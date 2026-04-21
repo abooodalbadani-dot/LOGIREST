@@ -1,0 +1,37 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import type { ZodSchema } from 'zod';
+import { paginatedSchema } from '@/types/api';
+
+export function useMasterDataList<T>(entity: string, schema: ZodSchema<T>, filters = {}) {
+  const params = new URLSearchParams(filters as Record<string, string>);
+  return useQuery({ 
+    queryKey: [entity, filters], 
+    queryFn: () => apiClient.get(`/${entity}?${params.toString()}`, paginatedSchema(schema)), 
+    staleTime: 60_000 
+  });
+}
+
+export function useMasterDataItem<T>(entity: string, id: string | null, schema: ZodSchema<T>) {
+  return useQuery({ 
+    queryKey: [entity, id], 
+    queryFn: () => apiClient.get(`/${entity}/${id}`, schema), 
+    enabled: !!id 
+  });
+}
+
+export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>) {
+  const qc = useQueryClient();
+  return useMutation({ 
+    mutationFn: (body: unknown) => apiClient.post(`/${entity}`, schema, body), 
+    onSuccess: () => qc.invalidateQueries({ queryKey: [entity] }) 
+  });
+}
+
+export function useMasterDataUpdate<T>(entity: string, schema: ZodSchema<T>) {
+  const qc = useQueryClient();
+  return useMutation({ 
+    mutationFn: ({ id, body }: { id: string; body: unknown }) => apiClient.put(`/${entity}/${id}`, schema, body), 
+    onSuccess: () => qc.invalidateQueries({ queryKey: [entity] }) 
+  });
+}

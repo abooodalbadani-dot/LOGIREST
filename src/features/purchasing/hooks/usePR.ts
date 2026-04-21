@@ -1,0 +1,42 @@
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import { z } from 'zod';
+
+const PRLineSchema = z.object({
+  id: z.string(),
+  item: z.object({
+    id: z.string(),
+    code: z.string(),
+    name_ar: z.string(),
+    name_en: z.string(),
+    primary_uom: z.object({
+      id: z.string(),
+      code: z.string(),
+    }),
+  }),
+  req_qty: z.number(),
+  uom_id: z.string(),
+});
+
+const PRDetailSchema = z.object({
+  id: z.string(),
+  document_number: z.string(),
+  status: z.string(),
+  department_id: z.string(),
+  expected_date: z.string(),
+  notes: z.string().nullable().optional(),
+  created_at: z.string().optional(),
+  lines: z.array(PRLineSchema),
+});
+
+export type PRDetail = z.infer<typeof PRDetailSchema>;
+
+export function usePR(id: string) {
+  return useQuery({
+    queryKey: ['purchase-request', id],
+    queryFn: () => apiClient.get(`/procurement/purchase-requests/${id}`, z.object({ data: PRDetailSchema })).then(res => res.data),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+}

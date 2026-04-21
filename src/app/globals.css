@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Surfaces */
+  --color-surface-0: #09090f;
+  /* page background */
+  --color-surface-1: #13131c;
+  /* card / panel */
+  --color-surface-2: #1e1e2a;
+  /* input backgrounds */
+  --color-surface-3: #2a2a3a;
+  /* hover states */
+
+  /* Accents */
+  --color-neon-cyan: #00e5ff;
+  --color-neon-amber: #ffba00;
+  --color-neon-red: #ff3d5a;
+  --color-neon-green: #00e676;
+
+  /* Text */
+  --color-on-surface: #e8e8f0;
+  --color-on-surface-muted: #8888aa;
+
+  /* Brand */
+  --color-brand-primary: #00e5ff;
+  --color-brand-secondary: #ffba00;
+
+  /* Fonts */
+  --font-sans: 'Inter', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root,
+.dark {
+  color-scheme: dark;
+
+  /* Shadcn overrides */
+  --background: var(--color-surface-0);
+  --foreground: var(--color-on-surface);
+  --primary: var(--color-neon-cyan);
+  --primary-foreground: #09090f;
+  --border: var(--color-surface-3);
+  --ring: var(--color-neon-cyan);
+  --radius: 0.75rem;
+
+  /* Remaining Shadcn defaults */
+  --card: var(--color-surface-1);
+  --card-foreground: var(--color-on-surface);
+  --popover: var(--color-surface-1);
+  --popover-foreground: var(--color-on-surface);
+  --secondary: var(--color-surface-2);
+  --secondary-foreground: var(--color-on-surface);
+  --muted: var(--color-surface-2);
+  --muted-foreground: var(--color-on-surface-muted);
+  --accent: var(--color-surface-3);
+  --accent-foreground: var(--color-on-surface);
+  --destructive: var(--color-neon-red);
+  --input: var(--color-surface-3);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    background-color: var(--color-surface-0);
+    color: var(--color-on-surface);
+  }
+}

@@ -1,0 +1,29 @@
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
+import { z } from 'zod';
+
+const PRSummarySchema = z.object({ 
+  id: z.string(), 
+  document_number: z.string(), 
+  status: z.string(), 
+  department_id: z.string(), 
+  expected_date: z.string(), 
+  created_at: z.string(), 
+});
+
+export type PRSummary = z.infer<typeof PRSummarySchema>;
+
+export function usePRList(filters: { status?: string; department_id?: string; page?: number } = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.department_id) params.set('department_id', filters.department_id);
+  params.set('page', String(filters.page ?? 1));
+  
+  return useQuery({
+    queryKey: ['purchase-requests', filters],
+    queryFn: () => apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema)),
+    staleTime: 60_000,
+  });
+}
