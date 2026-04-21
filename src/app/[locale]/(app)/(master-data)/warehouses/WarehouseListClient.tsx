@@ -23,7 +23,7 @@ export function WarehouseListClient() {
 
   const { data, isLoading } = useMasterDataList('warehouses', WarehouseSchema, { page: String(page) });
 
-  const columns = [
+  const columns: any[] = [
     { accessorKey: 'code', header: tc('code'), cell: (r: Warehouse) => <span dir="ltr" className="font-mono text-sm">{r.code}</span> },
     { accessorKey: 'name_ar', header: tc('name_ar'), cell: (r: Warehouse) => r.name_ar },
     { accessorKey: 'name_en', header: tc('name_en'), cell: (r: Warehouse) => r.name_en },

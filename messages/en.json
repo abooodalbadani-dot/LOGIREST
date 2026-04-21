@@ -44,7 +44,6 @@
       "admin": "Admin"
     }
   },
-  "auth": {},
   "procurement": {
     "grn": {
       "title": "Goods Received Notes",
@@ -289,15 +288,140 @@
       "edit_title": "Edit Barcode",
       "item": "Item",
       "barcode": "Barcode",
-      "default_qty": "Default Quantity"
+      "barcode_label": "Barcode",
+      "default_qty": "Default Quantity",
+      "scan_or_type": "Scan or type barcode..."
+    },
+    "import": {
+      "title": "Bulk Import",
+      "step_upload": "Upload",
+      "step_validate": "Validate",
+      "step_review": "Review",
+      "step_commit": "Commit",
+      "select_file": "Select CSV/Excel File",
+      "upload_cta": "Upload and Validate",
+      "validation_success": "Validation successful. {count} records ready.",
+      "validation_error": "Validation failed. {count} errors found.",
+      "import_now": "Import Now",
+      "import_success": "Successfully imported {count} records."
     }
   },
   "inventory": {
-    "balance": {},
-    "lots": {},
-    "movements": {}
+    "balance": {
+      "title": "Stock Balance",
+      "item_code": "Item Code",
+      "item_name": "Item Name",
+      "warehouse": "Warehouse",
+      "on_hand": "On Hand",
+      "reserved": "Reserved",
+      "available": "Available",
+      "reorder_point": "Reorder Point",
+      "low_stock": "Low Stock",
+      "export_xlsx": "Export"
+    },
+    "lots": {
+      "title": "Lot Balances",
+      "item_code": "Item Code",
+      "item_name": "Item Name",
+      "lot_number": "Lot Number",
+      "expiry_date": "Expiry Date",
+      "available_qty": "Available Qty",
+      "status": "Status",
+      "expired": "Expired",
+      "near_expiry": "Near Expiry",
+      "valid": "Valid",
+      "show_expired": "Show Expired Lots"
+    },
+    "movements": {
+      "title": "Inventory Movements",
+      "posted_at": "Posted At",
+      "document_number": "Document No",
+      "document_type": "Type",
+      "item_code": "Item Code",
+      "item_name": "Item Name",
+      "lot": "Lot",
+      "direction": "Direction",
+      "in": "IN",
+      "out": "OUT",
+      "qty": "Qty"
+    }
   },
-  "notifications": {},
-  "reports": {},
-  "admin": {}
+  "auth": {
+    "login_title": "Sign In",
+    "login_subtitle": "Access your warehouse operations",
+    "email": "Email Address",
+    "password": "Password",
+    "sign_in": "Sign In",
+    "invalid_credentials": "Invalid email or password.",
+    "session_expired": "Your session has expired. Please log in again."
+  },
+  "dashboard": {
+    "title": "Operations Overview",
+    "kpi": {
+      "total_stock": "Total Stock Value",
+      "pending_prs": "Pending Purchase Requests",
+      "active_stocktakes": "Active Stocktakes",
+      "low_stock_items": "Low Stock Items"
+    }
+  },
+  "profile": {
+    "title": "User Profile",
+    "details": "Account Details",
+    "security": "Security",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "assigned_scopes": "Assigned Scopes",
+    "change_password": "Change Password",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_password": "Confirm New Password",
+    "passwords_match": "Passwords do not match.",
+    "password_updated": "Password has been updated successfully."
+  },
+  "notifications": {
+    "templates": "Notification Templates",
+    "outbox": "Email Outbox",
+    "subject_ar": "Subject (Arabic)",
+    "body_ar": "Body (Arabic)",
+    "subject_en": "Subject (English)",
+    "body_en": "Body (English)",
+    "preview": "Preview",
+    "trigger_event": "Trigger Event",
+    "is_active": "Active",
+    "recipient": "Recipient",
+    "sent_at": "Sent At",
+    "status": "Status",
+    "error_message": "Error Message",
+    "retry": "Retry"
+  },
+  "reports": {
+    "title": "Reports",
+    "consumption": "Consumption Report",
+    "expiry": "Expiry Tracking Report",
+    "procurement": "Procurement Summary",
+    "variance": "Stocktake Variance Report",
+    "export": "Export"
+  },
+  "admin": {
+    "users": "Users",
+    "roles": "Roles & Permissions",
+    "audit_log": "Audit Log",
+    "create_user": "Create User",
+    "edit_user": "Edit User",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "scopes": "Scopes",
+    "branch_scope": "Branch",
+    "warehouse_scope": "Warehouse",
+    "department_scope": "Department",
+    "action": "Action",
+    "entity_type": "Entity Type",
+    "entity_id": "Entity ID",
+    "user_name": "User",
+    "created_at": "Created At",
+    "changes": "Changes",
+    "export_csv": "Export CSV"
+  }
 }

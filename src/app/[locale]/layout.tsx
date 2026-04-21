@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { Toaster } from 'sonner';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { SessionTimeoutModal } from '@/components/shared/SessionTimeoutModal';
@@ -24,6 +25,7 @@ export default async function LocaleLayout({
             <AuthProvider>
               {children}
               <SessionTimeoutModal />
+              <Toaster richColors position="top-center" dir={direction as 'rtl' | 'ltr'} />
             </AuthProvider>
           </QueryProvider>
         </NextIntlClientProvider>

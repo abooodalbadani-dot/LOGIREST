@@ -1,4 +1,5 @@
 import type { UserRole } from '@/providers/AuthProvider';
+export type { UserRole };
 export type ResourceType = 'grn' | 'pr' | 'po' | 'issue' | 'transfer' | 'adjustment' | 'stocktake' | 'inventory' | 'master_data' | 'admin' | 'reports';
 export type ActionType = 'view' | 'create' | 'edit' | 'delete' | 'post' | 'approve';
 export type PermissionMatrix = Record<UserRole, Partial<Record<ResourceType, ActionType[]>>>;

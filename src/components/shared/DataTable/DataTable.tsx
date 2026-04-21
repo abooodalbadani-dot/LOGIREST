@@ -24,6 +24,7 @@ interface DataTableProps<T> {
   emptyState?: React.ReactNode;
   filters?: React.ReactNode;
   onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string;
 }
 
 export function DataTable<T>({
@@ -34,7 +35,8 @@ export function DataTable<T>({
   onExport,
   emptyState,
   filters,
-  onRowClick
+  onRowClick,
+  rowClassName
 }: DataTableProps<T>) {
   const table = useReactTable({
     data: data || [],
@@ -101,7 +103,7 @@ export function DataTable<T>({
               </tr>
             ) : (
               table.getRowModel().rows.map(row => (
-                <tr key={row.id} className={`border-b border-surface-3 hover:bg-surface-2 transition-colors ${onRowClick ? "cursor-pointer" : ""}`} onClick={() => onRowClick && onRowClick(row.original)}>
+                <tr key={row.id} className={`border-b border-surface-3 hover:bg-surface-2 transition-colors ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} onClick={() => onRowClick && onRowClick(row.original)}>
                   {row.getVisibleCells().map(cell => {
                     const isNumeric = (cell.column.columnDef.meta as any)?.numeric === true;
                     return (

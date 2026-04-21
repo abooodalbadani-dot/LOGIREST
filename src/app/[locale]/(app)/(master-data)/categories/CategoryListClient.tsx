@@ -18,7 +18,7 @@ export function CategoryListClient() {
 
   const { data, isLoading } = useMasterDataList('categories', CategorySchema, { page: String(page) });
 
-  const columns = [
+  const columns: any[] = [
     { accessorKey: 'name_ar', header: tc('name_ar'), cell: (r: Category) => r.name_ar },
     { accessorKey: 'name_en', header: tc('name_en'), cell: (r: Category) => r.name_en },
   ];

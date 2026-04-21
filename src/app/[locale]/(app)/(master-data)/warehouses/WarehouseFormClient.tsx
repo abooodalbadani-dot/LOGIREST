@@ -99,7 +99,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle }: Props) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Switch id="wh-active" checked={watch('is_active')} onCheckedChange={(v) => setValue('is_active', v)} />
+          <Switch id="wh-active" checked={watch('is_active')} onCheckedChange={(v: boolean) => setValue('is_active', v)} />
           <Label htmlFor="wh-active">{t('is_active')}</Label>
         </div>
       </div>

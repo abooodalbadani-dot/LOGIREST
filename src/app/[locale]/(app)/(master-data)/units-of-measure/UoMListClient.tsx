@@ -18,7 +18,7 @@ export function UoMListClient() {
 
   const { data, isLoading } = useMasterDataList('units-of-measure', UoMSchema, { page: String(page) });
 
-  const columns = [
+  const columns: any[] = [
     { accessorKey: 'code', header: tc('code'), cell: (r: UoM) => <span dir="ltr" className="font-mono text-sm">{r.code}</span> },
     { accessorKey: 'name_ar', header: tc('name_ar'), cell: (r: UoM) => r.name_ar },
     { accessorKey: 'name_en', header: tc('name_en'), cell: (r: UoM) => r.name_en },

@@ -44,7 +44,6 @@
       "admin": "الإدارة"
     }
   },
-  "auth": {},
   "procurement": { 
     "grn": {
       "title": "سندات الاستلام",
@@ -198,6 +197,46 @@
       "posted_success": "تم ترحيل الجرد بنجاح ورُفع القفل عن المستودع."
     } 
   },
+  "inventory": {
+    "balance": {
+      "title": "أرصدة المخزون",
+      "item_code": "رمز الصنف",
+      "item_name": "اسم الصنف",
+      "warehouse": "المستودع",
+      "on_hand": "الكمية الفعلية",
+      "reserved": "محجوز",
+      "available": "متاح",
+      "reorder_point": "نقطة إعادة الطلب",
+      "low_stock": "مخزون منخفض",
+      "export_xlsx": "تصدير"
+    },
+    "lots": {
+      "title": "الدفعات",
+      "item_code": "رمز الصنف",
+      "item_name": "اسم الصنف",
+      "lot_number": "رقم الدفعة",
+      "expiry_date": "تاريخ الانتهاء",
+      "available_qty": "الكمية المتاحة",
+      "status": "الحالة",
+      "expired": "منتهي",
+      "near_expiry": "يقترب الانتهاء",
+      "valid": "صالح",
+      "show_expired": "إظهار الدفعات المنتهية"
+    },
+    "movements": {
+      "title": "حركات المخزون",
+      "posted_at": "تاريخ الترحيل",
+      "document_number": "رقم المستند",
+      "document_type": "نوع المستند",
+      "item_code": "رمز الصنف",
+      "item_name": "اسم الصنف",
+      "lot": "الدفعة",
+      "direction": "الاتجاه",
+      "in": "داخل",
+      "out": "خارج",
+      "qty": "الكمية"
+    }
+  },
   "masterData": {
     "common": {
       "code": "الرمز",
@@ -290,11 +329,100 @@
       "edit_title": "تعديل الباركود",
       "item": "الصنف",
       "barcode": "الباركود",
+      "barcode_label": "الباركود",
+      "scan_or_type": "امسح أو اكتب الباركود...",
       "default_qty": "الكمية الافتراضية"
+    },
+    "import": {
+      "title": "استيراد البيانات",
+      "step_upload": "رفع",
+      "step_validate": "تحقق",
+      "step_review": "مراجعة",
+      "step_commit": "تنفيذ",
+      "select_file": "اختر ملف CSV/Excel",
+      "upload_cta": "رفع وتحقق",
+      "validation_success": "تم التحقق بنجاح. {count} سجلات جاهزة.",
+      "validation_error": "فشل التحقق. تم العثور على {count} أخطاء.",
+      "import_now": "استيراد الآن",
+      "import_success": "تم استيراد {count} سجلات بنجاح."
     }
   },
-  "inventory": { "balance": {}, "lots": {}, "movements": {} },
-  "notifications": {},
-  "reports": {},
-  "admin": {}
+  "auth": {
+    "login_title": "تسجيل الدخول",
+    "login_subtitle": "الوصول إلى عمليات المستودع",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "sign_in": "دخول",
+    "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "session_expired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+  },
+  "dashboard": {
+    "title": "نظرة عامة على العمليات",
+    "kpi": {
+      "total_stock": "إجمالي قيمة المخزون",
+      "pending_prs": "طلبات شراء معلقة",
+      "active_stocktakes": "جلسات جرد نشطة",
+      "low_stock_items": "أصناف تحت الحد الأدنى"
+    }
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "details": "تفاصيل الحساب",
+    "security": "الأمان",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "assigned_scopes": "النطاقات المعينة",
+    "change_password": "تغيير كلمة المرور",
+    "current_password": "كلمة المرور الحالية",
+    "new_password": "كلمة المرور الجديدة",
+    "confirm_password": "تأكيد كلمة المرور الجديدة",
+    "passwords_match": "كلمات المرور غير متطابقة.",
+    "password_updated": "تم تحديث كلمة المرور بنجاح."
+  },
+  "notifications": {
+    "templates": "قوالب الإشعارات",
+    "outbox": "صندوق الصادر",
+    "subject_ar": "الموضوع (عربي)",
+    "body_ar": "النص (عربي)",
+    "subject_en": "Subject (English)",
+    "body_en": "Body (English)",
+    "preview": "معاينة",
+    "trigger_event": "حدث المشغل",
+    "is_active": "نشط",
+    "recipient": "المستلم",
+    "sent_at": "تاريخ الإرسال",
+    "status": "الحالة",
+    "error_message": "رسالة الخطأ",
+    "retry": "إعادة المحاولة"
+  },
+  "reports": {
+    "title": "التقارير",
+    "consumption": "تقرير الصرف",
+    "expiry": "تقرير الانتهاء",
+    "procurement": "ملخص المشتريات",
+    "variance": "تقرير فروق الجرد",
+    "export": "تصدير"
+  },
+  "admin": {
+    "users": "المستخدمون",
+    "roles": "الأدوار والصلاحيات",
+    "audit_log": "سجل التدقيق",
+    "create_user": "إنشاء مستخدم",
+    "edit_user": "تعديل المستخدم",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "scopes": "النطاقات",
+    "branch_scope": "الفرع",
+    "warehouse_scope": "المستودع",
+    "department_scope": "القسم",
+    "action": "الإجراء",
+    "entity_type": "نوع الكيان",
+    "entity_id": "معرف الكيان",
+    "user_name": "اسم المستخدم",
+    "created_at": "تاريخ الإنشاء",
+    "changes": "التغييرات",
+    "export_csv": "تصدير CSV"
+  }
 }

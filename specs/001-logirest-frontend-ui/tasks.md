@@ -366,7 +366,7 @@
   **PageHeader**: Server or Client Component. Props: `{ title: string; description?: string; actions?: React.ReactNode }`. Renders a row with title (`<h1>` styled `text-2xl font-bold text-on-surface`) and description below, plus `actions` slot floated to the inline-end via `flex justify-between`.
   **Acceptance**: Breadcrumb renders `Home > GRNs > GRN-001` correctly in both LTR and RTL; chevron flips in RTL.
 
-- [ ] T019 [P] Create `src/components/shared/LocaleSwitcher.tsx` — locale toggle button.
+- [x] T019 [P] Create `src/components/shared/LocaleSwitcher.tsx` — locale toggle button.
   Client Component. Reads current locale from `useParams().locale` or from `document.documentElement.lang`. Renders a button showing "عر" when current locale is `en` (switch to Arabic) and "EN" when current locale is `ar` (switch to English). On click: replace current path with the other locale prefix using `useRouter().replace(pathname.replace(/^\/(ar|en)/, `/${otherLocale}`))`. Persist locale in a cookie named `NEXT_LOCALE` via `document.cookie = 'NEXT_LOCALE=...; path=/'` before navigation.
   **Acceptance**: Clicking the button navigates to the other locale and the `dir` attribute changes.
 
@@ -1064,7 +1064,7 @@
 
 ---
 
-- [ ] T066 Add Transfer and Adjustment mock data to `src/lib/api/mocks/operations.ts`.
+- [x] T066 Add Transfer and Adjustment mock data to `src/lib/api/mocks/operations.ts`.
   Transfer mocks:
   ```
   "GET /operations/transfers"         → PaginatedResponse: 2 transfers (DRAFT, IN_TRANSIT)
@@ -1084,12 +1084,12 @@
   ```
   **Acceptance**: Both endpoints return mock data.
 
-- [ ] T067 Create Transfer hooks: `src/features/operations/hooks/useTransferList.ts`, `useTransfer.ts`, `useCreateTransfer.ts`, `useShipTransfer.ts`, `usePostTransfer.ts`.
+- [x] T067 Create Transfer hooks: `src/features/operations/hooks/useTransferList.ts`, `useTransfer.ts`, `useCreateTransfer.ts`, `useShipTransfer.ts`, `usePostTransfer.ts`.
   - `useShipTransfer()`: `POST /operations/transfers/:id/ship` — no body. On success: invalidate transfer queries.
   - `usePostTransfer()`: `POST /operations/transfers/:id/post`. Body `{ confirmation }`. On error `WAREHOUSE_LOCKED` (either warehouse): caller shows `LockBanner`.
   **Acceptance**: All hooks compile.
 
-- [ ] T068 [P] Build Transfer List + Detail pages.
+- [x] T068 [P] Build Transfer List + Detail pages.
   `src/app/[locale]/(app)/(operations)/transfers/page.tsx` (Server Component): title "نقل المخزون". `<TransferListClient>` columns: Doc Number, From WH, To WH, Status (use `transfer_status`), Shipped At, Received At.
   `src/app/[locale]/(app)/(operations)/transfers/[id]/page.tsx` (Client Component):
   - Warehouse selectors: From WH and To WH.
@@ -1098,12 +1098,12 @@
   - Status-based action buttons: DRAFT → "Ship" button → `PostConfirmDialog` → `useShipTransfer.mutate(id)`. IN_TRANSIT → receiving side shows editable "Received Qty" inputs + "Confirm Receipt & Post" → `usePostTransfer.mutate(id, body)`.
   **Acceptance**: DRAFT transfer has "Ship" button; IN_TRANSIT has editable received qty inputs.
 
-- [ ] T069 Create Adjustment hooks: `src/features/operations/hooks/useAdjustmentList.ts`, `useAdjustment.ts`, `useCreateAdjustment.ts`, `useApproveAdjustment.ts`, `usePostAdjustment.ts`.
+- [x] T069 Create Adjustment hooks: `src/features/operations/hooks/useAdjustmentList.ts`, `useAdjustment.ts`, `useCreateAdjustment.ts`, `useApproveAdjustment.ts`, `usePostAdjustment.ts`.
   - `useApproveAdjustment()`: `POST /operations/adjustments/:id/approve`. Restrict in UI to INV_MGR+ via `usePermission('approve', 'adjustment')`.
   - `usePostAdjustment()`: `POST /operations/adjustments/:id/post`. Body: `{ confirmation }`. Can only post APPROVED adjustments — button disabled if `status !== 'APPROVED'`.
   **Acceptance**: All hooks compile.
 
-- [ ] T070 [P] Build Adjustment List + Detail pages.
+- [x] T070 [P] Build Adjustment List + Detail pages.
   `src/app/[locale]/(app)/(operations)/adjustments/page.tsx`: title "التسويات". `<AdjustmentListClient>` columns: Doc Number, Reason (`<StatusBadge>`-style chip: DAMAGE/EXPIRY/THEFT red, COUNTING_ERROR amber, OTHER gray), Status badge, Approved By, Created At.
   `src/app/[locale]/(app)/(operations)/adjustments/[id]/page.tsx` (Client Component):
   - Reason selector (required): DAMAGE / EXPIRY / THEFT / COUNTING_ERROR / OTHER.
@@ -1112,7 +1112,7 @@
   - POST button disabled if `status !== 'APPROVED'`.
   **Acceptance**: DRAFT adjustment has Save + Approve buttons (for INV_MGR); APPROVED has Post button; POSTED is read-only.
 
-- [ ] T071 [P] Add Transfer + Adjustment i18n keys to both locale files.
+- [x] T071 [P] Add Transfer + Adjustment i18n keys to both locale files.
   Under `operations.transfer`: `{ "title": "نقل المخزون", "create_new": "نقل جديد", "from_warehouse": "من مستودع", "to_warehouse": "إلى مستودع", "ship": "شحن", "confirm_receipt": "تأكيد الاستلام والترحيل", "ship_confirm_title": "تأكيد الشحن" }`.
   Under `operations.adjustment`: `{ "title": "التسويات", "reason": "سبب التسوية", "approve": "اعتماد", "post_adjustment": "ترحيل التسوية", "direction_increase": "زيادة", "direction_decrease": "نقص", "reason_notes": "تفاصيل السبب" }`.
   EN equivalents.
@@ -1153,7 +1153,7 @@
   ```
   **Acceptance**: `useMasterDataList('branches', BranchSchema)` compiles and returns typed `PaginatedResponse<Branch>`.
 
-- [ ] T074 [P] Build Branches CRUD: `src/app/[locale]/(app)/(master-data)/branches/page.tsx` and `branches/[id]/page.tsx`.
+- [x] T074 [P] Build Branches CRUD: `src/app/[locale]/(app)/(master-data)/branches/page.tsx` and `branches/[id]/page.tsx`.
   **List page** (Server Component): title "الفروع". `<BranchListClient>` using `useMasterDataList('branches', BranchSchema)`. DataTable columns: Code, Name (AR or EN per locale), Active (✓ / ✗), Created At. "New Branch" button links to `/branches/new`. ProtectedRoute `view/master_data`.
   **Detail/Edit page** (Client Component): React Hook Form + Zod validation:
   ```typescript
@@ -1162,36 +1162,36 @@
   Fields: Code input, Name AR input, Name EN input, Is Active checkbox. "Save" button calls `useCreate.mutate()` or `useUpdate.mutate()`. On success: navigate back to list. ProtectedRoute `create/master_data` for new, `edit/master_data` for edit. AUDITOR cannot see this page.
   **Acceptance**: Can create a branch with `name_ar` and `name_en`; form validation blocks empty names.
 
-- [ ] T075 [P] Build Warehouses CRUD: `src/app/[locale]/(app)/(master-data)/warehouses/page.tsx` and `warehouses/[id]/page.tsx`.
+- [x] T075 [P] Build Warehouses CRUD: `src/app/[locale]/(app)/(master-data)/warehouses/page.tsx` and `warehouses/[id]/page.tsx`.
   Same pattern as Branches. Extra fields: Branch selector dropdown (`useMasterDataList('branches', BranchSchema)`), Type selector (MAIN / DRY / COLD / VIRTUAL), Is Active.
   Form Zod schema: `z.object({ branch_id: z.string().min(1), code: z.string().min(1), name_ar: z.string().min(1), name_en: z.string().min(1), type: z.enum(['MAIN','DRY','COLD','VIRTUAL']), is_active: z.boolean() })`.
   **Acceptance**: Warehouse form requires branch selection.
 
-- [ ] T076 [P] Build Items CRUD: `src/app/[locale]/(app)/(master-data)/items/page.tsx` and `items/[id]/page.tsx`.
+- [x] T076 [P] Build Items CRUD: `src/app/[locale]/(app)/(master-data)/items/page.tsx` and `items/[id]/page.tsx`.
   Extra fields: Category selector, Primary UoM selector, `track_lots` checkbox, Min Stock Level number input, Reorder Point number input, Barcode field (`<ScanInput onScan={(barcode) => setValue('barcode', barcode)} />` — user can scan OR type). UoM Conversions: repeating rows (From UoM, To UoM, Factor).
   Form schema: `z.object({ code: z.string().min(1), barcode: z.string().min(1), name_ar: z.string().min(1), name_en: z.string().min(1), category_id: z.string().min(1), primary_uom_id: z.string().min(1), track_lots: z.boolean(), min_stock_level: z.number().min(0), reorder_point: z.number().min(0) })`.
   **Acceptance**: Barcode field accepts scan input; `track_lots` checkbox toggles lot-related fields.
 
-- [ ] T077 [P] Build Suppliers CRUD: `src/app/[locale]/(app)/(master-data)/suppliers/page.tsx` and `suppliers/[id]/page.tsx`.
+- [x] T077 [P] Build Suppliers CRUD: `src/app/[locale]/(app)/(master-data)/suppliers/page.tsx` and `suppliers/[id]/page.tsx`.
   Fields: Code, Name AR, Name EN, Currency selector, Payment Terms textarea, Is Active.
   **Acceptance**: Supplier form requires currency selection.
 
-- [ ] T078 [P] Build Currencies & FX Rates: `src/app/[locale]/(app)/(master-data)/currencies/page.tsx` and `currencies/[id]/fx-rates/page.tsx`.
+- [x] T078 [P] Build Currencies & FX Rates: `src/app/[locale]/(app)/(master-data)/currencies/page.tsx` and `currencies/[id]/fx-rates/page.tsx`.
   Currency list: Code, Name AR, Name EN, Symbol, Is Base (only one allowed — show read-only if base).
   FX Rate list for a currency: `GET /currencies/fx-rates?from={code}`. Table: From, To, Rate, Effective Date. "Add Rate" form: From currency (read-only = current), To Currency, Rate (number, `dir="ltr"` input), Effective Date. Rates are immutable once saved (no edit, no delete).
   **Acceptance**: FX rate list shows rate 3.75 for USD→SAR from mock.
 
-- [ ] T079 [P] Build Departments CRUD: `src/app/[locale]/(app)/(master-data)/departments/page.tsx` and `departments/[id]/page.tsx`.
+- [x] T079 [P] Build Departments CRUD: `src/app/[locale]/(app)/(master-data)/departments/page.tsx` and `departments/[id]/page.tsx`.
   Fields: Branch selector, Code, Name AR, Name EN, Is Active.
   **Acceptance**: Department requires branch selection.
 
-- [ ] T080 [P] Build UoM, Categories, Barcodes management pages (simple CRUD).
+- [x] T080 [P] Build UoM, Categories, Barcodes management pages (simple CRUD).
   UoM: `src/app/[locale]/(app)/(master-data)/units-of-measure/page.tsx` — Code, Name AR, Name EN.
   Categories: `src/app/[locale]/(app)/(master-data)/categories/page.tsx` — Name AR, Name EN.
   Barcodes: `src/app/[locale]/(app)/(master-data)/barcodes/page.tsx` — item selector + barcode field (`<ScanInput>`). Renders item-barcode associations table. "Register Barcode" form: scan OR type barcode, select item.
   **Acceptance**: All three pages render with their respective DataTables and create forms.
 
-- [ ] T081 [P] Add Master Data i18n keys for all 10 entities to both locale files.
+- [x] T081 [P] Add Master Data i18n keys for all 10 entities to both locale files.
   Under `masterData.branches`, `masterData.warehouses`, etc.:
   For each entity: `{ "title": "...", "create_new": "...", "name_ar": "الاسم بالعربية", "name_en": "الاسم بالإنجليزية", "code": "الرمز", "is_active": "نشط", "saved_success": "تم الحفظ بنجاح." }`.
   EN equivalents.
@@ -1203,7 +1203,7 @@
 
 ---
 
-- [ ] T082 Build Login page: `src/app/[locale]/(auth)/login/page.tsx`.
+- [x] T082 Build Login page: `src/app/[locale]/(auth)/login/page.tsx`.
   Client Component. React Hook Form:
   ```typescript
   const schema = z.object({ email: z.string().email(), password: z.string().min(6) });
@@ -1214,7 +1214,7 @@
   Add auth-related mock: `"POST /auth/login"` → `{ user: { id:'u1', name:'مدير المخزون', email:'admin@demo.com', role:'ADMIN', scopes:[{ branch_id:null, warehouse_id:null, department_id:null }], locale:'ar' }, token:'mock.jwt.token' }`.
   **Acceptance**: Entering `admin@demo.com` + any password logs in and redirects to dashboard.
 
-- [ ] T083 [P] Build Dashboard: `src/app/[locale]/(app)/dashboard/page.tsx` — KPI overview with static mock data.
+- [x] T083 [P] Build Dashboard: `src/app/[locale]/(app)/dashboard/page.tsx` — KPI overview with static mock data.
   Server Component. Renders 4 KPI cards using a `<KPICard>` component:
   1. "رصيد المخزون الكلي" / "Total Stock Value" — mock value "SAR 1,245,300"
   2. "طلبات الشراء المعلقة" / "Pending PRs" — mock value "7"
@@ -1224,7 +1224,7 @@
   Numbers wrapped in `<span dir="ltr">`.
   **Acceptance**: Dashboard shows 4 KPI cards with mock values; numeric values have `dir="ltr"`.
 
-- [ ] T084 [P] Build User Profile + Change Password: `src/app/[locale]/(app)/profile/page.tsx` and `profile/change-password/page.tsx`.
+- [x] T084 [P] Build User Profile + Change Password: `src/app/[locale]/(app)/profile/page.tsx` and `profile/change-password/page.tsx`.
   Profile: Client Component. Shows logged-in user's name, email, role, scopes (branch/warehouse/dept assignments as badge list). `<LocaleSwitcher>` for changing preferred locale. Read-only — no edit form.
   Change Password: Client Component. React Hook Form: `z.object({ current_password: z.string().min(1), new_password: z.string().min(8), confirm_password: z.string() }).refine(d => d.new_password === d.confirm_password, { message: 'Passwords do not match', path: ['confirm_password'] })`.
   **Acceptance**: Profile shows current user's role and scopes.
@@ -1235,7 +1235,7 @@
 
 ---
 
-- [ ] T085 Add Inventory mock data to `src/lib/api/mocks/inventory.ts`.
+- [x] T085 Add Inventory mock data to `src/lib/api/mocks/inventory.ts`.
   ```
   "GET /inventory/balance"    → PaginatedResponse: 5 items with qty_on_hand, qty_reserved, qty_available (some below reorder_point)
   "GET /inventory/lots"       → PaginatedResponse: 6 lots (2 expired, 1 near-expiry, 3 valid)
@@ -1243,7 +1243,7 @@
   ```
   **Acceptance**: All 3 inventory endpoints return data.
 
-- [ ] T086 [P] Build Stock Balance page: `src/app/[locale]/(app)/(inventory)/balance/page.tsx`.
+- [x] T086 [P] Build Stock Balance page: `src/app/[locale]/(app)/(inventory)/balance/page.tsx`.
   Server Component + `<StockBalanceClient>` Client Component.
   DataTable columns: Item Code, Item Name (locale-aware), Warehouse, On Hand (`dir="ltr"`), Reserved (`dir="ltr"`), Available (`dir="ltr"`).
   Rows where `qty_available < item.reorder_point` → row class `bg-neon-red/5`.
@@ -1251,14 +1251,14 @@
   "Export XLSX" button: on click, download a CSV via `generateCSV(data, columns)` utility function — create `src/utils/export.ts` with `generateCSV()` that converts data array to CSV string and triggers a `<a download>` click.
   **Acceptance**: Low-stock rows have red background; Export CSV downloads file with correct column headers.
 
-- [ ] T087 [P] Build Inventory Movements Ledger: `src/app/[locale]/(app)/(inventory)/movements/page.tsx`.
+- [x] T087 [P] Build Inventory Movements Ledger: `src/app/[locale]/(app)/(inventory)/movements/page.tsx`.
   Server Component + `<MovementsClient>`.
   DataTable columns: Posted At (`dir="ltr"`), Document Number (link to the source document), Type (`<StatusBadge>`-style chip), Item Code, Item Name, Lot Number, Direction (IN=green ↑, OUT=red ↓), Qty (`dir="ltr"`).
   This is a READ-ONLY page — no action/edit buttons at all, regardless of role. Only `view` permission required.
   Filters: document_type, from_date, to_date, item search.
   **Acceptance**: No edit/delete buttons on any row at any role; IN movements show green badge, OUT red.
 
-- [ ] T088 [P] Build Lot Balances page: `src/app/[locale]/(app)/(inventory)/lots/page.tsx`.
+- [x] T088 [P] Build Lot Balances page: `src/app/[locale]/(app)/(inventory)/lots/page.tsx`.
   Server Component + `<LotBalanceClient>`.
   DataTable columns: Item Code, Item Name, Lot Number, Expiry Date, Available Qty, Status (expired=red "منتهي", near-expiry=amber "يقترب الانتهاء", valid=green "صالح").
   Toggle filter: "Show Expired Lots" checkbox — adds `?include_expired=true` to the query.
@@ -1270,7 +1270,7 @@
 
 ---
 
-- [ ] T089 Add Notifications and Admin mock data.
+- [x] T089 Add Notifications and Admin mock data.
   `src/lib/api/mocks/notifications.ts`:
   ```
   "GET /notifications/templates" → [2 templates with subject_ar/en and body_ar/en]
@@ -1283,13 +1283,13 @@
   ```
   **Acceptance**: All mock endpoints return data.
 
-- [ ] T090 [P] Build Notification Templates + Email Outbox.
+- [x] T090 [P] Build Notification Templates + Email Outbox.
   Templates list (`src/app/[locale]/(app)/(communications)/notifications/templates/page.tsx`): DataTable columns: Code, Trigger Event, Is Active toggle. Click to open editor.
   Template editor (`templates/[id]/page.tsx`): Client Component. Form with 4 textareas: Subject AR, Body AR (RTL), Subject EN, Body EN (LTR — use `dir="ltr"` on the EN inputs). "Preview AR" / "Preview EN" toggle. Save via `PUT /notifications/templates/:id`. ProtectedRoute `view/admin` (ADMIN + INV_MGR).
   Email Outbox (`src/app/[locale]/(app)/(communications)/email-outbox/page.tsx`): DataTable columns: Recipient, Subject, Status badge, Sent At, Error Message. Status filter (PENDING/SENT/FAILED). FAILED rows show error message inline; "Retry" button (placeholder — calls nothing for now).
   **Acceptance**: Template editor shows 4 separate textareas; EN inputs have `dir="ltr"`.
 
-- [ ] T091 [P] Build Reports Hub: `src/app/[locale]/(app)/(reports)/page.tsx`.
+- [x] T091 [P] Build Reports Hub: `src/app/[locale]/(app)/(reports)/page.tsx`.
   Server Component. Renders 4 `<ReportCard>` components (create inline):
   ```
   Props: { title: string; description: string; href: string; icon?: string }
@@ -1298,13 +1298,13 @@
   Each card shows title, description, and an "Export XLSX" button. For now, button calls a mock `GET /reports/{type}?format=xlsx` which in mock mode returns a placeholder CSV download.
   **Acceptance**: 4 report cards render; Export button triggers file download.
 
-- [ ] T092 [P] Build Admin: User Management + Roles Viewer + Audit Log.
+- [x] T092 [P] Build Admin: User Management + Roles Viewer + Audit Log.
   User Management (`src/app/[locale]/(app)/(admin)/users/page.tsx` + `users/[id]/page.tsx`): DataTable columns: Name, Email, Role badge, Scopes summary. ProtectedRoute: `view/admin` (ADMIN only for create/edit; AUDITOR view-only). Create/Edit form: Name, Email, Role selector, Branch scope multi-select, Warehouse scope multi-select.
   Roles Viewer (`src/app/[locale]/(app)/(admin)/roles/page.tsx`): Read-only matrix table — roles as columns, resources as rows — shows ✓ for each allowed action. Generated from `PERMISSION_MATRIX` constant in `src/types/rbac.ts`. No edit functionality.
   Audit Log (`src/app/[locale]/(app)/(admin)/audit-log/page.tsx`): DataTable columns: Entity Type, Entity ID (link), Action, User Name, Created At. Expandable row: shows `<AuditDiffViewer changes={entry.changes} />`. Export to CSV.
   **Acceptance**: Roles matrix renders `PERMISSION_MATRIX` accurately; AUDITOR cannot access user management create button (hidden).
 
-- [ ] T093 [P] Add Notifications, Reports, Admin i18n keys to both locale files.
+- [x] T093 [P] Add Notifications, Reports, Admin i18n keys to both locale files.
   Under `notifications`: `{ "templates": "قوالب الإشعارات", "outbox": "صندوق الصادر", "subject_ar": "الموضوع (عربي)", "body_ar": "النص (عربي)", "preview": "معاينة" }`.
   Under `reports`: `{ "title": "التقارير", "consumption": "تقرير الصرف", "expiry": "تقرير الانتهاء", "procurement": "ملخص المشتريات", "variance": "تقرير فروق الجرد" }`.
   Under `admin`: `{ "users": "المستخدمون", "roles": "الأدوار والصلاحيات", "audit_log": "سجل التدقيق" }`.
@@ -1317,7 +1317,7 @@
 
 ---
 
-- [ ] T094 Create Vitest unit tests for all utility functions.
+- [x] T094 Create Vitest unit tests for all utility functions.
   `src/tests/unit/currency.test.ts`:
   ```typescript
   import { describe, it, expect } from 'vitest';

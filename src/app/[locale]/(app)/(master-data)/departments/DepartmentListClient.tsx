@@ -18,7 +18,7 @@ export function DepartmentListClient() {
 
   const { data, isLoading } = useMasterDataList('departments', DepartmentSchema, { page: String(page) });
 
-  const columns = [
+  const columns: any[] = [
     { accessorKey: 'code', header: tc('code'), cell: (r: Department) => <span dir="ltr" className="font-mono text-sm">{r.code}</span> },
     { accessorKey: 'name_ar', header: tc('name_ar'), cell: (r: Department) => r.name_ar },
     { accessorKey: 'name_en', header: tc('name_en'), cell: (r: Department) => r.name_en },

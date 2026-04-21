@@ -20,7 +20,7 @@ export function BranchListClient() {
 
   const { data, isLoading } = useMasterDataList('branches', BranchSchema, { page: String(page) });
 
-  const columns = [
+  const columns: any[] = [
     {
       accessorKey: 'code',
       header: tc('code'),
