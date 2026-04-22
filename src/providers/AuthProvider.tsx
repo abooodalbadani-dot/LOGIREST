@@ -1,6 +1,8 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { z } from 'zod';
+import { apiClient } from '@/lib/api/client';
 
 export type UserRole = 'ADMIN' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'AUDITOR';
 export interface UserScope { branch_id: string | null; warehouse_id: string | null; department_id: string | null; }
@@ -8,6 +10,11 @@ export interface AuthUser { id: string; name: string; email: string; role: UserR
 export interface AuthContextValue { user: AuthUser | null; token: string | null; login: (email: string, password: string) => Promise<void>; logout: () => void; isLoading: boolean; }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+const LoginResponseSchema = z.object({
+  user: z.any(),
+  token: z.string()
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -31,18 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch('/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    if (!res.ok) throw new Error('Login failed');
-    const data = await res.json();
-    localStorage.setItem('logirest_token', data.token);
-    const payloadStr = atob(data.token.split('.')[1]);
-    const payload = JSON.parse(payloadStr);
-    setUser(payload.user as AuthUser);
-    setToken(data.token);
+    try {
+      const data = await apiClient.post('/auth/login', LoginResponseSchema, { email, password });
+      
+      localStorage.setItem('logirest_token', data.token);
+      const payloadStr = atob(data.token.split('.')[1]);
+      const payload = JSON.parse(payloadStr);
+      
+      setUser(payload.user as AuthUser);
+      setToken(data.token);
+    } catch (err) {
+      console.error('Login error:', err);
+      throw new Error('Login failed');
+    }
   };
 
   const logout = () => {

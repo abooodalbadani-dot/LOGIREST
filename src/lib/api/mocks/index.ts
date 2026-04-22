@@ -4,9 +4,18 @@ import { masterDataMocks } from './master-data';
 import { inventoryMocks } from './inventory';
 import { notificationsMocks } from './notifications';
 import { adminMocks } from './admin';
+import { authMocks } from './auth';
 
 type MockDb = Record<string, unknown>;
-const db: MockDb = { ...purchasingMocks, ...operationsMocks, ...masterDataMocks, ...inventoryMocks, ...notificationsMocks, ...adminMocks };
+const db: MockDb = { 
+  ...purchasingMocks, 
+  ...operationsMocks, 
+  ...masterDataMocks, 
+  ...inventoryMocks, 
+  ...notificationsMocks, 
+  ...adminMocks,
+  ...authMocks 
+};
 
 export function getMockResponse(method: string, path: string): unknown {
   const key = `${method.toUpperCase()} ${path.split('?')[0]}`;

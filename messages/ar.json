@@ -44,7 +44,7 @@
       "admin": "الإدارة"
     }
   },
-  "procurement": { 
+  "procurement": {
     "grn": {
       "title": "سندات الاستلام",
       "grns": "سندات الاستلام",
@@ -62,7 +62,7 @@
       "posted_success": "تم ترحيل سند الاستلام بنجاح.",
       "warehouse_locked": "لا يمكن الترحيل: المستودع مقفل بسبب جرد نشط.",
       "fx_required": "يجب تحديد سعر الصرف قبل ترحيل هذا السند."
-    }, 
+    },
     "pr": {
       "title": "طلبات الشراء",
       "requests": "الطلبات",
@@ -70,7 +70,6 @@
       "create_new": "إنشاء طلب",
       "detail_title": "طلب شراء",
       "doc_number": "رقم المستند",
-      "department": "القسم",
       "department": "القسم",
       "expected_date": "التاريخ المتوقع",
       "save_draft": "حفظ مسودة",
@@ -83,7 +82,7 @@
       "reject_confirm_title": "تأكيد الرفض",
       "reject_confirm_desc": "سيؤدي رفض طلب الشراء إلى إغلاقه.",
       "posted_success": "تمت العملية بنجاح."
-    }, 
+    },
     "po": {
       "title": "أوامر الشراء",
       "orders": "الأوامر",
@@ -101,7 +100,7 @@
       "posted_success": "تم ترحيل أمر الشراء بنجاح."
     }
   },
-  "operations": { 
+  "operations": {
     "issue": {
       "title": "سندات الصرف",
       "issues": "سندات الصرف",
@@ -119,7 +118,7 @@
       "fefo_drawer_title": "تخصيص الدفعات (FEFO)",
       "scan_log_title": "سجل المسح",
       "posted_success": "تم ترحيل سند الصرف بنجاح."
-    }, 
+    },
     "transfer": {
       "title": "نقل المخزون",
       "transfers": "عمليات النقل",
@@ -150,7 +149,7 @@
       "post_confirm_title": "تأكيد الترحيل",
       "post_confirm_desc": "بعد الترحيل، لا يمكن تعديل عملية النقل وسيتم تحديث الأرصدة في كلا المستودعين.",
       "fefo_drawer_title": "تخصيص الدفعات (FEFO)"
-    }, 
+    },
     "adjustment": {
       "title": "تسويات المخزون",
       "adjustments": "التسويات",
@@ -176,8 +175,8 @@
       "qty_adjusted": "الكمية المعدّلة",
       "reason_notes": "تفاصيل السبب",
       "posted_success": "تم ترحيل تسوية المخزون بنجاح."
-    }, 
-    "stocktake": { 
+    },
+    "stocktake": {
       "warehouse_locked_banner": "المستودع مقفل بسبب جرد مفتوح: {sessionNumber}",
       "title": "جلسات الجرد",
       "start_session": "بدء جلسة جرد",
@@ -195,7 +194,7 @@
       "post_confirm_title": "تأكيد ترحيل الجرد",
       "post_confirm_desc": "سيتم تطبيق تسويات للفروقات ورفع القفل عن المستودع.",
       "posted_success": "تم ترحيل الجرد بنجاح ورُفع القفل عن المستودع."
-    } 
+    }
   },
   "inventory": {
     "balance": {
