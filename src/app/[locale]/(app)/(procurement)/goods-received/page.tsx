@@ -5,6 +5,15 @@ import Link from 'next/link';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { GRNListClient } from './GRNListClient';
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'procurement.grn' });
+  return {
+    title: `${t('title')} | LogiRest`,
+    description: t('description') || 'Incoming supply chain verification and warehouse reception ledger',
+  };
+}
+
 export default async function GoodsReceivedPage(props: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ status?: string; page?: string }>;
@@ -15,24 +24,12 @@ export default async function GoodsReceivedPage(props: {
 
   return (
     <ProtectedRoute requiredAction="view" requiredResource="grn">
-      <div className="space-y-6">
-        <PageHeader 
-          title={t('title')} 
-          actions={
-            <Link href={`/${locale}/goods-received/new`}>
-              <Button>{t('create_new')}</Button>
-            </Link>
-          } 
-        />
-        <div className="text-sm text-muted-foreground mb-4">
-          {t('home')} / {t('grns')}
-        </div>
-        <GRNListClient 
-          initialStatus={status} 
-          initialPage={Number(page ?? 1)} 
-          locale={locale as any} 
-        />
-      </div>
+      <GRNListClient 
+        initialStatus={status} 
+        initialPage={Number(page ?? 1)} 
+        locale={locale as 'ar' | 'en'} 
+      />
     </ProtectedRoute>
+
   );
 }

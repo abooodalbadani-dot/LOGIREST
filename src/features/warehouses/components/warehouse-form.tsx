@@ -29,13 +29,15 @@ const formSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE"]),
 })
 
+type WarehouseFormValues = z.infer<typeof formSchema>;
+ 
 export function WarehouseForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const { data: branches, isLoading: branchesLoading } = useBranches()
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+ 
+  const form = useForm<WarehouseFormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       code: "",
       branchId: "",
@@ -67,7 +69,7 @@ export function WarehouseForm() {
           <FormField
             control={form.control}
             name="code"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Warehouse Code</FormLabel>
                 <FormControl>
@@ -81,7 +83,7 @@ export function WarehouseForm() {
           <FormField
             control={form.control}
             name="branchId"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Parent Branch</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={branchesLoading}>
@@ -104,7 +106,7 @@ export function WarehouseForm() {
           <FormField
             control={form.control}
             name="nameEn"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Name (English)</FormLabel>
                 <FormControl>
@@ -118,7 +120,7 @@ export function WarehouseForm() {
           <FormField
             control={form.control}
             name="nameAr"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Name (Arabic)</FormLabel>
                 <FormControl>
@@ -132,7 +134,7 @@ export function WarehouseForm() {
           <FormField
             control={form.control}
             name="type"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Warehouse Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -155,7 +157,7 @@ export function WarehouseForm() {
           <FormField
             control={form.control}
             name="status"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Status</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>

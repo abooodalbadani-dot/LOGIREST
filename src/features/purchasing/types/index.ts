@@ -3,6 +3,7 @@ export type PRStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 
 export interface PurchaseRequestLineItem {
   id?: string;
   itemId: string;
+  itemName: string;
   quantity: number;
   estimatedUnitCost: number;
   notes?: string;
@@ -34,6 +35,7 @@ export type POStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 
 export interface PurchaseOrderLineItem {
   id?: string;
   itemId: string;
+  itemName: string;
   quantity: number;
   unitPrice: number;
   notes?: string;

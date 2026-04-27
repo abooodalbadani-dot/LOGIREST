@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { PODetailSchema } from './usePO';
 
 const CreatePOPayloadSchema = z.object({
   supplier_id: z.string(),
@@ -24,7 +25,7 @@ export function useCreatePO() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePOPayload) => 
-      apiClient.post('/procurement/purchase-orders', z.any(), payload),
+      apiClient.post('/procurement/purchase-orders', PODetailSchema, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
     }

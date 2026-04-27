@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -11,28 +11,16 @@ export default async function IssuesPage(props: {
 }) {
   const { locale } = await props.params;
   const { status, page } = await props.searchParams;
+  setRequestLocale(locale);
   const t = await getTranslations('operations.issue');
 
   return (
     <ProtectedRoute requiredAction="view" requiredResource="issue">
-      <div className="space-y-6">
-        <PageHeader 
-          title={t('title')} 
-          actions={
-            <Link href={`/${locale}/issues/new`}>
-              <Button>{t('create_new')}</Button>
-            </Link>
-          } 
-        />
-        <div className="text-sm text-muted-foreground mb-4">
-          {t('home')} / {t('issues')}
-        </div>
-        <IssueListClient 
-          initialStatus={status} 
-          initialPage={Number(page ?? 1)} 
-          locale={locale as any} 
-        />
-      </div>
+      <IssueListClient 
+        initialStatus={status} 
+        initialPage={Number(page ?? 1)} 
+        locale={locale as 'ar' | 'en'} 
+      />
     </ProtectedRoute>
   );
 }

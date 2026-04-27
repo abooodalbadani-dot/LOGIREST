@@ -3,11 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 export const TransferSummarySchema = z.object({ 
   id: z.string(), 
   document_number: z.string(), 
-  transfer_status: z.string(), 
+  transfer_status: BadgeStatusSchema, 
   from_warehouse_id: z.string(), 
   to_warehouse_id: z.string(), 
   shipped_at: z.string().nullable().optional(),

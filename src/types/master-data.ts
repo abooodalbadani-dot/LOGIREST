@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export interface Branch { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; }
 export interface Warehouse { id: string; branch_id: string; code: string; name_ar: string; name_en: string; type: 'MAIN'|'DRY'|'COLD'|'VIRTUAL'; is_active: boolean; }
-export interface Department { id: string; branch_id: string; code: string; name_ar: string; name_en: string; is_active: boolean; }
+export interface Department { id: string; branch_id: string; code: string; name_ar: string; name_en: string; manager?: string; cost_center?: string; is_active: boolean; }
 export interface UoM { id: string; code: string; name_ar: string; name_en: string; }
 export interface UoMConversion { from_uom_id: string; to_uom_id: string; factor: number; }
 export interface Category { id: string; name_ar: string; name_en: string; }
@@ -29,7 +29,7 @@ export const WarehouseSchema = z.object({
 
 export const DepartmentSchema = z.object({
   id: z.string(), branch_id: z.string(), code: z.string(), name_ar: z.string(),
-  name_en: z.string(), is_active: z.boolean()
+  name_en: z.string(), manager: z.string().optional(), cost_center: z.string().optional(), is_active: z.boolean()
 });
 
 export const UoMSchema = z.object({
@@ -91,7 +91,7 @@ export const WarehouseFormSchema = z.object({
 
 export const DepartmentFormSchema = z.object({
   branch_id: z.string().min(1), code: z.string().min(1), name_ar: z.string().min(1),
-  name_en: z.string().min(1), is_active: z.boolean()
+  name_en: z.string().min(1), manager: z.string().optional(), cost_center: z.string().optional(), is_active: z.boolean()
 });
 
 export const UoMFormSchema = z.object({

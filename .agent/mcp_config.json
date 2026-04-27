@@ -15,8 +15,13 @@
                 "shadcn@latest",
                 "mcp"
             ]
+        },
+        "stitch": {
+            "serverUrl": "https://stitch.googleapis.com/mcp",
+            "headers": {
+                "X-Goog-Api-Key": "REPLACED_BY_PLACEHOLDER"
+            }
         }
-        //other mcp servers
     }
 }
 

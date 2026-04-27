@@ -12,8 +12,8 @@ const mockStocktakes: Stocktake[] = [
     status: 'COUNTING',
     items: [
       { id: 'si-01', itemId: 'item-tomato', itemName: 'طماطم', uom: 'KG', barcode: '6281017075090', snapshotQty: 50, lotNumber: 'LOT-T01', expiryDate: '2024-12-31' },
-      { id: 'si-02', itemId: 'item-oil',    itemName: 'زيت نباتي', uom: 'L',  barcode: '6287012349876', snapshotQty: 30, lotNumber: 'LOT-O02', expiryDate: '2025-08-01' },
-      { id: 'si-03', itemId: 'item-salt',   itemName: 'ملح',     uom: 'KG', barcode: '6281011234567', snapshotQty: 20, lotNumber: 'LOT-S01', expiryDate: '2025-06-01' },
+      { id: 'si-02', itemId: 'item-oil', itemName: 'زيت نباتي', uom: 'L', barcode: '6287012349876', snapshotQty: 30, lotNumber: 'LOT-O02', expiryDate: '2025-08-01' },
+      { id: 'si-03', itemId: 'item-salt', itemName: 'ملح', uom: 'KG', barcode: '6281011234567', snapshotQty: 20, lotNumber: 'LOT-S01', expiryDate: '2025-06-01' },
     ],
     createdAt: daysAgo(2),
     updatedAt: daysAgo(1),

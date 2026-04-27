@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { PRDetailSchema } from './usePR';
 
 const CreatePRPayloadSchema = z.object({
   department_id: z.string(),
@@ -20,7 +21,7 @@ export function useCreatePR() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePRPayload) => 
-      apiClient.post('/procurement/purchase-requests', z.any(), payload),
+      apiClient.post('/procurement/purchase-requests', PRDetailSchema, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
     }

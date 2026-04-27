@@ -4,6 +4,11 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  test: { environment: 'jsdom', setupFiles: ['src/tests/setup.ts'], globals: true },
+  test: { 
+    environment: 'jsdom', 
+    setupFiles: ['src/tests/setup.ts'], 
+    globals: true,
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**']
+  },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
 });

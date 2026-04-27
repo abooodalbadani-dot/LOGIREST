@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import type { BadgeStatus } from '@/components/shared/StatusBadge';
 
 const POLineSchema = z.object({
   id: z.string(),
@@ -20,10 +21,10 @@ const POLineSchema = z.object({
   unit_cost_foreign: z.number(),
 });
 
-const PODetailSchema = z.object({
+export const PODetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'REJECTED', 'CANCELLED', 'IN_TRANSIT', 'OPEN', 'COUNTING', 'REVIEW']),
   supplier_id: z.string(),
   target_warehouse_id: z.string(),
   currency_id: z.string(),

@@ -1,74 +1,192 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Surfaces */
-  --color-surface-0: #09090f;
-  /* page background */
-  --color-surface-1: #13131c;
-  /* card / panel */
-  --color-surface-2: #1e1e2a;
-  /* input backgrounds */
-  --color-surface-3: #2a2a3a;
-  /* hover states */
-
-  /* Accents */
-  --color-neon-cyan: #00e5ff;
-  --color-neon-amber: #ffba00;
-  --color-neon-red: #ff3d5a;
-  --color-neon-green: #00e676;
-
-  /* Text */
-  --color-on-surface: #e8e8f0;
-  --color-on-surface-muted: #8888aa;
-
-  /* Brand */
-  --color-brand-primary: #00e5ff;
-  --color-brand-secondary: #ffba00;
-
   /* Fonts */
-  --font-sans: 'Inter', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: var(--font-arabic), var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-tajawal), sans-serif;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+
+  /* Semantic Colors - Core Mappings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-container: var(--primary-container);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-error-container: var(--error-container);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Surfaces - High Fidelity Mappings */
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+
+  /* Operational Nocturne Palette */
+  --color-cyan-500: #4cd6fb;
+  --color-red-500: #ff4b4b;
+
+  /* Status Colors */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-error: #ef4444;
+
+  /* Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-:root,
+:root {
+  /* Light Mode: Culinary Logic */
+  --background: #f7f9ff;
+  --foreground: #181c20;
+
+  --primary: #004d64;
+  --primary-foreground: #ffffff;
+  --primary-container: #006684;
+
+  --secondary: #4c616b;
+  --secondary-foreground: #ffffff;
+
+  --tertiary: #004f4f;
+  --tertiary-container: #006969;
+  --tertiary-fixed-dim: #84d4d3;
+
+  --muted: #f1f4fa;
+  --muted-foreground: #3f484d;
+
+  --accent: #dfe3e8;
+  --accent-foreground: #181c20;
+
+  --destructive: #ba1a1a;
+  --destructive-foreground: #ffffff;
+  --error-container: #ffdad6;
+
+  --card: #ffffff;
+  --card-foreground: #181c20;
+
+  --popover: #ffffff;
+  --popover-foreground: #181c20;
+
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f1f4fa;
+  --surface-container: #f7f9ff;
+  --surface-container-high: #eef1f7;
+  --surface-container-highest: #dfe3e8;
+
+  --border: transparent;
+  --input: #dfe3e8;
+  --ring: #004d64;
+
+  --primary-rgb: 0, 77, 100;
+  --radius: 16px;
+}
+
 .dark {
-  color-scheme: dark;
+  /* Dark Mode: The Midnight Ledger */
+  --background: #0e1416;
+  --foreground: #dee3e6;
 
-  /* Shadcn overrides */
-  --background: var(--color-surface-0);
-  --foreground: var(--color-on-surface);
-  --primary: var(--color-neon-cyan);
-  --primary-foreground: #09090f;
-  --border: var(--color-surface-3);
-  --ring: var(--color-neon-cyan);
-  --radius: 0.75rem;
+  --primary: #4cd6fb;
+  --primary-foreground: #003642;
+  --primary-container: #00b4d8;
 
-  /* Remaining Shadcn defaults */
-  --card: var(--color-surface-1);
-  --card-foreground: var(--color-on-surface);
-  --popover: var(--color-surface-1);
-  --popover-foreground: var(--color-on-surface);
-  --secondary: var(--color-surface-2);
-  --secondary-foreground: var(--color-on-surface);
-  --muted: var(--color-surface-2);
-  --muted-foreground: var(--color-on-surface-muted);
-  --accent: var(--color-surface-3);
-  --accent-foreground: var(--color-on-surface);
-  --destructive: var(--color-neon-red);
-  --input: var(--color-surface-3);
+  --secondary: #c3c7cc;
+  --secondary-foreground: #2c3135;
+
+  --tertiary: #ffb77d;
+  --tertiary-container: #eb8f3b;
+  --tertiary-fixed-dim: #ffb77d;
+
+  --muted: #171c1f;
+  --muted-foreground: #bcc9ce;
+
+  --accent: #303638;
+  --accent-foreground: #dee3e6;
+
+  --destructive: #ffb4ab;
+  --destructive-foreground: #690005;
+  --error-container: #93000a;
+
+  --card: #1b2023;
+  --card-foreground: #dee3e6;
+
+  --popover: #1b2023;
+  --popover-foreground: #dee3e6;
+
+  --surface-container-lowest: #090f11;
+  --surface-container-low: #0d1517;
+  --surface-container: #111b1d;
+  --surface-container-high: #162325;
+  --surface-container-highest: #1d2d30;
+
+  --border: transparent;
+  --input: #303638;
+  --ring: #4cd6fb;
+  --primary-rgb: 76, 214, 251;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply outline-ring/50;
+    border-color: transparent;
   }
 
   body {
-    background-color: var(--color-surface-0);
-    color: var(--color-on-surface);
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Operational Focus Accessibility */
+  :focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 2px var(--background), 0 0 12px 3px #3ABEFF !important;
+    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  /* High Density Reset */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-bold;
+  }
+
+  /* Tajawal for large numbers */
+  .font-display {
+    font-family: var(--font-display);
   }
 }
+
+/* Stitch Special Utilities */
+.ghost-border {
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.primary-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+}
+
+

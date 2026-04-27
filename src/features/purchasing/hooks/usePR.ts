@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+
 const PRLineSchema = z.object({
   id: z.string(),
   item: z.object({
@@ -19,10 +21,10 @@ const PRLineSchema = z.object({
   uom_id: z.string(),
 });
 
-const PRDetailSchema = z.object({
+export const PRDetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: BadgeStatusSchema,
   department_id: z.string(),
   expected_date: z.string(),
   notes: z.string().nullable().optional(),

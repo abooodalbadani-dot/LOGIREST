@@ -36,12 +36,12 @@ export function ScanInput({ onScan, onError, disabled, placeholder, className, o
     
     if (inputRef.current) {
        inputRef.current.value = '';
-       inputRef.current.classList.remove('border-neon-red', 'ring-neon-red');
-       inputRef.current.classList.add('border-neon-cyan', 'ring-2', 'ring-neon-cyan');
+       inputRef.current.classList.remove('border-red-500', 'ring-red-500');
+       inputRef.current.classList.add('border-cyan-500', 'ring-2', 'ring-cyan-500');
        
        setTimeout(() => {
          if (inputRef.current) {
-           inputRef.current.classList.remove('border-neon-cyan', 'ring-2', 'ring-neon-cyan');
+           inputRef.current.classList.remove('border-cyan-500', 'ring-2', 'ring-cyan-500');
          }
        }, 300);
     }
@@ -76,7 +76,7 @@ export function ScanInput({ onScan, onError, disabled, placeholder, className, o
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onChange={onChange}
-      className={`bg-surface-2 border border-surface-3 text-on-surface rounded text-lg px-4 py-3 w-full focus:outline-none focus:border-neon-cyan transition-colors disabled:opacity-50 ${className || ''}`}
+      className={`bg-surface-2 border border-surface-3 text-on-surface rounded text-lg px-4 py-3 w-full focus:outline-none focus:border-cyan-500 transition-colors disabled:opacity-50 ${className || ''}`}
     />
   );
 }

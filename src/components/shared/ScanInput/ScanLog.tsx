@@ -13,7 +13,7 @@ export function ScanLog({ entries }: { entries: ScanLogEntry[] }) {
   return (
     <div className="flex flex-col gap-2">
       {recent.map((entry, i) => (
-        <div key={i} className={`flex items-center justify-between p-2 rounded text-sm ${entry.success ? 'bg-neon-green/10 text-neon-green' : 'bg-neon-red/10 text-neon-red'}`}>
+        <div key={i} className={`flex items-center justify-between p-2 rounded text-sm ${entry.success ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
           <div className="flex flex-col">
             <span className="font-medium">{entry.item_name}</span>
             <span dir="ltr" className="text-xs opacity-80 font-mono">{entry.barcode}</span>

@@ -1,5 +1,31 @@
 import * as React from "react"
-export const Sheet = ({ children, open, onOpenChange }: any) => <>{open ? children : null}</>;
-export const SheetContent = ({ children, className }: any) => <div className={className}>{children}</div>;
-export const SheetHeader = ({ children }: any) => <div>{children}</div>;
-export const SheetTitle = ({ children }: any) => <h2>{children}</h2>;
+
+interface SheetProps {
+  children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+export const Sheet = ({ children, open }: SheetProps) => <>{open ? children : null}</>;
+
+interface SheetContentProps {
+  children: React.ReactNode
+  className?: string
+  side?: 'top' | 'right' | 'bottom' | 'left'
+}
+
+export const SheetContent = ({ children, className, side }: SheetContentProps) => (
+  <div className={className} data-side={side}>{children}</div>
+);
+
+interface SheetHeaderProps {
+  children: React.ReactNode
+}
+
+export const SheetHeader = ({ children }: SheetHeaderProps) => <div>{children}</div>;
+
+interface SheetTitleProps {
+  children: React.ReactNode
+}
+
+export const SheetTitle = ({ children }: SheetTitleProps) => <h2>{children}</h2>;

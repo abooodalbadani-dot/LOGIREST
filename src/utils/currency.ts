@@ -12,7 +12,9 @@ export function convertToBase(foreignAmount: number, fxRate: number): number {
  * The calling component wraps the output in <span dir="ltr"> in RTL context.
  */
 export function formatCurrency(amount: number, currencyCode: string, locale: 'ar' | 'en'): string {
-  return new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
+  // Use 'ar-u-nu-latn' to force Western Arabic numerals (1, 2, 3...) in Arabic locale
+  const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  return new Intl.NumberFormat(formatterLocale, {
     style: 'currency',
     currency: currencyCode,
     minimumFractionDigits: 2,
@@ -24,5 +26,13 @@ export function formatCurrency(amount: number, currencyCode: string, locale: 'ar
  * Calling component wraps output in <span dir="ltr"> in RTL context.
  */
 export function formatNumber(value: number, locale: 'ar' | 'en'): string {
-  return new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US').format(value);
+  const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  return new Intl.NumberFormat(formatterLocale).format(value);
+}
+/**
+ * Format a time string with standardized numerals.
+ */
+export function formatTime(date: Date, locale: 'ar' | 'en'): string {
+  const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  return date.toLocaleTimeString(formatterLocale);
 }

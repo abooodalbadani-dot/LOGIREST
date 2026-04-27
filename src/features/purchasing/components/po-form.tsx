@@ -1,4 +1,5 @@
 "use client";
+// use no memo
 
 import * as React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -21,8 +22,8 @@ import { useRouter } from "next/navigation";
 
 const lineItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
-  quantity: z.preprocess((val) => Number(val), z.number().min(1, "Quantity must be at least 1")),
-  unitPrice: z.preprocess((val) => Number(val), z.number().min(0, "Price cannot be negative")),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  unitPrice: z.number().min(0, "Price cannot be negative"),
   notes: z.string().optional(),
 });
 
@@ -30,18 +31,20 @@ const formSchema = z.object({
   supplierId: z.string().min(1, "Supplier is required"),
   prId: z.string().optional(),
   supplierCurrency: z.string().min(1, "Currency is required"),
-  exchangeRate: z.preprocess((val) => Number(val), z.number().min(0.0001, "Exchange rate is required")),
+  exchangeRate: z.number().min(0.0001, "Exchange rate is required"),
   expectedDate: z.string().min(1, "Expected Date is required"),
   notes: z.string().optional(),
   items: z.array(lineItemSchema).min(1, "At least one item is required"),
 });
 
+type PurchaseOrderFormValues = z.infer<typeof formSchema>;
+
 export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+  const form = useForm<PurchaseOrderFormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       supplierId: "",
       prId: "",
@@ -86,7 +89,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           <FormField
             control={form.control}
             name="supplierId"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Supplier</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -108,7 +111,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           <FormField
             control={form.control}
             name="prId"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Linked PR (Optional)</FormLabel>
                 <FormControl>
@@ -122,7 +125,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           <FormField
             control={form.control}
             name="expectedDate"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Expected Delivery Date</FormLabel>
                 <FormControl>
@@ -138,7 +141,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           <FormField
             control={form.control}
             name="supplierCurrency"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Supplier Currency</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -160,13 +163,21 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           <FormField
             control={form.control}
             name="exchangeRate"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">FX Rate (to SAR)</FormLabel>
                 <div className="relative">
                   <ArrowRightLeft className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <FormControl>
-                    <Input type="number" step="0.0001" min="0" className="bg-surface-2 pl-9 font-mono" dir="ltr" {...field} />
+                    <Input 
+                      type="number" 
+                      step="0.0001" 
+                      min="0" 
+                      className="bg-surface-2 pl-9 font-mono" 
+                      dir="ltr" 
+                      {...field} 
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                 </div>
                 <FormMessage />
@@ -176,7 +187,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
            <FormField
             control={form.control}
             name="notes"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem className="md:col-span-3 text-left">
                 <FormLabel className="text-muted-foreground">General Notes</FormLabel>
                 <FormControl>
@@ -227,7 +238,14 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" min="1" className="bg-surface-1 font-mono" dir="ltr" {...inputField} />
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          className="bg-surface-1 font-mono" 
+                          dir="ltr" 
+                          {...inputField} 
+                          onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -241,7 +259,15 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Unit Price ({currency})</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" min="0" className="bg-surface-1 font-mono" dir="ltr" {...inputField} />
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          min="0" 
+                          className="bg-surface-1 font-mono" 
+                          dir="ltr" 
+                          {...inputField} 
+                          onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -266,7 +292,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                   type="button" 
                   variant="ghost" 
                   size="icon" 
-                  className="mb-[2px] text-muted-foreground hover:text-neon-error hover:bg-neon-error/10"
+                  className="mb-[2px] text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                 >

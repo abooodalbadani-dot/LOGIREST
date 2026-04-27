@@ -1,7 +1,8 @@
 'use client';
+import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 export const AdjustmentLineSchema = z.object({
   id: z.string(),
@@ -25,7 +26,7 @@ export const AdjustmentLineSchema = z.object({
 export const AdjustmentDetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: BadgeStatusSchema,
   warehouse_id: z.string(),
   reason: z.string(),
   notes: z.string().nullable().optional(),

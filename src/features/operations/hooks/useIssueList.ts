@@ -2,11 +2,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 export const IssueSummarySchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: BadgeStatusSchema,
   destination_department_id: z.string().nullable().optional(),
   warehouse_id: z.string(),
   created_at: z.string(),

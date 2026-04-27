@@ -1,13 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-
 export function Breadcrumb({ items }: { items: { label: string; href?: string }[] }) {
-  const [isRtl, setIsRtl] = useState(true);
-  
-  useEffect(() => {
-    setIsRtl(document.documentElement.dir === 'rtl');
-  }, []);
   
   return (
     <nav className="flex items-center text-sm mb-4">
@@ -27,14 +20,16 @@ export function Breadcrumb({ items }: { items: { label: string; href?: string }[
             )}
             
             {!isLast && (
-              <svg 
-                className={`w-4 h-4 mx-2 text-surface-3 ${isRtl ? 'scale-x-[-1]' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="rtl:rotate-180 inline-block">
+                <svg 
+                  className="w-4 h-4 mx-2 text-surface-3" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
             )}
           </div>
         );

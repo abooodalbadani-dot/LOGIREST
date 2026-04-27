@@ -46,3 +46,31 @@ next-env.d.ts
 
 # output
 dist/
+
+# Antigravity diagnostic logs
+*results.txt
+*errors.txt
+*results.json
+*output*.txt
+*audit.txt
+*report.txt
+check_results.txt
+commit_diffs.txt
+lint_results.txt
+tsc-errors.txt
+lint-results.json
+tsc-output.txt
+lint_output.txt
+analysis_report.txt
+browser_output.txt
+playwright_output.txt
+vitest_output.txt
+audit_report.txt
+check_results.txt
+commit_diffs.txt
+
+# Temp media storage
+.tempmediaStorage/
+
+# Agent Config
+.agent/mcp_config.json

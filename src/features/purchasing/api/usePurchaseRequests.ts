@@ -19,8 +19,8 @@ export function usePurchaseRequests() {
               status: 'PENDING_APPROVAL',
               totalAmount: 14500.00,
               items: [
-                { itemId: 'IT-1', quantity: 100, estimatedUnitCost: 45.50 },
-                { itemId: 'IT-2', quantity: 5, estimatedUnitCost: 1250.00 },
+                { itemId: 'IT-1', itemName: 'Industrial Oven', quantity: 100, estimatedUnitCost: 45.50 },
+                { itemId: 'IT-2', itemName: 'Cooling Unit', quantity: 5, estimatedUnitCost: 1250.00 },
               ],
               notes: 'Monthly staples replenishment.',
               createdAt: '2026-04-18T09:00:00Z', 
@@ -35,7 +35,7 @@ export function usePurchaseRequests() {
               status: 'APPROVED',
               totalAmount: 350.00,
               items: [
-                { itemId: 'IT-3', quantity: 10, estimatedUnitCost: 35.00 },
+                { itemId: 'IT-3', itemName: 'Fresh Tomatoes', quantity: 10, estimatedUnitCost: 35.00 },
               ],
               notes: 'Urgent cleaning supplies.',
               createdAt: '2026-04-17T11:30:00Z', 
@@ -64,8 +64,8 @@ export function usePurchaseRequest(id: string) {
               status: 'PENDING_APPROVAL',
               totalAmount: 14500.00,
               items: [
-                { itemId: 'IT-1', quantity: 100, estimatedUnitCost: 45.50 },
-                { itemId: 'IT-2', quantity: 5, estimatedUnitCost: 1250.00 },
+                { itemId: 'IT-1', itemName: 'Industrial Oven', quantity: 100, estimatedUnitCost: 45.50 },
+                { itemId: 'IT-2', itemName: 'Cooling Unit', quantity: 5, estimatedUnitCost: 1250.00 },
               ],
               notes: 'Monthly staples replenishment.',
               createdAt: '2026-04-18T09:00:00Z', 
@@ -80,7 +80,7 @@ export function usePurchaseRequest(id: string) {
               status: 'APPROVED',
               totalAmount: 350.00,
               items: [
-                { itemId: 'IT-3', quantity: 10, estimatedUnitCost: 35.00 },
+                { itemId: 'IT-3', itemName: 'Fresh Tomatoes', quantity: 10, estimatedUnitCost: 35.00 },
               ],
               notes: 'Urgent cleaning supplies.',
               createdAt: '2026-04-17T11:30:00Z', 

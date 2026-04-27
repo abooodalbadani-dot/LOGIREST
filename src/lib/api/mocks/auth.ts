@@ -12,4 +12,10 @@ export const authMocks: Record<string, unknown> = {
     },
     token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoidXNlci0xIiwibmFtZSI6Itij2K3ZhdivINin2YTZhdmG2LXZiNixIiwiZW1haWwiOiJhZG1pbkBkZW1vLmNvbSIsInJvbGUiOiJBRE1JTiIsInNjb3BlcyI6W3siYnJhbmNoX2lkIjoiYnItMSIsIndhcmVob3VzZV9pZCI6bnVsbCwiZGVwYXJ0bWVudF9pZCI6bnVsbH1dLCJsb2NhbGUiOiJhciJ9LCJleHAiOjE3NzY5MjY0MTV9.signature',
   },
+  'POST /auth/forgot-password': {
+    message: 'Reset link sent successfully',
+  },
+  'POST /auth/reset-password': {
+    message: 'Password reset successfully',
+  },
 };

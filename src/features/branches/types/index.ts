@@ -15,4 +15,5 @@ export interface CreateBranchDTO {
   status: 'ACTIVE' | 'INACTIVE';
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateBranchDTO extends Partial<CreateBranchDTO> {}

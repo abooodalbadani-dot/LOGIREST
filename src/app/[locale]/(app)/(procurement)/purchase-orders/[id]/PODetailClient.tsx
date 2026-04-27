@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { usePO } from '@/features/purchasing/hooks/usePO';
 import { useCreatePO } from '@/features/purchasing/hooks/useCreatePO';
 import { usePostPO } from '@/features/purchasing/hooks/usePostPO';
@@ -11,12 +14,25 @@ import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
+import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Can } from '@/components/auth/Can';
 import { Badge } from '@/components/ui/badge';
-import { Save, Send } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Save, Send, ClipboardList, Clock, ArrowRight, Wallet, TrendingUp } from 'lucide-react';
 
-export function PODetailClient({ id }: { id: string | null }) {
+const poHeaderSchema = z.object({
+  supplier_id: z.string().min(1, 'Required'),
+  currency_id: z.string().min(1, 'Required'),
+  expected_delivery_date: z.string().optional(),
+});
+
+type POHeaderFormValues = z.infer<typeof poHeaderSchema>;
+
+export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -32,10 +48,26 @@ export function PODetailClient({ id }: { id: string | null }) {
 
   const [postConfirmOpen, setPostConfirmOpen] = useState(false);
   
-  // Local state for new PO
-  const [supplierId, setSupplierId] = useState(po?.supplier_id || '');
-  const [currencyId, setCurrencyId] = useState(po?.currency_id || 'USD');
-  const [deliveryDate, setDeliveryDate] = useState(po?.expected_delivery_date || '');
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<POHeaderFormValues>({
+    resolver: zodResolver(poHeaderSchema),
+    defaultValues: {
+      supplier_id: '',
+      currency_id: 'USD',
+      expected_delivery_date: '',
+    }
+  });
+
+  const currencyId = watch('currency_id');
+
+  useEffect(() => {
+    if (po) {
+      reset({
+        supplier_id: po.supplier_id || '',
+        currency_id: po.currency_id || 'USD',
+        expected_delivery_date: po.expected_delivery_date || '',
+      });
+    }
+  }, [po, reset]);
 
   // Live FX conversion logic
   const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
@@ -47,167 +79,197 @@ export function PODetailClient({ id }: { id: string | null }) {
 
   // Calculate local totals
   const totalForeign = useMemo(() => {
-    if (!po?.lines) return 0;
-    return po.lines.reduce((acc, line) => acc + (line.qty * line.unit_cost_foreign), 0);
+    const lines = po?.lines;
+    if (!lines) return 0;
+    return lines.reduce((acc, line) => acc + (line.qty * line.unit_cost_foreign), 0);
   }, [po?.lines]);
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = handleSubmit(async (values) => {
     try {
       await createPOMutation.mutateAsync({
-        supplier_id: supplierId || 'sup-1',
+        ...values,
         target_warehouse_id: 'wh-1',
-        currency_id: currencyId || 'USD',
-        expected_delivery_date: deliveryDate,
         linked_pr_id: prefilledPrId || undefined,
-        lines: [] // In a real app, this would be editable lines state
+        lines: [] 
       });
       router.push('/purchase-orders');
     } catch (e) {
       console.error(e);
     }
-  };
+  });
 
   const handlePost = async () => {
     if (!id) return;
     try {
       await postPOMutation.mutateAsync(id);
       setPostConfirmOpen(false);
-      // Success path leads to GRN pre-filled with this PO
       router.push(`/goods-received/new?po_id=${id}`);
     } catch (e) {
       console.error(e);
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl animate-pulse">
+      <div className="relative">
+        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-primary tracking-tighter">PO</div>
+      </div>
+      <p className="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 animate-pulse">Synchronizing Order Context...</p>
+    </div>
+  );
+
+  const mockTimeline = po ? [
+    { status: po.status.toLowerCase() as Status, at: new Date().toISOString(), by: 'System User' }
+  ] : [];
 
   return (
-    <div className="flex flex-col gap-6 relative">
-      <div className="flex justify-between items-center bg-card p-4 rounded-lg border">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            {!isNew && (
-              <span dir="ltr" className="font-mono text-primary">
-                {po?.document_number}
-              </span>
-            )}
-            {!isNew && (
-              <Badge variant={
-                po?.status === 'POSTED' ? 'default' : 
-                'secondary'
-              }>
-                {tCommon(`status.${po?.status.toLowerCase()}` as any) || po?.status}
-              </Badge>
-            )}
-            {isNew && <span>{t('create_new')}</span>}
-          </h2>
-        </div>
-        
-        <div className="flex items-center gap-2 relative z-20">
-          {(isNew || po?.status === 'DRAFT') && (
-            <Button onClick={handleSaveDraft} disabled={createPOMutation.isPending} variant="outline">
-              <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {t('save_draft') || 'Save Draft'}
-            </Button>
-          )}
-          {!isNew && !isReadOnly && (
-            <Button onClick={() => setPostConfirmOpen(true)}>
-              <Send className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {t('post_po') || 'Post'}
-            </Button>
-          )}
-        </div>
-      </div>
+    <div className="flex flex-col gap-10 relative pb-20">
+      <PageHeader
+        title={isNew ? t('create_new') : `#${po?.document_number}`}
+        description={isNew ? t('commitment_intent') : t('specification')}
+        status={po?.status as BadgeStatus}
+        showStatus={!isNew}
+        actions={
+          <div className="flex items-center gap-3">
+            <Can perform={isNew ? 'create' : 'edit'} on="po">
+              {(isNew || po?.status === 'DRAFT') && (
+                <Button 
+                  onClick={handleSaveDraft} 
+                  disabled={createPOMutation.isPending} 
+                  variant="outline"
+                  className="h-11 px-6 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
+                >
+                  <Save className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0 opacity-60" />
+                  {t('save_draft')}
+                </Button>
+              )}
+            </Can>
+            
+            <Can perform="post" on="po">
+              {!isNew && !isReadOnly && (
+                <Button 
+                  onClick={() => setPostConfirmOpen(true)}
+                  className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all rounded-2xl"
+                >
+                  <Send className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+                  {t('post_po')}
+                </Button>
+              )}
+            </Can>
+          </div>
+        }
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Supplier Selector */}
-        <div className="bg-card p-4 rounded-lg border flex flex-col gap-2">
-          <label className="text-sm text-muted-foreground">{t('supplier') || 'Supplier'}</label>
+        <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1 transition-all hover:bg-surface-container-medium group relative overflow-hidden">
+          <Label htmlFor="supplier-select" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-cyan-500/60 transition-colors">
+            {tCommon('supplier')}
+          </Label>
           {isReadOnly ? (
-             <p className="font-medium">{suppliers?.find(s => s.id === po?.supplier_id)?.name_en || po?.supplier_id}</p>
+             <p className="font-bold text-lg tracking-tight mt-2">{suppliers?.find(s => s.id === po?.supplier_id)?.name_en || po?.supplier_id}</p>
           ) : (
-            <select 
-              value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
-              className="p-2 bg-surface-2 border border-surface-3 rounded focus:ring-1 focus:ring-primary outline-none"
-            >
-              <option value="">Select Supplier</option>
-              {suppliers?.map(s => <option key={s.id} value={s.id}>{s.name_en}</option>)}
-            </select>
+            <>
+              <select 
+                id="supplier-select"
+                {...register('supplier_id')}
+                className="mt-2 p-3 bg-surface-container-highest rounded-2xl focus:ring-1 focus:ring-primary/50 outline-none transition-all text-sm font-medium"
+              >
+                <option value="">{tCommon('select_supplier')}</option>
+                {suppliers?.map(s => <option key={s.id} value={s.id}>{s.name_en}</option>)}
+              </select>
+              {errors.supplier_id && <span className="text-[10px] text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
+            </>
           )}
         </div>
 
         {/* Currency Selector */}
-        <div className="bg-card p-4 rounded-lg border flex flex-col gap-2">
-           <label className="text-sm text-muted-foreground">Currency</label>
+        <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1 transition-all hover:bg-surface-container-medium group relative overflow-hidden">
+           <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+            <Wallet className="w-12 h-12" />
+          </div>
+           <Label htmlFor="currency-select" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-cyan-500/60 transition-colors">
+            {tCommon('order_currency')}
+           </Label>
            {isReadOnly ? (
-             <p className="font-medium">{po?.currency_id}</p>
+             <p className="font-mono font-bold text-lg tracking-tight text-cyan-500 mt-2">{po?.currency_id}</p>
            ) : (
-            <select 
-              value={currencyId}
-              onChange={(e) => setCurrencyId(e.target.value)}
-              className="p-2 bg-surface-2 border border-surface-3 rounded focus:ring-1 focus:ring-primary outline-none"
-            >
-              {currencies?.map(c => <option key={c.id} value={c.code}>{c.code} - {c.name}</option>)}
-            </select>
+            <>
+              <select 
+                id="currency-select"
+                {...register('currency_id')}
+                className="mt-2 p-3 bg-surface-container-highest rounded-2xl focus:ring-1 focus:ring-primary/50 outline-none transition-all text-sm font-medium"
+              >
+                {currencies?.map(c => <option key={c.id} value={c.code}>{c.code} - {c.name}</option>)}
+              </select>
+              {errors.currency_id && <span className="text-[10px] text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
+            </>
            )}
         </div>
 
         {/* Expected Delivery Date */}
-        <div className="bg-card p-4 rounded-lg border flex flex-col gap-2">
-          <label className="text-sm text-muted-foreground">{t('expected_delivery_date') || 'Expected Delivery'}</label>
+        <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1 transition-all hover:bg-surface-container-medium group relative overflow-hidden">
+          <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+            <Clock className="w-12 h-12" />
+          </div>
+           <Label htmlFor="delivery-date-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-cyan-500/60 transition-colors">
+            {t('expected_delivery_date')}
+           </Label>
           {isReadOnly ? (
-             <p className="font-medium">{po?.expected_delivery_date || '-'}</p>
+             <p className="font-mono font-bold text-lg tracking-tight text-foreground/80 mt-2">{po?.expected_delivery_date || '-'}</p>
           ) : (
             <input 
+              id="delivery-date-input"
               type="date"
-              value={deliveryDate}
-              onChange={(e) => setDeliveryDate(e.target.value)}
-              className="p-2 bg-surface-2 border border-surface-3 rounded focus:ring-1 focus:ring-primary outline-none"
+              {...register('expected_delivery_date')}
+              className="mt-2 p-3 bg-surface-container-highest rounded-2xl focus:ring-1 focus:ring-primary/50 outline-none transition-all text-sm font-medium"
             />
           )}
         </div>
 
         {/* Linked PR */}
-        <div className="bg-card p-4 rounded-lg border flex flex-col gap-2">
-          <label className="text-sm text-muted-foreground">Linked PR</label>
-          {po?.linked_pr_number ? (
-            <Badge variant="outline" className="w-fit">{po.linked_pr_number}</Badge>
-          ) : prefilledPrId ? (
-            <Badge variant="outline" className="w-fit border-dashed">Pending Linking</Badge>
-          ) : (
-            <p className="font-medium text-muted-foreground">-</p>
-          )}
+        <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1 transition-all hover:bg-surface-container-medium group relative overflow-hidden text-end">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-cyan-500/60 transition-colors">{t('origin_context')}</p>
+          <div className="mt-2">
+            {po?.linked_pr_number ? (
+              <Badge variant="outline" className="h-8 px-4 bg-cyan-500/10 text-cyan-500 border-cyan-500/30 text-[10px] font-black uppercase tracking-tighter">PR {po.linked_pr_number}</Badge>
+            ) : prefilledPrId ? (
+              <Badge variant="outline" className="h-8 px-4 border-dashed border-cyan-500/50 text-cyan-500/70 text-[10px] font-black uppercase">{t('pending_linking')}</Badge>
+            ) : (
+              <p className="font-bold text-lg text-muted-foreground/30 tracking-tighter italic uppercase">{t('independent_order')}</p>
+            )}
+          </div>
         </div>
       </div>
 
       <DocumentReadOnlyOverlay isPosted={isReadOnly}>
         <DocumentLineItemTable
-          lines={(po?.lines as any) || []}
-          locale="en"
+          lines={po?.lines || []}
+          locale={locale}
           isReadOnly={isReadOnly}
           extraColumns={[
             {
-              header: "Ordered Qty",
-              cell: (line: any) => isReadOnly ? (
-                 <span dir="ltr" className="font-mono">{line.qty} {line.uom_id}</span>
+              header: t('ordered_qty'),
+              cell: (line) => isReadOnly ? (
+                 <span dir="ltr" className="font-mono font-bold text-foreground/80">{line.qty} {line.uom_id}</span>
               ) : (
-                <input type="number" defaultValue={line.qty} className="w-20 px-2 py-1 bg-surface-2 border border-surface-3 rounded" dir="ltr" />
+                <input type="number" defaultValue={line.qty} aria-label={t('ordered_qty')} className="w-24 px-3 py-2 bg-surface-container-highest rounded-2xl font-mono text-sm focus:ring-1 focus:ring-primary outline-none transition-all" dir="ltr" />
               )
             },
             {
-              header: `Unit Price (${currencyId})`,
-              cell: (line: any) => isReadOnly ? (
-                 <span dir="ltr" className="font-mono">{line.unit_cost_foreign}</span>
+              header: `${t('unit_price')} (${currencyId})`,
+              cell: (line) => isReadOnly ? (
+                 <span dir="ltr" className="font-mono font-bold text-cyan-500">{line.unit_cost_foreign as number}</span>
               ) : (
-                <input type="number" defaultValue={line.unit_cost_foreign} className="w-24 px-2 py-1 bg-surface-2 border border-surface-3 rounded" dir="ltr" />
+                <input type="number" defaultValue={line.unit_cost_foreign as number} aria-label={t('unit_price')} className="w-28 px-3 py-2 bg-surface-container-highest rounded-2xl font-mono text-sm focus:ring-1 focus:ring-primary outline-none transition-all" dir="ltr" />
               )
             },
             {
-              header: `Total (${currencyId})`,
-              cell: (line: any) => (
-                <span dir="ltr" className="font-mono font-medium">
-                  {((line.qty || 0) * (line.unit_cost_foreign || 0)).toLocaleString()}
+              header: t('subtotal'),
+              cell: (line) => (
+                <span dir="ltr" className="font-mono font-black text-foreground">
+                  {((line.qty || 0) * (line.unit_cost_foreign as number || 0)).toLocaleString()}
                 </span>
               )
             }
@@ -215,26 +277,49 @@ export function PODetailClient({ id }: { id: string | null }) {
         />
       </DocumentReadOnlyOverlay>
 
-      {/* Live FX Output */}
-      <div className="flex justify-end pr-4">
-        <div className="bg-card p-4 rounded-lg border text-right">
-          <p className="text-sm text-muted-foreground mb-1">Total ({currencyId})</p>
-          <p dir="ltr" className="text-xl font-mono font-semibold mb-2">{(totalForeign || po?.total || 0).toLocaleString()}</p>
+      {/* Financial Summary */}
+      <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8">
+        <div className="flex flex-col items-end gap-1 px-6 border-e border-white/5">
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">{t('exchange_index')}</p>
+           <div className="flex items-center gap-2 text-cyan-500">
+             <TrendingUp className="w-3 h-3" />
+             <p className="text-xs font-mono font-bold">1 {currencyId} = {currentFxRate} {baseCurrency}</p>
+           </div>
+        </div>
+
+        <div className="bg-surface-container-high p-8 rounded-2xl shadow-2xl relative overflow-hidden min-w-[320px]">
+          <div className="absolute top-0 end-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
           
-          <div className="h-px bg-border w-full my-2" />
-          
-          <p className="text-xs text-muted-foreground">Live FX Rate: 1 {currencyId} = {currentFxRate} {baseCurrency}</p>
-          <p className="text-sm font-medium mt-1">الإجمالي بالعملة المحلية: <span dir="ltr" className="font-mono">{((totalForeign || po?.total || 0) * currentFxRate).toLocaleString()} {baseCurrency}</span></p>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center gap-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('order_total')} ({currencyId})</p>
+              <p dir="ltr" className="text-3xl font-display font-black tracking-tighter text-foreground">{(totalForeign || po?.total || 0).toLocaleString()}</p>
+            </div>
+            
+            <div className="h-px bg-white/5 w-full" />
+            
+            <div className="flex justify-between items-center gap-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/60">{t('local_equiv')} ({baseCurrency})</p>
+              <p dir="ltr" className="text-xl font-mono font-black text-cyan-500">{( (totalForeign || po?.total || 0) * currentFxRate ).toLocaleString()}</p>
+            </div>
+          </div>
         </div>
       </div>
+
+      {mockTimeline.length > 0 && (
+        <div className="bg-surface-container-low p-8 rounded-2xl shadow-lg transition-all hover:bg-surface-container-medium/50">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mb-10">{t('ledger_history')}</h3>
+          <StatusTimeline entries={mockTimeline} />
+        </div>
+      )}
 
       <PostConfirmDialog 
         open={postConfirmOpen}
         onOpenChange={setPostConfirmOpen}
         onConfirm={handlePost}
-        title={t('post_confirm_title') || 'Post Purchase Order?'}
-        description={t('post_confirm_desc') || 'Are you sure you want to post this PO?'}
-        warningText="This action cannot be undone and will transition the document to POSTED state."
+        title={t('post_confirm_title')}
+        description={t('post_confirm_desc')}
+        warningText={t('warning_irreversible')}
       />
     </div>
   );

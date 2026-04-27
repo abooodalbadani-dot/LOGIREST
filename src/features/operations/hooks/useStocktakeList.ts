@@ -3,12 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 const StocktakeSummarySchema = z.object({
   id: z.string(),
   session_number: z.string(),
   warehouse_id: z.string(),
-  status: z.enum(['OPEN', 'COUNTING', 'REVIEW', 'POSTED', 'CANCELLED']),
+  status: BadgeStatusSchema,
   snapshot_at: z.string(),
   started_by: z.string(),
   posted_at: z.string().nullable(),

@@ -34,7 +34,7 @@ export function SupplierForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema),
     defaultValues: {
       code: "",
       nameEn: "",
@@ -68,7 +68,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="code"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Supplier Code</FormLabel>
                 <FormControl>
@@ -82,7 +82,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="status"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Status</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -104,7 +104,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="nameEn"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem className="text-left">
                 <FormLabel className="text-muted-foreground">Name (English)</FormLabel>
                 <FormControl>
@@ -118,7 +118,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="nameAr"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem className="text-right" dir="rtl">
                 <FormLabel className="text-muted-foreground">Name (Arabic)</FormLabel>
                 <FormControl>
@@ -134,7 +134,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="contactPerson"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Primary Contact Person</FormLabel>
                 <FormControl>
@@ -148,7 +148,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="phone"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Phone Number</FormLabel>
                 <FormControl>
@@ -162,7 +162,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="email"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Email Address</FormLabel>
                 <FormControl>
@@ -176,7 +176,7 @@ export function SupplierForm() {
           <FormField
             control={form.control}
             name="taxNumber"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">VAT / Tax Number</FormLabel>
                 <FormControl>

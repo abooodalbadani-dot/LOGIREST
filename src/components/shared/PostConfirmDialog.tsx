@@ -27,11 +27,13 @@ export function PostConfirmDialog({
 }: PostConfirmDialogProps) {
   const t = useTranslations('common');
   const [confirmText, setConfirmText] = useState('');
-  const [isRtl, setIsRtl] = useState(true);
+  const [isRtl, setIsRtl] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.dir === 'rtl';
+    }
+    return true;
+  });
 
-  useEffect(() => {
-    setIsRtl(document.documentElement.dir === 'rtl');
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -66,7 +68,7 @@ export function PostConfirmDialog({
         <h2 className="text-xl font-bold text-on-surface mb-2">{title}</h2>
         <p className="text-sm text-on-surface-muted mb-4">{description}</p>
         
-        <div className="bg-neon-amber/10 border border-neon-amber/30 rounded p-3 text-neon-amber text-sm mb-4">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded p-3 text-amber-500 text-sm mb-4">
           {warningText}
           <div className="mt-1 font-medium">{t('posting_irreversible')}</div>
         </div>
@@ -83,7 +85,7 @@ export function PostConfirmDialog({
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               disabled={isLoading}
-              className="w-full bg-surface-2 border border-surface-3 rounded px-3 py-2 text-on-surface outline-none focus:border-neon-cyan"
+              className="w-full bg-surface-2 border border-surface-3 rounded px-3 py-2 text-on-surface outline-none focus:border-cyan-500"
             />
           </div>
         )}
@@ -100,7 +102,7 @@ export function PostConfirmDialog({
           <button 
             onClick={onConfirm}
             disabled={isConfirmDisabled}
-            className="px-4 py-2 bg-neon-cyan text-surface-0 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:bg-neon-cyan/80"
+            className="px-4 py-2 bg-cyan-500 text-surface-0 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:bg-cyan-500/80"
           >
             {isLoading && (
               <svg className="animate-spin h-4 w-4 text-surface-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -9,7 +9,6 @@ import { useTranslations } from "next-intl"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,15 +30,10 @@ const formSchema = z.object({
 export function BranchForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  let t: any;
-  try {
-    t = useTranslations("common")
-  } catch(e) {
-    t = (k: string) => k;
-  }
+  const t = useTranslations("common");
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema),
     defaultValues: {
       code: "",
       nameEn: "",
@@ -85,7 +79,7 @@ export function BranchForm() {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t("status") || "Status"}</FormLabel>
+                <FormLabel className="text-muted-foreground">{t("status_label")}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-surface-2">

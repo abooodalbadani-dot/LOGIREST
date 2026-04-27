@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 export const IssueLineLotAllocationSchema = z.object({
   lot_id: z.string(),
@@ -33,7 +34,7 @@ export const IssueLineItemSchema = z.object({
 export const StockIssueDetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: BadgeStatusSchema,
   type: z.string().optional(),
   // Support both old and new field names
   destination_dept_id: z.string().nullable().optional(),

@@ -45,10 +45,10 @@ export function ExpiredOverrideModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex flex-col items-center text-center gap-3 mb-2">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neon-error/20">
-              <AlertTriangle className="h-7 w-7 text-neon-error" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/20">
+              <AlertTriangle className="h-7 w-7 text-red-500" />
             </div>
-            <DialogTitle className="text-xl text-neon-error">منتج منتهي الصلاحية</DialogTitle>
+            <DialogTitle className="text-xl text-red-500">منتج منتهي الصلاحية</DialogTitle>
           </div>
         </DialogHeader>
 
@@ -56,22 +56,22 @@ export function ExpiredOverrideModal({
           <p className="text-text-secondary">
             تم مسح دُفعة منتهية الصلاحية:
           </p>
-          <div className="bg-neon-error/10 border border-neon-error/30 rounded-lg p-3 space-y-1 text-xs" dir="ltr">
-            <p><span className="text-text-tertiary">Lot:</span> <span className="font-mono font-bold text-neon-error">{lotNumber}</span></p>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 space-y-1 text-xs" dir="ltr">
+            <p><span className="text-text-tertiary">Lot:</span> <span className="font-mono font-bold text-red-500">{lotNumber}</span></p>
             <p><span className="text-text-tertiary">Item:</span> <span className="font-medium">{itemId}</span></p>
             <p><span className="text-text-tertiary">Expired:</span> <span className="font-bold">{expiryDate}</span></p>
           </div>
 
           {!CAN_OVERRIDE_EXPIRED ? (
             <div className="flex flex-col items-center gap-3 py-4 text-text-secondary">
-              <ShieldX className="w-10 h-10 text-neon-error opacity-60" />
-              <p className="font-medium text-neon-error">لا تملك صلاحية تجاوز الصلاحية</p>
+              <ShieldX className="w-10 h-10 text-red-500 opacity-60" />
+              <p className="font-medium text-red-500">لا تملك صلاحية تجاوز الصلاحية</p>
               <p className="text-xs text-text-tertiary">يُرجى التواصل مع مدير المستودع لإتمام هذه العملية.</p>
             </div>
           ) : (
             <div className="space-y-2 text-right">
               <Label htmlFor="override-reason" className="text-text-primary font-medium">
-                سبب التجاوز <span className="text-neon-error">*</span>
+                سبب التجاوز <span className="text-red-500">*</span>
                 <span className="text-text-tertiary font-normal text-xs ms-2">(10 أحرف على الأقل)</span>
               </Label>
               <Input
@@ -79,10 +79,10 @@ export function ExpiredOverrideModal({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="الرجاء تذكر السبب التفصيلي لقبول هذا المنتج..."
-                className={reason.length > 0 && !isValid ? "border-neon-error" : ""}
+                className={reason.length > 0 && !isValid ? "border-red-500" : ""}
               />
               {reason.length > 0 && !isValid && (
-                <p className="text-xs text-neon-error">
+                <p className="text-xs text-red-500">
                   {10 - reasonTrimmed.length} حرف إضافي مطلوب
                 </p>
               )}
@@ -96,7 +96,7 @@ export function ExpiredOverrideModal({
           </Button>
           {CAN_OVERRIDE_EXPIRED && (
             <Button
-              className="bg-neon-error hover:bg-neon-error/90 text-black font-bold"
+              className="bg-red-500 hover:bg-red-500/90 text-black font-bold"
               disabled={!isValid}
               onClick={handleConfirm}
             >

@@ -2,20 +2,18 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Upload, CheckCircle2, AlertCircle, Loader2, ChevronRight, ChevronLeft, Download } from 'lucide-react';
+import { Upload, CheckCircle2, Loader2, ChevronRight, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 
 type Step = 'upload' | 'validate' | 'review' | 'commit';
 
-export function ImportWizard() {
+export function ImportWizard({ locale }: { locale: string }) {
   const t = useTranslations('masterData.import');
   const [step, setStep] = useState<Step>('upload');
   const [isValidating, setIsValidating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [recordCount, setRecordCount] = useState(0);
-  const [errorCount, setErrorCount] = useState(0);
 
   const steps: { key: Step; label: string }[] = [
     { key: 'upload', label: t('step_upload') },
@@ -29,7 +27,6 @@ export function ImportWizard() {
     // Simulate validation
     setTimeout(() => {
       setRecordCount(150);
-      setErrorCount(0);
       setIsValidating(false);
       setStep('validate');
     }, 2000);
@@ -130,7 +127,7 @@ export function ImportWizard() {
               </div>
             </div>
             <p className="text-sm text-yellow-400/80 italic">
-              Note: This action will insert new records or update existing ones based on the 'code' handle.
+              Note: This action will insert new records or update existing ones based on the &apos;code&apos; handle.
             </p>
             <div className="flex justify-end gap-3 pt-4 border-t border-surface-3">
               <Button variant="ghost" onClick={() => setStep('validate')}>Back</Button>
@@ -150,7 +147,7 @@ export function ImportWizard() {
               <h3 className="text-2xl font-bold">{t('import_success', { count: recordCount })}</h3>
               <p className="text-muted-foreground">The master data has been updated and is now available across the system.</p>
             </div>
-            <Button onClick={() => window.location.href = './items'}>
+            <Button onClick={() => window.location.href = `/${locale}/master-data/items`}>
               View Items <ChevronRight className="w-4 h-4 ms-2" />
             </Button>
           </div>

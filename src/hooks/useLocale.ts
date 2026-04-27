@@ -2,7 +2,7 @@ import { useLocale as useNextIntlLocale, useTranslations } from 'next-intl';
 
 export function useLocale() {
   const locale = useNextIntlLocale();
-  const t = useTranslations('Common');
+  const t = useTranslations('common');
   
   return {
     locale,

@@ -23,8 +23,16 @@ Priority Order:
 import sys
 import subprocess
 import argparse
+import io
 from pathlib import Path
 from typing import List, Tuple, Optional
+
+# Reconfigure stdout to use UTF-8 if possible to avoid encoding errors on Windows
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+else:
+    # Fallback for older python or non-reconfigurable streams
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 # ANSI colors for terminal output
 class Colors:
@@ -43,16 +51,16 @@ def print_header(text: str):
     print(f"{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.ENDC}\n")
 
 def print_step(text: str):
-    print(f"{Colors.BOLD}{Colors.BLUE}🔄 {text}{Colors.ENDC}")
+    print(f"{Colors.BOLD}{Colors.BLUE}[*] {text}{Colors.ENDC}")
 
 def print_success(text: str):
-    print(f"{Colors.GREEN}✅ {text}{Colors.ENDC}")
+    print(f"{Colors.GREEN}[OK] {text}{Colors.ENDC}")
 
 def print_warning(text: str):
-    print(f"{Colors.YELLOW}⚠️  {text}{Colors.ENDC}")
+    print(f"{Colors.YELLOW}[!] {text}{Colors.ENDC}")
 
 def print_error(text: str):
-    print(f"{Colors.RED}❌ {text}{Colors.ENDC}")
+    print(f"{Colors.RED}[ERR] {text}{Colors.ENDC}")
 
 # Define priority-ordered checks
 CORE_CHECKS = [
@@ -127,7 +135,7 @@ def run_script(name: str, script_path: Path, project_path: str, url: Optional[st
 
 def print_summary(results: List[dict]):
     """Print final summary report"""
-    print_header("📊 CHECKLIST SUMMARY")
+    print_header("CHECKLIST SUMMARY")
     
     passed_count = sum(1 for r in results if r["passed"] and not r.get("skipped"))
     failed_count = sum(1 for r in results if not r["passed"] and not r.get("skipped"))
@@ -142,11 +150,11 @@ def print_summary(results: List[dict]):
     # Detailed results
     for r in results:
         if r.get("skipped"):
-            status = f"{Colors.YELLOW}⏭️ {Colors.ENDC}"
+            status = f"{Colors.YELLOW}[SKIP]{Colors.ENDC}"
         elif r["passed"]:
-            status = f"{Colors.GREEN}✅{Colors.ENDC}"
+            status = f"{Colors.GREEN}[OK]{Colors.ENDC}"
         else:
-            status = f"{Colors.RED}❌{Colors.ENDC}"
+            status = f"{Colors.RED}[ERR]{Colors.ENDC}"
         
         print(f"{status} {r['name']}")
     
@@ -156,7 +164,7 @@ def print_summary(results: List[dict]):
         print_error(f"{failed_count} check(s) FAILED - Please fix before proceeding")
         return False
     else:
-        print_success("All checks PASSED ✨")
+        print_success("All checks PASSED")
         return True
 
 def main():
@@ -181,14 +189,14 @@ Examples:
         print_error(f"Project path does not exist: {project_path}")
         sys.exit(1)
     
-    print_header("🚀 ANTIGRAVITY KIT - MASTER CHECKLIST")
+    print_header("ANTIGRAVITY KIT - MASTER CHECKLIST")
     print(f"Project: {project_path}")
     print(f"URL: {args.url if args.url else 'Not provided (performance checks skipped)'}")
     
     results = []
     
     # Run core checks
-    print_header("📋 CORE CHECKS")
+    print_header("CORE CHECKS")
     for name, script_path, required in CORE_CHECKS:
         script = project_path / script_path
         result = run_script(name, script, str(project_path))
@@ -202,7 +210,7 @@ Examples:
     
     # Run performance checks if URL provided
     if args.url and not args.skip_performance:
-        print_header("⚡ PERFORMANCE CHECKS")
+        print_header("PERFORMANCE CHECKS")
         for name, script_path, required in PERFORMANCE_CHECKS:
             script = project_path / script_path
             result = run_script(name, script, str(project_path), args.url)

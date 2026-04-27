@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "dist/**",
     "coverage/**",
     "**/*.min.js",
+    "debug-*.js",
+    "check-*.js",
   ]),
 ]);
 

@@ -4,10 +4,12 @@ import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+
 const PRSummarySchema = z.object({ 
   id: z.string(), 
   document_number: z.string(), 
-  status: z.string(), 
+  status: BadgeStatusSchema, 
   department_id: z.string(), 
   expected_date: z.string(), 
   created_at: z.string(), 

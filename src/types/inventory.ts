@@ -36,7 +36,7 @@ export const InventoryMovementSchema = z.object({
   posted_at: z.string(),
   document_id: z.string(),
   document_number: z.string(),
-  document_type: z.enum(['GRN', 'ISSUE', 'TRANSFER']),
+  document_type: z.enum(['GRN', 'ISSUE', 'TRANSFER', 'ADJUSTMENT']),
   item_id: z.string(),
   item_code: z.string(),
   item_name_ar: z.string(),
@@ -47,3 +47,10 @@ export const InventoryMovementSchema = z.object({
 });
 
 export type InventoryMovement = z.infer<typeof InventoryMovementSchema>;
+export const DashboardKPISchema = z.object({
+  totalStockValue: z.number(),
+  baseCurrency: z.string(),
+  pendingPRs: z.number(),
+  activeStocktakes: z.number(),
+  lowStockItems: z.number(),
+});

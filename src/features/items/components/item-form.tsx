@@ -24,17 +24,19 @@ const formSchema = z.object({
   nameAr: z.string().min(2, "Arabic name is required."),
   category: z.enum(['FOOD', 'EQUIPMENT', 'PACKAGING', 'SUPPLIES']),
   uom: z.enum(['EA', 'KG', 'L', 'BOX', 'PACK']),
-  minStockLevel: z.preprocess((val) => Number(val), z.number().min(0, "Cannot be negative")),
-  costPrice: z.preprocess((val) => Number(val), z.number().min(0, "Cannot be negative")),
+  minStockLevel: z.number().min(0, "Cannot be negative"),
+  costPrice: z.number().min(0, "Cannot be negative"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
-})
+});
+
+type ItemFormValues = z.infer<typeof formSchema>;
 
 export function ItemForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+  const form = useForm<ItemFormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       sku: "",
       nameEn: "",
@@ -65,10 +67,10 @@ export function ItemForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-5xl bg-surface-1 border border-border p-8 rounded-xl shadow-lg relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FormField
+          <FormField<ItemFormValues, "sku">
             control={form.control}
             name="sku"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">SKU Number</FormLabel>
                 <FormControl>
@@ -79,10 +81,10 @@ export function ItemForm() {
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "category">
             control={form.control}
             name="category"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Category</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -103,10 +105,10 @@ export function ItemForm() {
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "uom">
             control={form.control}
             name="uom"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Unit of Measure (UoM)</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -128,10 +130,10 @@ export function ItemForm() {
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "nameEn">
             control={form.control}
             name="nameEn"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem className="lg:col-span-2 text-left">
                 <FormLabel className="text-muted-foreground">Name (English)</FormLabel>
                 <FormControl>
@@ -142,10 +144,10 @@ export function ItemForm() {
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "nameAr">
             control={form.control}
             name="nameAr"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem className="lg:col-span-2 text-right" dir="rtl">
                 <FormLabel className="text-muted-foreground">Name (Arabic)</FormLabel>
                 <FormControl>
@@ -156,38 +158,51 @@ export function ItemForm() {
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "costPrice">
             control={form.control}
             name="costPrice"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Base Unit Cost (SAR)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" className="bg-surface-2 font-mono" {...field} />
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    className="bg-surface-2 font-mono" 
+                    dir="ltr" 
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "minStockLevel">
             control={form.control}
             name="minStockLevel"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Min Stock Level Target</FormLabel>
                 <FormControl>
-                  <Input type="number" className="bg-surface-2 font-mono" {...field} />
+                  <Input 
+                    type="number" 
+                    className="bg-surface-2 font-mono" 
+                    dir="ltr" 
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
+          <FormField<ItemFormValues, "status">
             control={form.control}
             name="status"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Status</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>

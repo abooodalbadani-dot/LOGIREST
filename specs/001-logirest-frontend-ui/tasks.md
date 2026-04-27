@@ -1340,7 +1340,7 @@
   ```
   **Acceptance**: `npm run test:unit` — all 6 unit tests pass.
 
-- [ ] T095 [P] RTL and layout compliance audit — fix any violations found.
+- [x] T095 [P] RTL and layout compliance audit — fix any violations found.
   Open each of the following pages in the browser at `/ar/` locale and check:
   1. `goods-received` — sidebar on RIGHT side. Breadcrumb arrows point LEFT (flipped). Pagination arrows flipped. All numeric cells `dir="ltr"`.
   2. `issues` — same checks.
@@ -1349,7 +1349,7 @@
   If any violation found, fix: in CSS use `padding-inline-start` not `padding-left`; in JSX wrap numbers in `<span dir="ltr">`.
   **Acceptance**: All 4 pages pass visual RTL inspection in AR locale.
 
-- [ ] T096 [P] Run constitution DoD final checklist across ALL pages.
+- [x] T096 [P] Run constitution DoD final checklist across ALL pages.
   For each module page (grn, issue, stocktake, transfer, adjustment, pr, po, branches, warehouses, items, suppliers, balance, movements, lots, notifications, reports, users, audit-log), verify:
   - [ ] `t('key')` used for ALL visible strings — zero hard-coded text
   - [ ] Dark background (`surface-0`) rendered — zero white backgrounds
@@ -1369,6 +1369,50 @@
 
 ---
 
+## Phase 12: Procurement Module Standardization (Refactor)
+
+- [x] T097 [P] Standardize PR Detail: Use `PageHeader`, `react-hook-form` for header fields, and `Can` component for RBAC.
+  - [x] Refactor `PRDetailClient.tsx` to use `PageHeader` from shared components.
+  - [x] Implement `react-hook-form` + `zod` for `department_id` and `expected_date`.
+  - [x] Replace manual permission checks with `Can` component.
+  - [x] Align translation keys with `common` and `procurement.pr` structure.
+  **Acceptance**: PR Detail page matches GRN layout/logic pattern; form validation active.
+
+- [x] T098 [P] Standardize PO Detail: Use `PageHeader`, `react-hook-form` for header fields, and `Can` component for RBAC.
+  - [x] Refactor `PODetailClient.tsx` to use `PageHeader`.
+  - [x] Implement `react-hook-form` + `zod` for `supplier_id`, `currency_id`, and `expected_delivery_date`.
+  - [x] Replace manual permission checks with `Can` component.
+  - [x] Standardize the Financial Summary layout to match the "Operational Nocturne" premium style.
+  **Acceptance**: PO Detail page matches GRN layout/logic pattern; multi-currency fields correctly handled in form.
+
+- [x] T099 [P] Sync Translation Files: Ensure `en.json` and `ar.json` have all standardized keys for procurement modules.
+  - [x] Audit `messages/en.json` and `messages/ar.json`.
+  - [x] Add missing keys for `procurement.pr`, `procurement.po`, and `common` (statuses, actions).
+  **Acceptance**: No `MISSING_MESSAGE` warnings in browser console for PR/PO modules.
+
+## Phase 13: Operations Module Standardization (Refactor)
+
+- [x] T100 [P] Stock Issue Detail Client Standardized
+    - [x] `PageHeader` implementation
+    - [x] `FEFO` Lot Allocation standardize
+    - [x] RTL compliance
+- [x] T101 [P] Stock Transfer Detail Client Standardized
+    - [x] Dual warehouse lock checking
+    - [x] `PageHeader` & `StatusBadge` integration
+- [x] T102 [P] Stock Adjustment Detail Client Standardized
+    - [x] Directional badge logic
+    - [x] Standardized read-only mode
+
+## Phase 14: Stocktake Module Standardization (Refactor)
+
+- [x] T103 [P] Stocktake Detail Client Standardized
+    - [x] Snapshot locking visualization
+    - [x] Inline count saving standardization
+- [x] T104 [P] Sync Translation Files (Operations & Stocktake)
+    - [x] Final localization audit for Operational Nocturne
+
+---
+
 ## Dependencies & Execution Order
 
 ```
@@ -1383,6 +1427,9 @@ Phase 8 (T082–T084) → Auth + Dashboard         | can start after Phase 1
 Phase 9 (T085–T088) → Inventory Views          | can start after Phase 2
 Phase 10 (T089–T093)→ Notifications + Admin    | can start after Phase 2
 Phase 11 (T094–T096)→ QA — REQUIRES all phases complete
+Phase 12 (T097–T099)→ Refactor — Standardization of PR/PO modules
+Phase 13 (T100–T102)→ Refactor — Standardization of Operations modules
+Phase 14 (T103–T104)→ Refactor — Standardization of Stocktake module
 ```
 
 ### Parallel Team Split (3 developers)

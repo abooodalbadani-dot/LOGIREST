@@ -34,7 +34,7 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
           {changes.map((change, i) => {
             const isAdded = change.old_value === null && change.new_value !== null;
             const isDeleted = change.old_value !== null && change.new_value === null;
-            const bgClass = isDeleted ? 'bg-neon-red/10' : isAdded ? 'bg-neon-green/10' : 'bg-neon-amber/10';
+            const bgClass = isDeleted ? 'bg-red-500/10' : isAdded ? 'bg-emerald-500/10' : 'bg-amber-500/10';
             
             return (
               <tr key={i} className={`border-b border-surface-3 ${bgClass}`}>

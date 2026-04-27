@@ -185,12 +185,14 @@ export const operationsMocks: Record<string, unknown> = {
   },
 
   // ─── Lots Available (for FEFO drawer) ─────────────────────────────────
-  'GET /operations/lots-available': [
-    { id: 'lot-exp', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-EXP-001', expiry_date: '2023-01-01', qty_available: 100, is_expired: true, is_near_expiry: false },
-    { id: 'lot-near', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-NEAR-001', expiry_date: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0], qty_available: 50, is_expired: false, is_near_expiry: true },
-    { id: 'lot-valid1', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-VAL-001', expiry_date: '2027-06-30', qty_available: 200, is_expired: false, is_near_expiry: false },
-    { id: 'lot-valid2', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-VAL-002', expiry_date: '2028-12-31', qty_available: 300, is_expired: false, is_near_expiry: false }
-  ],
+  'GET /operations/lots-available': {
+    data: [
+      { id: 'lot-exp', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-EXP-001', expiry_date: '2023-01-01', qty_available: 100, is_expired: true, is_near_expiry: false },
+      { id: 'lot-near', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-NEAR-001', expiry_date: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0], qty_available: 50, is_expired: false, is_near_expiry: true },
+      { id: 'lot-valid1', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-VAL-001', expiry_date: '2027-06-30', qty_available: 200, is_expired: false, is_near_expiry: false },
+      { id: 'lot-valid2', item_id: 'item-1', warehouse_id: 'wh-1', lot_number: 'LOT-VAL-002', expiry_date: '2028-12-31', qty_available: 300, is_expired: false, is_near_expiry: false }
+    ]
+  },
 
   // ─── Warehouse Lock States ─────────────────────────────────────────────
   'GET /inventory/warehouses/wh-1/lock': { is_locked: false, session_id: null, session_number: null, lock_started_at: null },

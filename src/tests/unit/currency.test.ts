@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { convertToBase, formatCurrency } from '@/utils/currency';
+import { convertToBase, formatCurrency, formatNumber } from '@/utils/currency';
 
 describe('convertToBase', () => {
   it('converts 100 USD at 3.75 to 375 SAR', () => expect(convertToBase(100, 3.75)).toBe(375));
@@ -16,5 +16,14 @@ describe('formatCurrency', () => {
   it('formats SAR in Arabic', () => {
     const result = formatCurrency(500, 'SAR', 'ar');
     expect(result).toBeTruthy();
+  });
+});
+
+describe('formatNumber', () => {
+  it('formats number in English', () => {
+    expect(formatNumber(1234.56, 'en')).toBeTruthy();
+  });
+  it('formats number in Arabic', () => {
+    expect(formatNumber(1234.56, 'ar')).toBeTruthy();
   });
 });

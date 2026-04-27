@@ -1,11 +1,42 @@
-export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
+import React from 'react';
+import { StatusBadge } from '@/components/ui/status-badge';
+
+interface PageHeaderProps {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
+  status?: string;
+  showStatus?: boolean;
+}
+
+export function PageHeader({ title, description, actions, status, showStatus }: PageHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-      <div className="mb-4 md:mb-0">
-        <h1 className="text-2xl font-bold text-on-surface">{title}</h1>
-        {description && <p className="text-sm text-on-surface-muted mt-1">{description}</p>}
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 relative">
+      {/* Decorative accent */}
+      <div className="absolute -left-8 top-0 bottom-8 w-1 bg-gradient-to-b from-cyan-400 to-transparent opacity-50 rounded-r-full" />
+      
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-4">
+          <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight text-foreground uppercase italic leading-none">
+            {title}
+          </h1>
+          {showStatus && status && (
+            <StatusBadge status={status} className="h-6" />
+          )}
+        </div>
+        {description && (
+          <p className="text-xs text-muted-foreground/60 uppercase tracking-[0.25em] font-bold">
+            {description}
+          </p>
+        )}
       </div>
-      {actions && <div className="flex items-center space-x-2 space-x-reverse">{actions}</div>}
+      
+      {actions && (
+        <div className="flex items-center gap-4 bg-surface-container-low/50 p-1.5 rounded-sm backdrop-blur-sm">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }
+

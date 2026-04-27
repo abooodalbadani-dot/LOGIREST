@@ -1,4 +1,5 @@
 "use client"
+// use no memo
 
 import * as React from "react"
 import {
@@ -49,13 +50,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  let t: any = null;
-  try {
-    t = useTranslations("common")
-  } catch (e) {
-    // fallback if not nested inside IntlProvider during testing
-    t = (key: string) => key;
-  }
+  const t = useTranslations("common");
 
   const table = useReactTable({
     data,

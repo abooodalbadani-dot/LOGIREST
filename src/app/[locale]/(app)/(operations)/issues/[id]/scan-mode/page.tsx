@@ -18,6 +18,7 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/providers/AuthProvider';
+import type { Lot } from '@/types/master-data';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
 import Link from 'next/link';
 import type { LotAllocation } from '@/types/documents';
@@ -62,7 +63,10 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
 
   useEffect(() => {
     if (issue) {
+      // Synchronize internal state with fetched issue data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLines((issue.lines || []) as unknown as LineItem[]);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWarehouseId(issue.warehouse_id || 'wh-1');
     }
   }, [issue]);
@@ -122,12 +126,18 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-surface-1 flex flex-col p-4 space-y-4">
+    <div className="min-h-screen bg-surface-container-lowest flex flex-col p-4 space-y-6">
       {/* Immersive Header */}
-      <div className="flex justify-between items-center bg-surface-2 p-4 rounded-xl border border-surface-3 shadow-lg">
+      <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-2xl border-l-4 border-cyan-500 shadow-xl">
         <div>
-          <h1 className="text-2xl font-bold">{isNew ? t('create_new') : issue?.document_number}</h1>
-          <span className="text-neon-cyan/70 text-sm">Scan Mode</span>
+          <h1 className="text-2xl font-bold tracking-tight">{isNew ? t('create_new') : issue?.document_number}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+            </span>
+            <span className="text-cyan-500/80 text-xs font-mono uppercase tracking-widest italic">Immersive Scan Mode</span>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <StatusBadge status={(issue?.status ?? 'DRAFT') as BadgeStatus} />
@@ -140,14 +150,14 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
       {(isLocked) && <LockBanner lockState={lockState} />}
 
       {/* Massive Scan Input for Tablets */}
-      <div className="bg-surface-2 p-6 rounded-xl border border-surface-3 shadow-lg flex-1 flex flex-col">
+      <div className="bg-surface-container-low p-8 rounded-3xl border border-cyan-500/20 shadow-2xl flex-1 flex flex-col">
           <ScanInput 
              onScan={handleScan} 
              disabled={isPosted || isLocked} 
-             placeholder="SCAN BARCODE..." 
-             className="text-3xl py-6 font-mono text-center border-2"
+             placeholder="READY FOR BARCODE..." 
+             className="text-4xl py-10 font-mono text-center bg-surface-container-highest border-none rounded-3xl focus:ring-4 focus:ring-cyan-500/30 transition-all placeholder:text-surface-highest/30 shadow-inner"
           />
-          {scanError && <div className="text-neon-red text-center mt-4 text-xl">{scanError}</div>}
+          {scanError && <div className="text-red-500 text-center mt-6 text-xl font-bold animate-bounce uppercase tracking-tighter">{scanError}</div>}
           
           <div className="mt-8 flex-1 overflow-auto">
              {lines.length > 0 ? (
@@ -157,25 +167,25 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
                    const isFullyAllocated = totalAllocated >= line.qty;
                    
                    return (
-                     <div key={line.id} className="bg-surface-1 border border-surface-3 p-4 rounded-lg flex items-center justify-between">
-                        <div>
-                          <div className="text-xl font-bold">{line.item.name_ar} / {line.item.name_en}</div>
-                          <div className="text-muted-foreground text-sm font-mono">{line.item.code}</div>
-                        </div>
-                        <div className="flex items-center gap-6">
-                           <div className="text-center">
-                             <div className="text-sm text-muted-foreground">Qty</div>
-                             <div className="text-2xl font-bold">{line.qty} {line.item.primary_uom.code}</div>
-                           </div>
-                           <button 
-                             className={`px-4 py-2 rounded-lg border-2 font-bold ${isFullyAllocated ? 'border-neon-cyan text-neon-cyan' : 'border-neon-red text-neon-red animate-pulse'}`}
-                             onClick={() => { setActiveLine(line); setFefoOpen(true); }}
-                             disabled={isPosted}
-                           >
-                             {isFullyAllocated ? `${totalAllocated} Allocated✓` : `${totalAllocated}/${line.qty} Pending`}
-                           </button>
-                        </div>
-                     </div>
+                      <div key={line.id} className="bg-surface-container-high border-none p-6 rounded-2xl shadow-md transition-all hover:scale-[1.01] flex items-center justify-between group">
+                         <div>
+                           <div className="text-xl font-bold group-hover:text-cyan-500 transition-colors">{line.item.name_ar} / {line.item.name_en}</div>
+                           <div className="text-muted-foreground text-sm font-mono mt-1 opacity-70 tracking-widest">{line.item.code}</div>
+                         </div>
+                         <div className="flex items-center gap-8">
+                            <div className="text-right">
+                              <div className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Quantity</div>
+                              <div className="text-2xl font-bold font-mono">{line.qty} <span className="text-sm opacity-60">{line.item.primary_uom.code}</span></div>
+                            </div>
+                            <button 
+                              className={`px-6 py-3 rounded-xl border-2 font-black tracking-tighter transition-all ${isFullyAllocated ? 'border-cyan-500 text-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10' : 'border-red-500 text-red-500 animate-pulse bg-red-500/5 hover:bg-red-500/10'}`}
+                              onClick={() => { setActiveLine(line); setFefoOpen(true); }}
+                              disabled={isPosted}
+                            >
+                              {isFullyAllocated ? `ALLOCATED ✓` : `PENDING LOTS`}
+                            </button>
+                         </div>
+                      </div>
                    );
                  })}
                </div>
@@ -190,8 +200,8 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
 
       {/* Scan Log */}
       {scanLog.length > 0 && (
-        <div className="bg-surface-2 p-4 rounded-xl border border-surface-3">
-          <h3 className="text-xs text-on-surface-muted mb-2 uppercase tracking-wider">{t('scan_log_title')}</h3>
+        <div className="bg-surface-container-low p-5 rounded-2xl shadow-inner border border-white/5">
+          <h3 className="text-[10px] text-cyan-500/60 mb-3 uppercase tracking-[0.2em] font-black">{t('scan_log_title')}</h3>
           <ScanLog entries={scanLog} />
         </div>
       )}
@@ -203,7 +213,7 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
             {t('save_draft')}
           </Button>
           <Button
-            className="flex-1 bg-neon-cyan text-surface-0 hover:bg-neon-cyan/80"
+            className="flex-1 bg-cyan-500 text-surface-0 hover:bg-cyan-500/80"
             disabled={isLocked || lines.length === 0}
             onClick={() => setIsPostDialogOpen(true)}
           >
@@ -230,7 +240,7 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
           <div className="py-4 overflow-y-auto pb-20">
             {activeLine && (
               <FEFOLotAllocator
-                lots={lots as any}
+                lots={lots as Lot[]}
                 requestedQty={activeLine.qty}
                 uomLabel={activeLine.item.primary_uom.code}
                 userRole={user?.role || 'WH_KEEPER'}

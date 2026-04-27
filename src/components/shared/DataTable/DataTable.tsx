@@ -1,30 +1,41 @@
 'use client';
+// use no memo
 import { 
   useReactTable, 
   getCoreRowModel, 
   flexRender,
-  ColumnDef
+  ColumnDef,
+  RowData
 } from '@tanstack/react-table';
-import { Pagination } from './Pagination';
 
-interface PaginationProps {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    numeric?: boolean;
+  }
 }
+
+import { Button } from '@/components/ui/button';
+import { useTranslations, useLocale } from 'next-intl';
+import { Pagination } from './Pagination';
 
 interface DataTableProps<T> {
   data: T[];
-  columns: ColumnDef<T, any>[];
+  columns: ColumnDef<T, unknown>[];
   isLoading?: boolean;
-  pagination?: PaginationProps;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  };
   onExport?: () => void;
   emptyState?: React.ReactNode;
   filters?: React.ReactNode;
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T) => string;
+  collectionName?: string;
 }
 
 export function DataTable<T>({
@@ -36,8 +47,10 @@ export function DataTable<T>({
   emptyState,
   filters,
   onRowClick,
-  rowClassName
+  rowClassName,
+  collectionName
 }: DataTableProps<T>) {
+  const t = useTranslations('common.datatable');
   const table = useReactTable({
     data: data || [],
     columns,
@@ -45,37 +58,53 @@ export function DataTable<T>({
   });
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-6 w-full">
       {(filters || onExport) && (
         <div className="flex justify-between items-start gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px]">
             {filters}
           </div>
           {onExport && (
-            <button 
-              onClick={onExport}
-              className="px-4 py-2 mt-1 bg-surface-2 border border-surface-3 text-on-surface hover:bg-surface-3 transition-colors rounded text-sm font-medium flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export to CSV
-            </button>
+            <div className="flex items-center gap-2 mt-1">
+              <Button 
+                variant="secondary"
+                size="sm"
+                onClick={onExport}
+                className="h-9 px-4 flex items-center gap-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase tracking-widest transition-all border-none shadow-sm"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                CSV
+              </Button>
+              <Button 
+                variant="secondary"
+                size="sm"
+                onClick={onExport}
+                className="h-9 px-4 flex items-center gap-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase tracking-widest transition-all border-none shadow-sm"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>
+                Excel
+              </Button>
+            </div>
           )}
         </div>
       )}
 
-      <div className="overflow-x-auto border border-surface-3 rounded bg-surface-1">
-        <table className="w-full text-sm text-left rtl:text-right">
-          <thead className="bg-surface-2 text-on-surface-muted border-b border-surface-3">
+      <div className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-xl shadow-foreground/[0.02]">
+        <table 
+          className="w-full text-sm text-start border-collapse"
+          data-webmcp-collection={collectionName || 'generic_table'}
+        >
+          <thead className="bg-surface-container-low/50 text-muted-foreground">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => {
-                  const isNumeric = (header.column.columnDef.meta as any)?.numeric === true;
+                {headerGroup.headers.map((header, idx) => {
+                  const isNumeric = header.column.columnDef.meta?.numeric === true;
+                  const isFirst = idx === 0;
+                  const isLast = idx === headerGroup.headers.length - 1;
                   return (
                     <th 
                       key={header.id} 
-                      className={`px-4 py-3 font-medium whitespace-nowrap ${isNumeric ? 'text-right rtl:text-left' : ''}`}
+                      className={`px-4 h-12 font-black text-[10px] uppercase tracking-[0.15em] whitespace-nowrap ${isNumeric ? 'text-end' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                     </th>
@@ -84,33 +113,41 @@ export function DataTable<T>({
               </tr>
             ))}
           </thead>
-          <tbody>
+          <tbody className="divide-none">
             {isLoading ? (
               Array.from({ length: 9 }).map((_, i) => (
-                <tr key={i} className="border-b border-surface-3">
+                <tr key={i} className={i % 2 === 0 ? 'bg-transparent' : 'bg-surface-container-low/20'}>
                   {columns.map((c, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-6 bg-surface-3 animate-pulse rounded w-3/4"></div>
+                    <td key={j} className="px-4 h-12">
+                      <div className="h-3 bg-muted/30 animate-pulse rounded-full w-3/4"></div>
                     </td>
                   ))}
                 </tr>
               ))
             ) : data.length === 0 ? (
-              <tr className="border-b border-surface-3">
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-on-surface-muted">
-                  {emptyState || 'No records found.'}
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-16 text-center text-muted-foreground italic text-xs uppercase tracking-widest opacity-60">
+                  {emptyState || t('no_records')}
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map(row => (
-                <tr key={row.id} className={`border-b border-surface-3 hover:bg-surface-2 transition-colors ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} onClick={() => onRowClick && onRowClick(row.original)}>
-                  {row.getVisibleCells().map(cell => {
-                    const isNumeric = (cell.column.columnDef.meta as any)?.numeric === true;
+              table.getRowModel().rows.map((row, i) => (
+                <tr 
+                  key={row.id} 
+                  className={`transition-all h-12 ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/40'} hover:bg-primary/[0.04] ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
+                  onClick={() => onRowClick && onRowClick(row.original)}
+                  data-webmcp-row={row.id}
+                >
+                  {row.getVisibleCells().map((cell, idx) => {
+                    const isNumeric = cell.column.columnDef.meta?.numeric === true;
+                    const isFirst = idx === 0;
+                    const isLast = idx === row.getVisibleCells().length - 1;
                     return (
                       <td 
                         key={cell.id} 
-                        className={`px-4 py-3 ${isNumeric ? 'text-right rtl:text-left' : ''}`}
+                        className={`px-4 text-[11px] font-medium border-none ${isNumeric ? 'text-end' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                         dir={isNumeric ? 'ltr' : undefined}
+                        data-webmcp-field={cell.column.id}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
@@ -124,9 +161,9 @@ export function DataTable<T>({
       </div>
 
       {pagination && !isLoading && data.length > 0 && (
-        <div className="flex items-center justify-between mt-2">
-           <div className="text-sm text-on-surface-muted">
-             Showing <span dir="ltr">{(pagination.page - 1) * pagination.pageSize + 1}</span> to <span dir="ltr">{Math.min(pagination.page * pagination.pageSize, pagination.total)}</span> of <span dir="ltr">{pagination.total}</span>
+        <div className="flex items-center justify-between mt-2 px-2">
+           <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-70">
+             {t('showing')} <span dir="ltr">{(pagination.page - 1) * pagination.pageSize + 1}</span> {t('to')} <span dir="ltr">{Math.min(pagination.page * pagination.pageSize, pagination.total)}</span> {t('of')} <span dir="ltr">{pagination.total}</span>
            </div>
            <Pagination 
              page={pagination.page} 

@@ -37,7 +37,9 @@ export function ScanInput({
 
   const [isRtl, setIsRtl] = React.useState(false)
   React.useEffect(() => {
-    setIsRtl(document.documentElement.dir === 'rtl')
+    setTimeout(() => {
+      setIsRtl(document.documentElement.dir === 'rtl')
+    }, 0)
   }, [])
 
   return (
@@ -49,7 +51,7 @@ export function ScanInput({
           ) : scanStatus === "success" ? (
             <Check className="h-4 w-4 text-brand-primary drop-shadow-[0_0_5px_rgba(58,190,255,0.8)]" />
           ) : scanStatus === "error" ? (
-            <X className="h-4 w-4 text-neon-error drop-shadow-[0_0_5px_rgba(255,180,171,0.8)]" />
+            <X className="h-4 w-4 text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]" />
           ) : (
             <ScanLine className="h-4 w-4 text-muted-foreground animate-pulse" />
           )}
@@ -64,7 +66,7 @@ export function ScanInput({
           placeholder="Scan barcode..."
           className={cn(
             isRtl ? "pr-10" : "pl-10",
-            scanStatus === "error" && "border-neon-error focus-visible:ring-neon-error text-neon-error",
+            scanStatus === "error" && "border-red-500 focus-visible:ring-red-500 text-red-500",
             scanStatus === "success" && "border-brand-primary focus-visible:ring-brand-primary text-brand-primary",
             className
           )}
@@ -74,7 +76,7 @@ export function ScanInput({
       {statusMessage && (
         <span className={cn(
           "text-xs px-1",
-          scanStatus === "error" ? "text-neon-error" : 
+          scanStatus === "error" ? "text-red-500" : 
           scanStatus === "success" ? "text-brand-primary" : 
           "text-muted-foreground"
         )}>

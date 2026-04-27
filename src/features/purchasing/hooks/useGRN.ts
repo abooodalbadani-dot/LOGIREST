@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+
 export const LineItemSchema = z.object({
   id: z.string(),
   item: z.object({
@@ -30,7 +32,7 @@ export const LineItemSchema = z.object({
 export const GRNDetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: BadgeStatusSchema,
   supplier_id: z.string(),
   po_id: z.string().nullable(),
   po_number: z.string().nullable(),

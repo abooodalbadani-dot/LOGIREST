@@ -3,21 +3,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const statusBadgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 uppercase tracking-wider whitespace-nowrap",
+  "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 uppercase tracking-[0.1em] whitespace-nowrap",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-surface-3 text-muted-foreground hover:bg-surface-4",
+          "bg-surface-3 text-muted-foreground hover:bg-surface-4",
         brand:
-          "border-transparent bg-brand-primary/15 text-brand-primary hover:bg-brand-primary/25",
+          "bg-primary/15 text-primary hover:bg-primary/25",
         warning:
-          "border-transparent bg-neon-amber/15 text-neon-amber hover:bg-neon-amber/25",
+          "bg-status-warning/15 text-status-warning hover:bg-status-warning/25",
         error:
-          "border-transparent bg-neon-error/15 text-neon-error hover:bg-neon-error/25",
+          "bg-status-error/15 text-status-error hover:bg-status-error/25",
         success:
-          "border-transparent border-brand-primary/30 bg-brand-primary/10 text-brand-primary shadow-[0_0_8px_rgba(58,190,255,0.2)] hover:bg-brand-primary/20",
-        outline: "text-foreground border-border",
+          "bg-status-success/15 text-status-success hover:bg-status-success/25",
+        outline: "text-foreground bg-surface-2",
       },
     },
     defaultVariants: {

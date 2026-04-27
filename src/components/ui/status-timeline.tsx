@@ -30,14 +30,14 @@ export function StatusTimeline({ steps, className, ...props }: StatusTimelinePro
           completed: "bg-brand-primary text-black shadow-[0_0_8px_rgba(58,190,255,0.4)]",
           current: "border-2 border-brand-primary bg-surface-2 text-brand-primary",
           pending: "border-2 border-surface-4 bg-surface-1 text-surface-4",
-          error: "bg-neon-error text-black shadow-[0_0_8px_rgba(255,180,171,0.4)]"
+          error: "bg-red-500 text-black shadow-[0_0_8px_rgba(239,68,68,0.4)]"
         };
 
         const textClasses = {
           completed: "text-foreground font-medium",
           current: "text-brand-primary font-bold",
           pending: "text-muted-foreground",
-          error: "text-neon-error font-bold"
+          error: "text-red-500 font-bold"
         };
 
         const renderIcon = () => {

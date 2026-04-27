@@ -1,8 +1,20 @@
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 
+export type Status = 
+  | 'draft' 
+  | 'submitted' 
+  | 'approved' 
+  | 'posted' 
+  | 'rejected' 
+  | 'cancelled' 
+  | 'in_transit' 
+  | 'open' 
+  | 'counting' 
+  | 'review';
+
 export interface StatusTimelineEntry {
-  status: string;
+  status: Status;
   at: string;
   by: string;
 }
@@ -16,7 +28,7 @@ export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) 
         <div key={idx} className="relative pl-6 rtl:pl-0 rtl:pr-6">
           <div className="absolute w-3 h-3 bg-primary rounded-full -left-[7px] rtl:-left-auto rtl:-right-[7px] top-1.5 ring-4 ring-card"></div>
           <p className="text-sm font-medium">
-            {tCommon(`status.${entry.status.toLowerCase()}` as any) || entry.status}
+            {tCommon(`status.${entry.status.toLowerCase() as Status}`) || entry.status}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {format(new Date(entry.at), 'PPP pp')} · {entry.by}

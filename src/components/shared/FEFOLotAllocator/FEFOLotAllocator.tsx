@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { Lot } from '@/types/master-data';
 import type { LotAllocation } from '@/types/documents';
 import type { UserRole } from '@/providers/AuthProvider';
+import { useTranslations } from 'next-intl';
 import { sortLotsByFEFO, isExpired, isNearExpiry } from '@/utils/fefo';
 import { LotRow } from './LotRow';
 
@@ -16,17 +17,15 @@ interface FEFOLotAllocatorProps {
 }
 
 export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAllocate, onClose }: FEFOLotAllocatorProps) {
-  const [allocations, setAllocations] = useState<Record<string, { qty: number, reason: string }>>({});
-  const [sortedLots, setSortedLots] = useState<Lot[]>([]);
-
-  useEffect(() => {
-    const sorted = sortLotsByFEFO(lots);
-    setSortedLots(sorted);
-    
+  const t = useTranslations('operations.issue');
+  const tc = useTranslations('common');
+  const sortedLots = useMemo(() => sortLotsByFEFO(lots), [lots]);
+  
+  const [allocations, setAllocations] = useState<Record<string, { qty: number, reason: string }>>(() => {
     const initialAllocations: Record<string, { qty: number, reason: string }> = {};
     let remaining = requestedQty;
     
-    for (const lot of sorted) {
+    for (const lot of sortedLots) {
       if (remaining <= 0) break;
       if (isExpired(lot.expiry_date) && !['ADMIN', 'INV_MGR'].includes(userRole)) {
         continue;
@@ -38,9 +37,8 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
         remaining -= toAllocate;
       }
     }
-    
-    setAllocations(initialAllocations);
-  }, [lots, requestedQty, userRole]);
+    return initialAllocations;
+  });
 
   const totalAllocated = Object.values(allocations).reduce((sum, current) => sum + (current.qty || 0), 0);
   
@@ -55,7 +53,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
   const handleConfirm = () => {
     if (!isValid) return;
     const finalAllocations = Object.entries(allocations)
-      .filter(([_, data]) => data.qty > 0)
+      .filter(([__unused_id, data]) => data.qty > 0)
       .map(([id, data]) => {
         const lot = lots.find(l => l.id === id)!;
         return {
@@ -72,9 +70,9 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center bg-surface-2 p-4 rounded border border-surface-3">
-        <h3 className="font-bold text-on-surface">Allocate Lots</h3>
-        <div className={`font-mono font-bold ${totalAllocated !== requestedQty ? 'text-neon-red' : 'text-neon-cyan'}`}>
-          Allocated: <span dir="ltr">{totalAllocated} / {requestedQty}</span> {uomLabel}
+        <h3 className="font-bold text-on-surface">{t('fefo_allocator_title')}</h3>
+        <div className={`font-mono font-bold ${totalAllocated !== requestedQty ? 'text-red-500' : 'text-cyan-500'}`}>
+          {t('allocated')}: <span dir="ltr">{totalAllocated} / {requestedQty}</span> {uomLabel}
         </div>
       </div>
       
@@ -94,13 +92,13 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
       </div>
       
       <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onClose} className="px-4 py-2 bg-surface-3 text-on-surface rounded font-medium hover:bg-surface-4 transition-colors">Cancel</button>
+        <button onClick={onClose} className="px-4 py-2 bg-surface-3 text-on-surface rounded font-medium hover:bg-surface-4 transition-colors">{tc('cancel')}</button>
         <button 
           onClick={handleConfirm}
           disabled={!isValid}
-          className="px-4 py-2 bg-neon-cyan text-surface-0 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neon-cyan/80 transition-colors"
+          className="px-4 py-2 bg-cyan-600 text-white rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-500 transition-colors"
         >
-          Confirm Allocation
+          {t('confirm_allocation')}
         </button>
       </div>
     </div>

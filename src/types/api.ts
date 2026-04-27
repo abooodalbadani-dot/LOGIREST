@@ -17,3 +17,7 @@ export function paginatedSchema<T>(itemSchema: z.ZodSchema<T>) {
     meta: z.object({ page: z.number(), page_size: z.number(), total: z.number(), total_pages: z.number() }),
   });
 }
+export const successSchema = z.object({
+  success: z.boolean().optional(),
+  message: z.string().optional(),
+});

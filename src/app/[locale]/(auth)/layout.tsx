@@ -1,18 +1,27 @@
+import { getTranslations } from 'next-intl/server';
 import { ReactNode } from 'react';
+import { WebMCPBadge } from '@/components/shared/WebMCPBadge';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'auth' });
+  return {
+    title: `${t('login.title')} | LogiRest`,
+    description: 'Secure authentication portal for the Kitchen-Store Inventory System.',
+  };
+}
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-0 relative overflow-hidden">
-      {/* Dynamic Background Accents */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-primary/5 blur-[160px] rounded-full" />
-        <div className="absolute -top-[10%] -right-[10%] w-[500px] h-[500px] bg-neon-cyan/5 blur-[120px] rounded-full" />
-      </div>
+    <div className="min-h-screen flex w-full bg-[#111315] relative overflow-hidden text-white font-sans">
+      {/* Universal WebMCP Header for Auth */}
+      <header className="absolute top-0 right-0 z-50 p-6 pointer-events-none">
+        <div className="pointer-events-auto scale-90 origin-top-right">
+          <WebMCPBadge />
+        </div>
+      </header>
 
-      {/* Auth Container */}
-      <div className="w-full max-w-md relative z-10 px-4">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

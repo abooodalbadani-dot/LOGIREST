@@ -4,7 +4,7 @@ export interface Item {
   nameEn: string;
   nameAr: string;
   category: 'FOOD' | 'EQUIPMENT' | 'PACKAGING' | 'SUPPLIES';
-  uom: 'EA' | 'KG' | 'L' | 'BOX' | 'PACK';
+  uom: 'EA' | 'KG' | 'L' | 'BOX' | 'PACK' | 'BAG';
   minStockLevel: number;
   costPrice: number;
   status: 'ACTIVE' | 'INACTIVE';
@@ -17,7 +17,7 @@ export interface CreateItemDTO {
   nameEn: string;
   nameAr: string;
   category: 'FOOD' | 'EQUIPMENT' | 'PACKAGING' | 'SUPPLIES';
-  uom: 'EA' | 'KG' | 'L' | 'BOX' | 'PACK';
+  uom: 'EA' | 'KG' | 'L' | 'BOX' | 'PACK' | 'BAG';
   minStockLevel: number;
   costPrice: number;
   status: 'ACTIVE' | 'INACTIVE';

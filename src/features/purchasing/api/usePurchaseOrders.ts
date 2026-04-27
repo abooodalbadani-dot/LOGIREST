@@ -21,7 +21,7 @@ export function usePurchaseOrders() {
               supplierTotalAmount: 1000.00,
               baseTotalAmount: 3750.00,
               items: [
-                { itemId: 'IT-1', quantity: 100, unitPrice: 10.00 },
+                { itemId: 'IT-1', itemName: 'Industrial Oven', quantity: 100, unitPrice: 10.00 },
               ],
               notes: 'First batch of equipment.',
               createdAt: '2026-04-18T10:00:00Z', 
@@ -39,7 +39,7 @@ export function usePurchaseOrders() {
               supplierTotalAmount: 350.00,
               baseTotalAmount: 350.00,
               items: [
-                { itemId: 'IT-3', quantity: 10, unitPrice: 35.00 },
+                { itemId: 'IT-3', itemName: 'Fresh Tomatoes', quantity: 10, unitPrice: 35.00 },
               ],
               notes: 'Local fresh produce.',
               createdAt: '2026-04-19T08:30:00Z', 
@@ -72,7 +72,7 @@ export function usePurchaseOrder(id: string) {
               supplierTotalAmount: 1000.00,
               baseTotalAmount: 3750.00,
               items: [
-                { itemId: 'IT-1', quantity: 100, unitPrice: 10.00 },
+                { itemId: 'IT-1', itemName: 'Industrial Oven', quantity: 100, unitPrice: 10.00 },
               ],
               notes: 'First batch of equipment.',
               createdAt: '2026-04-18T10:00:00Z', 
@@ -90,7 +90,7 @@ export function usePurchaseOrder(id: string) {
               supplierTotalAmount: 350.00,
               baseTotalAmount: 350.00,
               items: [
-                { itemId: 'IT-3', quantity: 10, unitPrice: 35.00 },
+                { itemId: 'IT-3', itemName: 'Fresh Tomatoes', quantity: 10, unitPrice: 35.00 },
               ],
               notes: 'Local fresh produce.',
               createdAt: '2026-04-19T08:30:00Z', 

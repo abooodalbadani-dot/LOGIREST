@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sortLotsByFEFO, isExpired, isNearExpiry } from '@/utils/fefo';
+import { sortLotsByFEFO, isExpired } from '@/utils/fefo';
 
 const makeLot = (expiry: string | null) => ({ 
   id: '1', item_id: '1', warehouse_id: '1', lot_number: 'L1', 

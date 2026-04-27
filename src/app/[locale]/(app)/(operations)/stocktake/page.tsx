@@ -1,7 +1,6 @@
-import { getTranslations } from 'next-intl/server';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { setRequestLocale } from 'next-intl/server';
 import { StocktakeListClient } from './StocktakeListClient';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 export default async function StocktakeListPage({
   params,
@@ -12,24 +11,16 @@ export default async function StocktakeListPage({
 }) {
   const { locale } = await params;
   const { status, page, warehouse_id } = await searchParams;
-  const t = await getTranslations('operations.stocktake');
-  const tCommon = await getTranslations('common');
+  setRequestLocale(locale);
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: tCommon('sidebar.dashboard'), href: `/${locale}/dashboard` },
-          { label: t('title') },
-        ]}
-      />
-      <PageHeader title={t('title')} />
+    <ProtectedRoute requiredAction="view" requiredResource="stocktake">
       <StocktakeListClient
         initialStatus={status}
         initialPage={Number(page ?? 1)}
         initialWarehouseId={warehouse_id}
         locale={locale as 'ar' | 'en'}
       />
-    </div>
+    </ProtectedRoute>
   );
 }

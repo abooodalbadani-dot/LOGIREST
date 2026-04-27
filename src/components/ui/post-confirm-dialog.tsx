@@ -42,8 +42,8 @@ export function PostConfirmDialog({
       {trigger && <AlertDialogTrigger>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader className="flex flex-col items-center text-center">
-          <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDestructive ? 'bg-neon-error/20' : 'bg-neon-amber/20'}`}>
-            <AlertTriangle className={`h-6 w-6 ${isDestructive ? 'text-neon-error' : 'text-neon-amber'}`} />
+          <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDestructive ? 'bg-red-500/20' : 'bg-amber-500/20'}`}>
+            <AlertTriangle className={`h-6 w-6 ${isDestructive ? 'text-red-500' : 'text-amber-500'}`} />
           </div>
           <AlertDialogTitle className="text-xl font-bold">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-center text-muted-foreground pt-2">
@@ -58,7 +58,7 @@ export function PostConfirmDialog({
             onClick={onConfirm} 
             className={`w-full sm:w-auto h-11 ${
               isDestructive 
-                ? 'bg-neon-error text-black hover:bg-neon-error/90 shadow-[0_0_15px_rgba(255,180,171,0.5)]' 
+                ? 'bg-red-500 text-black hover:bg-red-500/90 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
                 : 'bg-brand-primary text-black hover:bg-brand-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]'
             }`}
           >

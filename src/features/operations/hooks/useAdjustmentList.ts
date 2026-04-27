@@ -1,8 +1,8 @@
-'use client';
+import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
-import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 export const AdjustmentReasonSchema = z.enum(['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'OTHER']);
 export type AdjustmentReason = z.infer<typeof AdjustmentReasonSchema>;
@@ -10,7 +10,7 @@ export type AdjustmentReason = z.infer<typeof AdjustmentReasonSchema>;
 export const AdjustmentSummarySchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.string(),
+  status: BadgeStatusSchema,
   warehouse_id: z.string(),
   reason: AdjustmentReasonSchema.or(z.string()),
   approved_by: z.string().nullable().optional(),

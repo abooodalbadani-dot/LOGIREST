@@ -1,5 +1,16 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { TransferListClient } from './TransferListClient';
+import { PageHeader } from '@/components/shared/PageHeader';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'operations.transfer' });
+  return {
+    title: `${t('title')} | LogiRest`,
+    description: 'Internal warehouse transfers and movement tracking',
+  };
+}
 
 export default async function TransfersPage(props: { params: Promise<{ locale: string }> }) {
   const params = await props.params;
@@ -7,11 +18,14 @@ export default async function TransfersPage(props: { params: Promise<{ locale: s
   const t = await getTranslations('operations.transfer');
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
+    <ProtectedRoute requiredAction="view" requiredResource="transfer">
+      <div className="flex flex-col gap-6">
+        <PageHeader 
+          title={t('title')} 
+          description="Internal warehouse transfers and movement tracking"
+        />
+        <TransferListClient />
       </div>
-      <TransferListClient />
-    </div>
+    </ProtectedRoute>
   );
 }

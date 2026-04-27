@@ -72,14 +72,14 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
               setRate(val === '' ? '' : Number(val));
             }}
             disabled={isLoading}
-            className="flex-1 bg-surface-1 border border-surface-4 text-on-surface rounded p-2 focus:border-neon-cyan outline-none font-mono"
+            className="flex-1 bg-surface-1 border border-surface-4 text-on-surface rounded p-2 focus:border-cyan-500 outline-none font-mono"
           />
           <span className="font-mono text-on-surface-muted bg-surface-3 px-3 py-2 rounded">
             {toCurrencyCode}
           </span>
         </div>
         
-        <div className="text-sm text-neon-amber bg-neon-amber/10 border border-neon-amber/20 rounded p-2">
+        <div className="text-sm text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded p-2">
           {t('fx_permanent_warning') || 'سيُحفظ هذا السعر مع الوثيقة ولا يمكن تغييره لاحقاً.'}
         </div>
         
@@ -87,7 +87,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
           <button 
             onClick={() => onRateConfirmed(numericRate)}
             disabled={!isValid || isLoading}
-            className="px-4 py-2 bg-neon-cyan text-surface-0 font-medium rounded disabled:opacity-50 transition-colors hover:bg-neon-cyan/80"
+            className="px-4 py-2 bg-cyan-600 text-white font-medium rounded disabled:opacity-50 transition-colors hover:bg-cyan-500"
           >
             {tCommon('confirm_rate') || 'تأكيد السعر'}
           </button>

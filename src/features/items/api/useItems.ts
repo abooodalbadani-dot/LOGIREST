@@ -49,7 +49,7 @@ export function useItems() {
               createdAt: '2024-01-10T14:20:00Z', 
               updatedAt: '2024-01-10T14:20:00Z' 
             },
-          ] as any); // using any here for BAG fallback if needed, but type has BOX/PACK
+          ]);
         }, 800);
       });
     }

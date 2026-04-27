@@ -29,8 +29,17 @@ export const adminMocks: Record<string, unknown> = {
           { branch_id: 'br-1', warehouse_id: 'wh-1', department_id: 'dep-1' },
         ],
       },
+      {
+        id: 'user-4',
+        name: 'نورة عبدالله',
+        email: 'noura@logirest.com',
+        role: 'VIEWER',
+        scopes: [
+          { branch_id: 'br-1', warehouse_id: null, department_id: null },
+        ],
+      },
     ],
-    meta: { page: 1, page_size: 10, total: 3, total_pages: 1 },
+    meta: { page: 1, page_size: 10, total: 4, total_pages: 1 },
   },
 
   'GET /admin/users/user-1': {
@@ -107,7 +116,19 @@ export const adminMocks: Record<string, unknown> = {
         ],
         created_at: '2026-04-18T16:45:00Z',
       },
+      {
+        id: 'log-6',
+        entity_type: 'adjustment',
+        entity_id: 'adj-1',
+        action: 'POST',
+        user_id: 'user-2',
+        user_name: 'سارة حسن',
+        changes: [
+          { field: 'status', old_value: 'DRAFT', new_value: 'POSTED' },
+        ],
+        created_at: '2026-04-17T11:00:00Z',
+      },
     ],
-    meta: { page: 1, page_size: 10, total: 5, total_pages: 1 },
+    meta: { page: 1, page_size: 10, total: 6, total_pages: 1 },
   },
 };

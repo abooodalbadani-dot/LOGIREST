@@ -1,4 +1,5 @@
 import { test as base, Page } from '@playwright/test';
+/* eslint-disable react-hooks/rules-of-hooks */
 
 // Declare the types of your fixtures.
 type MyFixtures = {

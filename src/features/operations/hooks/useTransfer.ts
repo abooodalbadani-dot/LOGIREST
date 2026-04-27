@@ -2,6 +2,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+
+export const TransferLineLotAllocationSchema = z.object({
+  lot_id: z.string(),
+  lot_number: z.string(),
+  expiry_date: z.string().nullable().optional(),
+  allocated_qty: z.number(),
+  override_reason: z.string().nullable().optional(),
+});
 
 export const TransferLineSchema = z.object({
   id: z.string(),
@@ -19,13 +28,13 @@ export const TransferLineSchema = z.object({
   shipped_qty: z.number().nullable().optional(),
   received_qty: z.number().nullable().optional(),
   uom_id: z.string(),
-  lot_allocations: z.array(z.any()).optional(),
+  lot_allocations: z.array(TransferLineLotAllocationSchema).default([]),
 });
 
 export const TransferDetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  transfer_status: z.string(),
+  transfer_status: BadgeStatusSchema,
   from_warehouse_id: z.string(),
   to_warehouse_id: z.string(),
   notes: z.string().nullable().optional(),

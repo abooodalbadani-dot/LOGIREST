@@ -78,7 +78,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
         <div className="space-y-4 py-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-secondary">Required: <span className="font-bold text-text-primary" dir="ltr">{requestedQty}</span></span>
-            <span className={`font-bold ${isComplete ? 'text-brand-primary' : remaining < 0 ? 'text-neon-error' : 'text-neon-amber'}`} dir="ltr">
+            <span className={`font-bold ${isComplete ? 'text-brand-primary' : remaining < 0 ? 'text-red-500' : 'text-amber-500'}`} dir="ltr">
               {isComplete ? '✓ Allocation complete' : `${remaining > 0 ? remaining : Math.abs(remaining)} ${remaining > 0 ? 'remaining' : 'over-allocated'}`}
             </span>
             <Button size="sm" variant="outline" onClick={handleAutoAllocate} className="text-xs">
@@ -100,7 +100,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                     key={lot.lotNumber}
                     className={`p-3 rounded-lg border flex gap-4 items-center ${
                       isExpired
-                        ? 'bg-neon-error/5 border-neon-error/30'
+                        ? 'bg-red-500/5 border-red-500/30'
                         : 'bg-surface-2/50 border-surface-2'
                     }`}
                   >
@@ -108,7 +108,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-text-primary">{lot.lotNumber}</span>
                         {isExpired && (
-                          <span className="flex items-center gap-1 text-xs text-neon-error font-bold">
+                          <span className="flex items-center gap-1 text-xs text-red-500 font-bold">
                             <AlertTriangle className="w-3 h-3" />
                             EXPIRED
                           </span>

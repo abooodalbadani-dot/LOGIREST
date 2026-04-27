@@ -2,6 +2,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { AdjustmentDetailSchema } from './useAdjustment';
+
+const LotAllocationSchema = z.object({
+  lot_id: z.string(),
+  qty: z.number()
+});
 
 const CreateAdjustmentPayloadSchema = z.object({
   warehouse_id: z.string(),
@@ -11,7 +17,7 @@ const CreateAdjustmentPayloadSchema = z.object({
     item_id: z.string(),
     qty: z.number(),
     uom_id: z.string(),
-    lot_allocations: z.array(z.any()).optional()
+    lot_allocations: z.array(LotAllocationSchema).optional()
   }))
 });
 
@@ -21,7 +27,7 @@ export function useCreateAdjustment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateAdjustmentPayload) => 
-      apiClient.post('/operations/adjustments', z.any(), payload),
+      apiClient.post('/operations/adjustments', AdjustmentDetailSchema, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
     }
