@@ -69,9 +69,9 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center bg-surface-2 p-4 rounded border border-surface-3">
-        <h3 className="font-bold text-on-surface">{t('fefo_allocator_title')}</h3>
-        <div className={`font-mono font-bold ${totalAllocated !== requestedQty ? 'text-red-500' : 'text-cyan-500'}`}>
+      <div className="flex justify-between items-center bg-surface-container p-4 rounded-xl border border-white/10-muted/50">
+        <h3 className="font-bold text-foreground">{t('fefo_allocator_title')}</h3>
+        <div className={`font-mono font-bold ${totalAllocated !== requestedQty ? 'text-status-error' : 'text-operational-cyan'}`}>
           {t('allocated')}: <span dir="ltr">{totalAllocated} / {requestedQty}</span> {uomLabel}
         </div>
       </div>
@@ -92,11 +92,11 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
       </div>
       
       <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onClose} className="px-4 py-2 bg-surface-3 text-on-surface rounded font-medium hover:bg-surface-4 transition-colors">{tc('cancel')}</button>
+        <button onClick={onClose} className="px-4 py-2 bg-surface-container-high text-foreground rounded-xl font-medium hover:bg-surface-container-highest transition-colors">{tc('cancel')}</button>
         <button 
           onClick={handleConfirm}
           disabled={!isValid}
-          className="px-4 py-2 bg-cyan-600 text-white rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-500 transition-colors"
+          className="px-6 py-2.5 bg-operational-cyan text-primary-foreground rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all active:scale-[0.98] shadow-lg shadow-operational-cyan/20"
         >
           {t('confirm_allocation')}
         </button>

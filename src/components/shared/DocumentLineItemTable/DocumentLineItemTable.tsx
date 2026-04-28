@@ -65,7 +65,7 @@ export function DocumentLineItemTable<T extends LineItem>({
 
   return (
     <div className="overflow-x-auto rounded-sm border border-white/5 bg-surface-container-low shadow-2xl overflow-hidden">
-      <table className="w-full text-left rtl:text-right border-collapse">
+      <table className="w-full text-start border-collapse">
         <thead className="bg-surface-container-highest/10 border-b border-white/5">
           <tr>
             <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.code}</th>
@@ -96,7 +96,7 @@ export function DocumentLineItemTable<T extends LineItem>({
           ) : (
             lines.map(line => (
               <tr key={line.id} className="group hover:bg-white/[0.01] transition-all">
-                <td className="px-6 py-6 font-mono text-[11px] text-cyan-500/70 tracking-widest uppercase"><span dir="ltr">{line.item.code}</span></td>
+                <td className="px-6 py-6 font-mono text-[11px] text-operational-cyan/70 tracking-widest uppercase"><span dir="ltr">{line.item.code}</span></td>
                 <td className="px-6 py-6 text-xs font-bold text-foreground/80">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</td>
                 {!hideLotColumns && (
                   <>
@@ -126,7 +126,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                     <button
                       type="button"
                       onClick={() => onRemoveLine(line.id)}
-                      className="text-muted-foreground/20 hover:text-rose-500 hover:bg-rose-500/10 transition-all p-2 rounded-sm"
+                      className="text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all p-2 rounded-sm"
                       aria-label="Remove line"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

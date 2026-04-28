@@ -5,6 +5,9 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { SessionTimeoutModal } from '@/components/shared/SessionTimeoutModal';
 import { WarehouseScopeProvider } from '@/providers/WarehouseScopeProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
+import { cookies } from 'next/headers';
+
 import { inter, ibmPlexArabic, tajawal } from '@/lib/fonts';
 
 import { Metadata } from 'next';
@@ -28,20 +31,25 @@ export default async function LocaleLayout({
   const { locale } = await params;
   const messages = await getMessages();
   const direction = locale === 'ar' ? 'rtl' : 'ltr';
+  const cookieStore = await cookies();
+  const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'dark';
+
 
   return (
-    <html lang={locale} dir={direction} className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} ${ibmPlexArabic.variable} ${tajawal.variable} font-sans`} suppressHydrationWarning>
+    <html lang={locale} dir={direction} className={theme}>
+      <body className={`${inter.variable} ${ibmPlexArabic.variable} ${tajawal.variable} font-sans`}>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <QueryProvider>
             <AuthProvider>
-              <WarehouseScopeProvider>
-                <WebMCPProvider>
-                  {children}
-                  <SessionTimeoutModal />
-                  <Toaster richColors position="top-center" dir={direction as 'rtl' | 'ltr'} />
-                </WebMCPProvider>
-              </WarehouseScopeProvider>
+              <ThemeProvider initialTheme={theme}>
+                <WarehouseScopeProvider>
+                  <WebMCPProvider>
+                    {children}
+                    <SessionTimeoutModal />
+                    <Toaster richColors position="top-center" dir={direction as 'rtl' | 'ltr'} />
+                  </WebMCPProvider>
+                </WarehouseScopeProvider>
+              </ThemeProvider>
             </AuthProvider>
           </QueryProvider>
         </NextIntlClientProvider>

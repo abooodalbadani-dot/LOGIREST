@@ -5,6 +5,7 @@ import { inventoryMocks } from './inventory';
 import { notificationsMocks } from './notifications';
 import { adminMocks } from './admin';
 import { authMocks } from './auth';
+import { reportsMocks } from './reports';
 
 type MockDb = Record<string, unknown>;
 const db: MockDb = { 
@@ -14,7 +15,8 @@ const db: MockDb = {
   ...inventoryMocks, 
   ...notificationsMocks, 
   ...adminMocks,
-  ...authMocks 
+  ...authMocks,
+  ...reportsMocks
 };
 
 export function getMockResponse(method: string, path: string): unknown {

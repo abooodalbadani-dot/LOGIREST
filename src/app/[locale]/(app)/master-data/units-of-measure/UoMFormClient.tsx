@@ -5,16 +5,25 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Ruler, Hash, Globe2, Activity } from 'lucide-react';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import { useMasterDataItem, useMasterDataCreate, useMasterDataUpdate } from '@/features/master-data/hooks/useMasterDataCRUD';
+import {
+  useMasterDataItem,
+  useMasterDataCreate,
+  useMasterDataUpdate,
+} from '@/features/master-data/hooks/useMasterDataCRUD';
 import { UoMSchema, UoMFormSchema, type UoMFormValues } from '@/types/master-data';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Ruler, Info, Activity } from 'lucide-react';
 
-interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
+interface Props {
+  id: string | null;
+  createTitle: string;
+  editTitle: string;
+  locale: string;
+}
 
 export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
   const tc = useTranslations('masterData.common');
@@ -31,130 +40,128 @@ export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
   });
 
   useEffect(() => {
-    if (data) reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en });
+    if (data) {
+      reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en });
+    }
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) await update.mutateAsync({ id, body: values });
-    else await create.mutateAsync(values);
+    if (id) {
+      await update.mutateAsync({ id, body: values });
+    } else {
+      await create.mutateAsync(values);
+    }
     router.push(`/${locale}/master-data/units-of-measure`);
   });
 
-  const breadcrumbs = [
-    { label: tc('home'), href: `/${locale}` },
-    { label: tc('master_data'), href: `/${locale}/master-data` },
-    { label: tu('title'), href: `/${locale}/master-data/units-of-measure` },
-    { label: id ? editTitle : createTitle }
-  ];
+  const isSaving = create.isPending || update.isPending;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <Breadcrumb items={breadcrumbs} />
-
-      <MasterDataFormLayout 
-        title={id ? editTitle : createTitle} 
-        backHref={`/${locale}/master-data/units-of-measure`}
-        isSaving={create.isPending || update.isPending} 
-        onSubmit={onSubmit}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden border-l-2 border-l-cyan-500/50 shadow-2xl">
-              <CardHeader className="pb-4 border-b border-white/5 bg-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-cyan-500/10 rounded-sm">
-                    <Info className="w-4 h-4 text-cyan-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground">{tc('basic_info')}</CardTitle>
-                    <CardDescription className="text-[10px] text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{tu('description')}</CardDescription>
-                  </div>
+    <MasterDataFormLayout
+      title={id ? editTitle : createTitle}
+      backHref={`/${locale}/master-data/units-of-measure`}
+      isSaving={isSaving}
+      onSubmit={onSubmit}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
+            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                  <Ruler className="w-5 h-5 text-cyan-400" />
                 </div>
-              </CardHeader>
-              <CardContent className="pt-8 space-y-8">
-                <div className="grid gap-2">
+                <div>
+                  <CardTitle className="text-base font-black uppercase tracking-wider">{tc('basic_info')}</CardTitle>
+                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tu('description') || tc('details_desc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              {/* Code */}
+              <div className="grid gap-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Hash className="w-3 h-3 text-cyan-500/50" />
                   <Label htmlFor="uom-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('code')}</Label>
-                  <div className="relative group">
-                    <Input 
-                      id="uom-code" 
-                      dir="ltr" 
-                      {...register('code')} 
-                      className="bg-surface-container-highest/30 border-none h-12 font-mono text-cyan-500 font-black tracking-widest uppercase ps-4 transition-all focus:bg-surface-container-highest/50" 
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 opacity-20 group-focus-within:opacity-100 transition-opacity">
-                      <Ruler className="w-4 h-4 text-cyan-400" />
-                    </div>
-                  </div>
-                  {errors.code && <p className="text-[10px] font-bold text-red-400 uppercase tracking-tighter mt-1">{errors.code.message}</p>}
                 </div>
+                <Input 
+                  id="uom-code" 
+                  dir="ltr" 
+                  {...register('code')} 
+                  className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all text-cyan-400 font-black" 
+                  placeholder="UNIT-01" 
+                />
+                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.code.message}</p>}
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="grid gap-2">
-                    <Label htmlFor="uom-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_en')}</Label>
-                    <Input 
-                      id="uom-name-en" 
-                      dir="ltr" 
-                      {...register('name_en')} 
-                      className="bg-surface-container-highest/30 border-none h-12 font-bold text-xs transition-all focus:bg-surface-container-highest/50" 
-                    />
-                    {errors.name_en && <p className="text-[10px] font-bold text-red-400 uppercase tracking-tighter mt-1">{errors.name_en.message}</p>}
-                  </div>
-
-                  <div className="grid gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Name AR */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
                     <Label htmlFor="uom-name-ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_ar')}</Label>
-                    <Input 
-                      id="uom-name-ar" 
-                      dir="rtl" 
-                      {...register('name_ar')} 
-                      className="bg-surface-container-highest/30 border-none h-12 font-bold text-xs transition-all focus:bg-surface-container-highest/50" 
-                    />
-                    {errors.name_ar && <p className="text-[10px] font-bold text-red-400 uppercase tracking-tighter mt-1">{errors.name_ar.message}</p>}
                   </div>
+                  <Input 
+                    id="uom-name-ar" 
+                    dir="rtl" 
+                    {...register('name_ar')} 
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    placeholder="اسم الوحدة" 
+                  />
+                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_ar.message}</p>}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="space-y-8">
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden shadow-xl">
-              <CardHeader className="pb-4 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                  <Activity className="w-4 h-4 text-emerald-400" />
-                  <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground">{tu('precision')}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="p-4 bg-emerald-500/5 rounded-sm border border-emerald-500/10 border-dashed">
-                  <p className="text-[10px] text-emerald-400/80 font-medium leading-relaxed italic">
-                    Standard metrics for inventory precision and conversion accuracy across all supply chain nodes.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden shadow-xl">
-              <CardHeader className="pb-4 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-                  <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground">{tu('registry_sync')}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-between items-center px-4 py-3 bg-surface-container-highest/20 rounded-sm">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-sm">Active</span>
+                {/* Name EN */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
+                    <Label htmlFor="uom-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_en')}</Label>
                   </div>
-                  <div className="flex justify-between items-center px-4 py-3 bg-surface-container-highest/20 rounded-sm">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Compliance</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded-sm">100%</span>
-                  </div>
+                  <Input 
+                    id="uom-name-en" 
+                    dir="ltr" 
+                    {...register('name_en')} 
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    placeholder="Unit Name" 
+                  />
+                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_en.message}</p>}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </MasterDataFormLayout>
-    </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
+            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-sm bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <Activity className="w-4 h-4 text-emerald-400" />
+                </div>
+                <CardTitle className="text-xs font-black uppercase tracking-wider">{tu('precision') || tc('details')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="p-4 bg-emerald-500/5 rounded-sm border border-emerald-500/10 border-dashed">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">{tc('precision')}</h3>
+                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-medium leading-relaxed">
+                  {tu('precision_description')}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-sm border border-surface-variant/5">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{tc('status')}</span>
+                  <p className="text-[9px] text-emerald-400 font-bold uppercase">{tc('active')}</p>
+                </div>
+                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </MasterDataFormLayout>
   );
 }

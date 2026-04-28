@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -17,7 +17,7 @@ import { useShipTransfer } from '@/features/operations/hooks/useShipTransfer';
 import { useReceiveTransfer } from '@/features/operations/hooks/useReceiveTransfer';
 import { usePostTransfer } from '@/features/operations/hooks/usePostTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
-import { Can } from '@/components/auth/Can';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Truck, PackageCheck } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -139,7 +139,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
           <div className="flex gap-4 items-center">
             {!isNew && <StatusBadge status={transferStatus as BadgeStatus} />}
             {isNew && (
-              <Can perform="create" on="transfer">
+              <PermissionGate action="create" resource="transfer">
                 <Button 
                   onClick={handleSaveDraft} 
                   disabled={createTransfer.isPending}
@@ -147,35 +147,35 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
                 >
                   {t('save_draft')}
                 </Button>
-              </Can>
+              </PermissionGate>
             )}
             {isDraft && !isNew && (
-              <Can perform="post" on="transfer">
+              <PermissionGate action="post" resource="transfer">
                 <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
                   <Button
                     disabled={isEitherLocked || shipTransfer.isPending}
                     onClick={() => setShipDialogOpen(true)}
                     className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-cyan-900/20"
                   >
-                    <Truck className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    <Truck className="w-4 h-4 me-2" />
                     {t('ship')}
                   </Button>
                 </div>
-              </Can>
+              </PermissionGate>
             )}
             {isInTransit && (
-              <Can perform="post" on="transfer">
+              <PermissionGate action="post" resource="transfer">
                 <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
                   <Button
                     disabled={isEitherLocked || receiveTransfer.isPending}
                     onClick={() => setPostDialogOpen(true)}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
                   >
-                    <PackageCheck className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    <PackageCheck className="w-4 h-4 me-2" />
                     {t('confirm_receipt')}
                   </Button>
                 </div>
-              </Can>
+              </PermissionGate>
             )}
           </div>
         }
@@ -189,10 +189,10 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-surface-container-low/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500/50 via-cyan-500/20 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('from_warehouse')}</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>
           <div className="relative group">
             <select
               value={fromWarehouseId}
@@ -204,14 +204,14 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
               <option value="wh-2" className="bg-surface-container-highest text-foreground font-medium">{tCommon('warehouses.kitchen')}</option>
               <option value="wh-3" className="bg-surface-container-highest text-foreground font-medium">{tCommon('warehouses.pastry')}</option>
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+            <div className="absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
             </div>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('to_warehouse')}</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('to_warehouse')}</label>
           <div className="relative group">
             <select
               value={toWarehouseId}
@@ -223,7 +223,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
               <option value="wh-2" className="bg-surface-container-highest text-foreground font-medium">{tCommon('warehouses.kitchen')}</option>
               <option value="wh-3" className="bg-surface-container-highest text-foreground font-medium">{tCommon('warehouses.pastry')}</option>
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+            <div className="absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
             </div>
           </div>
@@ -231,7 +231,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
 
         {transfer?.shipped_at && (
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('shipped_at')}</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
             <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
                <span dir="ltr" className="font-mono text-sm font-bold text-cyan-500/80">
                 {format(new Date(transfer.shipped_at), 'MMM dd, yyyy HH:mm')}
@@ -242,7 +242,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
         )}
 
         <div className="col-span-1 md:col-span-4 space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{tCommon('notes')}</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('notes')}</label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}

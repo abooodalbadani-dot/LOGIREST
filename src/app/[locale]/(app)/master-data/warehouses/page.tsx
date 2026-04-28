@@ -19,13 +19,7 @@ export default async function WarehousesPage(props: { params: Promise<{ locale: 
   
   return (
     <ProtectedRoute requiredAction="view" requiredResource="master_data">
-      <div className="flex flex-col gap-6">
-        <PageHeader 
-          title={t('title')} 
-          description="Warehouse and storage location management"
-        />
-        <WarehouseListClient locale={params.locale} />
-      </div>
+      <WarehouseListClient locale={params.locale} />
     </ProtectedRoute>
   );
 }

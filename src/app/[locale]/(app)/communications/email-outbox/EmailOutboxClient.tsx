@@ -6,12 +6,11 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { useEmailOutbox, type EmailOutboxRow } from '@/features/notifications/hooks/useEmailOutbox';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Mail, RefreshCcw, Send, AlertCircle, Clock } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Mail, RefreshCcw, Send, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 import { ColumnDef } from '@tanstack/react-table';
 import { LucideIcon } from 'lucide-react';
+import { MetricCard } from '@/components/ui/metric-card';
 
 const statusConfig: Record<string, { color: string, icon: LucideIcon }> = {
   PENDING: { color: 'text-amber-400', icon: Clock },
@@ -82,8 +81,8 @@ export function EmailOutboxClient() {
     },
   ];
 
-  const total = data?.meta?.total || 0;
-  const sent = data?.data?.filter(e => e.status === 'SENT').length || 0;
+  const totalSent = data?.meta?.total || 0;
+  const delivered = data?.data?.filter(e => e.status === 'SENT').length || 0;
   const failed = data?.data?.filter(e => e.status === 'FAILED').length || 0;
 
   return (
@@ -93,7 +92,7 @@ export function EmailOutboxClient() {
         description="Communication audit trail and outgoing message pipeline"
         actions={
           <div className="flex items-center gap-4">
-            <div className="flex flex-col items-end gap-1 px-4 border-r border-white/10">
+            <div className="flex flex-col items-end gap-1 px-4 border-e border-white/10">
               <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Filter by Status</span>
               <Select value={statusFilter} onValueChange={(v) => { if (v) { setStatusFilter(v === 'all' ? '' : v); setPage(1); } }}>
                 <SelectTrigger className="w-[180px] h-9 bg-surface-container-low border-white/5 text-[11px] font-bold uppercase tracking-wider">
@@ -111,39 +110,25 @@ export function EmailOutboxClient() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Mail className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Volume</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground">{total}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-white/20 to-transparent" />
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Send className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Delivered</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400">{sent}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-emerald-500/50 to-transparent" />
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <AlertCircle className="w-24 h-24 text-rose-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Failures</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-rose-400">{failed}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-rose-500/50 to-transparent" />
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <MetricCard
+          label={t('stats.total_sent')}
+          value={totalSent}
+          icon={Mail}
+          color="cyan"
+        />
+        <MetricCard
+          label={t('stats.delivered')}
+          value={delivered}
+          icon={CheckCircle2}
+          color="emerald"
+        />
+        <MetricCard
+          label={t('stats.failed')}
+          value={failed}
+          icon={AlertCircle}
+          color="rose"
+        />
       </div>
 
       <DataTable

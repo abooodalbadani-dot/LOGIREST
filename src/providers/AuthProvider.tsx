@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
 
-export type UserRole = 'ADMIN' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER';
+export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR';
 export interface UserScope { branch_id: string | null; warehouse_id: string | null; department_id: string | null; }
 export interface ActiveScope { branchId: string | null; warehouseId: string | null; departmentId: string | null; }
 export interface AuthUser { id: string; name: string; email: string; role: UserRole; scopes: UserScope[]; locale?: 'ar' | 'en'; }

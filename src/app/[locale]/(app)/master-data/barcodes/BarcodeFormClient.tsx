@@ -13,8 +13,7 @@ import {
   useMasterDataItem, useMasterDataCreate, useMasterDataUpdate, useMasterDataList,
 } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { BarcodeSchema, BarcodeFormSchema, ItemSchema, type BarcodeFormValues } from '@/types/master-data';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Cpu, Link as LinkIcon, Hash, Barcode as BarcodeIcon } from 'lucide-react';
 
 interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
@@ -49,102 +48,96 @@ export function BarcodeFormClient({ id, createTitle, editTitle, locale }: Props)
     router.push(`/${locale}/master-data/barcodes`);
   });
 
-  const breadcrumbs = [
-    { label: tc('title'), href: `/${locale}/master-data` },
-    { label: tb('title'), href: `/${locale}/master-data/barcodes` },
-    { label: id ? editTitle : createTitle, href: '#' }
-  ];
-
   return (
-    <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <Breadcrumb items={breadcrumbs} />
-
-      <MasterDataFormLayout 
-        title={id ? editTitle : createTitle} 
-        backHref={`/${locale}/master-data/barcodes`}
-        isSaving={create.isPending || update.isPending} 
-        onSubmit={onSubmit}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Configuration */}
-          <div className="lg:col-span-8 space-y-6">
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden border-l-2 border-l-cyan-500/50">
-              <CardHeader>
-                <div className="flex items-center gap-2 mb-1">
-                  <LinkIcon className="w-3.5 h-3.5 text-cyan-400" />
-                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">
-                    {tb('mapping_section')}
-                  </CardTitle>
+    <MasterDataFormLayout 
+      title={id ? editTitle : createTitle} 
+      backHref={`/${locale}/master-data/barcodes`}
+      isSaving={create.isPending || update.isPending} 
+      onSubmit={onSubmit}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center">
+                  <LinkIcon className="w-5 h-5 text-cyan-500" />
                 </div>
-                <CardDescription className="text-xs text-muted-foreground/60 italic font-medium">
-                  {tb('mapping_description')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="bc-item" className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">{tb('mapping_section')}</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground/60/40 uppercase tracking-widest mt-0.5">{tb('mapping_description')}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label htmlFor="bc-item" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                     {tb('item')}
                   </Label>
                   <select 
                     id="bc-item" 
                     {...register('item_id')}
-                    className="h-11 px-4 bg-surface-container-highest/30 border-none rounded-sm w-full text-xs font-bold focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none"
+                    className="h-12 px-4 bg-surface-container-highest/30 border-none rounded-sm w-full text-xs font-bold uppercase tracking-widest appearance-none hover:bg-surface-container-highest/50 transition-all outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50"
                   >
-                    <option value="">—</option>
+                    <option value="" className="bg-surface-container-low text-muted-foreground/60">—</option>
                     {items?.data?.map((i) => (
-                      <option key={i.id} value={i.id}>{i.code} — {i.name_en}</option>
+                      <option key={i.id} value={i.id} className="bg-surface-container-low font-bold text-xs uppercase tracking-widest">
+                        {i.code} — {i.name_en}
+                      </option>
                     ))}
                   </select>
-                  {errors.item_id && <p className="text-[10px] font-bold text-red-400 uppercase tracking-tight">{errors.item_id.message}</p>}
+                  {errors.item_id && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.item_id.message}</p>}
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="bc-qty" className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                <div className="space-y-2">
+                  <Label htmlFor="bc-qty" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                     {tb('default_qty')}
                   </Label>
                   <div className="relative group">
-                    <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-400 transition-colors" />
+                    <Hash className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-400 transition-colors" />
                     <Input 
                       id="bc-qty" 
                       type="number" 
                       dir="ltr" 
                       min={1}
                       {...register('default_qty', { valueAsNumber: true })} 
-                      className="h-11 pl-10 bg-surface-container-highest/30 border-none rounded-sm font-mono font-bold text-xs focus:ring-1 focus:ring-cyan-500/50"
+                      className="h-12 ps-10 bg-surface-container-highest/30 border-none rounded-sm font-mono font-bold text-xs focus:ring-1 focus:ring-cyan-500/50"
                     />
                   </div>
-                  {errors.default_qty && <p className="text-[10px] font-bold text-red-400 uppercase tracking-tight">{errors.default_qty.message}</p>}
+                  {errors.default_qty && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.default_qty.message}</p>}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden border-l-2 border-l-amber-500/50">
-              <CardHeader>
-                <div className="flex items-center gap-2 mb-1">
-                  <Cpu className="w-3.5 h-3.5 text-amber-400" />
-                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
-                    {tb('hardware_integration')}
-                  </CardTitle>
+          <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-sm bg-amber-500/10 flex items-center justify-center">
+                  <BarcodeIcon className="w-5 h-5 text-amber-500" />
                 </div>
-                <CardDescription className="text-xs text-muted-foreground/60 italic font-medium">
-                  {tb('scan_description')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="bc-val" className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">{tb('hardware_integration')}</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground/60/40 uppercase tracking-widest mt-0.5">{tb('scan_description')}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="bc-val" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                     {tb('barcode_label')}
                   </Label>
                   <ScanInput
                     onScan={(val) => setValue('barcode', val, { shouldValidate: true })}
                     placeholder={tb('scan_or_type')}
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm focus-visible:ring-1 focus-visible:ring-amber-500/50 transition-all font-mono font-bold text-xs"
                   />
                   <input type="hidden" {...register('barcode')} />
-                  {errors.barcode && <p className="text-[10px] font-bold text-red-400 uppercase tracking-tight">{errors.barcode.message}</p>}
+                  {errors.barcode && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.barcode.message}</p>}
                 </div>
 
                 {currentBarcode && (
-                  <div className="p-4 bg-surface-container-highest/30 rounded-sm border border-amber-500/10 flex items-center justify-between group">
+                  <div className="p-4 bg-surface-container-highest/20 rounded-sm border border-amber-500/10 flex items-center justify-between group">
                     <div className="flex items-center gap-3">
                       <BarcodeIcon className="w-5 h-5 text-amber-400/50" />
                       <div>
@@ -155,28 +148,38 @@ export function BarcodeFormClient({ id, createTitle, editTitle, locale }: Props)
                     <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Contextual Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="p-6 bg-surface-container-low rounded-sm border-t-2 border-t-cyan-500/50 space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">{tc('quick_tips')}</h4>
-              <ul className="space-y-3">
-                <li className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
-                  <span className="text-cyan-400/60 mr-2">/</span>
-                  {tb('tip_1')}
+        <div className="space-y-8">
+          <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center">
+                  <Cpu className="w-5 h-5 text-cyan-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">{tc('quick_tips')}</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground/60/40 uppercase tracking-widest mt-0.5">{tc('hardware_usage')}</p>
+                </div>
+              </div>
+              
+              <ul className="space-y-4">
+                <li className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
+                  <span className="text-cyan-400/60 font-black">/</span>
+                  <span>{tb('tip_1')}</span>
                 </li>
-                <li className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
-                  <span className="text-cyan-400/60 mr-2">/</span>
-                  {tb('tip_2')}
+                <li className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
+                  <span className="text-cyan-400/60 font-black">/</span>
+                  <span>{tb('tip_2')}</span>
                 </li>
               </ul>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
-      </MasterDataFormLayout>
-    </div>
+      </div>
+    </MasterDataFormLayout>
   );
 }

@@ -11,7 +11,7 @@ export const AuthUserSchema = z.object({
   id: z.string(), 
   name: z.string(), 
   email: z.string().email(), 
-  role: z.enum(['ADMIN','INV_MGR','WH_KEEPER','PROC_OFFICER','APPROVER','AUDITOR','VIEWER']), 
+  role: z.enum(['ADMIN','GM','INV_MGR','WH_KEEPER','PROC_OFFICER','APPROVER','AUDITOR','VIEWER','KITCHEN_CHIEF','STORE_MGR']), 
   scopes: z.array(UserScopeSchema), 
   locale: z.enum(['ar','en']).optional() 
 });

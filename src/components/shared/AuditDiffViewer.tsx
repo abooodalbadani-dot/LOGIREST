@@ -21,9 +21,9 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
   };
 
   return (
-    <div className="overflow-x-auto border border-surface-3 rounded bg-surface-1">
-      <table className="w-full text-sm text-left rtl:text-right">
-        <thead className="bg-surface-2 text-on-surface-muted border-b border-surface-3">
+    <div className="overflow-x-auto border border-white/10-muted rounded-xl bg-surface-container-low">
+      <table className="w-full text-sm text-start">
+        <thead className="bg-surface-container-high text-muted-foreground border-b border-white/10-muted">
           <tr>
             <th className="px-4 py-3 font-medium">Field</th>
             <th className="px-4 py-3 font-medium">Old Value</th>
@@ -34,11 +34,11 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
           {changes.map((change, i) => {
             const isAdded = change.old_value === null && change.new_value !== null;
             const isDeleted = change.old_value !== null && change.new_value === null;
-            const bgClass = isDeleted ? 'bg-red-500/10' : isAdded ? 'bg-emerald-500/10' : 'bg-amber-500/10';
+            const bgClass = isDeleted ? 'bg-status-error/10' : isAdded ? 'bg-status-success/10' : 'bg-status-warning/10';
             
             return (
-              <tr key={i} className={`border-b border-surface-3 ${bgClass}`}>
-                <td className="px-4 py-3 font-mono text-on-surface-muted max-w-[150px] truncate" title={change.field}>
+              <tr key={i} className={`border-b border-white/10-muted ${bgClass}`}>
+                <td className="px-4 py-3 font-mono text-muted-foreground max-w-[150px] truncate" title={change.field}>
                   {change.field}
                 </td>
                 <td className="px-4 py-3 break-all">

@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { StatusBadge } from '@/components/shared/StatusBadge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { ScanLog } from '@/components/shared/ScanInput/ScanLog';
 import { FEFOLotAllocator } from '@/components/shared/FEFOLotAllocator/FEFOLotAllocator';
@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/providers/AuthProvider';
 import type { Lot } from '@/types/master-data';
-import type { BadgeStatus } from '@/components/shared/StatusBadge';
+import type { BadgeStatus } from '@/components/ui/status-badge';
 import Link from 'next/link';
 import type { LotAllocation } from '@/types/documents';
 
@@ -128,15 +128,15 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
   return (
     <div className="min-h-screen bg-surface-container-lowest flex flex-col p-4 space-y-6">
       {/* Immersive Header */}
-      <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-2xl border-l-4 border-cyan-500 shadow-xl">
+      <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-2xl border-s-4 border-operational-cyan shadow-xl">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{isNew ? t('create_new') : issue?.document_number}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-operational-cyan opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-operational-cyan"></span>
             </span>
-            <span className="text-cyan-500/80 text-xs font-mono uppercase tracking-widest italic">Immersive Scan Mode</span>
+            <span className="text-operational-cyan/80 text-xs font-mono uppercase tracking-widest italic">Immersive Scan Mode</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -155,9 +155,9 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
              onScan={handleScan} 
              disabled={isPosted || isLocked} 
              placeholder="READY FOR BARCODE..." 
-             className="text-4xl py-10 font-mono text-center bg-surface-container-highest border-none rounded-3xl focus:ring-4 focus:ring-cyan-500/30 transition-all placeholder:text-surface-highest/30 shadow-inner"
+             className="text-4xl py-10 font-mono text-center bg-surface-container-highest border-none rounded-3xl focus:ring-4 focus:ring-operational-cyan/30 transition-all placeholder:text-foreground/30 shadow-inner"
           />
-          {scanError && <div className="text-red-500 text-center mt-6 text-xl font-bold animate-bounce uppercase tracking-tighter">{scanError}</div>}
+          {scanError && <div className="text-status-error text-center mt-6 text-xl font-bold animate-bounce uppercase tracking-tighter">{scanError}</div>}
           
           <div className="mt-8 flex-1 overflow-auto">
              {lines.length > 0 ? (
@@ -167,18 +167,18 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
                    const isFullyAllocated = totalAllocated >= line.qty;
                    
                    return (
-                      <div key={line.id} className="bg-surface-container-high border-none p-6 rounded-2xl shadow-md transition-all hover:scale-[1.01] flex items-center justify-between group">
+                      <div key={line.id} className="bg-surface-container-high border border-border-muted/50 p-6 rounded-2xl shadow-md transition-all hover:scale-[1.01] flex items-center justify-between group">
                          <div>
-                           <div className="text-xl font-bold group-hover:text-cyan-500 transition-colors">{line.item.name_ar} / {line.item.name_en}</div>
+                           <div className="text-xl font-bold group-hover:text-operational-cyan transition-colors">{line.item.name_ar} / {line.item.name_en}</div>
                            <div className="text-muted-foreground text-sm font-mono mt-1 opacity-70 tracking-widest">{line.item.code}</div>
                          </div>
                          <div className="flex items-center gap-8">
-                            <div className="text-right">
+                            <div className="text-end">
                               <div className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Quantity</div>
                               <div className="text-2xl font-bold font-mono">{line.qty} <span className="text-sm opacity-60">{line.item.primary_uom.code}</span></div>
                             </div>
                             <button 
-                              className={`px-6 py-3 rounded-xl border-2 font-black tracking-tighter transition-all ${isFullyAllocated ? 'border-cyan-500 text-cyan-500 bg-cyan-500/5 hover:bg-cyan-500/10' : 'border-red-500 text-red-500 animate-pulse bg-red-500/5 hover:bg-red-500/10'}`}
+                              className={`px-6 py-3 rounded-xl border-2 font-black tracking-tighter transition-all ${isFullyAllocated ? 'border-operational-cyan text-operational-cyan bg-operational-cyan/5 hover:bg-operational-cyan/10' : 'border-status-error text-status-error animate-pulse bg-status-error/5 hover:bg-status-error/10'}`}
                               onClick={() => { setActiveLine(line); setFefoOpen(true); }}
                               disabled={isPosted}
                             >
@@ -213,7 +213,7 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
             {t('save_draft')}
           </Button>
           <Button
-            className="flex-1 bg-cyan-500 text-surface-0 hover:bg-cyan-500/80"
+            className="flex-1 bg-operational-cyan text-white hover:bg-operational-cyan/80"
             disabled={isLocked || lines.length === 0}
             onClick={() => setIsPostDialogOpen(true)}
           >
@@ -233,7 +233,7 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
         onConfirm={handlePost}
       />
       <Dialog open={fefoOpen} onOpenChange={setFefoOpen}>
-        <DialogContent className="max-h-[90vh] max-w-2xl bg-surface-1 border border-surface-3 overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl bg-surface-container border border-border-muted/50 overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">{t('fefo_drawer_title')}: {activeLine?.item.name_en}</DialogTitle>
           </DialogHeader>

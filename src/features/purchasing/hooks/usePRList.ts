@@ -4,7 +4,7 @@ import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
-import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
 const PRSummarySchema = z.object({ 
   id: z.string(), 

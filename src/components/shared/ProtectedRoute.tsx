@@ -47,7 +47,7 @@ export default function ProtectedRoute({
   if (isLoading || !isMounted) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-operational-cyan border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }

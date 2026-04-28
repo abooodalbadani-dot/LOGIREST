@@ -4,18 +4,20 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Plus, Home, MapPin, CheckCircle2, Search, Building2 } from 'lucide-react';
+import { Plus, Home, MapPin, CheckCircle2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { WarehouseSchema, type Warehouse } from '@/types/master-data';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { MetricCard } from '@/components/ui/metric-card';
 
 export function WarehouseListClient({ locale }: { locale: string }) {
   const tc = useTranslations('masterData.common');
@@ -24,12 +26,12 @@ export function WarehouseListClient({ locale }: { locale: string }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
 
-  const WAREHOUSE_TYPE_STYLES: Record<string, { label: string, color: string, shadow: string }> = {
+  const WAREHOUSE_TYPE_STYLES: Record<string, { label: string, color: string, shadow: string }> = useMemo(() => ({
     MAIN: { label: t('types.main'), color: 'text-blue-400', shadow: 'shadow-[0_0_8px_rgba(96,165,250,0.4)]' },
     DRY: { label: t('types.dry'), color: 'text-amber-400', shadow: 'shadow-[0_0_8px_rgba(251,191,36,0.4)]' },
     COLD: { label: t('types.cold'), color: 'text-cyan-400', shadow: 'shadow-[0_0_8px_rgba(34,211,238,0.4)]' },
     VIRTUAL: { label: t('types.virtual'), color: 'text-indigo-400', shadow: 'shadow-[0_0_8px_rgba(129,140,248,0.4)]' }
-  };
+  }), [t]);
 
   const { data, isLoading } = useMasterDataList(
     'warehouses', 
@@ -46,7 +48,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
     };
   }, [data]);
 
-  const columns: ColumnDef<Warehouse, unknown>[] = [
+  const columns = useMemo<ColumnDef<Warehouse, unknown>[]>(() => [
     { 
       accessorKey: 'code', 
       header: tc('code'), 
@@ -80,9 +82,10 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       accessorKey: 'is_active', 
       header: tc('is_active'),
       cell: ({ row }) => (
-        <Badge variant={row.original.is_active ? 'default' : 'outline'} className="text-[9px] font-black uppercase tracking-widest rounded-xl">
-          {row.original.is_active ? tc('active') : tc('inactive')}
-        </Badge>
+        <StatusBadge 
+          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} 
+          className="rounded-sm h-5"
+        />
       )
     },
     {
@@ -90,21 +93,23 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       header: '',
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/${locale}/master-data/warehouses/${row.original.id}`);
-            }}
-          >
-            {tc('view')}
-          </Button>
+          <PermissionGate action="view" resource="master_data">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${locale}/master-data/warehouses/${row.original.id}`);
+              }}
+            >
+              {tc('view')}
+            </Button>
+          </PermissionGate>
         </div>
       ),
     },
-  ];
+  ], [tc, t, locale, router, WAREHOUSE_TYPE_STYLES]);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -119,52 +124,42 @@ export function WarehouseListClient({ locale }: { locale: string }) {
           title={t('title')} 
           description={t('description')}
           actions={
-            <Link href={`/${locale}/master-data/warehouses/new`}>
-              <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-2xl transition-all shadow-lg shadow-cyan-900/20">
-                <Plus className="w-3.5 h-3.5 me-2" />
-                {tc('create_new')}
-              </Button>
-            </Link>
+            <PermissionGate action="create" resource="master_data">
+              <Link href={`/${locale}/master-data/warehouses/new`}>
+                <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                  <Plus className="w-3.5 h-3.5 me-2" />
+                  {tc('create_new')}
+                </Button>
+              </Link>
+            </PermissionGate>
           }
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-medium shadow-xl shadow-primary/5">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Home className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('total_warehouses')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground">{stats.total}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('total_warehouses')}
+          value={stats.total}
+          icon={Home}
+          color="cyan"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-medium shadow-xl shadow-primary/5">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <CheckCircle2 className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('active')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400">{stats.active}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-emerald-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('active')}
+          value={stats.active}
+          icon={CheckCircle2}
+          color="emerald"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-medium shadow-xl shadow-primary/5">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <MapPin className="w-24 h-24 text-cyan-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('physical_sites')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-cyan-400">{stats.physical}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={t('physical_sites')}
+          value={stats.physical}
+          icon={MapPin}
+          color="amber"
+        />
       </div>
 
-      <div className="bg-surface-container-low shadow-2xl shadow-primary/10 rounded-2xl overflow-hidden">
+      <div className="bg-surface-container-low shadow-2xl shadow-primary/10 rounded-sm overflow-hidden">
         <DataTable 
           columns={columns} 
           data={data?.data ?? []} 
@@ -187,7 +182,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
                     placeholder={t('search_placeholder')}
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                    className="w-full bg-surface-container-highest/30 border-none h-12 px-12 text-xs font-bold rounded-2xl shadow-inner shadow-black/20"
+                    className="w-full bg-surface-container-highest/30 border-none h-12 px-12 text-xs font-bold rounded-sm shadow-inner shadow-black/20"
                   />
                   <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                 </div>

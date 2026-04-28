@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { StatusBadge } from '@/components/shared/StatusBadge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { usePostStocktake } from '@/features/operations/hooks/usePostStocktake';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import type { StocktakeCount } from '@/features/operations/hooks/useStocktakeSession';
 import { format } from 'date-fns';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Info, Warehouse, User, BarChart3, Save, Clock, ChevronRight } from 'lucide-react';
 
 type LocalCount = StocktakeCount & {
   local_counted_qty: number | null;
@@ -23,6 +23,8 @@ type LocalCount = StocktakeCount & {
   is_saving: boolean;
   is_saved: boolean;
 };
+
+import { PermissionGate } from '@/components/shared/PermissionGate';
 
 export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake');
@@ -88,112 +90,192 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative w-24 h-24 flex items-center justify-center">
-          <div className="absolute inset-0 border-4 border-cyan-500/10 rounded-full" />
-          <div className="absolute inset-0 border-4 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_15px_rgba(6,182,212,0.2)]" />
-          <span className="text-2xl font-black text-cyan-500 tracking-tighter italic">STK</span>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
+        <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="absolute inset-0 border-[6px] border-cyan-500/5 rounded-full" />
+          <div className="absolute inset-0 border-[6px] border-t-cyan-500 rounded-full animate-spin shadow-[0_0_30px_rgba(6,182,212,0.3)]" />
+          <div className="absolute inset-4 border border-white/5 rounded-full flex items-center justify-center bg-surface-container-low shadow-inner">
+            <BarChart3 className="w-8 h-8 text-cyan-500 animate-pulse" />
+          </div>
         </div>
-        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/80 animate-pulse">
-          {t('retrieving_manifest')}
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-[10px] font-black uppercase tracking-[0.4em] text-cyan-500/80 animate-pulse">
+            {t('retrieving_manifest')}
+          </div>
+          <div className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest">{t('connecting_to_core')}</div>
         </div>
       </div>
     );
   }
 
-  if (!session) return <div className="text-on-surface-muted p-8 font-mono text-xs uppercase tracking-widest">{t('offline')}</div>;
+  if (!session) return <div className="text-muted-foreground/60 p-8 font-mono text-xs uppercase tracking-widest">{t('offline')}</div>;
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <Breadcrumb
-        items={[
-          { label: tCommon('sidebar.dashboard'), href: `/${locale}/dashboard` },
-          { label: t('title'), href: `/${locale}/stocktake` },
-          { label: session.session_number },
-        ]}
-      />
+    <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="flex flex-col gap-6">
+        <Breadcrumb
+          items={[
+            { label: tCommon('sidebar.dashboard'), href: `/${locale}/dashboard` },
+            { label: t('title'), href: `/${locale}/stocktake` },
+            { label: session.session_number },
+          ]}
+        />
 
-      <PageHeader
-        title={<span dir="ltr" className="font-mono">{session.session_number}</span>}
-        description={
-          <div className="flex items-center gap-4 mt-1">
-            <span dir="ltr" className="font-mono text-cyan-500/80 tracking-widest">{t('snapshot_qty')}: {format(new Date(session.snapshot_at), 'MMM dd, yyyy HH:mm')}</span>
+        <PageHeader
+          title={
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center border border-white/5 shadow-xl">
+                <BarChart3 className="w-6 h-6 text-cyan-500" />
+              </div>
+              <div className="flex flex-col">
+                <span dir="ltr" className="font-display font-black tracking-tighter text-3xl">
+                  {session.session_number}
+                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-cyan-500/10 rounded-md border border-cyan-500/20">
+                    <Clock className="w-2.5 h-2.5 text-cyan-500" />
+                    <span dir="ltr" className="text-[9px] font-black text-cyan-500 tabular-nums uppercase">
+                      {format(new Date(session.snapshot_at), 'MMM dd, HH:mm')}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground/20 text-[10px]">|</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                    {t('snapshot_qty')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+          actions={
+            !isPosted && (
+              <PermissionGate action="post" resource="stocktake">
+                <Button
+                  onClick={() => setIsPostDialogOpen(true)}
+                  disabled={!allCounted || hasUnresolvedVariances || postStocktake.isPending}
+                  className="h-12 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-emerald-900/20 disabled:opacity-20 group"
+                >
+                  <CheckCircle className="w-4 h-4 me-2 group-hover:scale-110 transition-transform" />
+                  {t('post_session')}
+                </Button>
+              </PermissionGate>
+            )
+          }
+        />
+      </div>
+
+      {/* Session Metadata Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+              <Warehouse className="w-5 h-5 text-cyan-500/60" />
+            </div>
+            <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em]">{tCommon('warehouse')}</span>
           </div>
-        }
-        actions={
-          !isPosted && (
-            <Button
-              onClick={() => setIsPostDialogOpen(true)}
-              disabled={!allCounted || hasUnresolvedVariances || postStocktake.isPending}
-              className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-30"
-            >
-              <CheckCircle className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {t('post_session')}
-            </Button>
-          )
-        }
-      />
-
-      {/* Session Info */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 bg-surface-container-low/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.1)]">
-        {/* Subtle accent line */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500/50 via-cyan-500/20 to-transparent" />
-
-        <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{tCommon('warehouse')}</span>
-          <div className="font-bold text-foreground text-sm flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/40" />
-            {tCommon('warehouses.' + session.warehouse_id.toLowerCase())}
+          <div className="flex flex-col">
+            <span className="text-lg font-black text-foreground tracking-tight">
+              {tCommon('warehouses.' + session.warehouse_id.toLowerCase())}
+            </span>
+            <span dir="ltr" className="text-[10px] font-bold text-muted-foreground/40 font-mono tracking-widest">{session.warehouse_id}</span>
           </div>
         </div>
-        <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{tCommon('status_label')}</span>
-          <div className="flex">
-            <StatusBadge status={session.status} />
+
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+              <Info className="w-5 h-5 text-amber-500/60" />
+            </div>
+            <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em]">{tCommon('status_label')}</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex">
+              <StatusBadge status={session.status} />
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('workflow_state')}</span>
           </div>
         </div>
-        <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('started_by')}</span>
-          <div className="font-bold text-foreground text-sm uppercase tracking-wide">{session.started_by}</div>
+
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+              <User className="w-5 h-5 text-emerald-500/60" />
+            </div>
+            <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em]">{t('started_by')}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-black text-foreground tracking-tight uppercase">
+              {session.started_by}
+            </span>
+            <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('owner')}</span>
+          </div>
         </div>
-        <div className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('items_count')}</span>
-          <div dir="ltr" className="font-mono font-black text-xl text-cyan-500">{session.counts.length}</div>
+
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+              <ChevronRight className="w-5 h-5 text-rose-500/60" />
+            </div>
+            <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em]">{t('items_count')}</span>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-1">
+              <span dir="ltr" className="text-3xl font-mono font-black text-foreground">
+                {session.counts.length}
+              </span>
+              <span className="text-[10px] font-bold text-rose-500/50 uppercase tracking-widest">{t('skus')}</span>
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('total_to_verify')}</span>
+          </div>
         </div>
       </div>
 
-      {/* Lock Banner always visible for active sessions */}
       {isActive && (
-        <div className="rounded-2xl overflow-hidden shadow-lg">
+        <div className="rounded-[2rem] overflow-hidden shadow-2xl">
           <LockBanner lockState={lockState} />
         </div>
       )}
 
-      {/* Count Sheet */}
-      <div className="bg-surface-container-low/30 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-        <div className="p-8 border-b border-white/5 bg-surface-container-low/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500">{t('count_sheet_title')}</h2>
-            <p className="text-muted-foreground/40 text-xs font-medium">{t('count_sheet_desc')}</p>
-          </div>
-          {hasUnresolvedVariances && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-              <span className="text-rose-400 text-[10px] font-black uppercase tracking-widest">{t('variance_reason_required')}</span>
-            </div>
-          )}
+      {/* Count Sheet Interface */}
+      <div className="bg-surface-container-low/30 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl relative">
+        <div className="absolute top-0 end-0 p-8 opacity-[0.02] pointer-events-none">
+          <BarChart3 className="w-48 h-48" />
         </div>
+
+        <div className="p-10 border-b border-white/5 bg-surface-container-low/50 flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-6 bg-cyan-500 rounded-full" />
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] text-cyan-500">{t('count_sheet_title')}</h2>
+            </div>
+            <p className="text-muted-foreground/40 text-[11px] font-bold uppercase tracking-widest ms-5">{t('count_sheet_desc')}</p>
+          </div>
+
+          <div className="flex items-center gap-6">
+            {hasUnresolvedVariances && (
+              <div className="flex items-center gap-3 px-6 py-3 bg-rose-500/5 border border-rose-500/20 rounded-2xl animate-in fade-in zoom-in duration-500">
+                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.8)]" />
+                <span className="text-rose-400 text-[10px] font-black uppercase tracking-[0.15em]">{t('variance_reason_required')}</span>
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-500/60" />
+              </div>
+            )}
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest/20 rounded-xl border border-white/5">
+              <Save className="w-3.5 h-3.5 text-muted-foreground/40" />
+              <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">{t('autosave_active')}</span>
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
-              <tr className="bg-surface-container-high/50 text-muted-foreground/60 text-[10px] uppercase tracking-[0.3em] font-black border-b border-white/5">
-                <th className="px-6 py-5 text-start">{t('uid')}</th>
-                <th className="px-6 py-5 text-start">{tCommon('item')}</th>
-                <th className="px-6 py-5 text-end">{t('snapshot_qty')}</th>
-                <th className="px-6 py-5 text-end">{t('counted_qty')}</th>
-                <th className="px-6 py-5 text-end">{t('variance')}</th>
-                <th className="px-6 py-5 text-start min-w-[200px]">{t('variance_reason')}</th>
-                <th className="px-6 py-5 text-center w-24">{t('status')}</th>
+              <tr className="bg-surface-container-high/30 text-muted-foreground/40 text-[9px] uppercase tracking-[0.4em] font-black border-b border-white/5">
+                <th className="px-8 py-6 text-start w-40">{t('uid')}</th>
+                <th className="px-8 py-6 text-start">{tCommon('item')}</th>
+                <th className="px-8 py-6 text-end w-32">{t('snapshot_qty')}</th>
+                <th className="px-8 py-6 text-center w-48">{t('counted_qty')}</th>
+                <th className="px-8 py-6 text-end w-32">{t('variance')}</th>
+                <th className="px-8 py-6 text-start min-w-[300px]">{t('variance_reason')}</th>
+                <th className="px-8 py-6 text-center w-24">{t('sync')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -201,28 +283,44 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                 const variance = count.local_counted_qty !== null
                   ? count.local_counted_qty - count.snapshot_qty
                   : null;
-                const varianceColor = variance === null ? 'text-muted-foreground/20'
+                const varianceColor = variance === null ? 'text-muted-foreground/10'
                   : variance < 0 ? 'text-rose-500'
                   : variance > 0 ? 'text-emerald-400'
-                  : 'text-muted-foreground/40';
+                  : 'text-muted-foreground/30';
                 const needsReason = variance !== null && variance !== 0 && !count.local_variance_reason;
 
                 return (
-                  <tr key={count.id} className="hover:bg-surface-container-high/40 transition-colors group">
-                    <td className="px-6 py-5">
-                      <span dir="ltr" className="font-mono text-[10px] text-cyan-500/40 group-hover:text-cyan-500/60 tracking-widest transition-colors">{count.item.code}</span>
+                  <tr key={count.id} className="hover:bg-surface-container-high/20 transition-all group border-s-4 border-transparent hover:border-cyan-500/40">
+                    <td className="px-8 py-7">
+                      <span dir="ltr" className="font-mono text-[11px] font-black text-cyan-500/30 group-hover:text-cyan-500 transition-colors tracking-widest">{count.item.code}</span>
                     </td>
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-foreground/90">{locale === 'ar' ? count.item.name_ar : count.item.name_en}</div>
+                    <td className="px-8 py-7">
+                      <div className="flex flex-col gap-1">
+                        <div className="font-black text-foreground text-sm tracking-tight leading-none group-hover:text-cyan-500/90 transition-colors">
+                          {locale === 'ar' ? count.item.name_ar : count.item.name_en}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.1em]">{count.item.category?.name_en || 'General'}</div>
+                      </div>
                     </td>
-                    <td className="px-6 py-5 text-end">
-                      <span dir="ltr" className="font-mono text-sm font-bold opacity-40 bg-surface-container-highest/30 px-2 py-1 rounded border border-white/5">{count.snapshot_qty}</span>
+                    <td className="px-8 py-7 text-end">
+                      <div className="flex flex-col items-end gap-1">
+                        <span dir="ltr" className="font-mono text-sm font-black text-foreground/40 tabular-nums">
+                          {count.snapshot_qty}
+                        </span>
+                        <span className="text-[8px] font-bold text-muted-foreground/20 uppercase tracking-widest">{t('expected')}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-5 text-end">
+                    <td className="px-8 py-7">
                       {isPosted ? (
-                        <span dir="ltr" className="font-mono text-sm font-black text-cyan-500">{count.counted_qty ?? '—'}</span>
+                        <div className="flex justify-center">
+                          <div className="px-6 py-2 bg-surface-container-highest/20 rounded-xl border border-white/5">
+                            <span dir="ltr" className="font-mono text-lg font-black text-cyan-500 tabular-nums">
+                              {count.counted_qty ?? '—'}
+                            </span>
+                          </div>
+                        </div>
                       ) : (
-                        <div className="flex justify-end">
+                        <div className="flex justify-center group/input">
                           <input
                             type="number"
                             min={0}
@@ -239,19 +337,27 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                               }
                             }}
                             dir="ltr"
-                            className="w-24 bg-surface-container-highest/30 border border-white/5 text-foreground rounded-xl px-4 py-2 text-center font-mono font-black text-sm focus:ring-2 focus:ring-cyan-500/30 focus:outline-none transition-all hover:bg-surface-container-highest/60"
+                            placeholder="0"
+                            className="w-32 bg-surface-container-highest/20 border border-white/10 text-foreground rounded-[1.25rem] px-6 py-4 text-center font-mono font-black text-xl focus:ring-4 focus:ring-cyan-500/20 focus:outline-none transition-all group-hover/input:bg-surface-container-highest/40 placeholder:text-muted-foreground/10 group-hover/input:border-cyan-500/30"
                           />
                         </div>
                       )}
                     </td>
-                    <td className={`px-6 py-5 text-end font-mono text-base font-black ${varianceColor}`}>
+                    <td className="px-8 py-7 text-end">
                       {variance !== null ? (
-                        <span dir="ltr">{variance > 0 ? `+${variance}` : variance}</span>
-                      ) : '—'}
+                        <div className={`flex flex-col items-end gap-1 ${varianceColor}`}>
+                          <span dir="ltr" className="font-mono text-lg font-black tabular-nums transition-all">
+                            {variance > 0 ? `+${variance}` : variance}
+                          </span>
+                          <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-50">{t('delta')}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground/10 font-mono text-lg">—</span>
+                      )}
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-8 py-7">
                       {!isPosted && variance !== 0 && count.local_counted_qty !== null ? (
-                        <div className="relative group/input">
+                        <div className="relative group/reason">
                           <input
                             type="text"
                             value={count.local_variance_reason}
@@ -259,25 +365,35 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                               ? { ...c, local_variance_reason: e.target.value }
                               : c))}
                             placeholder={t('variance_reason')}
-                            className={`w-full bg-surface-container-highest/40 border border-white/5 rounded-xl px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all hover:bg-surface-container-highest/60 ${needsReason ? 'ring-2 ring-rose-500/50' : ''}`}
+                            className={`w-full bg-surface-container-highest/20 border border-white/5 rounded-2xl px-6 py-3 text-[11px] font-bold tracking-wide focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all hover:bg-surface-container-highest/40 placeholder:text-muted-foreground/20 ${needsReason ? 'ring-2 ring-rose-500/30 border-rose-500/40' : ''}`}
                           />
+                          {needsReason && (
+                            <div className="absolute -top-2 -end-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                              <AlertTriangle className="w-3 h-3 text-white" />
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground/40 text-xs italic">{count.variance_reason || '—'}</span>
+                        <div className="px-2">
+                          <span className="text-muted-foreground/20 text-[10px] font-bold uppercase tracking-widest italic">{count.variance_reason || t('no_variance_recorded')}</span>
+                        </div>
                       )}
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      {count.is_saving ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-4 h-4 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                        </div>
-                      ) : count.is_saved ? (
-                        <div className="flex items-center justify-center">
-                          <CheckCircle className="w-5 h-5 text-emerald-400 animate-in zoom-in duration-300" />
-                        </div>
-                      ) : (
-                        <div className="w-2 h-2 rounded-full bg-white/5 mx-auto" />
-                      )}
+                    <td className="px-8 py-7 text-center">
+                      <div className="flex items-center justify-center">
+                        {count.is_saving ? (
+                          <div className="relative w-6 h-6">
+                            <div className="absolute inset-0 border-2 border-cyan-500/10 rounded-full" />
+                            <div className="absolute inset-0 border-2 border-t-cyan-500 rounded-full animate-spin" />
+                          </div>
+                        ) : count.is_saved ? (
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 animate-in zoom-in duration-300">
+                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                          </div>
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/5" />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

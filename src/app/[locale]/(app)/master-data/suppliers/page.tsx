@@ -17,7 +17,7 @@ export default async function SuppliersPage(props: { params: Promise<{ locale: s
   setRequestLocale(params.locale);
   const t = await getTranslations('masterData.suppliers');
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="suppliers">
+    <ProtectedRoute requiredAction="view" requiredResource="master_data_suppliers">
       <div className="flex flex-col gap-6">
         <PageHeader 
           title={t('title')} 

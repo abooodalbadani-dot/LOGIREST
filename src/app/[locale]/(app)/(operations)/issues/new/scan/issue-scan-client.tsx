@@ -159,12 +159,12 @@ export function IssueScanClient() {
           dir="ltr"
         />
         {lastFeedback === "success" && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-brand-primary text-sm font-bold animate-pulse">
+          <div className="absolute start-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-brand-primary text-sm font-bold animate-pulse">
             <CheckCircle2 className="w-4 h-4" /> تمت الإضافة
           </div>
         )}
         {lastFeedback === "error" && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-red-500 text-sm font-bold animate-pulse">
+          <div className="absolute start-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-red-500 text-sm font-bold animate-pulse">
             <AlertTriangle className="w-4 h-4" /> باركود غير معروف
           </div>
         )}
@@ -176,7 +176,7 @@ export function IssueScanClient() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">الأصناف الممسوحة ({lines.length})</CardTitle>
             <Button variant="ghost" size="sm" onClick={handleUndoLast} disabled={lines.length === 0}>
-              <RotateCcw className="mr-1 w-4 h-4" />
+              <RotateCcw className="me-1 w-4 h-4" />
               تراجع
             </Button>
           </div>

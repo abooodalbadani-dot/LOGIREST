@@ -49,20 +49,20 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md p-8 bg-surface-1 rounded-2xl border border-surface-3 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
+      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
         {/* Glow effect */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 blur-3xl rounded-full" />
+        <div className="absolute -top-24 -start-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
 
-        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20">
-          <CheckCircle2 className="w-8 h-8 text-green-500" />
+        <div className="w-16 h-16 bg-status-success/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-status-success/20">
+          <CheckCircle2 className="w-8 h-8 text-status-success" />
         </div>
-        <h2 className="text-2xl font-bold text-on-surface mb-2 tracking-tight">{t('email_sent')}</h2>
-        <p className="text-on-surface-muted mb-8 text-sm leading-relaxed">
+        <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">{t('email_sent')}</h2>
+        <p className="text-muted-foreground/60 mb-8 text-sm leading-relaxed">
           {t('email_sent_desc', { email: form.getValues('email') })}
         </p>
         <Link
           href={`/${locale}/login`}
-          className="inline-flex items-center gap-2 text-cyan-500 hover:text-cyan-500/80 font-medium transition-colors group"
+          className="inline-flex items-center gap-2 text-operational-cyan hover:text-operational-cyan/80 font-medium transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
           {t('back_to_login')}
@@ -72,16 +72,16 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md p-8 bg-surface-1 rounded-2xl border border-surface-3 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+    <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
       {/* Glow effect */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 blur-3xl rounded-full" />
+      <div className="absolute -top-24 -end-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
 
       <div className="mb-8 text-center relative">
-        <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 border border-cyan-500/20">
-          <Lock className="w-6 h-6 text-cyan-500" />
+        <div className="w-12 h-12 bg-operational-cyan/10 rounded-xl flex items-center justify-center mx-auto mb-4 border border-operational-cyan/20">
+          <Lock className="w-6 h-6 text-operational-cyan" />
         </div>
-        <h1 className="text-2xl font-bold text-on-surface tracking-tight">{t('forgot_password')}</h1>
-        <p className="text-on-surface-muted mt-2 text-sm">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('forgot_password')}</h1>
+        <p className="text-muted-foreground/60 mt-2 text-sm">
           {t('forgot_password_desc')}
         </p>
       </div>
@@ -93,8 +93,8 @@ export default function ForgotPasswordPage() {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-sm font-medium text-on-surface ml-1 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-on-surface-muted" />
+                <FormLabel className="text-sm font-medium text-foreground ms-1 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground/60" />
                   {t('email')}
                 </FormLabel>
                 <FormControl>
@@ -102,16 +102,16 @@ export default function ForgotPasswordPage() {
                     {...field}
                     type="email"
                     placeholder="name@example.com"
-                    className="bg-surface-2 border-surface-3 focus:border-cyan-500 transition-all py-6 h-12"
+                    className="bg-surface-container-lowest border-border-muted/50 focus:border-operational-cyan/50 focus:ring-1 focus:ring-operational-cyan/30 transition-all py-6 h-12"
                   />
                 </FormControl>
-                <FormMessage className="text-xs text-red-400" />
+                <FormMessage className="text-xs text-status-error" />
               </FormItem>
             )}
           />
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs animate-in fade-in duration-300">
+            <div className="p-3 rounded-lg bg-status-error/10 border border-status-error/20 text-status-error text-xs animate-in fade-in duration-300">
               {error}
             </div>
           )}
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-12 text-base font-bold bg-cyan-500 hover:bg-cyan-500/90 text-surface-0 shadow-lg shadow-cyan-500/20 transition-all active:scale-[0.98] disabled:opacity-70"
+            className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70 rounded-xl"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center mt-6">
             <Link
               href={`/${locale}/login`}
-              className="text-sm text-on-surface-muted hover:text-cyan-500 transition-colors inline-flex items-center gap-2 group"
+              className="text-sm text-muted-foreground/60 hover:text-operational-cyan transition-colors inline-flex items-center gap-2 group"
             >
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
               {t('back_to_login')}

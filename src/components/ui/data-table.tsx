@@ -84,25 +84,25 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between">
         {searchKey ? (
           <div className="relative max-w-sm w-full">
-            <Search className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`} />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder || t("search") || "Search..."}
               value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
               onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
               }
-              className={`max-w-sm ${isRtl ? 'pr-10' : 'pl-10'} bg-surface-1`}
+              className="max-w-sm ps-10 bg-surface-container-low border-white/10-muted/50"
             />
           </div>
         ) : <div />}
         {enableExport && (
-          <Button variant="outline" onClick={onExport} className="bg-surface-1 hover:bg-surface-2">
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high border-white/10-muted/50">
+            <Download className="me-2 h-4 w-4" />
             {t("export") || "Export"}
           </Button>
         )}
       </div>
-      <div className="rounded-xl border border-border bg-surface-1 overflow-hidden">
+      <div className="rounded-xl border border-white/10-muted/50 bg-surface-container-low overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -147,19 +147,19 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       
-      <div className="flex items-center justify-end space-x-2 rtl:space-x-reverse py-4">
+      <div className="flex items-center justify-end gap-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length)} of {table.getFilteredRowModel().rows.length} entries
         </div>
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="bg-surface-1"
+            className="bg-surface-container-low"
           >
-            {isRtl ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
             <span className="sr-only">Previous</span>
           </Button>
           <Button
@@ -167,9 +167,9 @@ export function DataTable<TData, TValue>({
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="bg-surface-1"
+            className="bg-surface-container-low"
           >
-            {isRtl ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             <span className="sr-only">Next</span>
           </Button>
         </div>

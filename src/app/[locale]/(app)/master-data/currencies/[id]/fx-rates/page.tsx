@@ -1,5 +1,5 @@
 import { FXRatesClient } from './FXRatesClient';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -13,14 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function FXRatesPage(props: { params: Promise<{ locale: string; id: string }> }) {
   const params = await props.params;
   setRequestLocale(params.locale);
-  const t = await getTranslations('masterData.currencies');
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader 
-        title={t('fx_rates_title')} 
-        description="Historical exchange rates and currency conversion management"
-      />
-      <FXRatesClient currencyId={params.id} />
-    </div>
+    <FXRatesClient currencyId={params.id} locale={params.locale} />
   );
 }

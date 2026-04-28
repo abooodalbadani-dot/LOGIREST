@@ -8,7 +8,7 @@ const Separator = React.forwardRef<
 >(({ className, orientation = 'horizontal', ...props }, ref) => (
   <div
     ref={ref}
-    className={`shrink-0 bg-surface-3 ${orientation === 'horizontal' ? 'h-[1px] w-full' : 'h-full w-[1px]'} ${className || ''}`}
+    className={`shrink-0 bg-border-muted ${orientation === 'horizontal' ? 'h-[1px] w-full' : 'h-full w-[1px]'} ${className || ''}`}
     {...props}
   />
 ));

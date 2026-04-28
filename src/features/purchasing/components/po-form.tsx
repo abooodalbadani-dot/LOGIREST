@@ -1,12 +1,14 @@
 "use client";
-// use no memo
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Trash2, Plus, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -16,31 +18,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const lineItemSchema = z.object({
-  itemId: z.string().min(1, "Item is required"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  unitPrice: z.number().min(0, "Price cannot be negative"),
+  itemId: z.string().min(1),
+  quantity: z.number().min(1),
+  unitPrice: z.number().min(0),
   notes: z.string().optional(),
 });
 
 const formSchema = z.object({
-  supplierId: z.string().min(1, "Supplier is required"),
+  supplierId: z.string().min(1),
   prId: z.string().optional(),
-  supplierCurrency: z.string().min(1, "Currency is required"),
-  exchangeRate: z.number().min(0.0001, "Exchange rate is required"),
-  expectedDate: z.string().min(1, "Expected Date is required"),
+  supplierCurrency: z.string().min(1),
+  exchangeRate: z.number().min(0.0001),
+  expectedDate: z.string().min(1),
   notes: z.string().optional(),
-  items: z.array(lineItemSchema).min(1, "At least one item is required"),
+  items: z.array(lineItemSchema).min(1),
 });
 
 type PurchaseOrderFormValues = z.infer<typeof formSchema>;
 
 export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) {
   const router = useRouter();
+  const t = useTranslations("purchasing.po");
+  const tc = useTranslations("common");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<PurchaseOrderFormValues>({
@@ -83,22 +91,22 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-1 border border-border p-8 rounded-xl shadow-lg relative">
-        <h3 className="text-xl font-bold mb-4 text-brand-primary">Purchase Order Details</h3>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-container-low/90 backdrop-blur-xl border border-white/10-muted/30 p-8 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] relative">
+        <h3 className="text-xl font-black mb-4 text-operational-cyan uppercase tracking-wider">{t('title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="supplierId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">Supplier</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('supplier')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-2 border-border">
-                      <SelectValue placeholder="Select Supplier" />
+                    <SelectTrigger className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11">
+                      <SelectValue placeholder={t('select_supplier')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-2 border-border">
+                  <SelectContent className="bg-surface-container-low border-white/10-muted/50 backdrop-blur-xl">
                     <SelectItem value="SUP-01">Al Marai Fresh (SUP-01)</SelectItem>
                     <SelectItem value="SUP-02">Global Equipments (SUP-02)</SelectItem>
                   </SelectContent>
@@ -113,9 +121,9 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             name="prId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">Linked PR (Optional)</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('linked_pr')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. PR-2026-001" className="bg-surface-2 uppercase font-mono" {...field} />
+                  <Input placeholder="PR-2026-001" className="bg-surface-container-lowest/50 uppercase font-mono border-white/10-muted/20 focus:border-operational-cyan/50 h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -127,9 +135,9 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             name="expectedDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">Expected Delivery Date</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('expected_date')}</FormLabel>
                 <FormControl>
-                  <Input type="date" className="bg-surface-2" {...field} />
+                  <Input type="date" className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,14 +151,14 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             name="supplierCurrency"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">Supplier Currency</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('supplier_currency')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-2 border-border font-mono">
+                    <SelectTrigger className="bg-surface-container-lowest/50 border-white/10-muted/20 font-mono h-11">
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-2 border-border">
+                  <SelectContent className="bg-surface-container-low border-white/10-muted/50 backdrop-blur-xl">
                     <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
                     <SelectItem value="USD">USD - US Dollar</SelectItem>
                     <SelectItem value="EUR">EUR - Euro</SelectItem>
@@ -165,15 +173,15 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             name="exchangeRate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">FX Rate (to SAR)</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('fx_rate')}</FormLabel>
                 <div className="relative">
-                  <ArrowRightLeft className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <ArrowRightLeft className="absolute start-3 top-3.5 h-4 w-4 text-muted-foreground/40" />
                   <FormControl>
                     <Input 
                       type="number" 
                       step="0.0001" 
                       min="0" 
-                      className="bg-surface-2 pl-9 font-mono" 
+                      className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11 ps-10" 
                       dir="ltr" 
                       {...field} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -188,10 +196,10 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             control={form.control}
             name="notes"
             render={({ field }) => (
-              <FormItem className="md:col-span-3 text-left">
-                <FormLabel className="text-muted-foreground">General Notes</FormLabel>
+              <FormItem className="md:col-span-3 text-start">
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('general_notes')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="E.g., Special packaging required" className="bg-surface-2" {...field} />
+                  <Input placeholder={t('notes_placeholder')} className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -199,32 +207,35 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           />
         </div>
 
-        <div className="pt-6 border-t border-border">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">Line Items</h3>
+        <div className="pt-6 border-t border-white/10-muted/20">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-black uppercase tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-operational-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.5)]" />
+              {t('line_items')}
+            </h3>
             <Button 
               type="button" 
               variant="outline" 
               size="sm" 
-              className="border-brand-primary text-brand-primary hover:bg-brand-primary/10"
+              className="border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10 transition-all shadow-[0_4px_12px_rgba(var(--operational-cyan-rgb),0.1)] rounded-lg font-bold"
               onClick={() => append({ itemId: "", quantity: 1, unitPrice: 0, notes: "" })}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
+              <Plus className="h-4 w-4 me-2" />
+              {t('add_item')}
             </Button>
           </div>
 
           <div className="space-y-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-2 p-4 rounded-lg border border-border">
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-container-lowest/30 p-6 rounded-2xl border border-white/10-muted/10 shadow-sm transition-all hover:shadow-md hover:border-white/10-muted/30 group">
                 <FormField
                   control={form.control}
                   name={`items.${index}.itemId`}
                   render={({ field: inputField }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Item SKU</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('item_sku')}</FormLabel>
                       <FormControl>
-                         <Input placeholder="e.g. IT-1" className="bg-surface-1 font-mono uppercase" {...inputField} />
+                         <Input placeholder="IT-1" className="bg-surface-container-lowest/50 font-mono uppercase border-white/10-muted/20 focus:border-operational-cyan/50 h-10" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -236,12 +247,12 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                   name={`items.${index}.quantity`}
                   render={({ field: inputField }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Quantity</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('quantity')}</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           min="1" 
-                          className="bg-surface-1 font-mono" 
+                          className="bg-surface-container-lowest/50 font-mono border-white/10-muted/20 focus:border-operational-cyan/50 h-10" 
                           dir="ltr" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -257,13 +268,13 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                   name={`items.${index}.unitPrice`}
                   render={({ field: inputField }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Unit Price ({currency})</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('unit_price')} ({currency})</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           step="0.01" 
                           min="0" 
-                          className="bg-surface-1 font-mono" 
+                          className="bg-surface-container-lowest/50 font-mono border-white/10-muted/20 focus:border-operational-cyan/50 h-10" 
                           dir="ltr" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -279,9 +290,9 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                   name={`items.${index}.notes`}
                   render={({ field: inputField }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Line Notes</FormLabel>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('line_notes')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Optional..." className="bg-surface-1" {...inputField} />
+                        <Input placeholder="..." className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-10" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -292,7 +303,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                   type="button" 
                   variant="ghost" 
                   size="icon" 
-                  className="mb-[2px] text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                  className="mb-[2px] text-muted-foreground/50 hover:text-status-error hover:bg-status-error/10 h-10 w-10 transition-colors rounded-lg"
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                 >
@@ -302,40 +313,41 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             ))}
           </div>
           
-          <div className="mt-8 flex flex-col md:flex-row justify-end gap-4">
-            <div className="bg-surface-2 px-6 py-4 rounded-lg border border-border flex items-center justify-between gap-6 min-w-[250px]">
-              <span className="text-sm text-muted-foreground">Supplier Total</span>
-              <span className="text-xl font-mono font-bold text-foreground" dir="ltr">
+          <div className="mt-10 flex flex-col md:flex-row justify-end gap-6">
+            <div className="bg-surface-container-lowest/50 px-8 py-5 rounded-2xl border border-white/10-muted/10 flex items-center justify-between gap-10 min-w-[300px] shadow-sm">
+              <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">{t('supplier_total')}</span>
+              <span className="text-xl font-mono font-black text-foreground" dir="ltr">
                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(supplierTotalAmount)}
               </span>
             </div>
-            <div className="bg-surface-2 px-6 py-4 rounded-lg border border-brand-primary/50 flex items-center justify-between gap-6 min-w-[250px]">
-              <span className="text-sm text-brand-primary/80">Base Total</span>
-              <span className="text-2xl font-mono font-bold text-brand-primary" dir="ltr">
+            <div className="bg-operational-cyan/5 px-8 py-5 rounded-2xl border border-operational-cyan/20 flex items-center justify-between gap-10 min-w-[300px] shadow-[0_12px_40px_-8px_rgba(var(--operational-cyan-rgb),0.15)] backdrop-blur-sm">
+              <span className="text-[10px] uppercase tracking-widest font-bold text-operational-cyan/80">{t('base_total')}</span>
+              <span className="text-2xl font-mono font-black text-operational-cyan" dir="ltr">
                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(baseTotalAmount)}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-2 pt-6 mt-6 border-t border-border">
+        <div className="flex items-center justify-end gap-3 pt-8 mt-10 border-t border-white/10-muted/20">
           <Button
-            variant="outline"
+            variant="ghost"
             type="button"
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="bg-surface-1 text-foreground border-border hover:bg-surface-2"
+            className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high px-8 h-12 rounded-xl font-bold"
           >
-            Cancel
+            {tc('cancel')}
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-brand-primary text-black hover:bg-brand-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]"
+            className="bg-operational-cyan text-primary-foreground hover:brightness-110 shadow-[0_16px_32px_-8px_rgba(var(--operational-cyan-rgb),0.3)] px-10 h-12 rounded-xl transition-all active:scale-[0.98] font-bold uppercase tracking-widest text-xs"
           >
-            {isSubmitting ? "Submitting..." : "Submit PO"}
+            {isSubmitting ? t('actions.submitting') : t('actions.submit')}
           </Button>
         </div>
+
       </form>
     </Form>
   );

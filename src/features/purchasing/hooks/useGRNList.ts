@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
-import { BadgeStatusSchema, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { BadgeStatusSchema, type BadgeStatus } from '@/components/ui/status-badge';
 
 const GRNSummarySchema = z.object({ 
   id: z.string(), 

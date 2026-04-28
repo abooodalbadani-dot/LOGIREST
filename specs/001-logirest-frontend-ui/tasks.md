@@ -1413,6 +1413,20 @@
 
 ---
 
+## Phase 15: Operational Nocturne Premium Redesign & Role-Based Workflows
+
+- [x] T105 [P] Redesign Item Creation Form: Full "Operational Nocturne" theme compliance with SKU Definition Protocol.
+- [x] T106 [P] Redesign Lot Details & Ledger: Integrated views with batch history and movements (Movements Ledger).
+- [x] T107 [P] Inventory Overview Redesign: Premium data visualization, location node tracking, and low-stock alerts.
+- [x] T108 [P] Purchase Orders History Redesign: Standardized procurement view with gross commitment and ETA boundary tracking.
+- [x] T109 [P] Global Search Results: Unified cross-system search interface in `src/app/[locale]/(app)/search`.
+
+- [/] T110 [P] Admin Dashboard: High-level system health overview, urgent alerts (low stock, near expiry), and pending actions.
+- [ ] T111 [P] Kitchen Chief Requests: Streamlined department head interface for creating and tracking supply requests.
+- [ ] T112 [P] Store Manager Fulfillment: Sophisticated operational view for stock issuance with FEFO-guided lot selection.
+
+---
+
 ## Dependencies & Execution Order
 
 ```
@@ -1430,15 +1444,16 @@ Phase 11 (T094–T096)→ QA — REQUIRES all phases complete
 Phase 12 (T097–T099)→ Refactor — Standardization of PR/PO modules
 Phase 13 (T100–T102)→ Refactor — Standardization of Operations modules
 Phase 14 (T103–T104)→ Refactor — Standardization of Stocktake module
+Phase 15 (T105–T112)→ Premium Redesign & Role-Based Workflows
 ```
 
 ### Parallel Team Split (3 developers)
 
-| Dev | Weeks 3–5 | Weeks 6–7 |
-|-----|-----------|-----------|
-| A   | Phase 3 (GRN + Issue + Stocktake) + Phase 5 | Phase 9 (Inventory) + Phase 11 |
-| B   | Phase 4 (PR + PO) + Phase 6 (Transfer + Adj) | Phase 10 (Notif + Admin) |
-| C   | Phase 8 (Auth) + Phase 7 (Master Data) | Phase 11 (QA) |
+| Dev | Weeks 3–5 | Weeks 6–7 | Weeks 8-9 |
+|-----|-----------|-----------|-----------|
+| A   | Phase 3 (GRN + Issue + Stocktake) + Phase 5 | Phase 9 (Inventory) + Phase 11 | Phase 15 (Admin/Kitchen) |
+| B   | Phase 4 (PR + PO) + Phase 6 (Transfer + Adj) | Phase 10 (Notif + Admin) | Phase 15 (Store Mgr) |
+| C   | Phase 8 (Auth) + Phase 7 (Master Data) | Phase 11 (QA) | Phase 15 (Search/Redesign) |
 
 ---
 

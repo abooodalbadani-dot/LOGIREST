@@ -1,33 +1,37 @@
 'use client';
-
+ 
+import * as React from 'react';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
-import { StatusBadge } from '@/components/shared/StatusBadge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/shared/DataTable/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileText, ClipboardCheck, AlertCircle, Plus, Filter } from 'lucide-react';
-import Link from 'next/link';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { MetricCard } from '@/components/ui/metric-card';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ColumnDef } from '@tanstack/react-table';
+import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck } from 'lucide-react';
+import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
-
+import { Badge } from '@/components/ui/badge';
+ 
 export function IssueListClient({ initialStatus, initialPage, locale }: { initialStatus?: string; initialPage: number; locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.issue');
+  const tc = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tc = useTranslations('common');
-
+ 
   const { data, isLoading } = useIssueList({
     status: initialStatus,
     page: initialPage
   });
-
+ 
   const handleStatusChange = (val: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     if (val && val !== 'ALL') {
@@ -38,183 +42,229 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };
-
+ 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', newPage.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
-
-  const columns: ColumnDef<IssueSummary>[] = [
+ 
+  const columns = useMemo<ColumnDef<IssueSummary>[]>(() => [
     {
       accessorKey: 'status',
-      header: tc('status_label') || 'Status',
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{tc('status_label')}</span>,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 rounded-full bg-surface-container-highest/20" />
+          <StatusBadge status={row.original.status} />
+        </div>
+      ),
     },
     {
       accessorKey: 'document_number',
-      header: t('doc_number'),
-      cell: ({ row }) => <span dir="ltr" className="font-mono text-cyan-500/90 font-bold tracking-wider">{row.original.document_number}</span>,
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('doc_number')}</span>,
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span dir="ltr" className="font-mono text-[11px] font-black text-cyan-500 tracking-wider">
+            {row.original.document_number}
+          </span>
+          <span className="text-[9px] font-bold text-muted-foreground/60/30 uppercase tracking-tighter">
+            Internal Voucher
+          </span>
+        </div>
+      ),
     },
     {
       accessorKey: 'destination_department_id',
-      header: t('destination'),
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('destination')}</span>,
       cell: ({ row }) => (
-        <span className="opacity-80 font-medium">{row.original.destination_department_id || '—'}</span>
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-surface-container-highest/50">
+             <Activity className="w-3 h-3 text-muted-foreground/60/40" />
+          </div>
+          <span className="text-[11px] font-bold text-muted-foreground/60/80 tracking-tight">
+            {row.original.destination_department_id || '—'}
+          </span>
+        </div>
       ),
     },
     {
       accessorKey: 'created_at',
-      header: tc('created_at'),
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{tc('created_at')}</span>,
       cell: ({ row }) => (
-        <span dir="ltr" className="text-xs font-mono opacity-50 tabular-nums">
-          {format(new Date(row.original.created_at), 'MMM dd, yyyy')}
-        </span>
+        <div className="flex flex-col items-start gap-0.5">
+           <span dir="ltr" className="text-[10px] font-mono font-bold text-muted-foreground/60/60 tabular-nums">
+             {format(new Date(row.original.created_at), 'dd MMM yyyy')}
+           </span>
+           <span className="text-[8px] font-black text-muted-foreground/60/20 uppercase tracking-widest">
+             {format(new Date(row.original.created_at), 'HH:mm')}
+           </span>
+        </div>
       ),
     },
     {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end pe-4">
           <Button
             variant="ghost"
             size="sm"
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+            className="group/btn h-9 w-9 rounded-xl bg-surface-container-highest/30 hover:bg-cyan-500 hover:text-white transition-all duration-300"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/${locale}/issues/${row.original.id}`);
             }}
           >
-            {tc('view') || 'Inspect'}
+            <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 rtl:group-hover/btn:-translate-x-0.5" />
           </Button>
         </div>
       ),
     },
-  ];
-
+  ], [t, tc, locale, router]);
+ 
   const meta = data?.meta?.pagination;
-
-  const activeIssues = data?.meta?.pagination?.total || 0;
+  const totalItemsCount = meta?.total || 0;
   const draftCount = data?.data?.filter(i => i.status === 'DRAFT').length || 0;
   const postedCount = data?.data?.filter(i => i.status === 'POSTED').length || 0;
-
+ 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <Breadcrumb 
-        items={[
-          { label: tc('operations'), href: `/${locale}/issues` },
-          { label: t('title'), href: `/${locale}/issues` }
-        ]} 
-      />
-      <PageHeader
-        title={t('title')}
-        description={t('description') || 'Internal stock consumption and department issues'}
+    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      
+      <PageHeader 
+        title={t('title')} 
+        description={t('description') || 'Internal stock consumption and department issues.'}
         actions={
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end gap-1 border-r border-white/5 pr-6 hidden md:flex">
-              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
-                {t('live_updates')}
-              </div>
-              <div dir="ltr" className="text-[9px] font-bold text-muted-foreground/40">
-                {t('last_sync')}: {new Date().toLocaleTimeString()}
-              </div>
-            </div>
-            <Link href={`/${locale}/issues/new`}>
-              <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-cyan-900/20 shadow-[0_0_15px_rgba(8,145,178,0.4)]">
-                <Plus className="w-3.5 h-3.5 mr-2" />
-                {t('create_new')}
-              </Button>
-            </Link>
+          <div className="flex items-center gap-4">
+            <PermissionGate action="create" resource="issue">
+               <Link href={`/${locale}/issues/new`}>
+                  <Button className="h-10 px-6 rounded-xl bg-surface-container-low border border-white/5 text-[9px] font-black uppercase tracking-widest gap-2 group transition-all hover:scale-[1.02] hover:bg-surface-container-medium group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shadow-[0_0_35px_rgba(6,182,212,0.5)] border-none">
+                     <Plus className="w-4 h-4 me-3" />
+                     {t('create_new')}
+                  </Button>
+               </Link>
+            </PermissionGate>
           </div>
         }
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-medium border-l-4 border-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.05)]">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-            <FileText className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-3 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('total_issues')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground" dir="ltr">{activeIssues}</CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-medium border-l-4 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.05)]">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-            <AlertCircle className="w-24 h-24 text-amber-400" />
-          </div>
-          <CardHeader className="pb-3 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('drafts')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-amber-400" dir="ltr">{draftCount}</CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-medium border-l-4 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.05)]">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-            <ClipboardCheck className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-3 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('posted')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400" dir="ltr">{postedCount}</CardTitle>
-          </CardHeader>
-        </Card>
+ 
+      {/* Fulfillment Status Ribbon */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <MetricCard
+          label="Throughput Volume"
+          value={totalItemsCount}
+          icon={Activity}
+          trend="active"
+        />
+        <MetricCard
+          label="Pending Selection"
+          value={draftCount}
+          icon={FileText}
+          trend="active"
+          color="amber"
+        />
+        <MetricCard
+          label="Finalized Issues"
+          value={postedCount}
+          icon={ClipboardCheck}
+          trend="active"
+          color="emerald"
+        />
+        <div className="bg-surface-container-low p-6 flex flex-col gap-2 transition-colors hover:bg-surface-container-lowest justify-center border border-outline-low rounded-2xl shadow-xl shadow-black/5">
+            <div className="flex items-center gap-3">
+               <div className="flex -space-x-2 rtl:space-x-reverse">
+                  {[1,2,3].map(i => (
+                     <div key={i} className="w-7 h-7 rounded-full bg-surface-container-highest border-2 border-surface-container-low flex items-center justify-center text-[8px] font-black text-muted-foreground/60/40">
+                        OP
+                     </div>
+                  ))}
+               </div>
+               <div className="text-[9px] font-bold text-muted-foreground/60/40 leading-tight">
+                  <span className="text-foreground">3 Operators</span> active<br/>in fulfillment stream
+               </div>
+            </div>
+         </div>
       </div>
-
-      <DataTable
-        columns={columns}
-        data={data?.data || []}
-        isLoading={isLoading}
-        onRowClick={(row: IssueSummary) => router.push(`/${locale}/issues/${row.id}`)}
-        collectionName="operations_issues"
-        pagination={meta ? {
-          page: meta.page,
-          pageSize: meta.pageSize,
-          total: meta.total,
-          totalPages: meta.total_pages,
-          onPageChange: handlePageChange
-        } : undefined}
-        filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low rounded-2xl border border-white/5">
-            <div className="flex flex-col gap-2 min-w-[240px] flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('status_filtering')}</label>
-              <Select
-                value={initialStatus || 'ALL'}
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger className="w-full bg-surface-container-highest/30 border-none h-11 px-4 text-xs font-bold rounded-xl">
-                  <SelectValue placeholder={tc('status.all')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">{tc('status.all')}</SelectItem>
-                  <SelectItem value="DRAFT">{tc('status.draft')}</SelectItem>
-                  <SelectItem value="APPROVED">{tc('status.approved')}</SelectItem>
-                  <SelectItem value="POSTED">{tc('status.posted')}</SelectItem>
-                  <SelectItem value="CANCELLED">{tc('status.rejected')}</SelectItem>
-                </SelectContent>
-              </Select>
+ 
+      {/* Advanced Filter Substrate */}
+      <div className="bg-surface-container-low p-6 rounded-[2.5rem] border border-outline-low shadow-xl shadow-primary/5">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex-1 min-w-[300px] relative group">
+            <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-cyan-500 text-muted-foreground/60/30">
+              <Search className="w-4 h-4" />
             </div>
-
-            <div className="flex flex-col gap-2 min-w-[300px] flex-[2]">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('search')}</label>
-              <div className="relative">
-                <Input
-                  placeholder={t('search_placeholder') || 'Search by Document Number...'}
-                  className="w-full bg-surface-container-highest/30 border-none h-11 px-10 text-xs font-bold rounded-xl"
-                />
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </div>
-            </div>
-
-            <Button className="h-11 px-8 bg-surface-container-highest/50 hover:bg-surface-container-highest text-foreground text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all border border-white/5">
-              <Filter className="w-3.5 h-3.5 mr-2" />
-              {tc('filters_button')}
-            </Button>
+            <Input
+              placeholder={t('search_placeholder') || 'Search by Document Number...'}
+              className="w-full bg-surface-container-high/50 border-none h-14 ps-14 pe-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus-visible:ring-2 focus-visible:ring-cyan-500/20 transition-all"
+            />
           </div>
-        }
-      />
+ 
+          <div className="flex items-center gap-4">
+             <div className="w-px h-10 bg-surface-container-high/50 mx-2" />
+             <div className="flex items-center gap-2">
+                <Select
+                  value={initialStatus || 'ALL'}
+                  onValueChange={handleStatusChange}
+                >
+                  <SelectTrigger className="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
+                    <SelectValue placeholder={tc('status.all')} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-container-highest border border-outline-low shadow-2xl rounded-2xl overflow-hidden">
+                    <SelectItem value="ALL" className="text-[10px] font-black uppercase tracking-widest">{tc('status.all')}</SelectItem>
+                    <SelectItem value="DRAFT" className="text-[10px] font-black uppercase tracking-widest">{tc('status.draft')}</SelectItem>
+                    <SelectItem value="APPROVED" className="text-[10px] font-black uppercase tracking-widest">{tc('status.approved')}</SelectItem>
+                    <SelectItem value="POSTED" className="text-[10px] font-black uppercase tracking-widest">{tc('status.posted')}</SelectItem>
+                    <SelectItem value="CANCELLED" className="text-[10px] font-black uppercase tracking-widest">{tc('status.rejected')}</SelectItem>
+                  </SelectContent>
+                </Select>
+ 
+                <Button variant="outline" className="h-14 px-6 bg-surface-container-high/50 hover:bg-surface-container-high border-none rounded-2xl shadow-inner shadow-black/5">
+                   <Filter className="w-4 h-4 text-muted-foreground/60/60" />
+                </Button>
+             </div>
+          </div>
+          
+          <div className="flex items-center gap-1 bg-surface-container-high/50 p-1.5 rounded-2xl shadow-inner shadow-black/5 ms-auto">
+             <Button size="icon" variant="ghost" className="w-11 h-11 rounded-xl text-cyan-500 bg-surface-container-low shadow-sm"><LayoutGrid className="w-4 h-4" /></Button>
+             <Button size="icon" variant="ghost" className="w-11 h-11 rounded-xl text-muted-foreground/60/20"><ListIcon className="w-4 h-4" /></Button>
+          </div>
+        </div>
+      </div>
+ 
+      {/* Main Consumption Ledger */}
+      <div className="bg-surface-container-low rounded-[2.5rem] border border-outline-low shadow-2xl shadow-black/5 overflow-hidden">
+        <DataTable
+          columns={columns}
+          data={data?.data || []}
+          isLoading={isLoading}
+          onRowClick={(row: IssueSummary) => router.push(`/${locale}/issues/${row.id}`)}
+          collectionName="operations_issues"
+          emptyState={
+            <EmptyState 
+              title={t('no_records') || 'No Issues Found'}
+              description={t('description') || 'Departmental stock consumption vouchers will appear here.'}
+              action={
+                <PermissionGate action="create" resource="issue">
+                  <Button 
+                    onClick={() => router.push(`/${locale}/issues/new`)}
+                    className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
+                  >
+                    <Plus className="w-4 h-4 me-2" />
+                    {t('create_new')}
+                  </Button>
+                </PermissionGate>
+              }
+            />
+          }
+          pagination={meta ? {
+            page: meta.page,
+            pageSize: meta.pageSize,
+            total: meta.total,
+            totalPages: meta.total_pages,
+            onPageChange: handlePageChange
+          } : undefined}
+        />
+      </div>
     </div>
   );
 }

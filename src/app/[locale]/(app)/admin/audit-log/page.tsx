@@ -1,6 +1,7 @@
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { AuditLogClient } from './AuditLogClient';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

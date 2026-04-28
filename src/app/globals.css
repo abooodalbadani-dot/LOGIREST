@@ -37,21 +37,37 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Hardened Semantic Tokens */
+  --color-border-surface: var(--border-surface);
+  --color-border-muted: var(--border-muted);
+  --color-bg-surface-low: var(--surface-container-low);
+  --color-bg-surface-elevated: var(--surface-container-high);
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--on-surface-variant);
+  --color-text-muted: var(--muted-foreground);
+  --color-outline-low: var(--outline-low);
+  --color-outline-medium: var(--outline-medium);
+  --color-outline-strong: var(--outline-strong);
+
   /* Surfaces - High Fidelity Mappings */
   --color-surface-container-lowest: var(--surface-container-lowest);
   --color-surface-container-low: var(--surface-container-low);
   --color-surface-container: var(--surface-container);
   --color-surface-container-high: var(--surface-container-high);
   --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface-variant: var(--on-surface-variant);
 
   /* Operational Nocturne Palette */
-  --color-cyan-500: #4cd6fb;
-  --color-red-500: #ff4b4b;
+  --color-operational-cyan: var(--operational-cyan);
+  --color-operational-red: var(--operational-red);
+  --color-surface-ledger: var(--surface-ledger);
 
-  /* Status Colors */
-  --color-status-success: #10b981;
-  --color-status-warning: #f59e0b;
-  --color-status-error: #ef4444;
+  /* Status Colors - Hardened */
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-error: var(--status-error);
+  --color-status-info: var(--status-info);
 
   /* Radius */
   --radius-lg: var(--radius);
@@ -61,6 +77,15 @@
 
 :root {
   /* Light Mode: Culinary Logic */
+  --operational-cyan: #006684;
+  --operational-red: #ba1a1a;
+  --surface-ledger: #0a1b24;
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+
   --background: #f7f9ff;
   --foreground: #181c20;
 
@@ -96,17 +121,39 @@
   --surface-container: #f7f9ff;
   --surface-container-high: #eef1f7;
   --surface-container-highest: #dfe3e8;
+  --surface-variant: #e1e2e5;
+  --on-surface-variant: #44474e;
 
   --border: transparent;
+  --border-surface: rgba(0, 77, 100, 0.08);
+  --border-muted: rgba(0, 77, 100, 0.05);
   --input: #dfe3e8;
   --ring: #004d64;
 
+  --outline-low: rgba(0, 77, 100, 0.05);
+  --outline-medium: rgba(0, 77, 100, 0.1);
+  --outline-strong: rgba(0, 77, 100, 0.2);
+
   --primary-rgb: 0, 77, 100;
+  --operational-cyan-rgb: 0, 102, 132;
+  --operational-red-rgb: 186, 26, 26;
+  --status-success-rgb: 16, 185, 129;
+  --status-warning-rgb: 245, 158, 11;
+  --status-error-rgb: 239, 68, 68;
   --radius: 16px;
 }
 
 .dark {
   /* Dark Mode: The Midnight Ledger */
+  --operational-cyan: #4cd6fb;
+  --operational-red: #ff4b4b;
+  --surface-ledger: #051118;
+
+  --status-success: #4cd6fb; /* Cyan for success in Nocturne Dark */
+  --status-warning: #eb8f3b;
+  --status-error: #ff4b4b;
+  --status-info: #00b4d8;
+
   --background: #0e1416;
   --foreground: #dee3e6;
 
@@ -142,11 +189,25 @@
   --surface-container: #111b1d;
   --surface-container-high: #162325;
   --surface-container-highest: #1d2d30;
+  --surface-variant: #303638;
+  --on-surface-variant: #c4c6d0;
 
   --border: transparent;
+  --border-surface: rgba(255, 255, 255, 0.1);
+  --border-muted: rgba(255, 255, 255, 0.05);
   --input: #303638;
   --ring: #4cd6fb;
+
+  --outline-low: rgba(255, 255, 255, 0.05);
+  --outline-medium: rgba(255, 255, 255, 0.1);
+  --outline-strong: rgba(255, 255, 255, 0.2);
+
   --primary-rgb: 76, 214, 251;
+  --operational-cyan-rgb: 76, 214, 251;
+  --operational-red-rgb: 255, 75, 75;
+  --status-success-rgb: 76, 214, 251;
+  --status-warning-rgb: 235, 143, 59;
+  --status-error-rgb: 255, 75, 75;
 }
 
 @layer base {

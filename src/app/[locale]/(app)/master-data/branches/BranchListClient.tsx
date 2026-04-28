@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Plus, Building2, CheckCircle2, Search, Shield } from 'lucide-react';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
@@ -16,6 +17,8 @@ import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { MetricCard } from '@/components/ui/metric-card';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 
 export function BranchListClient({ locale }: { locale: string }) {
   const t = useTranslations('masterData.branches');
@@ -38,7 +41,7 @@ export function BranchListClient({ locale }: { locale: string }) {
     };
   }, [data]);
 
-  const columns: ColumnDef<Branch, unknown>[] = [
+  const columns = useMemo<ColumnDef<Branch, unknown>[]>(() => [
     {
       accessorKey: 'code',
       header: tc('common.code'),
@@ -62,13 +65,12 @@ export function BranchListClient({ locale }: { locale: string }) {
     {
       accessorKey: 'is_active',
       header: tc('common.is_active'),
-      cell: ({ row }) => row.original.is_active
-        ? <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-2 h-5 rounded-sm">
-          {tc('common.active')}
-        </Badge>
-        : <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/20 text-[9px] font-black uppercase tracking-widest px-2 h-5 rounded-sm">
-          {tc('common.inactive')}
-        </Badge>,
+      cell: ({ row }) => (
+        <StatusBadge 
+          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} 
+          className="rounded-sm h-5"
+        />
+      ),
     },
     {
       accessorKey: 'created_at',
@@ -80,78 +82,73 @@ export function BranchListClient({ locale }: { locale: string }) {
       header: '',
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/${locale}/master-data/branches/${row.original.id}`);
-            }}
-          >
-            {tc('common.view')}
-          </Button>
+          <PermissionGate action="view" resource="master_data">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${locale}/master-data/branches/${row.original.id}`);
+              }}
+            >
+              {tc('common.view')}
+            </Button>
+          </PermissionGate>
         </div>
       ),
     },
-  ];
+  ], [tc, t, locale, router]);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="space-y-4">
         <Breadcrumb items={[
           { label: tc('common.home'), href: `/${locale}/dashboard` },
-          { label: tc('common.master_data') },
+          { label: tc('common.master_data'), href: `/${locale}/master-data` },
           { label: t('title') }
         ]} />
         <PageHeader
-          title={t('title') || 'Branch Operations'}
-          description={t('description') || 'Management of physical locations and operational nodes'}
-          actions={
+        title={t('title')}
+        description={t('description')}
+        actions={
+          <PermissionGate action="create" resource="master_data">
             <Link href={`/${locale}/master-data/branches/new`}>
               <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
-                <Plus className="w-3.5 h-3.5 mr-2" />
+                <Plus className="w-3.5 h-3.5 me-2" />
                 {tc('common.create_new')}
               </Button>
             </Link>
-          }
+          </PermissionGate>
+        }
         />
       </div>
 
       {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Building2 className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('total_locations')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground" dir="ltr">{stats.total}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={t('total_locations')}
+          value={stats.total}
+          icon={Building2}
+          color="cyan"
+          dir="ltr"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <CheckCircle2 className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('active_status')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400" dir="ltr">{stats.active}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-emerald-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={t('active_status')}
+          value={stats.active}
+          icon={CheckCircle2}
+          color="emerald"
+          dir="ltr"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Shield className="w-24 h-24 text-indigo-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('operational_compliance')}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-indigo-400" dir="ltr">100%</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-indigo-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={t('operational_compliance')}
+          value="100%"
+          icon={Shield}
+          color="indigo"
+          dir="ltr"
+        />
       </div>
 
       <DataTable
@@ -168,7 +165,7 @@ export function BranchListClient({ locale }: { locale: string }) {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-white/5 rounded-sm">
+          <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30">
             <div className="flex flex-col gap-2 min-w-[300px] flex-1">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">{tc('common.search')}</label>
               <div className="relative">
@@ -176,9 +173,9 @@ export function BranchListClient({ locale }: { locale: string }) {
                   placeholder={t('search_placeholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  className="w-full bg-surface-container-highest/30 border-none h-11 px-11 text-xs font-bold"
+                  className="w-full bg-surface-container-highest/30 border-none h-12 px-12 text-xs font-bold rounded-sm shadow-inner shadow-black/20"
                 />
-                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
               </div>
             </div>
           </div>

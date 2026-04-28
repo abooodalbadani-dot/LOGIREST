@@ -1,6 +1,8 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+
 
 interface PostConfirmDialogProps {
   open: boolean;
@@ -53,11 +55,11 @@ export function PostConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="bg-surface-1 rounded-lg border border-surface-3 w-full max-w-md p-6 shadow-xl relative m-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-surface-container-low rounded-2xl border border-outline-low w-full max-w-md p-6 shadow-2xl relative m-4 animate-in zoom-in-95 duration-200">
         {!isLoading && (
           <button 
-            className="absolute top-4 text-on-surface-muted hover:text-on-surface"
+            className="absolute top-4 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
             onClick={() => onOpenChange(false)}
             style={{ [isRtl ? 'left' : 'right']: '1rem' }}
           >
@@ -65,19 +67,22 @@ export function PostConfirmDialog({
           </button>
         )}
         
-        <h2 className="text-xl font-bold text-on-surface mb-2">{title}</h2>
-        <p className="text-sm text-on-surface-muted mb-4">{description}</p>
+        <h2 className="text-xl font-bold text-foreground mb-2">{title}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{description}</p>
         
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded p-3 text-amber-500 text-sm mb-4">
-          {warningText}
-          <div className="mt-1 font-medium">{t('posting_irreversible')}</div>
+        <div className="bg-status-warning/10 border border-status-warning/20 rounded-xl p-4 text-status-warning text-sm mb-4">
+          <div className="font-bold flex items-center gap-2 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
+            {warningText}
+          </div>
+          <div className="opacity-80">{t('posting_irreversible')}</div>
         </div>
 
         {children && <div className="mb-4">{children}</div>}
 
         {requiresTextConfirmation && (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-on-surface mb-1">
+            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 ms-1">
               {isRtl ? `اكتب "${requiredWord}" للتأكيد:` : `Type "${requiredWord}" to confirm:`}
             </label>
             <input 
@@ -85,16 +90,16 @@ export function PostConfirmDialog({
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               disabled={isLoading}
-              className="w-full bg-surface-2 border border-surface-3 rounded px-3 py-2 text-on-surface outline-none focus:border-cyan-500"
+              className="w-full bg-surface-container border border-outline-low rounded-xl px-4 py-2.5 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all shadow-inner"
             />
           </div>
         )}
 
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex justify-end gap-3 mt-8">
           {!isLoading && (
             <button 
               onClick={() => onOpenChange(false)}
-              className="px-4 py-2 bg-surface-3 text-on-surface rounded font-medium hover:bg-surface-4 transition-colors"
+              className="px-5 py-2.5 bg-surface-container-high text-foreground rounded-xl font-bold hover:bg-surface-container-highest transition-all active:scale-[0.98]"
             >
               {t('cancel')}
             </button>
@@ -102,13 +107,10 @@ export function PostConfirmDialog({
           <button 
             onClick={onConfirm}
             disabled={isConfirmDisabled}
-            className="px-4 py-2 bg-cyan-500 text-surface-0 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:bg-cyan-500/80"
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] hover:brightness-110 active:scale-[0.98]"
           >
             {isLoading && (
-              <svg className="animate-spin h-4 w-4 text-surface-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <Loader2 className="animate-spin h-4 w-4" />
             )}
             {t('confirm')}
           </button>

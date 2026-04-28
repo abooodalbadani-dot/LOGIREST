@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
-import type { BadgeStatus } from '@/components/shared/StatusBadge';
+import type { BadgeStatus } from '@/components/ui/status-badge';
 
 const POLineSchema = z.object({
   id: z.string(),

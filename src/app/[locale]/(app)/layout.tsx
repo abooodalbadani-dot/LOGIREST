@@ -1,8 +1,9 @@
 'use client';
-
+ 
 import { AppShell } from '@/components/layouts/AppShell';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
-
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+ 
 export default function AppLayout({
   children,
 }: {
@@ -10,9 +11,11 @@ export default function AppLayout({
 }) {
   return (
     <ProtectedRoute>
-      <AppShell>
-        {children}
-      </AppShell>
+      <ErrorBoundary>
+        <AppShell>
+          {children}
+        </AppShell>
+      </ErrorBoundary>
     </ProtectedRoute>
   );
 }

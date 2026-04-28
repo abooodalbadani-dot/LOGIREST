@@ -16,11 +16,11 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Can } from '@/components/auth/Can';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
 import { Badge } from '@/components/ui/badge';
 import { Save, CheckCircle, XCircle, Send, ArrowRight, ClipboardList, Clock, CheckCircle2, History } from 'lucide-react';
@@ -123,64 +123,64 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
   const headerActions = (
     <div className="flex items-center gap-3">
       {(isNew || pr?.status === 'DRAFT') && (
-        <Can perform="create" on="pr">
+        <PermissionGate action="create" resource="pr">
           <Button 
             onClick={form.handleSubmit(handleSaveDraft)} 
             disabled={createPRMutation.isPending} 
             variant="outline"
             className="h-11 px-6 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-2xl"
           >
-            <Save className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0 opacity-60" />
+            <Save className="w-4 h-4 me-2 opacity-60" />
             {t('save_draft')}
           </Button>
-        </Can>
+        </PermissionGate>
       )}
 
       {!isNew && pr?.status === 'DRAFT' && (
-        <Can perform="create" on="pr">
+        <PermissionGate action="create" resource="pr">
           <Button 
             onClick={handleSubmit} 
             disabled={submitPRMutation.isPending}
             className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all rounded-2xl"
           >
-            <Send className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+            <Send className="w-4 h-4 me-2" />
             {t('submit')}
           </Button>
-        </Can>
+        </PermissionGate>
       )}
 
       {!isNew && pr?.status === 'SUBMITTED' && (
-        <Can perform="approve" on="pr">
+        <PermissionGate action="approve" resource="pr">
           <div className="flex items-center gap-3">
             <Button 
               variant="destructive" 
               onClick={() => setRejectConfirmOpen(true)}
               className="h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-2xl"
             >
-              <XCircle className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+              <XCircle className="w-4 h-4 me-2" />
               {t('reject')}
             </Button>
             <Button 
               onClick={() => setApproveConfirmOpen(true)}
               className="h-11 px-8 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.3)] rounded-2xl"
             >
-              <CheckCircle className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+              <CheckCircle className="w-4 h-4 me-2" />
               {t('approve')}
             </Button>
           </div>
-        </Can>
+        </PermissionGate>
       )}
 
       {!isNew && pr?.status === 'APPROVED' && (
-        <Can perform="approve" on="pr">
+        <PermissionGate action="approve" resource="pr">
           <Button 
             onClick={() => router.push(`/${locale}/purchase-orders/new?pr_id=${id}`)}
             className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
           >
-            <ArrowRight className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+            <ArrowRight className="w-4 h-4 me-2" />
             {t('convert_to_po')}
           </Button>
-        </Can>
+        </PermissionGate>
       )}
     </div>
   );

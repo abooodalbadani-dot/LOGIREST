@@ -17,7 +17,7 @@ export default async function CurrenciesPage(props: { params: Promise<{ locale: 
   setRequestLocale(params.locale);
   const t = await getTranslations('masterData.currencies');
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="currencies">
+    <ProtectedRoute requiredAction="view" requiredResource="master_data_currencies">
       <div className="flex flex-col gap-6">
         <PageHeader 
           title={t('title')} 

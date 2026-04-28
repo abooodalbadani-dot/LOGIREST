@@ -9,64 +9,66 @@ interface KPICardProps {
   icon: LucideIcon;
   accent: 'cyan' | 'amber' | 'red';
   description?: string;
+  className?: string;
   trend?: {
     value: string;
     isPositive: boolean;
   };
 }
 
-export function KPICard({ title, value, icon: Icon, accent, description, trend }: KPICardProps) {
+export function KPICard({ title, value, icon: Icon, accent, description, trend, className }: KPICardProps) {
   const accentColors = {
-    cyan: 'text-cyan-500',
-    amber: 'text-amber-500',
-    red: 'text-red-500',
+    cyan: 'text-operational-cyan',
+    amber: 'text-status-warning',
+    red: 'text-status-error',
   };
 
   const accentBgs = {
-    cyan: 'bg-cyan-500/5',
-    amber: 'bg-amber-500/5',
-    red: 'bg-red-500/5',
+    cyan: 'bg-operational-cyan/10',
+    amber: 'bg-status-warning/10',
+    red: 'bg-status-error/10',
   };
 
   const accentShadows = {
-    cyan: 'shadow-[0_0_20px_rgba(6,182,212,0.1)]',
-    amber: 'shadow-[0_0_20px_rgba(245,158,11,0.1)]',
-    red: 'shadow-[0_0_20px_rgba(239,68,68,0.1)]',
+    cyan: 'shadow-[0_12px_24px_-8px_rgba(var(--operational-cyan-rgb),0.3)]',
+    amber: 'shadow-[0_12px_24px_-8px_rgba(var(--status-warning-rgb),0.3)]',
+    red: 'shadow-[0_12px_24px_-8px_rgba(var(--status-error-rgb),0.3)]',
   };
 
   return (
-    <Card className={`relative overflow-hidden border-none bg-surface-container-low hover:bg-surface-container transition-all duration-500 rounded group`}>
+    <Card className={`relative overflow-hidden border border-white/10-muted/20 bg-surface-container-low/50 backdrop-blur-sm hover:bg-surface-container transition-all duration-500 rounded-2xl group shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] ${className || ''}`}>
+      {/* Visual Accent - Top Gradient */}
+      <div className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500 ${accentColors[accent]}`} />
+
       {/* Large Watermark Icon */}
-      <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500 pointer-events-none">
-        <Icon className={`w-20 h-20 ${accentColors[accent]}`} />
+      <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 pointer-events-none">
+        <Icon className={`w-24 h-24 ${accentColors[accent]}`} />
       </div>
 
       <div className="p-6 relative z-10">
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black text-on-surface-muted uppercase tracking-[0.2em]">
+            <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.25em]">
               {title}
             </p>
-            <div className={`p-2 rounded ${accentBgs[accent]} ${accentColors[accent]} ghost-border`}>
+            <div className={`p-2.5 rounded-xl ${accentBgs[accent]} ${accentColors[accent]} border border-current/10 ${accentShadows[accent]}`}>
               <Icon className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <h3 className={`text-3xl font-bold tracking-tighter font-display ${accent === 'cyan' ? 'text-foreground' : accentColors[accent]}`}>
-              <span dir="ltr" className="tabular-nums drop-shadow-sm">
-                {value}
-              </span>
+          <div className="space-y-1.5">
+            <h3 className={`text-3xl font-bold tracking-tighter tabular-nums ${accent === 'cyan' ? 'text-foreground' : accentColors[accent]}`}>
+              {value}
             </h3>
             
             <div className="flex items-center gap-2">
               {trend && (
-                <span className={`text-[10px] font-bold ${trend.isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${trend.isPositive ? 'bg-status-success/10 text-status-success' : 'bg-status-error/10 text-status-error'}`}>
                   {trend.isPositive ? '↑' : '↓'} {trend.value}
                 </span>
               )}
               {description && (
-                <p className="text-[10px] font-medium text-on-surface-muted/60 tracking-tight">
+                <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
                   {description}
                 </p>
               )}
@@ -76,7 +78,7 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend }
       </div>
 
       {/* Decorative Glow Bar */}
-      <div className={`absolute bottom-0 left-0 h-[2px] w-full transition-all duration-500 opacity-30 group-hover:opacity-100 ${accent === 'cyan' ? 'bg-cyan-500' : accent === 'amber' ? 'bg-amber-500' : 'bg-red-500'} shadow-[0_0_10px_currentColor]`} />
+      <div className={`absolute bottom-0 left-0 h-[3px] w-full transition-all duration-500 opacity-20 group-hover:opacity-100 ${accent === 'cyan' ? 'bg-operational-cyan' : accent === 'amber' ? 'bg-status-warning' : 'bg-status-error'} shadow-[0_0_15px_currentColor]`} />
     </Card>
   );
 }

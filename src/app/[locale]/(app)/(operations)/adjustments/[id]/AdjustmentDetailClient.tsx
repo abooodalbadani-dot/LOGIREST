@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useAdjustment, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
@@ -14,7 +14,7 @@ import { useCreateAdjustment } from '@/features/operations/hooks/useCreateAdjust
 import { useApproveAdjustment } from '@/features/operations/hooks/useApproveAdjustment';
 import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
-import { Can } from '@/components/auth/Can';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { ArrowUp, ArrowDown, CheckCircle, Send } from 'lucide-react';
 
 const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'OTHER'] as const;
@@ -124,12 +124,13 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
       <PageHeader
         title={isNew ? t('create_new') : t('detail_title')}
         description={!isNew ? <span dir="ltr" className="font-mono text-cyan-500/80 tracking-widest">{adjustment?.document_number}</span> : undefined}
+        status={adjustment?.status}
+        showStatus={!isNew}
         actions={
           <div className="flex gap-4 items-center">
-            {!isNew && <StatusBadge status={adjustmentStatus as BadgeStatus} />}
 
             {isNew && (
-              <Can perform="create" on="adjustment">
+              <PermissionGate action="create" resource="adjustment">
                 <Button 
                   onClick={handleSaveDraft} 
                   disabled={createAdjustment.isPending}
@@ -137,44 +138,44 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                 >
                   {t('save_draft')}
                 </Button>
-              </Can>
+              </PermissionGate>
             )}
 
             {isDraft && !isNew && (
-              <Can perform="approve" on="adjustment">
+              <PermissionGate action="approve" resource="adjustment">
                 <Button
                   variant="outline"
                   onClick={() => setApproveDialogOpen(true)}
                   disabled={approveAdjustment.isPending}
                   className="bg-surface-container-high hover:bg-surface-container-highest text-foreground border border-white/5 rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
                 >
-                  <CheckCircle className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                  <CheckCircle className="w-4 h-4 me-2" />
                   {t('approve')}
                 </Button>
-              </Can>
+              </PermissionGate>
             )}
 
             {isApproved && (
-              <Can perform="post" on="adjustment">
+              <PermissionGate action="post" resource="adjustment">
                 <Button
                   onClick={() => setPostDialogOpen(true)}
                   disabled={postAdjustment.isPending}
                   className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-cyan-900/20"
                 >
-                  <Send className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                  <Send className="w-4 h-4 me-2" />
                   {t('post_adjustment')}
                 </Button>
-              </Can>
+              </PermissionGate>
             )}
           </div>
         }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-surface-container-low/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500/50 via-cyan-500/20 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{tCommon('warehouse')}</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('warehouse')}</label>
           <div className="relative group">
             <select
               value={warehouseId}
@@ -186,14 +187,14 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
               <option value="wh-2" className="bg-surface-container-highest text-foreground font-medium">{tCommon('warehouses.dry')}</option>
               <option value="wh-3" className="bg-surface-container-highest text-foreground font-medium">{tCommon('warehouses.cold')}</option>
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+            <div className="absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
             </div>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('reason')}</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('reason')}</label>
           <div className="relative group">
             <select
               value={reason}
@@ -207,7 +208,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                 </option>
               ))}
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+            <div className="absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
             </div>
           </div>
@@ -215,7 +216,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
 
         {adjustment?.approved_by && (
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{t('approved_by')}</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('approved_by')}</label>
             <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center gap-3">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
               <span className="text-sm font-bold text-emerald-400/90">{adjustment.approved_by}</span>
@@ -224,7 +225,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
         )}
 
         <div className="col-span-1 md:col-span-3 space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{tCommon('notes')}</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('notes')}</label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}

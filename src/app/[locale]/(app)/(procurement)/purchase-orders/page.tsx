@@ -16,7 +16,7 @@ export default async function PurchaseOrdersPage(props: { params: Promise<{ loca
   setRequestLocale(params.locale);
 
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="purchase_orders">
+    <ProtectedRoute requiredAction="view" requiredResource="procurement_po">
       <POListClient locale={params.locale as 'ar' | 'en'} />
     </ProtectedRoute>
   );

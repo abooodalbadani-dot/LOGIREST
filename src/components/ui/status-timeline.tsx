@@ -27,17 +27,17 @@ export function StatusTimeline({ steps, className, ...props }: StatusTimelinePro
         const rightLineColored = step.status === "completed";
 
         const iconClasses = {
-          completed: "bg-brand-primary text-black shadow-[0_0_8px_rgba(58,190,255,0.4)]",
-          current: "border-2 border-brand-primary bg-surface-2 text-brand-primary",
-          pending: "border-2 border-surface-4 bg-surface-1 text-surface-4",
-          error: "bg-red-500 text-black shadow-[0_0_8px_rgba(239,68,68,0.4)]"
+          completed: "bg-operational-cyan text-white shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.4)]",
+          current: "border-2 border-operational-cyan bg-surface-container-high text-operational-cyan",
+          pending: "border-2 border-surface-container-highest bg-surface-container-low text-surface-container-highest",
+          error: "bg-status-error text-white shadow-[0_0_8px_rgba(var(--status-error-rgb),0.4)]"
         };
 
         const textClasses = {
           completed: "text-foreground font-medium",
-          current: "text-brand-primary font-bold",
+          current: "text-operational-cyan font-bold",
           pending: "text-muted-foreground",
-          error: "text-red-500 font-bold"
+          error: "text-status-error font-bold"
         };
 
         const renderIcon = () => {
@@ -56,7 +56,7 @@ export function StatusTimeline({ steps, className, ...props }: StatusTimelinePro
               <div 
                 className={cn(
                   "h-0.5 w-full", 
-                  isFirst ? "bg-transparent" : (leftLineColored ? "bg-brand-primary" : "bg-surface-4")
+                  isFirst ? "bg-transparent" : (leftLineColored ? "bg-operational-cyan" : "bg-surface-container-highest")
                 )} 
               />
               
@@ -74,7 +74,7 @@ export function StatusTimeline({ steps, className, ...props }: StatusTimelinePro
               <div 
                 className={cn(
                   "h-0.5 w-full", 
-                  isLast ? "bg-transparent" : (rightLineColored ? "bg-brand-primary" : "bg-surface-4")
+                  isLast ? "bg-transparent" : (rightLineColored ? "bg-operational-cyan" : "bg-surface-container-highest")
                 )} 
               />
             </div>

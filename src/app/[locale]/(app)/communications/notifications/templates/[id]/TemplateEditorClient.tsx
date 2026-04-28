@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 
 const TemplateUpdateSchema = z.object({
   id: z.string(),
@@ -71,7 +72,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-48"><div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center h-48"><div className="w-8 h-8 border-4 border-operational-cyan border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -86,107 +87,109 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
       <form onSubmit={onSubmit} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Arabic Template Section */}
-          <div className="space-y-4 p-6 rounded-xl border border-white/5 bg-surface-1/50 backdrop-blur-sm relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
-            <div className="flex items-center gap-2 mb-2 text-cyan-500/70 font-semibold text-xs uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+          <div className="space-y-4 p-6 rounded-xl border border-border-muted/30 bg-surface-container-low/50 backdrop-blur-sm relative overflow-hidden group">
+            <div className="absolute top-0 start-0 w-full h-[1px] bg-gradient-to-r from-transparent via-operational-cyan/30 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-2 mb-2 text-operational-cyan/70 font-semibold text-xs uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-operational-cyan shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.3)]" />
               العربية (RTL)
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="subject-ar" className="text-on-surface-muted text-xs">{t('subject_ar')}</Label>
+              <Label htmlFor="subject-ar" className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold">{t('subject_ar')}</Label>
               <Textarea
                 id="subject-ar"
                 dir="rtl"
                 {...register('subject_ar')}
-                className="min-h-[60px] bg-surface-0 border-white/5 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all duration-300"
+                className="min-h-[60px] bg-surface-container-lowest border-border-muted/30 focus-visible:ring-operational-cyan/50 focus-visible:border-operational-cyan/50 transition-all duration-300"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="body-ar" className="text-on-surface-muted text-xs">{t('body_ar')}</Label>
+              <Label htmlFor="body-ar" className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold">{t('body_ar')}</Label>
               <Textarea
                 id="body-ar"
                 dir="rtl"
                 {...register('body_ar')}
-                className="min-h-[200px] bg-surface-0 border-white/5 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all duration-300 leading-relaxed"
+                className="min-h-[200px] bg-surface-container-lowest border-border-muted/30 focus-visible:ring-operational-cyan/50 focus-visible:border-operational-cyan/50 transition-all duration-300 leading-relaxed"
               />
             </div>
           </div>
 
           {/* English Template Section */}
-          <div className="space-y-4 p-6 rounded-xl border border-white/5 bg-surface-1/50 backdrop-blur-sm relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
-            <div className="flex items-center gap-2 mb-2 text-cyan-500/70 font-semibold text-xs uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+          <div className="space-y-4 p-6 rounded-xl border border-border-muted/20 bg-surface-container-low/50 backdrop-blur-sm relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-operational-cyan/40 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-2 mb-2 text-operational-cyan/80 font-bold text-[10px] uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.4)] animate-pulse" />
               English (LTR)
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="subject-en" className="text-on-surface-muted text-xs">{t('subject_en')}</Label>
+              <Label htmlFor="subject-en" className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold">{t('subject_en')}</Label>
               <Input
                 id="subject-en"
                 dir="ltr"
                 {...register('subject_en')}
-                className="h-10 bg-surface-0 border-white/5 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all duration-300"
+                className="h-10 bg-surface-container-lowest border-border-muted/30 focus-visible:ring-operational-cyan/50 focus-visible:border-operational-cyan/50 transition-all duration-300"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="body-en" className="text-on-surface-muted text-xs">{t('body_en')}</Label>
+              <Label htmlFor="body-en" className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold">{t('body_en')}</Label>
               <Textarea
                 id="body-en"
                 dir="ltr"
                 {...register('body_en')}
-                className="min-h-[200px] bg-surface-0 border-white/5 focus-visible:ring-cyan-500 focus-visible:border-cyan-500 transition-all duration-300 leading-relaxed"
+                className="min-h-[200px] bg-surface-container-lowest border-border-muted/30 focus-visible:ring-operational-cyan/50 focus-visible:border-operational-cyan/50 transition-all duration-300 leading-relaxed"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+        <div className="flex items-center justify-between pt-6 border-t border-border-muted/20">
           <div className="flex gap-4">
-            <Button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="bg-cyan-500 text-surface-0 hover:bg-cyan-500/90 min-w-[120px] font-semibold"
-            >
-              {updateMutation.isPending ? '...' : t('subject_ar').includes('عربي') ? 'حفظ التغييرات' : 'Save Changes'}
-            </Button>
+            <PermissionGate action="edit" resource="email_settings">
+              <Button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="bg-operational-cyan text-white hover:brightness-110 min-w-[140px] h-11 font-bold uppercase tracking-widest text-[10px] shadow-[0_12px_24px_-8px_rgba(var(--operational-cyan-rgb),0.4)] active:scale-[0.98] transition-all"
+              >
+                {updateMutation.isPending ? '...' : t('subject_ar').includes('عربي') ? 'حفظ التغييرات' : 'Save Changes'}
+              </Button>
+            </PermissionGate>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => router.push(`/${locale}/communications/notifications/templates`)}
-              className="border-white/10 hover:bg-white/5"
+              className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high h-11 px-6 font-bold uppercase tracking-widest text-[10px]"
             >
               {t('retry') === 'إعادة المحاولة' ? 'إلغاء' : 'Cancel'}
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-on-surface-muted">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-            {t('code')}: <span className="font-mono">{data?.code}</span>
+          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan/50" />
+            {t('code')}: <span className="font-mono text-foreground">{data?.code}</span>
           </div>
         </div>
       </form>
 
       {/* Modernized Preview Section */}
-      <div className="p-1 rounded-2xl bg-gradient-to-b from-white/10 to-transparent">
-        <div className="rounded-[15px] border border-white/5 bg-surface-1 overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-surface-2/50">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-on-surface">{t('preview')}</span>
-              <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-[10px] font-bold uppercase">Live View</span>
+      <div className="p-1 rounded-2xl bg-gradient-to-b from-border-muted/20 to-transparent">
+        <div className="rounded-[15px] border border-border-muted/20 bg-surface-container-low overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-muted/20 bg-surface-container/30 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">{t('preview')}</span>
+              <span className="px-2 py-0.5 rounded bg-operational-cyan/10 text-operational-cyan text-[8px] font-black uppercase tracking-widest border border-operational-cyan/20">Live View</span>
             </div>
-            <div className="flex bg-surface-0 rounded-lg p-1 border border-white/5">
+            <div className="flex bg-surface-container-lowest/50 rounded-lg p-1 border border-border-muted/20 backdrop-blur-sm">
               <button
                 type="button"
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${previewLang === 'ar' ? 'bg-cyan-500 text-surface-0 shadow-[0_0_12px_rgba(6,182,212,0.3)]' : 'text-on-surface-muted hover:text-on-surface'}`}
+                className={`px-5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewLang === 'ar' ? 'bg-operational-cyan text-white shadow-[0_8px_16px_-4px_rgba(var(--operational-cyan-rgb),0.4)]' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
                 onClick={() => setPreviewLang('ar')}
               >
                 Arabic
               </button>
               <button
                 type="button"
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${previewLang === 'en' ? 'bg-cyan-500 text-surface-0 shadow-[0_0_12px_rgba(6,182,212,0.3)]' : 'text-on-surface-muted hover:text-on-surface'}`}
+                className={`px-5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewLang === 'en' ? 'bg-operational-cyan text-white shadow-[0_8px_16px_-4px_rgba(var(--operational-cyan-rgb),0.4)]' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
                 onClick={() => setPreviewLang('en')}
               >
                 English
@@ -194,18 +197,19 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
             </div>
           </div>
 
-          <div className="p-8 min-h-[300px] flex flex-col items-center bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]">
+          <div className="p-8 min-h-[300px] flex flex-col items-center bg-[url('/grid.svg')] bg-center bg-fixed opacity-90">
             <div
-              className="w-full max-w-2xl bg-surface-0 border border-white/5 rounded-xl shadow-2xl p-8 space-y-6"
+              className="w-full max-w-2xl bg-surface-container-lowest/90 border border-border-muted/20 rounded-xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] p-10 space-y-8 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-700"
               dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
             >
-              <div className="pb-4 border-b border-white/5">
-                <span className="text-[10px] text-on-surface-muted uppercase tracking-widest mb-1 block">Subject</span>
-                <p className="text-xl font-bold text-on-surface">{subject || '...'}</p>
+              <div className="pb-6 border-b border-border-muted/10 relative">
+                <span className="text-[8px] text-muted-foreground/40 uppercase tracking-[0.2em] font-black mb-2 block">Subject Header</span>
+                <p className="text-2xl font-bold text-foreground tracking-tight leading-tight">{subject || '...'}</p>
+                <div className="absolute bottom-0 left-0 w-12 h-1 bg-operational-cyan/20" />
               </div>
-              <div>
-                <span className="text-[10px] text-on-surface-muted uppercase tracking-widest mb-2 block">Message Body</span>
-                <p className="text-on-surface-muted whitespace-pre-wrap leading-relaxed text-sm">
+              <div className="relative">
+                <span className="text-[8px] text-muted-foreground/40 uppercase tracking-[0.2em] font-black mb-3 block">Message Body</span>
+                <p className="text-foreground/80 whitespace-pre-wrap leading-[1.8] text-[15px] font-medium">
                   {body || 'Start typing to see preview...'}
                 </p>
               </div>
@@ -215,5 +219,4 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
       </div>
     </div>
   );
-
 }

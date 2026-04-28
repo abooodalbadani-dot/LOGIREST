@@ -10,8 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Can } from '@/components/auth/Can';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -206,30 +206,30 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
         status={grn?.status as BadgeStatus}
         actions={
           <div className="flex items-center gap-3">
-            <Can perform={isNew ? "create" : "edit"} on="grn">
+            <PermissionGate action={isNew ? "create" : "edit"} resource="grn">
               {!isPosted && (
                 <Button 
                   variant="outline" 
                   disabled={isLocked}
                   className="h-11 px-6 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
                 >
-                  <Save className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0 opacity-60" />
+                  <Save className="w-4 h-4 me-2 opacity-60" />
                   {t('save_draft')}
                 </Button>
               )}
-            </Can>
-            <Can perform="post" on="grn">
+            </PermissionGate>
+            <PermissionGate action="post" resource="grn">
               {!isPosted && (
                 <Button 
                   disabled={isLocked}
                   onClick={() => setIsPostDialogOpen(true)}
                   className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all rounded-2xl"
                 >
-                  <Send className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+                  <Send className="w-4 h-4 me-2" />
                   {t('post_grn')}
                 </Button>
               )}
-            </Can>
+            </PermissionGate>
           </div>
         }
       />
@@ -447,7 +447,7 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
       <Sheet open={fefoOpen} onOpenChange={setFefoOpen}>
         <SheetContent side="bottom" className="h-[80vh] bg-surface-container-lowest border-t border-primary/30 rounded-t-[32px]">
           <SheetHeader>
-            <SheetTitle className="text-xl font-display font-black tracking-tighter">{t('fefo_allocation')}</SheetTitle>
+            <SheetTitle>{t('fefo_allocation')}</SheetTitle>
           </SheetHeader>
           <div className="py-4">
             {activeLine && (

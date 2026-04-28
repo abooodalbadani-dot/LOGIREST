@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
-import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
 export const AdjustmentReasonSchema = z.enum(['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'OTHER']);
 export type AdjustmentReason = z.infer<typeof AdjustmentReasonSchema>;

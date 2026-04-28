@@ -129,7 +129,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
               className="h-12 px-10 bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-sm transition-all shadow-[0_0_25px_rgba(6,182,212,0.25)] border-none"
             >
               {createGRN.isPending ? tc('saving') : t('save_draft')}
-              {!createGRN.isPending && <Save className="ml-2 w-4 h-4 rtl:mr-2 rtl:ml-0" />}
+              {!createGRN.isPending && <Save className="ms-2 w-4 h-4" />}
             </Button>
           </div>
         }
@@ -164,7 +164,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
                       {...form.register("poId")}
                       className="h-14 bg-surface-container-highest/20 border-white/5 font-mono uppercase text-cyan-500 tracking-widest text-xs focus:ring-cyan-500/20"
                     />
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-focus-within:text-cyan-500 transition-colors" />
+                    <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-focus-within:text-cyan-500 transition-colors" />
                   </div>
                   {form.formState.errors.poId && <p className="text-[9px] text-red-400 font-bold uppercase tracking-tight ps-1">{form.formState.errors.poId.message}</p>}
                 </div>

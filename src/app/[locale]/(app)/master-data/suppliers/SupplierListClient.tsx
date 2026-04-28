@@ -7,14 +7,15 @@ import Link from 'next/link';
 import { Plus, Users, CheckCircle2, ExternalLink, CreditCard, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { SupplierSchema, type Supplier } from '@/types/master-data';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ColumnDef } from '@tanstack/react-table';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { MetricCard } from '@/components/ui/metric-card';
 
 export function SupplierListClient({ locale }: { locale: string }) {
   const tc = useTranslations('masterData.common');
@@ -37,7 +38,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
     };
   }, [data]);
 
-  const columns: ColumnDef<Supplier, unknown>[] = [
+  const columns = useMemo<ColumnDef<Supplier, unknown>[]>(() => [
     {
       accessorKey: 'code',
       header: tc('code'),
@@ -87,78 +88,73 @@ export function SupplierListClient({ locale }: { locale: string }) {
       header: '',
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/${locale}/master-data/suppliers/${row.original.id}`);
-            }}
-          >
-            {tc('view')}
-          </Button>
+          <PermissionGate action="view" resource="master_data">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${locale}/master-data/suppliers/${row.original.id}`);
+              }}
+            >
+              {tc('view')}
+            </Button>
+          </PermissionGate>
         </div>
       ),
     },
-  ];
+  ], [tc, ts, locale, router]);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <Breadcrumb
         items={[
           { label: tc('home'), href: `/${locale}/dashboard` },
-          { label: tc('title'), href: `/${locale}/master-data` },
+          { label: tc('master_data'), href: `/${locale}/master-data` },
           { label: ts('title') },
         ]}
       />
 
       <PageHeader
         title={ts('title')}
-        description={ts('description') || 'External procurement partners and global vendor management'}
+        description={ts('description')}
         actions={
-          <Link href={`/${locale}/master-data/suppliers/new`}>
-            <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
-              <Plus className="w-3.5 h-3.5 me-2" />
-              {tc('create_new')}
-            </Button>
-          </Link>
+          <PermissionGate action="create" resource="master_data">
+            <Link href={`/${locale}/master-data/suppliers/new`}>
+              <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                <Plus className="w-3.5 h-3.5 me-2" />
+                {tc('create_new')}
+              </Button>
+            </Link>
+          </PermissionGate>
         }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Users className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('total_suppliers') || 'Total Suppliers'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground">{stats.total}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('total_suppliers')}
+          value={stats.total}
+          icon={Users}
+          color="cyan"
+          dir="ltr"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <CheckCircle2 className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('active_partners') || 'Active Partners'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400">{stats.active}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-emerald-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('active_partners')}
+          value={stats.active}
+          icon={CheckCircle2}
+          color="emerald"
+          dir="ltr"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <ExternalLink className="w-24 h-24 text-rose-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('compliance_rate') || 'Compliance Rate'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-rose-400">100%</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-rose-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('compliance_rate')}
+          value="100%"
+          icon={ExternalLink}
+          color="rose"
+          dir="ltr"
+        />
       </div>
 
       <DataTable
@@ -175,12 +171,12 @@ export function SupplierListClient({ locale }: { locale: string }) {
           onPageChange: setPage,
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-white/5 rounded-sm">
+          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
             <div className="flex flex-col gap-2 min-w-[300px] flex-1">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('search')}</label>
               <div className="relative">
                 <Input
-                  placeholder={ts('search_placeholder') || 'Filter suppliers by name or code...'}
+                  placeholder={ts('search_placeholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="w-full bg-surface-container-highest/30 border-none h-11 ps-10 text-xs font-bold"

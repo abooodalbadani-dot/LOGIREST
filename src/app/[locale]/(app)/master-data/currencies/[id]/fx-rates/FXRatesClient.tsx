@@ -3,22 +3,25 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { ArrowLeft, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Lock, TrendingUp, History, PlusCircle, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
-import { useMasterDataList, useMasterDataCreate } from '@/features/master-data/hooks/useMasterDataCRUD';
+import { useMasterDataList, useMasterDataCreate, useMasterDataItem } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { FXRateSchema, FXRateFormSchema, CurrencySchema, type FXRate, type FXRateFormValues } from '@/types/master-data';
 import { format } from 'date-fns';
+import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
+import { Card, CardContent } from '@/components/ui/card';
 
-interface Props { currencyId: string; }
+interface Props { currencyId: string; locale: string; }
 
-export function FXRatesClient({ currencyId }: Props) {
+export function FXRatesClient({ currencyId, locale }: Props) {
   const t = useTranslations('masterData.currencies');
   const tc = useTranslations('masterData.common');
+
+  // Fetch current currency details for context
+  const { data: baseCurrency } = useMasterDataItem('currencies', currencyId, CurrencySchema);
 
   // Fetch rates for this currency pair
   const { data: ratesData, isLoading } = useMasterDataList(
@@ -50,90 +53,164 @@ export function FXRatesClient({ currencyId }: Props) {
   const columns: ColumnDef<FXRate>[] = [
     { 
       accessorKey: 'to_currency_id', 
-      header: t('to_currency'), 
-      cell: ({ row }) => <span dir="ltr" className="font-mono">{row.original.to_currency_id}</span> 
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest">{t('to_currency')}</span>,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low">
+            <span className="text-[10px] font-mono font-bold text-cyan-500">{row.original.to_currency_id}</span>
+          </div>
+          <span className="text-sm font-medium">
+            {currencies?.data?.find(c => c.id === row.original.to_currency_id)?.name_en || row.original.to_currency_id}
+          </span>
+        </div>
+      )
     },
     {
       accessorKey: 'rate',
-      header: t('rate'),
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest">{t('rate')}</span>,
       cell: ({ row }) => (
-        <span dir="ltr" className="font-mono font-semibold tabular-nums">{row.original.rate.toFixed(4)}</span>
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
+          <span dir="ltr" className="font-mono font-black text-sm text-foreground tabular-nums">
+            {row.original.rate.toFixed(4)}
+          </span>
+        </div>
       ),
     },
     {
       accessorKey: 'effective_date',
-      header: t('effective_date'),
-      cell: ({ row }) => <span dir="ltr">{format(new Date(row.original.effective_date), 'MMM dd, yyyy')}</span>,
+      header: () => <span className="text-[10px] font-black uppercase tracking-widest">{t('effective_date')}</span>,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 text-muted-foreground/60">
+          <History className="w-3.5 h-3.5 opacity-40" />
+          <span dir="ltr" className="text-xs font-bold uppercase tracking-tight">
+            {format(new Date(row.original.effective_date), 'MMM dd, yyyy')}
+          </span>
+        </div>
+      ),
     },
     {
       id: 'lock',
       header: '',
-      cell: () => <Lock className="w-3 h-3 text-text-muted" aria-label="Immutable" />,
+      cell: () => (
+        <div className="flex justify-end pr-4">
+          <div className="p-1.5 rounded-sm bg-surface-container-highest/10 border border-outline-low opacity-40 group-hover:opacity-100 transition-opacity">
+            <Lock className="w-3 h-3 text-text-muted" />
+          </div>
+        </div>
+      ),
     },
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Back to currencies */}
-      <div className="flex items-center gap-2">
-        <Link href="../../currencies">
-          <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
-            {tc('cancel')}
-          </Button>
-        </Link>
-      </div>
-
-      {/* Immutability notice */}
-      <p className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/30 rounded px-3 py-2">
-        {t('rate_immutable_note')}
-      </p>
-
-      {/* Existing rates */}
-      <DataTable columns={columns} data={ratesData?.data ?? []} isLoading={isLoading} />
-
-      {/* Add rate form */}
-      <div className="bg-surface-1 border border-surface-2 rounded-xl p-5 flex flex-col gap-4">
-        <h2 className="font-semibold text-sm">{t('add_rate')}</h2>
-
-        <div className="grid grid-cols-3 gap-4 items-end">
-          {/* To currency */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="fx-to">{t('to_currency')}</Label>
-            <select id="fx-to" {...register('to_currency_id')}
-              className="px-3 py-2 bg-surface-2 border border-surface-3 rounded w-full text-sm">
-              <option value="">—</option>
-              {currencies?.data
-                ?.filter((c) => c.id !== currencyId)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>{c.code} — {c.name_en}</option>
-                ))}
-            </select>
-            {errors.to_currency_id && <p className="text-xs text-red-400">{errors.to_currency_id.message}</p>}
+    <MasterDataFormLayout
+      title={`${t('fx_rates_for')} ${baseCurrency?.code || currencyId}`}
+      backHref={`/${locale}/master-data/currencies`}
+      isSaving={create.isPending}
+      onSubmit={onSubmit}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Existing Rates Table */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-sm bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+              <History className="w-5 h-5 text-cyan-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black uppercase tracking-tight">{t('historical_rates')}</h2>
+              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] font-bold">Audit log of valuation changes</p>
+            </div>
           </div>
 
-          {/* Rate */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="fx-rate">{t('rate')}</Label>
-            <Input id="fx-rate" type="number" dir="ltr" step="any" min={0}
-              {...register('rate', { valueAsNumber: true })} />
-            {errors.rate && <p className="text-xs text-red-400">{errors.rate.message}</p>}
-          </div>
+          <Card className="bg-transparent border-outline-low rounded-sm overflow-hidden shadow-none">
+            <DataTable columns={columns} data={ratesData?.data ?? []} isLoading={isLoading} />
+          </Card>
 
-          {/* Effective date */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="fx-date">{t('effective_date')}</Label>
-            <Input id="fx-date" type="date" dir="ltr" {...register('effective_date')} />
-            {errors.effective_date && <p className="text-xs text-red-400">{errors.effective_date.message}</p>}
+          <div className="flex items-start gap-3 p-4 rounded-sm bg-amber-500/5 border border-amber-500/20 text-amber-200/60">
+            <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+            <p className="text-xs leading-relaxed">
+              <span className="font-black uppercase tracking-wider block mb-1 text-amber-500/80">{tc('warning')}</span>
+              {t('rate_immutable_note')}
+            </p>
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <Button onClick={onSubmit} disabled={create.isPending}>
-            {create.isPending ? tc('saving') : t('add_rate')}
-          </Button>
+        {/* Add Rate Form */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-sm bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+              <PlusCircle className="w-5 h-5 text-cyan-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black uppercase tracking-tight">{t('add_rate')}</h2>
+              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] font-bold">Register new currency parity</p>
+            </div>
+          </div>
+
+          <Card className="bg-surface-container-highest/10 border-outline-low rounded-sm shadow-none">
+            <CardContent className="p-6 space-y-6">
+              {/* To currency */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
+                  {t('to_currency')}
+                </Label>
+                <select 
+                  id="fx-to" 
+                  {...register('to_currency_id')}
+                  className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none"
+                >
+                  <option value="">—</option>
+                  {currencies?.data
+                    ?.filter((c) => c.id !== currencyId)
+                    .map((c) => (
+                      <option key={c.id} value={c.id} className="bg-surface-container-low text-foreground">
+                        {c.code} — {c.name_en}
+                      </option>
+                    ))}
+                </select>
+                {errors.to_currency_id && <p className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{errors.to_currency_id.message}</p>}
+              </div>
+
+              {/* Rate */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
+                  {t('rate')}
+                </Label>
+                <Input 
+                  id="fx-rate" 
+                  type="number" 
+                  dir="ltr" 
+                  step="any" 
+                  min={0}
+                  className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
+                  {...register('rate', { valueAsNumber: true })} 
+                />
+                {errors.rate && <p className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{errors.rate.message}</p>}
+              </div>
+
+              {/* Effective date */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
+                  {t('effective_date')}
+                </Label>
+                <Input 
+                  id="fx-date" 
+                  type="date" 
+                  dir="ltr" 
+                  className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
+                  {...register('effective_date')} 
+                />
+                {errors.effective_date && <p className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{errors.effective_date.message}</p>}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="p-4 rounded-sm bg-surface-container-low border border-outline-low flex items-center justify-between">
+            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/60">Auto-Update Policy: OFF</span>
+            <div className="w-2 h-2 rounded-full bg-outline-low" />
+          </div>
         </div>
       </div>
-    </div>
+    </MasterDataFormLayout>
   );
 }

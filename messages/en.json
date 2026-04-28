@@ -1,5 +1,12 @@
 {
   "common": {
+    "code": "Code",
+    "name_en": "Name (English)",
+    "name_ar": "Name (Arabic)",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create",
+    "create_branch": "Create Branch",
     "permission_denied": "Access Denied",
     "permission_denied_body": "You do not have permission to access this page.",
     "back": "Back",
@@ -91,8 +98,22 @@
       "counting": "Counting",
       "review": "Review",
       "all": "All Statuses",
-      "live_updates": "Live Updates",
-      "last_sync": "Last Sync"
+      "active": "Active",
+      "inactive": "Inactive",
+      "healthy": "Healthy",
+      "low": "Low Stock",
+      "critical": "Critical"
+    },
+    "categories": {
+      "food": "Food & Ingredients",
+      "equipment": "Equipment",
+      "packaging": "Packaging",
+      "supplies": "Supplies"
+    },
+    "uoms": {
+      "ea": "Each (EA)",
+      "kg": "Kilogram (KG)",
+      "l": "Liter (L)"
     },
     "system_stats": {
       "live_updates": "Live Updates",
@@ -460,9 +481,73 @@
       "total_skus": "Total SKUs",
       "active_partners": "Active Partners",
       "home": "Home",
-      "master_data": "Master Data",
+      "master_data": "Master Data Hub",
       "compliance_rate": "Compliance Rate",
-      "not_set": "Not Set"
+      "not_set": "Not Set",
+      "status": "Status",
+      "basic_info": "Basic Information",
+      "basic_info_desc": "Core Entity Identification",
+      "operational_details": "Operational Details",
+      "operational_details_desc": "Management and financial mapping",
+      "status_description": "Control the visibility and operational availability of this unit.",
+      "active_status": "Active Status",
+      "inactive_status": "Inactive Status",
+      "registry_status": "Registry Status",
+      "bilingual_record": "Bilingual classification record",
+      "required": "Required",
+      "scope": "Scope",
+      "global": "Global",
+      "manager": "Manager",
+      "cost_center": "Cost Center",
+      "registry_sync": "Registry Sync",
+      "compliance": "Compliance",
+      "precision": "Precision",
+      "quick_tips": "Quick Tips",
+      "branches": "Branches",
+      "warehouses": "Warehouses",
+      "departments": "Departments",
+      "suppliers": "Suppliers",
+      "categories": "Categories",
+      "items": "Items",
+      "uom": "Units of Measure",
+      "barcodes": "Barcodes",
+      "currencies": "Currencies",
+      "sku_definition_protocol": "SKU Definition Protocol",
+      "master_data_sync": "Master Data Sync",
+      "placeholder_sku": "SKU-000-000",
+      "null_select": "— NULL SELECT —",
+      "select_base_unit": "— SELECT BASE UNIT —",
+      "source_unit": "SOURCE UNIT",
+      "target_unit": "TARGET UNIT",
+      "operational_availability": "Operational Availability",
+      "threshold_parameters": "Threshold Parameters",
+      "inventory_taxonomy_units": "Inventory Taxonomy & Units",
+      "relational_unit_transformation": "Relational Unit Transformation",
+      "category_classification_details": "Category classification details",
+      "currency_id": "Currency",
+      "identification_naming": "Currency identification and naming",
+      "base_currency_warning": "Warning: Setting this as base currency will affect all exchange rate calculations.",
+      "base_currency_description": "The system uses the base currency for all internal calculations and reporting.",
+      "categories_desc": "Logical grouping of inventory assets for hierarchical control and reporting",
+      "total_categories": "Total Groups",
+      "hierarchy_status": "Hierarchy Depth",
+      "flat": "Flat",
+      "optimal": "Optimal",
+      "no_categories_title": "No Categories Found",
+      "no_categories_desc": "Group your items into logical categories for better organization.",
+      "search_categories_placeholder": "Filter categories by name...",
+      "total_locations": "Total Locations",
+      "operational_compliance": "Operational Compliance",
+      "active_metrics": "Active Metrics",
+      "search_placeholder": "Search registry...",
+      "validation": {
+        "required": "This field is required",
+        "code_min": "Code must be at least 2 characters",
+        "code_format": "Code must be uppercase and alphanumeric",
+        "name_en_min": "English name must be at least 3 characters",
+        "name_ar_min": "Arabic name must be at least 3 characters",
+        "invalid_selection": "Invalid selection"
+      }
     },
     "branches": {
       "title": "Branches",
@@ -482,18 +567,36 @@
       "edit_title": "Edit Warehouse",
       "branch": "Branch",
       "type": "Type",
-      "type_main": "Main",
-      "type_dry": "Dry Storage",
-      "type_cold": "Cold Storage",
-      "type_virtual": "Virtual",
+      "code": "WH Code",
+      "parent_branch": "Parent Branch",
+      "name_en": "Name (EN)",
+      "name_ar": "Name (AR)",
+      "warehouse_type": "Warehouse Type",
+      "status": "WH Status",
+      "select_branch": "Select Branch",
+      "select_type": "Select Type",
+      "select_status": "Select Status",
+      "actions": {
+        "create": "Create Warehouse",
+        "save": "Save Changes"
+      },
+      "type_main": "Main Store",
+      "type_dry": "Dry Store",
+      "type_cold": "Cold Chain",
+      "type_virtual": "Virtual / Transit",
       "physical_sites": "Physical Sites",
       "search_placeholder": "Search warehouses by name or code...",
       "types": {
-        "main": "Main Hub",
+        "main": "Main Distribution Center",
         "dry": "Dry Storage",
-        "cold": "Cold Chain",
-        "virtual": "Virtual"
-      }
+        "cold": "Cold Chain Facility",
+        "virtual": "Virtual Node"
+      },
+      "warehouse_configuration": "Warehouse Configuration",
+      "branch_mapping_details": "Branch mapping and node details",
+      "physical_location_settings": "Physical Location & Settings",
+      "operational_status": "Operational Status",
+      "status_description": "Control the visibility and operational availability of this node."
     },
     "items": {
       "title": "Items",
@@ -516,7 +619,10 @@
       "basic_info": "Basic Information",
       "inventory_rules": "Inventory Rules",
       "stock_thresholds": "Stock Thresholds",
-      "no_conversions_defined": "No conversions defined"
+      "no_conversions_defined": "No conversions defined",
+      "description": "Inventory asset registry and SKU depth management",
+      "no_items_title": "No Inventory Items Found",
+      "no_items_desc": "Your master data catalog is currently empty. Start by adding your first SKU."
     },
     "suppliers": {
       "title": "Suppliers",
@@ -528,8 +634,23 @@
       "partner_identity": "Partner Identity",
       "financial_terms": "Financial Terms",
       "operational_settings": "Operational Settings",
+      "code": "Supplier Code",
+      "status": "Status",
+      "name_en": "Name (English)",
+      "name_ar": "Name (Arabic)",
+      "contact_info": "Contact Information",
+      "contact_person": "Primary Contact Person",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "tax_number": "VAT / Tax Number",
       "search_placeholder": "Search suppliers by name or code...",
-      "terms_placeholder": "e.g., Net 30 days"
+      "terms_placeholder": "e.g., Net 30 days",
+      "actions": {
+        "create": "Create Supplier",
+        "save": "Save Changes"
+      },
+      "no_suppliers_title": "No Suppliers Found",
+      "no_suppliers_desc": "Manage your external procurement partners and global vendor network here."
     },
     "currencies": {
       "title": "Currencies",
@@ -574,7 +695,8 @@
       "search_placeholder": "Filter units by name or code...",
       "total_metrics": "Total Metrics",
       "precision": "Precision",
-      "registry_sync": "Registry Sync"
+      "registry_sync": "Registry Sync",
+      "precision_description": "Standard metrics for inventory precision and conversion accuracy across all supply chain nodes."
     },
     "categories": {
       "title": "Categories",
@@ -594,15 +716,22 @@
       "edit_title": "Edit Barcode",
       "description": "Barcode registry and item mapping.",
       "search_placeholder": "Search barcodes...",
-      "item": "Item",
+      "item": "Target Item",
       "barcode": "Barcode",
-      "barcode_label": "Barcode",
-      "default_qty": "Default Quantity",
-      "scan_or_type": "Scan or type barcode...",
+      "barcode_label": "Primary Barcode Identity",
+      "default_qty": "Default Stock-In Quantity",
+      "scan_or_type": "Initiate Scan or Type...",
       "total_identities": "Total Identities",
       "linked_assets": "Linked Assets",
       "active_mappings": "Active Mappings",
-      "sku_link_verified": "SKU Link Verified"
+      "sku_link_verified": "SKU Link Verified",
+      "mapping_section": "Mapping Section",
+      "mapping_description": "Operational SKU linkage and quantity defaults",
+      "hardware_integration": "Hardware Integration",
+      "scan_description": "Real-time physical acquisition via scanning protocol",
+      "current_identity": "Current Identity",
+      "tip_1": "Ensure barcode clarity for consistent scanning.",
+      "tip_2": "Default quantity will pre-fill during receipt."
     },
     "import": {
       "title": "Bulk Import",
@@ -725,23 +854,25 @@
     "warehouse_placeholder": "Select Warehouse",
     "department_placeholder": "Select Department"
   },
-    "dashboard": {
+  "dashboard": {
     "title": "Operations Overview",
     "description": "Real-time overview of warehouse performance and critical indicators",
     "kpi": {
       "total_stock": "Total Stock Value",
       "pending_prs": "Pending Purchase Requests",
       "active_stocktakes": "Active Stocktakes",
-      "low_stock_items": "Low Stock Items",
+      "low_stock": "Low Stock Items",
       "vs_last_month": "vs. last month",
       "immediate_review": "Immediate review required",
-      "jeddah_riyadh_active": "Jeddah, Riyadh active",
+      "warehouse_locked": "Warehouse(s) Locked",
+      "reorder_suggested": "Reorder suggested",
       "critical_items": "Critical items"
     },
     "near_expiry": {
       "title": "Near Expiry Items",
       "alert": "Alert",
-      "expires": "Expires: "
+      "expires": "Expires: ",
+      "rotation_report": "Generate Inventory Rotation Report"
     },
     "pending_approvals": {
       "title": "Pending Approvals",
@@ -750,9 +881,30 @@
     },
     "expiry_control": "EXPIRY CONTROL",
     "approval_workflow": "APPROVAL WORKFLOW",
-    "business_intelligence": "BUSINESS INTELLIGENCE"
+    "business_intelligence": "BUSINESS INTELLIGENCE",
+    "system_health": {
+      "title": "System Integrity",
+      "optimal": "Optimal",
+      "health_suffix": "Health",
+      "node_description": "Real-time Performance Node",
+      "backup": "Backup",
+      "online": "Online",
+      "sessions": "Sessions"
+    },
+    "audit": {
+      "title": "Administrative Audit",
+      "subtitle": "Recent Master Activity",
+      "updated_sku": "Updated SKU",
+      "role_mutation": "Role Mutation",
+      "branch_sync": "Branch Sync Complete"
+    },
+    "analytics": {
+      "title": "System Analytics",
+      "velocity": "Operational Velocity",
+      "full_report": "Full Report",
+      "processing": "Processing Visual Stream"
+    }
   },
-
   "notifications": {
     "templates": "Notification Templates",
     "outbox": "Email Outbox",
@@ -767,7 +919,12 @@
     "sent_at": "Sent At",
     "status": "Status",
     "error_message": "Error Message",
-    "retry": "Retry"
+    "retry": "Retry",
+    "total_volume": "Total Volume",
+    "delivered": "Delivered",
+    "failures": "Failures",
+    "no_emails_title": "No Emails Sent",
+    "no_emails_desc": "The communication outbox is currently empty. System notifications and alerts will appear here once triggered."
   },
   "reports": {
     "title": "Reports",
@@ -798,9 +955,218 @@
     "action": "Action",
     "entity_type": "Entity Type",
     "entity_id": "Entity ID",
+    "details": "Details",
+    "no_logs": "No activity logs found.",
+    "timestamp": "Timestamp",
+    "ip_address": "IP Address",
     "user_name": "User",
     "created_at": "Created At",
     "changes": "Changes",
     "export_csv": "Export CSV"
+  },
+  "operational": {
+    "inventory": {
+      "title": "Inventory Overview",
+      "subtitle": "Orchestrate multi-node supply chains & stock levels",
+      "search_placeholder": "Query items or SKU...",
+      "add_item": "New Item",
+      "export": "Export Data",
+      "total_value": "Total Stock Value",
+      "near_expiry": "Near Expiry",
+      "low_stock": "Low Stock Items",
+      "total_sku": "Total SKU Depth",
+      "filter_category": "Category",
+      "filter_all": "All",
+      "filter_status": "Stock Status",
+      "pagination_info": "Showing {start}-{end} of {total}",
+      "quick_actions": "QUICK ACTIONS:",
+      "barcode_scanner": "Barcode Scanner",
+      "print_labels": "Print Labels",
+      "reconciliation": "Qty Reconciliation",
+      "status": {
+        "critical": "CRITICAL",
+        "low": "LOW STOCK",
+        "healthy": "HEALTHY"
+      }
+    },
+    "po": {
+      "title": "Purchase Orders Record",
+      "subtitle": "Procurement orchestration & supply chain monitoring",
+      "create_new": "Create New PO",
+      "filter_status": "PO Status",
+      "filter_supplier": "Supplier",
+      "all_suppliers": "All Suppliers",
+      "filter_date": "PO Date",
+      "select_date": "Select Date",
+      "clear_filters": "Clear Filters",
+      "pagination_info": "Showing {start}-{end} of {total} POs",
+      "active_orders": "Active Orders",
+      "monthly_expenditure": "Monthly Expenditure",
+      "active_vendors": "Active Vendors",
+      "bulk_edit": "Bulk Edit",
+      "table": {
+        "order_no": "Order No #",
+        "date": "Date",
+        "total": "Total",
+        "currency": "Currency"
+      },
+      "status": {
+        "completed": "COMPLETED",
+        "partial": "PARTIAL",
+        "sent": "SENT",
+        "draft": "DRAFT"
+      }
+    },
+    "lots": {
+      "title": "Lot Transaction Ledger",
+      "subtitle": "Historical tracking of all movements for this batch",
+      "lot_tag": "LOT",
+      "status_valid": "VALID",
+      "expiry_label": "Expiry: {date}",
+      "available_balance": "Available Balance",
+      "units": "UNITS",
+      "total_entry": "Total Entry",
+      "total_exit": "Total Exit",
+      "storage_node": "Storage Node",
+      "last_activity": "Last Activity",
+      "export_ledger": "Export Full Ledger",
+      "relocate": "Relocate",
+      "print_label": "Print Label",
+      "adjust": "Adjust",
+      "table": {
+        "datetime": "Date & Time",
+        "type": "Type",
+        "entry": "ENTRY",
+        "exit": "EXIT",
+        "qty": "Quantity",
+        "balance": "Running Balance",
+        "reference": "Reference",
+        "user": "User"
+      }
+    },
+    "search": {
+      "title": "Universal Search",
+      "identified_matches": "Identified {count} matches for \"{query}\"",
+      "search_hint": "Search across items, suppliers, or documents",
+      "shortcut_hint": "Press / for fast search",
+      "placeholder": "Find item, supplier, or invoice number...",
+      "execute": "Execute Search",
+      "refine": "Refine Results",
+      "main_category": "Main Category",
+      "operational_status": "Operational Status",
+      "recent_searches": "Recent Searches",
+      "syncing": "Synchronizing Operational Databases...",
+      "records": "Records",
+      "no_matches": "No Identification",
+      "no_matches_desc": "Zero operational matches identified for \"{query}\" in the primary matrix.",
+      "reset": "Reset Protocol",
+      "tips": {
+        "sku": "SKU Tracking",
+        "sku_desc": "Find master data via SKU or Item names",
+        "transactions": "Transactions",
+        "transactions_desc": "Access POs, Invoices and internal transfers",
+        "suppliers": "Suppliers",
+        "suppliers_desc": "Vendor details, contacts and performance"
+      },
+      "sections": {
+        "products": "Products",
+        "suppliers": "Suppliers",
+        "warehouse": "Warehouse",
+        "transactions": "Transactions"
+      }
+    },
+    "item_form": {
+      "steps": {
+        "basic": "Basic Information",
+        "uom": "Units of Measure",
+        "alerts": "Stock Alerts"
+      },
+      "image": {
+        "label": "Item Image",
+        "upload_hint": "Click to Upload",
+        "resolution": "Recommended Resolution: 800x800"
+      },
+      "glance": {
+        "title": "Quick Glance",
+        "sku": "SKU Code",
+        "category": "Category"
+      },
+      "header": {
+        "title": "Add New Item",
+        "subtitle": "Please complete all steps for data accuracy"
+      },
+      "fields": {
+        "sku": "SKU Number",
+        "category": "Category",
+        "name_ar": "Item Name (Arabic)",
+        "name_en": "Item Name (English)",
+        "base_unit": "Base Unit",
+        "conversions": "Conversion Factors",
+        "add_conversion": "Add Conversion",
+        "no_conversions": "No conversion factors added yet",
+        "min_stock": "Min Stock Level",
+        "alert_threshold": "Alert Threshold",
+        "notifications": "System Notifications",
+        "notifications_desc": "An immediate notification will be sent to the store manager when stock reaches the defined threshold."
+      },
+      "actions": {
+        "previous": "Previous",
+        "saving": "Saving...",
+        "save": "Save Item",
+        "next": "Next Step"
+      },
+      "validation": {
+        "sku_min": "SKU must be at least 2 characters",
+        "name_en_required": "English name is required",
+        "name_ar_required": "Arabic name is required",
+        "min_stock_negative": "Cannot be negative"
+      }
+    }
+  },
+  "procurement": {
+    "pr": {
+      "title": "Purchase Requests",
+      "description": "Internal stock replenishment requests and approval pipeline",
+      "create_new": "New Request",
+      "no_requests_title": "No Purchase Requests Found",
+      "no_requests_desc": "Request items from the store to replenish your department stock.",
+      "department": "Department",
+      "expected_date": "Expected Delivery Date",
+      "requested_qty": "Requested Qty",
+      "approved_qty": "Approved Qty",
+      "status_init": "Status Pending",
+      "new_intent": "New Request Intent",
+      "specification": "Resource Acquisition Details",
+      "save_draft": "Save Draft",
+      "submit": "Submit for Approval",
+      "reject": "Reject Request",
+      "approve": "Approve Request",
+      "convert_to_po": "Convert to PO"
+    }
+  },
+  "purchasing": {
+    "po": {
+      "title": "Purchase Order Details",
+      "supplier": "Supplier",
+      "linked_pr": "Linked PR (Optional)",
+      "expected_date": "Expected Delivery Date",
+      "supplier_currency": "Supplier Currency",
+      "fx_rate": "FX Rate (to SAR)",
+      "general_notes": "General Notes",
+      "line_items": "Line Items",
+      "add_item": "Add Item",
+      "item_sku": "Item SKU",
+      "quantity": "Quantity",
+      "unit_price": "Unit Price",
+      "line_notes": "Line Notes",
+      "supplier_total": "Supplier Total",
+      "base_total": "Base Total",
+      "select_supplier": "Select Supplier",
+      "notes_placeholder": "E.g., Special packaging required",
+      "actions": {
+        "submit": "Submit PO",
+        "submitting": "Submitting..."
+      }
+    }
   }
 }

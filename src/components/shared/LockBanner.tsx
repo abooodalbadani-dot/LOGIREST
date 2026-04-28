@@ -1,26 +1,45 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import type { WarehouseLockState } from '@/types/stocktake';
+import { Lock, AlertCircle } from 'lucide-react';
 
 export function LockBanner({ lockState }: { lockState: WarehouseLockState | undefined }) {
   const t = useTranslations('operations.stocktake');
+  const tc = useTranslations('common');
   
   if (!lockState?.is_locked) return null;
   
   const startTime = lockState.lock_started_at ? new Date(lockState.lock_started_at).toLocaleString() : '';
 
   return (
-    <div role="alert" className="bg-amber-500/15 border border-amber-500/40 rounded p-3 mb-4 flex items-start gap-3">
-      <div className="text-amber-500 mt-0.5">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-        </svg>
+    <div className="w-full bg-status-warning/10 border border-status-warning/30 sm:rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 shadow-[0_16px_32px_-8px_rgba(var(--status-warning-rgb),0.2)] animate-in fade-in slide-in-from-top-4 duration-700 relative overflow-hidden group backdrop-blur-md">
+      {/* Visual background element */}
+      <div className="absolute inset-0 bg-gradient-to-r from-status-warning/10 to-transparent pointer-events-none" />
+      
+      <div className="flex items-center gap-4 w-full sm:w-auto relative z-10">
+        <div className="flex shrink-0 items-center justify-center h-12 w-12 rounded-xl bg-status-warning/20 text-status-warning shadow-[inset_0_0_12px_rgba(var(--status-warning-rgb),0.3)] border border-status-warning/20">
+          <Lock className="h-5 w-5" />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="font-black text-status-warning tracking-[0.15em] uppercase text-[11px]">
+            {t('warehouse_locked_banner', { sessionNumber: lockState.session_number || 'N/A' })}
+          </span>
+          <span className="text-status-warning/80 text-xs font-bold leading-relaxed">
+            {startTime ? (
+              <span className="flex items-center gap-1.5">
+                {tc('lockedAt') || 'Locked at'}: <span dir="ltr" className="font-mono font-black bg-status-warning/20 px-2 py-0.5 rounded-lg text-[10px] shadow-sm">{startTime}</span>
+              </span>
+            ) : (
+              tc('stocktakeInProgressDesc') || "Transactions are restricted due to an active stocktake."
+            )}
+          </span>
+        </div>
       </div>
-      <div className="text-sm text-amber-500">
-        <p className="font-bold">
-          {t('warehouse_locked_banner', { sessionNumber: lockState.session_number || 'N/A' })}
-        </p>
-        {startTime && <p className="opacity-80 mt-1">Locked at: <span dir="ltr">{startTime}</span></p>}
+      <div className="flex shrink-0 items-center gap-3 relative z-10">
+        <div className="h-8 w-[1px] bg-status-warning/30 hidden sm:block mx-2" />
+        <div className="bg-status-warning/15 p-2.5 rounded-xl text-status-warning animate-pulse shadow-[0_0_15px_rgba(var(--status-warning-rgb),0.3)]">
+          <AlertCircle className="h-5 w-5" />
+        </div>
       </div>
     </div>
   );

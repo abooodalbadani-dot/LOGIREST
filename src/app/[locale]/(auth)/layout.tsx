@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex w-full bg-[#111315] relative overflow-hidden text-white font-sans">
       {/* Universal WebMCP Header for Auth */}
-      <header className="absolute top-0 right-0 z-50 p-6 pointer-events-none">
+      <header className="absolute top-0 end-0 z-50 p-6 pointer-events-none">
         <div className="pointer-events-auto scale-90 origin-top-right">
           <WebMCPBadge />
         </div>

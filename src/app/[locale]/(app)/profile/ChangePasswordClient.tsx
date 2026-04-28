@@ -51,94 +51,94 @@ export default function ChangePasswordClient() {
   };
 
   return (
-    <Card className="border-surface-3 bg-surface-1/50 backdrop-blur-md relative overflow-hidden group">
+    <Card className="border-border-muted/20 bg-surface-container-low/50 backdrop-blur-md relative overflow-hidden group shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
       {/* Ghost Border - Top Glow */}
-      <div className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent shadow-[0_0_15px_rgba(0,229,255,0.3)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute -top-[1px] start-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-operational-cyan/50 to-transparent shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.4)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      <CardHeader>
+      <CardHeader className="pb-4">
         <div className="flex items-center gap-2 mb-1">
-          <ShieldCheck className="w-4 h-4 text-cyan-500" />
-          <CardTitle className="text-lg">{t('security')}</CardTitle>
+          <ShieldCheck className="w-4 h-4 text-operational-cyan animate-pulse" />
+          <CardTitle className="text-lg uppercase tracking-wider">{t('security')}</CardTitle>
         </div>
-        <CardDescription>{t('change_password')}</CardDescription>
+        <CardDescription className="text-muted-foreground/60 font-medium">{t('change_password')}</CardDescription>
       </CardHeader>
       
       <CardContent className="relative z-10">
         {isSuccess ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center space-y-4 animate-in zoom-in-95 duration-300">
-            <div className="p-4 bg-cyan-500/10 rounded-full">
-              <CheckCircle2 className="w-12 h-12 text-cyan-500" />
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-6 animate-in zoom-in-95 duration-500">
+            <div className="p-6 bg-operational-cyan/10 rounded-full border border-operational-cyan/20 shadow-[0_0_40px_rgba(var(--operational-cyan-rgb),0.15)]">
+              <CheckCircle2 className="w-12 h-12 text-operational-cyan" />
             </div>
-            <div className="space-y-1">
-              <p className="text-on-surface font-bold text-lg">{t('password_updated')}</p>
-              <p className="text-sm text-on-surface-muted">Your security credentials are now synced.</p>
+            <div className="space-y-2">
+              <p className="text-foreground font-black text-xl uppercase tracking-tight">{t('password_updated')}</p>
+              <p className="text-sm text-muted-foreground/60 font-medium">Your security credentials are now hardened and synced.</p>
             </div>
-            <Button variant="outline" onClick={() => setIsSuccess(false)} className="mt-2 border-surface-3">
+            <Button variant="outline" onClick={() => setIsSuccess(false)} className="mt-2 border-border-muted/30 hover:bg-surface-container-high px-8 rounded-xl font-bold uppercase tracking-widest text-[10px]">
               Done
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="current_password" className="text-xs uppercase tracking-widest font-black text-on-surface-muted">
+              <Label htmlFor="current_password" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">
                 {t('current_password')}
               </Label>
               <div className="relative group/input">
                 <Input
                   id="current_password"
                   type="password"
-                  className="bg-surface-2/50 border-surface-3 focus-visible:ring-cyan-500/30 focus-visible:border-cyan-500 transition-all pl-9"
+                  className="bg-surface-container-low border-border-muted/30 focus-visible:ring-operational-cyan/20 focus-visible:border-operational-cyan/50 h-11 transition-all ps-10"
                   {...register('current_password')}
                 />
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-muted group-focus-within/input:text-cyan-500 transition-colors" />
+                <KeyRound className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within/input:text-operational-cyan transition-colors" />
               </div>
               {errors.current_password && (
-                <div className="flex items-center gap-1.5 text-red-500 mt-1">
+                <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
                   <AlertCircle className="w-3 h-3" />
-                  <p className="text-[10px] font-bold">{errors.current_password.message}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-tight">{errors.current_password.message}</p>
                 </div>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="new_password" className="text-xs uppercase tracking-widest font-black text-on-surface-muted">
+              <Label htmlFor="new_password" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">
                 {t('new_password')}
               </Label>
               <Input
                 id="new_password"
                 type="password"
-                className="bg-surface-2/50 border-surface-3 focus-visible:ring-cyan-500/30 focus-visible:border-cyan-500 transition-all"
+                className="bg-surface-container-low border-border-muted/30 focus-visible:ring-operational-cyan/20 focus-visible:border-operational-cyan/50 h-11 transition-all"
                 {...register('new_password')}
               />
               {errors.new_password && (
-                <div className="flex items-center gap-1.5 text-red-500 mt-1">
+                <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
                   <AlertCircle className="w-3 h-3" />
-                  <p className="text-[10px] font-bold">{errors.new_password.message}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-tight">{errors.new_password.message}</p>
                 </div>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm_password" className="text-xs uppercase tracking-widest font-black text-on-surface-muted">
+              <Label htmlFor="confirm_password" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">
                 {t('confirm_password')}
               </Label>
               <Input
                 id="confirm_password"
                 type="password"
-                className="bg-surface-2/50 border-surface-3 focus-visible:ring-cyan-500/30 focus-visible:border-cyan-500 transition-all"
+                className="bg-surface-container-low border-border-muted/30 focus-visible:ring-operational-cyan/20 focus-visible:border-operational-cyan/50 h-11 transition-all"
                 {...register('confirm_password')}
               />
               {errors.confirm_password && (
-                <div className="flex items-center gap-1.5 text-red-500 mt-1">
+                <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
                   <AlertCircle className="w-3 h-3" />
-                  <p className="text-[10px] font-bold">{errors.confirm_password.message}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-tight">{errors.confirm_password.message}</p>
                 </div>
               )}
             </div>
 
             <Button 
               type="submit" 
-              className="w-full bg-surface-3 hover:bg-cyan-500 hover:text-black font-black uppercase tracking-widest transition-all h-11" 
+              className="w-full bg-operational-cyan text-white font-black uppercase tracking-widest transition-all h-12 rounded-xl shadow-[0_12px_24px_-8px_rgba(var(--operational-cyan-rgb),0.4)] hover:brightness-110 active:scale-[0.98] text-[10px]" 
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -154,5 +154,6 @@ export default function ChangePasswordClient() {
         )}
       </CardContent>
     </Card>
+
   );
 }

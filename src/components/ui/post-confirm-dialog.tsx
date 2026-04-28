@@ -42,8 +42,8 @@ export function PostConfirmDialog({
       {trigger && <AlertDialogTrigger>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader className="flex flex-col items-center text-center">
-          <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDestructive ? 'bg-red-500/20' : 'bg-amber-500/20'}`}>
-            <AlertTriangle className={`h-6 w-6 ${isDestructive ? 'text-red-500' : 'text-amber-500'}`} />
+          <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDestructive ? 'bg-status-error/20' : 'bg-status-warning/20'}`}>
+            <AlertTriangle className={`h-6 w-6 ${isDestructive ? 'text-status-error' : 'text-status-warning'}`} />
           </div>
           <AlertDialogTitle className="text-xl font-bold">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-center text-muted-foreground pt-2">
@@ -51,15 +51,15 @@ export function PostConfirmDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4 sm:justify-center flex-col sm:flex-row gap-3">
-          <AlertDialogCancel className="w-full sm:w-auto h-11 bg-surface-3 hover:bg-surface-4 border-transparent text-foreground">
+          <AlertDialogCancel className="w-full sm:w-auto h-11 bg-surface-container-highest hover:bg-surface-container-high border-transparent text-foreground rounded-xl">
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm} 
-            className={`w-full sm:w-auto h-11 ${
+            className={`w-full sm:w-auto h-11 rounded-xl transition-all ${
               isDestructive 
-                ? 'bg-red-500 text-black hover:bg-red-500/90 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
-                : 'bg-brand-primary text-black hover:bg-brand-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]'
+                ? 'bg-status-error text-white hover:bg-status-error/90 shadow-[0_0_15px_rgba(var(--status-error-rgb),0.5)]' 
+                : 'bg-operational-cyan text-white hover:bg-operational-cyan/90 shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.5)]'
             }`}
           >
             {confirmText}

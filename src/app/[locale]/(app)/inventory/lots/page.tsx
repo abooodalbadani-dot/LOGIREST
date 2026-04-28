@@ -8,8 +8,8 @@ export default async function LotBalancesPage({ params }: { params: Promise<{ lo
   const t = await getTranslations('inventory.lots');
 
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="inventory">
-      <LotBalanceClient title={t('title')} />
+    <ProtectedRoute requiredAction="view" requiredResource="inventory_lots">
+      <LotBalanceClient />
     </ProtectedRoute>
   );
 }

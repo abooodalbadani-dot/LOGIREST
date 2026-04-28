@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
-import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
 export const TransferSummarySchema = z.object({ 
   id: z.string(), 

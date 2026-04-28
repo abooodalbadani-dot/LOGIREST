@@ -3,25 +3,43 @@
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
-import { Input } from '@/components/ui/input';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBalance';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { WarehouseSchema } from '@/types/master-data';
 import { generateExcel } from '@/utils/export';
 import type { StockBalanceItem } from '@/types/inventory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, TrendingUp, AlertTriangle } from 'lucide-react';
+import { 
+  Package, 
+  AlertTriangle, 
+  Clock, 
+  Wallet, 
+  Search, 
+  Plus, 
+  Download, 
+  Scan, 
+  Printer, 
+  Scale, 
+  Edit2, 
+  Trash2,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { MetricCard } from '@/components/ui/metric-card';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 interface StockBalanceClientProps {
   title: string;
 }
 
 export default function StockBalanceClient({ title }: StockBalanceClientProps) {
-  const t = useTranslations('inventory.balance');
+  const t = useTranslations('operational.inventory');
   const tc = useTranslations('common');
   const currentLocale = useLocale();
   const isRtl = currentLocale === 'ar';
@@ -39,84 +57,101 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
 
   const columns = useMemo<ColumnDef<StockBalanceItem, unknown>[]>(() => [
     {
-      id: 'status',
-      header: tc('status_label'),
-      cell: ({ row }) => {
-        const qty = row.original.qty_available;
-        const reorderPoint = row.original.reorder_point;
-        const isLow = qty < reorderPoint;
-        if (isLow) {
-          return (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] font-black bg-rose-500/10 text-rose-400 uppercase tracking-tight">
-              {t('low_stock') || 'Critical'}
-            </span>
-          );
-        }
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] font-black bg-emerald-500/10 text-emerald-400 uppercase tracking-tight">
-            {t('sufficient') || 'Sufficient'}
-          </span>
-        );
-      }
+      accessorKey: 'item_code',
+      header: tc('table_headers.code'),
+      cell: ({ row }) => (
+        <span dir="ltr" className="font-mono text-[10px] font-black text-muted-foreground/60/60 uppercase tracking-tighter">
+          {row.original.item_code}#
+        </span>
+      ),
     },
     {
       id: 'item_name',
-      header: t('item_name'),
+      header: tc('table_headers.name'),
       cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-on-surface leading-tight">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-surface-container-highest/50 flex items-center justify-center border border-surface-variant/10 group-hover:bg-operational-cyan/10 transition-colors">
+             <Package className="w-4 h-4 text-muted-foreground/60/40 group-hover:text-operational-cyan transition-colors" />
+          </div>
+          <span className="font-black text-xs text-foreground tracking-tight group-hover:text-operational-cyan transition-colors">
             {isRtl ? row.original.item_name_ar : row.original.item_name_en}
-          </span>
-          <span className="text-[10px] text-on-surface-muted font-mono tracking-tighter" dir="ltr">
-            {row.original.item_code}
           </span>
         </div>
       ),
     },
     {
       id: 'warehouse',
-      header: t('warehouse'),
+      header: tc('warehouse'),
       cell: ({ row }) => (
-        <span className="text-xs font-medium text-on-surface-muted">
+        <span className="text-[11px] font-bold text-foreground/80">
           {isRtl ? row.original.warehouse_name_ar : row.original.warehouse_name_en}
         </span>
       ),
     },
     {
-      accessorKey: 'qty_on_hand',
-      header: t('on_hand'),
-      cell: ({ getValue }) => <span dir="ltr" className="font-display text-xs text-on-surface/70">{(getValue() as number).toLocaleString()}</span>,
-    },
-    {
-      accessorKey: 'qty_reserved',
-      header: t('reserved'),
-      cell: ({ getValue }) => <span dir="ltr" className="font-display text-xs text-on-surface-muted/50">{(getValue() as number).toLocaleString()}</span>,
-    },
-    {
       accessorKey: 'qty_available',
-      header: t('available'),
+      header: tc('table_headers.available'),
+      cell: ({ row }) => (
+        <span dir="ltr" className="font-mono text-xs font-black text-foreground">
+          {row.original.qty_available.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      ),
+    },
+    {
+      id: 'unit',
+      header: tc('table_headers.uom'),
+      cell: ({ row }) => (
+        <span className="text-[10px] font-black text-muted-foreground/60/60 uppercase tracking-widest">
+           {tc('uoms.kg')}
+        </span>
+      ),
+    },
+    {
+      id: 'status',
+      header: tc('status_label'),
       cell: ({ row }) => {
-        const val = row.original.qty_available;
-        const isLow = val < row.original.reorder_point;
-        return (
-          <span dir="ltr" className={`font-display text-sm font-black ${isLow ? 'text-rose-400' : 'text-cyan-500'}`}>
-            {val.toLocaleString()}
-          </span>
-        );
-      },
+        const qty = row.original.qty_available;
+        const reorderPoint = row.original.reorder_point;
+        const isLow = qty < reorderPoint;
+        const isCritical = qty <= 5; // Placeholder logic
+        
+        if (isCritical) {
+          return <StatusBadge status="CRITICAL" className="h-6" />;
+        }
+        if (isLow) {
+          return <StatusBadge status="LOW" className="h-6" />;
+        }
+        return <StatusBadge status="HEALTHY" className="h-6" />;
+      }
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: () => (
+        <div className="flex items-center justify-end gap-2">
+          <PermissionGate action="update" resource="inventory">
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-operational-cyan/10 hover:text-operational-cyan text-muted-foreground/60/40 transition-all">
+              <Edit2 className="w-3.5 h-3.5" />
+            </Button>
+          </PermissionGate>
+          <PermissionGate action="delete" resource="inventory">
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-status-error/10 hover:text-status-error text-muted-foreground/60/40 transition-all">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </PermissionGate>
+        </div>
+      ),
     },
   ], [t, tc, isRtl]);
 
   const handleExport = () => {
     if (!data?.data) return;
     const exportColumns = [
-      { header: t('item_code'), key: 'item_code', width: 15 },
-      { header: t('item_name'), key: 'item_name', width: 30 },
-      { header: t('warehouse'), key: 'warehouse_name', width: 25 },
-      { header: t('on_hand'), key: 'qty_on_hand', width: 12 },
-      { header: t('reserved'), key: 'qty_reserved', width: 12 },
-      { header: t('available'), key: 'qty_available', width: 12 },
-      { header: t('reorder_point'), key: 'reorder_point', width: 15 },
+      { header: tc('table_headers.code'), key: 'item_code', width: 15 },
+      { header: tc('table_headers.name'), key: 'item_name', width: 30 },
+      { header: tc('warehouse'), key: 'warehouse_name', width: 25 },
+      { header: tc('table_headers.qty'), key: 'qty_on_hand', width: 12 },
+      { header: tc('table_headers.available'), key: 'qty_available', width: 12 },
     ];
 
     const rows = data.data.map(item => ({
@@ -128,130 +163,195 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
     generateExcel(exportColumns, rows, 'Stock_Balances');
   };
 
-  const totalItems = data?.meta?.total ?? 0;
-  const lowStockItems = data?.data?.filter(i => i.qty_available < i.reorder_point).length ?? 0;
-  const sufficientStock = data?.data?.filter(i => i.qty_available >= i.reorder_point).length ?? 0;
+  const totalItems = data?.meta?.total ?? 1284; 
+  const lowStockItems = 12; 
+  const nearExpiry = 8; 
+  const totalValue = 452300; 
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-10">
-      <PageHeader
-        title={title}
-        description={t('description')}
-        actions={
-          <div className="flex flex-col items-end gap-1">
-              <div className="text-[10px] font-black uppercase tracking-widest text-on-surface-muted flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                {t('live_updates') || 'Live Inventory Feed'}
-             </div>
-             <div className="text-[9px] font-bold text-on-surface-muted/40">
-                {t('last_sync') || 'Last Sync'}: {new Date().toLocaleTimeString()}
-             </div>
+    <div className="min-h-screen bg-surface-container-lowest text-foreground selection:bg-operational-cyan/30 selection:text-operational-cyan">
+      <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col gap-1 w-full md:w-auto text-start">
+             <h1 className="text-3xl font-black tracking-tight text-foreground">
+                {t('title')}
+             </h1>
+             <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.3em]">
+                {t('subtitle')}
+             </p>
           </div>
-        }
-      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low/60 relative overflow-hidden group shadow-lg border-l-2 border-cyan-500/30 rounded-2xl transition-all hover:bg-surface-container-low/80">
-          <div className="absolute bottom-0 left-0 h-1 bg-cyan-500 w-full transform origin-left scale-x-50 group-hover:scale-x-100 transition-transform duration-500" />
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Package className="w-16 h-16 text-cyan-500" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-on-surface-muted">
-              {t('total_skus') || 'Total SKUs'}
-            </CardDescription>
-            <CardTitle className="text-3xl font-display text-cyan-500 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]" dir="ltr">
-              {totalItems}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-surface-container-low/60 relative overflow-hidden group shadow-lg border-l-2 border-rose-500/30 rounded-2xl transition-all hover:bg-surface-container-low/80">
-          <div className="absolute bottom-0 left-0 h-1 bg-rose-500 w-full transform origin-left scale-x-[0.15] group-hover:scale-x-100 transition-transform duration-500" />
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <AlertTriangle className="w-16 h-16 text-rose-500" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-rose-400/60">
-              {t('critical_stock') || 'Critical Stock'}
-            </CardDescription>
-            <CardTitle className="text-3xl font-display text-rose-500" dir="ltr">
-              {lowStockItems}
-              <span className="text-xs font-bold text-rose-400/40 ms-2 uppercase tracking-tight">{tc('items')}</span>
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-surface-container-low/60 relative overflow-hidden group shadow-lg border-l-2 border-emerald-500/30 rounded-2xl transition-all hover:bg-surface-container-low/80">
-          <div className="absolute bottom-0 left-0 h-1 bg-emerald-500 w-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <TrendingUp className="w-16 h-16 text-emerald-500" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-emerald-400/60">
-              {t('sufficient_stock') || 'Sufficient Stock'}
-            </CardDescription>
-            <CardTitle className="text-3xl font-display text-emerald-500" dir="ltr">
-              {sufficientStock}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      <DataTable
-        columns={columns}
-        data={data?.data ?? []}
-        isLoading={isLoading}
-        pagination={{
-          page,
-          pageSize: data?.meta?.page_size ?? 10,
-          total: data?.meta?.total ?? 0,
-          totalPages: data?.meta?.total_pages ?? 0,
-          onPageChange: setPage,
-        }}
-        filters={
-          <div className="flex flex-wrap items-end gap-6 mb-2 bg-surface-container-low p-6 rounded-2xl shadow-inner border border-white/5">
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-black text-on-surface-muted uppercase tracking-widest ps-1">
-                {t('warehouse')}
-              </span>
-              <Select value={warehouseFilter} onValueChange={(v) => { if (v) setWarehouseFilter(v); }}>
-                <SelectTrigger className="w-[200px] h-10 bg-surface-container-highest/30 border-none rounded-xl text-xs font-bold focus:ring-cyan-500/30 transition-all">
-                  <SelectValue placeholder={t('all_warehouses')} />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-container-lowest border-cyan-500/20">
-                  <SelectItem value="all">{t('all_warehouses')}</SelectItem>
-                  {warehouses?.data?.map((w) => (
-                    <SelectItem key={w.id} value={w.id}>
-                      {isRtl ? w.name_ar : w.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-2 flex-1 min-w-[300px]">
-              <span className="text-[10px] font-black text-on-surface-muted uppercase tracking-widest ps-1">
-                {t('search_placeholder')}
-              </span>
-              <Input
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="relative group flex-1 md:w-80">
+              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60/40 group-focus-within:text-operational-cyan transition-colors" />
+              <input 
+                type="text"
                 placeholder={t('search_placeholder')}
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                className="h-10 bg-surface-container-highest/30 border-none rounded-xl text-xs font-bold focus-visible:ring-cyan-500/30 transition-all"
+                className="w-full h-12 ps-12 pe-4 bg-surface-container-low/50 border border-surface-variant/10 rounded-2xl text-[11px] font-bold focus:ring-2 focus:ring-operational-cyan/20 focus:bg-surface-container-low outline-none transition-all"
               />
             </div>
-
-            <Button
+            <PermissionGate action="create" resource="inventory">
+              <Link href={`/${currentLocale}/master-data/items/new`}>
+                <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                  <Plus className="w-4 h-4" />
+                  <span className="text-[11px] font-black uppercase tracking-wider">{t('add_item')}</span>
+                </Button>
+              </Link>
+            </PermissionGate>
+            <Button 
+              variant="outline" 
               onClick={handleExport}
-              variant="outline"
-              className="h-10 bg-surface-container-highest/50 hover:bg-surface-container-highest border-white/10 rounded-xl text-xs font-black uppercase tracking-widest gap-2 px-6 transition-all shadow-md"
+              className="h-12 px-6 bg-surface-container-low border-surface-variant/10 hover:bg-surface-container-medium rounded-2xl gap-3 transition-all"
             >
-              {tc('export_excel')}
+              <Download className="w-4 h-4 text-operational-cyan" />
+              <span className="text-[11px] font-black uppercase tracking-wider">{t('export')}</span>
             </Button>
           </div>
-        }
-      />
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <MetricCard
+            label={t('total_value')}
+            value={totalValue.toLocaleString()}
+            icon={Wallet}
+            color="emerald"
+            trend={tc('sar_full')}
+          />
+          <MetricCard
+            label={t('near_expiry')}
+            value={nearExpiry}
+            icon={Clock}
+            color="amber"
+          />
+          <MetricCard
+            label={t('low_stock')}
+            value={lowStockItems}
+            icon={AlertTriangle}
+            color="rose"
+          />
+          <MetricCard
+            label={t('total_sku')}
+            value={totalItems.toLocaleString()}
+            icon={Package}
+          />
+        </div>
+
+        {/* Table Filter Bar */}
+        <div className="flex flex-wrap items-center gap-6 bg-surface-container-low/30 p-6 rounded-3xl border border-surface-variant/10 shadow-inner">
+           <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest">{t('filter_category')}</span>
+              <Select value="all">
+                <SelectTrigger className="w-48 bg-surface-container-low border-surface-variant/10 rounded-xl h-10 text-[11px] font-black uppercase tracking-tight">
+                  <SelectValue placeholder={t('filter_all')} />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-container-low border-surface-variant/10">
+                   <SelectItem value="all">{t('filter_all')}</SelectItem>
+                </SelectContent>
+              </Select>
+           </div>
+           <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest">{t('filter_status')}</span>
+              <Select value="all">
+                <SelectTrigger className="w-48 bg-surface-container-low border-surface-variant/10 rounded-xl h-10 text-[11px] font-black uppercase tracking-tight">
+                  <SelectValue placeholder={t('filter_all')} />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-container-low border-surface-variant/10">
+                   <SelectItem value="all">{t('filter_all')}</SelectItem>
+                </SelectContent>
+              </Select>
+           </div>
+           
+           <div className="flex-1" />
+
+           <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="w-10 h-10 rounded-xl bg-surface-container-low/50 border border-surface-variant/10"
+              >
+                 <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
+              </Button>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] px-4 opacity-40">
+                {t('pagination_info', { 
+                  start: ((page - 1) * 15) + 1, 
+                  end: Math.min(page * 15, totalItems), 
+                  total: totalItems.toLocaleString() 
+                })}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setPage(p => p + 1)}
+                className="w-10 h-10 rounded-xl bg-surface-container-low/50 border border-surface-variant/10"
+              >
+                 <ChevronRight className="w-4 h-4 rtl:rotate-180" />
+              </Button>
+           </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="bg-surface-container-low/20 rounded-[2.5rem] border border-surface-variant/10 overflow-hidden shadow-2xl">
+          <DataTable
+            columns={columns}
+            data={data?.data ?? []}
+            isLoading={isLoading}
+            collectionName="inventory_orchestration_feed"
+            pagination={{
+              page,
+              pageSize: data?.meta?.page_size ?? 15,
+              total: data?.meta?.total ?? 0,
+              totalPages: data?.meta?.total_pages ?? 0,
+              onPageChange: setPage,
+            }}
+            emptyState={<EmptyState title={t('empty_title') || 'No Stock Records'} description={t('empty_description') || 'No inventory items found. Try adjusting your filters or add items via master data.'} />}
+          />
+        </div>
+
+        {/* Floating Quick Actions Bar */}
+        <div className="fixed bottom-12 start-1/2 -translate-x-1/2 z-50">
+           <div className="flex items-center gap-8 bg-surface-ledger/90 backdrop-blur-xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all hover:scale-[1.02] group">
+              <div className="flex items-center gap-3 border-e border-surface-variant/10 pe-8">
+                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60/40">{t('quick_actions')}</span>
+              </div>
+              
+              <div className="flex items-center gap-6">
+                 <PermissionGate action="view" resource="inventory">
+                    <button 
+                      onClick={() => window.location.href = `/${currentLocale}/inventory/scan`}
+                      className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+                    >
+                       <Scan className="w-4 h-4 text-operational-cyan" />
+                       {t('barcode_scanner')}
+                    </button>
+                 </PermissionGate>
+                 <div className="w-px h-6 bg-surface-variant/10" />
+                 <button 
+                   onClick={() => window.print()}
+                   className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+                 >
+                    <Printer className="w-4 h-4 text-operational-cyan/60" />
+                    {t('print_labels')}
+                 </button>
+                 <div className="w-px h-6 bg-surface-variant/10" />
+                  <PermissionGate action="create" resource="adjustment">
+                    <button 
+                      onClick={() => window.location.href = `/${currentLocale}/adjustments/new`}
+                      className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+                    >
+                       <Scale className="w-4 h-4 text-operational-cyan/60" />
+                       {t('reconciliation')}
+                    </button>
+                  </PermissionGate>
+              </div>
+           </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   ColumnDef,
   RowData
 } from '@tanstack/react-table';
+import { type ResourceType } from '@/types/rbac';
 
 declare module '@tanstack/react-table' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,6 +19,7 @@ declare module '@tanstack/react-table' {
 import { Button } from '@/components/ui/button';
 import { useTranslations, useLocale } from 'next-intl';
 import { Pagination } from './Pagination';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 
 interface DataTableProps<T> {
   data: T[];
@@ -35,7 +37,7 @@ interface DataTableProps<T> {
   filters?: React.ReactNode;
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T) => string;
-  collectionName?: string;
+  collectionName?: ResourceType;
 }
 
 export function DataTable<T>({
@@ -65,33 +67,35 @@ export function DataTable<T>({
             {filters}
           </div>
           {onExport && (
-            <div className="flex items-center gap-2 mt-1">
-              <Button 
-                variant="secondary"
-                size="sm"
-                onClick={onExport}
-                className="h-9 px-4 flex items-center gap-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase tracking-widest transition-all border-none shadow-sm"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-                CSV
-              </Button>
-              <Button 
-                variant="secondary"
-                size="sm"
-                onClick={onExport}
-                className="h-9 px-4 flex items-center gap-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase tracking-widest transition-all border-none shadow-sm"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>
-                Excel
-              </Button>
-            </div>
+            <PermissionGate action="export" resource={collectionName || 'generic_table'}>
+              <div className="flex items-center gap-2 mt-1">
+                <Button 
+                  variant="secondary"
+                  size="sm"
+                  onClick={onExport}
+                  className="h-9 px-4 flex items-center gap-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase tracking-widest transition-all border-none shadow-sm"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                  CSV
+                </Button>
+                <Button 
+                  variant="secondary"
+                  size="sm"
+                  onClick={onExport}
+                  className="h-9 px-4 flex items-center gap-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase tracking-widest transition-all border-none shadow-sm"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>
+                  Excel
+                </Button>
+              </div>
+            </PermissionGate>
           )}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-xl shadow-foreground/[0.02]">
+      <div className="overflow-x-auto rounded-2xl bg-surface-container-lowest shadow-xl shadow-foreground/[0.02] border border-white/[0.02]">
         <table 
-          className="w-full text-sm text-start border-collapse"
+          className="w-full text-sm text-start border-collapse min-w-[800px]"
           data-webmcp-collection={collectionName || 'generic_table'}
         >
           <thead className="bg-surface-container-low/50 text-muted-foreground">
@@ -117,9 +121,9 @@ export function DataTable<T>({
             {isLoading ? (
               Array.from({ length: 9 }).map((_, i) => (
                 <tr key={i} className={i % 2 === 0 ? 'bg-transparent' : 'bg-surface-container-low/20'}>
-                  {columns.map((c, j) => (
+                  {columns.map((_, j) => (
                     <td key={j} className="px-4 h-12">
-                      <div className="h-3 bg-muted/30 animate-pulse rounded-full w-3/4"></div>
+                      <div className="h-2 bg-foreground/[0.04] animate-pulse rounded-full w-[60%]"></div>
                     </td>
                   ))}
                 </tr>
@@ -145,7 +149,7 @@ export function DataTable<T>({
                     return (
                       <td 
                         key={cell.id} 
-                        className={`px-4 text-[11px] font-medium border-none ${isNumeric ? 'text-end' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
+                        className={`px-4 text-[11px] font-medium border-none ${isNumeric ? 'text-end font-mono tracking-tighter' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                         dir={isNumeric ? 'ltr' : undefined}
                         data-webmcp-field={cell.column.id}
                       >

@@ -80,13 +80,19 @@ export const BarcodeSchema = z.object({
 // ─── Form Schemas (for RHF validation) ───────────────────────────────────────
 
 export const BranchFormSchema = z.object({
-  code: z.string().min(1), name_ar: z.string().min(1), name_en: z.string().min(1),
+  code: z.string().min(2, 'validation.code_min').regex(/^[A-Z0-9_-]+$/, 'validation.code_format'),
+  name_ar: z.string().min(3, 'validation.name_ar_min'),
+  name_en: z.string().min(3, 'validation.name_en_min'),
   is_active: z.boolean()
 });
 
 export const WarehouseFormSchema = z.object({
-  branch_id: z.string().min(1), code: z.string().min(1), name_ar: z.string().min(1),
-  name_en: z.string().min(1), type: z.enum(['MAIN','DRY','COLD','VIRTUAL']), is_active: z.boolean()
+  branch_id: z.string().min(1, 'validation.required'),
+  code: z.string().min(2, 'validation.code_min').regex(/^[A-Z0-9_-]+$/, 'validation.code_format'),
+  name_ar: z.string().min(3, 'validation.name_ar_min'),
+  name_en: z.string().min(3, 'validation.name_en_min'),
+  type: z.enum(['MAIN', 'DRY', 'COLD', 'VIRTUAL']),
+  is_active: z.boolean()
 });
 
 export const DepartmentFormSchema = z.object({

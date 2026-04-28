@@ -4,12 +4,16 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useContextScope } from '@/hooks/useContextScope';
 import LocaleSwitcher from '../shared/LocaleSwitcher';
 import { ContextSelector } from '../shared/ContextSelector';
-import { WebMCPBadge } from '../shared/WebMCPBadge';
+import { WebMCPBadge } from '@/components/shared/WebMCPBadge';
 import { useTranslations } from 'next-intl';
 import { useWebMCP } from '@/providers/WebMCPProvider';
-import { Globe, ChevronDown, LogOut, Loader2 } from 'lucide-react';
+import { Globe, ChevronDown, LogOut, Loader2, Menu } from 'lucide-react';
 
-export function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void;
+}
+
+export function Topbar({ onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const { branchName, warehouseName, isLoading } = useContextScope();
   const { isAvailable, registeredTools } = useWebMCP();
@@ -18,9 +22,17 @@ export function Topbar() {
   const tc = useTranslations('common');
 
   return (
-    <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40">
+    <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40 border-b border-white/10-muted/50">
       <div className="flex items-center gap-4">
-        <div className="text-lg font-bold text-cyan-500 hidden md:block">
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ms-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-lg md:hidden transition-all"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="text-lg font-bold text-operational-cyan hidden sm:block">
           LogiRest
         </div>
 
@@ -30,60 +42,60 @@ export function Topbar() {
             className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all group relative overflow-hidden"
           >
             {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-operational-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-            <div className="p-1.5 bg-cyan-500/10 rounded-lg text-cyan-500 group-hover:shadow-[0_0_10px_rgba(6,182,212,0.2)] transition-all">
+            <div className="p-1.5 bg-operational-cyan/10 rounded-lg text-operational-cyan group-hover:shadow-[0_0_10px_rgba(var(--operational-cyan-rgb),0.2)] transition-all">
               <Globe className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
             </div>
 
             <div className="flex flex-col items-start leading-tight relative z-10">
-              <span className="text-[10px] text-on-surface-muted uppercase tracking-widest font-black">
+              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-black">
                 {t('switch_context')}
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-on-surface max-w-[140px] truncate" dir="ltr">
+                <span className="text-xs font-bold text-foreground max-w-[100px] md:max-w-[140px] truncate" dir="ltr">
                   {isLoading ? (
-                    <Loader2 className="w-3 h-3 animate-spin text-cyan-500" />
+                    <Loader2 className="w-3 h-3 animate-spin text-operational-cyan" />
                   ) : (
                     branchName ? `${branchName}${warehouseName ? ` / ${warehouseName}` : ''}` : t('no_selection')
                   )}
                 </span>
               </div>
             </div>
-            <ChevronDown className="w-3 h-3 text-on-surface-muted group-hover:text-cyan-500 transition-colors" />
+            <ChevronDown className="w-3 h-3 text-muted-foreground/60 group-hover:text-operational-cyan transition-colors" />
           </button>
         )}
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="hidden sm:block">
+      <div className="flex items-center gap-2 md:gap-4">
+        <div className="hidden lg:block">
           <WebMCPBadge />
         </div>
         <LocaleSwitcher />
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {user ? (
           <>
-            <div className="flex items-center gap-3 pe-4">
+            <div className="flex items-center gap-3 pe-2 md:pe-4">
               <div className="hidden sm:flex flex-col items-end leading-tight text-end" dir="ltr">
-                <span className="text-sm font-bold text-on-surface">{user.name}</span>
-                <span className="text-[10px] text-cyan-500 font-black uppercase tracking-tighter">{user.role}</span>
+                <span className="text-sm font-bold text-foreground">{user.name}</span>
+                <span className="text-[10px] text-operational-cyan font-black uppercase tracking-tighter">{user.role}</span>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-sm font-black text-cyan-500 shadow-inner transition-all group-hover:bg-surface-container">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-sm font-black text-operational-cyan shadow-inner transition-all group-hover:bg-surface-container">
                 {user.name.charAt(0).toUpperCase()}
               </div>
             </div>
             <button
               onClick={() => logout()}
-              className="p-2 text-on-surface-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+              className="p-2 text-muted-foreground/60 hover:text-status-error hover:bg-status-error/10 rounded-xl transition-all"
               title={tc('logout')}
             >
               <LogOut className="w-4 h-4" />
             </button>
           </>
         ) : (
-          <div className="text-sm text-on-surface-muted">{tc('not_logged_in')}</div>
+          <div className="text-sm text-muted-foreground/60">{tc('not_logged_in')}</div>
         )}
       </div>
 

@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
 export const AdjustmentLineSchema = z.object({
   id: z.string(),

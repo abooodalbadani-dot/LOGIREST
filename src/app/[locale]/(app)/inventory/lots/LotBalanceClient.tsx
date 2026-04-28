@@ -1,220 +1,248 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import type { ColumnDef } from '@tanstack/react-table';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useInventoryLots } from '@/features/inventory/hooks/useInventoryLots';
-import { generateExcel } from '@/utils/export';
-import type { InventoryLot } from '@/types/inventory';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { 
+  History, 
+  Package, 
+  ArrowUpRight, 
+  ArrowDownLeft, 
+  Calendar, 
+  ShieldCheck, 
+  MapPin,
+  Clock,
+  Printer,
+  Edit,
+  Scan,
+  Database
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Layers, AlertCircle, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 
-interface LotBalanceClientProps {
-  title: string;
+interface LotMovement {
+  id: string;
+  date: string;
+  type: string;
+  qty: number;
+  balance: number;
+  reference: string;
+  user: string;
 }
 
-export default function LotBalanceClient({ title }: LotBalanceClientProps) {
-  const t = useTranslations('inventory.lots');
+// Mock movement data for the ledger
+const MOCK_MOVEMENTS: LotMovement[] = [
+  { id: '1', date: '2024-05-15T10:00:00Z', type: 'IN', qty: 500, balance: 500, reference: 'PO-2024-0012', user: 'أحمد محمود' },
+  { id: '2', date: '2024-05-16T14:30:00Z', type: 'OUT', qty: 50, balance: 450, reference: 'TR-9902', user: 'سارة خالد' },
+  { id: '3', date: '2024-05-18T09:15:00Z', type: 'OUT', qty: 100, balance: 350, reference: 'ADJ-102', user: 'محمد علي' },
+  { id: '4', date: '2024-05-20T11:45:00Z', type: 'OUT', qty: 25, balance: 325, reference: 'TR-9915', user: 'سارة خالد' },
+];
+
+export default function LotBalanceClient() {
+  const locale = useLocale() as 'ar' | 'en';
+  const isRtl = locale === 'ar';
+  const t = useTranslations('operational.lots');
   const tc = useTranslations('common');
-  const currentLocale = useLocale();
-  const isRtl = currentLocale === 'ar';
 
-  const [includeExpired, setIncludeExpired] = useState(false);
-  const [page, setPage] = useState(1);
-
-  const { data, isLoading } = useInventoryLots({
-    include_expired: includeExpired || undefined,
-    page,
-  });
-
-  const getLotStatus = useMemo(() => (lot: InventoryLot): { label: string; variant: string } => {
-    if (lot.is_expired) return { label: t('expired'), variant: 'bg-black/40 text-rose-400 border-rose-400/20' };
-    if (lot.is_near_expiry) return { label: t('near_expiry'), variant: 'bg-black/40 text-amber-400 border-amber-400/20' };
-    return { label: t('valid'), variant: 'bg-black/40 text-emerald-400 border-emerald-400/20' };
-  }, [t]);
-
-  const columns = useMemo<ColumnDef<InventoryLot, unknown>[]>(() => [
+  const columns: ColumnDef<LotMovement, unknown>[] = [
     {
-      id: 'status',
-      header: tc('status_label'),
-      cell: ({ row }) => {
-        const status = getLotStatus(row.original);
-        return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-tight border ${status.variant}`}>
-            {status.label}
-          </span>
-        );
-      },
+      accessorKey: 'date',
+      header: t('table.datetime'),
+      cell: ({ row }) => (
+        <span dir="ltr" className="text-[11px] font-bold text-muted-foreground/60/60">
+          {format(new Date(row.original.date), 'dd MMM yyyy, HH:mm')}
+        </span>
+      ),
     },
     {
-      id: 'item_name',
-      header: t('item_name'),
+      accessorKey: 'type',
+      header: t('table.type'),
       cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-on-surface leading-tight">
-            {isRtl ? row.original.item_name_ar : row.original.item_name_en}
-          </span>
-          <span className="text-[10px] text-on-surface-muted font-mono tracking-tighter" dir="ltr">
-            {row.original.item_code}
-          </span>
+        <div className="flex items-center gap-2">
+           {row.original.type === 'IN' ? (
+             <ArrowDownLeft className="w-4 h-4 text-status-success" />
+           ) : (
+             <ArrowUpRight className="w-4 h-4 text-status-warning" />
+           )}
+           <span className={`text-[10px] font-black uppercase tracking-widest ${row.original.type === 'IN' ? 'text-status-success' : 'text-status-warning'}`}>
+              {row.original.type === 'IN' ? t('table.entry') : t('table.exit')}
+           </span>
         </div>
       ),
     },
     {
-      accessorKey: 'lot_number',
-      header: t('lot_number'),
-      cell: ({ getValue }) => <span dir="ltr" className="font-mono text-[11px] text-cyan-500">{getValue() as string}</span>,
+      accessorKey: 'qty',
+      header: t('table.qty'),
+      cell: ({ row }) => (
+        <span dir="ltr" className={`font-mono text-xs font-black ${row.original.type === 'IN' ? 'text-status-success' : 'text-status-warning'}`}>
+          {row.original.type === 'IN' ? '+' : '-'}{row.original.qty.toLocaleString()}
+        </span>
+      ),
     },
     {
-      accessorKey: 'expiry_date',
-      header: t('expiry_date'),
-      cell: ({ getValue }) => {
-        const val = getValue() as string | null;
-        if (!val) return <span className="text-on-surface-muted/30">—</span>;
-        return <span dir="ltr" className="text-xs font-medium">{new Date(val).toLocaleDateString(isRtl ? 'ar-SA' : 'en-US')}</span>;
-      },
+      accessorKey: 'balance',
+      header: t('table.balance'),
+      cell: ({ row }) => (
+        <span dir="ltr" className="font-mono text-xs font-black text-foreground">
+          {row.original.balance.toLocaleString()}
+        </span>
+      ),
     },
     {
-      accessorKey: 'qty_available',
-      header: t('available_qty'),
-      cell: ({ getValue }) => <span dir="ltr" className="font-display text-sm font-black text-on-surface/80">{(getValue() as number).toLocaleString()}</span>,
+      accessorKey: 'reference',
+      header: t('table.reference'),
+      cell: ({ row }) => (
+        <span className="font-mono text-[10px] font-black text-operational-cyan uppercase tracking-tight">
+          {row.original.reference}
+        </span>
+      ),
     },
-  ], [t, tc, isRtl, getLotStatus]);
-
-  const handleExport = () => {
-    if (!data?.data) return;
-    const exportColumns = [
-      { header: t('item_code'), key: 'item_code', width: 15 },
-      { header: t('item_name'), key: 'item_name', width: 30 },
-      { header: t('lot_number'), key: 'lot_number', width: 15 },
-      { header: t('expiry_date'), key: 'expiry_date', width: 15 },
-      { header: t('available_qty'), key: 'qty_available', width: 15 },
-      { header: t('status'), key: 'status_label', width: 15 },
-    ];
-
-    const rows = data.data.map(item => ({
-      ...item,
-      item_name: isRtl ? item.item_name_ar : item.item_name_en,
-      status_label: getLotStatus(item).label,
-    }));
-
-    generateExcel(exportColumns, rows, 'Lot_Balances');
-  };
-
-  const totalLots = data?.meta?.total ?? 0;
-  const expiredLots = data?.data?.filter(l => l.is_expired).length ?? 0;
-  const nearExpiryLots = data?.data?.filter(l => l.is_near_expiry).length ?? 0;
+    {
+      accessorKey: 'user',
+      header: t('table.user'),
+      cell: ({ row }) => (
+        <span className="text-[11px] font-bold text-muted-foreground/60/60">
+          {row.original.user}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-10">
-      <PageHeader
-        title={title}
-        description={t('description') || 'Track item batches and expiry dates across the system.'}
-        actions={
-          <div className="flex flex-col items-end gap-1">
-             <div className="text-[10px] font-black uppercase tracking-widest text-on-surface-muted flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                {t('live_updates') || 'Live Expiry Monitor'}
-             </div>
-             <div className="text-[9px] font-bold text-on-surface-muted/40">
-                {t('last_sync') || 'Last Sync'}: {new Date().toLocaleTimeString()}
-             </div>
-          </div>
-        }
-      />
+    <div className="min-h-screen bg-background text-foreground p-4 lg:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      
+      {/* Header: Lot Profile */}
+      <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
+         <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-start">
+            <div className="w-32 h-32 rounded-2xl bg-surface-ledger text-white flex flex-col items-center justify-center shadow-2xl shadow-surface-ledger/20 relative overflow-hidden group">
+               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+               <Database className="w-8 h-8 mb-1 opacity-40" />
+               <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{t('lot_tag')}</span>
+               <span className="text-2xl font-black tracking-tighter">9942</span>
+            </div>
+            <div className="space-y-2">
+               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                  <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">LOT-2024-0012</h1>
+                  <Badge className="bg-status-success/10 text-status-success border-none text-[10px] font-black px-4 h-7 rounded-full uppercase tracking-[0.2em]">
+                     {t('status_valid')}
+                  </Badge>
+               </div>
+               <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
+                  <div className="flex items-center gap-2">
+                     <Package className="w-4 h-4 text-muted-foreground/60/30" />
+                     <span className="text-sm font-black text-muted-foreground/60/60 uppercase">{isRtl ? 'زيت زيتون بكر ممتاز - 1 لتر' : 'Extra Virgin Olive Oil - 1L'}</span>
+                  </div>
+                  <div className="w-px h-4 bg-on-surface/10 hidden md:block" />
+                  <div className="flex items-center gap-2 text-status-error">
+                     <Calendar className="w-4 h-4" />
+                     <span className="text-sm font-black uppercase tracking-tight">{t('expiry_label', { date: '31 Dec 2025' })}</span>
+                  </div>
+               </div>
+            </div>
+         </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-2/40 border-surface-3 relative overflow-hidden group">
-          <div className="absolute bottom-0 left-0 h-1 bg-cyan-500 w-full transform origin-left scale-x-50 group-hover:scale-x-100 transition-transform duration-500" />
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Layers className="w-16 h-16 text-cyan-500" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-on-surface-muted">
-              {t('total_lots') || 'Active Lots'}
-            </CardDescription>
-            <CardTitle className="text-3xl font-display text-cyan-500 drop-shadow-[0_0_10px_rgba(0,229,255,0.3)]">
-              {totalLots}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-surface-2/40 border-surface-3 relative overflow-hidden group">
-          <div className="absolute bottom-0 left-0 h-1 bg-rose-500 w-full transform origin-left scale-x-[0.1] group-hover:scale-x-100 transition-transform duration-500" />
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <AlertCircle className="w-16 h-16 text-rose-500" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-rose-400/60">
-              {t('expired') || 'Expired'}
-            </CardDescription>
-            <CardTitle className="text-3xl font-display text-rose-500">
-              {expiredLots}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-surface-2/40 border-surface-3 relative overflow-hidden group">
-          <div className="absolute bottom-0 left-0 h-1 bg-amber-500 w-full transform origin-left scale-x-[0.1] group-hover:scale-x-100 transition-transform duration-500" />
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Clock className="w-16 h-16 text-amber-500" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-amber-400/60">
-              {t('near_expiry') || 'Near Expiry'}
-            </CardDescription>
-            <CardTitle className="text-3xl font-display text-amber-500">
-              {nearExpiryLots}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+         <div className="flex flex-wrap items-center gap-4">
+            <div className="bg-surface-container-low px-8 py-4 rounded-2xl border border-border-muted/50 shadow-xl text-center">
+               <p className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-[0.3em] mb-1">{t('available_balance')}</p>
+               <p className="text-3xl font-black tracking-tighter text-foreground">325 <span className="text-xs text-muted-foreground/60/30 uppercase">{t('units')}</span></p>
+            </div>
+         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={data?.data ?? []}
-        isLoading={isLoading}
-        pagination={{
-          page,
-          pageSize: data?.meta?.page_size ?? 10,
-          total: data?.meta?.total ?? 0,
-          totalPages: data?.meta?.total_pages ?? 0,
-          onPageChange: setPage,
-        }}
-        filters={
-          <div className="flex flex-wrap items-center justify-between gap-6 mb-2">
-            <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-surface-2/40 border border-surface-3 transition-all hover:border-cyan-500/30">
-              <Checkbox
-                id="show-expired"
-                checked={includeExpired}
-                onCheckedChange={(checked) => {
-                  setIncludeExpired(checked === true);
-                  setPage(1);
-                }}
-                className="border-surface-3 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
-              />
-              <label
-                htmlFor="show-expired"
-                className="text-[10px] font-black text-on-surface-muted uppercase tracking-widest cursor-pointer select-none"
-              >
-                {t('show_expired') || 'Show Expired Lots'}
-              </label>
+      {/* Stats Grid */}
+      <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         {[
+            { label: t('total_entry'), value: '500', icon: ArrowDownLeft, color: 'text-status-success', bg: 'bg-status-success/10' },
+            { label: t('total_exit'), value: '175', icon: ArrowUpRight, color: 'text-status-warning', bg: 'bg-status-warning/10' },
+            { label: t('storage_node'), value: 'WH-01-A4', icon: MapPin, color: 'text-operational-cyan', bg: 'bg-operational-cyan/10' },
+            { label: t('last_activity'), value: '11:45 AM', icon: Clock, color: 'text-muted-foreground/60/60', bg: 'bg-surface-container-low' },
+         ].map((stat, i) => (
+            <div key={i} className="p-6 rounded-2xl bg-surface-container-low/40 border border-border-muted/50 flex items-center gap-5">
+               <div className={`w-12 h-12 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+               </div>
+               <div>
+                  <p className="text-[9px] font-black text-muted-foreground/60/40 uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-xl font-black text-foreground uppercase tracking-tight">{stat.value}</p>
+               </div>
             </div>
+         ))}
+      </div>
 
-            <Button
-              onClick={handleExport}
-              variant="outline"
-              className="h-10 border-surface-3 bg-surface-2 hover:bg-surface-3 text-xs font-black uppercase tracking-widest gap-2 px-6"
+      {/* Ledger Table */}
+      <div className="max-w-[1600px] mx-auto space-y-6">
+         <div className="flex items-center justify-between px-6">
+            <div className="flex items-center gap-4">
+               <div className="w-1.5 h-10 bg-operational-cyan rounded-full" />
+               <div className="flex flex-col">
+                  <h2 className="text-2xl font-black tracking-tight text-foreground">
+                     {t('title')}
+                  </h2>
+                  <p className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest">
+                     {t('subtitle')}
+                  </p>
+               </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              onClick={() => window.print()}
+              className="h-10 px-6 rounded-xl bg-surface-container-low border border-white/5 text-[9px] font-black uppercase tracking-widest gap-2"
             >
-              {tc('export_excel')}
+               <History className="w-3 h-3 text-operational-cyan" />
+               {t('export_ledger')}
             </Button>
-          </div>
-        }
-      />
+         </div>
+
+         <div className="bg-surface-container-low/20 rounded-2xl border border-border-muted/50 overflow-hidden shadow-2xl">
+            <DataTable 
+               columns={columns}
+               data={MOCK_MOVEMENTS}
+               isLoading={false}
+               collectionName="lot_ledger_protocol"
+            />
+         </div>
+      </div>
+
+      {/* Floating Action Bar */}
+      <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50">
+         <div className="flex items-center gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-2xl transition-all hover:scale-[1.02] group">
+            <div className="flex items-center gap-6">
+               <button 
+                 onClick={() => window.location.href = `/${locale}/inventory/scan`}
+                 className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+               >
+                  <Scan className="w-4 h-4 text-operational-cyan" />
+                  {tc('barcode_scanner') || 'Scan'}
+               </button>
+               <div className="w-px h-6 bg-white/5" />
+               <button 
+                 onClick={() => window.location.href = `/${locale}/transfers/new`}
+                 className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+               >
+                  <MapPin className="w-4 h-4 text-operational-cyan/60" />
+                  {t('relocate')}
+               </button>
+               <div className="w-px h-6 bg-white/5" />
+               <button 
+                 onClick={() => window.print()}
+                 className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+               >
+                  <Printer className="w-4 h-4 text-operational-cyan/60" />
+                  {t('print_label')}
+               </button>
+               <div className="w-px h-6 bg-white/5" />
+               <button 
+                 onClick={() => window.location.href = `/${locale}/adjustments/new`}
+                 className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+               >
+                  <Edit className="w-4 h-4 text-operational-cyan/60" />
+                  {t('adjust')}
+               </button>
+            </div>
+         </div>
+      </div>
     </div>
   );
 }

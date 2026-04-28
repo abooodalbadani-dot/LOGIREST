@@ -11,7 +11,9 @@ import { generateExcel } from '@/utils/export';
 import { ChevronDown, History, Download, ShieldAlert, Activity, Database } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { MetricCard } from '@/components/ui/metric-card';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 const actionColors: Record<string, string> = {
   CREATE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -125,49 +127,37 @@ export function AuditLogClient() {
         title={t('audit_log') || 'System Ledger'} 
         description="Cryptographic evidence of all administrative and operational state changes"
         actions={
-          <Button 
-            onClick={handleExport}
-            className="h-11 px-8 bg-surface-container-high hover:bg-surface-container-highest text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all border border-white/5"
-          >
-            <Download className="w-3.5 h-3.5 mr-2" />
-            {t('export') || 'Export Ledger'}
-          </Button>
+          <PermissionGate action="export" resource="admin_audit_log">
+            <Button 
+              onClick={handleExport}
+              className="h-11 px-8 bg-surface-container-high hover:bg-surface-container-highest text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all border border-white/5"
+            >
+              <Download className="w-3.5 h-3.5 me-2" />
+              {t('export') || 'Export Ledger'}
+            </Button>
+          </PermissionGate>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Database className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Ledger Entries</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground">{stats.total}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <ShieldAlert className="w-24 h-24 text-rose-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Security Events (Page)</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-rose-400">{stats.securityEvents}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-rose-500/50 to-transparent" />
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Activity className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Integrity Status</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400">{stats.systemActivity}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-emerald-500/50 to-transparent" />
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <MetricCard
+          label="Total Ledger Entries"
+          value={stats.total}
+          icon={Database}
+          color="cyan"
+        />
+        <MetricCard
+          label="Security Events (Page)"
+          value={stats.securityEvents}
+          icon={ShieldAlert}
+          color="rose"
+        />
+        <MetricCard
+          label="Integrity Status"
+          value={stats.systemActivity}
+          icon={Activity}
+          color="emerald"
+        />
       </div>
 
       <DataTable
@@ -175,6 +165,13 @@ export function AuditLogClient() {
         data={data?.data ?? []}
         isLoading={isLoading}
         collectionName="admin_audit_log"
+        emptyState={
+          <EmptyState
+            title="No Ledger Entries Found"
+            description="The system audit trail is currently empty for the selected filters."
+            icon={History}
+          />
+        }
         pagination={data?.meta ? {
           page: data.meta.page,
           pageSize: data.meta.page_size,

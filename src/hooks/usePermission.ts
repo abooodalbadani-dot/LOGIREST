@@ -5,6 +5,10 @@ import { PERMISSION_MATRIX, type ResourceType, type ActionType } from '@/types/r
 export function usePermission(action: ActionType, resource: ResourceType): boolean {
   const { user } = useAuth();
   if (!user) return false;
-  const allowed = PERMISSION_MATRIX[user.role]?.[resource] ?? [];
+  
+  // Normalize role to lowercase to match matrix keys (e.g., 'ADMIN' -> 'admin')
+  const roleKey = user.role.toLowerCase() as keyof typeof PERMISSION_MATRIX;
+  const allowed = PERMISSION_MATRIX[roleKey]?.[resource] ?? [];
+  
   return allowed.includes(action);
 }

@@ -32,7 +32,7 @@ export default function LocaleSwitcher() {
   return (
     <button 
       onClick={toggleLocale}
-      className="px-3 py-1 bg-surface-2 hover:bg-surface-3 border border-surface-3 rounded text-sm font-medium transition-colors text-on-surface"
+      className="px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-white/10-muted rounded-xl text-sm font-medium transition-colors text-foreground"
     >
       {label}
     </button>

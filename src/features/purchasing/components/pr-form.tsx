@@ -1,11 +1,11 @@
 "use client"
-// use no memo
 
 import * as React from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Trash2, Plus } from "lucide-react"
+import { Trash2, Plus, Calendar, FileText, Package, Calculator, ArrowLeft, Send } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import {
   Form,
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 
 const lineItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -37,6 +38,8 @@ const formSchema = z.object({
 type PurchaseRequestFormValues = z.infer<typeof formSchema>;
 
 export function PurchaseRequestForm() {
+  const t = useTranslations("procurement.pr");
+  const tc = useTranslations("common");
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -55,7 +58,6 @@ export function PurchaseRequestForm() {
     name: "items",
   });
 
-  // Calculate total whenever items change
   const items = form.watch("items");
   const totalAmount = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.estimatedUnitCost || 0)), 0);
 
@@ -64,7 +66,7 @@ export function PurchaseRequestForm() {
     try {
       console.log("PR values:", values)
       await new Promise(r => setTimeout(r, 1000))
-      router.push('/purchasing/purchase-requests')
+      router.push('/purchase-requests')
     } catch (error) {
       console.error(error)
     } finally {
@@ -74,88 +76,116 @@ export function PurchaseRequestForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-1 border border-border p-8 rounded-xl shadow-lg relative">
-        <h3 className="text-xl font-bold mb-4">Request Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FormField<PurchaseRequestFormValues, "branchId">
-            control={form.control}
-            name="branchId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">Branch</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+        
+        {/* Step 1: Request Header */}
+        <div className="bg-surface-container-low p-8 rounded-3xl border border-surface-container-high/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center gap-4 mb-8 border-b border-surface-container-high/50 pb-6">
+             <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan border border-operational-cyan/20 shadow-sm">
+                <FileText className="w-5 h-5" />
+             </div>
+             <div>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">Request Configuration</h3>
+                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-0.5">Define origin and scheduling</p>
+             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FormField<PurchaseRequestFormValues, "branchId">
+              control={form.control}
+              name="branchId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-2">
+                    <Package className="w-3 h-3" />
+                    Target Branch
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl shadow-inner shadow-black/5">
+                        <SelectValue placeholder="Select Branch" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-xl">
+                      <SelectItem value="1" className="text-[11px] font-bold">Riyadh Main Kitchen</SelectItem>
+                      <SelectItem value="2" className="text-[11px] font-bold">Jeddah Coastal Branch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-[9px] font-black uppercase" />
+                </FormItem>
+              )}
+            />
+
+            <FormField<PurchaseRequestFormValues, "expectedDate">
+              control={form.control}
+              name="expectedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-2">
+                    <Calendar className="w-3 h-3" />
+                    Expected Arrival
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-2">
-                      <SelectValue placeholder="Select Branch" />
-                    </SelectTrigger>
+                    <Input type="date" className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl shadow-inner shadow-black/5" {...field} />
                   </FormControl>
-                  <SelectContent className="bg-surface-2 border-border">
-                    <SelectItem value="1">Riyadh Main Branch</SelectItem>
-                    <SelectItem value="2">Jeddah Branch</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage className="text-[9px] font-black uppercase" />
+                </FormItem>
+              )}
+            />
 
-          <FormField<PurchaseRequestFormValues, "expectedDate">
-            control={form.control}
-            name="expectedDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">Expected Delivery Date</FormLabel>
-                <FormControl>
-                  <Input type="date" className="bg-surface-2" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField<PurchaseRequestFormValues, "notes">
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem className="lg:col-span-3 text-left">
-                <FormLabel className="text-muted-foreground">General Notes</FormLabel>
-                <FormControl>
-                  <Input placeholder="E.g., Urgent restock for weekend" className="bg-surface-2" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField<PurchaseRequestFormValues, "notes">
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem className="lg:col-span-3">
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-3">Workflow Narrative / Notes</FormLabel>
+                  <FormControl>
+                    <Input placeholder="E.g., Urgent restock for upcoming banquet event..." className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl shadow-inner shadow-black/5" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[9px] font-black uppercase" />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
-        <div className="pt-6 border-t border-border">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">Line Items</h3>
+        {/* Step 2: Line Items */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-4">
+               <div className="p-2.5 rounded-xl bg-status-warning/10 text-status-warning border border-status-warning/20 shadow-sm">
+                  <Calculator className="w-4 h-4" />
+               </div>
+               <div>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/70">Line Item Manifest</h3>
+                  <p className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] mt-0.5">Add items to be fulfilled</p>
+               </div>
+            </div>
             <Button 
               type="button" 
               variant="outline" 
               size="sm" 
-              className="border-brand-primary text-brand-primary hover:bg-brand-primary/10"
+              className="h-10 px-6 border-operational-cyan/30 text-operational-cyan bg-operational-cyan/5 hover:bg-operational-cyan hover:text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               onClick={() => append({ itemId: "", quantity: 1, estimatedUnitCost: 0, notes: "" })}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
+              <Plus className="h-3.5 w-3.5 me-2" />
+              Add Component
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-2 p-4 rounded-lg border border-border">
+              <div key={field.id} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-6 items-end bg-surface-container-low/50 p-6 rounded-2xl border border-surface-container-high/20 shadow-sm group hover:bg-surface-container transition-all">
                 <FormField<PurchaseRequestFormValues, `items.${number}.itemId`>
                   control={form.control}
                   name={`items.${index}.itemId`}
                   render={({ field: inputField }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Item SKU</FormLabel>
+                      <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Item Identity / SKU</FormLabel>
                       <FormControl>
-                         <Input placeholder="e.g. IT-1" className="bg-surface-1 font-mono uppercase" {...inputField} />
+                         <Input placeholder="e.g. IT-001" className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner font-mono uppercase tracking-widest" {...inputField} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-[8px] font-black" />
                     </FormItem>
                   )}
                 />
@@ -164,14 +194,12 @@ export function PurchaseRequestForm() {
                   control={form.control}
                   name={`items.${index}.quantity`}
                   render={({ field: inputField }) => (
-                    <FormItem className="text-left">
-                      <FormLabel className="text-xs text-muted-foreground text-left">Quantity</FormLabel>
+                    <FormItem>
+                      <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Quantity</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
-                          min="1" 
-                          className="bg-surface-1 font-mono" 
-                          dir="ltr" 
+                          className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner font-mono" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
                         />
@@ -185,15 +213,13 @@ export function PurchaseRequestForm() {
                   control={form.control}
                   name={`items.${index}.estimatedUnitCost`}
                   render={({ field: inputField }) => (
-                    <FormItem className="text-left">
-                      <FormLabel className="text-xs text-muted-foreground text-left">Est. Unit Cost</FormLabel>
+                    <FormItem>
+                      <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Est. Unit Cost</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           step="0.01" 
-                          min="0" 
-                          className="bg-surface-1 font-mono" 
-                          dir="ltr" 
+                          className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner font-mono" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
                         />
@@ -208,9 +234,9 @@ export function PurchaseRequestForm() {
                   name={`items.${index}.notes`}
                   render={({ field: inputField }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Line Notes</FormLabel>
+                      <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Line Context</FormLabel>
                       <FormControl>
-                        <Input placeholder="Optional..." className="bg-surface-1" {...inputField} />
+                        <Input placeholder="Specific usage notes..." className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -221,7 +247,7 @@ export function PurchaseRequestForm() {
                   type="button" 
                   variant="ghost" 
                   size="icon" 
-                  className="mb-[2px] text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                  className="w-10 h-10 rounded-xl text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all border border-transparent hover:border-status-error/20"
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                 >
@@ -231,33 +257,64 @@ export function PurchaseRequestForm() {
             ))}
           </div>
           
-          <div className="mt-4 flex justify-end">
-            <div className="bg-surface-2 px-6 py-3 rounded-lg border border-brand-primary/30 flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">Estimated Total</span>
-              <span className="text-2xl font-mono font-bold text-brand-primary" dir="ltr">
-                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(totalAmount)}
-              </span>
-            </div>
+          {/* Summary Calculations */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-surface-container-low rounded-3xl border border-surface-container-high/20 shadow-inner">
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-operational-cyan/10 flex items-center justify-center border border-operational-cyan/20">
+                   <Package className="w-6 h-6 text-operational-cyan" />
+                </div>
+                <div>
+                   <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Item Aggregation</div>
+                   <div className="text-sm font-bold text-foreground">{fields.length} Unique Components Selected</div>
+                </div>
+             </div>
+             
+             <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-1">Estimated Total Commitment</span>
+                <div className="flex items-baseline gap-2">
+                   <span className="text-4xl font-black tracking-tighter tabular-nums text-foreground">
+                      {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(totalAmount)}
+                   </span>
+                   <span className="text-sm font-black text-operational-cyan uppercase tracking-widest">SAR</span>
+                </div>
+             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-2 pt-6 mt-6 border-t border-border">
-          <Button
-            variant="outline"
+        {/* Footer Actions */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t border-surface-container-high/50">
+           <Button
+            variant="ghost"
             type="button"
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="bg-surface-1 text-foreground border-border hover:bg-surface-2"
+            className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-foreground hover:bg-surface-container-high h-12 px-8 rounded-xl transition-all"
           >
-            Cancel
+            <ArrowLeft className="w-3.5 h-3.5 me-2" />
+            Discard Request
           </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-brand-primary text-black hover:bg-brand-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]"
-          >
-            {isSubmitting ? "Submitting..." : "Submit Request"}
-          </Button>
+          
+          <div className="flex items-center gap-4 w-full md:w-auto">
+             <Button
+                type="button"
+                variant="outline"
+                className="flex-1 md:flex-none h-12 px-8 border-surface-container-high text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-surface-container-high"
+             >
+                Save Draft
+             </Button>
+             <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 md:flex-none h-12 px-10 bg-operational-cyan hover:bg-operational-cyan/90 text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_15px_35px_rgba(var(--operational-cyan-rgb),0.3)] hover:shadow-[0_20px_45px_rgba(var(--operational-cyan-rgb),0.45)]"
+              >
+                {isSubmitting ? "Processing..." : (
+                  <>
+                    <Send className="w-3.5 h-3.5 me-2" />
+                    Dispatch Request
+                  </>
+                )}
+              </Button>
+          </div>
         </div>
       </form>
     </Form>

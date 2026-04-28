@@ -45,3 +45,5 @@ export function WebMCPBadge() {
   );
 }
 
+export default WebMCPBadge;
+

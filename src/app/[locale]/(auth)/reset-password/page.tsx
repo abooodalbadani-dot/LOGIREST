@@ -67,17 +67,17 @@ export default function ResetPasswordPage() {
 
   if (!token && !isSuccess) {
     return (
-      <div className="w-full max-w-md p-8 bg-surface-1 rounded-2xl border border-surface-3 shadow-2xl text-center">
-        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
-          <AlertCircle className="w-8 h-8 text-red-500" />
+      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl text-center">
+        <div className="w-16 h-16 bg-status-error/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-status-error/20">
+          <AlertCircle className="w-8 h-8 text-status-error" />
         </div>
-        <h2 className="text-2xl font-bold text-on-surface mb-2">{t('invalid_reset_link')}</h2>
-        <p className="text-on-surface-muted mb-8 text-sm">
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('invalid_reset_link')}</h2>
+        <p className="text-muted-foreground/60 mb-8 text-sm">
           {t('invalid_reset_link_desc')}
         </p>
         <Link 
           href={`/${locale}/forgot-password`} 
-          className="inline-flex items-center gap-2 text-cyan-500 hover:text-cyan-500/80 font-medium"
+          className="inline-flex items-center gap-2 text-operational-cyan hover:text-operational-cyan/80 font-medium"
         >
           {t('forgot_password')}
         </Link>
@@ -87,20 +87,20 @@ export default function ResetPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="w-full max-w-md p-8 bg-surface-1 rounded-2xl border border-surface-3 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
+      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
         {/* Glow effect */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-500/10 blur-3xl rounded-full" />
+        <div className="absolute -top-24 -start-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
         
-        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20">
-          <CheckCircle2 className="w-8 h-8 text-green-500" />
+        <div className="w-16 h-16 bg-status-success/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-status-success/20">
+          <CheckCircle2 className="w-8 h-8 text-status-success" />
         </div>
-        <h2 className="text-2xl font-bold text-on-surface mb-2 tracking-tight">{t('password_reset_success')}</h2>
-        <p className="text-on-surface-muted mb-8 text-sm leading-relaxed">
+        <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">{t('password_reset_success')}</h2>
+        <p className="text-muted-foreground/60 mb-8 text-sm leading-relaxed">
           {t('password_reset_redirect')}
         </p>
         <Link 
           href={`/${locale}/login`} 
-          className="inline-flex items-center gap-2 text-cyan-500 hover:text-cyan-500/80 font-medium transition-colors"
+          className="inline-flex items-center gap-2 text-operational-cyan hover:text-operational-cyan/80 font-medium transition-colors"
         >
           {t('back_to_login')}
         </Link>
@@ -109,16 +109,16 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md p-8 bg-surface-1 rounded-2xl border border-surface-3 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+    <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
       {/* Glow effect */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 blur-3xl rounded-full" />
+      <div className="absolute -top-24 -end-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
 
       <div className="mb-8 text-center relative">
-        <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 border border-cyan-500/20">
-          <Lock className="w-6 h-6 text-cyan-500" />
+        <div className="w-12 h-12 bg-operational-cyan/10 rounded-xl flex items-center justify-center mx-auto mb-4 border border-operational-cyan/20">
+          <Lock className="w-6 h-6 text-operational-cyan" />
         </div>
-        <h1 className="text-2xl font-bold text-on-surface tracking-tight">{t('reset_password')}</h1>
-        <p className="text-on-surface-muted mt-2 text-sm">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('reset_password')}</h1>
+        <p className="text-muted-foreground/60 mt-2 text-sm">
           {t('reset_password_desc')}
         </p>
       </div>
@@ -130,24 +130,24 @@ export default function ResetPasswordPage() {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-sm font-medium text-on-surface ml-1">{t('new_password')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground ms-1">{t('new_password')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? 'text' : 'password'}
-                      className="bg-surface-2 border-surface-3 focus:border-cyan-500 transition-all py-6 h-12 pr-10"
+                      className="bg-surface-container-lowest border-border-muted/50 focus:border-operational-cyan/50 focus:ring-1 focus:ring-operational-cyan/30 transition-all py-6 h-12 pe-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-muted hover:text-on-surface transition-colors"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </FormControl>
-                <FormMessage className="text-xs text-red-400" />
+                <FormMessage className="text-xs text-status-error" />
               </FormItem>
             )}
           />
@@ -157,21 +157,21 @@ export default function ResetPasswordPage() {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-sm font-medium text-on-surface ml-1">{t('confirm_new_password')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground ms-1">{t('confirm_new_password')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="password"
-                    className="bg-surface-2 border-surface-3 focus:border-cyan-500 transition-all py-6 h-12"
+                    className="bg-surface-container-lowest border-border-muted/50 focus:border-operational-cyan/50 focus:ring-1 focus:ring-operational-cyan/30 transition-all py-6 h-12"
                   />
                 </FormControl>
-                <FormMessage className="text-xs text-red-400" />
+                <FormMessage className="text-xs text-status-error" />
               </FormItem>
             )}
           />
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs animate-in fade-in duration-300">
+            <div className="p-3 rounded-lg bg-status-error/10 border border-status-error/20 text-status-error text-xs animate-in fade-in duration-300">
               {error}
             </div>
           )}
@@ -179,7 +179,7 @@ export default function ResetPasswordPage() {
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-full h-12 mt-2 text-base font-bold bg-cyan-500 hover:bg-cyan-500/90 text-surface-0 shadow-lg shadow-cyan-500/20 transition-all active:scale-[0.98] disabled:opacity-70"
+            className="w-full h-12 mt-2 text-base font-bold bg-primary hover:brightness-110 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70 rounded-xl"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />

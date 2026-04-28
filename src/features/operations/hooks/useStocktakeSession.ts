@@ -2,13 +2,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
-import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
 const StocktakeCountSchema = z.object({
   id: z.string(),
   session_id: z.string(),
   item_id: z.string(),
-  item: z.object({ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string() }),
+  item: z.object({ 
+    id: z.string(), 
+    code: z.string(), 
+    name_ar: z.string(), 
+    name_en: z.string(),
+    category: z.object({ name_ar: z.string(), name_en: z.string() }).optional()
+  }),
   lot_id: z.string().nullable(),
   snapshot_qty: z.number(),
   counted_qty: z.number().nullable(),

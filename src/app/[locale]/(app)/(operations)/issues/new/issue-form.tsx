@@ -1,34 +1,53 @@
 "use client";
 
+import * as React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { 
+  ArrowLeft, 
+  Plus, 
+  PackageCheck, 
+  Trash2, 
+  Settings2, 
+  Warehouse, 
+  Building2, 
+  FileText, 
+  Calculator, 
+  ChevronRight,
+  AlertCircle,
+  CheckCircle2,
+  ListFilter
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LockBanner } from "@/components/ui/lock-banner";
 import { FEFOLotAllocator } from "@/components/ui/fefo-lot-allocator";
 import { PostConfirmDialog } from "@/components/ui/post-confirm-dialog";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { useCreateIssue } from "@/features/operations/api/useIssues";
 import { IssueLot } from "@/features/operations/types";
-import { ArrowLeft, ArrowRight, Plus, PackageCheck, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const lineSchema = z.object({
-  itemId: z.string().min(1, "اسم الصنف مطلوب"),
-  requestedQuantity: z.number({ message: "الكمية مطلوبة" }).min(0.01, "يجب أن تكون الكمية موجبة"),
+  itemId: z.string().min(1, "Item SKU is required"),
+  requestedQuantity: z.number().min(0.01, "Quantity must be positive"),
   allocatedQuantity: z.number(),
   lots: z.array(z.custom<IssueLot>()),
   notes: z.string().optional(),
 });
 
 const formSchema = z.object({
-  warehouseId: z.string().min(1, "المخزن مطلوب"),
-  departmentId: z.string().min(1, "القسم مطلوب"),
-  items: z.array(lineSchema).min(1, "يجب إضافة صنف واحد على الأقل"),
+  warehouseId: z.string().min(1, "Warehouse is required"),
+  departmentId: z.string().min(1, "Department is required"),
+  items: z.array(lineSchema).min(1, "At least one item is required"),
   notes: z.string().optional(),
 });
 
@@ -38,6 +57,8 @@ type IssueFormValues = z.infer<typeof formSchema>;
 const LOCKED_WAREHOUSES = new Set(["wh-locked-01"]);
 
 export function IssueForm({ locale }: { locale: string }) {
+  const t = useTranslations("operations.issue");
+  const tc = useTranslations("common");
   const router = useRouter();
   const createIssue = useCreateIssue();
 
@@ -94,155 +115,250 @@ export function IssueForm({ locale }: { locale: string }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-5 w-5 rtl:hidden" />
-          <ArrowRight className="h-5 w-5 hidden rtl:block" />
-        </Button>
-        <Breadcrumb
-          items={[
-            { label: "العمليات", href: `/${locale}` },
-            { label: "صرف المخزون", href: `/${locale}/issues` },
-            { label: "صرف جديد", href: "#" },
-          ]}
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <PackageCheck className="w-8 h-8 text-brand-primary" />
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">صرف جديد</h2>
-          <p className="text-muted-foreground mt-1">صرف المواد من المستودع وتخصيص الدُّفعات وفق مبدأ FEFO.</p>
-        </div>
-      </div>
-
-      {isWarehouseLocked && <LockBanner message="المستودع المختار مقفل بسبب جرد نشط. لا يمكن الصرف حتى انتهاء الجرد." />}
-
-      <form onSubmit={form.handleSubmit(() => setConfirmOpen(true))} className="space-y-6">
-        {/* Header fields */}
-        <Card>
-          <CardHeader>
-            <CardTitle>بيانات الصرف</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="warehouseId">المخزن *</Label>
-              <Input id="warehouseId" {...form.register("warehouseId")}
-                className={form.formState.errors.warehouseId ? "border-red-500" : ""} />
-              {form.formState.errors.warehouseId && (
-                <p className="text-sm text-red-500">{form.formState.errors.warehouseId.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="departmentId">القسم *</Label>
-              <Input id="departmentId" {...form.register("departmentId")}
-                className={form.formState.errors.departmentId ? "border-red-500" : ""} />
-              {form.formState.errors.departmentId && (
-                <p className="text-sm text-red-500">{form.formState.errors.departmentId.message}</p>
-              )}
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">ملاحظات</Label>
-              <Input id="notes" {...form.register("notes")} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Line items */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>الأصناف</CardTitle>
-                <CardDescription>أضف الأصناف المطلوب صرفها وخصِّص الدُّفعات.</CardDescription>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(() => setConfirmOpen(true))} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
+        
+        {/* Fulfillment Orchestration Header */}
+        <div className="bg-surface-container-low p-10 rounded-[2.5rem] border border-surface-container-high/20 shadow-2xl shadow-primary/5">
+           <div className="flex items-center gap-6 mb-10 border-b border-surface-container-high/50 pb-8">
+              <div className="p-4 rounded-[1.5rem] bg-cyan-600/10 text-cyan-500 border border-cyan-500/20 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
+                 <Settings2 className="w-8 h-8" />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
+              <div>
+                 <h2 className="text-2xl font-black tracking-tight text-foreground">{t('title')} Orchestration</h2>
+                 <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.2em] mt-1 italic">Internal stock consumption & FEFO fulfillment protocol</p>
+              </div>
+              <div className="ms-auto flex items-center gap-2">
+                 <Badge className="bg-surface-container-high text-muted-foreground/60/60 border-none font-black text-[9px] uppercase tracking-widest px-4 h-9 rounded-xl">Node: Store-Primary</Badge>
+              </div>
+           </div>
+
+           {isWarehouseLocked && (
+             <div className="mb-10 animate-in zoom-in-95 duration-300">
+               <LockBanner message="Active Stocktake: Source warehouse currently locked. All issuance protocols suspended." />
+             </div>
+           )}
+
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              <FormField<IssueFormValues, "warehouseId">
+                control={form.control}
+                name="warehouseId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+                       <Warehouse className="w-3.5 h-3.5" />
+                       Source Warehouse
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                       <FormControl>
+                          <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
+                             <SelectValue placeholder="Select Origin Node" />
+                          </SelectTrigger>
+                       </FormControl>
+                       <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
+                          <SelectItem value="wh-01" className="text-[11px] font-bold">Main Distribution Hub</SelectItem>
+                          <SelectItem value="wh-locked-01" className="text-[11px] font-bold">Cold Storage (LOCKED)</SelectItem>
+                       </SelectContent>
+                    </Select>
+                    <FormMessage className="text-[9px] font-black uppercase" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField<IssueFormValues, "departmentId">
+                control={form.control}
+                name="departmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+                       <Building2 className="w-3.5 h-3.5" />
+                       Destination Department
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                       <FormControl>
+                          <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
+                             <SelectValue placeholder="Select Receiver" />
+                          </SelectTrigger>
+                       </FormControl>
+                       <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
+                          <SelectItem value="dep-kitchen" className="text-[11px] font-bold">Main Culinary Lab</SelectItem>
+                          <SelectItem value="dep-pastry" className="text-[11px] font-bold">Pastry & Desserts</SelectItem>
+                       </SelectContent>
+                    </Select>
+                    <FormMessage className="text-[9px] font-black uppercase" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField<IssueFormValues, "notes">
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="lg:col-span-3">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+                       <FileText className="w-3.5 h-3.5" />
+                       Operational Remarks
+                    </FormLabel>
+                    <FormControl>
+                       <Input placeholder="E.g., Routine replenishment for morning shift..." className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+           </div>
+        </div>
+
+        {/* Fulfillment Manifest Section */}
+        <div className="space-y-8">
+           <div className="flex items-center justify-between px-6">
+              <div className="flex items-center gap-5">
+                 <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    <Calculator className="w-5 h-5" />
+                 </div>
+                 <div>
+                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60/70">Issuance Ledger</h3>
+                    <p className="text-[9px] font-black text-muted-foreground/60/20 uppercase tracking-[0.2em] mt-1">Component selection and batch synchronization</p>
+                 </div>
+              </div>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="h-12 px-8 border-cyan-500/30 text-cyan-500 bg-cyan-500/5 hover:bg-cyan-500 hover:text-white rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-cyan-500/5"
                 onClick={() => append({ itemId: "", requestedQuantity: 1, allocatedQuantity: 0, lots: [] })}
               >
-                <Plus className="mr-1 w-4 h-4" />
-                إضافة صنف
+                <Plus className="h-4 w-4 me-2" />
+                Enroll Component
               </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {form.formState.errors.items?.root && (
-              <p className="text-sm text-red-500">{form.formState.errors.items.root.message}</p>
-            )}
-            {fields.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground bg-surface-2/30 rounded-lg border border-dashed border-surface-2">
-                <p>لم تتم إضافة أي صنف. اضغط «إضافة صنف» للبدء.</p>
-              </div>
-            ) : (
-              fields.map((field, index) => {
-                const isAllocated = (field.allocatedQuantity ?? 0) >= (field.requestedQuantity ?? 0);
-                return (
-                  <div key={field.id} className={`grid grid-cols-12 gap-3 items-center p-4 rounded-lg border ${isAllocated ? "border-brand-primary/30 bg-brand-primary/5" : "border-surface-2 bg-surface-1"}`}>
-                    <div className="col-span-4 space-y-1">
-                      <Label className="text-xs text-text-tertiary">رمز الصنف</Label>
-                      <Input
-                        placeholder="item-tomato"
-                        {...form.register(`items.${index}.itemId`)}
-                        className={form.formState.errors.items?.[index]?.itemId ? "border-red-500" : ""}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-1">
-                      <Label className="text-xs text-text-tertiary">الكمية</Label>
-                      <Input
-                        type="number" min="0.01" step="0.01" dir="ltr"
-                        {...form.register(`items.${index}.requestedQuantity`, { valueAsNumber: true })}
-                        className="text-center"
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-1 text-center">
-                      <Label className="text-xs text-text-tertiary">مُخصَّص</Label>
-                      <p className={`text-lg font-bold ${isAllocated ? "text-brand-primary" : "text-amber-500"}`} dir="ltr">
-                        {field.allocatedQuantity || 0}
-                      </p>
-                    </div>
-                    <div className="col-span-3 flex items-end gap-2 pb-0.5">
-                      <Button
-                        type="button"
-                        variant={isAllocated ? "outline" : "default"}
-                        size="sm"
-                        className={isAllocated ? "border-brand-primary text-brand-primary" : ""}
-                        onClick={() => handleOpenAllocator(index)}
-                        disabled={!field.itemId}
-                      >
-                        {isAllocated ? "✓ تعديل الدُّفعات" : "تخصيص الدُّفعات"}
-                      </Button>
-                    </div>
-                    <div className="col-span-1 flex items-end justify-end pb-0.5">
-                      <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10" onClick={() => remove(index)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
+           </div>
 
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()} disabled={createIssue.isPending}>
-            إلغاء
-          </Button>
-          <Button
-            type="submit"
-            className="bg-brand-primary hover:bg-brand-primary/90 text-white"
-            disabled={createIssue.isPending || isWarehouseLocked || !allLinesAllocated || fields.length === 0}
-          >
-            {createIssue.isPending ? "جار الحفظ..." : "إنشاء الصرف"}
-          </Button>
+           <div className="grid grid-cols-1 gap-5">
+             {fields.length === 0 ? (
+               <div className="py-24 text-center bg-surface-container-low rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
+                  <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
+                     <ListFilter className="w-10 h-10" />
+                  </div>
+                  <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.3em]">Manifest empty. Awaiting component enrollment.</p>
+               </div>
+             ) : (
+               fields.map((field, index) => {
+                 const isAllocated = (field.allocatedQuantity ?? 0) >= (field.requestedQuantity ?? 0);
+                 const hasSelection = !!field.itemId;
+                 
+                 return (
+                   <div key={field.id} className={`grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1.5fr_1.5fr_auto] gap-8 items-end p-8 rounded-[2.25rem] border transition-all duration-500 group ${isAllocated ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-lg shadow-emerald-500/5" : "bg-surface-container-low border-surface-container-high/20 hover:border-cyan-500/30 hover:bg-surface-container-medium shadow-xl shadow-black/5"}`}>
+                     
+                     <FormField<IssueFormValues, `items.${number}.itemId`>
+                       control={form.control}
+                       name={`items.${index}.itemId`}
+                       render={({ field: inputField }) => (
+                         <FormItem>
+                           <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3">Item Descriptor / SKU</FormLabel>
+                           <FormControl>
+                             <Input placeholder="e.g. IT-1004" className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-black font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
+                           </FormControl>
+                           <FormMessage className="text-[8px] font-black" />
+                         </FormItem>
+                       )}
+                     />
+
+                     <FormField<IssueFormValues, `items.${number}.requestedQuantity`>
+                       control={form.control}
+                       name={`items.${index}.requestedQuantity`}
+                       render={({ field: inputField }) => (
+                         <FormItem>
+                           <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 text-center block w-full">Request Qty</FormLabel>
+                           <FormControl>
+                             <Input 
+                               type="number" 
+                               min="0.01" 
+                               step="0.01" 
+                               dir="ltr"
+                               className="bg-surface-container-high/30 border-none h-12 px-4 text-[12px] font-black text-center rounded-xl shadow-inner shadow-black/5"
+                               {...inputField} 
+                               onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
+                             />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+
+                     <div className="flex flex-col items-center gap-1.5 pb-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40">Fulfillment Status</span>
+                        <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/60/20"}`}>
+                           <span className="text-[12px] font-black tabular-nums tracking-wider">{field.allocatedQuantity || 0}</span>
+                           {isAllocated ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4 opacity-30" />}
+                        </div>
+                     </div>
+
+                     <div className="pb-1">
+                        <Button
+                          type="button"
+                          variant={isAllocated ? "outline" : "default"}
+                          disabled={!hasSelection}
+                          className={`w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${isAllocated ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/10"}`}
+                          onClick={() => handleOpenAllocator(index)}
+                        >
+                          {isAllocated ? "Redefine Batches" : "Synchronize FEFO"}
+                          <ChevronRight className="ms-2 w-3.5 h-3.5" />
+                        </Button>
+                     </div>
+
+                     <div className="pb-2">
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          className="w-10 h-10 rounded-xl text-muted-foreground/60/20 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20" 
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                     </div>
+                   </div>
+                 );
+               })
+             )}
+           </div>
+        </div>
+
+        {/* Global Fulfillment Summary */}
+        <div className="p-10 bg-surface-container-low rounded-[3rem] border border-surface-container-high/20 shadow-inner flex flex-col md:flex-row items-center justify-between gap-10">
+           <div className="flex items-center gap-6">
+              <div className="w-16 h-16 rounded-[1.75rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
+                 <PackageCheck className="w-8 h-8 text-cyan-500" />
+              </div>
+              <div>
+                 <div className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60/40 mb-1">Synchronized Commitment</div>
+                 <div className="text-xl font-bold text-foreground">
+                    {fields.filter(f => (f.allocatedQuantity ?? 0) >= (f.requestedQuantity ?? 0)).length} / {fields.length} Protocol Validations Complete
+                 </div>
+              </div>
+           </div>
+           
+           <div className="flex items-center gap-6">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => router.back()} 
+                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 hover:text-foreground h-14 px-10 rounded-2xl"
+              >
+                Discard Sequence
+              </Button>
+              <Button
+                type="submit"
+                disabled={createIssue.isPending || isWarehouseLocked || !allLinesAllocated || fields.length === 0}
+                className="h-14 px-12 bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-black uppercase tracking-[0.25em] rounded-[1.5rem] transition-all shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] disabled:opacity-30 disabled:grayscale"
+              >
+                {createIssue.isPending ? "Finalizing Ledger..." : "Authorize Issuance Protocol"}
+              </Button>
+           </div>
         </div>
       </form>
 
-      {/* FEFO Allocator Drawer */}
+      {/* FEFO Allocator Overlay */}
       {activeLineIndex !== null && (
         <FEFOLotAllocator
           isOpen={allocatorOpen}
@@ -253,6 +369,7 @@ export function IssueForm({ locale }: { locale: string }) {
         />
       )}
 
+      {/* Posting Confirmation Sequence */}
       <PostConfirmDialog
         isOpen={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -260,10 +377,10 @@ export function IssueForm({ locale }: { locale: string }) {
           setConfirmOpen(false);
           form.handleSubmit(onSubmit)();
         }}
-        title="تأكيد إنشاء الصرف؟"
-        description="سيتم إنشاء أمر الصرف وحجز الدُّفعات المخصَّصة. يمكنك الترحيل لاحقاً من صفحة التفاصيل."
-        confirmText="إنشاء"
+        title="Authorize Fulfillment Protocol?"
+        description="This will lock the current issuance manifest and synchronize lot allocations with the central ledger. Are you prepared to commit?"
+        confirmText="Finalize"
       />
-    </div>
+    </Form>
   );
 }

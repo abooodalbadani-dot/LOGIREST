@@ -17,7 +17,7 @@ export default async function ItemsPage(props: { params: Promise<{ locale: strin
   setRequestLocale(params.locale);
   const t = await getTranslations('masterData.items');
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="items">
+    <ProtectedRoute requiredAction="view" requiredResource="master_data_items">
       <div className="flex flex-col gap-6">
         <PageHeader 
           title={t('title')} 

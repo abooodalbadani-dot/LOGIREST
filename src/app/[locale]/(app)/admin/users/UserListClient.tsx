@@ -3,16 +3,17 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Plus, Shield, Users, ShieldAlert, Search } from 'lucide-react';
+import { UserX, ShieldCheck, Search, Shield, Users, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAdminUsers, type AdminUserRow } from '@/features/admin/hooks/useAdminUsers';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { MetricCard } from '@/components/ui/metric-card';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 
 const roleVariants: Record<string, string> = {
   ADMIN: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
@@ -42,7 +43,7 @@ export function UserListClient({ locale }: { locale: string }) {
     };
   }, [data]);
 
-  const columns: ColumnDef<AdminUserRow, unknown>[] = [
+  const columns = useMemo<ColumnDef<AdminUserRow, unknown>[]>(() => [
     {
       accessorKey: 'name',
       header: t('name'),
@@ -99,12 +100,12 @@ export function UserListClient({ locale }: { locale: string }) {
               router.push(`/${locale}/admin/users/${row.original.id}`);
             }}
           >
-            {tCommon('view') || 'Inspect'}
+            {tCommon('view')}
           </Button>
         </div>
       ),
     },
-  ];
+  ], [t, tCommon, router, locale]);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -112,48 +113,36 @@ export function UserListClient({ locale }: { locale: string }) {
         title={t('title') || 'Access Management'} 
         description={t('description') || 'Authorized identity registry and operational scoping'}
         actions={
-          <Link href={`/${locale}/admin/users/new`}>
-            <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
-              <Plus className="w-3.5 h-3.5 mr-2" />
-              {t('create_user')}
-            </Button>
-          </Link>
+          <PermissionGate action="create" resource="admin">
+            <Link href={`/${locale}/admin/users/new`}>
+              <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                <Plus className="w-3.5 h-3.5 me-2" />
+                {t('create_user')}
+              </Button>
+            </Link>
+          </PermissionGate>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Users className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tCommon('total_users') || 'Identities'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground" dir="ltr">{stats.total}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <ShieldAlert className="w-24 h-24 text-rose-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tCommon('admins') || 'Elevated Access'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-rose-400" dir="ltr">{stats.admins}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-rose-500/50 to-transparent" />
-        </Card>
-
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Shield className="w-24 h-24 text-cyan-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tCommon('operators') || 'Standard Ops'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-cyan-400" dir="ltr">{stats.ops}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <MetricCard
+          label={tCommon('total_users') || 'Total Identities'}
+          value={stats.total}
+          icon={Users}
+          color="cyan"
+        />
+        <MetricCard
+          label={tCommon('admins') || 'Elevated Access'}
+          value={stats.admins}
+          icon={ShieldCheck}
+          color="rose"
+        />
+        <MetricCard
+          label={tCommon('operators') || 'Standard Ops'}
+          value={stats.ops}
+          icon={Shield}
+          color="cyan"
+        />
       </div>
 
       <DataTable
@@ -180,7 +169,7 @@ export function UserListClient({ locale }: { locale: string }) {
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="w-full bg-surface-container-highest/30 border-none h-11 px-10 text-xs font-bold"
                 />
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
               </div>
             </div>
           </div>

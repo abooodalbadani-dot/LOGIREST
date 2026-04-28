@@ -1,19 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Plus, Tag, Layers, Search, FolderTree, Info } from 'lucide-react';
+import { Plus, Layers, Search, FolderTree, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { ColumnDef } from '@tanstack/react-table';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { CategorySchema, type Category } from '@/types/master-data';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { MetricCard } from '@/components/ui/metric-card';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 export function CategoryListClient({ locale }: { locale: string }) {
   const tc = useTranslations('masterData.common');
@@ -27,7 +29,7 @@ export function CategoryListClient({ locale }: { locale: string }) {
     { page: String(page), ...(search ? { search } : {}) }
   );
 
-  const columns: ColumnDef<Category, unknown>[] = [
+  const columns = useMemo<ColumnDef<Category, unknown>[]>(() => [
     {
       accessorKey: 'name_en',
       header: tc('name'),
@@ -48,25 +50,27 @@ export function CategoryListClient({ locale }: { locale: string }) {
       header: '',
       cell: ({ row }) => (
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/${locale}/master-data/categories/${row.original.id}`);
-            }}
-          >
-            {tc('view')}
-          </Button>
+          <PermissionGate action="view" resource="master_data">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${locale}/master-data/categories/${row.original.id}`);
+              }}
+            >
+              {tc('view')}
+            </Button>
+          </PermissionGate>
         </div>
       ),
     },
-  ];
+  ], [tc, router, locale]);
 
   const breadcrumbs = [
     { label: tc('home'), href: `/${locale}/dashboard` },
-    { label: tc('title'), href: `/${locale}/master-data` },
+    { label: tc('master_data'), href: `/${locale}/master-data` },
     { label: tc('categories'), href: `/${locale}/master-data/categories` },
   ];
 
@@ -78,49 +82,39 @@ export function CategoryListClient({ locale }: { locale: string }) {
           title={tc('categories') || 'Item Categories'} 
           description={tc('categories_desc') || "Logical grouping of inventory assets for hierarchical control and reporting"}
           actions={
-            <Link href={`/${locale}/master-data/categories/new`}>
-              <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
-                <Plus className="w-3.5 h-3.5 mr-2" />
-                {tc('create_new')}
-              </Button>
-            </Link>
+            <PermissionGate action="create" resource="master_data">
+              <Link href={`/${locale}/master-data/categories/new`}>
+                <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                  <Plus className="w-3.5 h-3.5 me-2" />
+                  {tc('create_new')}
+                </Button>
+              </Link>
+            </PermissionGate>
           }
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Layers className="w-24 h-24 text-white" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('total_categories') || 'Total Groups'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-foreground">{data?.meta?.total || 0}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-cyan-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('total_categories') || 'Total Groups'}
+          value={data?.meta?.total || 0}
+          icon={Layers}
+          color="cyan"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <FolderTree className="w-24 h-24 text-amber-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('hierarchy_status') || 'Hierarchy Depth'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-amber-400">{tc('flat') || 'Flat'}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-amber-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('hierarchy_status') || 'Hierarchy Depth'}
+          value={tc('flat') || 'Flat'}
+          icon={FolderTree}
+          color="amber"
+        />
 
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container-medium">
-          <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-            <Info className="w-24 h-24 text-emerald-400" />
-          </div>
-          <CardHeader className="pb-2 relative z-10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('mapping_status') || 'Mapping Status'}</CardDescription>
-            <CardTitle className="text-4xl font-display font-bold tracking-tight text-emerald-400">{tc('optimal') || 'Optimal'}</CardTitle>
-          </CardHeader>
-          <div className="absolute bottom-0 start-0 h-0.5 w-full bg-gradient-to-r from-emerald-500/50 to-transparent" />
-        </Card>
+        <MetricCard
+          label={tc('mapping_status') || 'Mapping Status'}
+          value={tc('optimal') || 'Optimal'}
+          icon={Info}
+          color="emerald"
+        />
       </div>
 
       <DataTable 
@@ -128,6 +122,22 @@ export function CategoryListClient({ locale }: { locale: string }) {
         data={data?.data ?? []} 
         isLoading={isLoading}
         collectionName="master_data_categories"
+        emptyState={
+          <EmptyState 
+            title={tc('no_categories_title') || 'No Categories Found'}
+            description={tc('no_categories_desc') || 'Group your items into logical categories for better organization.'}
+            action={
+              <PermissionGate action="create" resource="master_data">
+                <Link href={`/${locale}/master-data/categories/new`}>
+                  <Button className="h-10 px-6 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm transition-all shadow-lg">
+                    <Plus className="w-3.5 h-3.5 me-2" />
+                    {tc('create_new')}
+                  </Button>
+                </Link>
+              </PermissionGate>
+            }
+          />
+        }
         onRowClick={(r: Category) => router.push(`/${locale}/master-data/categories/${r.id}`)}
         pagination={data?.meta ? {
           page: data.meta.page,
@@ -137,7 +147,7 @@ export function CategoryListClient({ locale }: { locale: string }) {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-white/5 rounded-sm">
+          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
             <div className="flex flex-col gap-2 min-w-[300px] flex-1">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('search')}</label>
               <div className="relative">

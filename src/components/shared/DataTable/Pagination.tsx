@@ -1,4 +1,5 @@
 import { useTranslations } from 'next-intl';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
   page: number; 
@@ -11,35 +12,29 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
   const isLast = page >= totalPages;
 
   return (
-    <div className="flex gap-2 items-center text-sm font-medium">
+    <div className="flex gap-1.5 items-center">
       <button 
         onClick={() => onPageChange(page - 1)}
         disabled={isFirst}
-        className="p-2 bg-surface-2 rounded border border-surface-3 disabled:opacity-50 hover:bg-surface-3 transition-colors"
+        className="p-2 bg-surface-container-low hover:bg-surface-container text-foreground disabled:opacity-30 disabled:pointer-events-none rounded-xl transition-all border-none shadow-sm group active:scale-95"
+        aria-label="Previous Page"
       >
-        <svg 
-          className="w-4 h-4 rtl:scale-x-[-1]" 
-          fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
+        <ChevronLeft className="w-4 h-4 rtl:rotate-180 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 transition-transform" />
       </button>
       
-      <span className="px-3 py-1 bg-surface-1 rounded border border-surface-3 text-on-surface">
-        <span dir="ltr">{page}</span> / <span dir="ltr">{totalPages}</span>
-      </span>
+      <div className="h-9 px-4 flex items-center bg-surface-container-lowest/50 border border-white/[0.03] backdrop-blur-md rounded-xl text-[10px] font-black uppercase tracking-[0.15em] text-operational-cyan shadow-inner">
+        <span dir="ltr">{page}</span>
+        <span className="mx-2 text-muted-foreground/30 font-light text-[8px]">/</span>
+        <span className="text-muted-foreground/60" dir="ltr">{totalPages || 1}</span>
+      </div>
 
       <button 
         onClick={() => onPageChange(page + 1)}
         disabled={isLast}
-        className="p-2 bg-surface-2 rounded border border-surface-3 disabled:opacity-50 hover:bg-surface-3 transition-colors"
+        className="p-2 bg-surface-container-low hover:bg-surface-container text-foreground disabled:opacity-30 disabled:pointer-events-none rounded-xl transition-all border-none shadow-sm group active:scale-95"
+        aria-label="Next Page"
       >
-        <svg 
-          className="w-4 h-4 rtl:scale-x-[-1]" 
-          fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
+        <ChevronRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
       </button>
     </div>
   );

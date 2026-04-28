@@ -58,18 +58,25 @@ export function BranchForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-1 border border-border p-8 rounded-xl shadow-lg relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low/90 backdrop-blur-xl border border-white/10-muted/30 p-8 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] relative overflow-hidden">
+        {/* Visual Accent */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-operational-cyan/40 to-transparent" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField
             control={form.control}
             name="code"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">{t("code") || "Branch Code"}</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{t("code") || "Branch Code"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. BR-001" className="bg-surface-2" {...field} />
+                  <Input 
+                    placeholder="e.g. BR-001" 
+                    className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl" 
+                    {...field} 
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-[10px] font-medium" />
               </FormItem>
             )}
           />
@@ -78,20 +85,20 @@ export function BranchForm() {
             control={form.control}
             name="status"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">{t("status_label")}</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{t("status_label")}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-2">
+                    <SelectTrigger className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl">
                       <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-2 border-border">
+                  <SelectContent className="bg-surface-container-low border-white/10-muted/30 backdrop-blur-xl">
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="INACTIVE">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-[10px] font-medium" />
               </FormItem>
             )}
           />
@@ -100,12 +107,16 @@ export function BranchForm() {
             control={form.control}
             name="nameEn"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">Name (English)</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{t('name_en')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Main Riyadh Branch" className="bg-surface-2" {...field} />
+                  <Input 
+                    placeholder="Main Riyadh Branch" 
+                    className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl" 
+                    {...field} 
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-[10px] font-medium" />
               </FormItem>
             )}
           />
@@ -114,33 +125,38 @@ export function BranchForm() {
             control={form.control}
             name="nameAr"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">Name (Arabic)</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{t('name_ar')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="فرع الرياض الرئيسي" className="bg-surface-2 text-right" dir="rtl" {...field} />
+                  <Input 
+                    placeholder="فرع الرياض الرئيسي" 
+                    className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl text-end" 
+                    dir="rtl" 
+                    {...field} 
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-[10px] font-medium" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex items-center justify-end space-x-2 rtl:space-x-reverse pt-6 mt-6 border-t border-border">
+        <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-white/10-muted/20">
           <Button 
             variant="outline" 
             type="button" 
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="bg-surface-1"
+            className="h-11 px-8 text-[11px] font-bold uppercase tracking-widest bg-transparent border-white/10-muted/30 hover:bg-surface-container-high hover:text-foreground transition-all rounded-xl"
           >
             {t("cancel") || "Cancel"}
           </Button>
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="bg-brand-primary text-black hover:bg-brand-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]"
+            className="h-11 px-10 text-[11px] font-bold uppercase tracking-widest bg-operational-cyan text-primary-foreground hover:brightness-110 shadow-[0_16px_32px_-8px_rgba(var(--operational-cyan-rgb),0.3)] transition-all active:scale-[0.98] rounded-xl"
           >
-            {isSubmitting ? "Saving..." : "Create Branch"}
+            {isSubmitting ? t('saving') : t('create_branch')}
           </Button>
         </div>
       </form>

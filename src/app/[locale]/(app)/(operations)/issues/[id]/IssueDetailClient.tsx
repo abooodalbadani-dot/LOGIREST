@@ -1,12 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { AlertCircle } from 'lucide-react';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { AlertCircle, History, Package, Clock, User, FileText, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -23,6 +21,8 @@ import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation } from '@/types/documents';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 
 export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.issue');
@@ -50,7 +50,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
 
   // Auto fetch lots when activeLine changes
   const { data: lots = [] } = useLotsByItem({ 
-    item_id: activeLine?.item?.id, 
+    item_id: activeLine?.item?.id || '', 
     warehouse_id: warehouseId 
   });
 
@@ -111,9 +111,6 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
     setFefoOpen(true);
   };
 
-  const isPosted = issue?.status === 'POSTED';
-  const isLocked = lockState?.is_locked ?? false;
-
   const handlePost = async () => {
     try {
       await postIssue.mutateAsync({ confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' });
@@ -128,90 +125,137 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
     }
   };
 
+  // History Timeline Mock/Derived
+  const history = useMemo((): StatusTimelineEntry[] => {
+    if (!issue) return [];
+    const h: StatusTimelineEntry[] = [
+      { status: 'draft', at: issue.created_at ?? '', by: issue.created_by != null ? issue.created_by : 'System' }
+    ];
+    if (issue.posted_at) {
+      h.push({ status: 'posted', at: issue.posted_at, by: issue.posted_by != null ? issue.posted_by : 'System' });
+    }
+    return h;
+  }, [issue]);
+
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative w-24 h-24 flex items-center justify-center">
-          <div className="absolute inset-0 border-4 border-cyan-500/10 rounded-full" />
-          <div className="absolute inset-0 border-4 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_15px_rgba(6,182,212,0.2)]" />
-          <span className="text-2xl font-black text-cyan-500 tracking-tighter italic">ISS</span>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
+        <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="absolute inset-0 border-4 border-cyan-500/5 rounded-full" />
+          <div className="absolute inset-0 border-4 border-t-cyan-500/40 rounded-full animate-spin shadow-[0_0_20px_rgba(6,182,212,0.1)]" />
+          <div className="absolute inset-4 border-2 border-b-emerald-500/40 rounded-full animate-spin-slow" />
+          <Package className="w-10 h-10 text-cyan-500/60 animate-pulse" />
         </div>
-        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/80 animate-pulse">
-          {t('synchronizing_matrix')}
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-[10px] font-black uppercase tracking-[0.4em] text-cyan-500/80 animate-pulse">
+            {t('synchronizing_matrix')}
+          </div>
+          <div className="h-0.5 w-12 bg-gradient-to-e from-transparent via-cyan-500/30 to-transparent" />
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <Breadcrumb 
-        items={[
-          { label: tCommon('modules.operations'), href: `/${locale}/issues` },
-          { label: t('title'), href: `/${locale}/issues` },
-          { label: isNew ? t('create_new') : t('detail_title') }
-        ]} 
-      />
+  const isPosted = issue?.status === 'POSTED';
+  const isLocked = lockState?.is_locked ?? false;
 
-      <PageHeader 
-        title={isNew ? t('create_new') : t('detail_title')}
-        description={isNew ? t('new_description') : (
-          <div className="flex items-center gap-2">
-            <span>{t('doc_number_short')}</span>
-            <span dir="ltr" className="font-mono text-cyan-500/80">{issue?.document_number || '—'}</span>
+  return (
+    <div className="min-h-screen bg-surface-container-lowest/50 p-6 lg:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-4">
+          <Breadcrumb 
+            items={[
+              { label: tCommon('modules.operations'), href: `/${locale}/issues` },
+              { label: t('title'), href: `/${locale}/issues` },
+              { label: isNew ? t('create_new') : t('detail_title') }
+            ]} 
+          />
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic bg-gradient-to-e from-foreground to-foreground/50 bg-clip-text text-transparent">
+              {isNew ? t('create_new') : t('detail_title')}
+            </h1>
+            {!isNew && (
+              <div className="flex items-center gap-3">
+                <div className="px-3 py-1 bg-cyan-500/10 rounded-full flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-cyan-500/80">
+                    {issue?.document_number || '—'}
+                  </span>
+                </div>
+                {isPosted && (
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
+                    {issue.posted_at ? new Date(issue.posted_at).toLocaleDateString() : ''}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-        )}
-        actions={
-          <div className="flex gap-4">
+        </div>
+
+        <div className="flex items-center gap-3">
+          <PermissionGate action="create" resource="issue">
             <Button 
               variant="outline" 
               disabled={isPosted || isLocked}
-              className="h-11 px-6 border-white/5 bg-surface-container-low hover:bg-surface-container-medium text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+              className="h-12 px-6 border-none bg-surface-container-low hover:bg-surface-container-medium text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-sm transition-all"
             >
               {t('save_draft')}
             </Button>
-            <div title={isLocked ? tCommon('warehouse_locked') : undefined}>
-              <Button 
-                disabled={isPosted || isLocked || isNew}
-                onClick={() => setIsPostDialogOpen(true)}
-                className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-cyan-900/20 shadow-[0_0_15px_rgba(8,145,178,0.4)]"
-              >
-                {t('post_issue')}
-              </Button>
-            </div>
-          </div>
-        }
-      />
+          </PermissionGate>
+          <PermissionGate action="post" resource="issue">
+            <Button 
+              disabled={isPosted || isLocked || isNew}
+              onClick={() => setIsPostDialogOpen(true)}
+              className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-cyan-900/20 active:scale-95"
+            >
+              {t('post_issue')}
+            </Button>
+          </PermissionGate>
+        </div>
+      </div>
 
       {(isLocked || isWarehouseLockedError) && <LockBanner lockState={lockState} />}
       
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 space-y-8">
+      <div className="grid grid-cols-12 gap-8">
+        <div className="col-span-12 lg:col-span-8 space-y-8">
           <DocumentReadOnlyOverlay isPosted={isPosted}>
             <div className="space-y-8">
-              <div className="bg-surface-container-low p-8 rounded-2xl border-l-4 border-cyan-500/50 shadow-xl space-y-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('scan_and_add')}</h3>
-                </div>
-                <ScanInput 
-                  onScan={handleScan} 
-                  disabled={isPosted} 
-                  placeholder={t('scan_placeholder')} 
-                  onError={(bc) => setScanError(t('not_found_prefix') + bc)}
-                />
-                {scanError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-bold text-red-500 uppercase tracking-wider animate-in shake duration-500">
-                    <AlertCircle className="w-4 h-4" />
-                    {scanError}
+              {!isPosted && (
+                <div className="bg-surface-container-low p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all hover:bg-surface-container-medium/50">
+                  <div className="absolute top-0 end-0 w-64 h-64 bg-cyan-500/5 blur-[80px] -me-32 -mt-32 rounded-full transition-all group-hover:bg-cyan-500/10" />
+                  <div className="relative space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                        <Package className="w-4 h-4 text-cyan-500" />
+                      </div>
+                      <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/70">{t('scan_and_add')}</h3>
+                    </div>
+                    <ScanInput 
+                      onScan={handleScan} 
+                      disabled={isPosted} 
+                      placeholder={t('scan_placeholder')} 
+                      onError={(bc) => setScanError(t('not_found_prefix') + bc)}
+                    />
+                    {scanError && (
+                      <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-2xl text-[10px] font-bold text-red-500 uppercase tracking-wider animate-in shake duration-500">
+                        <AlertCircle className="w-4 h-4" />
+                        {scanError}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
               
-              <div className="bg-surface-container-low rounded-2xl border border-white/5 shadow-xl overflow-hidden">
-                <div className="p-6 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('line_items')}</h3>
-                  <div className="text-[10px] font-mono text-cyan-500/60">{lines.length} {t('entries')}</div>
+              <div className="bg-surface-container-low rounded-[2.5rem] shadow-2xl overflow-hidden relative">
+                <div className="p-8 flex justify-between items-center bg-white/[0.01]">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1.5 h-6 bg-cyan-500/30 rounded-full" />
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-foreground/80">{t('line_items')}</h3>
+                  </div>
+                  <div className="px-4 py-2 bg-foreground/5 rounded-full text-[10px] font-mono text-foreground/50 tracking-tighter">
+                    {lines.length} {t('entries').toUpperCase()}
+                  </div>
                 </div>
                 <DocumentLineItemTable 
                   lines={lines} 
@@ -222,16 +266,19 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
                     {
                       header: t('qty'),
                       cell: (line) => (
-                        <input type="number" 
-                          dir="ltr"
-                          className="w-24 bg-surface-container-highest/30 border-none rounded-xl text-center px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
-                          value={line.qty as number} 
-                          disabled={isPosted}
-                          onChange={e => {
-                            const val = Number(e.target.value);
-                            setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
-                          }} 
-                        />
+                        <div className="flex items-center gap-2">
+                          <input type="number" 
+                            dir="ltr"
+                            className="w-20 bg-surface-container-highest/20 border-none rounded-xl text-center px-2 py-2 font-mono text-sm focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all disabled:opacity-50"
+                            value={line.qty as number} 
+                            disabled={isPosted}
+                            onChange={e => {
+                              const val = Number(e.target.value);
+                              setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
+                            }} 
+                          />
+                          <span className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest">{line.item.primary_uom.code}</span>
+                        </div>
                       )
                     },
                     {
@@ -241,20 +288,40 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
                         const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocated_qty, 0);
                         const isFullyAllocated = totalAllocated >= line.qty;
                         
+                        if (isPosted) {
+                          return (
+                            <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                              {lineAllocations.map((alloc, idx) => (
+                                <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-lg flex items-center gap-1.5">
+                                  <span className="text-[9px] font-mono text-emerald-500/80 tracking-tighter">{alloc.lot_number}</span>
+                                  <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
+                                  <span className="text-[9px] font-black text-emerald-500">{alloc.allocated_qty}</span>
+                                </div>
+                              ))}
+                              {lineAllocations.length === 0 && (
+                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30">—</span>
+                              )}
+                            </div>
+                          );
+                        }
+
                         return (
                           <Button 
                             variant="ghost"
                             size="sm"
-                            className={`h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                            className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
                               isFullyAllocated 
-                                ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10' 
-                                : 'text-cyan-500 hover:text-white hover:bg-cyan-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
+                                : 'bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20'
                             }`}
                             onClick={() => handleLotClick(line)}
-                            disabled={isPosted}
                           >
                             {lineAllocations.length > 0 
-                              ? <span dir="ltr">{`${totalAllocated} / ${line.qty} ${t('alloc_suffix')}`}</span> 
+                              ? <div className="flex items-center gap-2" dir="ltr">
+                                  <span>{totalAllocated}</span>
+                                  <div className="w-1 h-1 rounded-full bg-current/30" />
+                                  <span className="opacity-50">{line.qty}</span>
+                                </div> 
                               : t('allocate')}
                           </Button>
                         );
@@ -267,73 +334,106 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
           </DocumentReadOnlyOverlay>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-surface-container-low p-6 rounded-2xl border border-white/5 shadow-[0_0_20px_rgba(0,0,0,0.1)] space-y-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[50px] -mr-16 -mt-16 rounded-full" />
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('destination')}</label>
-                <select 
-                  value={destinationId} 
-                  onChange={e => setDestinationId(e.target.value)} 
-                  disabled={isPosted} 
-                  className="w-full bg-surface-container-highest/30 border border-white/5 rounded-xl p-3.5 text-xs font-bold focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all appearance-none cursor-pointer"
-                >
-                  <option value="">{t('select_department')}</option>
-                  <option value="dep-1" dir="ltr">Kitchen 1</option>
-                  <option value="dep-2" dir="ltr">Pastry</option>
-                </select>
+        <div className="col-span-12 lg:col-span-4 space-y-8">
+          <div className="bg-surface-container-low p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 start-0 w-32 h-32 bg-cyan-500/5 blur-[50px] -ms-16 -mt-16 rounded-full" />
+            <div className="relative space-y-10">
+              <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-cyan-500" />
+                </div>
+                <div>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/80">{t('document_manifest')}</h3>
+                  <p className="text-[10px] text-muted-foreground/50 tracking-wider font-medium">{t('operational_parameters')}</p>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('requested_by') || 'Requested By'}</label>
-                <input 
-                  type="text"
-                  value={requestedBy}
-                  onChange={e => setRequestedBy(e.target.value)}
-                  disabled={isPosted}
-                  placeholder={t('requested_by_placeholder')}
-                  className="w-full bg-surface-container-highest/30 border border-white/5 rounded-xl p-3.5 text-xs font-bold focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
-                />
-              </div>
+              <div className="space-y-8">
+                <div className="space-y-3 group">
+                  <div className="flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity rtl:rotate-180" />
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('destination')}</label>
+                  </div>
+                  <div className="relative">
+                    <select 
+                      value={destinationId} 
+                      onChange={e => setDestinationId(e.target.value)} 
+                      disabled={isPosted} 
+                      className="w-full bg-surface-container-highest/20 border-none rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all appearance-none cursor-pointer pe-10"
+                    >
+                      <option value="">{t('select_department')}</option>
+                      <option value="dep-1" dir="ltr">Kitchen 1</option>
+                      <option value="dep-2" dir="ltr">Pastry</option>
+                    </select>
+                    <div className="absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('status')}</label>
-                <div className="pt-1"><StatusBadge status={(issue?.status || 'DRAFT') as BadgeStatus} /></div>
-              </div>
-            </div>
+                <div className="space-y-3 group">
+                  <div className="flex items-center gap-2">
+                    <User className="w-3 h-3 text-cyan-500/50" />
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('requested_by') || 'Requested By'}</label>
+                  </div>
+                  <input 
+                    type="text"
+                    value={requestedBy}
+                    onChange={e => setRequestedBy(e.target.value)}
+                    disabled={isPosted}
+                    placeholder={t('requested_by_placeholder')}
+                    className="w-full bg-surface-container-highest/20 border-none rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all placeholder:text-muted-foreground/20"
+                  />
+                </div>
 
-            <div className="pt-6 border-t border-white/5 space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('operational_notes')}</label>
-                <textarea 
-                  value={notes} 
-                  onChange={e => setNotes(e.target.value)} 
-                  disabled={isPosted} 
-                  placeholder={t('notes_placeholder')}
-                  className="w-full bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 text-xs font-medium focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all min-h-[120px] resize-none"
-                />
+                <div className="space-y-3 group pt-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-cyan-500/50" />
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('operational_notes')}</label>
+                  </div>
+                  <textarea 
+                    value={notes} 
+                    onChange={e => setNotes(e.target.value)} 
+                    disabled={isPosted} 
+                    placeholder={t('notes_placeholder')}
+                    className="w-full bg-surface-container-highest/20 border-none rounded-2xl p-5 text-xs font-medium focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {!isNew && (
-             <div className="bg-surface-container-low p-6 rounded-2xl border border-white/5 shadow-xl">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-4">{t('audit_metadata')}</h4>
-                <div className="space-y-3">
-                   <div className="flex justify-between items-center">
-                      <span className="text-[10px] text-muted-foreground/40 font-medium uppercase tracking-wider">{t('created_by')}</span>
-                      <span className="text-[11px] font-mono text-foreground/70" dir="ltr">{user?.name || 'System'}</span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                      <span className="text-[10px] text-muted-foreground/40 font-medium uppercase tracking-wider">{t('created_at')}</span>
-                      <span className="text-[11px] font-mono text-foreground/70" dir="ltr">
-                         {issue?.created_at ? new Date(issue.created_at).toLocaleDateString() : '—'}
-                      </span>
-                   </div>
+          <div className="bg-surface-container-low p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <History className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/80">{t('status_history')}</h4>
+            </div>
+            
+            <div className="relative ps-2">
+              <StatusTimeline entries={history} />
+            </div>
+
+            {!isNew && (
+              <div className="mt-10 pt-8 border-t border-white/5 space-y-4">
+                <div className="flex justify-between items-center group">
+                  <span className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-[0.15em]">{t('created_by')}</span>
+                  <div className="px-3 py-1 bg-foreground/5 rounded-lg">
+                    <span className="text-[11px] font-mono text-foreground/70" dir="ltr">{user?.name || 'System'}</span>
+                  </div>
                 </div>
-             </div>
-          )}
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-[0.15em]">{t('created_at')}</span>
+                  <div className="px-3 py-1 bg-foreground/5 rounded-lg">
+                    <span className="text-[11px] font-mono text-foreground/70" dir="ltr">
+                      {issue?.created_at ? new Date(issue.created_at).toLocaleDateString() : '—'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

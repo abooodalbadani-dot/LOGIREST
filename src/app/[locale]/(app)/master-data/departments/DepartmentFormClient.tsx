@@ -3,19 +3,28 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Briefcase, ShieldCheck, Hash, Globe2, User, Landmark, Activity } from 'lucide-react';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import { useMasterDataItem, useMasterDataCreate, useMasterDataUpdate } from '@/features/master-data/hooks/useMasterDataCRUD';
+import {
+  useMasterDataItem,
+  useMasterDataCreate,
+  useMasterDataUpdate,
+} from '@/features/master-data/hooks/useMasterDataCRUD';
 import { DepartmentSchema, DepartmentFormSchema, type DepartmentFormValues } from '@/types/master-data';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Card, CardContent } from '@/components/ui/card';
-import { Briefcase, ShieldCheck } from 'lucide-react';
 
-interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
+interface Props {
+  id: string | null;
+  createTitle: string;
+  editTitle: string;
+  locale: string;
+}
 
 export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Props) {
   const tc = useTranslations('masterData.common');
@@ -25,7 +34,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
   const create = useMasterDataCreate('departments', DepartmentSchema);
   const update = useMasterDataUpdate('departments', DepartmentSchema);
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<DepartmentFormValues>({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
       code: '',
@@ -37,7 +46,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
     },
   });
 
-  const isActive = watch('is_active');
+  const isActive = useWatch({ control, name: 'is_active' });
 
   useEffect(() => {
     if (data) {
@@ -53,147 +62,168 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) await update.mutateAsync({ id, body: values });
-    else await create.mutateAsync(values);
+    if (id) {
+      await update.mutateAsync({ id, body: values });
+    } else {
+      await create.mutateAsync(values);
+    }
     router.push(`/${locale}/master-data/departments`);
   });
 
-  const breadcrumbs = [
-    { label: tc('title'), href: `/${locale}/master-data` },
-    { label: tc('departments'), href: `/${locale}/master-data/departments` },
-    { label: id ? editTitle : createTitle, href: '#' }
-  ];
+  const isSaving = create.isPending || update.isPending;
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb items={breadcrumbs} />
-      
-      <MasterDataFormLayout 
-        title={id ? editTitle : createTitle} 
-        backHref={`/${locale}/master-data/departments`}
-        isSaving={create.isPending || update.isPending} 
-        onSubmit={onSubmit}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
-              <CardContent className="p-6 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/5">
-                  <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-cyan-500" />
+    <MasterDataFormLayout
+      title={id ? editTitle : createTitle}
+      backHref={`/${locale}/master-data/departments`}
+      isSaving={isSaving}
+      onSubmit={onSubmit}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Section: Basic Info */}
+          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
+            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                  <Briefcase className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-black uppercase tracking-wider">{tc('basic_info')}</CardTitle>
+                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tc('basic_info_desc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              {/* Code */}
+              <div className="grid gap-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Hash className="w-3 h-3 text-cyan-500/50" />
+                  <Label htmlFor="dept-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('code')}</Label>
+                </div>
+                <Input 
+                  id="dept-code" 
+                  dir="ltr" 
+                  {...register('code')} 
+                  className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                  placeholder="DEPT-01" 
+                />
+                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.code.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Name AR */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
+                    <Label htmlFor="dept-name-ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_ar')}</Label>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold tracking-tight">{tc('basic_info')}</h3>
-                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-medium">Department identification and naming</p>
-                  </div>
+                  <Input 
+                    id="dept-name-ar" 
+                    dir="rtl" 
+                    {...register('name_ar')} 
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    placeholder="اسم القسم" 
+                  />
+                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_ar.message}</p>}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="dept-code" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                      {tc('code')}
-                    </Label>
-                    <Input 
-                      id="dept-code" 
-                      dir="ltr" 
-                      {...register('code')} 
-                      className="bg-surface-container-highest/30 border-none h-12 text-sm font-mono font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 uppercase tracking-widest"
-                      placeholder="e.g. DEPT-001"
-                    />
-                    {errors.code && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.code.message}</p>}
+                {/* Name EN */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
+                    <Label htmlFor="dept-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_en')}</Label>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="dept-name-en" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                      {tc('name_en')}
-                    </Label>
-                    <Input 
-                      id="dept-name-en" 
-                      dir="ltr" 
-                      {...register('name_en')} 
-                      className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50"
-                      placeholder="e.g. Human Resources"
-                    />
-                    {errors.name_en && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.name_en.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="dept-name-ar" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                      {tc('name_ar')}
-                    </Label>
-                    <Input 
-                      id="dept-name-ar" 
-                      dir="rtl" 
-                      {...register('name_ar')} 
-                      className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 text-right"
-                      placeholder="مثال: الموارد البشرية"
-                    />
-                    {errors.name_ar && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.name_ar.message}</p>}
-                  </div>
+                  <Input 
+                    id="dept-name-en" 
+                    dir="ltr" 
+                    {...register('name_en')} 
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    placeholder="Department Name" 
+                  />
+                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_en.message}</p>}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
-              <CardContent className="p-6 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/5">
-                  <div className="w-10 h-10 rounded-sm bg-amber-500/10 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-amber-500" />
+          {/* Section: Operational Details */}
+          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
+            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-sm bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                  <Landmark className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-black uppercase tracking-wider">{tc('operational_details')}</CardTitle>
+                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tc('operational_details_desc')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Manager */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <User className="w-3 h-3 text-amber-500/50" />
+                    <Label htmlFor="dept-manager" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('manager')}</Label>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold tracking-tight">{tc('operational_details') || 'Operational Details'}</h3>
-                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-medium">Management and financial mapping</p>
-                  </div>
+                  <Input 
+                    id="dept-manager" 
+                    {...register('manager')} 
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-sm focus-visible:ring-1 focus-visible:ring-amber-500/50 transition-all" 
+                    placeholder="Manager Name" 
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="dept-manager" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                      {tc('manager') || 'Department Manager'}
-                    </Label>
-                    <Input 
-                      id="dept-manager" 
-                      {...register('manager')} 
-                      className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50"
-                    />
+                {/* Cost Center */}
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Landmark className="w-3 h-3 text-amber-500/50" />
+                    <Label htmlFor="dept-cost-center" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('cost_center')}</Label>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="dept-cost-center" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                      {tc('cost_center') || 'Cost Center'}
-                    </Label>
-                    <Input 
-                      id="dept-cost-center" 
-                      dir="ltr"
-                      {...register('cost_center')} 
-                      className="bg-surface-container-highest/30 border-none h-12 text-sm font-mono font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 uppercase tracking-widest"
-                    />
-                  </div>
+                  <Input 
+                    id="dept-cost-center" 
+                    dir="ltr"
+                    {...register('cost_center')} 
+                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-amber-500/50 transition-all" 
+                    placeholder="CC-001" 
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-8">
-            <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-1">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500">{tc('status') || 'Lifecycle Status'}</h4>
-                  <p className="text-[11px] text-muted-foreground/60 leading-relaxed">Control the visibility and operational availability of this unit.</p>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-surface-container-highest/30 rounded-sm border border-white/5">
-                  <div className="space-y-0.5">
-                    <Label className="text-xs font-bold">{tc('is_active')}</Label>
-                    <p className="text-[10px] text-muted-foreground/50 uppercase tracking-tight">{isActive ? tc('active_status') : tc('inactive_status')}</p>
-                  </div>
-                  <Switch checked={isActive} onCheckedChange={(val) => setValue('is_active', val)} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </MasterDataFormLayout>
-    </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
+            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xs font-black uppercase tracking-wider">{tc('status')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-sm border border-surface-variant/5 group hover:bg-surface-container-highest/20 transition-all">
+                <div className="space-y-1">
+                  <Label htmlFor="dept-is-active" className="text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:text-cyan-400 transition-colors">{tc('is_active')}</Label>
+                  <p className="text-[9px] text-muted-foreground/40 font-bold uppercase">{isActive ? tc('active') : tc('inactive')}</p>
+                </div>
+                <Switch
+                  id="dept-is-active"
+                  checked={isActive}
+                  onCheckedChange={(v) => setValue('is_active', v)}
+                  className="data-[state=checked]:bg-cyan-500"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </MasterDataFormLayout>
   );
 }

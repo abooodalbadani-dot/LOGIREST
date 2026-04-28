@@ -10,11 +10,11 @@ export function Breadcrumb({ items }: { items: { label: string; href?: string }[
         return (
           <div key={index} className="flex items-center">
             {item.href && !isLast ? (
-              <Link href={item.href} className="text-on-surface-muted hover:text-on-surface transition-colors">
+              <Link href={item.href} className="text-muted-foreground/60 hover:text-foreground transition-colors">
                 {item.label}
               </Link>
             ) : (
-              <span className={isLast ? 'text-on-surface font-medium' : 'text-on-surface-muted'}>
+              <span className={isLast ? 'text-foreground font-medium' : 'text-muted-foreground/60'}>
                 {item.label}
               </span>
             )}
@@ -22,7 +22,7 @@ export function Breadcrumb({ items }: { items: { label: string; href?: string }[
             {!isLast && (
               <span className="rtl:rotate-180 inline-block">
                 <svg 
-                  className="w-4 h-4 mx-2 text-surface-3" 
+                  className="w-4 h-4 mx-2 text-surface-container-highest" 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"

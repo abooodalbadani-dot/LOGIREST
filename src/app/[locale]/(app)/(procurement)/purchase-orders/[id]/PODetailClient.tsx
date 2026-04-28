@@ -17,9 +17,9 @@ import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOve
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Can } from '@/components/auth/Can';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Save, Send, ClipboardList, Clock, ArrowRight, Wallet, TrendingUp } from 'lucide-react';
@@ -132,7 +132,7 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
         showStatus={!isNew}
         actions={
           <div className="flex items-center gap-3">
-            <Can perform={isNew ? 'create' : 'edit'} on="po">
+            <PermissionGate action={isNew ? 'create' : 'edit'} resource="po">
               {(isNew || po?.status === 'DRAFT') && (
                 <Button 
                   onClick={handleSaveDraft} 
@@ -140,23 +140,23 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
                   variant="outline"
                   className="h-11 px-6 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
                 >
-                  <Save className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0 opacity-60" />
+                  <Save className="w-4 h-4 me-2 opacity-60" />
                   {t('save_draft')}
                 </Button>
               )}
-            </Can>
+            </PermissionGate>
             
-            <Can perform="post" on="po">
+            <PermissionGate action="post" resource="po">
               {!isNew && !isReadOnly && (
                 <Button 
                   onClick={() => setPostConfirmOpen(true)}
                   className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all rounded-2xl"
                 >
-                  <Send className="w-4 h-4 me-2 rtl:ms-2 rtl:me-0" />
+                  <Send className="w-4 h-4 me-2" />
                   {t('post_po')}
                 </Button>
               )}
-            </Can>
+            </PermissionGate>
           </div>
         }
       />
