@@ -107,7 +107,7 @@ export function ItemForm() {
       
       {/* Left Sidebar: Image & Stats */}
       <div className="w-full lg:w-[380px] space-y-6">
-         <Card className="p-8 rounded-[2.5rem] border-white/5 bg-surface-container-low/40 shadow-2xl overflow-hidden relative group">
+         <Card className="p-8 rounded-[2.5rem] border-border-muted bg-surface-container-low/40 shadow-2xl overflow-hidden relative group">
             <div className="absolute inset-0 bg-gradient-to-br from-operational-cyan/5 to-transparent pointer-events-none" />
             <div className="flex flex-col items-center gap-6 text-center">
                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
@@ -146,8 +146,8 @@ export function ItemForm() {
             </div>
          </Card>
 
-         <Card className="p-8 rounded-[2.5rem] border-white/5 bg-surface-container-low/40">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6 border-b border-white/5 pb-4">
+         <Card className="p-8 rounded-[2.5rem] border-border-muted bg-surface-container-low/40">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 mb-6 border-b border-border-muted pb-4">
                {t('glance.title')}
             </h4>
             <div className="space-y-4">
@@ -198,7 +198,7 @@ export function ItemForm() {
 
          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-               <Card className="p-10 rounded-[3rem] border-white/5 bg-surface-container-low/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden">
+               <Card className="p-10 rounded-[3rem] border-border-muted bg-surface-container-low/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden">
                   <div className="absolute top-0 end-0 p-8">
                      <span className="text-[64px] font-black text-foreground/5 select-none leading-none">0{step}</span>
                   </div>
@@ -215,7 +215,7 @@ export function ItemForm() {
                                    {t('fields.sku')}
                                 </FormLabel>
                                 <FormControl>
-                                  <Input placeholder="E.G. ITEM-9902" className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 font-mono font-black text-sm uppercase focus-visible:ring-operational-cyan/30" {...field} />
+                                  <Input placeholder="E.G. ITEM-9902" className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 font-mono font-black text-sm uppercase focus-visible:ring-operational-cyan/30" {...field} />
                                 </FormControl>
                                 <FormMessage className="text-[10px] font-bold" />
                               </FormItem>
@@ -232,11 +232,11 @@ export function ItemForm() {
                                 </FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
-                                    <SelectTrigger className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 text-[11px] font-black uppercase tracking-tight focus:ring-operational-cyan/30">
+                                    <SelectTrigger className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 text-[11px] font-black uppercase tracking-tight focus:ring-operational-cyan/30">
                                       <SelectValue placeholder="Select Category" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent className="bg-surface-container-low border-white/10 rounded-2xl">
+                                  <SelectContent className="bg-surface-container-low border-border-surface rounded-2xl">
                                     <SelectItem value="FOOD" className="text-[10px] font-black uppercase">{tc('categories.food')}</SelectItem>
                                     <SelectItem value="EQUIPMENT" className="text-[10px] font-black uppercase">{tc('categories.equipment')}</SelectItem>
                                     <SelectItem value="PACKAGING" className="text-[10px] font-black uppercase">{tc('categories.packaging')}</SelectItem>
@@ -259,7 +259,7 @@ export function ItemForm() {
                                    {t('fields.name_ar')}
                                 </FormLabel>
                                 <FormControl>
-                                  <Input placeholder="أرز بسمتي 5 كجم" className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 font-black text-sm text-end focus-visible:ring-operational-cyan/30" dir="rtl" {...field} />
+                                  <Input placeholder="أرز بسمتي 5 كجم" className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 font-black text-sm text-end focus-visible:ring-operational-cyan/30" dir="rtl" {...field} />
                                 </FormControl>
                                 <FormMessage className="text-[10px] font-bold" />
                               </FormItem>
@@ -275,7 +275,7 @@ export function ItemForm() {
                                    {t('fields.name_en')}
                                 </FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Basmati Rice 5kg" className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 font-black text-sm focus-visible:ring-operational-cyan/30" {...field} />
+                                  <Input placeholder="Basmati Rice 5kg" className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 font-black text-sm focus-visible:ring-operational-cyan/30" {...field} />
                                 </FormControl>
                                 <FormMessage className="text-[10px] font-bold" />
                               </FormItem>
@@ -298,11 +298,11 @@ export function ItemForm() {
                                 </FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
-                                    <SelectTrigger className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 text-[11px] font-black uppercase tracking-tight focus:ring-operational-cyan/30">
+                                    <SelectTrigger className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 text-[11px] font-black uppercase tracking-tight focus:ring-operational-cyan/30">
                                       <SelectValue placeholder="Select UoM" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent className="bg-surface-container-low border-white/10 rounded-2xl">
+                                  <SelectContent className="bg-surface-container-low border-border-surface rounded-2xl">
                                     <SelectItem value="EA" className="text-[10px] font-black uppercase">{tc('uoms.ea')}</SelectItem>
                                     <SelectItem value="KG" className="text-[10px] font-black uppercase">{tc('uoms.kg')}</SelectItem>
                                     <SelectItem value="L" className="text-[10px] font-black uppercase">{tc('uoms.l')}</SelectItem>
@@ -314,7 +314,7 @@ export function ItemForm() {
                           />
                        </div>
 
-                       <div className="bg-surface-container-low/40 rounded-[2rem] p-8 border border-white/5 space-y-6">
+                       <div className="bg-surface-container-low/40 rounded-[2rem] p-8 border border-border-muted space-y-6">
                           <div className="flex items-center justify-between">
                              <div className="flex items-center gap-3">
                                 <Settings2 className="w-5 h-5 text-operational-cyan" />
@@ -325,7 +325,7 @@ export function ItemForm() {
                                 {t('fields.add_conversion')}
                              </Button>
                           </div>
-                          <div className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] text-center py-8 bg-surface-container-low/20 rounded-2xl border border-dashed border-white/5">
+                          <div className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] text-center py-8 bg-surface-container-low/20 rounded-2xl border border-dashed border-border-muted">
                              {t('fields.no_conversions')}
                           </div>
                        </div>
@@ -346,7 +346,7 @@ export function ItemForm() {
                                 <FormControl>
                                   <Input 
                                     type="number" 
-                                    className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 font-mono font-black text-sm focus-visible:ring-operational-cyan/30" 
+                                    className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 font-mono font-black text-sm focus-visible:ring-operational-cyan/30" 
                                     {...field} 
                                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                                   />
@@ -367,7 +367,7 @@ export function ItemForm() {
                                 <FormControl>
                                   <Input 
                                     type="number" 
-                                    className="h-14 bg-surface-container-low border-white/5 rounded-2xl px-6 font-mono font-black text-sm focus-visible:ring-operational-cyan/30" 
+                                    className="h-14 bg-surface-container-low border-border-muted rounded-2xl px-6 font-mono font-black text-sm focus-visible:ring-operational-cyan/30" 
                                     {...field} 
                                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                                   />
@@ -393,7 +393,7 @@ export function ItemForm() {
                   )}
 
                   {/* Wizard Footer Actions */}
-                  <div className="mt-16 flex items-center justify-between pt-10 border-t border-white/5">
+                  <div className="mt-16 flex items-center justify-between pt-10 border-t border-border-muted">
                      <Button 
                         type="button" 
                         variant="ghost" 

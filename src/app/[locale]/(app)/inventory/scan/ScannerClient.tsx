@@ -37,8 +37,8 @@ export default function ScannerClient() {
               <Scan className="w-4 h-4 text-operational-cyan" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-operational-cyan">Scanner Active</span>
            </div>
-           <h1 className="text-3xl font-black tracking-tight">{t('barcode_scanner')}</h1>
-           <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-widest">Identify assets via optical matrix scan</p>
+           <h1 className="text-3xl font-black tracking-tight" dir="auto" style={{ unicodeBidi: 'isolate' }}>{t('barcode_scanner')}</h1>
+           <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-widest" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identify assets via optical matrix scan</p>
         </div>
 
         {/* Scanner Viewport */}
@@ -71,8 +71,8 @@ export default function ScannerClient() {
                    <CheckCircle2 className="w-12 h-12 text-status-success" />
                 </div>
                 <div className="text-center space-y-1">
-                   <p className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest">Identified Record:</p>
-                   <p className="text-3xl font-black tracking-tighter text-status-success uppercase">{result}</p>
+                   <p className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identified Record:</p>
+                   <p className="text-3xl font-black tracking-tighter text-status-success uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}><span dir="ltr" className="font-mono">{result}</span></p>
                 </div>
                 <div className="flex flex-col gap-3 w-64">
                    <Button 

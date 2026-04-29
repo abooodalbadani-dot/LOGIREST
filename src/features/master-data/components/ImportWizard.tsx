@@ -176,7 +176,7 @@ export function ImportWizard({ locale }: { locale: string }) {
               <div className="flex justify-end gap-3 pt-6 border-t border-surface-container-highest">
                 <Button variant="ghost" onClick={() => setStep('validate')} className="rounded-sm font-black uppercase tracking-widest text-muted-foreground">BACK</Button>
                 <Button onClick={handleImport} disabled={isImporting} className="min-w-[180px] rounded-sm font-black uppercase tracking-widest">
-                  {isImporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : t('import_now')}
+                  {isImporting ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : t('import_now')}
                 </Button>
               </div>
             </div>

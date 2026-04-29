@@ -4,13 +4,45 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { usePermission } from '@/hooks/usePermission';
 import type { ResourceType } from '@/types/rbac';
-import { X } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Truck, 
+  ClipboardList, 
+  ArrowRightLeft, 
+  FileText, 
+  ShoppingCart, 
+  ClipboardCheck, 
+  Sliders, 
+  Layers, 
+  Database, 
+  BarChart3, 
+  ShieldCheck,
+  Bell,
+  Mail,
+  Shield,
+  History,
+  X,
+  Package,
+  Warehouse,
+  Ruler,
+  Barcode,
+  Building2,
+  LucideIcon
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface NavItem {
   key: string;
   href: string;
   resource: ResourceType;
   labelKey: string;
+  icon: LucideIcon;
+}
+
+interface NavGroup {
+  key: string;
+  titleKey: string;
+  items: NavItem[];
 }
 
 interface SidebarProps {
@@ -22,34 +54,106 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('common.sidebar');
 
-  const items: NavItem[] = [
-    { key: 'dashboard', href: `/${locale}/dashboard`, resource: 'inventory', labelKey: 'dashboard' },
-    { key: 'grn', href: `/${locale}/goods-received`, resource: 'grn', labelKey: 'grn' },
-    { key: 'issue', href: `/${locale}/issues`, resource: 'issue', labelKey: 'issue' },
-    { key: 'transfer', href: `/${locale}/transfers`, resource: 'transfer', labelKey: 'transfer' },
-    { key: 'pr', href: `/${locale}/purchase-requests`, resource: 'pr', labelKey: 'pr' },
-    { key: 'po', href: `/${locale}/purchase-orders`, resource: 'po', labelKey: 'po' },
-    { key: 'stocktake', href: `/${locale}/stocktake`, resource: 'stocktake', labelKey: 'stocktake' },
-    { key: 'adjustment', href: `/${locale}/adjustments`, resource: 'adjustment', labelKey: 'adjustment' },
-    { key: 'balance', href: `/${locale}/inventory/balance`, resource: 'inventory', labelKey: 'balance' },
-    { key: 'master', href: `/${locale}/master-data/branches`, resource: 'master_data', labelKey: 'master' },
-    { key: 'reports', href: `/${locale}/reports`, resource: 'reports', labelKey: 'reports' },
-    { key: 'admin', href: `/${locale}/admin/users`, resource: 'admin', labelKey: 'admin' },
+  const groups: NavGroup[] = [
+    {
+      key: 'dashboard',
+      titleKey: 'group_dashboard',
+      items: [
+        { key: 'dashboard', href: `/${locale}/dashboard`, resource: 'inventory', labelKey: 'dashboard', icon: LayoutDashboard },
+      ]
+    },
+    {
+      key: 'inventory',
+      titleKey: 'group_inventory',
+      items: [
+        { key: 'balance', href: `/${locale}/inventory/balance`, resource: 'inventory', labelKey: 'balance', icon: Layers },
+        { key: 'grn', href: `/${locale}/goods-received`, resource: 'grn', labelKey: 'grn', icon: Truck },
+        { key: 'issue', href: `/${locale}/issues`, resource: 'issue', labelKey: 'issue', icon: ClipboardList },
+        { key: 'transfer', href: `/${locale}/transfers`, resource: 'transfer', labelKey: 'transfer', icon: ArrowRightLeft },
+        { key: 'stocktake', href: `/${locale}/stocktake`, resource: 'stocktake', labelKey: 'stocktake', icon: ClipboardCheck },
+        { key: 'adjustment', href: `/${locale}/adjustments`, resource: 'adjustment', labelKey: 'adjustment', icon: Sliders },
+      ]
+    },
+    {
+      key: 'procurement',
+      titleKey: 'group_procurement',
+      items: [
+        { key: 'pr', href: `/${locale}/purchase-requests`, resource: 'pr', labelKey: 'pr', icon: FileText },
+        { key: 'po', href: `/${locale}/purchase-orders`, resource: 'po', labelKey: 'po', icon: ShoppingCart },
+      ]
+    },
+    {
+      key: 'communications',
+      titleKey: 'group_communications',
+      items: [
+        { key: 'notifications', href: `/${locale}/communications/notifications`, resource: 'inventory', labelKey: 'notifications', icon: Bell },
+        { key: 'email_outbox', href: `/${locale}/communications/email-outbox`, resource: 'inventory', labelKey: 'email_outbox', icon: Mail },
+      ]
+    },
+    {
+      key: 'master_data',
+      titleKey: 'group_master_data',
+      items: [
+        { key: 'items', href: `/${locale}/master-data/items`, resource: 'master_data', labelKey: 'items', icon: Package },
+        { key: 'warehouses', href: `/${locale}/master-data/warehouses`, resource: 'master_data', labelKey: 'warehouses', icon: Warehouse },
+        { key: 'uom', href: `/${locale}/master-data/units-of-measure`, resource: 'master_data', labelKey: 'uom', icon: Ruler },
+        { key: 'barcodes', href: `/${locale}/master-data/barcodes`, resource: 'master_data', labelKey: 'barcodes', icon: Barcode },
+        { key: 'branches', href: `/${locale}/master-data/branches`, resource: 'master_data', labelKey: 'branches', icon: Building2 },
+      ]
+    },
+    {
+      key: 'reports_group',
+      titleKey: 'group_reports',
+      items: [
+        { key: 'reports', href: `/${locale}/reports`, resource: 'reports', labelKey: 'reports', icon: BarChart3 },
+      ]
+    },
+    {
+      key: 'admin',
+      titleKey: 'group_admin',
+      items: [
+        { key: 'users', href: `/${locale}/admin/users`, resource: 'admin', labelKey: 'users', icon: ShieldCheck },
+        { key: 'roles', href: `/${locale}/admin/roles`, resource: 'admin', labelKey: 'roles', icon: Shield },
+        { key: 'audit', href: `/${locale}/admin/audit-log`, resource: 'admin', labelKey: 'audit_log', icon: History },
+      ]
+    }
   ];
 
   return (
-    <aside className="w-full bg-surface-container-low flex flex-col h-full border-e border-white/10-muted/50">
-      <div className="p-4 flex items-center justify-between md:hidden border-b border-white/10-muted/50 mb-2">
+    <aside className="w-full bg-surface-container-low flex flex-col h-full border-e border-border-surface">
+      <div className="p-4 flex items-center justify-between md:hidden border-b border-border-surface mb-2">
         <span className="font-bold text-operational-cyan">LogiRest</span>
-        <button onClick={onClose} className="p-1 hover:bg-surface-container-high rounded-md">
+        <button onClick={onClose} className="p-1 hover:bg-surface-container-high rounded-md transition-colors">
           <X className="w-5 h-5 text-muted-foreground/60" />
         </button>
       </div>
 
-      <nav className="flex-1 py-4 flex flex-col gap-1 px-3 overflow-y-auto">
-        {items.map((item) => (
-          <SidebarLink key={item.key} item={item} pathname={pathname} t={t} onClick={onClose} />
-        ))}
+      <nav className="flex-1 py-4 flex flex-col gap-6 px-3 overflow-y-auto custom-scrollbar">
+        {groups.map((group) => {
+          const visibleItems = group.items.filter(item => {
+            // We can't use hooks here, move to a component
+            return true; 
+          });
+
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <div key={group.key} className="flex flex-col gap-1">
+              {group.titleKey && (
+                <div className="px-4 mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+                    {t(group.titleKey)}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col gap-1">
+                {group.items.map((item) => (
+                  <SidebarLink key={item.key} item={item} pathname={pathname} t={t} onClick={onClose} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </nav>
     </aside>
   );
@@ -59,19 +163,45 @@ function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: 
   const canView = usePermission('view', item.resource);
   
   if (!canView) return null;
-  const isActive = pathname.startsWith(item.href);
+  
+  // Highlight if exact match or if it's a sub-route of this link
+  // But avoid highlighting root dashboard on every page
+  const isDashboard = item.key === 'dashboard';
+  const isActive = isDashboard 
+    ? pathname === item.href 
+    : pathname.startsWith(item.href);
+
+  const Icon = item.icon;
   
   return (
     <Link 
       href={item.href}
       onClick={onClick}
-      className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-3 ${
+      className={cn(
+        "px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 flex items-center gap-3 group relative overflow-hidden",
         isActive 
           ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary-rgb),0.1)]' 
           : 'text-muted-foreground/60 hover:bg-surface-container-high hover:text-foreground'
-      }`}
+      )}
     >
-      {t(item.labelKey) ?? item.labelKey}
+      {/* Active Indicator Glow */}
+      {isActive && (
+        <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+      )}
+
+      <Icon className={cn(
+        "w-4 h-4 transition-transform duration-200 relative z-10",
+        isActive ? 'scale-110' : 'group-hover:scale-110'
+      )} />
+      
+      <span className="flex-1 truncate relative z-10">
+        {t(item.labelKey) ?? item.labelKey}
+      </span>
+
+      {isActive && (
+        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)] relative z-10" />
+      )}
     </Link>
   );
 }
+

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
@@ -22,56 +23,67 @@ import { DocumentLineItemTable, type LineItem } from '@/components/shared/Docume
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
-import { Badge } from '@/components/ui/badge';
-import { Save, CheckCircle, XCircle, Send, ArrowRight, ClipboardList, Clock, CheckCircle2, History } from 'lucide-react';
+import { Save, CheckCircle, XCircle, Send, ArrowRight, ClipboardList, Clock, CheckCircle2, History, Building2 } from 'lucide-react';
 
-const prHeaderSchema = z.object({
-  department_id: z.string().min(1, 'Department is required'),
-  expected_date: z.string().min(1, 'Expected date is required'),
-});
+// Static department list — replace with API hook when endpoint is available
+const DEPARTMENTS = [
+  { id: 'dep-kitchen', labelKey: 'warehouses.kitchen' },
+  { id: 'dep-pastry',  labelKey: 'warehouses.pastry'  },
+  { id: 'dep-dry',     labelKey: 'warehouses.dry'     },
+  { id: 'dep-cold',    labelKey: 'warehouses.cold'    },
+] as const;
 
-type PRHeaderFormValues = z.infer<typeof prHeaderSchema>;
+const buildSchema = (t: (k: string) => string) =>
+  z.object({
+    department_id:  z.string().min(1, t('validation.department_required')),
+    expected_date:  z.string().min(1, t('validation.date_required')),
+  });
+
+type PRHeaderFormValues = {
+  department_id: string;
+  expected_date: string;
+};
 
 export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar' | 'en' }) {
-  const t = useTranslations('procurement.pr');
+  const t       = useTranslations('procurement.pr');
   const tCommon = useTranslations('common');
-  const router = useRouter();
-  
+  const router  = useRouter();
+
   const { data: pr, isLoading } = usePR(id || '');
-  const createPRMutation = useCreatePR();
-  const submitPRMutation = useSubmitPR();
+  const createPRMutation  = useCreatePR();
+  const submitPRMutation  = useSubmitPR();
   const approvePRMutation = useApprovePR();
-  const rejectPRMutation = useRejectPR();
+  const rejectPRMutation  = useRejectPR();
 
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
-  const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
+  const [rejectConfirmOpen,  setRejectConfirmOpen]  = useState(false);
+
+  const schema = buildSchema((k) => tCommon(k as Parameters<typeof tCommon>[0]));
 
   const form = useForm<PRHeaderFormValues>({
-    resolver: zodResolver(prHeaderSchema),
-    defaultValues: {
-      department_id: '',
-      expected_date: '',
-    },
+    resolver: zodResolver(schema),
+    defaultValues: { department_id: '', expected_date: '' },
   });
 
   useEffect(() => {
     if (pr) {
       form.reset({
         department_id: pr.department_id || '',
-        expected_date: pr.expected_date || '',
+        expected_date: pr.expected_date  || '',
       });
     }
   }, [pr, form]);
 
-  const isNew = !id;
+  const isNew      = !id;
   const isReadOnly = ['APPROVED', 'POSTED', 'REJECTED'].includes(pr?.status ?? '');
 
+  /* ── Handlers ────────────────────────────────────────────────────────── */
   const handleSaveDraft = async (values: PRHeaderFormValues) => {
     try {
       await createPRMutation.mutateAsync({
         department_id: values.department_id,
         expected_date: values.expected_date,
-        lines: [] // For now, lines are handled separately or come from initial state
+        lines: [],
       });
       router.push(`/${locale}/purchase-requests`);
     } catch (e) {
@@ -91,9 +103,7 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
     try {
       await approvePRMutation.mutateAsync(id);
       setApproveConfirmOpen(false);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleReject = async () => {
@@ -101,11 +111,10 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
     try {
       await rejectPRMutation.mutateAsync(id);
       setRejectConfirmOpen(false);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   };
 
+  /* ── Loading ─────────────────────────────────────────────────────────── */
   if (isLoading) return (
     <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl animate-pulse">
       <div className="relative">
@@ -120,13 +129,14 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
     { status: pr.status.toLowerCase() as Status, at: pr.created_at || new Date().toISOString(), by: 'System User' }
   ] : [];
 
+  /* ── Header actions — strict status gates ────────────────────────────── */
   const headerActions = (
     <div className="flex items-center gap-3">
       {(isNew || pr?.status === 'DRAFT') && (
         <PermissionGate action="create" resource="pr">
-          <Button 
-            onClick={form.handleSubmit(handleSaveDraft)} 
-            disabled={createPRMutation.isPending} 
+          <Button
+            onClick={form.handleSubmit(handleSaveDraft)}
+            disabled={createPRMutation.isPending}
             variant="outline"
             className="h-11 px-6 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-2xl"
           >
@@ -138,8 +148,8 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
 
       {!isNew && pr?.status === 'DRAFT' && (
         <PermissionGate action="create" resource="pr">
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={submitPRMutation.isPending}
             className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all rounded-2xl"
           >
@@ -152,20 +162,20 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
       {!isNew && pr?.status === 'SUBMITTED' && (
         <PermissionGate action="approve" resource="pr">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => setRejectConfirmOpen(true)}
               className="h-11 px-6 text-[10px] font-black uppercase tracking-widest rounded-2xl"
             >
               <XCircle className="w-4 h-4 me-2" />
-              {t('reject')}
+              {t('reject_pr')}
             </Button>
-            <Button 
+            <Button
               onClick={() => setApproveConfirmOpen(true)}
               className="h-11 px-8 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.3)] rounded-2xl"
             >
               <CheckCircle className="w-4 h-4 me-2" />
-              {t('approve')}
+              {t('approve_pr')}
             </Button>
           </div>
         </PermissionGate>
@@ -173,11 +183,11 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
 
       {!isNew && pr?.status === 'APPROVED' && (
         <PermissionGate action="approve" resource="pr">
-          <Button 
+          <Button
             onClick={() => router.push(`/${locale}/purchase-orders/new?pr_id=${id}`)}
             className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
           >
-            <ArrowRight className="w-4 h-4 me-2" />
+            <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
             {t('convert_to_po')}
           </Button>
         </PermissionGate>
@@ -185,12 +195,13 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
     </div>
   );
 
+  /* ── Render ───────────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col gap-10 relative pb-20">
-      <PageHeader 
+      <PageHeader
         title={isNew ? t('new_intent') : pr?.document_number || ''}
-        description={isNew ? t('specification') : t('specification')}
-        status={pr?.status}
+        description={t('specification')}
+        status={pr?.status as BadgeStatus}
         showStatus={!isNew}
         actions={headerActions}
       />
@@ -198,29 +209,50 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
       <Form {...form}>
         <form className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {/* Department selector */}
             <FormField
               control={form.control}
               name="department_id"
               render={({ field }) => (
                 <FormItem className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1 transition-all hover:bg-surface-container-medium group relative overflow-hidden">
                   <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                    <ClipboardList className="w-12 h-12" />
+                    <Building2 className="w-12 h-12" />
                   </div>
                   <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 group-hover:text-cyan-500/60 transition-colors">
                     {t('department')}
                   </FormLabel>
                   <FormControl>
                     {isReadOnly ? (
-                      <p className="font-bold text-lg tracking-tight">{field.value || '-'}</p>
+                      <p className="font-bold text-lg tracking-tight">
+                        {DEPARTMENTS.find(d => d.id === field.value)
+                          ? tCommon(DEPARTMENTS.find(d => d.id === field.value)!.labelKey as Parameters<typeof tCommon>[0])
+                          : (field.value || '—')}
+                      </p>
                     ) : (
-                      <Input {...field} className="bg-transparent border-none p-0 h-auto font-bold text-lg tracking-tight focus-visible:ring-0" />
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger
+                          id="pr-department-select"
+                          className="bg-transparent border-none p-0 h-auto font-bold text-lg tracking-tight focus:ring-0 shadow-none"
+                        >
+                          <SelectValue placeholder={tCommon('status.all')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
+                          {DEPARTMENTS.map(dep => (
+                            <SelectItem key={dep.id} value={dep.id} className="text-[11px] font-bold">
+                              {tCommon(dep.labelKey as Parameters<typeof tCommon>[0])}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[9px] font-black uppercase" />
                 </FormItem>
               )}
             />
 
+            {/* Expected delivery date */}
             <FormField
               control={form.control}
               name="expected_date"
@@ -234,16 +266,23 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
                   </FormLabel>
                   <FormControl>
                     {isReadOnly ? (
-                      <p className="font-mono font-bold text-lg tracking-tight text-foreground/80">{field.value || '-'}</p>
+                      <p className="font-mono font-bold text-lg tracking-tight text-foreground/80" dir="ltr">{field.value || '—'}</p>
                     ) : (
-                      <Input type="date" {...field} className="bg-transparent border-none p-0 h-auto font-mono font-bold text-lg tracking-tight focus-visible:ring-0" />
+                      <Input
+                        id="pr-expected-date"
+                        type="date"
+                        {...field}
+                        dir="ltr"
+                        className="bg-transparent border-none p-0 h-auto font-mono font-bold text-lg tracking-tight focus-visible:ring-0"
+                      />
                     )}
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[9px] font-black uppercase" />
                 </FormItem>
               )}
             />
 
+            {/* Status tile — display only */}
             <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1 transition-all hover:bg-surface-container-medium group relative overflow-hidden">
               <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity text-primary">
                 <CheckCircle2 className="w-12 h-12" />
@@ -252,11 +291,12 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
                 {tCommon('status_label')}
               </Label>
               <p className="font-bold text-lg tracking-tight uppercase text-primary/80">
-                {pr?.status ? tCommon(`status.${pr.status.toLowerCase()}`) : t('status_init')}
+                {pr?.status ? tCommon(`status.${pr.status.toLowerCase()}` as Parameters<typeof tCommon>[0]) : t('status_init')}
               </p>
             </div>
           </div>
 
+          {/* Line items */}
           {isReadOnly ? (
             <DocumentReadOnlyOverlay isPosted={isReadOnly}>
               <DocumentLineItemTable
@@ -283,12 +323,21 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
               extraColumns={[
                 {
                   header: t('requested_qty'),
-                  cell: (line: LineItem) => <input type="number" defaultValue={line.qty as number} aria-label={t('requested_qty')} className="w-20 px-2 py-1.5 bg-surface-container-highest rounded-2xl font-mono text-sm focus:ring-1 focus:ring-primary outline-none transition-all" dir="ltr" />
+                  cell: (line: LineItem) => (
+                    <input
+                      type="number"
+                      defaultValue={line.qty as number}
+                      aria-label={t('requested_qty')}
+                      className="w-20 px-2 py-1.5 bg-surface-container-highest rounded-2xl font-mono text-sm focus:ring-1 focus:ring-primary outline-none transition-all"
+                      dir="ltr"
+                    />
+                  )
                 }
               ]}
             />
           )}
 
+          {/* Audit trail */}
           {mockTimeline.length > 0 && (
             <div className="bg-surface-container-low p-8 rounded-2xl shadow-lg transition-all hover:bg-surface-container-medium/50">
               <div className="flex items-center gap-3 mb-10">
@@ -301,7 +350,7 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
         </form>
       </Form>
 
-      <PostConfirmDialog 
+      <PostConfirmDialog
         open={approveConfirmOpen}
         onOpenChange={setApproveConfirmOpen}
         onConfirm={handleApprove}
@@ -310,7 +359,7 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
         warningText={t('irreversible')}
       />
 
-      <PostConfirmDialog 
+      <PostConfirmDialog
         open={rejectConfirmOpen}
         onOpenChange={setRejectConfirmOpen}
         onConfirm={handleReject}

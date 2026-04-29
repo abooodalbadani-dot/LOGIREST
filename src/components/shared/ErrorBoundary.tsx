@@ -52,14 +52,14 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="flex gap-4">
             <Button 
               onClick={this.handleReset}
-              className="h-10 px-6 bg-surface-container-high hover:bg-surface-container-highest text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5"
+              className="h-10 px-6 bg-surface-container-high hover:bg-surface-container-highest text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-border-muted"
             >
               <RefreshCcw className="w-3.5 h-3.5 me-2" />
               Reinitialize Module
             </Button>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-white/5 w-full max-w-md">
+          <div className="mt-8 pt-8 border-t border-border-muted w-full max-w-md">
             <p className="text-[9px] font-mono text-muted-foreground/30 uppercase tracking-tighter overflow-hidden text-ellipsis">
               Error: {this.state.error?.message || 'Unknown Runtime Exception'}
             </p>

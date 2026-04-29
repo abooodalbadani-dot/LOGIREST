@@ -58,7 +58,7 @@ export function BranchForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low/90 backdrop-blur-xl border border-white/10-muted/30 p-8 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] relative overflow-hidden">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low/90 backdrop-blur-xl border border-border-surface p-8 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] relative overflow-hidden">
         {/* Visual Accent */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-operational-cyan/40 to-transparent" />
 
@@ -72,7 +72,7 @@ export function BranchForm() {
                 <FormControl>
                   <Input 
                     placeholder="e.g. BR-001" 
-                    className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl" 
+                    className="h-11 bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl" 
                     {...field} 
                   />
                 </FormControl>
@@ -89,11 +89,11 @@ export function BranchForm() {
                 <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">{t("status_label")}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl">
+                    <SelectTrigger className="h-11 bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl">
                       <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-low border-white/10-muted/30 backdrop-blur-xl">
+                  <SelectContent className="bg-surface-container-low border-border-surface backdrop-blur-xl">
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="INACTIVE">Inactive</SelectItem>
                   </SelectContent>
@@ -112,7 +112,7 @@ export function BranchForm() {
                 <FormControl>
                   <Input 
                     placeholder="Main Riyadh Branch" 
-                    className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl" 
+                    className="h-11 bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl" 
                     {...field} 
                   />
                 </FormControl>
@@ -130,7 +130,7 @@ export function BranchForm() {
                 <FormControl>
                   <Input 
                     placeholder="فرع الرياض الرئيسي" 
-                    className="h-11 bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl text-end" 
+                    className="h-11 bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/40 focus:ring-operational-cyan/10 transition-all rounded-xl text-end" 
                     dir="rtl" 
                     {...field} 
                   />
@@ -141,13 +141,13 @@ export function BranchForm() {
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-white/10-muted/20">
+        <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-border-surface">
           <Button 
             variant="outline" 
             type="button" 
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="h-11 px-8 text-[11px] font-bold uppercase tracking-widest bg-transparent border-white/10-muted/30 hover:bg-surface-container-high hover:text-foreground transition-all rounded-xl"
+            className="h-11 px-8 text-[11px] font-bold uppercase tracking-widest bg-transparent border-border-surface hover:bg-surface-container-high hover:text-foreground transition-all rounded-xl"
           >
             {t("cancel") || "Cancel"}
           </Button>

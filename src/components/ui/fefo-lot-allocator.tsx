@@ -76,8 +76,8 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-surface-container-low border-white/10-muted/20 p-0 overflow-hidden rounded-[2rem] shadow-2xl">
-        <div className="bg-muted/10 p-8 border-b border-white/10-muted/20">
+      <DialogContent className="sm:max-w-2xl bg-surface-container-low border-border-surface p-0 overflow-hidden rounded-[2rem] shadow-2xl">
+        <div className="bg-muted/10 p-8 border-b border-border-surface">
           <DialogHeader>
              <div className="flex items-center gap-4 mb-2">
                 <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan border border-operational-cyan/20">
@@ -100,7 +100,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
         <div className="p-8 space-y-8">
           {/* Allocation Progress Bar */}
-          <div className="bg-muted/5 p-6 rounded-3xl border border-white/10-muted/20 shadow-inner">
+          <div className="bg-muted/5 p-6 rounded-3xl border border-border-surface shadow-inner">
              <div className="flex items-center justify-between mb-4">
                 <div className="flex flex-col">
                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Required Commitment</span>
@@ -134,7 +134,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                     onClick={handleAutoAllocate} 
                     className="h-9 px-4 border-primary/30 text-primary bg-primary/5 hover:bg-primary hover:text-primary-foreground rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
                  >
-                    <Zap className="w-3 h-3 mr-2" />
+                    <Zap className="w-3 h-3 me-2" />
                     FEFO Smart Allocate
                  </Button>
              </div>
@@ -148,12 +148,12 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
             </h4>
             
             {availableLots.length === 0 ? (
-              <div className="py-12 text-center bg-muted/5 rounded-3xl border border-dashed border-white/10-muted/20">
+              <div className="py-12 text-center bg-muted/5 rounded-3xl border border-dashed border-border-surface">
                 <PackageSearch className="w-12 h-12 mx-auto text-muted-foreground/10 mb-4" />
                 <p className="text-[11px] font-bold text-muted-foreground/30 uppercase tracking-widest">No available lots in inventory</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pe-2 custom-scrollbar">
                 {availableLots.map((lot) => {
                   const lotExpiryDate = new Date(lot.expiryDate);
                   const isExpired = lot.isExpired || lotExpiryDate < now;
@@ -167,7 +167,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                           ? 'bg-status-error/5 border-status-error/20 opacity-60'
                           : isNearExpiry
                           ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10'
-                          : 'bg-surface-container-low border-white/10-muted/20 hover:border-operational-cyan/30 hover:bg-muted/50'
+                          : 'bg-surface-container-low border-border-surface hover:border-operational-cyan/30 hover:bg-muted/50'
                       }`}
                     >
                       <div className="flex items-center gap-6">
@@ -176,7 +176,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                             <span className="text-sm font-black text-foreground tracking-tight">{lot.lotNumber}</span>
                             {isExpired ? (
                                <Badge variant="destructive" className="h-5 px-2 rounded-md text-[8px] font-black uppercase tracking-widest bg-status-error/10 text-status-error border-none">
-                                <ShieldAlert className="w-2.5 h-2.5 mr-1" />
+                                <ShieldAlert className="w-2.5 h-2.5 me-1" />
                                 Protocol Violation (Expired)
                               </Badge>
                             ) : isNearExpiry ? (
@@ -213,7 +213,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                                 value={allocations[lot.lotNumber] ?? ''}
                                 onChange={(e) => handleQtyChange(lot.lotNumber, e.target.value)}
                              />
-                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-black text-muted-foreground/20 uppercase tracking-widest pointer-events-none">UNIT</div>
+                             <div className="absolute end-3 top-1/2 -translate-y-1/2 text-[8px] font-black text-muted-foreground/20 uppercase tracking-widest pointer-events-none">UNIT</div>
                           </div>
                         </div>
                       </div>
@@ -225,7 +225,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
           </div>
         </div>
 
-        <div className="p-8 bg-muted/10 border-t border-white/10-muted/20 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="p-8 bg-muted/10 border-t border-border-surface flex flex-col md:flex-row items-center justify-between gap-4">
            <Button 
             variant="ghost" 
             onClick={onClose}
@@ -239,7 +239,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
             disabled={!isComplete}
             onClick={handleConfirm}
           >
-            <CheckCircle2 className="mr-2 w-3.5 h-3.5" />
+            <CheckCircle2 className="me-2 w-3.5 h-3.5" />
             Synchronize Fulfillment
             <ArrowRight className="ms-2 w-3.5 h-3.5 opacity-40" />
           </Button>

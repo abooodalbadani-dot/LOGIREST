@@ -2,6 +2,7 @@
 import { AlertCircle, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 export function NearExpiryWidget({ locale }: { locale: string }) {
   const t = useTranslations('dashboard.near_expiry');
@@ -16,8 +17,8 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
   const isRtl = locale === 'ar';
 
   return (
-    <div className="bg-surface-container-low/40 rounded-2xl overflow-hidden border border-white/10-muted/20 backdrop-blur-sm">
-      <div className="px-6 py-4 border-b border-white/10-muted/20 flex items-center justify-between">
+    <div className="bg-surface-container-low/40 rounded-2xl overflow-hidden border border-border-surface backdrop-blur-sm">
+      <div className="px-6 py-4 border-b border-border-surface flex items-center justify-between">
         <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-status-warning" />
           {t('title')}
@@ -28,7 +29,7 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
           </span>
         </div>
       </div>
-      <div className="flex flex-col divide-y divide-border-muted/20">
+      <div className="flex flex-col divide-y divide-border-surface">
         {items.map((item, idx) => (
           <div 
             key={item.id} 
@@ -61,10 +62,12 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
           </div>
         ))}
       </div>
-      <div className="p-3 bg-muted/10 text-center border-t border-white/10-muted/20">
-        <button className="text-[9px] font-black text-muted-foreground/40 hover:text-operational-cyan uppercase tracking-[0.3em] transition-all">
-          {t('rotation_report')}
-        </button>
+      <div className="p-3 bg-muted/10 text-center border-t border-border-surface">
+        <Link href={`/${locale}/reports`}>
+          <button className="text-[9px] font-black text-muted-foreground/40 hover:text-operational-cyan uppercase tracking-[0.3em] transition-all">
+            {t('rotation_report')}
+          </button>
+        </Link>
       </div>
     </div>
   );

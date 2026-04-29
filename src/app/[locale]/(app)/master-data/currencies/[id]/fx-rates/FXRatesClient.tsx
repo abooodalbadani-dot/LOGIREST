@@ -93,7 +93,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
       id: 'lock',
       header: '',
       cell: () => (
-        <div className="flex justify-end pr-4">
+        <div className="flex justify-end pe-4">
           <div className="p-1.5 rounded-sm bg-surface-container-highest/10 border border-outline-low opacity-40 group-hover:opacity-100 transition-opacity">
             <Lock className="w-3 h-3 text-text-muted" />
           </div>

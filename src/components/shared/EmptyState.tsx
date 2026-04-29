@@ -58,9 +58,9 @@ export function EmptyState({
       </div>
 
       {/* Blueprint lines decoration */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-20 opacity-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[1px] bg-operational-cyan/20 rotate-12" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[1px] bg-operational-cyan/20 -rotate-12" />
+      <div className="absolute top-0 start-0 w-full h-full pointer-events-none overflow-hidden -z-20 opacity-10">
+        <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[1px] bg-operational-cyan/20 rotate-12" />
+        <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[1px] bg-operational-cyan/20 -rotate-12" />
       </div>
     </div>
   );

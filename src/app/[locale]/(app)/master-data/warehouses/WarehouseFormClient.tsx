@@ -97,7 +97,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                         </option>
                       ))}
                     </select>
-                    {errors.branch_id && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.branch_id.message as any)}</p>}
+                    {errors.branch_id && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.branch_id.message as string)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -105,7 +105,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                       {t('code')}
                     </Label>
                     <Input id="wh-code" dir="ltr" {...register('code')} className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50" />
-                    {errors.code && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.code.message as any)}</p>}
+                    {errors.code && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.code.message as string)}</p>}
                   </div>
                 </div>
 
@@ -115,7 +115,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                       {t('name_en')}
                     </Label>
                     <Input id="wh-name-en" dir="ltr" {...register('name_en')} className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50" />
-                    {errors.name_en && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.name_en.message as any)}</p>}
+                    {errors.name_en && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.name_en.message as string)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -123,7 +123,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                       {t('name_ar')}
                     </Label>
                     <Input id="wh-name-ar" dir="rtl" {...register('name_ar')} className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 text-end" />
-                    {errors.name_ar && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.name_ar.message as any)}</p>}
+                    {errors.name_ar && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{t(errors.name_ar.message as string)}</p>}
                   </div>
                 </div>
               </CardContent>

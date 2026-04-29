@@ -10,15 +10,16 @@ const LotAllocationSchema = z.object({
 });
 
 const CreateAdjustmentPayloadSchema = z.object({
-  warehouse_id: z.string(),
-  reason: z.string(),
-  notes: z.string().optional(),
+  warehouse_id: z.string().min(1, 'Warehouse is required'),
+  reason: z.string().min(1, 'Reason category is required'),
+  notes: z.string().min(10, 'Reason details must be at least 10 characters'),
   lines: z.array(z.object({
     item_id: z.string(),
-    qty: z.number(),
+    qty: z.number().positive(),
     uom_id: z.string(),
+    direction: z.enum(['INCREASE', 'DECREASE']),
     lot_allocations: z.array(LotAllocationSchema).optional()
-  }))
+  })).min(1, 'At least one item is required')
 });
 
 export type CreateAdjustmentPayload = z.infer<typeof CreateAdjustmentPayloadSchema>;

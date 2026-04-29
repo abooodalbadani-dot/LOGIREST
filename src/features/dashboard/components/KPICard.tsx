@@ -36,12 +36,12 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend, 
   };
 
   return (
-    <Card className={`relative overflow-hidden border border-white/10-muted/20 bg-surface-container-low/50 backdrop-blur-sm hover:bg-surface-container transition-all duration-500 rounded-2xl group shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] ${className || ''}`}>
+    <Card className={`relative overflow-hidden border border-border-surface bg-surface-container-low/50 backdrop-blur-sm hover:bg-surface-container transition-all duration-500 rounded-2xl group shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] ${className || ''}`}>
       {/* Visual Accent - Top Gradient */}
       <div className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500 ${accentColors[accent]}`} />
 
       {/* Large Watermark Icon */}
-      <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 pointer-events-none">
+      <div className="absolute top-0 end-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 pointer-events-none">
         <Icon className={`w-24 h-24 ${accentColors[accent]}`} />
       </div>
 
@@ -78,7 +78,7 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend, 
       </div>
 
       {/* Decorative Glow Bar */}
-      <div className={`absolute bottom-0 left-0 h-[3px] w-full transition-all duration-500 opacity-20 group-hover:opacity-100 ${accent === 'cyan' ? 'bg-operational-cyan' : accent === 'amber' ? 'bg-status-warning' : 'bg-status-error'} shadow-[0_0_15px_currentColor]`} />
+      <div className={`absolute bottom-0 start-0 h-[3px] w-full transition-all duration-500 opacity-20 group-hover:opacity-100 ${accent === 'cyan' ? 'bg-operational-cyan' : accent === 'amber' ? 'bg-status-warning' : 'bg-status-error'} shadow-[0_0_15px_currentColor]`} />
     </Card>
   );
 }

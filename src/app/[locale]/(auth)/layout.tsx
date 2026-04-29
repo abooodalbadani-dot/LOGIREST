@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex w-full bg-[#111315] relative overflow-hidden text-white font-sans">
+    <div className="min-h-screen flex w-full bg-background relative overflow-hidden text-foreground font-sans">
       {/* Universal WebMCP Header for Auth */}
       <header className="absolute top-0 end-0 z-50 p-6 pointer-events-none">
         <div className="pointer-events-auto scale-90 origin-top-right">

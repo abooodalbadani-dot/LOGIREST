@@ -8,17 +8,21 @@ import { WarehouseScopeProvider } from '@/providers/WarehouseScopeProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { cookies } from 'next/headers';
 
-import { inter, ibmPlexArabic, tajawal } from '@/lib/fonts';
+import { inter, cairo } from '@/lib/fonts';
 
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { WebMCPProvider } from '@/providers/WebMCPProvider';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
   title: 'LogiRest | Kitchen-Store Inventory System',
   description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
-  viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default async function LocaleLayout({
@@ -36,12 +40,12 @@ export default async function LocaleLayout({
 
 
   return (
-    <html lang={locale} dir={direction} className={theme}>
-      <body className={`${inter.variable} ${ibmPlexArabic.variable} ${tajawal.variable} font-sans`}>
+    <html lang={locale} dir={direction} className={theme} suppressHydrationWarning>
+      <body className={`${cairo.variable} ${inter.variable} font-sans`}>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <QueryProvider>
             <AuthProvider>
-              <ThemeProvider initialTheme={theme}>
+              <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
                 <WarehouseScopeProvider>
                   <WebMCPProvider>
                     {children}

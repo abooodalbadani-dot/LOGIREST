@@ -67,7 +67,7 @@ export function WarehouseForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low border border-white/10 p-8 rounded-xl shadow-lg relative">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low border border-border-surface p-8 rounded-xl shadow-lg relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -95,7 +95,7 @@ export function WarehouseForm() {
                        {branchesLoading ? <Skeleton className="h-4 w-20" /> : <SelectValue placeholder={t('select_branch')} />}
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-white/10">
+                  <SelectContent className="bg-surface-container-medium border-border-surface">
                     {branches?.map(branch => (
                        <SelectItem key={branch.id} value={branch.id}>{branch.nameEn}</SelectItem>
                     ))}
@@ -146,7 +146,7 @@ export function WarehouseForm() {
                       <SelectValue placeholder={t('select_type')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-white/10">
+                  <SelectContent className="bg-surface-container-medium border-border-surface">
                     <SelectItem value="MAIN">{t('type_main')}</SelectItem>
                     <SelectItem value="TRANSIT">Transit Hub</SelectItem>
                     <SelectItem value="VIRTUAL">{t('type_virtual')}</SelectItem>
@@ -169,7 +169,7 @@ export function WarehouseForm() {
                       <SelectValue placeholder={t('select_status')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-white/10">
+                  <SelectContent className="bg-surface-container-medium border-border-surface">
                     <SelectItem value="ACTIVE">{tc('active')}</SelectItem>
                     <SelectItem value="INACTIVE">{tc('inactive')}</SelectItem>
                   </SelectContent>
@@ -181,7 +181,7 @@ export function WarehouseForm() {
 
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-6 mt-6 border-t border-white/10">
+        <div className="flex items-center justify-end gap-2 pt-6 mt-6 border-t border-border-surface">
           <Button 
             variant="outline" 
             type="button" 

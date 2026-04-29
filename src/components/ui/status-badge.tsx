@@ -7,8 +7,8 @@ import { z } from "zod"
 
 export const BadgeStatusSchema = z.enum([
   'DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'RECEIVED', 'REJECTED', 'CANCELLED', 
-  'IN_TRANSIT', 'OPEN', 'COUNTING', 'REVIEW', 'ACTIVE', 'INACTIVE', 
-  'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED'
+  'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL',
+  'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'COUNTING'
 ]);
 
 export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
@@ -28,7 +28,7 @@ const statusBadgeVariants = cva(
           "bg-status-error/15 text-status-error hover:bg-status-error/25",
         success:
           "bg-status-success/15 text-status-success hover:bg-status-success/25",
-        outline: "text-foreground bg-surface-container border border-white/10-muted",
+        outline: "text-foreground bg-surface-container border border-border-surface",
         info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
       },
     },
@@ -52,14 +52,16 @@ export function StatusBadge({ className, variant, status, children, ...props }: 
       const s = status.toUpperCase();
       if (["APPROVED", "DELIVERED", "COMPLETED", "IN_STOCK", "ACTIVE", "HEALTHY"].includes(s)) {
           mappedVariant = "success";
-      } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW"].includes(s)) {
+      } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL"].includes(s)) {
           mappedVariant = "warning";
-      } else if (["REJECTED", "CANCELLED", "OUT_OF_STOCK", "EXPIRED", "LOCKED", "CRITICAL"].includes(s)) {
+      } else if (["REJECTED", "CANCELLED", "OUT_OF_STOCK", "EXPIRED", "LOCKED"].includes(s)) {
           mappedVariant = "error";
-      } else if (["SUBMITTED", "POSTED", "ISSUED", "RECEIVED"].includes(s)) {
+      } else if (["SUBMITTED", "ISSUED", "RECEIVED"].includes(s)) {
           // Operational Success (Cyan in Dark mode, but Success variant is already Cyan in dark mode)
           mappedVariant = "success"; 
-      } else if (["COUNTING"].includes(s)) {
+      } else if (["POSTED"].includes(s)) {
+          mappedVariant = "outline";
+      } else if (["COUNTING", "PARTIAL"].includes(s)) {
           mappedVariant = "info";
       } else {
           mappedVariant = "default";

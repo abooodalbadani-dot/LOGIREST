@@ -41,7 +41,7 @@ export function FXCapturePanel({
   };
 
   return (
-    <Card className="border border-white/10-muted bg-surface-container-low/50 rounded-xl overflow-hidden">
+    <Card className="border border-border-surface bg-surface-container-low/50 rounded-xl overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           {readOnly ? (
@@ -63,7 +63,7 @@ export function FXCapturePanel({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label className="text-muted-foreground/80">إجمالي المورد ({supplierCurrency})</Label>
-            <div className="h-10 px-3 bg-surface-container-high rounded-xl flex items-center border border-white/10-muted opacity-70" dir="ltr">
+            <div className="h-10 px-3 bg-surface-container-high rounded-xl flex items-center border border-border-surface opacity-70" dir="ltr">
               <span className="text-foreground font-mono me-auto">
                 {supplierTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -75,7 +75,7 @@ export function FXCapturePanel({
               سعر الصرف (1 {supplierCurrency} = ? {baseCurrency})
             </Label>
             {readOnly ? (
-              <div className="h-10 px-3 bg-surface-container-high rounded-xl flex items-center border border-white/10-muted opacity-70" dir="ltr">
+              <div className="h-10 px-3 bg-surface-container-high rounded-xl flex items-center border border-border-surface opacity-70" dir="ltr">
                 <span className="text-foreground font-mono me-auto">
                   {exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </span>
@@ -88,7 +88,7 @@ export function FXCapturePanel({
                 value={exchangeRate || ''}
                 onChange={handleRateChange}
                 dir="ltr"
-                className="font-mono text-end rounded-xl border-white/10-muted focus:ring-operational-cyan focus:border-operational-cyan"
+                className="font-mono text-end rounded-xl border-border-surface focus:ring-operational-cyan focus:border-operational-cyan"
               />
             )}
           </div>

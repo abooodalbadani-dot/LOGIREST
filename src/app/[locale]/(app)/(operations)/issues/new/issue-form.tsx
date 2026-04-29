@@ -36,22 +36,22 @@ import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const lineSchema = z.object({
-  itemId: z.string().min(1, "Item SKU is required"),
-  requestedQuantity: z.number().min(0.01, "Quantity must be positive"),
+const buildLineSchema = (t: (k: string) => string) => z.object({
+  itemId: z.string().min(1, t('validation.item_required')),
+  requestedQuantity: z.number().min(0.01, t('validation.qty_positive')),
   allocatedQuantity: z.number(),
   lots: z.array(z.custom<IssueLot>()),
   notes: z.string().optional(),
 });
 
-const formSchema = z.object({
-  warehouseId: z.string().min(1, "Warehouse is required"),
-  departmentId: z.string().min(1, "Department is required"),
-  items: z.array(lineSchema).min(1, "At least one item is required"),
+const buildFormSchema = (t: (k: string) => string) => z.object({
+  warehouseId: z.string().min(1, t('validation.warehouse_required')),
+  departmentId: z.string().min(1, t('validation.department_required')),
+  items: z.array(buildLineSchema(t)).min(1, t('validation.items_required')),
   notes: z.string().optional(),
 });
 
-type IssueFormValues = z.infer<typeof formSchema>;
+type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 // Simulated locked warehouse IDs for demo
 const LOCKED_WAREHOUSES = new Set(["wh-locked-01"]);
@@ -65,6 +65,8 @@ export function IssueForm({ locale }: { locale: string }) {
   const [allocatorOpen, setAllocatorOpen] = useState(false);
   const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
   const form = useForm<IssueFormValues>({
     resolver: zodResolver(formSchema),
@@ -125,21 +127,21 @@ export function IssueForm({ locale }: { locale: string }) {
                  <Settings2 className="w-8 h-8" />
               </div>
               <div>
-                 <h2 className="text-2xl font-black tracking-tight text-foreground">{t('title')} Orchestration</h2>
-                 <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.2em] mt-1 italic">Internal stock consumption & FEFO fulfillment protocol</p>
+                 <h2 className="text-2xl font-black tracking-tight text-foreground">{t('title')}</h2>
+                 <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.2em] mt-1 italic">{t('new_description')}</p>
               </div>
               <div className="ms-auto flex items-center gap-2">
-                 <Badge className="bg-surface-container-high text-muted-foreground/60/60 border-none font-black text-[9px] uppercase tracking-widest px-4 h-9 rounded-xl">Node: Store-Primary</Badge>
+                 <Badge className="bg-surface-container-high text-muted-foreground/60/60 border-none font-black text-[9px] uppercase tracking-widest px-4 h-9 rounded-xl">{tc('warehouses.main')}</Badge>
               </div>
            </div>
 
            {isWarehouseLocked && (
              <div className="mb-10 animate-in zoom-in-95 duration-300">
-               <LockBanner message="Active Stocktake: Source warehouse currently locked. All issuance protocols suspended." />
+               <LockBanner message={t('warehouse_locked')} />
              </div>
            )}
 
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
               <FormField<IssueFormValues, "warehouseId">
                 control={form.control}
                 name="warehouseId"
@@ -147,12 +149,12 @@ export function IssueForm({ locale }: { locale: string }) {
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 flex items-center gap-2">
                        <Warehouse className="w-3.5 h-3.5" />
-                       Source Warehouse
+                       {tc('warehouse')}
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                        <FormControl>
                           <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
-                             <SelectValue placeholder="Select Origin Node" />
+                             <SelectValue placeholder={t('select_department')} />
                           </SelectTrigger>
                        </FormControl>
                        <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
@@ -172,12 +174,12 @@ export function IssueForm({ locale }: { locale: string }) {
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 flex items-center gap-2">
                        <Building2 className="w-3.5 h-3.5" />
-                       Destination Department
+                       {t('destination')}
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                        <FormControl>
                           <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
-                             <SelectValue placeholder="Select Receiver" />
+                             <SelectValue placeholder={t('select_department')} />
                           </SelectTrigger>
                        </FormControl>
                        <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
@@ -197,10 +199,10 @@ export function IssueForm({ locale }: { locale: string }) {
                   <FormItem className="lg:col-span-3">
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 flex items-center gap-2">
                        <FileText className="w-3.5 h-3.5" />
-                       Operational Remarks
+                       {t('operational_notes')}
                     </FormLabel>
                     <FormControl>
-                       <Input placeholder="E.g., Routine replenishment for morning shift..." className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20" {...field} />
+                       <Input placeholder={t('notes_placeholder')} className="bg-surface-container-high/30 border-none h-14 px-6 text-[11px] font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -217,8 +219,8 @@ export function IssueForm({ locale }: { locale: string }) {
                     <Calculator className="w-5 h-5" />
                  </div>
                  <div>
-                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60/70">Issuance Ledger</h3>
-                    <p className="text-[9px] font-black text-muted-foreground/60/20 uppercase tracking-[0.2em] mt-1">Component selection and batch synchronization</p>
+                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground/60/70">{t('ledger_title')}</h3>
+                    <p className="text-[9px] font-black text-muted-foreground/60/20 uppercase tracking-[0.2em] mt-1">{t('ledger_subtitle')}</p>
                  </div>
               </div>
               <Button 
@@ -229,7 +231,7 @@ export function IssueForm({ locale }: { locale: string }) {
                 onClick={() => append({ itemId: "", requestedQuantity: 1, allocatedQuantity: 0, lots: [] })}
               >
                 <Plus className="h-4 w-4 me-2" />
-                Enroll Component
+                {t('enroll_component')}
               </Button>
            </div>
 
@@ -239,7 +241,7 @@ export function IssueForm({ locale }: { locale: string }) {
                   <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
                      <ListFilter className="w-10 h-10" />
                   </div>
-                  <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.3em]">Manifest empty. Awaiting component enrollment.</p>
+                  <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.3em]">{t('empty_manifest')}</p>
                </div>
              ) : (
                fields.map((field, index) => {
@@ -247,16 +249,16 @@ export function IssueForm({ locale }: { locale: string }) {
                  const hasSelection = !!field.itemId;
                  
                  return (
-                   <div key={field.id} className={`grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1.5fr_1.5fr_auto] gap-8 items-end p-8 rounded-[2.25rem] border transition-all duration-500 group ${isAllocated ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-lg shadow-emerald-500/5" : "bg-surface-container-low border-surface-container-high/20 hover:border-cyan-500/30 hover:bg-surface-container-medium shadow-xl shadow-black/5"}`}>
+                   <div key={field.id} className={`grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1.5fr_1.5fr_auto] gap-4 md:gap-8 items-end p-5 md:p-8 rounded-[2.25rem] border transition-all duration-500 group ${isAllocated ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-lg shadow-emerald-500/5" : "bg-surface-container-low border-surface-container-high/20 hover:border-cyan-500/30 hover:bg-surface-container-medium shadow-xl shadow-black/5"}`}>
                      
                      <FormField<IssueFormValues, `items.${number}.itemId`>
                        control={form.control}
                        name={`items.${index}.itemId`}
                        render={({ field: inputField }) => (
                          <FormItem>
-                           <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3">Item Descriptor / SKU</FormLabel>
+                           <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3">{t('item_label')}</FormLabel>
                            <FormControl>
-                             <Input placeholder="e.g. IT-1004" className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-black font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
+                             <Input placeholder={t('sku_placeholder')} className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-black font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
                            </FormControl>
                            <FormMessage className="text-[8px] font-black" />
                          </FormItem>
@@ -268,7 +270,7 @@ export function IssueForm({ locale }: { locale: string }) {
                        name={`items.${index}.requestedQuantity`}
                        render={({ field: inputField }) => (
                          <FormItem>
-                           <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 text-center block w-full">Request Qty</FormLabel>
+                           <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 mb-3 text-center block w-full">{t('request_qty')}</FormLabel>
                            <FormControl>
                              <Input 
                                type="number" 
@@ -286,7 +288,7 @@ export function IssueForm({ locale }: { locale: string }) {
                      />
 
                      <div className="flex flex-col items-center gap-1.5 pb-1">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40">Fulfillment Status</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40">{t('fulfillment_status')}</span>
                         <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/60/20"}`}>
                            <span className="text-[12px] font-black tabular-nums tracking-wider">{field.allocatedQuantity || 0}</span>
                            {isAllocated ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4 opacity-30" />}
@@ -301,7 +303,7 @@ export function IssueForm({ locale }: { locale: string }) {
                           className={`w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${isAllocated ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/10"}`}
                           onClick={() => handleOpenAllocator(index)}
                         >
-                          {isAllocated ? "Redefine Batches" : "Synchronize FEFO"}
+                          {isAllocated ? t('redefine_batches') : t('sync_fefo')}
                           <ChevronRight className="ms-2 w-3.5 h-3.5" />
                         </Button>
                      </div>
@@ -325,15 +327,15 @@ export function IssueForm({ locale }: { locale: string }) {
         </div>
 
         {/* Global Fulfillment Summary */}
-        <div className="p-10 bg-surface-container-low rounded-[3rem] border border-surface-container-high/20 shadow-inner flex flex-col md:flex-row items-center justify-between gap-10">
+        <div className="p-6 md:p-10 bg-surface-container-low rounded-[3rem] border border-surface-container-high/20 shadow-inner flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10">
            <div className="flex items-center gap-6">
               <div className="w-16 h-16 rounded-[1.75rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
                  <PackageCheck className="w-8 h-8 text-cyan-500" />
               </div>
               <div>
-                 <div className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60/40 mb-1">Synchronized Commitment</div>
+                 <div className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
                  <div className="text-xl font-bold text-foreground">
-                    {fields.filter(f => (f.allocatedQuantity ?? 0) >= (f.requestedQuantity ?? 0)).length} / {fields.length} Protocol Validations Complete
+                    {fields.filter(f => (f.allocatedQuantity ?? 0) >= (f.requestedQuantity ?? 0)).length} / {fields.length} {t('protocol_validations')}
                  </div>
               </div>
            </div>
@@ -345,14 +347,14 @@ export function IssueForm({ locale }: { locale: string }) {
                 onClick={() => router.back()} 
                 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/40 hover:text-foreground h-14 px-10 rounded-2xl"
               >
-                Discard Sequence
+                {t('discard_sequence')}
               </Button>
               <Button
                 type="submit"
                 disabled={createIssue.isPending || isWarehouseLocked || !allLinesAllocated || fields.length === 0}
                 className="h-14 px-12 bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-black uppercase tracking-[0.25em] rounded-[1.5rem] transition-all shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] disabled:opacity-30 disabled:grayscale"
               >
-                {createIssue.isPending ? "Finalizing Ledger..." : "Authorize Issuance Protocol"}
+                {createIssue.isPending ? t('finalizing_ledger') : t('authorize_protocol')}
               </Button>
            </div>
         </div>
@@ -377,9 +379,9 @@ export function IssueForm({ locale }: { locale: string }) {
           setConfirmOpen(false);
           form.handleSubmit(onSubmit)();
         }}
-        title="Authorize Fulfillment Protocol?"
-        description="This will lock the current issuance manifest and synchronize lot allocations with the central ledger. Are you prepared to commit?"
-        confirmText="Finalize"
+        title={t('post_confirm_title')}
+        description={t('post_confirm_desc')}
+        confirmText={tc('confirm')}
       />
     </Form>
   );

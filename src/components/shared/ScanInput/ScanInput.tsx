@@ -71,12 +71,13 @@ export function ScanInput({ onScan, onError, disabled, placeholder, className, o
     <input
       ref={inputRef}
       type="text"
+      dir="ltr"
       disabled={disabled}
       placeholder={placeholder}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onChange={onChange}
-      className={`bg-surface-container border border-white/10-muted/50 text-foreground rounded-xl text-lg px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-operational-cyan/30 focus:border-operational-cyan transition-all disabled:opacity-50 ${className || ''}`}
+      className={`bg-surface-container border border-border-surface text-foreground rounded-xl text-lg px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-operational-cyan/30 focus:border-operational-cyan transition-all disabled:opacity-50 ${className || ''}`}
     />
   );
 }

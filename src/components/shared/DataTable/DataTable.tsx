@@ -93,7 +93,7 @@ export function DataTable<T>({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-surface-container-lowest shadow-xl shadow-foreground/[0.02] border border-white/[0.02]">
+      <div className="overflow-x-auto rounded-2xl bg-surface-container-lowest shadow-xl shadow-foreground/[0.02] border border-border-muted">
         <table 
           className="w-full text-sm text-start border-collapse min-w-[800px]"
           data-webmcp-collection={collectionName || 'generic_table'}

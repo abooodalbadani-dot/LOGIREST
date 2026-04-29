@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default async function LocaleRootPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  // Check auth cookie/state later. For now default to login.
+  const cookieStore = await cookies();
+  const token = cookieStore.get('logirest_token')?.value;
+
+  if (token) {
+    redirect(`/${locale}/dashboard`);
+  }
+  
   redirect(`/${locale}/login`);
 }

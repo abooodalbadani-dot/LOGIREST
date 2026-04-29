@@ -206,7 +206,7 @@ export default function LotBalanceClient() {
       </div>
 
       {/* Floating Action Bar */}
-      <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-12 start-1/2 -translate-x-1/2 z-50">
          <div className="flex items-center gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-2xl transition-all hover:scale-[1.02] group">
             <div className="flex items-center gap-6">
                <button 

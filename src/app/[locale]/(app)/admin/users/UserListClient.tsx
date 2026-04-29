@@ -21,7 +21,7 @@ const roleVariants: Record<string, string> = {
   APPROVER: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   WH_KEEPER: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   PROC_OFFICER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  AUDITOR: 'bg-white/5 text-white/40 border-white/10',
+  AUDITOR: 'bg-surface-container text-muted-foreground border-border-surface',
   VIEWER: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 };
 
@@ -58,7 +58,7 @@ export function UserListClient({ locale }: { locale: string }) {
       accessorKey: 'role',
       header: t('role'),
       cell: ({ row }) => (
-        <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-sm ${roleVariants[row.original.role] ?? 'bg-white/5 text-white/40 border-white/10'}`}>
+        <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest rounded-sm ${roleVariants[row.original.role] ?? 'bg-surface-container text-muted-foreground border-border-surface'}`}>
           {row.original.role}
         </Badge>
       ),
@@ -159,7 +159,7 @@ export function UserListClient({ locale }: { locale: string }) {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-white/5 rounded-sm">
+          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-border-surface rounded-sm">
             <div className="flex flex-col gap-2 min-w-[300px] flex-1">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tCommon('search')}</label>
               <div className="relative">

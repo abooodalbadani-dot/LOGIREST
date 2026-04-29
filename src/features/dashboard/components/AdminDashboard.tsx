@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 
 export function AdminDashboard() {
@@ -80,8 +81,8 @@ export function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* System Health & Audit Column */}
         <div className="lg:col-span-1 space-y-8">
-          <Card className="bg-surface-container-low border-white/10-muted/20 shadow-2xl overflow-hidden relative group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-operational-cyan/5 blur-[60px] rounded-full -mr-16 -mt-16 group-hover:bg-operational-cyan/10 transition-colors duration-700" />
+          <Card className="bg-surface-container-low border-border-surface shadow-2xl overflow-hidden relative group">
+            <div className="absolute top-0 end-0 w-32 h-32 bg-operational-cyan/5 blur-[60px] rounded-full -me-16 -mt-16 group-hover:bg-operational-cyan/10 transition-colors duration-700" />
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-operational-cyan shadow-[0_0_10px_rgba(var(--primary-rgb),0.3)]">{t('system_health.title')}</span>
@@ -98,32 +99,41 @@ export function AdminDashboard() {
                 <div className="h-full bg-gradient-to-r from-operational-cyan to-operational-cyan/60 w-[98.4%] shadow-[0_0_15px_rgba(var(--primary-rgb),0.4)]" />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-muted/50 rounded-xl border border-white/10-muted/20 space-y-1">
+                <div className="p-3 bg-muted/50 rounded-xl border border-border-surface space-y-1">
                   <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
                     <Database className="w-3 h-3" /> {t('system_health.backup')}
                   </span>
                   <span className="text-xs font-bold text-foreground">{stats.lastBackup}</span>
                 </div>
-                <div className="p-3 bg-muted/50 rounded-xl border border-white/10-muted/20 space-y-1">
-                  <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
-                    <Users className="w-3 h-3" /> {t('system_health.online')}
-                  </span>
-                  <span className="text-xs font-bold text-foreground">{stats.activeUsers} {t('system_health.sessions')}</span>
+                <div className="p-3 bg-muted/50 rounded-xl border border-border-surface space-y-1">
+                  <Link href={`/${locale}/admin/users`} className="contents">
+                    <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest flex items-center gap-1.5 hover:text-operational-cyan cursor-pointer transition-colors">
+                      <Users className="w-3 h-3" /> {t('system_health.online')}
+                    </span>
+                    <span className="text-xs font-bold text-foreground">{stats.activeUsers} {t('system_health.sessions')}</span>
+                  </Link>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-surface-container-low border-white/10-muted/20 shadow-xl">
-            <CardHeader className="pb-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-1 flex items-center gap-2">
-                <History className="w-3 h-3" /> 
-                {t('audit.title')}
-              </span>
-              <CardTitle className="text-lg font-black tracking-tight uppercase">{t('audit.subtitle')}</CardTitle>
+          <Card className="bg-surface-container-low border-border-surface shadow-xl overflow-hidden group">
+            <CardHeader className="pb-4 border-b border-border-surface">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 flex items-center gap-2">
+                  <History className="w-3 h-3" /> 
+                  {t('audit.title')}
+                </span>
+                <Link href={`/${locale}/reports`}>
+                  <Button variant="ghost" size="sm" className="h-6 text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-operational-cyan">
+                    View All
+                  </Button>
+                </Link>
+              </div>
+              <CardTitle className="text-lg font-black tracking-tight uppercase mt-2">{t('audit.subtitle')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-border-surface">
                 {[
                   { action: 'Updated SKU: M102-SA', user: 'Admin. Mansour', time: '12m ago', type: 'catalog' },
                   { action: 'Role Mutation: INV_MGR', user: 'System', time: '1h ago', type: 'security' },
@@ -149,7 +159,7 @@ export function AdminDashboard() {
             <NearExpiryWidget locale={locale} />
           </div>
           
-          <Card className="bg-surface-container-low border-white/10-muted/20 shadow-2xl relative overflow-hidden">
+          <Card className="bg-surface-container-low border-border-surface shadow-2xl relative overflow-hidden">
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(var(--primary-rgb),0.05),transparent_70%)]" />
              <CardHeader className="flex flex-row items-center justify-between pb-6">
                 <div>
@@ -157,12 +167,14 @@ export function AdminDashboard() {
                   <CardTitle className="text-2xl font-black tracking-tighter uppercase italic">{t('analytics.velocity')}</CardTitle>
                 </div>
                 <PermissionGate action="view" resource="reports">
-                  <Button variant="outline" size="sm" className="bg-muted/10 border-white/10-muted/20 text-[10px] font-black uppercase tracking-widest px-4 h-8 rounded-xl hover:bg-operational-cyan hover:text-black hover:border-operational-cyan transition-all">
-                    {t('analytics.full_report')} <TrendingUp className="w-3 h-3 ms-2" />
-                  </Button>
+                  <Link href={`/${locale}/reports`}>
+                    <Button variant="outline" size="sm" className="bg-muted/10 border-border-surface text-[10px] font-black uppercase tracking-widest px-4 h-8 rounded-xl hover:bg-operational-cyan hover:text-black hover:border-operational-cyan transition-all">
+                      {t('analytics.full_report')} <TrendingUp className="w-3 h-3 ms-2" />
+                    </Button>
+                  </Link>
                 </PermissionGate>
              </CardHeader>
-             <CardContent className="h-[200px] flex items-center justify-center border-t border-white/10-muted/20">
+             <CardContent className="h-[200px] flex items-center justify-center border-t border-border-surface">
                 <div className="text-center space-y-4">
                   <Activity className="w-12 h-12 text-muted-foreground/10 mx-auto animate-pulse" />
                   <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.3em]">{t('analytics.processing')}</span>

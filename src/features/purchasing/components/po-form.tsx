@@ -91,7 +91,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-container-low/90 backdrop-blur-xl border border-white/10-muted/30 p-8 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] relative">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-container-low/90 backdrop-blur-xl border border-border-surface p-8 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] relative">
         <h3 className="text-xl font-black mb-4 text-operational-cyan uppercase tracking-wider">{t('title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <FormField
@@ -102,11 +102,11 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('supplier')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11">
+                    <SelectTrigger className="bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/50 h-11">
                       <SelectValue placeholder={t('select_supplier')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-low border-white/10-muted/50 backdrop-blur-xl">
+                  <SelectContent className="bg-surface-container-low border-border-surface backdrop-blur-xl">
                     <SelectItem value="SUP-01">Al Marai Fresh (SUP-01)</SelectItem>
                     <SelectItem value="SUP-02">Global Equipments (SUP-02)</SelectItem>
                   </SelectContent>
@@ -123,7 +123,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('linked_pr')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="PR-2026-001" className="bg-surface-container-lowest/50 uppercase font-mono border-white/10-muted/20 focus:border-operational-cyan/50 h-11" {...field} />
+                  <Input placeholder="PR-2026-001" className="bg-surface-container-lowest/50 uppercase font-mono border-border-surface focus:border-operational-cyan/50 h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -137,7 +137,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('expected_date')}</FormLabel>
                 <FormControl>
-                  <Input type="date" className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11" {...field} />
+                  <Input type="date" className="bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/50 h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -154,11 +154,11 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('supplier_currency')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-container-lowest/50 border-white/10-muted/20 font-mono h-11">
+                    <SelectTrigger className="bg-surface-container-lowest/50 border-border-surface font-mono h-11">
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-low border-white/10-muted/50 backdrop-blur-xl">
+                  <SelectContent className="bg-surface-container-low border-border-surface backdrop-blur-xl">
                     <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
                     <SelectItem value="USD">USD - US Dollar</SelectItem>
                     <SelectItem value="EUR">EUR - Euro</SelectItem>
@@ -181,7 +181,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                       type="number" 
                       step="0.0001" 
                       min="0" 
-                      className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11 ps-10" 
+                      className="bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/50 h-11 ps-10" 
                       dir="ltr" 
                       {...field} 
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -199,7 +199,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
               <FormItem className="md:col-span-3 text-start">
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('general_notes')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('notes_placeholder')} className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-11" {...field} />
+                  <Input placeholder={t('notes_placeholder')} className="bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/50 h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -207,7 +207,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           />
         </div>
 
-        <div className="pt-6 border-t border-white/10-muted/20">
+        <div className="pt-6 border-t border-border-surface">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-black uppercase tracking-wide flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-operational-cyan rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.5)]" />
@@ -227,7 +227,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
           <div className="space-y-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-container-lowest/30 p-6 rounded-2xl border border-white/10-muted/10 shadow-sm transition-all hover:shadow-md hover:border-white/10-muted/30 group">
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-container-lowest/30 p-6 rounded-2xl border border-border-surface shadow-sm transition-all hover:shadow-md hover:border-border-surface group">
                 <FormField
                   control={form.control}
                   name={`items.${index}.itemId`}
@@ -235,7 +235,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                     <FormItem>
                       <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('item_sku')}</FormLabel>
                       <FormControl>
-                         <Input placeholder="IT-1" className="bg-surface-container-lowest/50 font-mono uppercase border-white/10-muted/20 focus:border-operational-cyan/50 h-10" {...inputField} />
+                         <Input placeholder="IT-1" className="bg-surface-container-lowest/50 font-mono uppercase border-border-surface focus:border-operational-cyan/50 h-10" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -252,7 +252,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                         <Input 
                           type="number" 
                           min="1" 
-                          className="bg-surface-container-lowest/50 font-mono border-white/10-muted/20 focus:border-operational-cyan/50 h-10" 
+                          className="bg-surface-container-lowest/50 font-mono border-border-surface focus:border-operational-cyan/50 h-10" 
                           dir="ltr" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -274,7 +274,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                           type="number" 
                           step="0.01" 
                           min="0" 
-                          className="bg-surface-container-lowest/50 font-mono border-white/10-muted/20 focus:border-operational-cyan/50 h-10" 
+                          className="bg-surface-container-lowest/50 font-mono border-border-surface focus:border-operational-cyan/50 h-10" 
                           dir="ltr" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -292,7 +292,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
                     <FormItem>
                       <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('line_notes')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="..." className="bg-surface-container-lowest/50 border-white/10-muted/20 focus:border-operational-cyan/50 h-10" {...inputField} />
+                        <Input placeholder="..." className="bg-surface-container-lowest/50 border-border-surface focus:border-operational-cyan/50 h-10" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -314,7 +314,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           </div>
           
           <div className="mt-10 flex flex-col md:flex-row justify-end gap-6">
-            <div className="bg-surface-container-lowest/50 px-8 py-5 rounded-2xl border border-white/10-muted/10 flex items-center justify-between gap-10 min-w-[300px] shadow-sm">
+            <div className="bg-surface-container-lowest/50 px-8 py-5 rounded-2xl border border-border-surface flex items-center justify-between gap-10 min-w-[300px] shadow-sm">
               <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">{t('supplier_total')}</span>
               <span className="text-xl font-mono font-black text-foreground" dir="ltr">
                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(supplierTotalAmount)}
@@ -329,7 +329,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-8 mt-10 border-t border-white/10-muted/20">
+        <div className="flex items-center justify-end gap-3 pt-8 mt-10 border-t border-border-surface">
           <Button
             variant="ghost"
             type="button"

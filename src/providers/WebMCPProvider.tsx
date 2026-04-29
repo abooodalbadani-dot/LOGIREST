@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { StockBalanceItemSchema, InventoryMovementSchema, DashboardKPISchema } from '@/types/inventory';
@@ -61,12 +61,19 @@ interface WebMCPNavigator extends Navigator {
 export function WebMCPProvider({ children }: { children: React.ReactNode }) {
   const [isAvailable, setIsAvailable] = useState(false);
   const [registeredTools, setRegisteredTools] = useState<Omit<WebMCPTool, 'execute'>[]>([]);
+  // Guard against React Strict Mode double-effect invocations and HMR remounts.
+  // The provider lives at the root layout and is never truly unmounted during the
+  // page's lifetime, so a ref is the correct primitive here.
+  const hasRegistered = useRef(false);
 
   useEffect(() => {
+    if (hasRegistered.current) return;
+
     const nav = navigator as WebMCPNavigator;
     if (nav.modelContext && typeof nav.modelContext.registerTool === 'function') {
       console.log('⚡ WebMCP detected, starting registration...');
       try {
+        hasRegistered.current = true;
         const modelContext = nav.modelContext;
         const toolsMetadata: Omit<WebMCPTool, 'execute'>[] = [];
         setTimeout(() => setIsAvailable(true), 0);

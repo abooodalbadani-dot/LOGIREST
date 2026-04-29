@@ -64,9 +64,9 @@ export function DocumentLineItemTable<T extends LineItem>({
   const totalCols = baseCols + extraColumns.length + (!isReadOnly && onRemoveLine ? 1 : 0);
 
   return (
-    <div className="overflow-x-auto rounded-sm border border-white/5 bg-surface-container-low shadow-2xl overflow-hidden">
+    <div className="overflow-x-auto rounded-sm border border-border-muted bg-surface-container-low shadow-2xl">
       <table className="w-full text-start border-collapse">
-        <thead className="bg-surface-container-highest/10 border-b border-white/5">
+        <thead className="bg-surface-container-highest/10 border-b border-border-muted">
           <tr>
             <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.code}</th>
             <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.name}</th>

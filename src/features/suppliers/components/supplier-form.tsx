@@ -66,7 +66,7 @@ export function SupplierForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low border border-white/10 p-8 rounded-xl shadow-lg relative">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low border border-border-surface p-8 rounded-xl shadow-lg relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -94,7 +94,7 @@ export function SupplierForm() {
                       <SelectValue placeholder={t('status')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-white/10">
+                  <SelectContent className="bg-surface-container-medium border-border-surface">
                     <SelectItem value="ACTIVE">{tc('active')}</SelectItem>
                     <SelectItem value="INACTIVE">{tc('inactive')}</SelectItem>
                   </SelectContent>
@@ -132,7 +132,7 @@ export function SupplierForm() {
             )}
           />
 
-          <h3 className="col-span-1 md:col-span-2 text-lg font-semibold border-b border-white/10 pb-2 mt-4">{t('contact_info')}</h3>
+          <h3 className="col-span-1 md:col-span-2 text-lg font-semibold border-b border-border-surface pb-2 mt-4">{t('contact_info')}</h3>
 
           <FormField
             control={form.control}
@@ -192,13 +192,13 @@ export function SupplierForm() {
 
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-6 mt-6 border-t border-white/10">
+        <div className="flex items-center justify-end gap-2 pt-6 mt-6 border-t border-border-surface">
           <Button 
             variant="outline" 
             type="button" 
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="bg-surface-container-low text-foreground border-white/10 hover:bg-surface-container-medium"
+            className="bg-surface-container-low text-foreground border-border-surface hover:bg-surface-container-medium"
           >
             {tc('cancel')}
           </Button>

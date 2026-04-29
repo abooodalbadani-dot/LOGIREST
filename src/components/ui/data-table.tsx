@@ -91,18 +91,18 @@ export function DataTable<TData, TValue>({
               onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
               }
-              className="max-w-sm ps-10 bg-surface-container-low border-white/10-muted/50"
+              className="max-w-sm ps-10 bg-surface-container-low border-border-surface"
             />
           </div>
         ) : <div />}
         {enableExport && (
-          <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high border-white/10-muted/50">
+          <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high border-border-surface">
             <Download className="me-2 h-4 w-4" />
             {t("export") || "Export"}
           </Button>
         )}
       </div>
-      <div className="rounded-xl border border-white/10-muted/50 bg-surface-container-low overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-border-surface bg-surface-container-low overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

@@ -95,7 +95,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
                   className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
                   placeholder="BR-001" 
                 />
-                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.code.message as any)}</p>}
+                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.code.message as string)}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -112,7 +112,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
                     className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
                     placeholder="اسم الفرع" 
                   />
-                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.name_ar.message as any)}</p>}
+                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.name_ar.message as string)}</p>}
                 </div>
 
                 {/* Name EN */}
@@ -128,7 +128,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
                     className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
                     placeholder="Branch Name" 
                   />
-                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.name_en.message as any)}</p>}
+                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.name_en.message as string)}</p>}
                 </div>
               </div>
             </CardContent>

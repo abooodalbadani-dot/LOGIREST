@@ -16,8 +16,8 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
   const isRtl = locale === 'ar';
 
   return (
-    <div className="bg-surface-container-low/40 rounded-2xl overflow-hidden border border-white/10-muted/20 backdrop-blur-sm flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-white/10-muted/20 flex items-center justify-between">
+    <div className="bg-surface-container-low/40 rounded-2xl overflow-hidden border border-border-surface backdrop-blur-sm flex flex-col h-full">
+      <div className="px-6 py-4 border-b border-border-surface flex items-center justify-between">
         <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
           <FileText className="w-3.5 h-3.5 text-operational-cyan" />
           {t('title')}
@@ -28,7 +28,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
           </span>
         </div>
       </div>
-      <div className="flex flex-col flex-1 divide-y divide-border">
+      <div className="flex flex-col flex-1 divide-y divide-border-surface">
         {docs.map((doc, idx) => (
           <Link 
             key={doc.id} 
@@ -48,7 +48,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
                 <span className="text-[10px] text-muted-foreground font-bold tracking-tight">
                   {doc.department || doc.warehouse}
                 </span>
-                <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-s border-white/10 ps-3">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-s border-border-surface ps-3">
                   <Timer className="w-3 h-3" />
                   {doc.date}
                 </div>
@@ -60,7 +60,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
           </Link>
         ))}
       </div>
-      <div className="p-4 bg-muted/50 text-center border-t border-white/10">
+      <div className="p-4 bg-muted/50 text-center border-t border-border-surface">
         <Link 
           href={`/${locale}/purchase-requests`}
           className="text-[9px] font-black text-operational-cyan hover:text-operational-cyan/80 uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2"

@@ -4,16 +4,19 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useContextScope } from '@/hooks/useContextScope';
 import LocaleSwitcher from '../shared/LocaleSwitcher';
 import { ContextSelector } from '../shared/ContextSelector';
+import { ThemeToggle } from '../shared/ThemeToggle';
 import { WebMCPBadge } from '@/components/shared/WebMCPBadge';
 import { useTranslations } from 'next-intl';
 import { useWebMCP } from '@/providers/WebMCPProvider';
-import { Globe, ChevronDown, LogOut, Loader2, Menu } from 'lucide-react';
+import { Globe, ChevronDown, LogOut, Loader2, Menu, Search } from 'lucide-react';
+import Link from 'next/link';
 
 interface TopbarProps {
+  locale: string;
   onMenuClick?: () => void;
 }
 
-export function Topbar({ onMenuClick }: TopbarProps) {
+export function Topbar({ locale, onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const { branchName, warehouseName, isLoading } = useContextScope();
   const { isAvailable, registeredTools } = useWebMCP();
@@ -22,7 +25,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const tc = useTranslations('common');
 
   return (
-    <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40 border-b border-white/10-muted/50">
+    <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40 border-b border-border-surface">
       <div className="flex items-center gap-4">
         {/* Mobile Menu Button */}
         <button 
@@ -68,24 +71,35 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        <Link 
+          href={`/${locale}/search`}
+          className="p-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all"
+          title={tc('search')}
+        >
+          <Search className="w-4 h-4" />
+        </Link>
         <div className="hidden lg:block">
           <WebMCPBadge />
         </div>
+        {user && <ThemeToggle />}
         <LocaleSwitcher />
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
         {user ? (
           <>
-            <div className="flex items-center gap-3 pe-2 md:pe-4">
+            <Link 
+              href={`/${locale}/profile`}
+              className="flex items-center gap-3 pe-2 md:pe-4 group"
+            >
               <div className="hidden sm:flex flex-col items-end leading-tight text-end" dir="ltr">
-                <span className="text-sm font-bold text-foreground">{user.name}</span>
+                <span className="text-sm font-bold text-foreground group-hover:text-operational-cyan transition-colors">{user.name}</span>
                 <span className="text-[10px] text-operational-cyan font-black uppercase tracking-tighter">{user.role}</span>
               </div>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-sm font-black text-operational-cyan shadow-inner transition-all group-hover:bg-surface-container">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-sm font-black text-operational-cyan shadow-inner transition-all group-hover:bg-surface-container group-hover:shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.2)]">
                 {user.name.charAt(0).toUpperCase()}
               </div>
-            </div>
+            </Link>
             <button
               onClick={() => logout()}
               className="p-2 text-muted-foreground/60 hover:text-status-error hover:bg-status-error/10 rounded-xl transition-all"

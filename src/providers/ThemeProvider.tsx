@@ -1,59 +1,58 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-
-type Theme = 'light' | 'dark';
-
-interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'next-themes';
+import { type ThemeProviderProps } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 /**
- * ThemeProvider
+ * ThemeProvider wrapper using next-themes
  * 
  * Manages the application theme (light/dark).
- * Uses cookies for server-side persistence to prevent hydration flicker.
+ * Synchronizes with cookies for server-side persistence to prevent hydration flicker.
  */
-export function ThemeProvider({ 
-  children, 
-  initialTheme = 'dark' 
-}: { 
-  children: React.ReactNode; 
-  initialTheme?: Theme;
-}) {
-  const [theme, setThemeState] = useState<Theme>(initialTheme);
-
-  // Sync theme to document element on mount and theme change
-  useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [theme]);
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    // Set cookie for server-side detection
-    document.cookie = `theme=${newTheme}; path=/; max-age=31536000; SameSite=Lax`;
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <NextThemesProvider {...props}>
+      <ThemeSync />
       {children}
-    </ThemeContext.Provider>
+    </NextThemesProvider>
   );
 }
 
+/**
+ * Component to synchronize next-themes state with cookies
+ */
+function ThemeSync() {
+  const { theme } = useNextTheme();
+  
+  useEffect(() => {
+    if (theme === 'light' || theme === 'dark') {
+      document.cookie = `theme=${theme}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+  }, [theme]);
+  
+  return null;
+}
+
+/**
+ * Custom hook to maintain compatibility with existing components
+ */
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  const { theme, setTheme, forcedTheme } = useNextTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch by only returning theme after mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  const currentTheme = (forcedTheme || theme) as 'light' | 'dark';
+
+  return {
+    theme: mounted ? currentTheme : 'dark', // Fallback to dark during SSR/Hydration
+    setTheme: (t: 'light' | 'dark') => setTheme(t),
+    toggleTheme: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+    mounted
+  };
 };

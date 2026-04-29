@@ -1,17 +1,10 @@
-import { Inter, IBM_Plex_Sans_Arabic, Tajawal } from 'next/font/google';
+import { Inter, Cairo } from 'next/font/google';
 
 export const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
-export const ibmPlexArabic = IBM_Plex_Sans_Arabic({ 
+export const cairo = Cairo({ 
   subsets: ['arabic'], 
   weight: ['400', '500', '600', '700'], 
-  variable: '--font-arabic', 
-  display: 'swap' 
-});
-
-export const tajawal = Tajawal({ 
-  subsets: ['arabic'], 
-  weight: ['400', '500', '700'], 
-  variable: '--font-tajawal', 
+  variable: '--font-cairo', 
   display: 'swap' 
 });

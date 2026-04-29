@@ -28,7 +28,7 @@ export function LotRow({
   const inputDisabled = isExpired && !canOverride;
 
   return (
-    <div className={`p-3 rounded-xl border border-white/10-muted/50 ${bgClass}`}>
+    <div className={`p-3 rounded-xl border border-border-surface ${bgClass}`}>
       <div className="flex justify-between items-center mb-2">
         <div className="flex gap-4">
           <div>
@@ -57,7 +57,7 @@ export function LotRow({
             value={allocatedQty || ''}
             onChange={(e) => onQtyChange(Number(e.target.value))}
             disabled={inputDisabled}
-            className="w-20 bg-surface-container-high border border-white/10-muted/50 text-foreground rounded-lg p-1 text-center font-mono focus:border-operational-cyan outline-none disabled:opacity-50"
+            className="w-20 bg-surface-container-high border border-border-surface text-foreground rounded-lg p-1 text-center font-mono focus:border-operational-cyan outline-none disabled:opacity-50"
           />
         </div>
       </div>

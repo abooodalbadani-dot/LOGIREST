@@ -116,7 +116,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
 
           {/* English Template Section */}
           <div className="space-y-4 p-6 rounded-xl border border-border-muted/20 bg-surface-container-low/50 backdrop-blur-sm relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-operational-cyan/40 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="absolute top-0 start-0 w-full h-[1px] bg-gradient-to-r from-transparent via-operational-cyan/40 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <div className="flex items-center gap-2 mb-2 text-operational-cyan/80 font-bold text-[10px] uppercase tracking-widest">
               <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.4)] animate-pulse" />
               English (LTR)
@@ -205,7 +205,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
               <div className="pb-6 border-b border-border-muted/10 relative">
                 <span className="text-[8px] text-muted-foreground/40 uppercase tracking-[0.2em] font-black mb-2 block">Subject Header</span>
                 <p className="text-2xl font-bold text-foreground tracking-tight leading-tight">{subject || '...'}</p>
-                <div className="absolute bottom-0 left-0 w-12 h-1 bg-operational-cyan/20" />
+                <div className="absolute bottom-0 start-0 w-12 h-1 bg-operational-cyan/20" />
               </div>
               <div className="relative">
                 <span className="text-[8px] text-muted-foreground/40 uppercase tracking-[0.2em] font-black mb-3 block">Message Body</span>

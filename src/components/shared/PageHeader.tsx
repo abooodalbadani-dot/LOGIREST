@@ -13,9 +13,7 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, actions, status, showStatus, className }: PageHeaderProps) {
   return (
     <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 relative ${className || ''}`}>
-      {/* Decorative accent */}
-      <div className="absolute -left-8 top-0 bottom-8 w-1 bg-gradient-to-b from-operational-cyan/50 to-transparent opacity-50 rounded-r-full" />
-      
+
       <div className="space-y-1.5">
         <div className="flex items-center gap-4">
           <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight text-foreground uppercase italic leading-none">

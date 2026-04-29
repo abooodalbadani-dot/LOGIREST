@@ -22,7 +22,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
         <ChevronLeft className="w-4 h-4 rtl:rotate-180 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 transition-transform" />
       </button>
       
-      <div className="h-9 px-4 flex items-center bg-surface-container-lowest/50 border border-white/[0.03] backdrop-blur-md rounded-xl text-[10px] font-black uppercase tracking-[0.15em] text-operational-cyan shadow-inner">
+      <div className="h-9 px-4 flex items-center bg-surface-container-lowest/50 border border-border-muted backdrop-blur-md rounded-xl text-[10px] font-black uppercase tracking-[0.15em] text-operational-cyan shadow-inner">
         <span dir="ltr">{page}</span>
         <span className="mx-2 text-muted-foreground/30 font-light text-[8px]">/</span>
         <span className="text-muted-foreground/60" dir="ltr">{totalPages || 1}</span>

@@ -1,23 +1,17 @@
 'use client';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWarehouseScope } from '@/providers/WarehouseScopeProvider';
-import { Lock, AlertTriangle, Menu, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { Lock, AlertTriangle } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState('ar');
+  const locale = useLocale();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isLocked } = useWarehouseScope();
   const t = useTranslations('common');
-  
-  useEffect(() => {
-    // Determine locale from HTML lang or fallback
-    const htmlLang = document.documentElement.lang || 'ar';
-    setLocale(htmlLang);
-  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -32,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         
-        <Topbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Topbar locale={locale} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         
         <div className="flex flex-1 overflow-hidden relative">
           {/* Mobile Sidebar Overlay */}
@@ -46,17 +40,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Sidebar Wrapper */}
           <div className={cn(
-            "fixed inset-y-0 start-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto",
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            "fixed inset-y-0 start-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0"
           )}>
             <Sidebar locale={locale} onClose={() => setIsSidebarOpen(false)} />
           </div>
 
           <main className={cn(
-            "flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-background transition-all duration-300",
+            "flex-1 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300",
             isLocked && 'pointer-events-none grayscale-[0.3] opacity-90'
           )}>
-            {children}
+            <div className="w-full min-h-screen flex justify-center">
+              <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+                {children}
+              </div>
+            </div>
           </main>
         </div>
         

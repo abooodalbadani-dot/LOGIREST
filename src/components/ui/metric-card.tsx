@@ -58,13 +58,13 @@ export function MetricCard({
     )}>
       {/* Background Icon Decoration */}
       <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity transform group-hover:scale-110 duration-500">
-        {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as any, { className: "w-24 h-24" })) : null}
+        {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: "w-24 h-24" })) : null}
       </div>
 
       <CardHeader className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div className={cn("p-2 rounded-lg", styles.bg)}>
-            {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as any, { className: cn("w-5 h-5", styles.text) })) : null}
+            {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: cn("w-5 h-5", styles.text) })) : null}
           </div>
           {trend && (
             <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
@@ -74,11 +74,11 @@ export function MetricCard({
         </div>
 
         <div className="space-y-1">
-          <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+          <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60" dir="auto" style={{ unicodeBidi: 'isolate' }}>
             {label}
           </CardDescription>
-          <CardTitle className={cn("text-4xl font-display font-bold tracking-tight", styles.text)} dir={dir}>
-            {value}
+          <CardTitle className={cn("text-4xl font-display font-bold tracking-tight", styles.text)} dir="auto" style={{ unicodeBidi: 'isolate' }}>
+            <span dir="ltr" className="font-mono">{value}</span>
           </CardTitle>
         </div>
       </CardHeader>

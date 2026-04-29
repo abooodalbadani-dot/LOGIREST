@@ -50,14 +50,15 @@ function DialogContent({
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Popup
-        data-slot="dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-surface-container-low p-4 text-sm text-foreground shadow-2xl duration-100 outline-none border border-white/10-muted/50 sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className
-        )}
-        {...props}
-      >
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4 sm:p-0">
+        <DialogPrimitive.Popup
+          data-slot="dialog-content"
+          className={cn(
+            "pointer-events-auto grid w-full gap-4 rounded-xl bg-surface-container-low p-4 text-sm text-foreground shadow-2xl duration-100 outline-none border border-border-surface max-w-lg mx-auto data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            className
+          )}
+          {...props}
+        >
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
@@ -76,6 +77,7 @@ function DialogContent({
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>
+      </div>
     </DialogPortal>
   )
 }
@@ -102,7 +104,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl bg-surface-container-lowest/50 p-4 sm:flex-row sm:justify-end border-t border-white/10-muted/50",
+        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl bg-surface-container-lowest/50 p-4 sm:flex-row sm:justify-end border-t border-border-surface",
         className
       )}
       {...props}
