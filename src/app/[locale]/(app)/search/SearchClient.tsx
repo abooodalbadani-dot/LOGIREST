@@ -144,7 +144,7 @@ export default function SearchClient() {
                </div>
             </div>
             
-            <div className="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-2xl border border-surface-variant/10 shadow-inner">
+            <div className="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-sm border border-surface-variant/10">
                <Command className="w-4 h-4 text-operational-cyan" />
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60/60">
                   {t('shortcut_hint')}
@@ -160,10 +160,10 @@ export default function SearchClient() {
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
                placeholder={t('placeholder')}
-               className="h-24 ps-20 pe-40 rounded-[2.5rem] bg-surface-container-low border-none shadow-2xl shadow-operational-cyan/5 text-xl font-bold placeholder:text-muted-foreground/60/30 focus-visible:ring-4 focus-visible:ring-operational-cyan/10 transition-all outline-none"
+               className="h-24 ps-20 pe-40 rounded-3xl bg-surface-container-low border border-border-surface text-xl font-bold placeholder:text-muted-foreground/60/30 focus-visible:ring-4 focus-visible:ring-operational-cyan/10 transition-all outline-none"
             />
             <div className="absolute inset-y-0 end-0 pe-4 flex items-center">
-               <Button type="submit" className="h-16 px-10 rounded-[1.8rem] bg-surface-ledger hover:bg-surface-ledger/90 text-white font-black text-sm uppercase tracking-widest gap-3 shadow-xl transition-all active:scale-95">
+               <Button type="submit" className="h-16 px-10 rounded-2xl bg-surface-ledger hover:bg-surface-ledger/90 text-white font-black text-sm uppercase tracking-widest gap-3 transition-all hover:scale-[0.98] active:scale-95">
                   {t('execute')}
                   <ArrowRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
                </Button>
@@ -176,7 +176,7 @@ export default function SearchClient() {
          
          {/* Filter Sidebar */}
          <div className="w-full lg:w-[320px] space-y-6">
-            <Card className="p-8 rounded-[2.5rem] border-surface-variant/10 bg-surface-container-low/40 shadow-xl">
+            <Card className="p-8 rounded-3xl border-surface-variant/10 bg-surface-container-low/40">
                <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
                      <Filter className="w-5 h-5 text-operational-cyan" />
@@ -213,7 +213,7 @@ export default function SearchClient() {
                </div>
             </Card>
 
-            <Card className="p-8 rounded-[2.5rem] border-surface-variant/10 bg-surface-container-low/40">
+            <Card className="p-8 rounded-3xl border-surface-variant/10 bg-surface-container-low/40">
                <div className="flex items-center gap-3 mb-6">
                   <Clock className="w-4 h-4 text-status-warning" />
                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em]">{t('recent_searches')}</h4>
@@ -233,7 +233,7 @@ export default function SearchClient() {
          <div className="flex-1 space-y-12">
             {isLoading ? (
                <div className="flex flex-col items-center justify-center py-40 gap-6">
-                  <div className="w-20 h-20 border-4 border-operational-cyan/10 border-t-operational-cyan rounded-full animate-spin shadow-2xl shadow-operational-cyan/20" />
+                  <div className="w-20 h-20 border-4 border-operational-cyan/10 border-t-operational-cyan rounded-full animate-spin" />
                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-operational-cyan animate-pulse">
                      {t('syncing')}
                   </p>
@@ -245,7 +245,7 @@ export default function SearchClient() {
                   return (
                     <div key={section.id} className="space-y-6">
                        <div className="flex items-center gap-4 px-4">
-                          <div className={`w-10 h-10 rounded-2xl bg-surface-container-low flex items-center justify-center shadow-xl`}>
+                          <div className={`w-10 h-10 rounded-2xl bg-surface-container-low flex items-center justify-center border border-surface-variant/10`}>
                              <section.icon className={`w-5 h-5 ${section.color}`} />
                           </div>
                           <div className="flex flex-col gap-0.5">
@@ -257,9 +257,9 @@ export default function SearchClient() {
 
                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {sectionResults.map(result => (
-                            <a key={result.id} href={result.link} className="group flex flex-col p-8 rounded-[2.5rem] bg-surface-container-low/60 border border-surface-variant/10 hover:bg-surface-container-low hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden">
+                            <a key={result.id} href={result.link} className="group flex flex-col p-8 rounded-3xl bg-surface-container-low/60 border border-surface-variant/10 hover:bg-surface-container-low hover:scale-[0.98] active:scale-95 transition-all duration-500 relative overflow-hidden">
                                <div className="flex items-start justify-between mb-8">
-                                  <div className="w-16 h-16 rounded-[1.5rem] bg-surface-container-highest flex items-center justify-center border border-surface-variant/10 shadow-inner">
+                                  <div className="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center border border-surface-variant/10">
                                      {result.type === 'item' ? <Package className="w-7 h-7 text-operational-cyan/40" /> : <Database className="w-7 h-7 text-status-success/40" />}
                                   </div>
                                   {result.status && (
@@ -292,7 +292,7 @@ export default function SearchClient() {
                })
             ) : query ? (
                <div className="flex flex-col items-center justify-center py-40 gap-8 text-center max-w-md mx-auto">
-                  <div className="w-24 h-24 rounded-[2.5rem] bg-surface-container-low flex items-center justify-center shadow-inner">
+                  <div className="w-24 h-24 rounded-3xl bg-surface-container-low flex items-center justify-center border border-border-surface">
                      <AlertCircle className="w-10 h-10 text-status-error/20" />
                   </div>
                   <div className="space-y-2">
@@ -301,7 +301,7 @@ export default function SearchClient() {
                         {t('no_matches_desc', { query })}
                      </p>
                   </div>
-                  <Button variant="outline" onClick={() => setSearchTerm('')} className="h-12 px-8 rounded-2xl border-surface-variant/10 bg-surface-container-low text-[10px] font-black uppercase tracking-widest">
+                  <Button variant="outline" onClick={() => setSearchTerm('')} className="h-12 px-8 rounded-sm border-surface-variant/10 bg-surface-container-low text-[10px] font-black uppercase tracking-widest hover:scale-[0.98] active:scale-95">
                      {t('reset')}
                   </Button>
                </div>
@@ -312,8 +312,8 @@ export default function SearchClient() {
                     { title: t('tips.transactions'), icon: FileText, desc: t('tips.transactions_desc') },
                     { title: t('tips.suppliers'), icon: Truck, desc: t('tips.suppliers_desc') },
                   ].map((tip, i) => (
-                    <div key={i} className="p-10 rounded-[3rem] bg-surface-container-low/40 border border-surface-variant/10 space-y-6 text-center hover:bg-surface-container-low transition-colors group">
-                       <div className="w-16 h-16 rounded-[1.5rem] bg-surface-container-highest flex items-center justify-center mx-auto shadow-inner group-hover:scale-110 transition-transform">
+                    <div key={i} className="p-10 rounded-3xl bg-surface-container-low/40 border border-surface-variant/10 space-y-6 text-center hover:bg-surface-container-low transition-colors group">
+                       <div className="w-16 h-16 rounded-xl bg-surface-container-highest flex items-center justify-center mx-auto border border-border-surface group-hover:scale-110 transition-transform">
                           <tip.icon className="w-8 h-8 text-operational-cyan/40" />
                        </div>
                        <div className="space-y-2">

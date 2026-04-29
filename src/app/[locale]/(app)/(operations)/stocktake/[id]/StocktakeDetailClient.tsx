@@ -124,7 +124,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
         <PageHeader
           title={
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center border border-white/5 shadow-xl">
+              <div className="w-12 h-12 rounded-2xl bg-surface-container-low flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-cyan-500" />
               </div>
               <div className="flex flex-col">
@@ -132,7 +132,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                   {session.session_number}
                 </span>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-cyan-500/10 rounded-md border border-cyan-500/20">
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-cyan-500/10 rounded-md">
                     <Clock className="w-2.5 h-2.5 text-cyan-500" />
                     <span dir="ltr" className="text-[9px] font-black text-cyan-500 tabular-nums uppercase">
                       {format(new Date(session.snapshot_at), 'MMM dd, HH:mm')}
@@ -152,7 +152,6 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                 <Button
                   onClick={() => setIsPostDialogOpen(true)}
                   disabled={!allCounted || hasUnresolvedVariances || postStocktake.isPending}
-                  className="h-12 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-emerald-900/20 disabled:opacity-20 group"
                 >
                   <CheckCircle className="w-4 h-4 me-2 group-hover:scale-110 transition-transform" />
                   {t('post_session')}
@@ -165,7 +164,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
 
       {/* Session Metadata Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
               <Warehouse className="w-5 h-5 text-cyan-500/60" />
@@ -180,7 +179,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
           </div>
         </div>
 
-        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
               <Info className="w-5 h-5 text-amber-500/60" />
@@ -195,7 +194,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
           </div>
         </div>
 
-        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
               <User className="w-5 h-5 text-emerald-500/60" />
@@ -210,7 +209,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
           </div>
         </div>
 
-        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] border border-white/5 flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
+        <div className="bg-surface-container-low/40 p-6 rounded-[2rem] flex flex-col gap-4 group hover:bg-surface-container-low transition-all">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
               <ChevronRight className="w-5 h-5 text-rose-500/60" />
@@ -230,18 +229,18 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
       </div>
 
       {isActive && (
-        <div className="rounded-[2rem] overflow-hidden shadow-2xl">
+        <div className="rounded-[2rem] overflow-hidden">
           <LockBanner lockState={lockState} />
         </div>
       )}
 
       {/* Count Sheet Interface */}
-      <div className="bg-surface-container-low/30 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl relative">
+      <div className="bg-surface-container-low/30 rounded-[2.5rem] overflow-hidden relative">
         <div className="absolute top-0 end-0 p-8 opacity-[0.02] pointer-events-none">
           <BarChart3 className="w-48 h-48" />
         </div>
 
-        <div className="p-10 border-b border-white/5 bg-surface-container-low/50 flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+        <div className="p-10 bg-surface-container-low/50 flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="w-2 h-6 bg-cyan-500 rounded-full" />
@@ -252,13 +251,13 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
 
           <div className="flex items-center gap-6">
             {hasUnresolvedVariances && (
-              <div className="flex items-center gap-3 px-6 py-3 bg-rose-500/5 border border-rose-500/20 rounded-2xl animate-in fade-in zoom-in duration-500">
-                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.8)]" />
+              <div className="flex items-center gap-3 px-6 py-3 bg-rose-500/5 rounded-2xl animate-in fade-in zoom-in duration-500">
+                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                 <span className="text-rose-400 text-[10px] font-black uppercase tracking-[0.15em]">{t('variance_reason_required')}</span>
                 <AlertTriangle className="w-3.5 h-3.5 text-rose-500/60" />
               </div>
             )}
-            <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest/20 rounded-xl border border-white/5">
+            <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest/20 rounded-xl">
               <Save className="w-3.5 h-3.5 text-muted-foreground/40" />
               <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">{t('autosave_active')}</span>
             </div>
@@ -268,18 +267,18 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-surface-container-high/30 text-muted-foreground/40 text-[9px] uppercase tracking-[0.4em] font-black border-b border-white/5">
-                <th className="px-8 py-6 text-start w-40">{t('uid')}</th>
-                <th className="px-8 py-6 text-start">{tCommon('item')}</th>
-                <th className="px-8 py-6 text-end w-32">{t('snapshot_qty')}</th>
-                <th className="px-8 py-6 text-center w-48">{t('counted_qty')}</th>
-                <th className="px-8 py-6 text-end w-32">{t('variance')}</th>
-                <th className="px-8 py-6 text-start min-w-[300px]">{t('variance_reason')}</th>
-                <th className="px-8 py-6 text-center w-24">{t('sync')}</th>
+              <tr className="bg-surface-container-high/30 text-muted-foreground/60 text-[11px] uppercase tracking-widest font-bold">
+                <th className="px-8 h-14 text-start w-40">{t('uid')}</th>
+                <th className="px-8 h-14 text-start">{tCommon('item')}</th>
+                <th className="px-8 h-14 text-end w-32">{t('snapshot_qty')}</th>
+                <th className="px-8 h-14 text-center w-48">{t('counted_qty')}</th>
+                <th className="px-8 h-14 text-end w-32">{t('variance')}</th>
+                <th className="px-8 h-14 text-start min-w-[300px]">{t('variance_reason')}</th>
+                <th className="px-8 h-14 text-center w-24 pe-8">{t('sync')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {localCounts.map(count => {
+            <tbody className="divide-none">
+              {localCounts.map((count, idx) => {
                 const variance = count.local_counted_qty !== null
                   ? count.local_counted_qty - count.snapshot_qty
                   : null;
@@ -290,31 +289,31 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                 const needsReason = variance !== null && variance !== 0 && !count.local_variance_reason;
 
                 return (
-                  <tr key={count.id} className="hover:bg-surface-container-high/20 transition-all group border-s-4 border-transparent hover:border-cyan-500/40">
-                    <td className="px-8 py-7">
-                      <span dir="ltr" className="font-mono text-[11px] font-black text-cyan-500/30 group-hover:text-cyan-500 transition-colors tracking-widest">{count.item.code}</span>
+                  <tr key={count.id} className={`transition-all h-14 ${idx % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] group`}>
+                    <td className="px-8">
+                      <span dir="ltr" className="font-mono text-[11px] font-bold text-cyan-500/30 group-hover:text-cyan-500 transition-colors tracking-widest">{count.item.code}</span>
                     </td>
-                    <td className="px-8 py-7">
-                      <div className="flex flex-col gap-1">
-                        <div className="font-black text-foreground text-sm tracking-tight leading-none group-hover:text-cyan-500/90 transition-colors">
+                    <td className="px-8">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="font-bold text-foreground text-[14px] tracking-tight leading-none group-hover:text-cyan-500/90 transition-colors">
                           {locale === 'ar' ? count.item.name_ar : count.item.name_en}
                         </div>
                         <div className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.1em]">{count.item.category?.name_en || 'General'}</div>
                       </div>
                     </td>
-                    <td className="px-8 py-7 text-end">
-                      <div className="flex flex-col items-end gap-1">
-                        <span dir="ltr" className="font-mono text-sm font-black text-foreground/40 tabular-nums">
+                    <td className="px-8 text-end">
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span dir="ltr" className="font-mono text-[14px] font-bold text-foreground/40 tabular-nums">
                           {count.snapshot_qty}
                         </span>
                         <span className="text-[8px] font-bold text-muted-foreground/20 uppercase tracking-widest">{t('expected')}</span>
                       </div>
                     </td>
-                    <td className="px-8 py-7">
+                    <td className="px-8">
                       {isPosted ? (
                         <div className="flex justify-center">
-                          <div className="px-6 py-2 bg-surface-container-highest/20 rounded-xl border border-white/5">
-                            <span dir="ltr" className="font-mono text-lg font-black text-cyan-500 tabular-nums">
+                          <div className="px-6 py-2 bg-surface-container-highest/10 rounded-xl">
+                            <span dir="ltr" className="font-mono text-[18px] font-black text-cyan-500 tabular-nums">
                               {count.counted_qty ?? '—'}
                             </span>
                           </div>
@@ -338,15 +337,15 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                             }}
                             dir="ltr"
                             placeholder="0"
-                            className="w-32 bg-surface-container-highest/20 border border-white/10 text-foreground rounded-[1.25rem] px-6 py-4 text-center font-mono font-black text-xl focus:ring-4 focus:ring-cyan-500/20 focus:outline-none transition-all group-hover/input:bg-surface-container-highest/40 placeholder:text-muted-foreground/10 group-hover/input:border-cyan-500/30"
+                            className="w-32 bg-surface-container-highest/30 text-foreground rounded-[1.25rem] px-6 py-4 text-center font-mono font-black text-[20px] focus:ring-4 focus:ring-cyan-500/10 focus:outline-none transition-all group-hover/input:bg-surface-container-highest/40 placeholder:text-muted-foreground/10"
                           />
                         </div>
                       )}
                     </td>
-                    <td className="px-8 py-7 text-end">
+                    <td className="px-8 text-end">
                       {variance !== null ? (
-                        <div className={`flex flex-col items-end gap-1 ${varianceColor}`}>
-                          <span dir="ltr" className="font-mono text-lg font-black tabular-nums transition-all">
+                        <div className={`flex flex-col items-end gap-0.5 ${varianceColor}`}>
+                          <span dir="ltr" className="font-mono text-[18px] font-black tabular-nums transition-all">
                             {variance > 0 ? `+${variance}` : variance}
                           </span>
                           <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-50">{t('delta')}</span>
@@ -355,7 +354,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                         <span className="text-muted-foreground/10 font-mono text-lg">—</span>
                       )}
                     </td>
-                    <td className="px-8 py-7">
+                    <td className="px-8">
                       {!isPosted && variance !== 0 && count.local_counted_qty !== null ? (
                         <div className="relative group/reason">
                           <input
@@ -365,7 +364,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                               ? { ...c, local_variance_reason: e.target.value }
                               : c))}
                             placeholder={t('variance_reason')}
-                            className={`w-full bg-surface-container-highest/20 border border-white/5 rounded-2xl px-6 py-3 text-[11px] font-bold tracking-wide focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all hover:bg-surface-container-highest/40 placeholder:text-muted-foreground/20 ${needsReason ? 'ring-2 ring-rose-500/30 border-rose-500/40' : ''}`}
+                            className={`w-full bg-surface-container-highest/20 rounded-2xl px-6 py-3 text-[11px] font-bold tracking-wide focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all hover:bg-surface-container-highest/40 placeholder:text-muted-foreground/20 ${needsReason ? 'ring-2 ring-rose-500/30' : ''}`}
                           />
                           {needsReason && (
                             <div className="absolute -top-2 -end-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
@@ -379,7 +378,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                         </div>
                       )}
                     </td>
-                    <td className="px-8 py-7 text-center">
+                    <td className="px-8 text-center">
                       <div className="flex items-center justify-center">
                         {count.is_saving ? (
                           <div className="relative w-6 h-6">
@@ -387,7 +386,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string; locale: 'ar'
                             <div className="absolute inset-0 border-2 border-t-cyan-500 rounded-full animate-spin" />
                           </div>
                         ) : count.is_saved ? (
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 animate-in zoom-in duration-300">
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in duration-300">
                             <CheckCircle className="w-4 h-4 text-emerald-400" />
                           </div>
                         ) : (

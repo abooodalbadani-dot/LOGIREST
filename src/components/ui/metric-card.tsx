@@ -53,7 +53,7 @@ export function MetricCard({
 
   return (
     <Card className={cn(
-      "bg-surface-container-low border-none rounded-sm overflow-hidden relative group transition-all hover:bg-surface-container text-foreground shadow-lg shadow-black/20",
+      "bg-surface-container-lowest border-none rounded-[2rem] overflow-hidden relative group transition-all hover:bg-surface-container-low/50 hover:ambient-shadow text-foreground",
       className
     )}>
       {/* Background Icon Decoration */}
@@ -63,7 +63,7 @@ export function MetricCard({
 
       <CardHeader className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <div className={cn("p-2 rounded-lg", styles.bg)}>
+          <div className={cn("p-2.5 rounded-xl transition-colors group-hover:bg-background", styles.bg)}>
             {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: cn("w-5 h-5", styles.text) })) : null}
           </div>
           {trend && (
@@ -74,7 +74,7 @@ export function MetricCard({
         </div>
 
         <div className="space-y-1">
-          <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60" dir="auto" style={{ unicodeBidi: 'isolate' }}>
+          <CardDescription className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60" dir="auto" style={{ unicodeBidi: 'isolate' }}>
             {label}
           </CardDescription>
           <CardTitle className={cn("text-4xl font-display font-bold tracking-tight", styles.text)} dir="auto" style={{ unicodeBidi: 'isolate' }}>
@@ -83,8 +83,6 @@ export function MetricCard({
         </div>
       </CardHeader>
 
-      {/* Bottom Glow */}
-      <div className={cn("absolute bottom-0 start-0 h-[1px] w-full bg-gradient-to-r to-transparent", styles.glow)} />
     </Card>
   );
 }

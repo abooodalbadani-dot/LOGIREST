@@ -161,7 +161,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[13px] tracking-wide py-3 rounded-xl mt-4 flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[13px] tracking-wide py-3 rounded-xl mt-4 flex items-center justify-center gap-2 transition-all hover:scale-[0.98] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -201,7 +201,7 @@ export default function LoginPage() {
 
           <div className="mt-8 pt-4 border-t border-border-muted/30 flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan" />
               <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wider">{t('login.system_online')}</span>
             </div>
             <span className="text-[10px] text-muted-foreground/60/50 font-mono">v3.1.04</span>

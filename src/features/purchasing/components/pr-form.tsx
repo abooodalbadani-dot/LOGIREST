@@ -76,12 +76,13 @@ export function PurchaseRequestForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative pb-20">
+        <h3 className="text-xl font-black mb-4 text-operational-cyan uppercase tracking-wider">{t('title')}</h3>
         
         {/* Step 1: Request Header */}
-        <div className="bg-surface-container-low p-8 rounded-3xl border border-surface-container-high/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center gap-4 mb-8 border-b border-surface-container-high/50 pb-6">
-             <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan border border-operational-cyan/20 shadow-sm">
+        <div className="bg-surface-container-low p-8 rounded-3xl relative">
+          <div className="flex items-center gap-4 mb-8 pb-6">
+             <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan">
                 <FileText className="w-5 h-5" />
              </div>
              <div>
@@ -102,11 +103,11 @@ export function PurchaseRequestForm() {
                   </FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl shadow-inner shadow-black/5">
+                      <SelectTrigger className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl">
                         <SelectValue placeholder="Select Branch" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-xl">
+                    <SelectContent className="bg-surface-container-highest border-none rounded-xl">
                       <SelectItem value="1" className="text-[11px] font-bold">Riyadh Main Kitchen</SelectItem>
                       <SelectItem value="2" className="text-[11px] font-bold">Jeddah Coastal Branch</SelectItem>
                     </SelectContent>
@@ -126,7 +127,7 @@ export function PurchaseRequestForm() {
                     Expected Arrival
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl shadow-inner shadow-black/5" {...field} />
+                    <Input type="date" className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl" {...field} />
                   </FormControl>
                   <FormMessage className="text-[9px] font-black uppercase" />
                 </FormItem>
@@ -140,7 +141,7 @@ export function PurchaseRequestForm() {
                 <FormItem className="lg:col-span-3">
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-3">Workflow Narrative / Notes</FormLabel>
                   <FormControl>
-                    <Input placeholder="E.g., Urgent restock for upcoming banquet event..." className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl shadow-inner shadow-black/5" {...field} />
+                    <Input placeholder="E.g., Urgent restock for upcoming banquet event..." className="bg-surface-container-high/30 border-none h-12 px-5 text-[11px] font-bold rounded-xl" {...field} />
                   </FormControl>
                   <FormMessage className="text-[9px] font-black uppercase" />
                 </FormItem>
@@ -153,7 +154,7 @@ export function PurchaseRequestForm() {
         <div className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-4">
-               <div className="p-2.5 rounded-xl bg-status-warning/10 text-status-warning border border-status-warning/20 shadow-sm">
+               <div className="p-2.5 rounded-xl bg-status-warning/10 text-status-warning">
                   <Calculator className="w-4 h-4" />
                </div>
                <div>
@@ -175,7 +176,7 @@ export function PurchaseRequestForm() {
 
           <div className="grid grid-cols-1 gap-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-6 items-end bg-surface-container-low/50 p-6 rounded-2xl border border-surface-container-high/20 shadow-sm group hover:bg-surface-container transition-all">
+              <div key={field.id} className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-6 items-end bg-surface-container-low/50 p-6 rounded-2xl group hover:bg-surface-container transition-all">
                 <FormField<PurchaseRequestFormValues, `items.${number}.itemId`>
                   control={form.control}
                   name={`items.${index}.itemId`}
@@ -183,7 +184,7 @@ export function PurchaseRequestForm() {
                     <FormItem>
                       <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Item Identity / SKU</FormLabel>
                       <FormControl>
-                         <Input placeholder="e.g. IT-001" className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner font-mono uppercase tracking-widest" {...inputField} />
+                         <Input placeholder="e.g. IT-001" className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg font-mono uppercase tracking-widest" {...inputField} />
                       </FormControl>
                       <FormMessage className="text-[8px] font-black" />
                     </FormItem>
@@ -199,7 +200,7 @@ export function PurchaseRequestForm() {
                       <FormControl>
                         <Input 
                           type="number" 
-                          className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner font-mono" 
+                          className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg font-mono" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
                         />
@@ -219,7 +220,7 @@ export function PurchaseRequestForm() {
                         <Input 
                           type="number" 
                           step="0.01" 
-                          className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner font-mono" 
+                          className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg font-mono" 
                           {...inputField} 
                           onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
                         />
@@ -236,7 +237,7 @@ export function PurchaseRequestForm() {
                     <FormItem>
                       <FormLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Line Context</FormLabel>
                       <FormControl>
-                        <Input placeholder="Specific usage notes..." className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg shadow-inner" {...inputField} />
+                        <Input placeholder="Specific usage notes..." className="bg-surface-container-high/30 border-none h-11 px-4 text-[11px] font-bold rounded-lg" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -247,7 +248,7 @@ export function PurchaseRequestForm() {
                   type="button" 
                   variant="ghost" 
                   size="icon" 
-                  className="w-10 h-10 rounded-xl text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all border border-transparent hover:border-status-error/20"
+                  className="w-10 h-10 rounded-xl text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all"
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                 >
@@ -258,9 +259,9 @@ export function PurchaseRequestForm() {
           </div>
           
           {/* Summary Calculations */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-surface-container-low rounded-3xl border border-surface-container-high/20 shadow-inner">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-surface-container-low rounded-2xl">
              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-operational-cyan/10 flex items-center justify-center border border-operational-cyan/20">
+                <div className="w-12 h-12 rounded-2xl bg-operational-cyan/10 flex items-center justify-center">
                    <Package className="w-6 h-6 text-operational-cyan" />
                 </div>
                 <div>
@@ -282,7 +283,7 @@ export function PurchaseRequestForm() {
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t border-surface-container-high/50">
+        <div className="flex flex-col md:flex-row items-center justify-end gap-6 pt-12 mt-12">
            <Button
             variant="ghost"
             type="button"
@@ -305,8 +306,8 @@ export function PurchaseRequestForm() {
              <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 md:flex-none h-12 px-10 bg-operational-cyan hover:bg-operational-cyan/90 text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_15px_35px_rgba(var(--operational-cyan-rgb),0.3)] hover:shadow-[0_20px_45px_rgba(var(--operational-cyan-rgb),0.45)]"
-              >
+                className="flex-1 md:flex-none h-12 px-10 bg-operational-cyan hover:brightness-110 text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95"
+             >
                 {isSubmitting ? "Processing..." : (
                   <>
                     <Send className="w-3.5 h-3.5 me-2" />

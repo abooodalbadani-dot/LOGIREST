@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
 
   if (!token && !isSuccess) {
     return (
-      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl text-center">
+      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 text-center">
         <div className="w-16 h-16 bg-status-error/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-status-error/20">
           <AlertCircle className="w-8 h-8 text-status-error" />
         </div>
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
+      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute -top-24 -start-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
         
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+    <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
       {/* Glow effect */}
       <div className="absolute -top-24 -end-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
 
@@ -179,7 +179,7 @@ export default function ResetPasswordPage() {
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-full h-12 mt-2 text-base font-bold bg-primary hover:brightness-110 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70 rounded-xl"
+            className="w-full h-12 mt-2 text-base font-bold bg-primary hover:brightness-110 text-primary-foreground transition-all hover:scale-[0.98] active:scale-95 disabled:opacity-70 rounded-xl"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />

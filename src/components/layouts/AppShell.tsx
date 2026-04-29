@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background">
       <div className="flex flex-1 flex-col overflow-hidden relative">
         {isLocked && (
-          <div className="bg-status-warning/10 border-b border-status-warning/20 px-4 py-1.5 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 z-[60]">
+          <div className="bg-status-warning/10 px-4 py-1.5 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 z-[60]">
             <Lock className="w-3.5 h-3.5 text-status-warning" />
             <span className="text-[11px] font-bold text-status-warning uppercase tracking-widest">
               {t('warehouse_locked')}

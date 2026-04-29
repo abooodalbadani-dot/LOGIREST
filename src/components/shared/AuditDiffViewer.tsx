@@ -21,30 +21,35 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
   };
 
   return (
-    <div className="overflow-x-auto border border-border-surface rounded-xl bg-surface-container-low">
-      <table className="w-full text-sm text-start">
-        <thead className="bg-surface-container-high text-muted-foreground border-b border-border-surface">
+    <div className="overflow-x-auto rounded-[2.5rem] bg-surface-container-low shadow-sm">
+      <table className="w-full text-start border-collapse">
+        <thead className="bg-surface-container-high/50 text-muted-foreground">
           <tr>
-            <th className="px-4 py-3 font-medium">Field</th>
-            <th className="px-4 py-3 font-medium">Old Value</th>
-            <th className="px-4 py-3 font-medium">New Value</th>
+            <th className="px-6 h-14 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">Field</th>
+            <th className="px-6 h-14 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">Old Value</th>
+            <th className="px-6 h-14 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">New Value</th>
           </tr>
         </thead>
         <tbody>
           {changes.map((change, i) => {
             const isAdded = change.old_value === null && change.new_value !== null;
             const isDeleted = change.old_value !== null && change.new_value === null;
-            const bgClass = isDeleted ? 'bg-status-error/10' : isAdded ? 'bg-status-success/10' : 'bg-status-warning/10';
+            
+            // Tonal indicator based on type of change
+            const indicatorClass = isDeleted ? 'bg-status-error/20' : isAdded ? 'bg-status-success/20' : 'bg-status-warning/20';
             
             return (
-              <tr key={i} className={`border-b border-border-surface ${bgClass}`}>
-                <td className="px-4 py-3 font-mono text-muted-foreground max-w-[150px] truncate" title={change.field}>
-                  {change.field}
+              <tr key={i} className="transition-all hover:bg-primary/[0.04] h-14">
+                <td className="px-6 font-mono text-[11px] text-muted-foreground/60 max-w-[150px] truncate" title={change.field}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-1.5 h-1.5 rounded-full ${indicatorClass}`} />
+                    {change.field}
+                  </div>
                 </td>
-                <td className="px-4 py-3 break-all">
+                <td className="px-6 text-[11px] font-medium text-foreground/80 break-all">
                   {renderValue(change.old_value)}
                 </td>
-                <td className="px-4 py-3 break-all">
+                <td className="px-6 text-[11px] font-medium text-foreground/80 break-all">
                   {renderValue(change.new_value)}
                 </td>
               </tr>

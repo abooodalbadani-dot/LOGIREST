@@ -67,16 +67,17 @@ export function WarehouseForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low border border-border-surface p-8 rounded-xl shadow-lg relative">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-lowest p-8 rounded-[2rem] relative">
+        <h3 className="text-xl font-black mb-4 text-operational-cyan uppercase tracking-wider">{t('title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('code')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('code')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. WH-001" className="bg-surface-container-medium" {...field} />
+                  <Input placeholder="e.g. WH-001" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -88,14 +89,14 @@ export function WarehouseForm() {
             name="branchId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('parent_branch')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('parent_branch')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={branchesLoading}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-container-medium">
+                    <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl">
                        {branchesLoading ? <Skeleton className="h-4 w-20" /> : <SelectValue placeholder={t('select_branch')} />}
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-border-surface">
+                  <SelectContent className="bg-surface-container-low border-none">
                     {branches?.map(branch => (
                        <SelectItem key={branch.id} value={branch.id}>{branch.nameEn}</SelectItem>
                     ))}
@@ -111,9 +112,9 @@ export function WarehouseForm() {
             name="nameEn"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('name_en')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('name_en')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Main Warehouse" className="bg-surface-container-medium" {...field} />
+                  <Input placeholder="Main Warehouse" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -125,9 +126,9 @@ export function WarehouseForm() {
             name="nameAr"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('name_ar')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('name_ar')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="المستودع الرئيسي" className="bg-surface-container-medium text-end" dir="rtl" {...field} />
+                  <Input placeholder="المستودع الرئيسي" className="bg-surface-container-low text-end border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" dir="rtl" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,14 +140,14 @@ export function WarehouseForm() {
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('warehouse_type')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('warehouse_type')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-container-medium">
+                    <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl">
                       <SelectValue placeholder={t('select_type')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-border-surface">
+                  <SelectContent className="bg-surface-container-low border-none">
                     <SelectItem value="MAIN">{t('type_main')}</SelectItem>
                     <SelectItem value="TRANSIT">Transit Hub</SelectItem>
                     <SelectItem value="VIRTUAL">{t('type_virtual')}</SelectItem>
@@ -162,14 +163,14 @@ export function WarehouseForm() {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('status')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('status')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-container-medium">
+                    <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl">
                       <SelectValue placeholder={t('select_status')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-border-surface">
+                  <SelectContent className="bg-surface-container-low border-none">
                     <SelectItem value="ACTIVE">{tc('active')}</SelectItem>
                     <SelectItem value="INACTIVE">{tc('inactive')}</SelectItem>
                   </SelectContent>
@@ -181,20 +182,20 @@ export function WarehouseForm() {
 
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-6 mt-6 border-t border-border-surface">
+        <div className="flex items-center justify-end gap-3 pt-12 mt-12">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             type="button" 
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="bg-surface-container-low"
+            className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high px-8 h-12 rounded-xl font-bold hover:scale-[0.98] active:scale-95 transition-all"
           >
             {tc('cancel')}
           </Button>
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="bg-primary text-black hover:bg-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]"
+            className="bg-operational-cyan text-primary-foreground hover:brightness-110 px-10 h-12 rounded-xl transition-all hover:scale-[0.98] active:scale-95 font-black uppercase tracking-widest text-[10px]"
           >
             {isSubmitting ? tc('saving') : t('actions.create')}
           </Button>

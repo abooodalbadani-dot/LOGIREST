@@ -224,7 +224,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
           <div className="absolute inset-0 border-4 border-t-cyan-500 rounded-full animate-spin" />
           <span className="text-2xl font-black text-cyan-500 tracking-tighter">ADJ</span>
         </div>
-        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500 animate-pulse">
+        <div className={cn("text-[10px] font-black uppercase text-cyan-500 animate-pulse", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>
           {t('retrieving_manifest')}
         </div>
       </div>
@@ -242,7 +242,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
       />
       <PageHeader
         title={isNew ? t('create_new') : t('detail_title')}
-        description={!isNew ? <span dir="ltr" className="font-mono text-cyan-500/80 tracking-widest">{adjustment?.document_number}</span> : undefined}
+        description={!isNew ? <span dir="ltr" className={cn("font-mono text-cyan-500/80", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}>{adjustment?.document_number}</span> : undefined}
         status={adjustment?.status}
         showStatus={!isNew}
         actions={
@@ -253,8 +253,8 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                 <Button 
                   onClick={handleSaveDraft} 
                   disabled={createAdjustment.isPending || !!lockState?.is_locked || notes.trim().length < 10 || lines.length === 0}
-                  className="bg-surface-container-high hover:bg-surface-container-highest text-foreground border border-white/5 rounded-xl h-11 px-6 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
-                >
+                  className={cn("bg-surface-container-high hover:bg-surface-container-highest text-foreground rounded-xl h-11 px-6 text-[10px] font-black uppercase transition-all disabled:opacity-50", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}
+>
                   {t('save_draft')}
                 </Button>
               </PermissionGate>
@@ -266,7 +266,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                   variant="outline"
                   onClick={() => setApproveDialogOpen(true)}
                   disabled={approveAdjustment.isPending || !!lockState?.is_locked}
-                  className="bg-surface-container-high hover:bg-surface-container-highest text-foreground border border-white/5 rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
+                  className={cn("bg-surface-container-high hover:bg-surface-container-highest text-foreground rounded-xl h-11 px-8 text-[10px] font-black uppercase transition-all", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}
                 >
                   <CheckCircle className="w-4 h-4 me-2" />
                   {t('approve')}
@@ -279,7 +279,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                 <Button
                   onClick={() => setPostDialogOpen(true)}
                   disabled={postAdjustment.isPending || !!lockState?.is_locked}
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-cyan-900/20"
+                  className={cn("bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase transition-all shadow-lg", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}
                 >
                   <Send className="w-4 h-4 me-2" />
                   {t('post_adjustment')}
@@ -292,20 +292,20 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
 
       <LockBanner lockState={lockState} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-surface-container-low/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-surface-container-low/50 p-8 rounded-[2rem] relative overflow-hidden">
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('warehouse')}</label>
+          <label className={cn("text-[10px] font-black uppercase text-muted-foreground/60 ms-1", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>{tCommon('warehouse')}</label>
           <Select
             value={warehouseId}
             onValueChange={(val) => val && setWarehouseId(val)}
             disabled={(!isDraft && !isNew) || !!lockState?.is_locked}
           >
-            <SelectTrigger className="w-full bg-surface-container-highest/40 border-white/5 rounded-xl h-[52px] font-bold text-sm hover:bg-surface-container-highest/60 transition-all outline-none">
+            <SelectTrigger className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-bold text-sm hover:bg-surface-container-highest/60 transition-all">
               <SelectValue placeholder={tCommon('warehouse')} />
             </SelectTrigger>
-            <SelectContent className="bg-surface-container-highest border-white/10 rounded-xl shadow-2xl">
+            <SelectContent className="bg-surface-container-highest rounded-xl shadow-2xl border-none">
               <SelectItem value="wh-1" className="font-medium focus:bg-cyan-500/10 focus:text-cyan-400">{tCommon('warehouses.main')}</SelectItem>
               <SelectItem value="wh-2" className="font-medium focus:bg-cyan-500/10 focus:text-cyan-400">{tCommon('warehouses.dry')}</SelectItem>
               <SelectItem value="wh-3" className="font-medium focus:bg-cyan-500/10 focus:text-cyan-400">{tCommon('warehouses.cold')}</SelectItem>
@@ -314,16 +314,16 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('reason')}</label>
+          <label className={cn("text-[10px] font-black uppercase text-muted-foreground/60 ms-1", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>{t('reason')}</label>
           <Select
             value={reason}
             onValueChange={(val) => val && setReason(val)}
             disabled={(!isDraft && !isNew) || !!lockState?.is_locked}
           >
-            <SelectTrigger className={`w-full border-white/5 rounded-xl h-[52px] font-black text-sm transition-all outline-none ${REASON_COLOR[reason] ?? 'bg-surface-container-highest/40'}`}>
+            <SelectTrigger className={cn(`w-full rounded-xl h-[52px] font-black text-sm transition-all`, REASON_COLOR[reason] ?? 'bg-surface-container-highest/40')}>
               <SelectValue placeholder={t('reason')} />
             </SelectTrigger>
-            <SelectContent className="bg-surface-container-highest border-white/10 rounded-xl shadow-2xl">
+            <SelectContent className="bg-surface-container-highest rounded-xl shadow-2xl border-none">
               {REASON_OPTIONS.map(r => (
                 <SelectItem key={r} value={r} className="font-medium focus:bg-cyan-500/10 focus:text-cyan-400">
                   {t(`reasons.${r.toLowerCase()}`)}
@@ -335,8 +335,8 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
 
         {adjustment?.approved_by && (
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{t('approved_by')}</label>
-            <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center gap-3">
+            <label className={cn("text-[10px] font-black uppercase text-muted-foreground/60 ms-1", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>{t('approved_by')}</label>
+            <div className="bg-surface-container-highest/30 rounded-xl p-4 flex items-center gap-3">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
               <span className="text-sm font-bold text-emerald-400/90">{adjustment.approved_by}</span>
             </div>
@@ -344,23 +344,23 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
         )}
 
         <div className="col-span-1 md:col-span-3 space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('notes')}</label>
+          <label className={cn("text-[10px] font-black uppercase text-muted-foreground/60 ms-1", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>{tCommon('notes')}</label>
           <Textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             disabled={(!isDraft && !isNew) || !!lockState?.is_locked}
             placeholder={t('notes_placeholder')}
-            className="w-full bg-surface-container-highest/40 border-white/5 rounded-xl p-4 font-medium text-sm focus:ring-2 focus:ring-cyan-500/30 transition-all outline-none resize-none min-h-[100px] hover:bg-surface-container-highest/60"
+            className="w-full bg-surface-container-highest/40 rounded-xl p-4 font-medium text-sm border-none focus:bg-primary-fixed-dim/10 transition-all outline-none shadow-none ring-0 focus-visible:ring-0 resize-none min-h-[100px] hover:bg-surface-container-highest/60"
             rows={2}
           />
         </div>
       </div>
       
       {isNew && !isPosted && (
-        <div className="bg-surface-container-low p-8 rounded-2xl border border-white/5 space-y-6">
+        <div className="bg-surface-container-low p-8 rounded-[2rem] space-y-6">
           <div className="flex items-center gap-3">
             <Package className="w-5 h-5 text-cyan-500" />
-            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/80">{t('add_item')}</h3>
+            <h3 className={cn("text-[11px] font-black uppercase text-foreground/80", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>{t('add_item')}</h3>
           </div>
           <ScanInput 
             onScan={handleScan}
@@ -376,43 +376,43 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
         </div>
       )}
 
-      <div className="bg-surface-container-low/30 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+      <div className="bg-surface-container-low/30 rounded-[2.5rem] overflow-hidden relative">
         <DocumentReadOnlyOverlay isPosted={isPosted}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full">
               <thead>
-                <tr className="bg-surface-container-high/50 text-muted-foreground/60 text-[10px] uppercase tracking-[0.3em] font-black border-b border-white/5">
-                  <th className="text-start px-6 py-5">{tCommon('item')}</th>
-                  <th className="text-center px-6 py-5">{t('direction')}</th>
-                  <th className="text-center px-6 py-5">{t('qty_before')}</th>
-                  <th className="text-center px-6 py-5">{t('qty_adjusted')}</th>
-                  <th className="text-center px-6 py-5">{t('qty_after')}</th>
-                  <th className="text-start px-6 py-5">{t('reason_notes')}</th>
+                <tr className={cn("bg-surface-container-high/30 text-muted-foreground/60 text-[11px] uppercase font-bold", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}>
+                  <th className="text-start px-8 h-14">{tCommon('item')}</th>
+                  <th className="text-center px-6 h-14">{t('direction')}</th>
+                  <th className="text-center px-6 h-14">{t('qty_before')}</th>
+                  <th className="text-center px-6 h-14">{t('qty_adjusted')}</th>
+                  <th className="text-center px-6 h-14">{t('qty_after')}</th>
+                  <th className="text-start px-6 h-14 pe-8">{t('reason_notes')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-none">
                 {lines.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-16 text-muted-foreground/40 font-mono text-xs tracking-widest italic">
+                    <td colSpan={6} className={cn("text-center py-16 text-muted-foreground/40 font-mono text-xs italic bg-surface-container-lowest", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>
                       {tCommon('no_items') || 'NO CALIBRATION DATA'}
                     </td>
                   </tr>
                 )}
-                {lines.map(line => (
-                  <tr key={line.id} className="hover:bg-surface-container-high/40 transition-colors group">
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-foreground/90">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</div>
-                      <div dir="ltr" className="text-[10px] text-cyan-500/40 font-mono tracking-widest mt-1 group-hover:text-cyan-500/60 transition-colors text-start">{line.item.code}</div>
+                {lines.map((line, idx) => (
+                  <tr key={line.id} className={`transition-all h-14 ${idx % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] group`}>
+                    <td className="px-8">
+                      <div className="font-bold text-foreground/90 text-[14px]">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</div>
+                      <div dir="ltr" className={cn("text-[10px] text-cyan-500/40 font-mono mt-0.5 group-hover:text-cyan-500/60 transition-colors text-start", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>{line.item.code}</div>
                     </td>
-                    <td className="px-6 py-5 text-center">
+                    <td className="px-6 text-center">
                       {isPosted ? (
                         line.direction === 'INCREASE' ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
+                          <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-400 border-none shadow-none", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>
                             <ArrowUp className="w-3 h-3" />
                             {t('direction_increase')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 border border-red-500/20 shadow-[0_0_10px_rgba(255,49,49,0.05)]">
+                          <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-red-500/10 text-red-500 border-none shadow-none", locale === 'ar' ? "tracking-normal" : "tracking-[0.05em]")}>
                             <ArrowDown className="w-3 h-3" />
                             {t('direction_decrease')}
                           </span>
@@ -424,29 +424,29 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                             onValueChange={(val) => updateLine(line.id, { direction: val as 'INCREASE' | 'DECREASE' })}
                             disabled={!!lockState?.is_locked}
                           >
-                            <SelectTrigger className="w-[140px] h-9 rounded-lg border-white/5 bg-surface-container-high/50 text-[10px] font-black uppercase tracking-widest outline-none">
+                            <SelectTrigger className={cn("w-[140px] h-9 rounded-lg bg-surface-container-high/50 text-[10px] font-black uppercase", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-surface-container-highest border-white/10 rounded-xl">
-                              <SelectItem value="INCREASE" className="text-[10px] font-black uppercase text-emerald-400 focus:bg-emerald-500/10">{t('direction_increase')}</SelectItem>
-                              <SelectItem value="DECREASE" className="text-[10px] font-black uppercase text-red-500 focus:bg-red-500/10">{t('direction_decrease')}</SelectItem>
+                            <SelectContent className="bg-surface-container-highest rounded-xl border-none">
+                              <SelectItem value="INCREASE" className={cn("text-[10px] font-black uppercase text-emerald-400 focus:bg-emerald-500/10", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}>{t('direction_increase')}</SelectItem>
+                              <SelectItem value="DECREASE" className={cn("text-[10px] font-black uppercase text-red-500 focus:bg-red-500/10", locale === 'ar' ? "tracking-normal" : "tracking-[0.08em]")}>{t('direction_decrease')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span dir="ltr" className="font-mono text-sm font-bold bg-surface-container-highest/50 px-3 py-1.5 rounded-lg border border-white/5 opacity-40">
+                    <td className="px-6 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span dir="ltr" className="font-mono text-[14px] font-bold text-foreground/40 tabular-nums">
                           {line.qty_before.toFixed(3)}
                         </span>
-                        <span className="text-[9px] font-black uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
+                        <span className="text-[9px] font-black uppercase text-muted-foreground/30 tracking-tighter">{line.item.primary_uom.code}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex flex-col items-center gap-1">
+                    <td className="px-6 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
                         {isPosted ? (
-                          <span dir="ltr" className={`font-mono text-base font-black px-4 py-2 rounded-xl border ${line.direction === 'INCREASE' ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/20' : 'bg-red-500/5 text-red-500 border-red-500/20'}`}>
+                          <span dir="ltr" className={`font-mono text-[16px] font-black ${line.direction === 'INCREASE' ? 'text-emerald-400' : 'text-red-500'}`}>
                             {line.direction === 'INCREASE' ? '+' : '−'}{line.qty_adjusted.toFixed(3)}
                           </span>
                         ) : (
@@ -460,27 +460,27 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                               value={line.qty_adjusted}
                               onChange={e => updateLine(line.id, { qty_adjusted: Number(e.target.value) })}
                               disabled={(!isDraft && !isNew) || !!lockState?.is_locked}
-                              className="w-24 bg-surface-container-highest/50 border border-white/5 rounded-lg px-3 py-2 font-mono text-base font-black text-center focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all"
+                              className="w-24 bg-surface-container-highest/50 rounded-lg px-3 py-2 font-mono text-[16px] font-black text-center border-none focus:bg-primary-fixed-dim/10 transition-all outline-none shadow-none ring-0 focus-visible:ring-0"
                             />
                           </div>
                         )}
-                        <span className="text-[9px] font-black uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
+                        <span className="text-[9px] font-black uppercase text-muted-foreground/30 tracking-tighter">{line.item.primary_uom.code}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex flex-col items-center gap-1">
+                    <td className="px-6 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
                         <span dir="ltr" className={cn(
-                          "font-mono text-sm font-bold px-3 py-1.5 rounded-lg border border-white/5",
+                          "font-mono text-[14px] font-bold",
                           (line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted) < 0 
-                            ? "bg-red-500/10 text-red-500 border-red-500/20" 
-                            : "bg-surface-container-highest/50 text-foreground/70"
+                            ? "text-red-500" 
+                            : "text-foreground/70"
                         )}>
                           {(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted).toFixed(3)}
                         </span>
-                        <span className="text-[9px] font-black uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
+                        <span className="text-[9px] font-black uppercase text-muted-foreground/30 tracking-tighter">{line.item.primary_uom.code}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6">
                       {isPosted ? (
                         <div className="text-muted-foreground/60 text-xs italic">
                           {line.reason_notes ?? '—'}
@@ -493,7 +493,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
                             onChange={e => updateLine(line.id, { reason_notes: e.target.value })}
                             disabled={!!lockState?.is_locked}
                             placeholder={t('reason_notes_placeholder') || 'Line reason...'}
-                            className="flex-1 bg-transparent border-b border-white/5 focus:border-cyan-500/50 py-1 text-xs outline-none transition-all italic text-muted-foreground/80 disabled:opacity-50"
+                            className="flex-1 bg-transparent py-1 text-xs outline-none transition-all italic text-muted-foreground/80 focus-visible:bg-primary-fixed-dim/10 disabled:opacity-50"
                           />
                           <Button 
                             variant="ghost" 

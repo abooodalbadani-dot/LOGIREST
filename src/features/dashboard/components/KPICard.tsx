@@ -29,46 +29,42 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend, 
     red: 'bg-status-error/10',
   };
 
-  const accentShadows = {
-    cyan: 'shadow-[0_12px_24px_-8px_rgba(var(--operational-cyan-rgb),0.3)]',
-    amber: 'shadow-[0_12px_24px_-8px_rgba(var(--status-warning-rgb),0.3)]',
-    red: 'shadow-[0_12px_24px_-8px_rgba(var(--status-error-rgb),0.3)]',
-  };
+
 
   return (
-    <Card className={`relative overflow-hidden border border-border-surface bg-surface-container-low/50 backdrop-blur-sm hover:bg-surface-container transition-all duration-500 rounded-2xl group shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] ${className || ''}`}>
+    <div className={`relative overflow-hidden bg-surface-container-lowest hover:bg-surface-container-low transition-all duration-500 rounded-[2rem] group ${className || ''}`}>
       {/* Visual Accent - Top Gradient */}
-      <div className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500 ${accentColors[accent]}`} />
+      <div className={`absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${accentColors[accent]}`} />
 
       {/* Large Watermark Icon */}
-      <div className="absolute top-0 end-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 pointer-events-none">
-        <Icon className={`w-24 h-24 ${accentColors[accent]}`} />
+      <div className="absolute top-0 end-0 p-4 opacity-[0.03] group-hover:opacity-[0.06] group-hover:scale-110 group-hover:rotate-6 transition-all duration-700 pointer-events-none">
+        <Icon className={`w-28 h-28 ${accentColors[accent]}`} />
       </div>
 
-      <div className="p-6 relative z-10">
-        <div className="space-y-5">
+      <div className="p-7 relative z-10">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.25em]">
+            <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.3em]">
               {title}
             </p>
-            <div className={`p-2.5 rounded-xl ${accentBgs[accent]} ${accentColors[accent]} border border-current/10 ${accentShadows[accent]}`}>
+            <div className={`p-3 rounded-2xl ${accentBgs[accent]} ${accentColors[accent]} transition-transform duration-500 group-hover:scale-110`}>
               <Icon className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <h3 className={`text-3xl font-bold tracking-tighter tabular-nums ${accent === 'cyan' ? 'text-foreground' : accentColors[accent]}`}>
+          <div className="space-y-2">
+            <h3 className={`text-4xl font-black tracking-tighter tabular-nums ${accent === 'cyan' ? 'text-foreground' : accentColors[accent]}`}>
               {value}
             </h3>
             
             <div className="flex items-center gap-2">
               {trend && (
-                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${trend.isPositive ? 'bg-status-success/10 text-status-success' : 'bg-status-error/10 text-status-error'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl ${trend.isPositive ? 'bg-status-success/10 text-status-success' : 'bg-status-error/10 text-status-error'}`}>
                   {trend.isPositive ? '↑' : '↓'} {trend.value}
                 </span>
               )}
               {description && (
-                <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">
                   {description}
                 </p>
               )}
@@ -76,9 +72,6 @@ export function KPICard({ title, value, icon: Icon, accent, description, trend, 
           </div>
         </div>
       </div>
-
-      {/* Decorative Glow Bar */}
-      <div className={`absolute bottom-0 start-0 h-[3px] w-full transition-all duration-500 opacity-20 group-hover:opacity-100 ${accent === 'cyan' ? 'bg-operational-cyan' : accent === 'amber' ? 'bg-status-warning' : 'bg-status-error'} shadow-[0_0_15px_currentColor]`} />
-    </Card>
+    </div>
   );
 }

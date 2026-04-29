@@ -48,16 +48,16 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
       onSubmit={onSubmit}
     >
       <div className="space-y-8">
-        <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
+        <Card className="bg-surface-container-low border-none overflow-hidden">
           <CardContent className="p-8 space-y-8">
             {/* Section Header */}
             <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-              <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center">
-                <Layers className="w-5 h-5 text-cyan-500" />
+              <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                <Layers className="w-5 h-5 text-tertiary" />
               </div>
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">{tc('basic_info')}</h3>
-                <p className="text-[10px] font-bold text-muted-foreground/60/40 uppercase tracking-widest mt-0.5">
+                <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('basic_info')}</h3>
+                <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">
                   {tc('category_classification_details')}
                 </p>
               </div>
@@ -66,18 +66,18 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Name EN */}
               <div className="space-y-2">
-                <Label htmlFor="cat-name-en" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                <Label htmlFor="cat-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
                   {tc('name_en')}
                 </Label>
                 <Input
                   id="cat-name-en"
                   dir="ltr"
                   {...register('name_en')}
-                  className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+                  className="font-semibold"
                   placeholder="e.g. Raw Materials"
                 />
                 {errors.name_en && (
-                  <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">
+                  <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">
                     {errors.name_en.message}
                   </p>
                 )}
@@ -85,18 +85,18 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
 
               {/* Name AR */}
               <div className="space-y-2">
-                <Label htmlFor="cat-name-ar" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                <Label htmlFor="cat-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
                   {tc('name_ar')}
                 </Label>
                 <Input
                   id="cat-name-ar"
                   dir="rtl"
                   {...register('name_ar')}
-                  className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 text-end"
+                  className="font-semibold text-end"
                   placeholder="مثال: مواد خام"
                 />
                 {errors.name_ar && (
-                  <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">
+                  <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">
                     {errors.name_ar.message}
                   </p>
                 )}

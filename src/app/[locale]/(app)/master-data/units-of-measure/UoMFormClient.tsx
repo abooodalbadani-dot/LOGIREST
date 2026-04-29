@@ -63,69 +63,59 @@ export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
       isSaving={isSaving}
       onSubmit={onSubmit}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <Ruler className="w-5 h-5 text-cyan-400" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-black uppercase tracking-wider">{tc('basic_info')}</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tu('description') || tc('details_desc')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
             <CardContent className="p-8 space-y-8">
+            <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+              <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                <Ruler className="w-5 h-5 text-tertiary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{tc('basic_info')}</h3>
+                <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{tu('description') || tc('details_desc')}</p>
+              </div>
+            </div>
+
               {/* Code */}
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Hash className="w-3 h-3 text-cyan-500/50" />
-                  <Label htmlFor="uom-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('code')}</Label>
-                </div>
+              <div className="space-y-2 max-w-sm">
+                <Label htmlFor="uom-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{tc('code')}</Label>
                 <Input 
                   id="uom-code" 
                   dir="ltr" 
                   {...register('code')} 
-                  className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all text-cyan-400 font-black" 
+                  className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
                   placeholder="UNIT-01" 
                 />
-                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.code.message}</p>}
+                {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.code.message}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name AR */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="uom-name-ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_ar')}</Label>
-                  </div>
-                  <Input 
-                    id="uom-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
-                    placeholder="اسم الوحدة" 
-                  />
-                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_ar.message}</p>}
-                </div>
-
                 {/* Name EN */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="uom-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_en')}</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="uom-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{tc('name_en')}</Label>
                   <Input 
                     id="uom-name-en" 
                     dir="ltr" 
                     {...register('name_en')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    className="font-semibold" 
                     placeholder="Unit Name" 
                   />
-                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_en.message}</p>}
+                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_en.message}</p>}
+                </div>
+
+                {/* Name AR */}
+                <div className="space-y-2">
+                  <Label htmlFor="uom-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{tc('name_ar')}</Label>
+                  <Input 
+                    id="uom-name-ar" 
+                    dir="rtl" 
+                    {...register('name_ar')} 
+                    className="font-semibold text-end" 
+                    placeholder="اسم الوحدة" 
+                  />
+                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_ar.message}</p>}
                 </div>
               </div>
             </CardContent>
@@ -133,30 +123,32 @@ export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-sm bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                  <Activity className="w-4 h-4 text-emerald-400" />
+        <div className="space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-status-active/10 flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-status-active" />
                 </div>
-                <CardTitle className="text-xs font-black uppercase tracking-wider">{tu('precision') || tc('details')}</CardTitle>
+                <div>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{tu('precision') || tc('details')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{tc('status')}</p>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="p-4 bg-emerald-500/5 rounded-sm border border-emerald-500/10 border-dashed">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">{tc('precision')}</h3>
-                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-medium leading-relaxed">
+
+              <div className="p-4 bg-status-active/5 rounded-md border border-status-active/10 border-dashed">
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-status-active mb-1">{tc('precision')}</h3>
+                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal font-medium leading-relaxed">
                   {tu('precision_description')}
                 </p>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-sm border border-surface-variant/5">
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{tc('status')}</span>
-                  <p className="text-[9px] text-emerald-400 font-bold uppercase">{tc('active')}</p>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/50">{tc('status')}</span>
+                  <p className="text-[9px] text-status-active font-semibold uppercase">{tc('active')}</p>
                 </div>
-                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                <div className="h-2 w-2 rounded-full bg-status-active shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.5)]" />
               </div>
             </CardContent>
           </Card>

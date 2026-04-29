@@ -120,10 +120,10 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-full bg-surface-container-low flex flex-col h-full border-e border-border-surface">
-      <div className="p-4 flex items-center justify-between md:hidden border-b border-border-surface mb-2">
+    <aside className="w-full bg-surface-container-low flex flex-col h-full">
+      <div className="p-4 flex items-center justify-between md:hidden mb-2">
         <span className="font-bold text-operational-cyan">LogiRest</span>
-        <button onClick={onClose} className="p-1 hover:bg-surface-container-high rounded-md transition-colors">
+        <button onClick={onClose} className="p-1 hover:bg-surface-container-high rounded-lg transition-colors">
           <X className="w-5 h-5 text-muted-foreground/60" />
         </button>
       </div>
@@ -131,7 +131,6 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
       <nav className="flex-1 py-4 flex flex-col gap-6 px-3 overflow-y-auto custom-scrollbar">
         {groups.map((group) => {
           const visibleItems = group.items.filter(item => {
-            // We can't use hooks here, move to a component
             return true; 
           });
 
@@ -141,14 +140,14 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
             <div key={group.key} className="flex flex-col gap-1">
               {group.titleKey && (
                 <div className="px-4 mb-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+                  <span className={cn("text-[9px] font-black uppercase text-muted-foreground/40", locale === 'ar' ? 'tracking-normal' : 'tracking-[0.2em]')}>
                     {t(group.titleKey)}
                   </span>
                 </div>
               )}
               <div className="flex flex-col gap-1">
                 {group.items.map((item) => (
-                  <SidebarLink key={item.key} item={item} pathname={pathname} t={t} onClick={onClose} />
+                  <SidebarLink key={item.key} item={item} pathname={pathname} t={t} onClick={onClose} locale={locale} />
                 ))}
               </div>
             </div>
@@ -159,13 +158,11 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
   );
 }
 
-function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: string, t: (key: string) => string, onClick?: () => void }) {
+function SidebarLink({ item, pathname, t, onClick, locale }: { item: NavItem, pathname: string, t: (key: string) => string, onClick?: () => void, locale: string }) {
   const canView = usePermission('view', item.resource);
   
   if (!canView) return null;
   
-  // Highlight if exact match or if it's a sub-route of this link
-  // But avoid highlighting root dashboard on every page
   const isDashboard = item.key === 'dashboard';
   const isActive = isDashboard 
     ? pathname === item.href 
@@ -178,10 +175,11 @@ function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: 
       href={item.href}
       onClick={onClick}
       className={cn(
-        "px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 flex items-center gap-3 group relative overflow-hidden",
-        isActive 
-          ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary-rgb),0.1)]' 
-          : 'text-muted-foreground/60 hover:bg-surface-container-high hover:text-foreground'
+        "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all duration-[140ms] ease-out relative overflow-hidden",
+        locale === 'ar' ? "tracking-normal" : "tracking-widest",
+        isActive
+          ? "bg-primary text-white shadow-lg shadow-primary/20"
+          : "text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high"
       )}
     >
       {/* Active Indicator Glow */}
@@ -199,7 +197,7 @@ function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: 
       </span>
 
       {isActive && (
-        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)] relative z-10" />
+        <div className="w-1.5 h-1.5 rounded-full bg-primary relative z-10" />
       )}
     </Link>
   );

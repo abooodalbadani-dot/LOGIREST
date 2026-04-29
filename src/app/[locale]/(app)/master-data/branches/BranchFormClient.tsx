@@ -10,7 +10,7 @@ import { Building2, ShieldCheck, Globe2, Hash } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
   useMasterDataItem,
@@ -66,69 +66,59 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
       isSaving={isSaving}
       onSubmit={onSubmit}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <Building2 className="w-5 h-5 text-cyan-400" />
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-black uppercase tracking-wider">{tb('details_title') || t('details')}</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tb('details_description') || t('details_desc')}</CardDescription>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tb('details_title') || t('details')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tb('details_description') || t('details_desc')}</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
+
               {/* Code */}
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Hash className="w-3 h-3 text-cyan-500/50" />
-                  <Label htmlFor="branch-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('code')}</Label>
-                </div>
+              <div className="space-y-2 max-w-sm">
+                <Label htmlFor="branch-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{t('code')}</Label>
                 <Input 
                   id="branch-code" 
                   dir="ltr" 
                   {...register('code')} 
-                  className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                  className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
                   placeholder="BR-001" 
                 />
-                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.code.message as string)}</p>}
+                {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.code.message as string)}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name AR */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="branch-name-ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('name_ar')}</Label>
-                  </div>
-                  <Input 
-                    id="branch-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
-                    placeholder="اسم الفرع" 
-                  />
-                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.name_ar.message as string)}</p>}
-                </div>
-
                 {/* Name EN */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="branch-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('name_en')}</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="branch-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{t('name_en')}</Label>
                   <Input 
                     id="branch-name-en" 
                     dir="ltr" 
                     {...register('name_en')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    className="font-semibold" 
                     placeholder="Branch Name" 
                   />
-                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{t(errors.name_en.message as string)}</p>}
+                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.name_en.message as string)}</p>}
+                </div>
+
+                {/* Name AR */}
+                <div className="space-y-2">
+                  <Label htmlFor="branch-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{t('name_ar')}</Label>
+                  <Input 
+                    id="branch-name-ar" 
+                    dir="rtl" 
+                    {...register('name_ar')} 
+                    className="font-semibold text-end" 
+                    placeholder="اسم الفرع" 
+                  />
+                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.name_ar.message as string)}</p>}
                 </div>
               </div>
             </CardContent>
@@ -136,27 +126,29 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+        <div className="space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
-                <CardTitle className="text-xs font-black uppercase tracking-wider">{t('status')}</CardTitle>
+                <div>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{t('status')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{t('operational_status')}</p>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-sm border border-surface-variant/5 group hover:bg-surface-container-highest/20 transition-all">
+
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="branch-is-active" className="text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:text-cyan-400 transition-colors">{t('is_active')}</Label>
-                  <p className="text-[9px] text-muted-foreground/40 font-bold uppercase">{isActive ? t('active') : t('inactive')}</p>
+                  <Label htmlFor="branch-is-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
                 </div>
                 <Switch
                   id="branch-is-active"
                   checked={isActive}
                   onCheckedChange={(v) => setValue('is_active', v)}
-                  className="data-[state=checked]:bg-cyan-500"
+                  className="data-[state=checked]:bg-status-active"
                 />
               </div>
             </CardContent>

@@ -12,7 +12,7 @@ export function LockBanner({ message }: LockBannerProps) {
   const t = useTranslations("common");
 
   return (
-    <div className="w-full bg-status-warning/20 border-y sm:border sm:rounded-lg border-status-warning/50 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 shadow-[0_0_15px_rgba(var(--status-warning-rgb),0.15)]">
+    <div className="w-full bg-status-warning/15 sm:rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-3 w-full sm:w-auto">
         <div className="flex shrink-0 items-center justify-center h-10 w-10 rounded-full bg-status-warning/20 text-status-warning">
           <Lock className="h-5 w-5" />

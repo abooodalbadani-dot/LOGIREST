@@ -10,7 +10,9 @@ import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRU
 import { WarehouseSchema } from '@/types/master-data';
 import { generateExcel } from '@/utils/export';
 import type { StockBalanceItem } from '@/types/inventory';
+import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Package, 
@@ -101,7 +103,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
       id: 'unit',
       header: tc('table_headers.uom'),
       cell: ({ row }) => (
-        <span className="text-[10px] font-black text-muted-foreground/60/60 uppercase tracking-widest">
+        <span className={cn("text-[10px] font-black text-muted-foreground/60/60 uppercase", isRtl ? "tracking-normal" : "tracking-[0.05em]")}>
            {tc('uoms.kg')}
         </span>
       ),
@@ -178,27 +180,27 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
              <h1 className="text-3xl font-black tracking-tight text-foreground">
                 {t('title')}
              </h1>
-             <p className="text-[11px] font-black text-muted-foreground/60/40 uppercase tracking-[0.3em]">
+             <p className={cn("text-[11px] font-black text-muted-foreground/60/40 uppercase", isRtl ? "tracking-normal" : "tracking-[0.05em]")}>
                 {t('subtitle')}
              </p>
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="relative group flex-1 md:w-80">
-              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60/40 group-focus-within:text-operational-cyan transition-colors" />
-              <input 
+              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60/40 group-focus-within:text-operational-cyan transition-colors z-10" />
+              <Input 
                 type="text"
                 placeholder={t('search_placeholder')}
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                className="w-full h-12 ps-12 pe-4 bg-surface-container-low/50 border border-surface-variant/10 rounded-2xl text-[11px] font-bold focus:ring-2 focus:ring-operational-cyan/20 focus:bg-surface-container-low outline-none transition-all"
+                className="w-full h-12 ps-12 pe-4 bg-surface-container-low/50 border-none rounded-2xl text-[11px] font-bold transition-all"
               />
             </div>
             <PermissionGate action="create" resource="inventory">
               <Link href={`/${currentLocale}/master-data/items/new`}>
-                <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-lg shadow-primary/20">
                   <Plus className="w-4 h-4" />
-                  <span className="text-[11px] font-black uppercase tracking-wider">{t('add_item')}</span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.08em]">{t('add_item')}</span>
                 </Button>
               </Link>
             </PermissionGate>
@@ -208,7 +210,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
               className="h-12 px-6 bg-surface-container-low border-surface-variant/10 hover:bg-surface-container-medium rounded-2xl gap-3 transition-all"
             >
               <Download className="w-4 h-4 text-operational-cyan" />
-              <span className="text-[11px] font-black uppercase tracking-wider">{t('export')}</span>
+              <span className={cn("text-[11px] font-black uppercase", isRtl ? "tracking-normal" : "tracking-[0.08em]")}>{t('export')}</span>
             </Button>
           </div>
         </div>
@@ -220,7 +222,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
             value={totalValue.toLocaleString()}
             icon={Wallet}
             color="emerald"
-            trend={tc('sar_full')}
+            trend={tc('currencies.sar_full')}
           />
           <MetricCard
             label={t('near_expiry')}
@@ -244,9 +246,9 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
         {/* Table Filter Bar */}
         <div className="flex flex-wrap items-center gap-6 bg-surface-container-low/30 p-6 rounded-3xl border border-surface-variant/10 shadow-inner">
            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest">{t('filter_category')}</span>
+              <span className={cn("text-[10px] font-black text-muted-foreground/60/40 uppercase", isRtl ? "tracking-normal" : "tracking-[0.05em]")}>{t('filter_category')}</span>
               <Select value="all">
-                <SelectTrigger className="w-48 bg-surface-container-low border-surface-variant/10 rounded-xl h-10 text-[11px] font-black uppercase tracking-tight">
+                <SelectTrigger className="w-48 bg-surface-container-low border-none rounded-xl h-10 text-[11px] font-black uppercase tracking-tight">
                   <SelectValue placeholder={t('filter_all')} />
                 </SelectTrigger>
                 <SelectContent className="bg-surface-container-low border-surface-variant/10">
@@ -255,9 +257,9 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
               </Select>
            </div>
            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black text-muted-foreground/60/40 uppercase tracking-widest">{t('filter_status')}</span>
+              <span className={cn("text-[10px] font-black text-muted-foreground/60/40 uppercase", isRtl ? "tracking-normal" : "tracking-[0.05em]")}>{t('filter_status')}</span>
               <Select value="all">
-                <SelectTrigger className="w-48 bg-surface-container-low border-surface-variant/10 rounded-xl h-10 text-[11px] font-black uppercase tracking-tight">
+                <SelectTrigger className="w-48 bg-surface-container-low border-none rounded-xl h-10 text-[11px] font-black uppercase tracking-tight">
                   <SelectValue placeholder={t('filter_all')} />
                 </SelectTrigger>
                 <SelectContent className="bg-surface-container-low border-surface-variant/10">
@@ -277,7 +279,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
               >
                  <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
               </Button>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] px-4 opacity-40">
+              <div className={cn("text-[10px] font-black uppercase px-4 opacity-40", isRtl ? "tracking-normal" : "tracking-[0.05em]")}>
                 {t('pagination_info', { 
                   start: ((page - 1) * 15) + 1, 
                   end: Math.min(page * 15, totalItems), 
@@ -315,16 +317,16 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
 
         {/* Floating Quick Actions Bar */}
         <div className="fixed bottom-12 start-1/2 -translate-x-1/2 z-50">
-           <div className="flex items-center gap-8 bg-surface-ledger/90 backdrop-blur-xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all hover:scale-[1.02] group">
+           <div className="flex items-center gap-8 bg-surface-ledger/90 backdrop-blur-xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all">
               <div className="flex items-center gap-3 border-e border-surface-variant/10 pe-8">
-                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60/40">{t('quick_actions')}</span>
+                 <span className={cn("text-[10px] font-black uppercase text-muted-foreground/60/40", isRtl ? "tracking-normal" : "tracking-[0.05em]")}>{t('quick_actions')}</span>
               </div>
               
               <div className="flex items-center gap-6">
                  <PermissionGate action="view" resource="inventory">
-                    <button 
+                       <button 
                       onClick={() => window.location.href = `/${currentLocale}/inventory/scan`}
-                      className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+                      className={cn("flex items-center gap-3 text-[11px] font-black uppercase text-foreground hover:text-operational-cyan transition-colors", isRtl ? "tracking-normal" : "tracking-[0.08em]")}
                     >
                        <Scan className="w-4 h-4 text-operational-cyan" />
                        {t('barcode_scanner')}
@@ -333,7 +335,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
                  <div className="w-px h-6 bg-surface-variant/10" />
                  <button 
                    onClick={() => window.print()}
-                   className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+                   className={cn("flex items-center gap-3 text-[11px] font-black uppercase text-foreground hover:text-operational-cyan transition-colors", isRtl ? "tracking-normal" : "tracking-[0.08em]")}
                  >
                     <Printer className="w-4 h-4 text-operational-cyan/60" />
                     {t('print_labels')}
@@ -342,7 +344,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
                   <PermissionGate action="create" resource="adjustment">
                     <button 
                       onClick={() => window.location.href = `/${currentLocale}/adjustments/new`}
-                      className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-foreground hover:text-operational-cyan transition-colors"
+                      className={cn("flex items-center gap-3 text-[11px] font-black uppercase text-foreground hover:text-operational-cyan transition-colors", isRtl ? "tracking-normal" : "tracking-[0.08em]")}
                     >
                        <Scale className="w-4 h-4 text-operational-cyan/60" />
                        {t('reconciliation')}

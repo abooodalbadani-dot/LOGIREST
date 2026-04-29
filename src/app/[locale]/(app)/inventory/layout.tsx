@@ -33,7 +33,8 @@ export default function InventoryLayout({
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300",
+                "flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all duration-[140ms] ease-out",
+                locale === 'ar' ? "tracking-normal" : "tracking-widest",
                 isActive
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high"

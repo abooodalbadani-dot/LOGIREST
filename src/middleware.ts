@@ -4,9 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
-export function proxy(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  console.log('Proxy path:', pathname);
 
   // Public paths that don't require authentication
   const isPublicPage = pathname.includes('/login') ||
@@ -17,7 +16,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get('logirest_token')?.value;
 
   // If the user is not authenticated and trying to access a protected page
-  if (!token && !isPublicPage && pathname !== '/') {
+  if (!token && !isPublicPage && pathname !== '/' && !pathname.includes('/static') && !pathname.includes('/favicon.ico')) {
     const locale = pathname.split('/')[1] || 'ar';
     const loginUrl = new URL(`/${locale}/login`, request.url);
     return NextResponse.redirect(loginUrl);

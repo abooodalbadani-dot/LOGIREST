@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ScanInputProps {
   onScan: (barcode: string) => void;
@@ -36,12 +37,12 @@ export function ScanInput({ onScan, onError, disabled, placeholder, className, o
     
     if (inputRef.current) {
        inputRef.current.value = '';
-       inputRef.current.classList.remove('border-status-error', 'ring-status-error');
-       inputRef.current.classList.add('border-operational-cyan', 'ring-2', 'ring-operational-cyan');
+       inputRef.current.classList.remove('bg-status-error/10');
+       inputRef.current.classList.add('bg-operational-cyan/20');
        
        setTimeout(() => {
          if (inputRef.current) {
-           inputRef.current.classList.remove('border-operational-cyan', 'ring-2', 'ring-operational-cyan');
+           inputRef.current.classList.remove('bg-operational-cyan/20');
          }
        }, 300);
     }
@@ -77,7 +78,12 @@ export function ScanInput({ onScan, onError, disabled, placeholder, className, o
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onChange={onChange}
-      className={`bg-surface-container border border-border-surface text-foreground rounded-xl text-lg px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-operational-cyan/30 focus:border-operational-cyan transition-all disabled:opacity-50 ${className || ''}`}
+      className={cn(
+        "bg-surface-container-highest border-none text-foreground rounded-xl text-lg px-6 py-4 w-full transition-all duration-[140ms] ease-out",
+        "focus:outline-none focus:bg-primary-fixed-dim/10 focus:shadow-none",
+        "shadow-none ring-0 focus-visible:ring-0 disabled:opacity-50",
+        className
+      )}
     />
   );
 }

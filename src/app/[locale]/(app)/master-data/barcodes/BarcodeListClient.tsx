@@ -45,8 +45,8 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       header: tb('barcode_label'), 
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <BarcodeIcon className="w-3.5 h-3.5 text-cyan-500/50" />
-          <span dir="ltr" className="font-mono text-xs font-black text-cyan-500 tracking-widest uppercase">
+          <BarcodeIcon className="w-3.5 h-3.5 text-status-active/50" />
+          <span dir="ltr" className="font-mono text-xs font-semibold text-status-active tracking-[0.08em] uppercase">
             {row.original.barcode}
           </span>
         </div>
@@ -57,7 +57,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       header: tb('item'), 
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-xs tracking-tight">{row.original.item_id}</span>
+          <span className="font-semibold text-xs tracking-tight">{row.original.item_id}</span>
           <span className="text-[10px] text-muted-foreground/60 uppercase tracking-tighter">{tb('sku_link_verified')}</span>
         </div>
       )
@@ -66,7 +66,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       accessorKey: 'default_qty', 
       header: tb('default_qty'), 
       cell: ({ row }) => (
-        <span className="font-mono text-[11px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-sm border border-emerald-500/20">
+        <span className="font-mono text-[11px] font-semibold text-status-active bg-status-active/10 px-2 py-0.5 rounded-md border border-status-active/20">
           {row.original.default_qty}
         </span>
       )
@@ -80,7 +80,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
+              className="text-[10px] font-semibold uppercase tracking-[0.08em] text-status-active hover:text-status-active hover:bg-status-active/10 h-7"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/${locale}/master-data/barcodes/${row.original.id}`);
@@ -109,7 +109,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         actions={
             <PermissionGate action="create" resource="master_data">
               <Link href={`/${locale}/master-data/barcodes/new`}>
-                <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                <Button className="h-11 px-8 bg-status-active hover:bg-status-active/90 text-white text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all shadow-lg shadow-status-active/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {tc('create_new')}
                 </Button>
@@ -123,7 +123,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           label={tb('total_identities')}
           value={stats.total}
           icon={BarcodeIcon}
-          color="cyan"
+          color="primary"
           dir="ltr"
         />
 
@@ -131,7 +131,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           label={tb('linked_assets')}
           value={stats.uniqueSKUs}
           icon={Box}
-          color="amber"
+          color="secondary"
           dir="ltr"
         />
 
@@ -139,7 +139,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           label={tb('active_mappings')}
           value="100%"
           icon={Tag}
-          color="emerald"
+          color="primary"
           dir="ltr"
         />
       </div>
@@ -158,15 +158,15 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
+          <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-md">
             <div className="flex flex-col gap-2 min-w-[300px] flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('search')}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60">{tc('search')}</label>
               <div className="relative">
                 <Input
                   placeholder={tb('search_placeholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  className="w-full bg-surface-container-highest/30 border-none h-11 px-10 text-xs font-bold"
+                  className="w-full bg-surface-container-highest/30 border-none h-11 px-10 text-xs font-semibold"
                 />
                 <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
               </div>

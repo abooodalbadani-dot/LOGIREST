@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
+      <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 animate-in fade-in slide-in-from-bottom-4 duration-500 text-center relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute -top-24 -start-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
 
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+    <div className="w-full max-w-md p-8 bg-surface-container-low rounded-2xl border border-border-muted/50 animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
       {/* Glow effect */}
       <div className="absolute -top-24 -end-24 w-48 h-48 bg-operational-cyan/10 blur-3xl rounded-full" />
 
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70 rounded-xl"
+            className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-[0.98] active:scale-95 disabled:opacity-70 rounded-xl"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />

@@ -524,7 +524,15 @@
       "last_sync": "Last Sync",
       "active_counting": "Active Counting",
       "finalized_audits": "Finalized Audits",
-      "filter_state": "Filter by State"
+      "filter_state": "Filter by State",
+      "skus": "SKUs",
+      "total_to_verify": "Total to Verify",
+      "workflow_state": "Workflow State",
+      "owner": "Owner",
+      "autosave_active": "Autosave Active",
+      "expected": "Expected",
+      "delta": "Delta",
+      "no_variance_recorded": "No variance recorded"
     }
   },
   "masterData": {

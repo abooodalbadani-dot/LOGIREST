@@ -25,7 +25,7 @@ export function Topbar({ locale, onMenuClick }: TopbarProps) {
   const tc = useTranslations('common');
 
   return (
-    <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40 border-b border-border-surface">
+    <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40">
       <div className="flex items-center gap-4">
         {/* Mobile Menu Button */}
         <button 
@@ -47,7 +47,7 @@ export function Topbar({ locale, onMenuClick }: TopbarProps) {
             {/* Subtle glow effect */}
             <div className="absolute inset-0 bg-operational-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-            <div className="p-1.5 bg-operational-cyan/10 rounded-lg text-operational-cyan group-hover:shadow-[0_0_10px_rgba(var(--operational-cyan-rgb),0.2)] transition-all">
+            <div className="p-1.5 bg-operational-cyan/10 rounded-sm text-operational-cyan transition-all">
               <Globe className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
             </div>
 
@@ -96,7 +96,7 @@ export function Topbar({ locale, onMenuClick }: TopbarProps) {
                 <span className="text-sm font-bold text-foreground group-hover:text-operational-cyan transition-colors">{user.name}</span>
                 <span className="text-[10px] text-operational-cyan font-black uppercase tracking-tighter">{user.role}</span>
               </div>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-surface-container-low flex items-center justify-center text-sm font-black text-operational-cyan shadow-inner transition-all group-hover:bg-surface-container group-hover:shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.2)]">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-sm bg-surface-container-low flex items-center justify-center text-sm font-black text-operational-cyan transition-all group-hover:bg-surface-container">
                 {user.name.charAt(0).toUpperCase()}
               </div>
             </Link>

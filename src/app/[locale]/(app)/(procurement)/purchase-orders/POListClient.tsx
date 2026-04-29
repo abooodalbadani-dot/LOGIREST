@@ -162,7 +162,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
           <MetricCard
             label={t('monthly_expenditure')}
             value="84,200"
-            trend={tc('sar_full')}
+            trend={tc('currencies.sar_full')}
             icon={Wallet}
             color="emerald"
           />

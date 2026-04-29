@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Truck, CreditCard, ShieldCheck, Hash, Globe2, Coins, ScrollText } from 'lucide-react';
 
@@ -13,6 +13,13 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   useMasterDataItem,
   useMasterDataList,
@@ -77,150 +84,137 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
       isSaving={isSaving}
       onSubmit={onSubmit}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Section: Partner Identity */}
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <Truck className="w-5 h-5 text-cyan-400" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Truck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-black uppercase tracking-wider">{ts('partner_identity')}</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{ts('partner_identity_desc') || t('details_desc')}</CardDescription>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{ts('partner_identity')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{ts('partner_identity_desc') || t('details_desc')}</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              {/* Code */}
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Hash className="w-3 h-3 text-cyan-500/50" />
-                  <Label htmlFor="sup-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('code')}</Label>
-                </div>
-                <Input 
-                  id="sup-code" 
-                  dir="ltr" 
-                  {...register('code')} 
-                  className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
-                  placeholder="SUP-001" 
-                />
-                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.code.message}</p>}
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name AR */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="sup-name-ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('name_ar')}</Label>
-                  </div>
+              <div className="space-y-6">
+                <div className="space-y-2 max-w-sm">
+                  <Label htmlFor="sup-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{t('code')}</Label>
                   <Input 
-                    id="sup-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
-                    placeholder="اسم المورد" 
-                  />
-                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_ar.message}</p>}
-                </div>
-
-                {/* Name EN */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="sup-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('name_en')}</Label>
-                  </div>
-                  <Input 
-                    id="sup-name-en" 
+                    id="sup-code" 
                     dir="ltr" 
-                    {...register('name_en')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
-                    placeholder="Supplier Name" 
+                    {...register('code')} 
+                    className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
+                    placeholder="e.g. SUP-001" 
                   />
-                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_en.message}</p>}
+                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.code.message}</p>}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <Label htmlFor="sup-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{t('name_en')}</Label>
+                    <Input 
+                      id="sup-name-en" 
+                      dir="ltr" 
+                      {...register('name_en')} 
+                      className="font-semibold" 
+                      placeholder="Supplier Name" 
+                    />
+                    {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_en.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sup-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{t('name_ar')}</Label>
+                    <Input 
+                      id="sup-name-ar" 
+                      dir="rtl" 
+                      {...register('name_ar')} 
+                      className="font-semibold text-end" 
+                      placeholder="اسم المورد" 
+                    />
+                    {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_ar.message}</p>}
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Section: Financial & Terms */}
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                  <CreditCard className="w-5 h-5 text-amber-400" />
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-black uppercase tracking-wider">{ts('financial_terms')}</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{ts('financial_terms_desc') || t('details_desc')}</CardDescription>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{ts('financial_terms')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{ts('financial_terms_desc') || t('details_desc')}</p>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              {/* Currency */}
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Coins className="w-3 h-3 text-amber-500/50" />
-                  <Label htmlFor="sup-currency" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{ts('currency')}</Label>
-                </div>
-                <select 
-                  id="sup-currency" 
-                  {...register('currency_id')}
-                  className="h-12 px-4 bg-surface-container-highest/30 border-none rounded-sm w-full text-sm font-bold appearance-none hover:bg-surface-container-highest/40 transition-all focus:ring-1 focus:ring-amber-500/50"
-                >
-                  <option value="" className="bg-surface-container-low text-muted-foreground">—</option>
-                  {currencies?.data?.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-surface-container-low uppercase">
-                      {c.code} — {c.name_en}
-                    </option>
-                  ))}
-                </select>
-                {errors.currency_id && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.currency_id.message}</p>}
               </div>
 
-              {/* Payment Terms */}
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <ScrollText className="w-3 h-3 text-amber-500/50" />
-                  <Label htmlFor="sup-terms" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{ts('payment_terms')}</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label htmlFor="sup-currency" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{ts('currency')}</Label>
+                  <Controller
+                    name="currency_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="sup-currency">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">—</SelectItem>
+                          {currencies?.data?.map((c) => (
+                            <SelectItem key={c.id} value={c.id} className="font-semibold text-xs uppercase tracking-[0.08em]">
+                              {c.code} — {c.name_en}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.currency_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.currency_id.message}</p>}
                 </div>
-                <Textarea 
-                  id="sup-terms" 
-                  rows={4} 
-                  {...register('payment_terms')} 
-                  className="bg-surface-container-highest/30 border-none rounded-sm text-sm font-medium resize-none focus-visible:ring-1 focus-visible:ring-amber-500/50 transition-all p-4" 
-                  placeholder={ts('terms_placeholder')} 
-                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="sup-terms" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{ts('payment_terms')}</Label>
+                  <Textarea 
+                    id="sup-terms" 
+                    rows={4} 
+                    {...register('payment_terms')} 
+                    className="font-medium resize-none p-4" 
+                    placeholder={ts('terms_placeholder')} 
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+        <div className="space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
-                <CardTitle className="text-xs font-black uppercase tracking-wider">{t('status')}</CardTitle>
+                <div>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{t('status')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{t('operational_status')}</p>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-sm border border-surface-variant/5 group hover:bg-surface-container-highest/20 transition-all">
+
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="sup-active" className="text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:text-cyan-400 transition-colors">{t('is_active')}</Label>
-                  <p className="text-[9px] text-muted-foreground/40 font-bold uppercase">{isActive ? t('active') : t('inactive')}</p>
+                  <Label htmlFor="sup-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
                 </div>
                 <Switch
                   id="sup-active"
                   checked={isActive}
                   onCheckedChange={(v) => setValue('is_active', v)}
-                  className="data-[state=checked]:bg-cyan-500"
+                  className="data-[state=checked]:bg-status-active"
                 />
               </div>
             </CardContent>

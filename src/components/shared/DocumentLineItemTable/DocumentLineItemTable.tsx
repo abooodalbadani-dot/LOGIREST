@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import type { LotAllocation } from '@/types/documents';
 
@@ -64,69 +65,75 @@ export function DocumentLineItemTable<T extends LineItem>({
   const totalCols = baseCols + extraColumns.length + (!isReadOnly && onRemoveLine ? 1 : 0);
 
   return (
-    <div className="overflow-x-auto rounded-sm border border-border-muted bg-surface-container-low shadow-2xl">
+    <div className="overflow-x-auto rounded-[2.5rem] bg-surface-container-lowest">
       <table className="w-full text-start border-collapse">
-        <thead className="bg-surface-container-highest/10 border-b border-border-muted">
+        <thead className="bg-surface-container-low/50">
           <tr>
-            <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.code}</th>
-            <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.name}</th>
+            <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{h.code}</th>
+            <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{h.name}</th>
             {!hideLotColumns && (
               <>
-                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.lot}</th>
-                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.expiry}</th>
+                <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{h.lot}</th>
+                <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{h.expiry}</th>
               </>
             )}
-            <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap text-center">{h.qty}</th>
-            <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap">{h.uom}</th>
+            <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap text-center", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{h.qty}</th>
+            <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{h.uom}</th>
             {extraColumns.map((col, i) => (
-              <th key={i} className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap text-center">{col.header}</th>
+              <th key={i} className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap text-center", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{col.header}</th>
             ))}
             {!isReadOnly && onRemoveLine && (
-              <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 whitespace-nowrap w-10" />
+              <th className={cn("px-6 h-14 text-[10px] font-black uppercase text-muted-foreground/40 whitespace-nowrap w-10", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")} />
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody>
           {lines.length === 0 ? (
             <tr>
               <td colSpan={totalCols} className="px-6 py-20 text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/20 italic">{tc('no_items')}</p>
+                <p className={cn("text-[10px] font-black uppercase text-muted-foreground/20 italic", locale === 'ar' ? "tracking-normal" : "tracking-[0.3em]")}>{tc('no_items')}</p>
               </td>
             </tr>
           ) : (
-            lines.map(line => (
-              <tr key={line.id} className="group hover:bg-white/[0.01] transition-all">
-                <td className="px-6 py-6 font-mono text-[11px] text-operational-cyan/70 tracking-widest uppercase"><span dir="ltr">{line.item.code}</span></td>
-                <td className="px-6 py-6 text-xs font-bold text-foreground/80">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</td>
+            lines.map((line, idx) => (
+              <tr 
+                key={line.id} 
+                className={cn(
+                  "group transition-all hover:bg-primary/[0.04] h-14",
+                  idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/60"
+                )}
+              >
+                <td className="px-6 font-mono text-[11px] text-operational-cyan/70 tracking-widest uppercase"><span dir="ltr">{line.item.code}</span></td>
+                <td className="px-6 text-xs font-bold text-foreground/80">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</td>
                 {!hideLotColumns && (
                   <>
-                    <td className="px-6 py-6 font-mono text-[10px] text-muted-foreground/60 tracking-wider">
+                    <td className="px-6 font-mono text-[10px] text-muted-foreground/60 tracking-wider">
                       {line.lot ? <span dir="ltr">{line.lot.lot_number}</span> : '—'}
                     </td>
-                    <td className="px-6 py-6 font-mono text-[10px] text-muted-foreground/60 tracking-wider">
+                    <td className="px-6 font-mono text-[10px] text-muted-foreground/60 tracking-wider">
                       {line.lot?.expiry_date
                         ? <span dir="ltr">{new Date(line.lot.expiry_date).toLocaleDateString()}</span>
                         : '—'}
                     </td>
                   </>
                 )}
-                <td className="px-6 py-6 text-center">
+                <td className="px-6 text-center">
                   <span dir="ltr" className="font-mono text-sm font-black text-foreground">{line.qty}</span>
                 </td>
-                <td className="px-6 py-6">
+                <td className="px-6">
                   <span dir="ltr" className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground/40">{line.item.primary_uom.code}</span>
                 </td>
                 {extraColumns.map((col, i) => (
-                  <td key={i} className="px-6 py-6 text-center">
+                  <td key={i} className="px-6 text-center">
                     {col.cell(line)}
                   </td>
                 ))}
                 {!isReadOnly && onRemoveLine && (
-                  <td className="px-6 py-6 text-center">
+                  <td className="px-6 text-center">
                     <button
                       type="button"
                       onClick={() => onRemoveLine(line.id)}
-                      className="text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all p-2 rounded-sm"
+                      className="text-muted-foreground/20 hover:text-status-error hover:bg-status-error/10 transition-all p-2 rounded-2xl"
                       aria-label="Remove line"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

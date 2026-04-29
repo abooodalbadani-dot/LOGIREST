@@ -10,7 +10,7 @@ import { Briefcase, ShieldCheck, Hash, Globe2, User, Landmark, Activity } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
   useMasterDataItem,
@@ -79,115 +79,98 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
       isSaving={isSaving}
       onSubmit={onSubmit}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           {/* Section: Basic Info */}
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <Briefcase className="w-5 h-5 text-cyan-400" />
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-black uppercase tracking-wider">{tc('basic_info')}</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tc('basic_info_desc')}</CardDescription>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('basic_info')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('basic_info_desc')}</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
+
               {/* Code */}
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Hash className="w-3 h-3 text-cyan-500/50" />
-                  <Label htmlFor="dept-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('code')}</Label>
-                </div>
+              <div className="space-y-2 max-w-sm">
+                <Label htmlFor="dept-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('code')}</Label>
                 <Input 
                   id="dept-code" 
                   dir="ltr" 
                   {...register('code')} 
-                  className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                  className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
                   placeholder="DEPT-01" 
                 />
-                {errors.code && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.code.message}</p>}
+                {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.code.message}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name AR */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="dept-name-ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_ar')}</Label>
-                  </div>
-                  <Input 
-                    id="dept-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
-                    placeholder="اسم القسم" 
-                  />
-                  {errors.name_ar && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_ar.message}</p>}
-                </div>
-
                 {/* Name EN */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe2 className="w-3 h-3 text-cyan-500/50" />
-                    <Label htmlFor="dept-name-en" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('name_en')}</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dept-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('name_en')}</Label>
                   <Input 
                     id="dept-name-en" 
                     dir="ltr" 
                     {...register('name_en')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-base focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all" 
+                    className="font-semibold" 
                     placeholder="Department Name" 
                   />
-                  {errors.name_en && <p className="text-[10px] text-red-400 font-bold uppercase tracking-tight ps-1">{errors.name_en.message}</p>}
+                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_en.message}</p>}
+                </div>
+
+                {/* Name AR */}
+                <div className="space-y-2">
+                  <Label htmlFor="dept-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{tc('name_ar')}</Label>
+                  <Input 
+                    id="dept-name-ar" 
+                    dir="rtl" 
+                    {...register('name_ar')} 
+                    className="font-semibold text-end" 
+                    placeholder="اسم القسم" 
+                  />
+                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_ar.message}</p>}
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Section: Operational Details */}
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                  <Landmark className="w-5 h-5 text-amber-400" />
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Landmark className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-black uppercase tracking-wider">{tc('operational_details')}</CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/40">{tc('operational_details_desc')}</CardDescription>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('operational_details')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('operational_details_desc')}</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Manager */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <User className="w-3 h-3 text-amber-500/50" />
-                    <Label htmlFor="dept-manager" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('manager')}</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dept-manager" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('manager')}</Label>
                   <Input 
                     id="dept-manager" 
                     {...register('manager')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-bold text-sm focus-visible:ring-1 focus-visible:ring-amber-500/50 transition-all" 
+                    className="font-semibold" 
                     placeholder="Manager Name" 
                   />
                 </div>
 
                 {/* Cost Center */}
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Landmark className="w-3 h-3 text-amber-500/50" />
-                    <Label htmlFor="dept-cost-center" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('cost_center')}</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dept-cost-center" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('cost_center')}</Label>
                   <Input 
                     id="dept-cost-center" 
                     dir="ltr"
                     {...register('cost_center')} 
-                    className="h-12 bg-surface-container-highest/30 border-none rounded-sm font-mono uppercase text-sm tracking-widest focus-visible:ring-1 focus-visible:ring-amber-500/50 transition-all" 
+                    className="font-mono font-semibold uppercase tracking-[0.08em] text-tertiary" 
                     placeholder="CC-001" 
                   />
                 </div>
@@ -197,27 +180,29 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          <Card className="bg-surface-container-low border-none rounded-sm shadow-xl shadow-black/20 overflow-hidden">
-            <CardHeader className="border-b border-surface-variant/5 bg-surface-container-low/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-sm bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+        <div className="space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
-                <CardTitle className="text-xs font-black uppercase tracking-wider">{tc('status')}</CardTitle>
+                <div>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('status')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('operational_status')}</p>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-sm border border-surface-variant/5 group hover:bg-surface-container-highest/20 transition-all">
+
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="dept-is-active" className="text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:text-cyan-400 transition-colors">{tc('is_active')}</Label>
-                  <p className="text-[9px] text-muted-foreground/40 font-bold uppercase">{isActive ? tc('active') : tc('inactive')}</p>
+                  <Label htmlFor="dept-is-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{tc('is_active')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tc('active') : tc('inactive')}</p>
                 </div>
                 <Switch
                   id="dept-is-active"
                   checked={isActive}
                   onCheckedChange={(v) => setValue('is_active', v)}
-                  className="data-[state=checked]:bg-cyan-500"
+                  className="data-[state=checked]:bg-status-active"
                 />
               </div>
             </CardContent>

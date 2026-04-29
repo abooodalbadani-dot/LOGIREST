@@ -82,14 +82,14 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-md animate-in fade-in duration-300">
       <div 
-        className="bg-surface-container-low rounded-2xl border border-outline-low w-full max-w-lg shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200"
+        className="bg-surface-container-lowest rounded-3xl border border-outline-low w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200"
       >
         {/* Nocturne Ghost Border / Glow */}
         <div className="absolute top-0 start-0 w-full h-[2px] bg-gradient-to-r from-transparent via-operational-cyan/50 to-transparent" />
         
         <div className="p-6 border-b border-outline-low flex justify-between items-center bg-surface-container/20">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-operational-cyan/10 rounded-xl text-operational-cyan shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.15)]">
+            <div className="p-2.5 bg-operational-cyan/10 rounded-xl text-operational-cyan">
               <Globe className="w-5 h-5" />
             </div>
             <div>
@@ -120,7 +120,7 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
                   setSelectedWarehouseId('');
                   setSelectedDepartmentId('');
                 }}
-                className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer hover:bg-surface-container-high shadow-inner"
+                className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer hover:bg-surface-container-high"
               >
                 <option value="" className="bg-surface-container-lowest">{t('branch_placeholder')}</option>
                 {branches.map((b) => (
@@ -145,7 +145,7 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
               value={selectedWarehouseId}
               onChange={(e) => setSelectedWarehouseId(e.target.value)}
               disabled={!selectedBranchId}
-              className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high shadow-inner"
+              className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
             >
               <option value="" className="bg-surface-container-lowest">{t('warehouse_placeholder')}</option>
               {warehouses.map((w) => (
@@ -166,7 +166,7 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
               value={selectedDepartmentId}
               onChange={(e) => setSelectedDepartmentId(e.target.value)}
               disabled={!selectedBranchId}
-              className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high shadow-inner"
+              className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
             >
               <option value="" className="bg-surface-container-lowest">{t('department_placeholder')}</option>
               {departments.map((d) => (
@@ -187,7 +187,7 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
           </button>
           <button 
             onClick={handleConfirm}
-            className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)] hover:brightness-110 transition-all active:scale-[0.98]"
+            className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:brightness-110 transition-all active:scale-[0.98]"
           >
             {t('confirm_selection')}
           </button>

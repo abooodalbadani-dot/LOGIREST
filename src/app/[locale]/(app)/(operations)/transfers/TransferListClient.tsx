@@ -39,7 +39,7 @@ export function TransferListClient() {
       accessorKey: 'document_number',
       header: tCommon('doc_number'),
       cell: ({ row }) => (
-        <span dir="ltr" className="font-mono text-cyan-500/90 font-bold tracking-wider">
+        <span dir="ltr" className="font-mono tracking-normal text-cyan-500/90 font-semibold text-[13px]">
           {row.original.document_number}
         </span>
       ),
@@ -67,7 +67,7 @@ export function TransferListClient() {
       header: t('shipped_at'),
       cell: ({ row }) =>
         row.original.shipped_at ? (
-          <span dir="ltr" className="text-[11px] opacity-40 font-mono italic">{format(new Date(row.original.shipped_at), 'MMM dd, yyyy')}</span>
+          <span dir="ltr" className="text-[11px] opacity-60 font-mono font-medium">{format(new Date(row.original.shipped_at), 'dd/MM/yyyy')}</span>
         ) : <span className="opacity-20">—</span>,
     },
     {
@@ -75,8 +75,8 @@ export function TransferListClient() {
       header: tCommon('created_at'),
       cell: ({ row }) =>
         row.original.created_at ? (
-          <span dir="ltr" className="text-[11px] opacity-40 font-mono italic">
-            {format(new Date(row.original.created_at), 'MMM dd, yyyy')}
+          <span dir="ltr" className="text-[11px] opacity-60 font-mono font-medium">
+            {format(new Date(row.original.created_at), 'dd/MM/yyyy')}
           </span>
         ) : <span className="opacity-20">—</span>,
     },
@@ -88,7 +88,7 @@ export function TransferListClient() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
+            className="text-[10px] font-semibold uppercase tracking-[0.08em] text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`transfers/${row.original.id}`);
@@ -120,17 +120,17 @@ export function TransferListClient() {
         actions={
           <div className="flex items-center gap-6">
             <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex">
-               <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+               <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
                   {tCommon('status.live_updates')}
                </div>
-               <div className="text-[9px] font-bold text-muted-foreground/40" dir="ltr">
+               <div className="text-[9px] font-semibold text-muted-foreground/40" dir="ltr">
                   {tCommon('status.last_sync')}: {new Date().toLocaleTimeString()}
                </div>
             </div>
             <PermissionGate action="create" resource="transfer">
                <Link href="transfers/new">
-                 <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                 <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all shadow-lg shadow-cyan-900/10">
                    <Plus className="w-3.5 h-3.5 me-2" />
                    {t('create_new')}
                  </Button>
@@ -163,8 +163,9 @@ export function TransferListClient() {
         />
       </div>
 
-      <DataTable 
-        columns={columns}
+      <div className="bg-surface-container-lowest rounded-lg border border-outline-low/5 overflow-hidden shadow-sm">
+        <DataTable 
+          columns={columns}
         data={data?.data || []}
         isLoading={isLoading}
         onRowClick={(row: TransferSummary) => router.push(`transfers/${row.id}`)}
@@ -177,7 +178,7 @@ export function TransferListClient() {
               <PermissionGate action="create" resource="transfer">
                 <Button 
                   onClick={() => router.push(`transfers/new`)}
-                  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
+                  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20 rounded-md"
                 >
                   <Plus className="w-4 h-4 me-2" />
                   {t('create_new')}
@@ -194,17 +195,17 @@ export function TransferListClient() {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low rounded-2xl shadow-xl">
+          <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg shadow-sm">
             <div className="flex flex-col gap-2 min-w-[240px] flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
               <Select
                 value={status || 'ALL'}
                 onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
               >
-                <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-xs font-bold rounded-xl transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/30">
+                <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-xs font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10">
                   <SelectValue placeholder={tCommon('status.all')} />
                 </SelectTrigger>
-                <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
+                <SelectContent className="bg-surface-container-highest border-outline-low/10 rounded-md">
                   <SelectItem value="ALL">{tCommon('status.all')}</SelectItem>
                   <SelectItem value="DRAFT">{tCommon('status.draft')}</SelectItem>
                   <SelectItem value="IN_TRANSIT">{tCommon('status.in_transit')}</SelectItem>
@@ -215,17 +216,17 @@ export function TransferListClient() {
             </div>
 
             <div className="flex flex-col gap-2 min-w-[300px] flex-[2]">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('search')}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60 ms-1">{tCommon('search')}</label>
               <div className="relative group">
                 <Input
                   placeholder={t('search_placeholder')}
-                  className="w-full bg-surface-container-highest/40 border-none h-12 ps-12 pe-4 text-xs font-bold rounded-xl transition-all group-hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/30"
+                  className="w-full bg-surface-container-highest/40 border-none h-12 ps-12 pe-4 text-xs font-semibold rounded-md transition-all group-hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10"
                 />
                 <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 transition-colors group-hover:text-cyan-500/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               </div>
             </div>
 
-            <Button className="h-12 px-8 bg-surface-container-highest/60 hover:bg-cyan-500 hover:text-black text-foreground text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all border border-outline-low shadow-lg group">
+            <Button className="h-12 px-8 bg-surface-container-highest/60 hover:bg-cyan-500 hover:text-black text-foreground text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all border border-outline-low/5 shadow-sm group">
               <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180" />
               {tCommon('filters')}
             </Button>

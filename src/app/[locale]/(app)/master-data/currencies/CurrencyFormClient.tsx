@@ -65,73 +65,73 @@ export function CurrencyFormClient({ id, createTitle, editTitle, locale }: Props
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
+          <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
             <CardContent className="p-8 space-y-8">
               <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-sm bg-cyan-500/10 flex items-center justify-center">
-                  <Coins className="w-5 h-5 text-cyan-500" />
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Coins className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">{tc('basic_info')}</h3>
-                  <p className="text-[10px] font-bold text-muted-foreground/60/40 uppercase tracking-widest mt-0.5">{tc('identification_naming')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{tc('basic_info')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{tc('identification_naming')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="curr-code" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                  <Label htmlFor="curr-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
                     {tc('code')}
                   </Label>
                   <Input 
                     id="curr-code" 
                     dir="ltr" 
                     {...register('code')} 
-                    className="bg-surface-container-highest/30 border-none h-12 text-sm font-mono font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 uppercase tracking-widest"
+                    className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active"
                     placeholder="e.g. USD"
                   />
-                  {errors.code && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.code.message}</p>}
+                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.code.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="curr-symbol" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                  <Label htmlFor="curr-symbol" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
                     {t('symbol')}
                   </Label>
                   <Input 
                     id="curr-symbol" 
                     dir="ltr" 
                     {...register('symbol')} 
-                    className="bg-surface-container-highest/30 border-none h-12 text-sm font-mono font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+                    className="font-mono font-semibold text-status-active"
                     placeholder="e.g. $"
                   />
-                  {errors.symbol && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.symbol.message}</p>}
+                  {errors.symbol && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.symbol.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="curr-name-en" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                  <Label htmlFor="curr-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
                     {tc('name_en')}
                   </Label>
                   <Input 
                     id="curr-name-en" 
                     dir="ltr" 
                     {...register('name_en')} 
-                    className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50"
+                    className="font-semibold"
                     placeholder="e.g. US Dollar"
                   />
-                  {errors.name_en && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.name_en.message}</p>}
+                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_en.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="curr-name-ar" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                  <Label htmlFor="curr-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
                     {tc('name_ar')}
                   </Label>
                   <Input 
                     id="curr-name-ar" 
                     dir="rtl" 
                     {...register('name_ar')} 
-                    className="bg-surface-container-highest/30 border-none h-12 text-sm font-bold focus-visible:ring-1 focus-visible:ring-cyan-500/50 text-end"
+                    className="font-semibold text-end"
                     placeholder="e.g. دولار أمريكي"
                   />
-                  {errors.name_ar && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tight">{errors.name_ar.message}</p>}
+                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_ar.message}</p>}
                 </div>
               </div>
             </CardContent>
@@ -139,29 +139,29 @@ export function CurrencyFormClient({ id, createTitle, editTitle, locale }: Props
         </div>
 
         <div className="space-y-8">
-          <Card className="bg-surface-container-low border-none rounded-sm overflow-hidden">
+          <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
             <CardContent className="p-8 space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-sm bg-amber-500/10 flex items-center justify-center">
-                  <Star className={`w-5 h-5 ${isBase ? 'fill-amber-500 text-amber-500' : 'text-amber-500'}`} />
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Star className={`w-5 h-5 ${isBase ? 'fill-tertiary text-tertiary' : 'text-tertiary'}`} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">{t('base_currency')}</h3>
-                  <p className="text-[10px] font-bold text-muted-foreground/60/40 uppercase tracking-widest mt-0.5">{t('monetary_standard')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{t('base_currency')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{t('monetary_standard')}</p>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-sm border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
+              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase tracking-widest cursor-pointer text-muted-foreground/60">{t('is_base')}</Label>
-                  <p className={`text-xs font-bold uppercase tracking-tight ${isBase ? 'text-amber-400' : 'text-muted-foreground/40'}`}>{isBase ? t('active') : t('inactive')}</p>
+                  <Label className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal cursor-pointer text-muted-foreground/60">{t('is_base')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isBase ? 'text-tertiary' : 'text-muted-foreground/40'}`}>{isBase ? tc('active') : tc('inactive')}</p>
                 </div>
-                <Switch checked={isBase} onCheckedChange={(val) => setValue('is_base', val)} className="data-[state=checked]:bg-amber-500" />
+                <Switch checked={isBase} onCheckedChange={(val) => setValue('is_base', val)} className="data-[state=checked]:bg-tertiary" />
               </div>
               
               {isBase && (
-                <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-sm">
-                  <p className="text-[10px] text-amber-500/70 font-bold uppercase tracking-tight leading-relaxed">
+                <div className="p-4 bg-tertiary-container/5 border border-tertiary-container/10 rounded-md">
+                  <p className="text-[10px] text-tertiary/70 font-semibold uppercase tracking-tight leading-relaxed">
                     {tc('base_currency_warning')}
                   </p>
                 </div>

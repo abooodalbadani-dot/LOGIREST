@@ -52,7 +52,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
   const isValid = numericRate > 0;
 
   return (
-    <div className="bg-surface-container-low border border-outline-low rounded-2xl p-6 shadow-sm">
+    <div className="bg-surface-container-lowest border border-transparent rounded-2xl p-6">
       <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
         <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
         {t('fx_capture_title') || 'سعر الصرف عند الترحيل'}

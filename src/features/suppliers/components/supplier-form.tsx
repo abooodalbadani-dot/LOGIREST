@@ -66,16 +66,17 @@ export function SupplierForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-low border border-border-surface p-8 rounded-xl shadow-lg relative">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-lowest p-8 rounded-[2rem] relative">
+        <h3 className="text-xl font-black mb-4 text-operational-cyan uppercase tracking-wider">{t('title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('code')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('code')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. V-001" className="bg-surface-container-medium font-mono uppercase" {...field} />
+                  <Input placeholder="e.g. V-001" className="bg-surface-container-low font-mono uppercase border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -87,14 +88,14 @@ export function SupplierForm() {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('status')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('status')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-surface-container-medium">
+                    <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl">
                       <SelectValue placeholder={t('status')} />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-surface-container-medium border-border-surface">
+                  <SelectContent className="bg-surface-container-low border-none">
                     <SelectItem value="ACTIVE">{tc('active')}</SelectItem>
                     <SelectItem value="INACTIVE">{tc('inactive')}</SelectItem>
                   </SelectContent>
@@ -109,9 +110,9 @@ export function SupplierForm() {
             name="nameEn"
             render={({ field }) => (
               <FormItem className="text-start">
-                <FormLabel className="text-muted-foreground">{t('name_en')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('name_en')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Global Distributors" className="bg-surface-container-medium" {...field} />
+                  <Input placeholder="Global Distributors" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -123,25 +124,28 @@ export function SupplierForm() {
             name="nameAr"
             render={({ field }) => (
               <FormItem className="text-end" dir="rtl">
-                <FormLabel className="text-muted-foreground">{t('name_ar')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('name_ar')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="الموزعون العالميون" className="bg-surface-container-medium text-end" dir="rtl" {...field} />
+                  <Input placeholder="الموزعون العالميون" className="bg-surface-container-low text-end border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" dir="rtl" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <h3 className="col-span-1 md:col-span-2 text-lg font-semibold border-b border-border-surface pb-2 mt-4">{t('contact_info')}</h3>
+          <h3 className="col-span-1 md:col-span-2 text-xl font-black uppercase tracking-wide flex items-center gap-2 mt-4">
+             <span className="w-1.5 h-1.5 bg-operational-cyan rounded-full animate-pulse" />
+             {t('contact_info')}
+          </h3>
 
           <FormField
             control={form.control}
             name="contactPerson"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('contact_person')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('contact_person')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" className="bg-surface-container-medium" {...field} />
+                  <Input placeholder="John Doe" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -153,9 +157,9 @@ export function SupplierForm() {
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('phone')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('phone')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="+966 50 000 0000" className="bg-surface-container-medium" dir="ltr" {...field} />
+                  <Input placeholder="+966 50 000 0000" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" dir="ltr" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -167,9 +171,9 @@ export function SupplierForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('email')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('email')}</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="vendor@example.com" className="bg-surface-container-medium" dir="ltr" {...field} />
+                  <Input type="email" placeholder="vendor@example.com" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" dir="ltr" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -181,9 +185,9 @@ export function SupplierForm() {
             name="taxNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">{t('tax_number')}</FormLabel>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('tax_number')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={tc('not_set')} className="bg-surface-container-medium font-mono" {...field} />
+                  <Input placeholder={tc('not_set')} className="bg-surface-container-low font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -192,20 +196,20 @@ export function SupplierForm() {
 
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-6 mt-6 border-t border-border-surface">
+        <div className="flex items-center justify-end gap-3 pt-12 mt-12">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             type="button" 
             onClick={() => router.back()}
             disabled={isSubmitting}
-            className="bg-surface-container-low text-foreground border-border-surface hover:bg-surface-container-medium"
+            className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high px-8 h-12 rounded-xl font-bold hover:scale-[0.98] active:scale-95 transition-all"
           >
             {tc('cancel')}
           </Button>
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="bg-primary text-black hover:bg-primary/90 shadow-[0_0_15px_rgba(58,190,255,0.5)]"
+            className="bg-operational-cyan text-primary-foreground hover:brightness-110 px-10 h-12 rounded-xl transition-all hover:scale-[0.98] active:scale-95 font-black uppercase tracking-widest text-[10px]"
           >
             {isSubmitting ? tc('saving') : t('actions.create')}
           </Button>

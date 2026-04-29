@@ -21,6 +21,7 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-container: var(--primary-container);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-tertiary: var(--tertiary);
@@ -68,6 +69,9 @@
   --color-status-warning: var(--status-warning);
   --color-status-error: var(--status-error);
   --color-status-info: var(--status-info);
+  --color-status-active: var(--operational-cyan);
+  --color-status-classification: var(--tertiary);
+  --color-status-secondary: var(--secondary);
 
   /* Radius */
   --radius-lg: var(--radius);
@@ -86,7 +90,8 @@
   --status-error: #ef4444;
   --status-info: #3b82f6;
 
-  --background: #e5ecef;
+  /* Culinary Architect Surface Foundation */
+  --background: #f7f9ff;
   --foreground: #181c20;
 
   --primary: #004d64;
@@ -124,22 +129,26 @@
   --surface-variant: #e1e2e5;
   --on-surface-variant: #44474e;
 
+  /* No-Line Rule: Section borders are prohibited */
   --border: transparent;
-  --border-surface: rgba(0, 77, 100, 0.08);
-  --border-muted: rgba(0, 77, 100, 0.05);
+  --border-surface: transparent;
+  --border-muted: transparent;
   --input: #dfe3e8;
   --ring: #004d64;
 
   --outline-low: rgba(0, 77, 100, 0.05);
   --outline-medium: rgba(0, 77, 100, 0.1);
   --outline-strong: rgba(0, 77, 100, 0.2);
+  --outline-variant: rgba(24, 28, 32, 0.15); /* Ghost Border token */
 
   --primary-rgb: 0, 77, 100;
+  --primary-fixed-dim: #4cd6fb;
   --operational-cyan-rgb: 0, 102, 132;
   --operational-red-rgb: 186, 26, 26;
   --status-success-rgb: 16, 185, 129;
   --status-warning-rgb: 245, 158, 11;
   --status-error-rgb: 239, 68, 68;
+  --on-surface-rgb: 24, 28, 32;
   --radius: 16px;
 }
 
@@ -161,6 +170,7 @@
   --primary: #4cd6fb;
   --primary-foreground: #003642;
   --primary-container: #00b4d8;
+  --primary-fixed-dim: #004d64;
 
   --secondary: #c3c7cc;
   --secondary-foreground: #2c3135;
@@ -194,8 +204,8 @@
   --on-surface-variant: #c4c6d0;
 
   --border: transparent;
-  --border-surface: rgba(255, 255, 255, 0.1);
-  --border-muted: rgba(255, 255, 255, 0.05);
+  --border-surface: transparent;
+  --border-muted: transparent;
   --input: #303638;
   --ring: #4cd6fb;
 
@@ -209,6 +219,7 @@
   --status-success-rgb: 76, 214, 251;
   --status-warning-rgb: 235, 143, 59;
   --status-error-rgb: 255, 75, 75;
+  --on-surface-rgb: 222, 227, 230;
 }
 
 @layer base {
@@ -273,9 +284,14 @@
   /* Operational Focus Accessibility */
   :focus-visible {
     outline: none !important;
-    box-shadow: 0 0 0 2px var(--background), 0 0 12px 3px #3ABEFF !important;
-    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary-container) !important;
+    transition: box-shadow 0.14s ease-out;
     position: relative;
+  }
+  
+  /* Disable external glow for inputs as they use internal background glow */
+  [data-slot="input"]:focus-visible {
+    box-shadow: none !important;
   }
 
   /* High Density Reset */
@@ -301,4 +317,8 @@
 
 .primary-gradient {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+}
+
+@utility ambient-shadow {
+  box-shadow: 0 0 24px 0 rgba(var(--on-surface-rgb), 0.06);
 }

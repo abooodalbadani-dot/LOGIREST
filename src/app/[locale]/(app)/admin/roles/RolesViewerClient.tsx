@@ -43,9 +43,9 @@ export function RolesViewerClient() {
         />
       </div>
  
-      <div className="bg-surface-container-low border border-outline-low rounded-sm overflow-hidden shadow-2xl">
-        <div className="p-6 bg-surface-container-high border-b border-outline-low">
-          <div className="flex items-center gap-3 text-cyan-500 font-black text-[10px] uppercase tracking-[0.25em]">
+      <div className="bg-surface-container-low rounded-[2.5rem] overflow-hidden ambient-shadow">
+        <div className="p-8 bg-surface-container-low/50">
+          <div className="flex items-center gap-3 text-cyan-500 font-bold text-[11px] uppercase tracking-widest">
             <Fingerprint className="w-4 h-4" />
             Authorization Matrix
           </div>
@@ -54,17 +54,17 @@ export function RolesViewerClient() {
         <div className="overflow-x-auto">
           <table className="w-full text-start border-collapse">
             <thead>
-              <tr className="bg-surface-container-medium/50 border-b border-white/10">
-                <th className="sticky start-0 z-20 bg-surface-container-medium p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-e border-white/10">Resource</th>
+              <tr className="bg-surface-container-low">
+                <th className="sticky start-0 z-20 bg-surface-container-low h-14 px-8 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Resource</th>
                 {ROLES.map((role) => (
-                  <th key={role} className="p-0 border-e border-white/5 last:border-0" colSpan={ACTIONS.length}>
+                  <th key={role} className="p-0 border-none" colSpan={ACTIONS.length}>
                     <div className="flex flex-col">
-                      <div className="p-2 text-center text-[10px] font-black uppercase tracking-[0.2em] bg-surface-container-highest/20 border-b border-white/5 text-cyan-500">
+                      <div className="h-14 flex items-center justify-center text-[11px] font-bold uppercase tracking-widest bg-surface-container-high/40 text-cyan-500">
                         {role}
                       </div>
-                      <div className="grid grid-cols-6 divide-s divide-white/5">
+                      <div className="grid grid-cols-6">
                         {ACTIONS.map((action) => (
-                          <div key={action} className="p-2 text-center text-[8px] font-bold uppercase tracking-tighter text-muted-foreground/60 bg-black/20">
+                          <div key={action} className="p-2 text-center text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 bg-surface-container-highest/10">
                             {action.substring(0, 3)}
                           </div>
                         ))}
@@ -74,25 +74,25 @@ export function RolesViewerClient() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {RESOURCES.map((resource) => (
-                <tr key={resource} className="group hover:bg-white/[0.02] transition-colors">
-                  <td className="sticky start-0 z-10 bg-surface-container-low p-4 font-mono text-[11px] font-black uppercase tracking-widest text-muted-foreground border-e border-white/10 group-hover:text-foreground group-hover:bg-surface-container-medium transition-all">
+            <tbody className="divide-none">
+              {RESOURCES.map((resource, i) => (
+                <tr key={resource} className={`group transition-all h-14 ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'}`}>
+                  <td className={`sticky start-0 z-10 p-4 px-8 font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40 transition-all group-hover:text-cyan-500 ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'}`}>
                     {resource.replace('_', ' ')}
                   </td>
                   {ROLES.map((role) => (
-                    <td key={`${role}-${resource}`} className="p-0 border-e border-white/5 last:border-0">
-                      <div className="grid grid-cols-6 divide-s divide-white/5 h-full min-h-[44px]">
+                    <td key={`${role}-${resource}`} className="p-0 border-none">
+                      <div className="grid grid-cols-6 h-full min-h-[44px]">
                         {ACTIONS.map((action) => {
                           const allowed = (PERMISSION_MATRIX[role]?.[resource] ?? []).includes(action);
                           return (
                             <div key={`${role}-${resource}-${action}`} className="flex items-center justify-center p-2 group/cell">
                               {allowed ? (
-                                <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center animate-in zoom-in-50 duration-500">
+                                <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in-50 duration-500">
                                   <Check className="w-2.5 h-2.5 text-emerald-400 stroke-[4px]" />
                                 </div>
                               ) : (
-                                <Minus className="w-3 h-3 text-white/5" />
+                                <Minus className="w-3 h-3 text-foreground/5" />
                               )}
                             </div>
                           );
@@ -107,8 +107,8 @@ export function RolesViewerClient() {
         </div>
       </div>
  
-      <div className="flex items-center justify-center p-8 bg-surface-container-low/30 rounded-sm border border-dashed border-outline-low">
-        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest text-center leading-relaxed">
+      <div className="flex items-center justify-center p-8 bg-surface-container-low/30 rounded-[2.5rem]">
+        <p className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest text-center leading-relaxed max-w-2xl">
           The permission matrix is immutable in the current runtime environment. Changes require security clearance and deployment of a new RBAC manifest.
         </p>
       </div>

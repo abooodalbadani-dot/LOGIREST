@@ -65,12 +65,12 @@ export function StocktakeListClient({
       header: t('session_number') || 'Session',
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span dir="ltr" className="font-mono text-sm font-black tracking-tight text-cyan-500 group-hover:text-cyan-400 transition-colors">
+          <span dir="ltr" className="font-mono text-sm font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
             {row.original.session_number}
           </span>
           <div className="flex items-center gap-1.5 opacity-40">
             <Calendar className="w-2.5 h-2.5" />
-            <span dir="ltr" className="text-[9px] font-bold tabular-nums">
+            <span dir="ltr" className="text-[9px] font-semibold tabular-nums">
               {format(new Date(row.original.snapshot_at), 'MMM dd, HH:mm')}
             </span>
           </div>
@@ -102,7 +102,7 @@ export function StocktakeListClient({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-4 text-[9px] font-black uppercase tracking-[0.2em] text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg group/btn transition-all"
+            className="h-8 px-4 text-[9px] font-semibold uppercase tracking-[0.08em] text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md group/btn transition-all"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/${locale}/stocktake/${row.original.id}`);
@@ -135,7 +135,7 @@ export function StocktakeListClient({
           actions={
             <div className="flex items-center gap-8">
               <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-8 hidden md:flex">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500 flex items-center gap-2">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-cyan-500 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_rgba(6,182,212,1)]" />
                   {tc('status.live_updates')}
                 </div>
@@ -146,7 +146,7 @@ export function StocktakeListClient({
               </div>
               <PermissionGate action="create" resource="stocktake">
                 <Link href={`/${locale}/stocktake/new`}>
-                  <Button className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-cyan-900/20 group">
+                  <Button className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all shadow-xl shadow-cyan-900/20 group">
                     <Plus className="w-4 h-4 me-2 group-hover:rotate-90 transition-transform" />
                     {t('create_new')}
                   </Button>
@@ -181,17 +181,17 @@ export function StocktakeListClient({
       </div>
 
       <div className="space-y-6">
-        <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-surface-container-low rounded-[2rem] border border-outline-low shadow-2xl">
+        <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-surface-container-low rounded-lg border border-outline-low shadow-2xl">
           <div className="flex flex-col gap-3 min-w-[280px] flex-1">
             <div className="flex items-center gap-2 ms-1">
               <Filter className="w-3 h-3 text-cyan-500/60" />
-              <label className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">{tc('status_label') || 'Filter by State'}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/50">{tc('status_label') || 'Filter by State'}</label>
             </div>
             <Select
               value={initialStatus || 'ALL'}
               onValueChange={handleStatusChange}
             >
-              <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-xs font-bold rounded-2xl focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
+              <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-xs font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
                 <SelectValue placeholder={tc('status.all')} />
               </SelectTrigger>
               <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
@@ -208,22 +208,22 @@ export function StocktakeListClient({
           <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">
             <div className="flex items-center gap-2 ms-1">
               <Search className="w-3 h-3 text-cyan-500/60" />
-              <label className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/50">{tc('search')}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/50">{tc('search')}</label>
             </div>
             <div className="relative group">
               <input
                 placeholder={t('search_placeholder') || 'Search by Session ID...'}
-                className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-xs font-bold rounded-2xl outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
+                className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-xs font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
               />
             </div>
           </div>
 
-          <Button className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all border border-outline-low hover:text-foreground">
+          <Button className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all border border-outline-low hover:text-foreground">
             {tc('filters_button')}
           </Button>
         </div>
 
-        <div className="bg-surface-container-low/30 rounded-[2rem] border border-outline-low overflow-hidden shadow-2xl">
+        <div className="bg-surface-container-lowest rounded-lg border border-outline-low overflow-hidden shadow-2xl">
           <DataTable
             columns={columns}
             data={data?.data || []}

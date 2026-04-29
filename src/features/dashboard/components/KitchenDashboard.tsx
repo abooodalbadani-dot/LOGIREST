@@ -48,7 +48,7 @@ export function KitchenDashboard() {
         </div>
         <PermissionGate action="create" resource="operations_issues">
           <Link href={`/${locale}/issues/new`} className="contents">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest px-8 rounded-xl h-12 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]">
+            <Button className="primary-gradient text-white font-black uppercase tracking-widest px-8 rounded-xl h-12">
               <Plus className="w-5 h-5 me-2" /> New Request
             </Button>
           </Link>
@@ -90,7 +90,7 @@ export function KitchenDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Requests List */}
-        <Card className="lg:col-span-2 bg-surface-container-low border-border-surface shadow-2xl relative overflow-hidden">
+        <Card className="lg:col-span-2 bg-surface-container-lowest border-none rounded-3xl relative overflow-hidden">
           <div className="absolute top-0 end-0 w-64 h-64 bg-status-warning/5 blur-[100px] rounded-full -me-32 -mt-32" />
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -104,7 +104,7 @@ export function KitchenDashboard() {
             </PermissionGate>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-border-surface">
+            <div className="">
               {[
                 { id: 'RQ-2024-081', items: 'Fresh Vegetables (12), Meat (4)', status: 'Pending', time: '1h ago', priority: 'High' },
                 { id: 'RQ-2024-079', items: 'Dry Spices, Cooking Oil (20L)', status: 'Fulfilled', time: '4h ago', priority: 'Normal' },
@@ -112,10 +112,10 @@ export function KitchenDashboard() {
               ].map((req, i) => (
                 <div key={i} className="p-5 flex items-center justify-between hover:bg-white/[0.01] transition-colors group">
                   <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-xl border ${
-                      req.status === 'Pending' ? 'bg-status-warning/10 border-status-warning/20' : 
-                      req.status === 'Fulfilled' ? 'bg-status-success/10 border-status-success/20' : 
-                      'bg-status-error/10 border-status-error/20'
+                    <div className={`p-3 rounded-xl border-none ${
+                      req.status === 'Pending' ? 'bg-status-warning/10' : 
+                      req.status === 'Fulfilled' ? 'bg-status-success/10' : 
+                      'bg-status-error/10'
                     }`}>
                       <PackageSearch className={`w-5 h-5 ${
                         req.status === 'Pending' ? 'text-status-warning' : 
@@ -127,9 +127,9 @@ export function KitchenDashboard() {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-black text-foreground tracking-tight uppercase italic">{req.id}</span>
                         <Badge variant="outline" className={`text-[8px] font-black uppercase px-1.5 h-4 ${
-                          req.priority === 'Urgent' ? 'text-status-error border-status-error/30 bg-status-error/5' :
-                          req.priority === 'High' ? 'text-status-warning border-status-warning/30 bg-status-warning/5' :
-                          'text-muted-foreground/40 border-border-surface'
+                          req.priority === 'Urgent' ? 'text-status-error bg-status-error/5' :
+                          req.priority === 'High' ? 'text-status-warning bg-status-warning/5' :
+                          'text-muted-foreground/40 border-none bg-surface-container-low'
                         }`}>
                           {req.priority}
                         </Badge>
@@ -156,7 +156,7 @@ export function KitchenDashboard() {
         </Card>
 
         {/* Consumption Log Widget */}
-        <Card className="bg-surface-container-low border-border-surface shadow-xl">
+        <Card className="bg-surface-container-lowest border-none rounded-3xl">
           <CardHeader>
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-operational-cyan mb-1 flex items-center gap-2">
               <History className="w-3 h-3" /> 
@@ -181,7 +181,7 @@ export function KitchenDashboard() {
              ))}
              <PermissionGate action="create" resource="operations_issues">
                 <Link href={`/${locale}/issues/new`} className="w-full">
-                  <Button variant="outline" className="w-full bg-muted/10 border-border-surface text-[10px] font-black uppercase tracking-[0.2em] h-10 hover:bg-cyan-500 hover:text-primary-foreground transition-all">
+                  <Button variant="outline" className="w-full bg-surface-container-low border-none text-[10px] font-black uppercase tracking-[0.2em] h-10 hover:bg-operational-cyan/20 hover:text-operational-cyan transition-all">
                      Quick Record Usage <ArrowUpRight className="w-3 h-3 ms-2" />
                   </Button>
                 </Link>

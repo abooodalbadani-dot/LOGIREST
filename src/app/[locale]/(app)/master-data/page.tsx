@@ -59,16 +59,16 @@ export default async function MasterDataHubPage(props: { params: Promise<{ local
             <Link
               key={module.href + module.name}
               href={module.href}
-              className="flex items-center gap-4 p-6 bg-surface-container-low border border-outline-low rounded-xl transition-all hover:bg-surface-container-high hover:border-primary/30 group"
+              className="flex items-center gap-4 p-6 bg-surface-container-low rounded-lg transition-all hover:bg-surface-container-high group"
             >
-              <div className="p-3 rounded-lg bg-surface-container-high group-hover:bg-primary/10 transition-colors">
-                <module.icon className="w-6 h-6 text-muted-foreground/60 group-hover:text-primary transition-colors" />
+              <div className="p-3 rounded-md bg-surface-container-high group-hover:bg-status-active/10 transition-colors">
+                <module.icon className="w-6 h-6 text-muted-foreground/60 group-hover:text-status-active transition-colors" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-foreground group-hover:text-primary transition-colors">
+                <span className="font-semibold text-foreground group-hover:text-status-active transition-colors tracking-tight">
                   {module.name}
                 </span>
-                <span className="text-xs text-muted-foreground/60 uppercase tracking-wider">
+                <span className="text-[10px] text-muted-foreground/40 uppercase tracking-[0.08em] font-medium">
                   {module.resource.replace('_', ' ')}
                 </span>
               </div>

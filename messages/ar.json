@@ -522,7 +522,15 @@
       "last_sync": "آخر مزامنة",
       "active_counting": "عد نشط",
       "finalized_audits": "تدقيقات مكتملة",
-      "filter_state": "تصفية حسب الحالة"
+      "filter_state": "تصفية حسب الحالة",
+      "skus": "الأصناف",
+      "total_to_verify": "إجمالي للتحقق",
+      "workflow_state": "حالة سير العمل",
+      "owner": "المالك",
+      "autosave_active": "الحفظ التلقائي نشط",
+      "expected": "المتوقع",
+      "delta": "الفارق",
+      "no_variance_recorded": "لم يتم تسجيل فروقات"
     }
   },
   "masterData": {

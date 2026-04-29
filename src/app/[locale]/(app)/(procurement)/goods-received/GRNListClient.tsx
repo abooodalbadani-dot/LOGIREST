@@ -55,8 +55,8 @@ export function GRNListClient({
       header: tc('doc_number'),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span dir="ltr" className="font-mono text-cyan-500/90 font-black tracking-widest text-[13px]">{row.original.document_number}</span>
-          <span className="text-[9px] font-black uppercase tracking-tighter opacity-20">{t('received_manifest_sub')}</span>
+          <span dir="ltr" className="font-mono tracking-normal text-cyan-500 font-semibold text-[13px]">{row.original.document_number}</span>
+          <span className="text-[9px] font-semibold uppercase tracking-[0.08em] opacity-30">{t('received_manifest_sub')}</span>
         </div>
       ),
     },
@@ -65,8 +65,8 @@ export function GRNListClient({
       header: tc('supplier'),
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span dir="ltr" className="text-[11px] font-bold tracking-tight text-foreground/80 text-start">{row.original.supplier_id}</span>
-          <span className="text-[9px] font-medium opacity-40 uppercase tracking-widest">{t('verified_vendor_sub')}</span>
+          <span dir="ltr" className="text-[11px] font-semibold text-foreground/80 text-start">{row.original.supplier_id}</span>
+          <span className="text-[9px] font-medium opacity-40 uppercase tracking-[0.08em]">{t('verified_vendor_sub')}</span>
         </div>
       ),
     },
@@ -76,12 +76,11 @@ export function GRNListClient({
       cell: ({ row }) =>
         row.original.posted_at ? (
           <div className="flex items-center gap-2">
-            <Clock className="w-3 h-3 opacity-20" />
-            <span dir="ltr" className="text-[10px] opacity-60 font-mono font-bold tracking-tighter">
-              {new Date(row.original.posted_at).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+            <span dir="ltr" className="text-[11px] opacity-60 font-mono font-medium">
+              {format(new Date(row.original.posted_at), 'dd/MM/yyyy')}
             </span>
           </div>
-        ) : <span className="opacity-10 text-[10px] font-black italic">{t('pending_label')}</span>,
+        ) : <span className="opacity-10 text-[10px] font-semibold italic">{t('pending_label')}</span>,
     },
     {
       id: 'actions',
@@ -92,7 +91,7 @@ export function GRNListClient({
             <Button
               variant="ghost"
               size="sm"
-              className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-sm transition-all group"
+              className="text-[9px] font-semibold uppercase tracking-[0.08em] text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-md transition-all group"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/${locale}/goods-received/${row.original.id}`);
@@ -127,8 +126,8 @@ export function GRNListClient({
             <div className="flex items-center gap-6">
               <PermissionGate action="create" resource="grn">
                 <Link href={`/${locale}/goods-received/new`}>
-                  <Button className="h-12 px-10 bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-sm transition-all shadow-[0_0_25px_rgba(6,182,212,0.25)] border-none">
-                    <Plus className="w-4 h-4 me-2" />
+                  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all shadow-lg shadow-cyan-900/10 border-none">
+                    <Plus className="w-3.5 h-3.5 me-2" />
                     {t('create_new')}
                   </Button>
                 </Link>
@@ -159,7 +158,7 @@ export function GRNListClient({
         />
       </div>
 
-      <div className="bg-surface-container-low/30 border border-surface-variant/10 rounded-sm p-1">
+      <div className="bg-surface-container-lowest border border-surface-variant/5 rounded-lg p-1">
         <DataTable
           columns={columns}
           data={data?.data || []}
@@ -173,7 +172,7 @@ export function GRNListClient({
               action={
                 <PermissionGate action="create" resource="grn">
                   <Link href={`/${locale}/goods-received/new`}>
-                    <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-black uppercase tracking-widest rounded-sm transition-all shadow-lg">
+                    <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all">
                       <Plus className="w-3.5 h-3.5 me-2" />
                       {t('create_new')}
                     </Button>
@@ -192,36 +191,36 @@ export function GRNListClient({
           filters={
             <div className="flex flex-wrap items-end gap-8 w-full py-6 px-8 bg-surface-container-low border-b border-surface-variant/10">
               <div className="flex flex-col gap-3 min-w-[240px] flex-1">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">{tc('status_filtering')}</label>
+                <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/40">{tc('status_filtering')}</label>
                 <Select
                   value={status || 'ALL'}
                   onValueChange={(val) => { setStatus(val === 'ALL' ? undefined : (val ?? undefined)); setPage(1); }}
                 >
-                  <SelectTrigger className="w-full bg-surface-container-highest/20 border-surface-variant/10 h-12 px-4 text-[10px] font-black uppercase tracking-widest focus:ring-cyan-500/20">
+                  <SelectTrigger className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 px-4 text-[10px] font-semibold uppercase tracking-[0.08em] focus:ring-cyan-500/10 rounded-md">
                     <SelectValue placeholder={tc('status.all')} />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-high border-surface-variant/20">
-                    <SelectItem value="ALL" className="text-[10px] font-black uppercase tracking-widest">{tc('status.all')}</SelectItem>
-                    <SelectItem value="DRAFT" className="text-[10px] font-black uppercase tracking-widest">{tc('status.draft')}</SelectItem>
-                    <SelectItem value="POSTED" className="text-[10px] font-black uppercase tracking-widest">{tc('status.posted')}</SelectItem>
+                  <SelectContent className="bg-surface-container-high border-surface-variant/5 rounded-md">
+                    <SelectItem value="ALL" className="text-[10px] font-semibold uppercase tracking-[0.08em]">{tc('status.all')}</SelectItem>
+                    <SelectItem value="DRAFT" className="text-[10px] font-semibold uppercase tracking-[0.08em]">{tc('status.draft')}</SelectItem>
+                    <SelectItem value="POSTED" className="text-[10px] font-semibold uppercase tracking-[0.08em]">{tc('status.posted')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-3 min-w-[300px] flex-[2]">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">{t('stream_identifier')}</label>
+                <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/40">{t('stream_identifier')}</label>
                 <div className="relative">
                   <Input
                     placeholder={t('search_placeholder')}
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                    className="w-full bg-surface-container-highest/20 border-surface-variant/10 h-12 ps-12 pe-4 text-xs font-bold focus:ring-cyan-500/20 placeholder:text-muted-foreground/20 rounded-sm"
+                    className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 ps-12 pe-4 text-xs font-semibold focus:ring-cyan-500/10 placeholder:text-muted-foreground/20 rounded-md"
                   />
                   <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-500/40" />
                   {search && (
                     <button 
                       onClick={() => { setSearch(''); setPage(1); }}
-                      className="absolute end-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-cyan-500 transition-colors"
+                      className="absolute end-4 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/40 hover:text-cyan-500 transition-colors"
                     >
                       {tc('reset')}
                     </button>
@@ -232,7 +231,7 @@ export function GRNListClient({
               <Button 
                 variant="outline"
                 onClick={() => { setStatus(undefined); setSearch(''); setPage(1); }}
-                className="h-12 px-10 bg-surface-container-highest/30 hover:bg-surface-container-highest text-[10px] font-black uppercase tracking-[0.2em] rounded-sm transition-all border border-surface-variant/10 group"
+                className="h-12 px-10 bg-surface-container-highest/30 hover:bg-surface-container-highest text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all border border-surface-variant/5 group"
               >
                 <Filter className="w-4 h-4 me-2 group-hover:text-cyan-500 transition-colors" />
                 {tc('reset')}

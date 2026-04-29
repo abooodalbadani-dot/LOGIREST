@@ -19,21 +19,15 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
  
-// Status → badge variant
-const STATUS_VARIANT: Record<string, string> = {
-  POSTED:   'bg-black/40 text-emerald-400 border-emerald-400/20',
-  APPROVED: 'bg-black/40 text-cyan-400 border-cyan-400/20',
-  DRAFT:    'bg-black/40 text-white/40 border-white/5',
+// Reason → Semantic visual styling (Hardened for Culinary Architect)
+const REASON_CHIP: Record<string, string> = {
+  DAMAGE:        'bg-status-error/10 text-status-error font-bold border border-status-error/5',
+  EXPIRY:        'bg-status-warning/10 text-status-warning font-bold border border-status-warning/5',
+  THEFT:         'bg-status-error/10 text-status-error font-bold border border-status-error/5',
+  COUNTING_ERROR:'bg-status-secondary/10 text-status-secondary font-bold border border-status-secondary/5',
+  OTHER:         'bg-surface-container-highest/30 text-muted-foreground font-bold border border-outline-low/5',
 };
  
-// Reason → TailwindCSS classes for colour-coded chip
-const REASON_CHIP: Record<string, string> = {
-  DAMAGE:        'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-  EXPIRY:        'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-  THEFT:         'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-  COUNTING_ERROR:'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-  OTHER:         'bg-white/5 text-white/40 border border-white/5',
-};
  
 export function AdjustmentListClient() {
   const t = useTranslations('operations.adjustment');
@@ -57,7 +51,7 @@ export function AdjustmentListClient() {
       accessorKey: 'document_number',
       header: t('doc_number'),
       cell: ({ row }) => (
-        <span dir="ltr" className="font-mono text-cyan-500 font-bold tracking-wider">
+        <span dir="ltr" className="font-mono text-status-active text-[13px] font-semibold tracking-normal">
           {row.original.document_number}
         </span>
       ),
@@ -70,7 +64,7 @@ export function AdjustmentListClient() {
         const cls = REASON_CHIP[row.original.reason as keyof typeof REASON_CHIP] ?? REASON_CHIP.OTHER;
         const label = t.has(`reasons.${reason}`) ? t(`reasons.${reason}`) : row.original.reason;
         return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${cls}`}>
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[9px] uppercase tracking-[0.05em] ${cls}`}>
             {label}
           </span>
         );
@@ -86,13 +80,13 @@ export function AdjustmentListClient() {
       header: t('approved_by'),
       cell: ({ row }) =>
         row.original.approved_by ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400/90">
-            <CheckCircle2 className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-status-success">
+            <CheckCircle2 className="w-3.5 h-3.5" />
             {row.original.approved_by}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-white/20 italic">
-            <Clock className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground/30 italic">
+            <Clock className="w-3.5 h-3.5" />
             {tCommon('status.pending') || 'Pending'}
           </span>
         ),
@@ -102,10 +96,10 @@ export function AdjustmentListClient() {
       header: tCommon('created_at'),
       cell: ({ row }) =>
         row.original.created_at ? (
-          <span dir="ltr" className="text-[11px] opacity-40 font-mono italic">
-            {format(new Date(row.original.created_at), 'MMM dd, yyyy')}
+          <span dir="ltr" className="text-[11px] text-muted-foreground/40 font-mono font-medium">
+            {format(new Date(row.original.created_at), 'dd/MM/yyyy')}
           </span>
-        ) : <span className="opacity-20">—</span>,
+        ) : <span className="opacity-20 text-[10px]">—</span>,
     },
     {
       id: 'actions',
@@ -115,7 +109,7 @@ export function AdjustmentListClient() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-[10px] font-black uppercase tracking-widest text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
+            className="text-[10px] font-bold uppercase tracking-[0.08em] text-status-active hover:bg-status-active/10 h-8 px-4 rounded-md"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`adjustments/${row.original.id}`);
@@ -156,8 +150,8 @@ export function AdjustmentListClient() {
             </div>
             <PermissionGate action="create" resource="adjustment">
                <Link href="adjustments/new">
-                 <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
-                   <Plus className="w-3.5 h-3.5 me-2" />
+                 <Button className="h-10 px-8 bg-surface-container-low border border-outline-low/10 text-status-active text-[10px] font-bold uppercase tracking-[0.1em] rounded-md transition-all hover:bg-surface-container-medium shadow-sm gap-2">
+                   <Plus className="w-3.5 h-3.5" />
                    {t('create_new')}
                  </Button>
                </Link>
@@ -221,9 +215,9 @@ export function AdjustmentListClient() {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low rounded-2xl shadow-xl">
-            <div className="flex flex-col gap-2 min-w-[240px] flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
+          <div className="flex flex-wrap items-center gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg">
+            <div className="flex flex-col gap-2.5 min-w-[240px] flex-1">
+              <label className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40 ms-1">{tCommon('status_label')}</label>
               <Select
                 value={status || 'ALL'}
                 onValueChange={(val: string | null) => { 
@@ -232,31 +226,31 @@ export function AdjustmentListClient() {
                   setPage(1); 
                 }}
               >
-                <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-xs font-bold rounded-xl transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/30">
+                <SelectTrigger className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 px-5 text-[11px] font-bold uppercase tracking-[0.05em] rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20">
                   <SelectValue placeholder={tCommon('status.all')} />
                 </SelectTrigger>
-                <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
-                  <SelectItem value="ALL">{tCommon('status.all')}</SelectItem>
-                  <SelectItem value="DRAFT">{tCommon('status.draft')}</SelectItem>
-                  <SelectItem value="APPROVED">{tCommon('status.approved')}</SelectItem>
-                  <SelectItem value="POSTED">{tCommon('status.posted')}</SelectItem>
+                <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
+                  <SelectItem value="ALL" className="text-[10px] font-bold uppercase tracking-[0.08em]">{tCommon('status.all')}</SelectItem>
+                  <SelectItem value="DRAFT" className="text-[10px] font-bold uppercase tracking-[0.08em]">{tCommon('status.draft')}</SelectItem>
+                  <SelectItem value="APPROVED" className="text-[10px] font-bold uppercase tracking-[0.08em]">{tCommon('status.approved')}</SelectItem>
+                  <SelectItem value="POSTED" className="text-[10px] font-bold uppercase tracking-[0.08em]">{tCommon('status.posted')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
  
-            <div className="flex flex-col gap-2 min-w-[300px] flex-[2]">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ms-1">{tCommon('search')}</label>
+            <div className="flex flex-col gap-2.5 min-w-[300px] flex-[2]">
+              <label className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40 ms-1">{tCommon('search')}</label>
               <div className="relative group">
                 <Input
                   placeholder={t('search_placeholder') || 'Search Adjustment Documents...'}
-                  className="w-full bg-surface-container-highest/40 border-none h-12 ps-12 pe-4 text-xs font-bold rounded-xl transition-all group-hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/30"
+                  className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 ps-12 pe-4 text-[11px] font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20"
                 />
-                <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 transition-colors group-hover:text-cyan-500/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-active/40 transition-colors group-hover:text-status-active/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               </div>
             </div>
  
-            <Button className="h-12 px-8 bg-surface-container-highest/60 hover:bg-cyan-500 hover:text-black text-foreground text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all border border-outline-low shadow-lg group">
-              <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180" />
+            <Button className="h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-[10px] font-bold uppercase tracking-[0.1em] rounded-md transition-all border border-outline-low/10 group">
+              <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180 text-status-active/60" />
               {tCommon('filters_button')}
             </Button>
           </div>

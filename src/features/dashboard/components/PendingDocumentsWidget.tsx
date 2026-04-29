@@ -16,19 +16,19 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
   const isRtl = locale === 'ar';
 
   return (
-    <div className="bg-surface-container-low/40 rounded-2xl overflow-hidden border border-border-surface backdrop-blur-sm flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-border-surface flex items-center justify-between">
+    <div className="bg-surface-container-low/40 rounded-3xl overflow-hidden border-none backdrop-blur-sm flex flex-col h-full">
+      <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
           <FileText className="w-3.5 h-3.5 text-operational-cyan" />
           {t('title')}
         </h3>
         <div className="flex items-center gap-2">
-           <span className="px-2 py-0.5 rounded-full bg-operational-cyan/10 text-operational-cyan text-[9px] font-black uppercase tracking-widest border border-operational-cyan/20">
+           <span className="px-2 py-0.5 rounded-full bg-operational-cyan/10 text-operational-cyan text-[9px] font-black uppercase tracking-widest">
             {docs.length} {t('tasks')}
           </span>
         </div>
       </div>
-      <div className="flex flex-col flex-1 divide-y divide-border-surface">
+      <div className="flex flex-col flex-1">
         {docs.map((doc, idx) => (
           <Link 
             key={doc.id} 
@@ -37,7 +37,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
           >
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-3">
-                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-muted text-foreground tracking-tighter uppercase shadow-sm">
+                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-muted text-foreground tracking-tighter uppercase">
                    {doc.type}
                  </span>
                  <span className="text-[13px] font-bold text-foreground group-hover:text-operational-cyan transition-colors tracking-tight font-mono">
@@ -48,19 +48,19 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
                 <span className="text-[10px] text-muted-foreground font-bold tracking-tight">
                   {doc.department || doc.warehouse}
                 </span>
-                <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-s border-border-surface ps-3">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest ps-3">
                   <Timer className="w-3 h-3" />
                   {doc.date}
                 </div>
               </div>
             </div>
-            <div className="p-2 text-muted-foreground/20 group-hover:text-operational-cyan group-hover:bg-operational-cyan/10 rounded-xl transition-all border border-transparent group-hover:border-operational-cyan/20 shadow-sm">
+            <div className="p-2 text-muted-foreground/20 group-hover:text-operational-cyan group-hover:bg-operational-cyan/10 rounded-xl transition-all border-none">
               <ArrowUpRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRtl ? 'rotate-[-90deg] group-hover:rotate-[-45deg]' : ''}`} />
             </div>
           </Link>
         ))}
       </div>
-      <div className="p-4 bg-muted/50 text-center border-t border-border-surface">
+      <div className="p-4 bg-muted/50 text-center">
         <Link 
           href={`/${locale}/purchase-requests`}
           className="text-[9px] font-black text-operational-cyan hover:text-operational-cyan/80 uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2"

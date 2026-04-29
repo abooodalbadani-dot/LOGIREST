@@ -56,7 +56,7 @@ export function PostConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-surface-container-low rounded-2xl border border-outline-low w-full max-w-md p-6 shadow-2xl relative m-4 animate-in zoom-in-95 duration-200">
+      <div className="bg-surface-container-lowest rounded-2xl border border-outline-low w-full max-w-md p-6 ambient-shadow relative m-4 animate-in zoom-in-95 duration-200">
         {!isLoading && (
           <button 
             className="absolute top-4 text-muted-foreground/60 hover:text-muted-foreground transition-colors"

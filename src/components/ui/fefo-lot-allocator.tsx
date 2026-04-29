@@ -76,7 +76,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-surface-container-low border-border-surface p-0 overflow-hidden rounded-[2rem] shadow-2xl">
+      <DialogContent className="sm:max-w-2xl bg-surface-container-lowest border-none p-0 overflow-hidden rounded-3xl">
         <div className="bg-muted/10 p-8 border-b border-border-surface">
           <DialogHeader>
              <div className="flex items-center gap-4 mb-2">
@@ -100,7 +100,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
         <div className="p-8 space-y-8">
           {/* Allocation Progress Bar */}
-          <div className="bg-muted/5 p-6 rounded-3xl border border-border-surface shadow-inner">
+          <div className="bg-muted/5 p-6 rounded-3xl">
              <div className="flex items-center justify-between mb-4">
                 <div className="flex flex-col">
                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Required Commitment</span>
@@ -119,7 +119,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
              
              <div className="h-3 bg-muted/20 rounded-full overflow-hidden border border-black/5 p-0.5">
                   <div 
-                     className={`h-full rounded-full transition-all duration-700 ${isComplete ? 'bg-status-success shadow-[0_0_15px_rgba(var(--status-success-rgb),0.5)]' : isOver ? 'bg-status-error' : 'bg-primary animate-pulse'}`}
+                     className={`h-full rounded-full transition-all duration-700 ${isComplete ? 'bg-status-success' : isOver ? 'bg-status-error' : 'bg-primary animate-pulse'}`}
                     style={{ width: `${Math.min(100, (totalAllocated / requestedQty) * 100)}%` }}
                  />
              </div>
@@ -207,7 +207,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                                 min="0"
                                 max={lot.availableQty}
                                 step="0.01"
-                                 className="w-32 h-10 bg-muted/50 border-none text-center font-mono font-black text-[11px] rounded-lg shadow-inner transition-all focus:ring-2 focus:ring-operational-cyan/20"
+                                 className="w-32 h-10 bg-muted/50 border-none text-center font-mono font-black text-[11px] rounded-lg transition-all focus:ring-2 focus:ring-operational-cyan/20"
                                 dir="ltr"
                                 disabled={isExpired}
                                 value={allocations[lot.lotNumber] ?? ''}
@@ -235,7 +235,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
           </Button>
           
           <Button
-            className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] disabled:opacity-30 disabled:grayscale"
+            className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all disabled:opacity-30 disabled:grayscale active:scale-95"
             disabled={!isComplete}
             onClick={handleConfirm}
           >

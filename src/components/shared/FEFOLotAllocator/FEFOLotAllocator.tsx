@@ -96,7 +96,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
         <button 
           onClick={handleConfirm}
           disabled={!isValid}
-          className="px-6 py-2.5 bg-operational-cyan text-primary-foreground rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all active:scale-[0.98] shadow-lg shadow-operational-cyan/20"
+          className="px-6 py-2.5 bg-operational-cyan text-primary-foreground rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all active:scale-[0.98]"
         >
           {t('confirm_allocation')}
         </button>

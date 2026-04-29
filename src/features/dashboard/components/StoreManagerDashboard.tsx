@@ -41,7 +41,7 @@ export function StoreManagerDashboard() {
         <div className="space-y-2">
           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-status-success block mb-2 opacity-80">Logistics & fulfillment</span>
           <h2 className="text-6xl font-black tracking-tighter uppercase italic text-foreground leading-none">
-            Operational <span className="text-status-success drop-shadow-[0_0_15px_rgba(var(--status-success-rgb),0.3)]">Control</span>
+            Operational <span className="text-status-success">Control</span>
           </h2>
           <div className="flex items-center gap-3">
             <div className="h-[2px] w-12 bg-status-success" />
@@ -51,14 +51,14 @@ export function StoreManagerDashboard() {
         <div className="flex gap-4">
           <PermissionGate action="view" resource="operations_stocktake">
             <Link href={`/${locale}/stocktake`} className="contents">
-              <Button variant="outline" className="border border-border-surface bg-surface-container-low/50 backdrop-blur-md rounded-xl h-14 px-8 font-black uppercase tracking-[0.2em] text-[11px] hover:bg-status-success hover:text-black hover:border-status-success transition-all shadow-lg hover:shadow-[0_0_30px_rgba(var(--status-success-rgb),0.2)]">
+              <Button variant="outline" className="border-none bg-surface-container-low rounded-xl h-14 px-8 font-black uppercase tracking-[0.2em] text-[11px] hover:bg-status-success hover:text-black transition-all">
                 Inventory Audit
               </Button>
             </Link>
           </PermissionGate>
           <PermissionGate action="create" resource="operations_issues">
             <Link href={`/${locale}/issues/new`} className="contents">
-              <Button className="bg-status-success hover:bg-status-success/90 text-black font-black uppercase tracking-[0.2em] px-10 rounded-xl h-14 shadow-[0_12px_24px_-8px_rgba(var(--status-success-rgb),0.5)] transition-all active:scale-[0.98]">
+              <Button className="primary-gradient text-white font-black uppercase tracking-[0.2em] px-10 rounded-xl h-14 transition-all hover:scale-[0.98] hover:brightness-110 active:scale-95">
                 Batch Issue
               </Button>
             </Link>
@@ -74,7 +74,7 @@ export function StoreManagerDashboard() {
           icon={Truck}
           accent="cyan"
           description="Pending Issues & Transfers"
-          className="shadow-xl"
+          className=""
         />
         <KPICard
           title="Stock Shortages"
@@ -82,7 +82,7 @@ export function StoreManagerDashboard() {
           icon={AlertCircle}
           accent="red"
           description="Awaiting Procurement"
-          className="shadow-xl"
+          className=""
         />
         <KPICard
           title="Warehouse Load"
@@ -90,7 +90,7 @@ export function StoreManagerDashboard() {
           icon={Warehouse}
           accent="amber"
           description="Storage Capacity Usage"
-          className="shadow-xl"
+          className=""
         />
         <KPICard
           title="Asset Value"
@@ -98,64 +98,65 @@ export function StoreManagerDashboard() {
           icon={Layers}
           accent="cyan"
           description="On-hand stock valuation"
-          className="shadow-xl"
+          className=""
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Fulfillment Queue - Direct & Industrial */}
-        <Card className="lg:col-span-2 bg-surface-container-low/50 backdrop-blur-md border-border-surface rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-          <div className="absolute top-0 start-0 w-1.5 h-full bg-status-success opacity-40 group-hover:opacity-100 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border-surface pb-6">
-            <div>
-              <CardTitle className="text-2xl font-black tracking-tighter uppercase italic text-foreground">Fulfillment Queue</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.25em] mt-1.5">Real-time Stock Allocation (FEFO-Guided)</CardDescription>
-            </div>
+        <div className="lg:col-span-2 bg-surface-container-lowest border-none rounded-[2rem] relative overflow-hidden group transition-all duration-500">
+          <div className="absolute top-0 start-0 w-2 h-full bg-status-success/20 group-hover:bg-status-success transition-all duration-500" />
+          <div className="p-8 pb-4">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-2xl font-black tracking-tighter uppercase italic text-foreground leading-none">Fulfillment Queue</h3>
+                <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.3em] mt-2">Real-time Stock Allocation (FEFO-Guided)</p>
+              </div>
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2.5">
-                {[1,2,3].map(i => <div key={i} className="w-9 h-9 rounded-full border-2 border-surface-container-low bg-surface-container-high shadow-inner" />)}
+                {[1,2,3].map(i => <div key={i} className="w-9 h-9 rounded-full border-none bg-surface-container-high" />)}
               </div>
-              <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">+4 more</span>
+              <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">+4 more</span>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border-surface">
+          </div>
+          <div className="p-0">
+            <div className="">
               {[
                 { id: 'IS-90021', dest: 'Main Kitchen', items: 14, urgency: 'Urgent', status: 'Allocating' },
                 { id: 'TR-44023', dest: 'Branch B2', items: 45, urgency: 'Normal', status: 'Pending' },
                 { id: 'IS-90025', dest: 'Pastry Dept', items: 8, urgency: 'Normal', status: 'Ready' },
               ].map((job, i) => (
-                <div key={i} className="p-6 flex items-center justify-between hover:bg-surface-container-low/40 transition-all cursor-pointer group">
-                  <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-center justify-center w-14 h-14 bg-surface-container-lowest border border-border-surface rounded-xl font-mono text-xs font-black shadow-sm group-hover:border-operational-cyan/40 group-hover:shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.1)] transition-all">
-                       <span className="opacity-20 text-[8px] mb-1">ID</span>
+                <div key={i} className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-low transition-all cursor-pointer group">
+                  <div className="flex items-center gap-8">
+                    <div className="flex flex-col items-center justify-center w-14 h-14 bg-surface-container-low border-none rounded-2xl font-mono text-xs font-black group-hover:bg-operational-cyan/10 transition-all duration-500">
+                       <span className="opacity-10 text-[8px] mb-1">ID</span>
                        {job.id.split('-')[1]}
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4">
                         <span className="text-sm font-black text-foreground uppercase tracking-tight">{job.dest}</span>
-                        <Badge className={`rounded-md text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-none ${
-                          job.urgency === 'Urgent' ? 'bg-status-error text-black animate-pulse' : 'bg-surface-container-high text-muted-foreground'
+                        <Badge className={`rounded-lg text-[8px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border-none ${
+                          job.urgency === 'Urgent' ? 'bg-status-error text-white animate-pulse' : 'bg-surface-container-high text-muted-foreground/60'
                         }`}>
                           {job.urgency}
                         </Badge>
                       </div>
-                      <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-[0.15em]">
-                        {job.items} items • {job.id.startsWith('IS') ? 'Direct Issue' : 'Transfer Request'}
+                      <p className="text-[10px] text-muted-foreground/30 font-black uppercase tracking-[0.2em]">
+                        {job.items} units • {job.id.startsWith('IS') ? 'Direct Issue' : 'Transfer Request'}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-8">
-                      <div className="hidden md:flex flex-col items-end gap-1.5">
-                        <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] italic">FEFO Status</span>
+                  <div className="flex items-center gap-10">
+                      <div className="hidden md:flex flex-col items-end gap-2">
+                        <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em] italic">FEFO Buffer</span>
                         <div className="flex gap-1">
-                           <div className="w-4 h-1 bg-status-success" />
-                           <div className="w-4 h-1 bg-status-success" />
-                           <div className="w-4 h-1 bg-outline-medium" />
+                           <div className="w-5 h-1 bg-status-success rounded-full" />
+                           <div className="w-5 h-1 bg-status-success rounded-full" />
+                           <div className="w-5 h-1 bg-surface-container-high rounded-full" />
                         </div>
                      </div>
                       <PermissionGate action="edit" resource="operations_issues">
-                        <Button variant="ghost" className="rounded-xl border border-border-surface h-11 w-11 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-105">
+                        <Button variant="ghost" className="rounded-2xl border-none bg-surface-container-low h-12 w-12 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-110 active:scale-95">
                           <ArrowRightLeft className="w-4 h-4" />
                         </Button>
                       </PermissionGate>
@@ -163,59 +164,60 @@ export function StoreManagerDashboard() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Warehouse Efficiency / FEFO Watch */}
-        <div className="space-y-6">
-          <Card className="bg-surface-container-low/50 backdrop-blur-md border-border-surface rounded-2xl shadow-xl relative group overflow-hidden">
-            <div className="absolute bottom-0 start-0 w-full h-[3px] bg-status-success scale-x-0 group-hover:scale-x-100 transition-transform duration-500 shadow-[0_0_15px_rgba(var(--status-success-rgb),0.5)]" />
-            <CardHeader className="pb-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-status-success flex items-center gap-2">
+        <div className="space-y-8">
+          <div className="bg-surface-container-lowest border-none rounded-[2rem] relative group overflow-hidden transition-all duration-500">
+            <div className="absolute bottom-0 start-0 w-full h-1 bg-status-success scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
+            <div className="p-8 pb-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-status-success flex items-center gap-2 mb-4">
                 <Zap className="w-3.5 h-3.5 fill-current" /> FEFO Boundary
               </span>
-              <CardTitle className="text-xl font-black tracking-tight uppercase italic text-foreground">Expiring Stock</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-2">
+              <h3 className="text-xl font-black tracking-tight uppercase italic text-foreground leading-none">Expiring Stock</h3>
+            </div>
+            <div className="p-8 pt-2 space-y-6">
                {[
                  { item: 'Tomato Paste 5kg', days: 4, batch: 'B-992' },
                  { item: 'Whole Milk 1L', days: 7, batch: 'B-102' },
                  { item: 'Fresh Cream', days: 2, batch: 'B-041' },
                ].map((item, i) => (
-                 <div key={i} className="flex flex-col gap-1.5 border-s-2 border-border-surface ps-4 hover:border-status-success transition-colors group/item">
+                 <div key={i} className="flex flex-col gap-2 border-s-2 border-surface-container-low ps-6 hover:border-status-success transition-all duration-300 group/item">
                    <div className="flex items-center justify-between">
                      <span className="text-[11px] font-black text-foreground group-hover/item:text-status-success transition-colors uppercase tracking-tight">{item.item}</span>
-                     <span className={`text-[9px] font-black px-2 py-0.5 rounded ${item.days < 3 ? 'bg-status-error/10 text-status-error' : 'bg-status-warning/10 text-status-warning'} uppercase tracking-widest`}>{item.days}d Left</span>
+                     <span className={`text-[9px] font-black px-3 py-1 rounded-lg ${item.days < 3 ? 'bg-status-error/10 text-status-error' : 'bg-status-warning/10 text-status-warning'} uppercase tracking-widest`}>{item.days}d Left</span>
                    </div>
-                   <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">Batch {item.batch} • Location A1-4</span>
+                   <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.25em]">Batch {item.batch} • Location A1-4</span>
                  </div>
                ))}
                <PermissionGate action="create" resource="operations_adjustments">
                  <Link href={`/${locale}/adjustments/new`} className="w-full">
-                   <Button className="w-full bg-surface-container-high hover:bg-status-success hover:text-black border-none rounded-xl text-[10px] font-black uppercase tracking-[0.3em] h-12 mt-4 shadow-sm transition-all active:scale-[0.98]">
+                   <Button className="w-full bg-surface-container-high hover:bg-status-success hover:text-black border-none rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] h-14 mt-6 transition-all hover:scale-[0.98] hover:brightness-110 active:scale-95">
                       Generate Disposal Log
                    </Button>
                  </Link>
                </PermissionGate>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="bg-surface-container-low/50 backdrop-blur-md border-border-surface rounded-2xl shadow-xl overflow-hidden group">
-            <CardHeader className="pb-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 flex items-center gap-2">
+          <div className="bg-surface-container-lowest border-none rounded-[2rem] overflow-hidden group transition-all duration-500">
+            <div className="p-8 pb-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/20 flex items-center gap-2 mb-4">
                 <BarChart3 className="w-3.5 h-3.5" /> Efficiency
               </span>
-              <CardTitle className="text-xl font-black tracking-tight uppercase italic text-foreground">Stock Velocity</CardTitle>
-            </CardHeader>
-            <CardContent className="h-36 flex flex-col items-center justify-center gap-5 border-t border-border-surface bg-surface-container-lowest/20">
-                <div className="flex items-end gap-1.5 h-14">
+              <h3 className="text-xl font-black tracking-tight uppercase italic text-foreground leading-none">Stock Velocity</h3>
+            </div>
+            <div className="h-44 flex flex-col items-center justify-center gap-6 bg-surface-container-low/30 group-hover:bg-surface-container-low/50 transition-colors duration-700">
+                <div className="flex items-end gap-2 h-16">
                    {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-                     <div key={i} className="w-2.5 bg-status-success/10 hover:bg-status-success group-hover:bg-status-success/30 transition-all cursor-pointer rounded-t-sm" style={{ height: `${h}%` }} />
+                     <div key={i} className="w-3 bg-status-success/10 group-hover:bg-status-success/40 transition-all duration-700 cursor-pointer rounded-full" style={{ height: `${h}%` }} />
                    ))}
                 </div>
-                <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">Week 17 Throughput</span>
-            </CardContent>
-          </Card>
+                <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.5em]">Week 17 Throughput</span>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </div>

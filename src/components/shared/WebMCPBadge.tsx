@@ -20,28 +20,28 @@ export function WebMCPBadge() {
         console.log('Registered WebMCP Tools:', registeredTools);
         alert(`WebMCP Discovery Mode:\n${registeredTools.map(t => `• ${t.name}`).join('\n')}`);
       }}
-      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-black/80 shadow-[0_0_20px_rgba(236,72,153,0.3)] group transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] relative overflow-hidden"
+      className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-fuchsia-500/30 group transition-all relative overflow-hidden shadow-[0_0_15px_rgba(217,70,239,0.3)] hover:shadow-[0_0_25px_rgba(217,70,239,0.5)]"
       type="button"
     >
-      {/* Pulsing Neon Background - OVERRIDES PURPLE BAN FOR WEBMCP */}
-      <div className="absolute inset-0 bg-gradient-to-r from-pink-600/20 via-indigo-600/20 to-pink-600/20 opacity-40 group-hover:opacity-100 transition-opacity" />
-      <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-indigo-500 to-pink-500 blur-lg opacity-10 group-hover:opacity-30 animate-pulse" />
+      {/* Dynamic Glowing Background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600/20 via-purple-600/20 to-pink-600/20 opacity-60 group-hover:opacity-100 transition-opacity animate-pulse" />
       
-      <div className="relative flex items-center gap-2">
+      <div className="relative flex items-center gap-2.5">
         <div className="relative">
-          <Zap className="w-3.5 h-3.5 text-pink-400 fill-pink-400 drop-shadow-[0_0_8px_rgba(236,72,153,1)]" />
-          <div className="absolute inset-0 blur-[4px] bg-pink-400/60 rounded-full animate-ping opacity-40" />
+          <Zap className="w-4 h-4 text-fuchsia-400 fill-fuchsia-400 group-hover:scale-125 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
+          <div className="absolute inset-0 blur-[4px] bg-fuchsia-400/40 rounded-full animate-ping opacity-20" />
         </div>
         <div className="flex flex-col items-start leading-none">
-          <span className="text-[8px] font-black text-pink-300/90 uppercase tracking-[0.25em] mb-0.5">
+          <span className="text-[7px] font-black text-fuchsia-300 uppercase tracking-[0.4em] mb-0.5 drop-shadow-sm">
             Discovery Active
           </span>
-          <span className="text-[10px] font-black text-white uppercase tracking-wider drop-shadow-[0_0_3px_rgba(255,255,255,0.4)]">
-            ⚡ WebMCP Enabled
+          <span className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-1">
+            <span className="text-fuchsia-400">⚡</span> WebMCP
           </span>
         </div>
       </div>
     </button>
+
   );
 }
 
