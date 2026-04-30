@@ -1,0 +1,84 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
+import { DataTable } from '@/components/shared/DataTable/DataTable';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { useExpiryReport } from '@/features/reports/hooks/useReports';
+import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
+import { ColumnDef } from '@tanstack/react-table';
+import { formatDate } from '@/lib/utils';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+
+export default function ExpiryReportClient() {
+  const t = useTranslations('reports');
+  const { data, isLoading } = useExpiryReport();
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: 'sku',
+      header: t('table.sku'),
+    },
+    {
+      accessorKey: 'name',
+      header: t('table.name'),
+    },
+    {
+      accessorKey: 'lot_no',
+      header: t('table.lot_no'),
+    },
+    {
+      accessorKey: 'expiry_date',
+      header: t('table.expiry_date'),
+      cell: ({ row }) => formatDate(row.getValue('expiry_date')),
+    },
+    {
+      accessorKey: 'days_remaining',
+      header: t('table.days_remaining'),
+      meta: { numeric: true },
+    },
+    {
+      accessorKey: 'status',
+      header: t('table.status'),
+      cell: ({ row }) => (
+        <StatusBadge 
+          status={row.getValue('status')} 
+          variant={row.getValue('status') === 'EXPIRED' ? 'destructive' : 'warning'}
+        />
+      ),
+    },
+  ];
+
+  const exportColumns = [
+    { header: t('table.sku'), key: 'sku', width: 15 },
+    { header: t('table.name'), key: 'item_name', width: 30 },
+    { header: t('table.lot_no'), key: 'lot_no', width: 15 },
+    { header: t('table.expiry_date'), key: 'expiry_date', width: 20 },
+    { header: t('table.qty'), key: 'qty', width: 10 },
+    { header: t('table.status'), key: 'status', width: 15 },
+  ];
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <PageHeader 
+        title={t('expiry')}
+        subtitle={t('expiry_desc')}
+        backHref="/reports"
+      />
+
+      <DataTable
+        data={data || []}
+        columns={columns}
+        isLoading={isLoading}
+        exportComponent={
+          <ReportExportMenu 
+            columns={exportColumns}
+            data={data || []}
+            filename="Expiry_Report"
+            title={t('expiry')}
+          />
+        }
+        collectionName="reports"
+      />
+    </div>
+  );
+}

@@ -6,11 +6,16 @@ import { successSchema } from '@/types/api';
 export function useRejectPR() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => 
-      apiClient.post(`/procurement/purchase-requests/${id}/reject`, successSchema, {}),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => 
+      apiClient.post(`/procurement/purchase-requests/${id}/reject`, successSchema, { reason }),
+    onSuccess: (_, { id }) => {
+      // Simulate state transition in cache
+      queryClient.setQueryData(['purchase-request', id], (old: any) => {
+        if (!old) return old;
+        return { ...old, status: 'REJECTED' };
+      });
+
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-request', id] });
     }
   });
 }

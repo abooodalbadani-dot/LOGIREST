@@ -17,9 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useMasterDataItem, useMasterDataList, useMasterDataCreate, useMasterDataUpdate } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemSchema, ItemFormSchema, type ItemFormValues, CategorySchema, UoMSchema } from '@/types/master-data';
+import { Card, CardContent } from '@/components/ui/card';
+import { useItem, useCreateItem, useUpdateItem } from '@/features/items/hooks/useItems';
+import { useCategories } from '@/features/categories/hooks/useCategories';
+import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
+import { ItemFormSchema, type ItemFormValues, CategorySchema, UoMSchema } from '@/types/master-data';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -28,15 +30,16 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
 
 export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const t = useTranslations('masterData.common');
-  const ti = useTranslations('masterData.items');
+  const t = useTranslations('master_data.common');
+  const ti = useTranslations('master_data.items');
+  const tv = useTranslations(); // For validation messages if they are nested
   const router = useRouter();
 
-  const { data } = useMasterDataItem('items', id, ItemSchema);
-  const { data: categories } = useMasterDataList('categories', CategorySchema);
+  const { data } = useItem(id);
+  const { data: categories } = useCategories();
   const { data: uoms } = useMasterDataList('units-of-measure', UoMSchema);
-  const create = useMasterDataCreate('items', ItemSchema);
-  const update = useMasterDataUpdate('items', ItemSchema);
+  const create = useCreateItem();
+  const update = useUpdateItem();
 
   const { register, handleSubmit, reset, setValue, watch, control, formState: { errors } } =
     useForm<ItemFormValues>({
@@ -65,7 +68,7 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) await update.mutateAsync({ id, body: values });
+    if (id) await update.mutateAsync({ id, data: values });
     else await create.mutateAsync(values);
     router.push(`/${locale}/master-data/items`);
   });
@@ -97,8 +100,8 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                   <Package className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('basic_info')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{t('basic_info_desc')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('sections.identity')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{ti('sections.identity_desc')}</p>
                 </div>
               </div>
 
@@ -110,33 +113,41 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                     dir="ltr" 
                     {...register('code')} 
                     className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
-                    placeholder={t('placeholder_sku')} 
+                    placeholder="E.g. SKU-100-RED" 
                   />
-                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.code.message}</p>}
+                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tv(errors.code.message as any)}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('barcode')}</Label>
-                  <ScanInput
-                    onScan={(barcode) => setValue('barcode', barcode, { shouldValidate: true })}
-                    placeholder={ti('scan_or_type')}
-                    className="font-mono font-semibold text-status-active"
+                  <Label className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('fields.barcode')}</Label>
+                  <Controller
+                    name="barcode"
+                    control={control}
+                    render={({ field }) => (
+                      <ScanInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        onScan={(barcode) => setValue('barcode', barcode, { shouldValidate: true })}
+                        placeholder={ti('fields.barcode')}
+                        clearOnScan={false}
+                        className="font-mono font-semibold text-status-active"
+                      />
+                    )}
                   />
-                  <input type="hidden" {...register('barcode')} />
-                  {errors.barcode && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.barcode.message}</p>}
+                  {errors.barcode && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tv(errors.barcode.message as any)}</p>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="item-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{t('name_en')}</Label>
+                  <Label htmlFor="item-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('fields.name_en')}</Label>
                   <Input id="item-name-en" dir="ltr" {...register('name_en')} className="font-semibold" />
-                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_en.message}</p>}
+                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tv(errors.name_en.message as any)}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="item-name-ar" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{t('name_ar')}</Label>
+                  <Label htmlFor="item-name-ar" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('fields.name_ar')}</Label>
                   <Input id="item-name-ar" dir="rtl" {...register('name_ar')} className="font-semibold text-end" />
-                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_ar.message}</p>}
+                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tv(errors.name_ar.message as any)}</p>}
                 </div>
               </div>
             </CardContent>
@@ -150,14 +161,14 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                   <Boxes className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('classification')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{t('inventory_taxonomy_units')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('sections.categorization')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{ti('sections.categorization_desc')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="item-category" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('category')}</Label>
+                  <Label htmlFor="item-category" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('fields.category')}</Label>
                   <Controller
                     name="category_id"
                     control={control}
@@ -168,7 +179,7 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">—</SelectItem>
-                          {categories?.data?.map((c) => (
+                          {categories?.data?.map((c: any) => (
                             <SelectItem key={c.id} value={c.id} className="uppercase tracking-[0.08em] rtl:tracking-normal font-semibold text-xs">
                               {locale === 'ar' ? c.name_ar : c.name_en}
                             </SelectItem>
@@ -177,11 +188,11 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                       </Select>
                     )}
                   />
-                  {errors.category_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.category_id.message}</p>}
+                  {errors.category_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tv(errors.category_id.message as any)}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="primary-uom" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('primary_uom')}</Label>
+                  <Label htmlFor="primary-uom" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">{ti('fields.base_unit')}</Label>
                   <Controller
                     name="primary_uom_id"
                     control={control}
@@ -201,7 +212,7 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                       </Select>
                     )}
                   />
-                  {errors.primary_uom_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.primary_uom_id.message}</p>}
+                  {errors.primary_uom_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tv(errors.primary_uom_id.message as any)}</p>}
                 </div>
               </div>
             </CardContent>
@@ -308,7 +319,7 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{t('status')}</h3>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('fields.is_active')}</h3>
                   <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{t('operational_availability')}</p>
                 </div>
               </div>
@@ -340,20 +351,20 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
                   <Settings2 className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('inventory_rules')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{t('threshold_parameters')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{ti('sections.inventory_rules')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">{ti('sections.inventory_rules_desc')}</p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="min-stock" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/60 ps-1">{ti('min_stock_level')}</Label>
+                  <Label htmlFor="min-stock" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/60 ps-1">{ti('fields.min_stock')}</Label>
                   <Input id="min-stock" type="number" dir="ltr" min={0} 
                     className="font-mono font-semibold text-status-secondary"
                     {...register('min_stock_level', { valueAsNumber: true })} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reorder-point" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/60 ps-1">{ti('reorder_point')}</Label>
+                  <Label htmlFor="reorder-point" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/60 ps-1">{ti('fields.reorder_point')}</Label>
                   <Input id="reorder-point" type="number" dir="ltr" min={0} 
                     className="font-mono font-semibold text-status-secondary"
                     {...register('reorder_point', { valueAsNumber: true })} />

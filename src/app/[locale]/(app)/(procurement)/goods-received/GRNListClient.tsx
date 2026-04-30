@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { format } from 'date-fns';
 
 export function GRNListClient({
   initialStatus,

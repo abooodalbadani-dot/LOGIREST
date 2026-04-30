@@ -21,8 +21,11 @@ export function useCreatePR() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePRPayload) => 
-      apiClient.post('/procurement/purchase-requests', PRDetailSchema, payload),
-    onSuccess: () => {
+      apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(payload)),
+    onSuccess: (data) => {
+      // Seed the cache for the newly created PR
+      queryClient.setQueryData(['purchase-request', data.id], data);
+      
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
     }
   });

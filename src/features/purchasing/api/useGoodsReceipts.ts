@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { GoodsReceipt, CreateGoodsReceiptDTO, GRNStatus } from '../types';
+import { GoodsReceipt, CreateGoodsReceiptDTO, GRNStatus, GoodsReceiptLineItem } from '../types';
 
 // Mock data
 const mockGoodsReceipts: GoodsReceipt[] = [
@@ -146,6 +146,55 @@ export function usePostGoodsReceipt() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['goods-receipts'] });
       queryClient.invalidateQueries({ queryKey: ['goods-receipts', id] });
+    },
+  });
+}
+export function useUpdateGRNLine() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ grnId, item }: { grnId: string, item: GoodsReceiptLineItem }) => {
+      // Simulation: no real network call
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return { grnId, item };
+    },
+    onMutate: async ({ grnId, item }) => {
+      await queryClient.cancelQueries({ queryKey: ['goods-receipts', grnId] });
+      const previousGRN = queryClient.getQueryData<GoodsReceipt>(['goods-receipts', grnId]);
+
+      if (previousGRN) {
+        const newItems = [...previousGRN.items];
+        // Check if item already exists with this lot
+        const existingIndex = newItems.findIndex(i => i.itemId === item.itemId && i.lotNumber === item.lotNumber);
+        
+        if (existingIndex > -1) {
+          newItems[existingIndex] = {
+            ...newItems[existingIndex],
+            receivedQuantity: item.receivedQuantity // Or increment logic depending on caller
+          };
+        } else {
+          newItems.push({
+            ...item,
+            id: `grn-li-scan-${Date.now()}`
+          });
+        }
+
+        queryClient.setQueryData(['goods-receipts', grnId], {
+          ...previousGRN,
+          items: newItems,
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      return { previousGRN };
+    },
+    onError: (err, { grnId }, context) => {
+      if (context?.previousGRN) {
+        queryClient.setQueryData(['goods-receipts', grnId], context.previousGRN);
+      }
+    },
+    onSettled: (data, error, { grnId }) => {
+      queryClient.invalidateQueries({ queryKey: ['goods-receipts', grnId] });
     },
   });
 }

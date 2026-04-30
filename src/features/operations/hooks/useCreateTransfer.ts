@@ -27,7 +27,7 @@ export function useCreateTransfer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateTransferPayload) => 
-      apiClient.post('/operations/transfers', TransferDetailSchema, payload),
+      apiClient.post('/operations/transfers', TransferDetailSchema, CreateTransferPayloadSchema.parse(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
     }

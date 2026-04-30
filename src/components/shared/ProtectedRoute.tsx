@@ -11,22 +11,25 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredAction?: ActionType;
   requiredResource?: ResourceType;
+  roles?: string[];
 }
 
 export default function ProtectedRoute({
   children,
   requiredAction,
   requiredResource,
+  roles,
 }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
   
-  // If no specific permission is required, assume just authentication is enough
+  // If no specific permission or role is required, assume just authentication is enough
   const hasGenericAccess = !!user;
   const hasSpecificPermission = usePermission(requiredAction as ActionType, requiredResource as ResourceType);
+  const hasRequiredRole = roles ? (user?.role && roles.includes(user.role)) : true;
   
   const hasPermission = (requiredAction && requiredResource) 
     ? hasSpecificPermission 
-    : hasGenericAccess;
+    : (roles ? hasRequiredRole : hasGenericAccess);
     
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);

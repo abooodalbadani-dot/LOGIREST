@@ -342,6 +342,75 @@ export const operationsMocks: Record<string, unknown> = {
     document_number: 'ADJ-2026-001',
     status: 'POSTED',
     posted_at: new Date().toISOString()
+  },
+  'POST /operations/adjustments/adj-1/submit': {
+    id: 'adj-1',
+    status: 'SUBMITTED'
+  },
+  'POST /operations/adjustments/adj-1/reject': {
+    id: 'adj-1',
+    status: 'REJECTED'
+  },
+
+  // ─── Kitchen Requests ──────────────────────────────────────────────────
+  'GET /operations/kitchen-requests': {
+    data: [
+      { id: 'kr-1', request_number: 'REQ-2026-001', status: 'DRAFT', department_id: 'dep-1', warehouse_id: 'wh-1', requested_by: 'Ali Hassan', requested_at: '2026-04-25T08:00:00Z', created_at: '2026-04-25T08:00:00Z' },
+      { id: 'kr-2', request_number: 'REQ-2026-002', status: 'SUBMITTED', department_id: 'dep-2', warehouse_id: 'wh-1', requested_by: 'Sara Ahmed', requested_at: '2026-04-26T10:00:00Z', created_at: '2026-04-26T10:00:00Z' },
+      { id: 'kr-3', request_number: 'REQ-2026-003', status: 'APPROVED', department_id: 'dep-1', warehouse_id: 'wh-1', requested_by: 'Mona Ali', requested_at: '2026-04-27T11:00:00Z', created_at: '2026-04-27T11:00:00Z' }
+    ],
+    meta: { page: 1, page_size: 10, total: 3, total_pages: 1 }
+  },
+  'GET /operations/kitchen-requests/kr-1': {
+    id: 'kr-1',
+    request_number: 'REQ-2026-001',
+    status: 'DRAFT',
+    department_id: 'dep-1',
+    warehouse_id: 'wh-1',
+    notes: 'Urgent request for breakfast items',
+    requested_by: 'Ali Hassan',
+    requested_at: '2026-04-25T08:00:00Z',
+    created_at: '2026-04-25T08:00:00Z',
+    items: [
+      { id: 'kri-1', item_id: 'item-1', item_name: 'Beef', uom: 'KG', quantity: 5, notes: 'Minced beef' },
+      { id: 'kri-2', item_id: 'item-2', item_name: 'Chicken', uom: 'CTN', quantity: 2 }
+    ]
+  },
+  'GET /operations/kitchen-requests/kr-2': {
+    id: 'kr-2',
+    request_number: 'REQ-2026-002',
+    status: 'SUBMITTED',
+    department_id: 'dep-2',
+    warehouse_id: 'wh-1',
+    notes: 'Weekly supply',
+    requested_by: 'Sara Ahmed',
+    requested_at: '2026-04-26T10:00:00Z',
+    created_at: '2026-04-26T10:00:00Z',
+    items: [
+      { id: 'kri-3', item_id: 'item-1', item_name: 'Beef', uom: 'KG', quantity: 10 }
+    ]
+  },
+  'GET /operations/kitchen-requests/kr-3': {
+    id: 'kr-3',
+    request_number: 'REQ-2026-003',
+    status: 'APPROVED',
+    department_id: 'dep-1',
+    warehouse_id: 'wh-1',
+    notes: 'Pre-approved monthly stock',
+    requested_by: 'Mona Ali',
+    requested_at: '2026-04-27T11:00:00Z',
+    created_at: '2026-04-27T11:00:00Z',
+    items: [
+      { id: 'kri-4', item_id: 'item-2', item_name: 'Chicken', uom: 'CTN', quantity: 15 }
+    ]
+  },
+  'POST /operations/kitchen-requests': {
+    id: 'kr-new',
+    request_number: 'REQ-2026-NEW',
+    status: 'DRAFT',
+    department_id: 'dep-1',
+    warehouse_id: 'wh-1',
+    items: []
   }
 };
 

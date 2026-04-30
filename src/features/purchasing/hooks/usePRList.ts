@@ -11,8 +11,10 @@ const PRSummarySchema = z.object({
   document_number: z.string(), 
   status: BadgeStatusSchema, 
   department_id: z.string(), 
+  warehouse_id: z.string(), 
   expected_date: z.string(), 
   created_at: z.string(), 
+  created_by: z.string(), 
 });
 
 export type PRSummary = z.infer<typeof PRSummarySchema>;

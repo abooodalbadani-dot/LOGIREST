@@ -233,6 +233,7 @@ export function TransferListClient() {
           </div>
         }
       />
+      </div>
     </div>
   );
 }

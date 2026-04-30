@@ -4,16 +4,7 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { LotSchema, type Lot } from '@/types/master-data';
 
-interface RawLotItem {
-  id: string;
-  item_id: string;
-  lot_number: string;
-  expiry_date: string;
-  total_qty?: number;
-  qty_available?: number;
-  is_expired?: boolean;
-  is_near_expiry?: boolean;
-}
+
 
 export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; warehouse_id?: string }) {
   return useQuery({

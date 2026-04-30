@@ -12,8 +12,13 @@ export function useSubmitPR() {
       return response;
     },
     onSuccess: (_, id) => {
+      // Simulate state transition in cache
+      queryClient.setQueryData(['purchase-request', id], (old: any) => {
+        if (!old) return old;
+        return { ...old, status: 'SUBMITTED' };
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-request', id] });
     },
   });
 }

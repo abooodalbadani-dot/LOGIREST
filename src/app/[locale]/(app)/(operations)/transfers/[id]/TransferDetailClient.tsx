@@ -15,7 +15,6 @@ import { useTransfer, TransferLine } from '@/features/operations/hooks/useTransf
 import { useCreateTransfer } from '@/features/operations/hooks/useCreateTransfer';
 import { useShipTransfer } from '@/features/operations/hooks/useShipTransfer';
 import { useReceiveTransfer } from '@/features/operations/hooks/useReceiveTransfer';
-import { usePostTransfer } from '@/features/operations/hooks/usePostTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Truck, PackageCheck } from 'lucide-react';
@@ -32,12 +31,12 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
   const createTransfer = useCreateTransfer();
   const shipTransfer = useShipTransfer();
   const receiveTransfer = useReceiveTransfer(id);
-  const postTransfer = usePostTransfer();
 
   const [fromWarehouseId, setFromWarehouseId] = useState('wh-1');
   const [toWarehouseId, setToWarehouseId] = useState('wh-3');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<(TransferLine & { _receivedQty?: number })[]>([]);
+  const [varianceReason, setVarianceReason] = useState('');
   const [shipDialogOpen, setShipDialogOpen] = useState(false);
   const [postDialogOpen, setPostDialogOpen] = useState(false);
 
@@ -61,9 +60,12 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
   }, [transfer]);
 
   const transferStatus = transfer?.transfer_status ?? 'DRAFT';
-  const isPosted = transferStatus === 'POSTED';
+  const isPosted = ['POSTED', 'RECEIVED'].includes(transferStatus);
   const isInTransit = transferStatus === 'IN_TRANSIT';
   const isDraft = transferStatus === 'DRAFT';
+
+  const hasVariance = lines.some(l => (l._receivedQty ?? l.qty) !== (l.shipped_qty ?? l.qty));
+  const isVarianceValid = !hasVariance || varianceReason.trim().length >= 10;
 
   const handleSaveDraft = async () => {
     try {
@@ -94,7 +96,11 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
         line_id: l.id,
         received_qty: l._receivedQty ?? l.qty
       }));
-      await receiveTransfer.mutateAsync({ lines: receiveLines, confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' });
+      await receiveTransfer.mutateAsync({ 
+        lines: receiveLines, 
+        confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
+        variance_reason: hasVariance ? varianceReason : undefined
+      });
       setPostDialogOpen(false);
       router.push(`/${locale}/transfers`);
     } catch (e) {
@@ -165,11 +171,11 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
             )}
             {isInTransit && (
               <PermissionGate action="post" resource="transfer">
-                <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
+                <div title={isEitherLocked ? tCommon('warehouse_locked') : !isVarianceValid ? t('variance_required_error') : undefined}>
                   <Button
-                    disabled={isEitherLocked || receiveTransfer.isPending}
+                    disabled={isEitherLocked || receiveTransfer.isPending || !isVarianceValid}
                     onClick={() => setPostDialogOpen(true)}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50"
                   >
                     <PackageCheck className="w-4 h-4 me-2" />
                     {t('confirm_receipt')}
@@ -251,6 +257,35 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
             className="w-full bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-medium text-sm focus:ring-2 focus:ring-cyan-500/30 transition-all outline-none resize-none min-h-[100px] hover:bg-surface-container-highest/60"
           />
         </div>
+
+        {isInTransit && hasVariance && (
+          <div className="col-span-1 md:col-span-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+            <div className="h-px bg-gradient-to-r from-transparent via-status-warning/20 to-transparent" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-status-warning/80">
+                  {t('variance_reason')}
+                </label>
+                <span className="text-[9px] font-bold text-status-warning/60 bg-status-warning/10 px-2 py-0.5 rounded-full border border-status-warning/20">
+                  {t('variance_detected')}
+                </span>
+              </div>
+              <textarea
+                value={varianceReason}
+                onChange={e => setVarianceReason(e.target.value)}
+                placeholder={t('variance_reason_placeholder')}
+                className={`w-full bg-status-warning/5 border border-status-warning/20 rounded-xl p-4 font-medium text-sm focus:ring-2 focus:ring-status-warning/30 transition-all outline-none resize-none min-h-[100px] hover:bg-status-warning/10 ${
+                  !isVarianceValid ? 'ring-1 ring-status-error/30' : ''
+                }`}
+              />
+              {!isVarianceValid && (
+                <p className="text-[9px] font-bold text-status-error/80 px-1 tracking-tight">
+                  {t('variance_required_error')}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-surface-container-low/30 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">

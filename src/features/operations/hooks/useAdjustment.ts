@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
+export const AdjustmentStatusSchema = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'POSTED']);
+export type AdjustmentStatus = z.infer<typeof AdjustmentStatusSchema>;
+
 export const AdjustmentLineSchema = z.object({
   id: z.string(),
   item: z.object({
@@ -26,12 +29,20 @@ export const AdjustmentLineSchema = z.object({
 export const AdjustmentDetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: BadgeStatusSchema,
+  status: AdjustmentStatusSchema,
   warehouse_id: z.string(),
   reason: z.string(),
   notes: z.string().nullable().optional(),
+  reject: z.string().nullable().optional(),
+  movement_id: z.string().nullable().optional(),
   approved_by: z.string().nullable().optional(),
+  posted_at: z.string().nullable().optional(),
   lines: z.array(AdjustmentLineSchema),
+  timeline: z.array(z.object({
+    status: z.string(),
+    at: z.string(),
+    by: z.string(),
+  })).optional(),
 });
 
 export type AdjustmentDetail = z.infer<typeof AdjustmentDetailSchema>;

@@ -8,20 +8,25 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import { useMasterDataItem, useMasterDataCreate, useMasterDataUpdate } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { CategorySchema, CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
+import {
+  useCategory,
+  useCreateCategory,
+  useUpdateCategory,
+} from '@/features/categories/hooks/useCategories';
+import { CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Layers } from 'lucide-react';
 
 interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
 
 export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const tc = useTranslations('masterData.common');
+  const t = useTranslations('common');
+  const tc = useTranslations('master_data.categories');
   const router = useRouter();
 
-  const { data } = useMasterDataItem('categories', id, CategorySchema);
-  const create = useMasterDataCreate('categories', CategorySchema);
-  const update = useMasterDataUpdate('categories', CategorySchema);
+  const { data } = useCategory(id);
+  const create = useCreateCategory();
+  const update = useUpdateCategory();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
@@ -33,9 +38,13 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) await update.mutateAsync({ id, body: values });
-    else await create.mutateAsync(values);
-    router.push(`/${locale}/master-data/categories`);
+    try {
+      if (id) await update.mutateAsync({ id, values });
+      else await create.mutateAsync(values);
+      router.push(`/${locale}/master-data/categories`);
+    } catch (error) {
+      // Handled by mutation hook
+    }
   });
 
 
@@ -56,9 +65,9 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
                 <Layers className="w-5 h-5 text-tertiary" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('basic_info')}</h3>
+                <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('title')}</h3>
                 <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">
-                  {tc('category_classification_details')}
+                  {tc('description')}
                 </p>
               </div>
             </div>
@@ -67,7 +76,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
               {/* Name EN */}
               <div className="space-y-2">
                 <Label htmlFor="cat-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
-                  {tc('name_en')}
+                  {tc('fields.name_en')}
                 </Label>
                 <Input
                   id="cat-name-en"
@@ -86,7 +95,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
               {/* Name AR */}
               <div className="space-y-2">
                 <Label htmlFor="cat-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
-                  {tc('name_ar')}
+                  {tc('fields.name_ar')}
                 </Label>
                 <Input
                   id="cat-name-ar"

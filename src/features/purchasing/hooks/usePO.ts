@@ -2,7 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
-import type { BadgeStatus } from '@/components/ui/status-badge';
 
 const POLineSchema = z.object({
   id: z.string(),
@@ -16,24 +15,28 @@ const POLineSchema = z.object({
       code: z.string(),
     }),
   }),
-  qty: z.number(),
+  quantity: z.number(),
+  unit_price: z.number(),
   uom_id: z.string(),
-  unit_cost_foreign: z.number(),
+  notes: z.string().optional(),
 });
 
 export const PODetailSchema = z.object({
   id: z.string(),
   document_number: z.string(),
-  status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'REJECTED', 'CANCELLED', 'IN_TRANSIT', 'OPEN', 'COUNTING', 'REVIEW']),
+  status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']),
+  pr_id: z.string().nullable().optional(),
   supplier_id: z.string(),
-  target_warehouse_id: z.string(),
-  currency_id: z.string(),
-  expected_delivery_date: z.string().optional(),
-  total: z.number().optional(),
-  linked_pr_id: z.string().nullable().optional(),
-  linked_pr_number: z.string().nullable().optional(),
-  notes: z.string().nullable().optional(),
+  currency_code: z.string(),
+  exchange_rate: z.number(),
+  expected_date: z.string(),
   lines: z.array(POLineSchema),
+  supplier_total_amount: z.number(),
+  base_total_amount: z.number(),
+  notes: z.string().nullable().optional(),
+  created_at: z.string().optional(),
+  created_by: z.string().optional(),
+  updated_at: z.string().optional(),
 });
 
 export type PODetail = z.infer<typeof PODetailSchema>;
@@ -43,6 +46,6 @@ export function usePO(id: string) {
     queryKey: ['purchase-order', id],
     queryFn: () => apiClient.get(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema })).then(res => res.data),
     enabled: !!id,
-    staleTime: 60_000,
+    staleTime: 30_000,
   });
 }

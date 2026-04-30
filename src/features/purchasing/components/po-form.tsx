@@ -7,6 +7,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowRightLeft, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,90 +26,151 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCreatePO } from "../hooks/useCreatePO";
+import { useUpdatePO } from "../hooks/useUpdatePO";
+import { PODetail } from "../hooks/usePO";
+import { useSuppliers } from "../hooks/useSuppliers";
+import { useCurrencies } from "../hooks/useCurrencies";
+import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useFXRates } from "../hooks/useFXRates";
+import { BadgeStatus, StatusBadge } from "@/components/ui/status-badge";
+import { FormItemPlaceholder } from "@/components/shared/FormItemPlaceholder";
 
 const lineItemSchema = z.object({
-  itemId: z.string().min(1),
-  quantity: z.number().min(1),
-  unitPrice: z.number().min(0),
+  item_id: z.string().min(1),
+  quantity: z.number().positive(),
+  unit_price: z.number().nonnegative(),
+  uom_id: z.string().min(1),
   notes: z.string().optional(),
 });
 
 const formSchema = z.object({
-  supplierId: z.string().min(1),
-  prId: z.string().optional(),
-  supplierCurrency: z.string().min(1),
-  exchangeRate: z.number().min(0.0001),
-  expectedDate: z.string().min(1),
+  supplier_id: z.string().min(1),
+  pr_id: z.string().optional(),
+  currency_code: z.string().min(1),
+  exchange_rate: z.number().min(0.0001),
+  expected_date: z.string().min(1),
+  target_warehouse_id: z.string().min(1),
   notes: z.string().optional(),
-  items: z.array(lineItemSchema).min(1),
+  lines: z.array(lineItemSchema).min(1),
 });
 
 type PurchaseOrderFormValues = z.infer<typeof formSchema>;
 
-export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) {
+interface PurchaseOrderFormProps {
+  initialData?: PODetail;
+  mode?: "create" | "edit";
+}
+
+export function PurchaseOrderForm({ initialData, mode = "create" }: PurchaseOrderFormProps) {
   const router = useRouter();
-  const t = useTranslations("purchasing.po");
+  const t = useTranslations("procurement.po");
   const tc = useTranslations("common");
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
+  const createMutation = useCreatePO();
+  const updateMutation = useUpdatePO(initialData?.id || "");
 
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      supplierId: "",
-      prId: "",
-      supplierCurrency: defaultCurrency,
-      exchangeRate: initialRate,
-      expectedDate: "",
-      notes: "",
-      items: [{ itemId: "", quantity: 1, unitPrice: 0, notes: "" }]
+      supplier_id: initialData?.supplier_id || "",
+      pr_id: initialData?.pr_id || "",
+      currency_code: initialData?.currency_id || "SAR",
+      exchange_rate: initialData?.exchange_rate || 1,
+      expected_date: initialData?.expected_delivery_date || "",
+      target_warehouse_id: initialData?.target_warehouse_id || "",
+      notes: initialData?.notes || "",
+      lines: initialData?.lines.map(l => ({
+        item_id: l.item.id,
+        quantity: l.quantity,
+        unit_price: l.unit_price,
+        uom_id: l.uom_id,
+        notes: l.notes || ""
+      })) || [{ item_id: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "items",
+    name: "lines",
   });
 
-  const items = form.watch("items");
-  const currency = form.watch("supplierCurrency");
-  const rate = form.watch("exchangeRate");
+  const lines = form.watch("lines");
+  const currency = form.watch("currency_code");
+  const rate = form.watch("exchange_rate");
 
-  const supplierTotalAmount = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.unitPrice || 0)), 0);
+  const supplierTotalAmount = lines.reduce((sum, line) => sum + ((line.quantity || 0) * (line.unit_price || 0)), 0);
   const baseTotalAmount = supplierTotalAmount * (rate || 1);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
+  async function onSubmit(values: PurchaseOrderFormValues) {
     try {
-      console.log("PO values:", values);
-      await new Promise(r => setTimeout(r, 1000));
-      router.push('/purchasing/po');
+      if (mode === "edit" && initialData) {
+        await updateMutation.mutateAsync(values);
+        toast.success(t("edit_success"));
+      } else {
+        const result = await createMutation.mutateAsync(values);
+        toast.success(t("submit_success"));
+        router.push(`/${window.location.pathname.split('/')[1]}/purchase-orders/${result.id}`);
+      }
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsSubmitting(false);
+      toast.error(tc("error_occurred"));
     }
+  }
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  const { data: suppliers, isLoading: loadingSuppliers } = useSuppliers();
+  const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
+  const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
+
+  const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
+  const { data: fxRates } = useFXRates(currency, baseCurrency);
+  
+  React.useEffect(() => {
+    if (fxRates?.[0]?.rate && !initialData) {
+      form.setValue("exchange_rate", fxRates[0].rate);
+    }
+  }, [fxRates, form, initialData]);
+
+  if (loadingSuppliers || loadingCurrencies || loadingWarehouses) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-64 bg-surface-container-low rounded-3xl" />
+        <div className="h-96 bg-surface-container-low rounded-3xl" />
+      </div>
+    );
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative">
-        <h3 className="text-xl font-black mb-4 text-operational-cyan uppercase tracking-wider">{t('title')}</h3>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative shadow-2xl shadow-black/10">
+        <div className="flex items-center justify-between border-b border-surface-container-high pb-6 mb-6">
+          <h3 className="text-xl font-black text-operational-cyan uppercase tracking-wider">{mode === "edit" ? t('specification') : t('new_intent')}</h3>
+          <div className="flex gap-2">
+            <span className="px-3 py-1 bg-operational-cyan/10 text-operational-cyan rounded-full text-[10px] font-bold tracking-tighter">PO_V2</span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
-            name="supplierId"
+            name="supplier_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('supplier')}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl">
                       <SelectValue placeholder={t('select_supplier')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-surface-container-low border-none rounded-xl">
-                    <SelectItem value="SUP-01">Al Marai Fresh (SUP-01)</SelectItem>
-                    <SelectItem value="SUP-02">Global Equipments (SUP-02)</SelectItem>
+                    {suppliers?.map(s => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name_en} ({s.code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -118,7 +180,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
           <FormField
             control={form.control}
-            name="prId"
+            name="pr_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('linked_pr')}</FormLabel>
@@ -132,7 +194,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
           <FormField
             control={form.control}
-            name="expectedDate"
+            name="expected_date"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('expected_date')}</FormLabel>
@@ -143,25 +205,52 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           <FormField
             control={form.control}
-            name="supplierCurrency"
+            name="target_warehouse_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('target_warehouse')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl">
+                      <SelectValue placeholder={t('select_warehouse')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-surface-container-low border-none rounded-xl">
+                    {warehouses?.map(w => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-surface-container-high/50">
+          <FormField
+            control={form.control}
+            name="currency_code"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('supplier_currency')}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-surface-container-low border-none font-mono h-11 rounded-xl">
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-surface-container-low border-none rounded-xl">
-                    <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    {currencies?.map(c => (
+                      <SelectItem key={c.id} value={c.code}>
+                        {c.code} — {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -170,7 +259,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           />
           <FormField
             control={form.control}
-            name="exchangeRate"
+            name="exchange_rate"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-bold">{t('fx_rate')}</FormLabel>
@@ -218,7 +307,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
               variant="outline" 
               size="sm" 
               className="border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10 transition-all rounded-xl font-bold hover:scale-[0.98] active:scale-95"
-              onClick={() => append({ itemId: "", quantity: 1, unitPrice: 0, notes: "" })}
+              onClick={() => append({ item_id: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" })}
             >
               <Plus className="h-4 w-4 me-2" />
               {t('add_item')}
@@ -227,10 +316,10 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
           <div className="space-y-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-container-high/20 p-6 rounded-2xl border-none transition-all hover:bg-surface-container-high/30 group">
+              <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-container-high/20 p-6 rounded-2xl border-none transition-all hover:bg-surface-container-high/30 group">
                 <FormField
                   control={form.control}
-                  name={`items.${index}.itemId`}
+                  name={`lines.${index}.item_id`}
                   render={({ field: inputField }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('item_sku')}</FormLabel>
@@ -244,7 +333,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
                 <FormField
                   control={form.control}
-                  name={`items.${index}.quantity`}
+                  name={`lines.${index}.quantity`}
                   render={({ field: inputField }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('quantity')}</FormLabel>
@@ -265,7 +354,21 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
                 <FormField
                   control={form.control}
-                  name={`items.${index}.unitPrice`}
+                  name={`lines.${index}.uom_id`}
+                  render={({ field: inputField }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{tc('uom')}</FormLabel>
+                      <FormControl>
+                         <Input placeholder="PCS" className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={`lines.${index}.unit_price`}
                   render={({ field: inputField }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('unit_price')} ({currency})</FormLabel>
@@ -287,12 +390,12 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
 
                 <FormField
                   control={form.control}
-                  name={`items.${index}.notes`}
+                  name={`lines.${index}.notes`}
                   render={({ field: inputField }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/40">{t('line_notes')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="..." className="bg-surface-container-low border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+                        <Input placeholder={t('notes_placeholder')} className="bg-surface-container-low border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -330,7 +433,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-12 mt-12">
+        <div className="flex items-center justify-end gap-3 pt-12 mt-12 border-t border-surface-container-high">
           <Button
             variant="ghost"
             type="button"
@@ -345,7 +448,7 @@ export function PurchaseOrderForm({ defaultCurrency = "SAR", initialRate = 1 }) 
             disabled={isSubmitting}
             className="bg-operational-cyan text-primary-foreground hover:brightness-110 px-10 h-12 rounded-xl transition-all hover:scale-[0.98] active:scale-95 font-black uppercase tracking-widest text-[10px]"
           >
-            {isSubmitting ? t('actions.submitting') : t('actions.submit')}
+            {isSubmitting ? t('actions.submitting') : (mode === "edit" ? tc('save') : t('actions.submit'))}
           </Button>
         </div>
 

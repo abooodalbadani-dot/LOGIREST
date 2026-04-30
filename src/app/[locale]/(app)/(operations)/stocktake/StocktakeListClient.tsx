@@ -3,7 +3,8 @@
 import { useMemo } from 'react';
 
 import { useTranslations } from 'next-intl';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname, Link } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useStocktakeList, StocktakeSummary } from '@/features/operations/hooks/useStocktakeList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -14,7 +15,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
 import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History } from 'lucide-react';
-import Link from 'next/link';
+
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -64,13 +65,16 @@ export function StocktakeListClient({
       accessorKey: 'session_number',
       header: t('session_number') || 'Session',
       cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span dir="ltr" className="font-mono text-sm font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
+        <div className="flex flex-col">
+          <span dir="ltr" className="font-mono tracking-normal text-[13px] font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
             {row.original.session_number}
           </span>
-          <div className="flex items-center gap-1.5 opacity-40">
+          <span className="text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-[0.08em]">
+            Operational Audit
+          </span>
+          <div className="flex items-center gap-1.5 opacity-20 mt-1">
             <Calendar className="w-2.5 h-2.5" />
-            <span dir="ltr" className="text-[9px] font-semibold tabular-nums">
+            <span dir="ltr" className="text-[8px] font-semibold tabular-nums">
               {format(new Date(row.original.snapshot_at), 'MMM dd, HH:mm')}
             </span>
           </div>
@@ -105,7 +109,7 @@ export function StocktakeListClient({
             className="h-8 px-4 text-[9px] font-semibold uppercase tracking-[0.08em] text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md group/btn transition-all"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/${locale}/stocktake/${row.original.id}`);
+              router.push(`/stocktake/${row.original.id}`);
             }}
           >
             {tc('view') || 'Inspect'}
@@ -117,8 +121,8 @@ export function StocktakeListClient({
   ], [t, tc, locale, router]);
 
   const activeSessionsCount = data?.meta?.total || 0;
-  const inProgressCount = data?.data?.filter(i => ['OPEN', 'COUNTING'].includes(i.status)).length || 0;
-  const postedCount = data?.data?.filter(i => i.status === 'POSTED').length || 0;
+  const inProgressCount = data?.data?.filter(i => ['STARTED', 'COUNTING', 'COUNTING_COMPLETED', 'VarianceSubmitted', 'REJECTED'].includes(i.status.toUpperCase())).length || 0;
+  const postedCount = data?.data?.filter(i => i.status.toUpperCase() === 'POSTED').length || 0;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -126,7 +130,7 @@ export function StocktakeListClient({
         <Breadcrumb 
           items={[
             { label: tc('inventory'), href: '#' },
-            { label: t('title'), href: `/${locale}/stocktake` }
+            { label: t('title'), href: `/stocktake` }
           ]} 
         />
         <PageHeader
@@ -145,7 +149,7 @@ export function StocktakeListClient({
                 </div>
               </div>
               <PermissionGate action="create" resource="stocktake">
-                <Link href={`/${locale}/stocktake/new`}>
+                <Link href={`/stocktake/new`}>
                   <Button className="h-12 px-10 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold uppercase tracking-[0.08em] rounded-md transition-all shadow-xl shadow-cyan-900/20 group">
                     <Plus className="w-4 h-4 me-2 group-hover:rotate-90 transition-transform" />
                     {t('create_new')}
@@ -185,7 +189,7 @@ export function StocktakeListClient({
           <div className="flex flex-col gap-3 min-w-[280px] flex-1">
             <div className="flex items-center gap-2 ms-1">
               <Filter className="w-3 h-3 text-cyan-500/60" />
-              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/50">{tc('status_label') || 'Filter by State'}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
             </div>
             <Select
               value={initialStatus || 'ALL'}
@@ -197,9 +201,12 @@ export function StocktakeListClient({
               <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
                 <SelectItem value="ALL" className="text-xs font-bold">{tc('status.all')}</SelectItem>
                 <SelectItem value="DRAFT" className="text-xs font-bold">{tc('status.draft')}</SelectItem>
-                <SelectItem value="OPEN" className="text-xs font-bold">{tc('status.open')}</SelectItem>
-                <SelectItem value="COUNTING" className="text-xs font-bold">{tc('status.counting')}</SelectItem>
+                <SelectItem value="STARTED" className="text-xs font-bold">{tc('status.started')}</SelectItem>
+                <SelectItem value="COUNTING_COMPLETED" className="text-xs font-bold">{tc('status.counting_completed')}</SelectItem>
+                <SelectItem value="VarianceSubmitted" className="text-xs font-bold">{tc('status.variancesubmitted')}</SelectItem>
+                <SelectItem value="APPROVED" className="text-xs font-bold">{tc('status.approved')}</SelectItem>
                 <SelectItem value="POSTED" className="text-xs font-bold">{tc('status.posted')}</SelectItem>
+                <SelectItem value="REJECTED" className="text-xs font-bold">{tc('status.rejected')}</SelectItem>
                 <SelectItem value="CANCELLED" className="text-xs font-bold">{tc('status.cancelled')}</SelectItem>
               </SelectContent>
             </Select>
@@ -208,7 +215,7 @@ export function StocktakeListClient({
           <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">
             <div className="flex items-center gap-2 ms-1">
               <Search className="w-3 h-3 text-cyan-500/60" />
-              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/50">{tc('search')}</label>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/40">{tc('search')}</label>
             </div>
             <div className="relative group">
               <input
@@ -228,7 +235,7 @@ export function StocktakeListClient({
             columns={columns}
             data={data?.data || []}
             isLoading={isLoading}
-            onRowClick={(row: StocktakeSummary) => router.push(`/${locale}/stocktake/${row.id}`)}
+            onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
             collectionName="operations_stocktake"
             emptyState={
               <EmptyState 
@@ -237,7 +244,7 @@ export function StocktakeListClient({
                 action={
                   <PermissionGate action="create" resource="stocktake">
                     <Button 
-                      onClick={() => router.push(`/${locale}/stocktake/new`)}
+                      onClick={() => router.push(`/stocktake/new`)}
                       className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
                     >
                       <Plus className="w-4 h-4 me-2" />

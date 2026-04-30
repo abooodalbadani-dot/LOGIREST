@@ -13,7 +13,10 @@ export const AuthUserSchema = z.object({
   email: z.string().email(), 
   role: z.enum(['ADMIN','GM','INV_MGR','WH_KEEPER','PROC_OFFICER','APPROVER','AUDITOR','VIEWER','KITCHEN_CHIEF','STORE_MGR']), 
   scopes: z.array(UserScopeSchema), 
-  locale: z.enum(['ar','en']).optional() 
+  locale: z.enum(['ar','en']).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
+  language: z.enum(['ar', 'en']).default('en'),
+  created_at: z.string().optional(),
 });
 
 export const ForgotPasswordSchema = z.object({

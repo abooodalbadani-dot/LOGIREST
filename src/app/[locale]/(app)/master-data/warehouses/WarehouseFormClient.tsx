@@ -17,33 +17,38 @@ import {
 } from '@/components/ui/select';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
-  useMasterDataItem, useMasterDataCreate, useMasterDataUpdate, useMasterDataList,
-} from '@/features/master-data/hooks/useMasterDataCRUD';
+  useWarehouse,
+  useCreateWarehouse,
+  useUpdateWarehouse,
+} from '@/features/warehouses/hooks/useWarehouses';
+import { useBranches } from '@/features/branches/hooks/useBranches';
 import {
-  WarehouseSchema, WarehouseFormSchema, BranchSchema,
+  WarehouseFormSchema,
   type WarehouseFormValues,
 } from '@/types/master-data';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Warehouse, MapPin, Activity } from 'lucide-react';
 
-interface Props { id: string | null; createTitle: string; editTitle: string; }
+interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
 
-export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Props & { locale: string }) {
-  const t = useTranslations('masterData.common');
-  const tw = useTranslations('masterData.warehouses');
+export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Props) {
+  const t = useTranslations('common');
+  const tw = useTranslations('master_data.warehouses');
   const router = useRouter();
 
-  const { data } = useMasterDataItem('warehouses', id, WarehouseSchema);
-  const { data: branches } = useMasterDataList('branches', BranchSchema);
-  const create = useMasterDataCreate('warehouses', WarehouseSchema);
-  const update = useMasterDataUpdate('warehouses', WarehouseSchema);
+  const { data } = useWarehouse(id);
+  const { data: branches = [] } = useBranches();
+  const create = useCreateWarehouse();
+  const update = useUpdateWarehouse();
 
   const { register, handleSubmit, reset, setValue, watch, control, formState: { errors } } =
     useForm<WarehouseFormValues>({
       resolver: zodResolver(WarehouseFormSchema),
       defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'MAIN', is_active: true },
     });
+
+  const isActive = watch('is_active');
 
   useEffect(() => {
     if (data) {
@@ -52,15 +57,27 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) await update.mutateAsync({ id, body: values });
-    else await create.mutateAsync(values);
-    router.push(`/${locale}/master-data/warehouses`);
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      router.push(`/${locale}/master-data/warehouses`);
+    } catch (error) {
+      // Error handled by mutation hook
+    }
   });
 
   const isSaving = create.isPending || update.isPending;
 
   return (
-    <MasterDataFormLayout title={id ? editTitle : createTitle} backHref={`/${locale}/master-data/warehouses`} isSaving={isSaving} onSubmit={onSubmit}>
+    <MasterDataFormLayout 
+      title={id ? editTitle : createTitle} 
+      backHref={`/${locale}/master-data/warehouses`} 
+      isSaving={isSaving} 
+      onSubmit={onSubmit}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="bg-surface-container-low border-none overflow-hidden">
@@ -70,17 +87,17 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                   <Warehouse className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{tw('warehouse_configuration')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">
-                    {tw('branch_mapping_details')}
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tw('title')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">
+                    {tw('description')}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="wh-branch" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
-                    {tw('branch')}
+                  <Label htmlFor="wh-branch" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+                    {tw('fields.branch')}
                   </Label>
                   <Controller
                     name="branch_id"
@@ -91,9 +108,8 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                           <SelectValue placeholder="—" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">—</SelectItem>
-                          {branches?.data?.map((b) => (
-                            <SelectItem key={b.id} value={b.id} className="font-semibold text-xs uppercase tracking-[0.08em] rtl:tracking-normal">
+                          {branches.map((b) => (
+                            <SelectItem key={b.id} value={b.id} className="font-semibold text-xs uppercase tracking-[0.08em]">
                               {b.code} — {b.name_en}
                             </SelectItem>
                           ))}
@@ -101,12 +117,12 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                       </Select>
                     )}
                   />
-                  {errors.branch_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.branch_id.message as string)}</p>}
+                  {errors.branch_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tw(`validation.${errors.branch_id.message}`)}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wh-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
-                    {t('code')}
+                  <Label htmlFor="wh-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+                    {tw('fields.code')}
                   </Label>
                   <Input 
                     id="wh-code" 
@@ -115,24 +131,24 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                     className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active"
                     placeholder="e.g. WH-001"
                   />
-                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.code.message as string)}</p>}
+                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tw(`validation.${errors.code.message}`)}</p>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="wh-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
-                    {t('name_en')}
+                  <Label htmlFor="wh-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+                    {tw('fields.name_en')}
                   </Label>
                   <Input id="wh-name-en" dir="ltr" {...register('name_en')} className="font-semibold" />
-                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.name_en.message as string)}</p>}
+                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tw(`validation.${errors.name_en.message}`)}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="wh-name-ar" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
-                    {t('name_ar')}
+                  <Label htmlFor="wh-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">
+                    {tw('fields.name_ar')}
                   </Label>
                   <Input id="wh-name-ar" dir="rtl" {...register('name_ar')} className="font-semibold text-end" />
-                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{t(errors.name_ar.message as string)}</p>}
+                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{tw(`validation.${errors.name_ar.message}`)}</p>}
                 </div>
               </div>
             </CardContent>
@@ -145,16 +161,16 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                   <MapPin className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{tw('physical_location_settings')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">
-                    {tw('type')}
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tw('fields.type')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">
+                    {t('operational_status')}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2 max-w-md">
-                <Label htmlFor="wh-type" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal text-muted-foreground/70">
-                  {tw('type')}
+                <Label htmlFor="wh-type" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
+                  {tw('fields.type')}
                 </Label>
                 <Controller
                   name="type"
@@ -166,8 +182,8 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                       </SelectTrigger>
                       <SelectContent>
                         {(['MAIN','DRY','COLD','VIRTUAL'] as const).map((ty) => (
-                          <SelectItem key={ty} value={ty} className="font-semibold text-xs uppercase tracking-[0.08em] rtl:tracking-normal">
-                            {tw(`types.${ty.toLowerCase()}` as Parameters<typeof tw>[0])}
+                          <SelectItem key={ty} value={ty} className="font-semibold text-xs uppercase tracking-[0.08em]">
+                            {tw(`types.${ty.toLowerCase()}` as any)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -187,23 +203,23 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
                   <Activity className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] rtl:tracking-normal text-foreground uppercase">{tw('operational_status')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] rtl:tracking-normal mt-0.5">
-                    {tw('status_description')}
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{t('status')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">
+                    {t('operational_status')}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="wh-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] rtl:tracking-normal cursor-pointer text-muted-foreground/60">{t('status')}</Label>
-                  <p className={`text-xs font-semibold uppercase tracking-tight ${watch('is_active') ? 'text-status-active' : 'text-status-error'}`}>
-                    {watch('is_active') ? t('active') : t('inactive')}
+                  <Label htmlFor="wh-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{tw('fields.is_active')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>
+                    {isActive ? t('active') : t('inactive')}
                   </p>
                 </div>
                 <Switch 
                   id="wh-active" 
-                  checked={watch('is_active')} 
+                  checked={isActive} 
                   onCheckedChange={(v: boolean) => setValue('is_active', v)} 
                   className="data-[state=checked]:bg-status-active"
                 />

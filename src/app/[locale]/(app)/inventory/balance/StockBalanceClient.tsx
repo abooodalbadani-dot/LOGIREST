@@ -35,6 +35,7 @@ import Link from 'next/link';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { ReportHeader } from '@/components/shared/ReportHeader';
 
 interface StockBalanceClientProps {
   title: string;
@@ -174,6 +175,8 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
     <div className="min-h-screen bg-surface-container-lowest text-foreground selection:bg-operational-cyan/30 selection:text-operational-cyan">
       <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
         
+        <ReportHeader />
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col gap-1 w-full md:w-auto text-start">

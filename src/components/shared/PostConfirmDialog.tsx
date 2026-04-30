@@ -1,121 +1,146 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
 
+import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from '@/components/ui/button';
 
 interface PostConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description: string;
-  warningText: string;
+  warningText?: string;
   requiresTextConfirmation?: boolean;
   isLoading?: boolean;
   onConfirm: () => void | Promise<void>;
+  trigger?: React.ReactElement;
   children?: React.ReactNode;
+  variant?: 'warning' | 'destructive' | 'default';
+  confirmText?: string;
+  cancelText?: string;
+  confirmKeyword?: string;
+  // Support legacy prop name
+  isOpen?: boolean;
 }
 
 export function PostConfirmDialog({
-  open,
-  onOpenChange,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  isOpen: legacyOpen,
   title,
   description,
   warningText,
   requiresTextConfirmation,
   isLoading,
   onConfirm,
-  children
+  trigger,
+  children,
+  variant = 'warning',
+  confirmText: customConfirmText,
+  cancelText: customCancelText,
+  confirmKeyword,
 }: PostConfirmDialogProps) {
   const t = useTranslations('common');
-  const [confirmText, setConfirmText] = useState('');
-  const [isRtl, setIsRtl] = useState(() => {
-    if (typeof document !== 'undefined') {
-      return document.documentElement.dir === 'rtl';
-    }
-    return true;
-  });
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [confirmInput, setConfirmInput] = useState('');
+  
+  const open = controlledOpen ?? legacyOpen ?? internalOpen;
+  const onOpenChange = controlledOnOpenChange ?? setInternalOpen;
 
+  const isRtl = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : true;
+  const defaultKeyword = isRtl ? 'تأكيد' : 'CONFIRM';
+  const requiredWord = confirmKeyword || defaultKeyword;
+  const isConfirmDisabled = isLoading || (requiresTextConfirmation && confirmInput !== requiredWord);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isLoading) {
-        onOpenChange(false);
-      }
-    };
-    if (open) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, isLoading, onOpenChange]);
-
-  const requiredWord = isRtl ? 'تأكيد' : 'CONFIRM';
-  const isConfirmDisabled = isLoading || (requiresTextConfirmation && confirmText !== requiredWord);
-
-  if (!open) return null;
+  const handleConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await onConfirm();
+    onOpenChange(false);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-surface-container-lowest rounded-2xl border border-outline-low w-full max-w-md p-6 ambient-shadow relative m-4 animate-in zoom-in-95 duration-200">
-        {!isLoading && (
-          <button 
-            className="absolute top-4 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-            onClick={() => onOpenChange(false)}
-            style={{ [isRtl ? 'left' : 'right']: '1rem' }}
-          >
-            ✕
-          </button>
-        )}
-        
-        <h2 className="text-xl font-bold text-foreground mb-2">{title}</h2>
-        <p className="text-sm text-muted-foreground mb-4">{description}</p>
-        
-        <div className="bg-status-warning/10 border border-status-warning/20 rounded-xl p-4 text-status-warning text-sm mb-4">
-          <div className="font-bold flex items-center gap-2 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
-            {warningText}
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <AlertDialogTrigger render={trigger} />}
+      <AlertDialogContent className="max-w-md border-none ambient-shadow p-6 bg-surface-container-lowest">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-xl font-bold tracking-tight">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground/70">
+            {description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className={cn(
+          "my-6 p-4 rounded-xl border flex flex-col gap-1.5",
+          variant === 'warning' ? "bg-status-warning/5 border-status-warning/20 text-status-warning" : 
+          variant === 'destructive' ? "bg-destructive/5 border-destructive/20 text-destructive" :
+          "bg-primary/5 border-primary/20 text-primary"
+        )}>
+          <div className="font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
+            <AlertTriangle className="w-4 h-4" />
+            {warningText || t('warning')}
           </div>
-          <div className="opacity-80">{t('posting_irreversible')}</div>
+          <div className="text-xs opacity-70 leading-relaxed font-medium">
+            {t('posting_irreversible')}
+          </div>
         </div>
 
-        {children && <div className="mb-4">{children}</div>}
+        {children}
 
         {requiresTextConfirmation && (
-          <div className="mb-4">
-            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 ms-1">
-              {isRtl ? `اكتب "${requiredWord}" للتأكيد:` : `Type "${requiredWord}" to confirm:`}
+          <div className="space-y-2 mb-6">
+            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ms-1">
+              {t('confirm_word_prompt', { keyword: requiredWord })}
             </label>
             <input 
               type="text"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
+              value={confirmInput}
+              onChange={(e) => setConfirmInput(e.target.value)}
               disabled={isLoading}
-              className="w-full bg-surface-container border border-outline-low rounded-xl px-4 py-2.5 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all shadow-inner"
+              className="w-full bg-surface-container border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all shadow-inner font-medium"
+              autoFocus
             />
           </div>
         )}
 
-        <div className="flex justify-end gap-3 mt-8">
-          {!isLoading && (
-            <button 
-              onClick={() => onOpenChange(false)}
-              className="px-5 py-2.5 bg-surface-container-high text-foreground rounded-xl font-bold hover:bg-surface-container-highest transition-all active:scale-[0.98]"
-            >
-              {t('cancel')}
-            </button>
-          )}
-          <button 
-            onClick={onConfirm}
-            disabled={isConfirmDisabled}
-            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] hover:brightness-110 active:scale-[0.98]"
+        <AlertDialogFooter className="gap-3 mt-4">
+          <AlertDialogCancel 
+            variant="ghost" 
+            className="font-bold rounded-xl hover:bg-surface-container-high"
+            disabled={isLoading}
           >
-            {isLoading && (
-              <Loader2 className="animate-spin h-4 w-4" />
+            {customCancelText || t('actions.cancel')}
+          </AlertDialogCancel>
+          <Button
+            onClick={handleConfirm}
+            disabled={isConfirmDisabled}
+            className={cn(
+              "font-bold rounded-xl px-6 min-w-[100px] transition-all active:scale-[0.98]",
+              variant === 'destructive' ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
             )}
-            {t('confirm')}
-          </button>
-        </div>
-      </div>
-    </div>
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              customConfirmText || t('actions.confirm')
+            )}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

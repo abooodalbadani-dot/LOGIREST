@@ -51,12 +51,12 @@ export function PostConfirmDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4 sm:justify-center flex-col sm:flex-row gap-3">
-          <AlertDialogCancel className="w-full sm:w-auto h-11 bg-surface-container-highest hover:bg-surface-container-high border-transparent text-foreground rounded-xl">
+          <AlertDialogCancel className="w-full sm:w-auto h-11 bg-surface-container-highest hover:bg-surface-container-high border-transparent text-foreground rounded-sm">
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm} 
-            className={`w-full sm:w-auto h-11 rounded-xl transition-all ${
+            className={`w-full sm:w-auto h-11 rounded-sm transition-all ${
               isDestructive 
                 ? 'bg-status-error text-white hover:bg-status-error/90 shadow-[0_0_15px_rgba(var(--status-error-rgb),0.5)]' 
                 : 'bg-operational-cyan text-white hover:bg-operational-cyan/90 shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.5)]'

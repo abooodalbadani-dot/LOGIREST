@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { MetricCard } from '@/components/ui/metric-card';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { format } from 'date-fns';
 
 const roleVariants: Record<string, string> = {
   ADMIN: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
@@ -26,7 +28,7 @@ const roleVariants: Record<string, string> = {
 };
 
 export function UserListClient({ locale }: { locale: string }) {
-  const t = useTranslations('admin');
+  const t = useTranslations('admin.users');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const [page, setPage] = useState(1);
@@ -64,6 +66,22 @@ export function UserListClient({ locale }: { locale: string }) {
       ),
     },
     {
+      accessorKey: 'status',
+      header: t('status'),
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.status || 'ACTIVE'} className="rounded-sm px-2 h-5" />
+      ),
+    },
+    {
+      accessorKey: 'language',
+      header: t('language'),
+      cell: ({ row }) => (
+        <span className="text-[10px] font-black uppercase tracking-widest opacity-60 px-2 py-0.5 bg-surface-container rounded-sm">
+          {row.original.language || 'en'}
+        </span>
+      ),
+    },
+    {
       accessorKey: 'scopes',
       header: t('scopes'),
       cell: ({ row }) => {
@@ -85,6 +103,15 @@ export function UserListClient({ locale }: { locale: string }) {
           </div>
         );
       },
+    },
+    {
+      accessorKey: 'created_at',
+      header: tCommon('created_at'),
+      cell: ({ row }) => (
+        <span className="text-[10px] font-mono opacity-40" dir="ltr">
+          {row.original.created_at ? format(new Date(row.original.created_at), 'yyyy-MM-dd HH:mm') : '—'}
+        </span>
+      ),
     },
     {
       id: 'actions',

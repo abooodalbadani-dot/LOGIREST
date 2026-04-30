@@ -4,63 +4,74 @@ import { z } from 'zod';
 
 // --- Schemas ---
 
-export const ConsumptionReportSchema = z.object({
-  code: z.string(),
+export const AvailableInventoryReportSchema = z.object({
+  sku: z.string(),
   name: z.string(),
-  qty: z.number(),
-  wh: z.string(),
+  category: z.string(),
+  qty_physical: z.number(),
+  qty_reserved: z.number(),
+  qty_available: z.number(),
+});
+
+export const StockMovementsReportSchema = z.object({
   date: z.string(),
+  reference: z.string(),
+  type: z.string(),
+  from: z.string(),
+  to: z.string(),
+  item: z.string(),
+  qty: z.number(),
+  user: z.string(),
 });
 
 export const ExpiryReportSchema = z.object({
-  code: z.string(),
+  sku: z.string(),
   name: z.string(),
-  lot: z.string(),
-  expiry: z.string(),
-  days: z.number(),
+  lot_no: z.string(),
+  expiry_date: z.string(),
+  days_remaining: z.number(),
   status: z.string(),
 });
 
-export const ProcurementReportSchema = z.object({
-  id: z.string(),
+export const StocktakeVarianceReportSchema = z.object({
+  sku: z.string(),
+  name: z.string(),
+  system_qty: z.number(),
+  counted_qty: z.number(),
+  variance: z.number(),
+  reason: z.string(),
+});
+
+export const ProcurementStatusReportSchema = z.object({
+  po_no: z.string(),
+  date: z.string(),
   supplier: z.string(),
   currency: z.string(),
   total: z.number(),
   status: z.string(),
-  date: z.string(),
 });
 
-export const VarianceReportSchema = z.object({
-  code: z.string(),
-  name: z.string(),
-  sys: z.number(),
-  cnt: z.number(),
-  var: z.number(),
-  reason: z.string(),
-});
-
-export const ValuationReportSchema = z.object({
-  code: z.string(),
-  name: z.string(),
-  qty: z.number(),
-  cost: z.number(),
+export const CurrencySummaryReportSchema = z.object({
+  currency: z.string(),
   total: z.number(),
-});
-
-export const AuditReportSchema = z.object({
-  date: z.string(),
-  user: z.string(),
-  action: z.string(),
-  entity: z.string(),
-  ref: z.string(),
+  total_base: z.number(),
+  last_rate: z.number(),
 });
 
 // --- Hooks ---
 
-export function useConsumptionReport() {
+export function useAvailableInventoryReport() {
   return useQuery({
-    queryKey: ['reports', 'consumption'],
-    queryFn: () => apiClient.get('/reports/consumption', z.array(ConsumptionReportSchema)),
+    queryKey: ['reports', 'available-inventory'],
+    queryFn: () => apiClient.get('/reports/available-inventory', z.array(AvailableInventoryReportSchema)),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useStockMovementsReport() {
+  return useQuery({
+    queryKey: ['reports', 'movements'],
+    queryFn: () => apiClient.get('/reports/movements', z.array(StockMovementsReportSchema)),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -73,34 +84,26 @@ export function useExpiryReport() {
   });
 }
 
-export function useProcurementReport() {
+export function useStocktakeVarianceReport() {
   return useQuery({
-    queryKey: ['reports', 'procurement'],
-    queryFn: () => apiClient.get('/reports/procurement', z.array(ProcurementReportSchema)),
+    queryKey: ['reports', 'stocktake-variance'],
+    queryFn: () => apiClient.get('/reports/stocktake-variance', z.array(StocktakeVarianceReportSchema)),
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useVarianceReport() {
+export function useProcurementStatusReport() {
   return useQuery({
-    queryKey: ['reports', 'variance'],
-    queryFn: () => apiClient.get('/reports/variance', z.array(VarianceReportSchema)),
+    queryKey: ['reports', 'procurement-status'],
+    queryFn: () => apiClient.get('/reports/procurement-status', z.array(ProcurementStatusReportSchema)),
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useValuationReport() {
+export function useCurrencySummaryReport() {
   return useQuery({
-    queryKey: ['reports', 'valuation'],
-    queryFn: () => apiClient.get('/reports/valuation', z.array(ValuationReportSchema)),
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-export function useAuditReport() {
-  return useQuery({
-    queryKey: ['reports', 'audit'],
-    queryFn: () => apiClient.get('/reports/audit', z.array(AuditReportSchema)),
+    queryKey: ['reports', 'currency-summaries'],
+    queryFn: () => apiClient.get('/reports/currency-summaries', z.array(CurrencySummaryReportSchema)),
     staleTime: 5 * 60 * 1000,
   });
 }

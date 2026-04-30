@@ -9,8 +9,19 @@ export function useApproveAdjustment(id: string) {
     mutationFn: () =>
       apiClient.post(`/operations/adjustments/${id}/approve`, successSchema, {}),
     onSuccess: () => {
+      queryClient.setQueryData(['adjustment', id], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: 'APPROVED',
+          approved_by: 'Current User',
+          timeline: [
+            ...(old.timeline || []),
+            { status: 'APPROVED', at: new Date().toISOString(), by: 'Current User' }
+          ]
+        };
+      });
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-      queryClient.invalidateQueries({ queryKey: ['adjustment', id] });
     }
   });
 }

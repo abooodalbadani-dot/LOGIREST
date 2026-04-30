@@ -8,20 +8,18 @@ import { Plus, Home, MapPin, CheckCircle2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
-import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { WarehouseSchema, type Warehouse } from '@/types/master-data';
-import { Badge } from '@/components/ui/badge';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { type Warehouse } from '@/types/master-data';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
-
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 
 export function WarehouseListClient({ locale }: { locale: string }) {
-  const tc = useTranslations('masterData.common');
-  const t = useTranslations('masterData.warehouses');
+  const tc = useTranslations('common');
+  const t = useTranslations('master_data.warehouses');
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -33,27 +31,22 @@ export function WarehouseListClient({ locale }: { locale: string }) {
     VIRTUAL: { label: t('types.virtual'), color: 'text-indigo-400', shadow: 'shadow-[0_0_8px_rgba(129,140,248,0.4)]' }
   }), [t]);
 
-  const { data, isLoading } = useMasterDataList(
-    'warehouses', 
-    WarehouseSchema, 
-    { page: String(page), ...(search ? { search } : {}) }
-  );
+  const { data: queryData, isLoading } = useWarehouses({ search });
+  const warehouses = queryData?.data || [];
 
   const stats = useMemo(() => {
-    const warehouses = data?.data || [];
     return {
-      total: data?.meta?.total || 0,
+      total: warehouses.length,
       active: warehouses.filter(w => w.is_active).length,
       physical: warehouses.filter(w => w.type !== 'VIRTUAL').length
     };
-  }, [data]);
+  }, [warehouses]);
 
   const columns = useMemo<ColumnDef<Warehouse, unknown>[]>(() => [
     { 
       accessorKey: 'code', 
-      header: tc('code'), 
-      meta: { numeric: true },
-      cell: ({ row }) => <span className="font-mono text-cyan-500/90 font-bold tracking-wider">{row.original.code}</span> 
+      header: t('fields.code'), 
+      cell: ({ row }) => <span dir="ltr" className="font-mono text-cyan-500/90 font-bold tracking-wider uppercase bg-cyan-500/5 px-2 py-0.5 rounded-sm">{row.original.code}</span> 
     },
     { 
       accessorKey: 'name', 
@@ -67,7 +60,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
     },
     {
       accessorKey: 'type', 
-      header: t('type'),
+      header: t('fields.type'),
       cell: ({ row }) => {
         const style = WAREHOUSE_TYPE_STYLES[row.original.type] || { label: row.original.type, color: 'text-muted-foreground', shadow: '' };
         return (
@@ -80,7 +73,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
     },
     {
       accessorKey: 'is_active', 
-      header: tc('is_active'),
+      header: t('fields.is_active'),
       cell: ({ row }) => (
         <StatusBadge 
           status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} 
@@ -116,6 +109,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       <div className="space-y-4">
         <Breadcrumb 
           items={[
+            { label: tc('home'), href: `/${locale}/dashboard` },
             { label: tc('master_data'), href: `/${locale}/master-data` },
             { label: t('title') }
           ]} 
@@ -128,7 +122,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
               <Link href={`/${locale}/master-data/warehouses/new`}>
                 <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
-                  {tc('create_new')}
+                  {tc('create')}
                 </Button>
               </Link>
             </PermissionGate>
@@ -138,59 +132,53 @@ export function WarehouseListClient({ locale }: { locale: string }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
-          label={tc('total_warehouses')}
+          label={tc('total_locations')}
           value={stats.total}
           icon={Home}
           color="cyan"
+          dir="ltr"
         />
 
         <MetricCard
-          label={tc('active')}
+          label={tc('status.active')}
           value={stats.active}
           icon={CheckCircle2}
           color="emerald"
+          dir="ltr"
         />
 
         <MetricCard
-          label={t('physical_sites')}
+          label={t('fields.type')}
           value={stats.physical}
           icon={MapPin}
           color="amber"
+          dir="ltr"
         />
       </div>
 
-      <div className="bg-surface-container-low shadow-2xl shadow-primary/10 rounded-sm overflow-hidden">
-        <DataTable 
-          columns={columns} 
-          data={data?.data ?? []} 
-          isLoading={isLoading}
-          collectionName="master_data_warehouses"
-          onRowClick={(r: Warehouse) => router.push(`/${locale}/master-data/warehouses/${r.id}`)}
-          pagination={data?.meta ? {
-            page: data.meta.page,
-            pageSize: data.meta.page_size,
-            total: data.meta.total,
-            totalPages: data.meta.total_pages,
-            onPageChange: setPage
-          } : undefined}
-          filters={
-            <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30">
-              <div className="flex flex-col gap-2 min-w-[300px] flex-1">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">{tc('search')}</label>
-                <div className="relative">
-                  <Input
-                    placeholder={t('search_placeholder')}
-                    value={search}
-                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                    className="w-full bg-surface-container-highest/30 border-none h-12 px-12 text-xs font-bold rounded-sm shadow-inner shadow-black/20"
-                  />
-                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-                </div>
+      <DataTable 
+        columns={columns} 
+        data={warehouses} 
+        isLoading={isLoading}
+        collectionName="master_data_warehouses"
+        onRowClick={(r: Warehouse) => router.push(`/${locale}/master-data/warehouses/${r.id}`)}
+        filters={
+          <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30 rounded-sm">
+            <div className="flex flex-col gap-2 min-w-[300px] flex-1">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ps-1">{tc('search')}</label>
+              <div className="relative">
+                <Input
+                  placeholder={tc('search')}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="w-full bg-surface-container-highest/30 border-none h-12 px-12 text-xs font-bold rounded-sm shadow-inner shadow-black/20"
+                />
+                <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
               </div>
             </div>
-          }
-        />
-      </div>
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAdminUser } from '@/features/admin/hooks/useAdminUsers';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useAdminUser, useAdminUserMutations, UserFormSchema, type UserFormValues } from '@/features/admin/hooks/useAdminUsers';
 import { useAuth } from '@/providers/AuthProvider';
 import { type UserRole } from '@/types/rbac';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Card, CardContent } from '@/components/ui/card';
-import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2, Globe, Power, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'INV_MGR', 'APPROVER', 'WH_KEEPER', 'PROC_OFFICER', 'AUDITOR', 'VIEWER'];
 
@@ -22,14 +24,15 @@ const MOCK_BRANCHES = [
 ];
 
 const MOCK_WAREHOUSES = [
-  { id: 'wh-1', name_ar: 'المستودع الرئيسي', name_en: 'Main Warehouse' },
-  { id: 'wh-2', name_ar: 'مستودع التبريد', name_en: 'Cold Storage' },
-  { id: 'wh-3', name_ar: 'المستودع الجاف', name_en: 'Dry Storage' },
+  { id: 'wh-1', branch_id: 'br-1', name_ar: 'المستودع الرئيسي', name_en: 'Main Warehouse' },
+  { id: 'wh-2', branch_id: 'br-1', name_ar: 'المستودع الثانوي', name_en: 'Secondary Warehouse' },
+  { id: 'wh-3', branch_id: 'br-2', name_ar: 'لوجستيات الشمال', name_en: 'North Logistics' },
 ];
 
 const MOCK_DEPARTMENTS = [
-  { id: 'dep-1', name_ar: 'المطبخ', name_en: 'Kitchen' },
-  { id: 'dep-2', name_ar: 'الخدمة', name_en: 'Service' },
+  { id: 'dep-1', warehouse_id: 'wh-1', name_ar: 'المطبخ', name_en: 'Kitchen' },
+  { id: 'dep-2', warehouse_id: 'wh-1', name_ar: 'المخزن', name_en: 'Store' },
+  { id: 'dep-3', warehouse_id: 'wh-3', name_ar: 'التوزيع', name_en: 'Distribution' },
 ];
 
 interface Props {
@@ -40,23 +43,69 @@ interface Props {
 }
 
 export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const t = useTranslations('admin');
-  const tc = useTranslations('masterData.common');
+  const t = useTranslations('admin.users');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { data, isLoading } = useAdminUser(id);
   const { user: currentUser } = useAuth();
+  const { createUser, updateUser, isLastActiveAdmin } = useAdminUserMutations();
+
+  const isSelf = currentUser?.id === id;
   const isAuditor = currentUser?.role === 'AUDITOR';
 
-  const { register, handleSubmit, reset, watch, setValue } = useForm({
+  const { register, handleSubmit, reset, watch, setValue, formState: { isSubmitting, errors } } = useForm<UserFormValues>({
+    resolver: zodResolver(UserFormSchema),
     defaultValues: {
       name: '',
       email: '',
-      role: 'WH_KEEPER' as UserRole,
-      branch_ids: [] as string[],
-      warehouse_ids: [] as string[],
-      department_ids: [] as string[],
+      role: 'WH_KEEPER',
+      status: 'ACTIVE',
+      language: 'en',
+      branch_ids: [],
+      warehouse_ids: [],
+      department_ids: [],
     },
   });
+
+  const selectedBranches = watch('branch_ids');
+  const selectedWarehouses = watch('warehouse_ids');
+  const selectedRole = watch('role');
+  const selectedStatus = watch('status');
+
+  // Security Check: Is this the last admin?
+  const isLastAdmin = useMemo(() => {
+    if (!id) return false;
+    return isLastActiveAdmin(id);
+  }, [id, isLastActiveAdmin]);
+
+  // Cascading Logic: Warehouses depend on Branches
+  const filteredWarehouses = useMemo(() => {
+    if (!selectedBranches?.length) return [];
+    return MOCK_WAREHOUSES.filter(wh => selectedBranches.includes(wh.branch_id));
+  }, [selectedBranches]);
+
+  // Cascading Logic: Departments depend on Warehouses
+  const filteredDepartments = useMemo(() => {
+    if (!selectedWarehouses?.length) return [];
+    return MOCK_DEPARTMENTS.filter(dep => selectedWarehouses.includes(dep.warehouse_id));
+  }, [selectedWarehouses]);
+
+  // Auto-reset dependent selections when parent changes
+  useEffect(() => {
+    const currentWhs = watch('warehouse_ids') || [];
+    const validWhs = currentWhs.filter(whId => filteredWarehouses.some(f => f.id === whId));
+    if (validWhs.length !== currentWhs.length) {
+      setValue('warehouse_ids', validWhs);
+    }
+  }, [filteredWarehouses, setValue, watch]);
+
+  useEffect(() => {
+    const currentDeps = watch('department_ids') || [];
+    const validDeps = currentDeps.filter(depId => filteredDepartments.some(f => f.id === depId));
+    if (validDeps.length !== currentDeps.length) {
+      setValue('department_ids', validDeps);
+    }
+  }, [filteredDepartments, setValue, watch]);
 
   useEffect(() => {
     if (data) {
@@ -64,6 +113,8 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
         name: data.name,
         email: data.email,
         role: data.role as UserRole,
+        status: data.status as 'ACTIVE' | 'INACTIVE' || 'ACTIVE',
+        language: (data.language as 'en' | 'ar') || 'en',
         branch_ids: data.scopes.filter(s => s.branch_id).map(s => s.branch_id!),
         warehouse_ids: data.scopes.filter(s => s.warehouse_id).map(s => s.warehouse_id!),
         department_ids: data.scopes.filter(s => s.department_id).map(s => s.department_id!),
@@ -71,19 +122,30 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(() => {
+  const onSubmit = handleSubmit(async (values) => {
+    if (id) {
+      await updateUser.mutateAsync({ ...values, id });
+    } else {
+      await createUser.mutateAsync(values);
+    }
     router.push(`/${locale}/admin/users`);
   });
 
+
   if (isLoading && id) {
-    return <div className="flex items-center justify-center h-48"><div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" /></div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Syncing Identity Stream...</span>
+      </div>
+    );
   }
 
   return (
     <MasterDataFormLayout
       title={id ? editTitle : createTitle}
       backHref={`/${locale}/admin/users`}
-      isSaving={false} // Hook this up to a mutation if available
+      isSaving={isSubmitting}
       onSubmit={onSubmit}
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -108,12 +170,12 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
                     <User className="w-3 h-3" /> {t('name')}
                   </Label>
                   <Input 
-                    id="user-name" 
                     {...register('name')} 
                     disabled={isAuditor} 
-                    dir="rtl"
-                    className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
+                    dir="auto"
+                    className={`h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50 font-bold ${errors.name ? 'border-rose-500' : ''}`}
                   />
+                  {errors.name && <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest">{t(errors.name.message as any)}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -121,12 +183,25 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
                     <Mail className="w-3 h-3" /> {t('email')}
                   </Label>
                   <Input 
-                    id="user-email" 
                     dir="ltr" 
                     {...register('email')} 
                     disabled={isAuditor}
-                    className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
+                    className={`h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50 font-mono font-bold ${errors.email ? 'border-rose-500' : ''}`}
                   />
+                  {errors.email && <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest">{t(errors.email.message as any)}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted flex items-center gap-2">
+                    <Globe className="w-3 h-3" /> {t('language')}
+                  </Label>
+                  <select
+                    {...register('language')}
+                    className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-xs font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  >
+                    <option value="en">English</option>
+                    <option value="ar">العربية</option>
+                  </select>
                 </div>
               </CardContent>
             </Card>
@@ -149,29 +224,36 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
                 <MultiSelect
                   label={t('branch_scope')}
                   icon={<Building2 className="w-3 h-3" />}
-                  options={MOCK_BRANCHES.map(b => ({ id: b.id, label: b.name_en }))}
-                  selected={watch('branch_ids')}
+                  options={MOCK_BRANCHES.map(b => ({ id: b.id, label: locale === 'ar' ? b.name_ar : b.name_en }))}
+                  selected={selectedBranches}
                   onChange={(v) => setValue('branch_ids', v)}
-                  disabled={isAuditor}
+                  disabled={isAuditor || isSelf}
                 />
 
                 <MultiSelect
                   label={t('warehouse_scope')}
                   icon={<Warehouse className="w-3 h-3" />}
-                  options={MOCK_WAREHOUSES.map(w => ({ id: w.id, label: w.name_en }))}
-                  selected={watch('warehouse_ids')}
+                  options={filteredWarehouses.map(w => ({ id: w.id, label: locale === 'ar' ? w.name_ar : w.name_en }))}
+                  selected={selectedWarehouses}
                   onChange={(v) => setValue('warehouse_ids', v)}
-                  disabled={isAuditor}
+                  disabled={isAuditor || isSelf || !selectedBranches.length}
                 />
 
                 <MultiSelect
                   label={t('department_scope')}
                   icon={<Building2 className="w-3 h-3" />}
-                  options={MOCK_DEPARTMENTS.map(d => ({ id: d.id, label: d.name_en }))}
+                  options={filteredDepartments.map(d => ({ id: d.id, label: locale === 'ar' ? d.name_ar : d.name_en }))}
                   selected={watch('department_ids')}
                   onChange={(v) => setValue('department_ids', v)}
-                  disabled={isAuditor}
+                  disabled={isAuditor || isSelf || !selectedWarehouses.length}
                 />
+
+                {(!selectedBranches.length) && (
+                  <div className="p-4 rounded-sm bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Select at least one branch to view warehouses</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
@@ -195,16 +277,15 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
                 <CheckCircle2 className="w-3 h-3 text-cyan-500" />
                 <span className="text-[9px] font-black uppercase tracking-widest text-cyan-500">Live Permissions Policy</span>
               </div>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-6 space-y-8">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">
                     {t('role')}
                   </Label>
                   <select
-                    id="user-role"
-                    className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none"
+                    className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-xs font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none disabled:opacity-50"
                     {...register('role')}
-                    disabled={isAuditor}
+                    disabled={isAuditor || isSelf || isLastAdmin}
                   >
                     {ALL_ROLES.map((role) => (
                       <option key={role} value={role} className="bg-surface-container-low text-foreground">{role}</option>
@@ -212,24 +293,69 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
                   </select>
                 </div>
 
-                <div className="p-4 rounded-sm bg-surface-container-low border border-outline-low space-y-3">
-                  <div className="flex justify-between items-center border-b border-outline-low pb-2">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Admin Access</span>
-                    <div className={`w-2 h-2 rounded-full ${watch('role') === 'ADMIN' ? 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]' : 'bg-outline-low'}`} />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Audit Log Visibility</span>
-                    <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted flex items-center gap-2">
+                    <Power className="w-3 h-3" /> {t('status')}
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      disabled={isAuditor || isSelf || isLastAdmin}
+                      onClick={() => setValue('status', 'ACTIVE')}
+                      className={`flex-1 h-11 rounded-sm border text-[10px] font-black uppercase tracking-widest transition-all ${
+                        watch('status') === 'ACTIVE' 
+                          ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
+                          : 'bg-surface-container-highest/20 border-outline-low text-muted-foreground/40 hover:bg-surface-container-highest/40'
+                      }`}
+                    >
+                      {t('activate')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isAuditor || isSelf || isLastAdmin}
+                      onClick={() => setValue('status', 'INACTIVE')}
+                      className={`flex-1 h-11 rounded-sm border text-[10px] font-black uppercase tracking-widest transition-all ${
+                        watch('status') === 'INACTIVE' 
+                          ? 'bg-rose-500/10 border-rose-500/50 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.1)]' 
+                          : 'bg-surface-container-highest/20 border-outline-low text-muted-foreground/40 hover:bg-surface-container-highest/40'
+                      }`}
+                    >
+                      {t('deactivate')}
+                    </button>
                   </div>
                 </div>
+
+                {isLastAdmin && (selectedStatus === 'INACTIVE' || selectedRole !== 'ADMIN') && (
+                  <div className="p-4 rounded-sm bg-amber-500/5 border border-amber-500/20 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-amber-500">Critical Lockdown</span>
+                    </div>
+                    <p className="text-[10px] text-amber-500/70 leading-tight">
+                      {t('cannot_deactivate_last_admin')}
+                    </p>
+                  </div>
+                )}
+
+                {isSelf && (
+                  <div className="p-4 rounded-sm bg-rose-500/5 border border-rose-500/20 space-y-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-rose-500">Self-Protection Active</span>
+                    <p className="text-[10px] text-rose-500/70 leading-tight">
+                      {t('cannot_modify_self')}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
 
-          <div className="p-6 rounded-sm bg-surface-container-low border border-outline-low border-l-4 border-l-cyan-500">
-            <h3 className="text-xs font-black uppercase tracking-widest text-foreground mb-2">Security Note</h3>
-            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-              Scope-based restrictions apply immediately upon save. Users must refresh their session to reflect new permissions.
+          <div className="p-6 rounded-sm bg-surface-container-low border border-outline-low border-l-4 border-l-cyan-500 shadow-lg shadow-black/20">
+            <h3 className="text-xs font-black uppercase tracking-widest text-foreground mb-2 flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-cyan-500" />
+              Security Protocol
+            </h3>
+            <p className="text-[11px] text-muted-foreground/60 leading-relaxed font-medium">
+              Access scopes define the data visibility boundaries for this user. At least one branch must be assigned for operational roles.
             </p>
           </div>
         </div>
@@ -270,9 +396,12 @@ function MultiSelect({ label, icon, options, selected, onChange, disabled }: {
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {selected.includes(opt.id) && <CheckCircle2 className="w-3 h-3" />}
-            <span dir="ltr">{opt.label}</span>
+            <span dir="auto">{opt.label}</span>
           </button>
         ))}
+        {options.length === 0 && (
+          <span className="text-[10px] italic opacity-20 py-2">No units available for current selection</span>
+        )}
       </div>
     </div>
   );

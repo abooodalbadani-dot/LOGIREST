@@ -8,7 +8,7 @@ export default async function UsersPage(props: { params: Promise<{ locale: strin
   const t = await getTranslations('admin');
 
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="admin">
+    <ProtectedRoute roles={["ADMIN"]}>
       <UserListClient locale={locale} />
     </ProtectedRoute>
   );

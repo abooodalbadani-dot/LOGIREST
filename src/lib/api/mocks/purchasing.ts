@@ -90,8 +90,8 @@ export const purchasingMocks: Record<string, unknown> = {
   },
   'GET /procurement/purchase-requests': {
     data: [
-      { id: 'pr-1', document_number: 'PR-2023-001', status: 'DRAFT', department_id: 'dept-1', expected_date: '2023-11-01', created_at: '2023-10-01T10:00:00Z' },
-      { id: 'pr-2', document_number: 'PR-2023-002', status: 'APPROVED', department_id: 'dept-2', expected_date: '2023-11-05', created_at: '2023-10-02T10:00:00Z' }
+      { id: 'pr-1', document_number: 'PR-2023-001', status: 'DRAFT', department_id: 'dept-1', warehouse_id: 'wh-1', expected_date: '2023-11-01', created_at: '2023-10-01T10:00:00Z', created_by: 'Ahmed Ali' },
+      { id: 'pr-2', document_number: 'PR-2023-002', status: 'APPROVED', department_id: 'dept-2', warehouse_id: 'wh-2', expected_date: '2023-11-05', created_at: '2023-10-02T10:00:00Z', created_by: 'Sarah J.' }
     ],
     meta: {
       pagination: {

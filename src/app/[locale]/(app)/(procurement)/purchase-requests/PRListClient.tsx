@@ -39,33 +39,42 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
       accessorKey: 'document_number',
       header: tc('doc_number'),
       cell: ({ row }) => (
-        <span className="font-mono text-cyan-500 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">
+        <span dir="ltr" className="font-mono text-cyan-500 font-bold tracking-wider drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">
           {row.original.document_number}
         </span>
       ),
     },
     {
-      accessorKey: 'department_id',
-      header: t('department'),
+      accessorKey: 'warehouse_id',
+      header: tc('warehouse'),
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="opacity-90 font-bold text-[13px] tracking-tight text-start">{row.original.department_id}</span>
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60/40 font-black text-start">Department</span>
+          <span className="opacity-90 font-bold text-[13px] tracking-tight text-start">{row.original.warehouse_id}</span>
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 font-black text-start">{tc('warehouse')}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'expected_date',
-      header: t('expected_date'),
-      cell: ({ row }) =>
-        row.original.expected_date ? (
-          <div className="flex flex-col">
-            <span dir="ltr" className="text-[11px] font-mono font-black text-foreground/80">
-              {format(new Date(row.original.expected_date), 'dd/MM/yyyy')}
-            </span>
-            <span className="text-[9px] uppercase tracking-tighter opacity-30 font-black">Est. Delivery</span>
-          </div>
-        ) : <span className="opacity-20">—</span>,
+      accessorKey: 'created_at',
+      header: tc('created_at'),
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span dir="ltr" className="text-[11px] font-mono font-black text-foreground/80">
+            {format(new Date(row.original.created_at), 'dd/MM/yyyy HH:mm')}
+          </span>
+          <span className="text-[9px] uppercase tracking-tighter opacity-30 font-black text-start">{tc('created_at')}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'created_by',
+      header: t('requested_by'),
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span className="opacity-90 font-bold text-[13px] tracking-tight text-start">{row.original.created_by}</span>
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 font-black text-start">{t('requested_by')}</span>
+        </div>
+      ),
     },
     {
       id: 'actions',
@@ -76,7 +85,7 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-cyan-500/20 text-muted-foreground/60/40 hover:text-cyan-500 transition-all group"
+              className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-cyan-500/20 text-muted-foreground/60 hover:text-cyan-500 transition-all group"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/${locale}/purchase-requests/${row.original.id}`);
@@ -105,7 +114,7 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
         <Breadcrumb items={breadcrumbs} />
         <PageHeader 
           title={t('title')} 
-          description={t('description') || 'Internal stock replenishment requests and approval pipeline'}
+          description={t('description')}
           actions={
             <PermissionGate action="create" resource="pr">
               <Link href={`/${locale}/purchase-requests/new`}>
@@ -121,19 +130,19 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
-          label="Total Requests"
+          label={t('metrics.total')}
           value={totalPRs}
           icon={ClipboardList}
           color="cyan"
         />
         <MetricCard
-          label="Approved"
+          label={t('metrics.approved')}
           value={approvedCount}
           icon={CheckCircle2}
           color="emerald"
         />
         <MetricCard
-          label="Pending"
+          label={t('metrics.pending')}
           value={pendingCount}
           icon={Clock}
           color="amber"
@@ -149,8 +158,8 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
           collectionName="procurement_pr"
           emptyState={
             <EmptyState 
-              title={t('no_requests_title') || 'No Purchase Requests'}
-              description={t('no_requests_desc') || 'Request items from the store to replenish your department stock.'}
+              title={t('no_requests_title')}
+              description={t('no_requests_desc')}
               action={
                 <PermissionGate action="create" resource="pr">
                   <Link href={`/${locale}/purchase-requests/new`}>
@@ -173,40 +182,41 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
           filters={
             <div className="flex flex-wrap items-center gap-6 w-full py-6 px-8 border-b border-surface-variant/10">
               <div className="flex flex-col gap-2 min-w-[200px]">
-                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 ps-1">Status Stream</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 ps-1">{tc('status_filtering')}</label>
                 <Select
                   value={status || 'ALL'}
                   onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
                 >
                   <SelectTrigger className="w-full bg-surface-variant/10 border-none h-11 px-5 text-[11px] font-bold rounded-sm shadow-inner shadow-black/5">
                     <div className="flex items-center gap-2">
-                       <ListFilter className="w-3.5 h-3.5 text-muted-foreground/60/40" />
+                       <ListFilter className="w-3.5 h-3.5 text-muted-foreground/60" />
                        <SelectValue placeholder={tc('status.all')} />
                     </div>
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
                     <SelectItem value="ALL" className="text-[11px] font-bold">{tc('status.all')}</SelectItem>
-                    <SelectItem value="DRAFT" className="text-[11px] font-bold">Draft</SelectItem>
-                    <SelectItem value="APPROVED" className="text-[11px] font-bold">Approved</SelectItem>
-                    <SelectItem value="REJECTED" className="text-[11px] font-bold">Rejected</SelectItem>
+                    <SelectItem value="DRAFT" className="text-[11px] font-bold">{tc('status.draft')}</SelectItem>
+                    <SelectItem value="SUBMITTED" className="text-[11px] font-bold">{tc('status.submitted')}</SelectItem>
+                    <SelectItem value="APPROVED" className="text-[11px] font-bold">{tc('status.approved')}</SelectItem>
+                    <SelectItem value="REJECTED" className="text-[11px] font-bold">{tc('status.rejected')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-2 flex-1 min-w-[300px]">
-                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60/40 ps-1">Dynamic Search</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 ps-1">{tc('search')}</label>
                 <div className="relative group">
                   <Input
-                    placeholder="Filter by document number or department..."
+                    placeholder={t('search_placeholder')}
                     className="w-full bg-surface-variant/10 border-none h-11 px-11 text-[11px] font-bold rounded-sm shadow-inner shadow-black/5 transition-all focus:bg-surface-container-high"
                   />
-                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60/20 group-focus-within:text-cyan-500 transition-colors" />
+                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-cyan-500 transition-colors" />
                 </div>
               </div>
 
-              <Button variant="ghost" className="h-11 px-6 text-muted-foreground/60/40 hover:text-cyan-500 text-[9px] font-black uppercase tracking-widest border border-dashed border-surface-variant/10 rounded-sm hover:bg-cyan-500/5 hover:border-cyan-500/20 transition-all mt-6">
+              <Button variant="ghost" className="h-11 px-6 text-muted-foreground/60 hover:text-cyan-500 text-[9px] font-black uppercase tracking-widest border border-dashed border-surface-variant/10 rounded-sm hover:bg-cyan-500/5 hover:border-cyan-500/20 transition-all mt-6">
                 <Filter className="w-3.5 h-3.5 me-2" />
-                Advanced Filters
+                {tc('filters_button')}
               </Button>
             </div>
           }

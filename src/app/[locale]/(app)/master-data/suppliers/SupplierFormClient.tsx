@@ -20,13 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  useMasterDataItem,
-  useMasterDataList,
-  useMasterDataCreate,
-  useMasterDataUpdate,
-} from '@/features/master-data/hooks/useMasterDataCRUD';
-import { SupplierSchema, SupplierFormSchema, type SupplierFormValues, CurrencySchema } from '@/types/master-data';
+import { useSupplier, useCreateSupplier, useUpdateSupplier } from '@/features/suppliers/hooks/useSuppliers';
+import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
+import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
 
 interface Props {
   id: string | null;
@@ -36,14 +32,14 @@ interface Props {
 }
 
 export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const t = useTranslations('masterData.common');
-  const ts = useTranslations('masterData.suppliers');
+  const tc = useTranslations('common');
+  const ts = useTranslations('master_data.suppliers');
   const router = useRouter();
 
-  const { data } = useMasterDataItem('suppliers', id, SupplierSchema);
-  const { data: currencies } = useMasterDataList('currencies', CurrencySchema);
-  const create = useMasterDataCreate('suppliers', SupplierSchema);
-  const update = useMasterDataUpdate('suppliers', SupplierSchema);
+  const { data } = useSupplier(id);
+  const { data: currencies } = useCurrencies();
+  const create = useCreateSupplier();
+  const update = useUpdateSupplier();
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors } } =
     useForm<SupplierFormValues>({
@@ -60,19 +56,23 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
         name_ar: data.name_ar,
         name_en: data.name_en,
         currency_id: data.currency_id,
-        payment_terms: data.payment_terms,
+        payment_terms: data.payment_terms || '',
         is_active: data.is_active,
       });
     }
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) {
-      await update.mutateAsync({ id, body: values });
-    } else {
-      await create.mutateAsync(values);
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      router.push(`/${locale}/master-data/suppliers`);
+    } catch (error) {
+      // Error handled by mutation toast
     }
-    router.push(`/${locale}/master-data/suppliers`);
   });
 
   const isSaving = create.isPending || update.isPending;
@@ -94,13 +94,13 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{ts('partner_identity')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{ts('partner_identity_desc') || t('details_desc')}</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{ts('partner_identity_desc')}</p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2 max-w-sm">
-                  <Label htmlFor="sup-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{t('code')}</Label>
+                  <Label htmlFor="sup-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('code')}</Label>
                   <Input 
                     id="sup-code" 
                     dir="ltr" 
@@ -113,7 +113,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <Label htmlFor="sup-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{t('name_en')}</Label>
+                    <Label htmlFor="sup-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('name_en')}</Label>
                     <Input 
                       id="sup-name-en" 
                       dir="ltr" 
@@ -125,7 +125,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sup-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{t('name_ar')}</Label>
+                    <Label htmlFor="sup-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{tc('name_ar')}</Label>
                     <Input 
                       id="sup-name-ar" 
                       dir="rtl" 
@@ -148,13 +148,13 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{ts('financial_terms')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{ts('financial_terms_desc') || t('details_desc')}</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{ts('financial_terms_desc')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="sup-currency" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{ts('currency')}</Label>
+                  <Label htmlFor="sup-currency" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{ts('fields.currency')}</Label>
                   <Controller
                     name="currency_id"
                     control={control}
@@ -165,7 +165,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">—</SelectItem>
-                          {currencies?.data?.map((c) => (
+                          {currencies?.map((c: any) => (
                             <SelectItem key={c.id} value={c.id} className="font-semibold text-xs uppercase tracking-[0.08em]">
                               {c.code} — {c.name_en}
                             </SelectItem>
@@ -178,7 +178,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sup-terms" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{ts('payment_terms')}</Label>
+                  <Label htmlFor="sup-terms" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{ts('fields.payment_terms')}</Label>
                   <Textarea 
                     id="sup-terms" 
                     rows={4} 
@@ -200,15 +200,15 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{t('status')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{t('operational_status')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('status_label')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('status_label')}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="sup-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
-                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
+                  <Label htmlFor="sup-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{tc('is_active')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tc('active') : tc('inactive')}</p>
                 </div>
                 <Switch
                   id="sup-active"

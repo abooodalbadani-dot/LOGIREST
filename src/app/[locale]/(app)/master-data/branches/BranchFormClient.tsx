@@ -13,11 +13,11 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
-  useMasterDataItem,
-  useMasterDataCreate,
-  useMasterDataUpdate,
-} from '@/features/master-data/hooks/useMasterDataCRUD';
-import { BranchSchema, BranchFormSchema, type BranchFormValues } from '@/types/master-data';
+  useBranch,
+  useCreateBranch,
+  useUpdateBranch,
+} from '@/features/branches/hooks/useBranches';
+import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
 
 interface Props {
   id: string | null;
@@ -27,13 +27,13 @@ interface Props {
 }
 
 export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const t = useTranslations('masterData.common');
-  const tb = useTranslations('masterData.branches');
+  const t = useTranslations('common');
+  const tb = useTranslations('master_data.branches');
   const router = useRouter();
 
-  const { data } = useMasterDataItem('branches', id, BranchSchema);
-  const create = useMasterDataCreate('branches', BranchSchema);
-  const update = useMasterDataUpdate('branches', BranchSchema);
+  const { data } = useBranch(id);
+  const create = useCreateBranch();
+  const update = useUpdateBranch();
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<BranchFormValues>({
     resolver: zodResolver(BranchFormSchema),
@@ -49,12 +49,16 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) {
-      await update.mutateAsync({ id, body: values });
-    } else {
-      await create.mutateAsync(values);
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      router.push(`/${locale}/master-data/branches`);
+    } catch (error) {
+      // Error handled by mutation hook via toast
     }
-    router.push(`/${locale}/master-data/branches`);
   });
 
   const isSaving = create.isPending || update.isPending;

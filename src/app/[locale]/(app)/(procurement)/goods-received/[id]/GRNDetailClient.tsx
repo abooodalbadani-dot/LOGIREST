@@ -63,8 +63,6 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
   
   const [lines, setLines] = useState<LineItem[]>([]);
   const [scanError, setScanError] = useState('');
-  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [fxRate, setFxRate] = useState<number>(1);
   const [isWarehouseLockedError, setIsWarehouseLockedError] = useState(false);
   
   // FEFO Allocator State
@@ -167,21 +165,8 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
   };
 
   const isPosted = grn?.status === 'POSTED';
+  const isApproved = grn?.status === 'APPROVED';
   const isLocked = lockState?.is_locked ?? false;
-
-  const handlePost = async () => {
-    try {
-      await postGRN.mutateAsync({ fx_rate: fxRate, confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' });
-      setIsPostDialogOpen(false);
-      router.push(`/${locale}/goods-received`);
-    } catch (err: unknown) {
-      const error = err as { code?: string };
-      if (error?.code === 'WAREHOUSE_LOCKED') {
-        setIsWarehouseLockedError(true);
-        setIsPostDialogOpen(false);
-      }
-    }
-  };
 
   if (isLoadingGRN) return (
     <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl animate-pulse">
@@ -219,10 +204,10 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
               )}
             </PermissionGate>
             <PermissionGate action="post" resource="grn">
-              {!isPosted && (
+              {isApproved && (
                 <Button 
                   disabled={isLocked}
-                  onClick={() => setIsPostDialogOpen(true)}
+                  onClick={() => router.push(`/${locale}/goods-received/${id}/post`)}
                   className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all rounded-2xl"
                 >
                   <Send className="w-4 h-4 me-2" />
@@ -389,10 +374,14 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
       {/* Financial Summary */}
       <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8">
         <div className="flex flex-col items-end gap-1 px-6 border-e border-white/5">
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">{t('market_index_ref')}</p>
-           <div className="flex items-center gap-2 text-cyan-500">
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+             {isPosted ? t('finalized_rate') : t('market_index_ref')}
+           </p>
+           <div className={`flex items-center gap-2 ${isPosted ? 'text-amber-500' : 'text-cyan-500'}`}>
              <TrendingUp className="w-3 h-3" />
-             <p dir="ltr" className="text-xs font-mono font-black">1 {currencyId} = {currentFxRate} {baseCurrency}</p>
+             <p dir="ltr" className="text-xs font-mono font-black">
+               1 {currencyId} = {isPosted ? (grn?.fx_rate || 1) : currentFxRate} {baseCurrency}
+             </p>
            </div>
         </div>
 
@@ -409,7 +398,9 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
             
             <div className="flex justify-between items-center gap-10">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/40">{t('base_value', { currency: baseCurrency })}</p>
-              <p dir="ltr" className="text-xl font-mono font-black text-cyan-500/80">{(totalForeign * currentFxRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p dir="ltr" className="text-xl font-mono font-black text-cyan-500/80">
+                {(totalForeign * (isPosted ? (grn?.fx_rate || 1) : currentFxRate)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </p>
             </div>
           </div>
         </div>
@@ -425,24 +416,7 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
         </div>
       )}
 
-      <PostConfirmDialog 
-        open={isPostDialogOpen} 
-        onOpenChange={setIsPostDialogOpen}
-        title={t('post_confirm_title')}
-        description={t('post_confirm_desc')}
-        warningText={t('post_irreversible')}
-        requiresTextConfirmation={true}
-        onConfirm={handlePost}
-        isLoading={postGRN.isPending}
-      >
-        {currencyId !== 'SAR' && (
-           <FXRateCapture 
-             fromCurrencyCode={currencyId} 
-             toCurrencyCode="SAR" 
-             onRateConfirmed={setFxRate} 
-           />
-        )}
-      </PostConfirmDialog>
+
 
       <Sheet open={fefoOpen} onOpenChange={setFefoOpen}>
         <SheetContent side="bottom" className="h-[80vh] bg-surface-container-lowest border-t border-primary/30 rounded-t-[32px]">

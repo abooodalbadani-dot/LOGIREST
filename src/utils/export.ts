@@ -1,4 +1,7 @@
 import * as XLSX from 'xlsx';
+import { generateExcelWithBranding, ExcelColumn } from '@/lib/export/xlsxExport';
+
+export { type ExcelColumn };
 
 export function generateCSV(headers: string[], rows: string[][], filename: string) {
   const csvContent = [
@@ -14,28 +17,6 @@ export function generateCSV(headers: string[], rows: string[][], filename: strin
   URL.revokeObjectURL(link.href);
 }
 
-export interface ExcelColumn {
-  header: string;
-  key: string;
-  width?: number;
-}
-
 export function generateExcel(columns: ExcelColumn[], rows: Record<string, unknown>[], filename: string) {
-  // Extract headers
-  const headers = columns.map(col => col.header);
-  
-  // Map rows based on keys
-  const data = rows.map(row => columns.map(col => row[col.key]));
-  
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
-  
-  // Apply widths if provided
-  if (columns.some(col => col.width)) {
-    worksheet['!cols'] = columns.map(col => ({ wch: col.width ?? 10 }));
-  }
-
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-  
-  XLSX.writeFile(workbook, `${filename}.xlsx`);
+  return generateExcelWithBranding(columns, rows, filename);
 }

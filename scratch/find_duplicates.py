@@ -1,24 +1,23 @@
 import json
+from collections import Counter
 
-def find_duplicate_keys(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    # We can't use json.load because it automatically handles duplicates
-    # We need a custom parser or just count occurrences of top-level keys
-    # For a simple check, we can look for strings like "  \"key\": {" at the first level of indentation
-    
-    import re
-    # Match "key": { or "key": "value" at level 1 indentation (2 spaces)
-    matches = re.findall(r'^  "([^"]+)":', content, re.MULTILINE)
-    
-    counts = {}
-    for m in matches:
-        counts[m] = counts.get(m, 0) + 1
-    
-    duplicates = {k: v for k, v in counts.items() if v > 1}
-    return duplicates
+def get_keys(obj, prefix=''):
+    keys = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            keys.append(f"{prefix}{k}")
+            keys.extend(get_keys(v, f"{prefix}{k}."))
+    return keys
 
-if __name__ == "__main__":
-    print("Duplicates in en.json:", find_duplicate_keys(r"messages\en.json"))
-    print("Duplicates in ar.json:", find_duplicate_keys(r"messages\ar.json"))
+try:
+    with open('messages/ar.json', 'r', encoding='utf-8') as f:
+        d = json.load(f)
+    all_keys = get_keys(d)
+    counts = Counter(all_keys)
+    dups = [k for k, v in counts.items() if v > 1]
+    if dups:
+        print(f"Duplicates found: {dups}")
+    else:
+        print("No duplicates found.")
+except Exception as e:
+    print(f"Error: {e}")

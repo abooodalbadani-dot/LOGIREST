@@ -28,7 +28,7 @@ export function useCreateAdjustment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateAdjustmentPayload) => 
-      apiClient.post('/operations/adjustments', AdjustmentDetailSchema, payload),
+      apiClient.post('/operations/adjustments', AdjustmentDetailSchema, CreateAdjustmentPayloadSchema.parse(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
     }

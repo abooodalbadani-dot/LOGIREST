@@ -3,21 +3,30 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Briefcase, ShieldCheck, Hash, Globe2, User, Landmark, Activity } from 'lucide-react';
+import { Briefcase, ShieldCheck, Landmark, Activity, Warehouse } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
-  useMasterDataItem,
-  useMasterDataCreate,
-  useMasterDataUpdate,
-} from '@/features/master-data/hooks/useMasterDataCRUD';
-import { DepartmentSchema, DepartmentFormSchema, type DepartmentFormValues } from '@/types/master-data';
+  useDepartment,
+  useCreateDepartment,
+  useUpdateDepartment,
+} from '@/features/departments/hooks/useDepartments';
+import { useBranches } from '@/features/branches/hooks/useBranches';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { DepartmentFormSchema, type DepartmentFormValues } from '@/types/master-data';
 
 interface Props {
   id: string | null;
@@ -27,16 +36,23 @@ interface Props {
 }
 
 export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const tc = useTranslations('masterData.common');
+  const t = useTranslations('common');
+  const td = useTranslations('master_data.departments');
   const router = useRouter();
 
-  const { data } = useMasterDataItem('departments', id, DepartmentSchema);
-  const create = useMasterDataCreate('departments', DepartmentSchema);
-  const update = useMasterDataUpdate('departments', DepartmentSchema);
+  const { data } = useDepartment(id);
+  const { data: branches = [] } = useBranches();
+  const { data: warehousesQuery } = useWarehouses();
+  const warehouses = warehousesQuery?.data || [];
+  
+  const create = useCreateDepartment();
+  const update = useUpdateDepartment();
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
+      branch_id: '',
+      warehouse_id: '',
       code: '',
       name_ar: '',
       name_en: '',
@@ -47,10 +63,16 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
   });
 
   const isActive = useWatch({ control, name: 'is_active' });
+  const selectedBranchId = useWatch({ control, name: 'branch_id' });
+
+  // Filter warehouses based on selected branch
+  const filteredWarehouses = warehouses.filter(w => !selectedBranchId || w.branch_id === selectedBranchId);
 
   useEffect(() => {
     if (data) {
       reset({
+        branch_id: data.branch_id,
+        warehouse_id: data.warehouse_id,
         code: data.code,
         name_ar: data.name_ar,
         name_en: data.name_en,
@@ -62,12 +84,16 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
   }, [data, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (id) {
-      await update.mutateAsync({ id, body: values });
-    } else {
-      await create.mutateAsync(values);
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      router.push(`/${locale}/master-data/departments`);
+    } catch (error) {
+      // Error handled by mutation hook
     }
-    router.push(`/${locale}/master-data/departments`);
   });
 
   const isSaving = create.isPending || update.isPending;
@@ -90,49 +116,102 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
                   <Briefcase className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('basic_info')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('basic_info_desc')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{td('title')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{td('description')}</p>
                 </div>
-              </div>
-
-              {/* Code */}
-              <div className="space-y-2 max-w-sm">
-                <Label htmlFor="dept-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('code')}</Label>
-                <Input 
-                  id="dept-code" 
-                  dir="ltr" 
-                  {...register('code')} 
-                  className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
-                  placeholder="DEPT-01" 
-                />
-                {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.code.message}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name EN */}
+                {/* Branch Select */}
                 <div className="space-y-2">
-                  <Label htmlFor="dept-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('name_en')}</Label>
-                  <Input 
-                    id="dept-name-en" 
-                    dir="ltr" 
-                    {...register('name_en')} 
-                    className="font-semibold" 
-                    placeholder="Department Name" 
+                  <Label htmlFor="dept-branch" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{td('fields.branch')}</Label>
+                  <Controller
+                    name="branch_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={(val) => {
+                        field.onChange(val);
+                        setValue('warehouse_id', ''); // Reset warehouse when branch changes
+                      }}>
+                        <SelectTrigger id="dept-branch">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {branches.map((b) => (
+                            <SelectItem key={b.id} value={b.id} className="font-semibold text-xs uppercase tracking-[0.08em]">
+                              {b.code} — {b.name_en}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
-                  {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_en.message}</p>}
+                  {errors.branch_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{td(`validation.${errors.branch_id.message}`)}</p>}
                 </div>
 
-                {/* Name AR */}
+                {/* Warehouse Select */}
                 <div className="space-y-2">
-                  <Label htmlFor="dept-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{tc('name_ar')}</Label>
-                  <Input 
-                    id="dept-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    className="font-semibold text-end" 
-                    placeholder="اسم القسم" 
+                  <Label htmlFor="dept-warehouse" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{td('fields.warehouse')}</Label>
+                  <Controller
+                    name="warehouse_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange} disabled={!selectedBranchId}>
+                        <SelectTrigger id="dept-warehouse">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filteredWarehouses.map((w) => (
+                            <SelectItem key={w.id} value={w.id} className="font-semibold text-xs uppercase tracking-[0.08em]">
+                              {w.code} — {w.name_en}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
-                  {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{errors.name_ar.message}</p>}
+                  {errors.warehouse_id && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{td(`validation.${errors.warehouse_id.message}`)}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="dept-code" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{td('fields.code')}</Label>
+                  <Input 
+                    id="dept-code" 
+                    dir="ltr" 
+                    {...register('code')} 
+                    className="font-mono font-semibold uppercase tracking-[0.08em] text-status-active" 
+                    placeholder="DEPT-01" 
+                  />
+                  {errors.code && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{td(`validation.${errors.code.message}`)}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Name EN */}
+                  <div className="space-y-2">
+                    <Label htmlFor="dept-name-en" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{td('fields.name_en')}</Label>
+                    <Input 
+                      id="dept-name-en" 
+                      dir="ltr" 
+                      {...register('name_en')} 
+                      className="font-semibold" 
+                    />
+                    {errors.name_en && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{td(`validation.${errors.name_en.message}`)}</p>}
+                  </div>
+
+                  {/* Name AR */}
+                  <div className="space-y-2">
+                    <Label htmlFor="dept-name-ar" className="text-[10px] font-semibold uppercase tracking-normal text-muted-foreground/70">{td('fields.name_ar')}</Label>
+                    <Input 
+                      id="dept-name-ar" 
+                      dir="rtl" 
+                      {...register('name_ar')} 
+                      className="font-semibold text-end" 
+                    />
+                    {errors.name_ar && <p className="text-[10px] font-semibold text-status-error uppercase tracking-tight">{td(`validation.${errors.name_ar.message}`)}</p>}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -146,26 +225,25 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
                   <Landmark className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('operational_details')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('operational_details_desc')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{t('operational_details')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{t('operational_status')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Manager */}
                 <div className="space-y-2">
-                  <Label htmlFor="dept-manager" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('manager')}</Label>
+                  <Label htmlFor="dept-manager" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{td('fields.manager')}</Label>
                   <Input 
                     id="dept-manager" 
                     {...register('manager')} 
                     className="font-semibold" 
-                    placeholder="Manager Name" 
                   />
                 </div>
 
                 {/* Cost Center */}
                 <div className="space-y-2">
-                  <Label htmlFor="dept-cost-center" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{tc('cost_center')}</Label>
+                  <Label htmlFor="dept-cost-center" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">{td('fields.cost_center')}</Label>
                   <Input 
                     id="dept-cost-center" 
                     dir="ltr"
@@ -188,15 +266,15 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{tc('status')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('operational_status')}</p>
+                  <h3 className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">{t('status')}</h3>
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{t('operational_status')}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="dept-is-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{tc('is_active')}</Label>
-                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tc('active') : tc('inactive')}</p>
+                  <Label htmlFor="dept-is-active" className="text-[10px] font-semibold uppercase tracking-[0.08em] cursor-pointer text-muted-foreground/60">{td('fields.is_active')}</Label>
+                  <p className={`text-xs font-semibold uppercase tracking-tight ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
                 </div>
                 <Switch
                   id="dept-is-active"

@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
-import type { NotificationTemplate } from '@/types/notifications';
 
 const NotificationTemplateSchema = z.object({
   id: z.string(),

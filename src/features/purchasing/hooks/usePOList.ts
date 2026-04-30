@@ -4,16 +4,16 @@ import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
-import { BadgeStatusSchema, type BadgeStatus } from '@/components/ui/status-badge';
+import { BadgeStatusSchema } from '@/components/ui/status-badge';
 
 const POSummarySchema = z.object({ 
   id: z.string(), 
   document_number: z.string(), 
   status: BadgeStatusSchema, 
   supplier_id: z.string(), 
-  currency_id: z.string(), 
-  expected_delivery_date: z.string().optional(),
-  total: z.number().optional(),
+  currency_code: z.string(), 
+  expected_date: z.string(),
+  supplier_total_amount: z.number(),
   created_at: z.string(), 
 });
 

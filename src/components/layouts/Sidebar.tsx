@@ -27,6 +27,9 @@ import {
   Ruler,
   Barcode,
   Building2,
+  Coins,
+  TrendingUp,
+  Store,
   LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -98,6 +101,8 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
         { key: 'warehouses', href: `/${locale}/master-data/warehouses`, resource: 'master_data', labelKey: 'warehouses', icon: Warehouse },
         { key: 'uom', href: `/${locale}/master-data/units-of-measure`, resource: 'master_data', labelKey: 'uom', icon: Ruler },
         { key: 'barcodes', href: `/${locale}/master-data/barcodes`, resource: 'master_data', labelKey: 'barcodes', icon: Barcode },
+        { key: 'currencies', href: `/${locale}/master-data/currencies`, resource: 'master_data', labelKey: 'currencies', icon: Coins },
+        { key: 'fx_rates', href: `/${locale}/master-data/fx-rates`, resource: 'master_data', labelKey: 'fx_rates', icon: TrendingUp },
         { key: 'branches', href: `/${locale}/master-data/branches`, resource: 'master_data', labelKey: 'branches', icon: Building2 },
       ]
     },
@@ -115,6 +120,7 @@ export function Sidebar({ locale, onClose }: SidebarProps) {
         { key: 'users', href: `/${locale}/admin/users`, resource: 'admin', labelKey: 'users', icon: ShieldCheck },
         { key: 'roles', href: `/${locale}/admin/roles`, resource: 'admin', labelKey: 'roles', icon: Shield },
         { key: 'audit', href: `/${locale}/admin/audit-log`, resource: 'admin', labelKey: 'audit_log', icon: History },
+        { key: 'restaurant_profile', href: `/${locale}/admin/restaurant-profile`, resource: 'admin', labelKey: 'restaurant_profile', icon: Store },
       ]
     }
   ];

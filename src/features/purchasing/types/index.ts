@@ -1,71 +1,95 @@
-export type PRStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CONVERTED_TO_PO';
+export type PRStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface PurchaseRequestLineItem {
-  id?: string;
-  itemId: string;
-  itemName: string;
-  quantity: number;
-  estimatedUnitCost: number;
-  notes?: string;
+  id: string;
+  item: {
+    id: string;
+    code: string;
+    name_ar: string;
+    name_en: string;
+    primary_uom: {
+      id: string;
+      code: string;
+    };
+  };
+  req_qty: number;
+  uom_id: string;
 }
 
 export interface PurchaseRequest {
   id: string;
-  prNumber: string;
-  branchId: string;
-  requestedBy: string;
-  expectedDate: string;
+  document_number: string;
   status: PRStatus;
-  items: PurchaseRequestLineItem[];
-  totalAmount: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  department_id: string;
+  expected_date: string;
+  notes?: string | null;
+  created_at?: string;
+  created_by?: string;
+  lines: PurchaseRequestLineItem[];
 }
 
 export interface CreatePurchaseRequestDTO {
-  branchId: string;
-  expectedDate: string;
-  items: PurchaseRequestLineItem[];
+  department_id: string;
+  expected_date: string;
+  lines: Array<{
+    item_id: string;
+    req_qty: number;
+    uom_id: string;
+  }>;
   notes?: string;
 }
 
-export type POStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'PARTIAL_RECEIPT' | 'FULFILLED' | 'CANCELLED';
+export type POStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface PurchaseOrderLineItem {
-  id?: string;
-  itemId: string;
-  itemName: string;
+  id: string;
+  item: {
+    id: string;
+    code: string;
+    name_ar: string;
+    name_en: string;
+    primary_uom: {
+      id: string;
+      code: string;
+    };
+  };
   quantity: number;
-  unitPrice: number;
+  unit_price: number;
+  uom_id: string;
   notes?: string;
 }
 
 export interface PurchaseOrder {
   id: string;
-  poNumber: string;
-  prId?: string;
-  supplierId: string;
-  supplierCurrency: string;
-  exchangeRate: number;
-  expectedDate: string;
+  document_number: string;
+  pr_id?: string;
+  supplier_id: string;
+  currency_code: string;
+  exchange_rate: number;
+  expected_date: string;
   status: POStatus;
-  items: PurchaseOrderLineItem[];
-  supplierTotalAmount: number;
-  baseTotalAmount: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  lines: PurchaseOrderLineItem[];
+  supplier_total_amount: number;
+  base_total_amount: number;
+  notes?: string | null;
+  created_at?: string;
+  created_by?: string;
+  updated_at?: string;
 }
 
 export interface CreatePurchaseOrderDTO {
-  prId?: string;
-  supplierId: string;
-  supplierCurrency: string;
-  exchangeRate: number;
-  expectedDate: string;
-  items: PurchaseOrderLineItem[];
+  pr_id?: string;
+  supplier_id: string;
+  currency_code: string;
+  exchange_rate: number;
+  expected_date: string;
+  lines: Array<{
+    item_id: string;
+    quantity: number;
+    unit_price: number;
+    uom_id: string;
+    notes?: string;
+  }>;
   notes?: string;
 }
 

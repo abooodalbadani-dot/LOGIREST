@@ -8,7 +8,7 @@ import { z } from "zod"
 export const BadgeStatusSchema = z.enum([
   'DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'RECEIVED', 'REJECTED', 'CANCELLED', 
   'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL',
-  'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'COUNTING'
+  'IN_TRANSIT', 'PENDING',  'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 'COUNTING_COMPLETED', 'VARIANCESUBMITTED'
 ]);
 
 export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
@@ -52,17 +52,19 @@ export function StatusBadge({ className, variant, status, children, ...props }: 
       const s = status.toUpperCase();
       if (["APPROVED", "DELIVERED", "COMPLETED", "IN_STOCK", "ACTIVE", "HEALTHY"].includes(s)) {
           mappedVariant = "success";
-      } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL"].includes(s)) {
+      } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL", "VARIANCESUBMITTED"].includes(s)) {
           mappedVariant = "warning";
-      } else if (["REJECTED", "CANCELLED", "OUT_OF_STOCK", "EXPIRED", "LOCKED"].includes(s)) {
+      } else if (["REJECTED", "CANCELLED", "OUT_OF_STOCK", "EXPIRED", "LOCKED", "INACTIVE"].includes(s)) {
           mappedVariant = "error";
       } else if (["SUBMITTED", "ISSUED", "RECEIVED"].includes(s)) {
           // Operational Success (Cyan in Dark mode, but Success variant is already Cyan in dark mode)
           mappedVariant = "success"; 
       } else if (["POSTED"].includes(s)) {
           mappedVariant = "outline";
-      } else if (["COUNTING", "PARTIAL"].includes(s)) {
+      } else if (["COUNTING", "PARTIAL", "COUNTING_COMPLETED"].includes(s)) {
           mappedVariant = "info";
+      } else if (["STARTED", "ACTIVE"].includes(s)) {
+          mappedVariant = "brand";
       } else {
           mappedVariant = "default";
       }

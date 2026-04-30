@@ -34,8 +34,13 @@ export const GRNDetailSchema = z.object({
   document_number: z.string(),
   status: BadgeStatusSchema,
   supplier_id: z.string(),
+  supplier: z.object({
+    id: z.string(),
+    name: z.string()
+  }).optional(),
   po_id: z.string().nullable(),
   po_number: z.string().nullable(),
+  po_fx_rate: z.number().nullable().optional(),
   currency_id: z.string(),
   warehouse_id: z.string(),
   fx_rate: z.number().nullable(),

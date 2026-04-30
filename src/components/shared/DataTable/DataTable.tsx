@@ -34,6 +34,7 @@ interface DataTableProps<T> {
     onPageChange: (page: number) => void;
   };
   onExport?: () => void;
+  exportComponent?: React.ReactNode;
   emptyState?: React.ReactNode;
   filters?: React.ReactNode;
   onRowClick?: (row: T) => void;
@@ -68,27 +69,32 @@ export function DataTable<T>({
           <div className="flex-1 min-w-[200px]">
             {filters}
           </div>
-          {onExport && (
+          { (onExport || exportComponent) && (
             <PermissionGate action="export" resource={collectionName || 'generic_table'}>
               <div className="flex items-center gap-2 mt-1">
-                <Button 
-                  variant="secondary"
-                  size="sm"
-                  onClick={onExport}
-                  className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase ${locale === 'ar' ? 'tracking-normal' : 'tracking-[0.08em]'} transition-all border-none`}
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-                  CSV
-                </Button>
-                <Button 
-                  variant="secondary"
-                  size="sm"
-                  onClick={onExport}
-                  className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase ${locale === 'ar' ? 'tracking-normal' : 'tracking-[0.08em]'} transition-all border-none`}
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>
-                  Excel
-                </Button>
+                {exportComponent}
+                {!exportComponent && onExport && (
+                  <>
+                    <Button 
+                      variant="secondary"
+                      size="sm"
+                      onClick={onExport}
+                      className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase ${locale === 'ar' ? 'tracking-normal' : 'tracking-[0.08em]'} transition-all border-none`}
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                      CSV
+                    </Button>
+                    <Button 
+                      variant="secondary"
+                      size="sm"
+                      onClick={onExport}
+                      className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-[9px] font-black uppercase ${locale === 'ar' ? 'tracking-normal' : 'tracking-[0.08em]'} transition-all border-none`}
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>
+                      Excel
+                    </Button>
+                  </>
+                )}
               </div>
             </PermissionGate>
           )}

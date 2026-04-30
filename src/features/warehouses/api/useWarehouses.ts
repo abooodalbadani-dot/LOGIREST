@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { Warehouse } from '../types';
-import { apiClient } from '@/lib/api/client';
 
 export function useWarehouses() {
   return useQuery({

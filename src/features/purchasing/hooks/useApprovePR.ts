@@ -9,8 +9,13 @@ export function useApprovePR() {
     mutationFn: (id: string) => 
       apiClient.post(`/procurement/purchase-requests/${id}/approve`, successSchema, {}),
     onSuccess: (_, id) => {
+      // Simulate state transition in cache
+      queryClient.setQueryData(['purchase-request', id], (old: any) => {
+        if (!old) return old;
+        return { ...old, status: 'APPROVED' };
+      });
+
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-request', id] });
     }
   });
 }

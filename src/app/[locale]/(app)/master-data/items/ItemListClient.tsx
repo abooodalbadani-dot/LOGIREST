@@ -4,33 +4,27 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Plus, Package, CheckCircle2, Search, Info } from 'lucide-react';
+import { Plus, Package, CheckCircle2, Search, Barcode, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
-import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemSchema, type Item } from '@/types/master-data';
-import { Badge } from '@/components/ui/badge';
+import { useItems } from '@/features/items/hooks/useItems';
+import { type Item } from '@/types/master-data';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 
-
 export function ItemListClient({ locale }: { locale: string }) {
-  const tc = useTranslations('masterData.common');
-  const ti = useTranslations('masterData.items');
+  const t = useTranslations('common');
+  const ti = useTranslations('master_data.items');
   const router = useRouter();
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
 
-  const { data, isLoading } = useMasterDataList(
-    'items',
-    ItemSchema,
-    { page: String(page), ...(search ? { search } : {}) },
-  );
+  const { data, isLoading } = useItems({ search });
 
   const stats = useMemo(() => {
     const items = data?.data || [];
@@ -44,18 +38,20 @@ export function ItemListClient({ locale }: { locale: string }) {
   const columns = useMemo<ColumnDef<Item, unknown>[]>(() => [
     { 
       accessorKey: 'code', 
-      header: tc('code'), 
-      meta: { numeric: true },
+      header: t('code'), 
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-mono text-cyan-500 font-black tracking-wider uppercase">{row.original.code}</span>
-          <span className="text-[9px] text-muted-foreground/60 font-medium">{row.original.barcode}</span>
+          <span className="font-mono text-cyan-500 font-black tracking-wider uppercase" dir="ltr">{row.original.code}</span>
+          <span className="text-[9px] text-muted-foreground/60 font-medium font-mono flex items-center gap-1" dir="ltr">
+            <Barcode className="w-2.5 h-2.5 opacity-40" />
+            {row.original.barcode || '—'}
+          </span>
         </div>
       )
     },
     { 
       accessorKey: 'name', 
-      header: tc('name'), 
+      header: t('name'), 
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
           <span className="font-bold text-xs tracking-tight">{row.original.name_en}</span>
@@ -64,34 +60,32 @@ export function ItemListClient({ locale }: { locale: string }) {
       )
     },
     { 
-      accessorKey: 'primary_uom', 
-      header: ti('primary_uom'), 
+      accessorKey: 'base_unit', 
+      header: ti('fields.base_unit'), 
       cell: ({ row }) => (
-        <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-black bg-surface-container-low/30 border-surface-variant/10 uppercase tracking-tighter text-cyan-400">
+        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
           {row.original.primary_uom.code}
-        </Badge>
+        </span>
       )
     },
     {
       accessorKey: 'track_lots', 
-      header: ti('track_lots'),
+      header: ti('fields.track_lots'),
       cell: ({ row }) => row.original.track_lots
-        ? <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[9px] uppercase tracking-wider">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-            {tc('yes')}
+        ? <div className="flex items-center gap-1.5 text-status-active font-bold text-[9px] uppercase tracking-wider">
+            <div className="w-1.5 h-1.5 rounded-full bg-status-active shadow-[0_0_8px_currentColor]" />
+            {t('yes')}
           </div>
         : <div className="flex items-center gap-1.5 text-muted-foreground/30 font-bold text-[9px] uppercase tracking-wider">
             <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/20" />
-            {tc('no')}
+            {t('no')}
           </div>,
     },
     {
       accessorKey: 'is_active', 
-      header: tc('is_active'),
+      header: t('status'),
       cell: ({ row }) => (
-        <Badge variant={row.original.is_active ? 'default' : 'outline'} className="text-[9px] font-black uppercase tracking-widest rounded-sm">
-          {row.original.is_active ? tc('active') : tc('inactive')}
-        </Badge>
+        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} />
       ),
     },
     {
@@ -109,41 +103,43 @@ export function ItemListClient({ locale }: { locale: string }) {
                 router.push(`/${locale}/master-data/items/${row.original.id}`);
               }}
             >
-              {tc('view')}
+              {t('view')}
             </Button>
           </PermissionGate>
         </div>
       ),
     },
-  ], [tc, ti, locale, router]);
+  ], [t, ti, locale, router]);
 
   const breadcrumbs = [
-    { label: tc('master_data'), href: `/${locale}/master-data` },
-    { label: ti('title'), href: '#' }
+    { label: t('home'), href: `/${locale}/dashboard` },
+    { label: t('master_data'), href: `/${locale}/master-data` },
+    { label: ti('title'), href: `/${locale}/master-data/items` }
   ];
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <Breadcrumb items={breadcrumbs} />
-      
-      <PageHeader 
-        title={ti('title')} 
-        description={ti('description')}
-        actions={
-          <PermissionGate action="create" resource="master_data">
-            <Link href={`/${locale}/master-data/items/new`}>
-              <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
-                <Plus className="w-3.5 h-3.5 me-2" />
-                {tc('create_new')}
-              </Button>
-            </Link>
-          </PermissionGate>
-        }
-      />
+      <div className="space-y-4">
+        <Breadcrumb items={breadcrumbs} />
+        <PageHeader 
+          title={ti('title')} 
+          description={ti('description')}
+          actions={
+            <PermissionGate action="create" resource="master_data">
+              <Link href={`/${locale}/master-data/items/new`}>
+                <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-sm transition-all shadow-lg shadow-cyan-900/20">
+                  <Plus className="w-3.5 h-3.5 me-2" />
+                  {t('create_new')}
+                </Button>
+              </Link>
+            </PermissionGate>
+          }
+        />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
-          label={tc('total_skus')}
+          label={ti('metrics.total_items')}
           value={stats.total}
           icon={Package}
           color="cyan"
@@ -151,7 +147,7 @@ export function ItemListClient({ locale }: { locale: string }) {
         />
 
         <MetricCard
-          label={tc('active')}
+          label={t('active')}
           value={stats.active}
           icon={CheckCircle2}
           color="emerald"
@@ -159,9 +155,9 @@ export function ItemListClient({ locale }: { locale: string }) {
         />
 
         <MetricCard
-          label={ti('track_lots')}
+          label={ti('metrics.tracking_lots')}
           value={stats.trackingLots}
-          icon={Info}
+          icon={ShieldAlert}
           color="amber"
           dir="ltr"
         />
@@ -171,17 +167,17 @@ export function ItemListClient({ locale }: { locale: string }) {
         columns={columns} 
         data={data?.data ?? []} 
         isLoading={isLoading}
-        collectionName="master_data_items"
+        collectionName="items"
         emptyState={
           <EmptyState 
-            title={ti('no_items_title')}
-            description={ti('no_items_desc')}
+            title={ti('empty.title')}
+            description={ti('empty.description')}
             action={
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/${locale}/master-data/items/new`}>
                   <Button className="h-10 px-6 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm transition-all shadow-lg">
                     <Plus className="w-3.5 h-3.5 me-2" />
-                    {tc('create_new')}
+                    {t('create_new')}
                   </Button>
                 </Link>
               </PermissionGate>
@@ -189,22 +185,15 @@ export function ItemListClient({ locale }: { locale: string }) {
           />
         }
         onRowClick={(r: Item) => router.push(`/${locale}/master-data/items/${r.id}`)}
-        pagination={data?.meta ? {
-          page: data.meta.page,
-          pageSize: data.meta.page_size,
-          total: data.meta.total,
-          totalPages: data.meta.total_pages,
-          onPageChange: setPage
-        } : undefined}
         filters={
           <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
             <div className="flex flex-col gap-2 min-w-[300px] flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{tc('search')}</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('search')}</label>
               <div className="relative">
                 <Input
-                  placeholder={ti('scan_or_type')}
+                  placeholder={ti('search_placeholder')}
                   value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-surface-container-highest/30 border-none h-11 ps-10 text-xs font-bold"
                 />
                 <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />

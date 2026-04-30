@@ -10,11 +10,11 @@ export default async function UserDetailPage(props: {
   const t = await getTranslations('admin');
 
   return (
-    <ProtectedRoute requiredAction="view" requiredResource="admin">
+    <ProtectedRoute roles={["ADMIN"]}>
       <UserFormClient
         id={id === 'new' ? null : id}
-        createTitle={t('create_user')}
-        editTitle={t('edit_user')}
+        createTitle={t('users.create_title')}
+        editTitle={t('users.edit_title')}
         locale={locale}
       />
     </ProtectedRoute>
