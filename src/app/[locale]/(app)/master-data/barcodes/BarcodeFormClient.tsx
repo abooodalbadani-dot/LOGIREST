@@ -3,16 +3,16 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+ Select,
+ SelectContent,
+ SelectItem,
+ SelectTrigger,
+ SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -27,252 +27,252 @@ import { Cpu, Link as LinkIcon, Hash, Barcode as BarcodeIcon, Settings2 } from '
 interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
 
 export function BarcodeFormClient({ id, createTitle, editTitle, locale }: Props) {
-  const tc = useTranslations('common');
-  const tb = useTranslations('master_data.barcodes');
-  const router = useRouter();
+ const tc = useTranslations('common');
+ const tb = useTranslations('master_data.barcodes');
+ const router = useRouter();
 
-  const { data: barcode } = useBarcode(id);
-  const { data: items } = useItems();
-  const { data: uoms } = useUoMs();
-  
-  const create = useCreateBarcode();
-  const update = useUpdateBarcode();
+ const { data: barcode } = useBarcode(id);
+ const { data: items } = useItems();
+ const { data: uoms } = useUoMs();
+ 
+ const create = useCreateBarcode();
+ const update = useUpdateBarcode();
 
-  const { register, handleSubmit, reset, setValue, watch, control, formState: { errors } } =
-    useForm<BarcodeFormValues>({
-      resolver: zodResolver(BarcodeFormSchema),
-      defaultValues: { 
-        item_id: '', 
-        uom_id: '', 
-        code: '', 
-        default_qty: 1,
-        is_active: true
-      },
-    });
+ const { register, handleSubmit, reset, setValue, control, formState: { errors } } =
+ useForm<BarcodeFormValues>({
+ resolver: zodResolver(BarcodeFormSchema),
+ defaultValues: { 
+ item_id: '', 
+ uom_id: '', 
+ code: '', 
+ default_qty: 1,
+ is_active: true
+ },
+ });
 
-  const currentCode = watch('code');
+ const currentCode = useWatch({ control, name: 'code' });
 
-  useEffect(() => {
-    if (barcode) {
-      reset({ 
-        item_id: barcode.item_id, 
-        uom_id: barcode.uom_id,
-        code: barcode.code, 
-        default_qty: barcode.default_qty,
-        is_active: barcode.is_active
-      });
-    }
-  }, [barcode, reset]);
+ useEffect(() => {
+ if (barcode) {
+ reset({ 
+ item_id: barcode.item_id, 
+ uom_id: barcode.uom_id,
+ code: barcode.code, 
+ default_qty: barcode.default_qty,
+ is_active: barcode.is_active
+ });
+ }
+ }, [barcode, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push(`/${locale}/master-data/barcodes`);
-    } catch (error) {
-      // Error handled by mutation toast
-    }
-  });
+ const onSubmit = handleSubmit(async (values) => {
+ try {
+ if (id) {
+ await update.mutateAsync({ id, values });
+ } else {
+ await create.mutateAsync(values);
+ }
+ router.push(`/ ${locale}/master-data/barcodes`);
+ } catch (error) {
+ // Error handled by mutation toast
+ }
+ });
 
-  return (
-    <MasterDataFormLayout 
-      title={id ? editTitle : createTitle} 
-      backHref={`/${locale}/master-data/barcodes`}
-      isSaving={create.isPending || update.isPending} 
-      onSubmit={onSubmit}
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <LinkIcon className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground uppercase">{tb('title')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tb('description')}</p>
-                </div>
-              </div>
+ return (
+ <MasterDataFormLayout 
+ title={id ? editTitle : createTitle} 
+ backHref={`/ ${locale}/master-data/barcodes`}
+ isSaving={create.isPending || update.isPending} 
+ onSubmit={onSubmit}
+ >
+ <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+ <div className="lg:col-span-2 space-y-8">
+ <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
+ <CardContent className="p-8 space-y-8">
+ <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+ <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+ <LinkIcon className="w-5 h-5 text-tertiary" />
+ </div>
+ <div>
+ <h3 className="text-body-md font-semibold text-foreground uppercase">{tb('title')}</h3>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tb('description')}</p>
+ </div>
+ </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="bc-item" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
-                    {tb('fields.item')}
-                  </Label>
-                  <Controller
-                    name="item_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="bc-item" className="h-11 border-none bg-surface-container-high/40 hover:bg-surface-container-high transition-colors uppercase text-[11px] font-bold tracking-wider">
-                          <SelectValue placeholder="—" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface-container-highest border-none">
-                          {items?.data?.map((i) => (
-                            <SelectItem key={i.id} value={i.id} className="font-semibold text-[10px] uppercase tracking-[0.08em]">
-                              {i.code} — {locale === 'ar' ? i.name_ar : i.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.item_id && <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-tight">{errors.item_id.message}</p>}
-                </div>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+ <div className="space-y-2">
+ <Label htmlFor="bc-item" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+ {tb('fields.item')}
+ </Label>
+ <Controller
+ name="item_id"
+ control={control}
+ render={({ field }) => (
+ <Select value={field.value} onValueChange={field.onChange}>
+ <SelectTrigger id="bc-item" className="h-11 border-none bg-surface-container-high/40 hover:bg-surface-container-high transition-colors uppercase text-label-xs font-bold">
+ <SelectValue placeholder="—" />
+ </SelectTrigger>
+ <SelectContent className="bg-surface-container-highest border-none">
+ {items?.data?.map((i) => (
+ <SelectItem key={i.id} value={i.id} className="font-semibold text-label-xs uppercase">
+ {i.code} — {locale === 'ar' ? i.name_ar : i.name_en}
+ </SelectItem>
+ ))}
+ </SelectContent>
+ </Select>
+ )}
+ />
+ {errors.item_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.item_id.message}</p>}
+ </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bc-uom" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
-                    {tb('fields.uom')}
-                  </Label>
-                  <Controller
-                    name="uom_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="bc-uom" className="h-11 border-none bg-surface-container-high/40 hover:bg-surface-container-high transition-colors uppercase text-[11px] font-bold tracking-wider">
-                          <SelectValue placeholder="—" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface-container-highest border-none">
-                          {uoms?.data?.map((u) => (
-                            <SelectItem key={u.id} value={u.id} className="font-semibold text-[10px] uppercase tracking-[0.08em]">
-                              {u.code} — {locale === 'ar' ? u.name_ar : u.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.uom_id && <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-tight">{errors.uom_id.message}</p>}
-                </div>
+ <div className="space-y-2">
+ <Label htmlFor="bc-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+ {tb('fields.uom')}
+ </Label>
+ <Controller
+ name="uom_id"
+ control={control}
+ render={({ field }) => (
+ <Select value={field.value} onValueChange={field.onChange}>
+ <SelectTrigger id="bc-uom" className="h-11 border-none bg-surface-container-high/40 hover:bg-surface-container-high transition-colors uppercase text-label-xs font-bold">
+ <SelectValue placeholder="—" />
+ </SelectTrigger>
+ <SelectContent className="bg-surface-container-highest border-none">
+ {uoms?.data?.map((u) => (
+ <SelectItem key={u.id} value={u.id} className="font-semibold text-label-xs uppercase">
+ {u.code} — {locale === 'ar' ? u.name_ar : u.name_en}
+ </SelectItem>
+ ))}
+ </SelectContent>
+ </Select>
+ )}
+ />
+ {errors.uom_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.uom_id.message}</p>}
+ </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bc-qty" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
-                    {tb('fields.default_qty')}
-                  </Label>
-                  <div className="relative group">
-                    <Hash className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-status-active transition-colors" />
-                    <Input 
-                      id="bc-qty" 
-                      type="number" 
-                      dir="ltr" 
-                      min={1}
-                      {...register('default_qty', { valueAsNumber: true })} 
-                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-xs text-status-active"
-                    />
-                  </div>
-                  {errors.default_qty && <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-tight">{errors.default_qty.message}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+ <div className="space-y-2">
+ <Label htmlFor="bc-qty" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+ {tb('fields.default_qty')}
+ </Label>
+ <div className="relative group">
+ <Hash className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-status-active transition-colors" />
+ <Input 
+ id="bc-qty" 
+ type="number" 
+ dir="ltr" 
+ min={1}
+ {...register('default_qty', { valueAsNumber: true })} 
+ className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-status-active"
+ />
+ </div>
+ {errors.default_qty && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.default_qty.message}</p>}
+ </div>
+ </div>
+ </CardContent>
+ </Card>
 
-          <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-status-secondary/10 flex items-center justify-center">
-                  <BarcodeIcon className="w-5 h-5 text-status-secondary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground uppercase">{tb('fields.code')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">Physical identifier mapping</p>
-                </div>
-              </div>
+ <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
+ <CardContent className="p-8 space-y-8">
+ <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+ <div className="w-10 h-10 rounded-md bg-status-secondary/10 flex items-center justify-center">
+ <BarcodeIcon className="w-5 h-5 text-status-secondary" />
+ </div>
+ <div>
+ <h3 className="text-body-md font-semibold text-foreground uppercase">{tb('fields.code')}</h3>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Physical identifier mapping</p>
+ </div>
+ </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="bc-val" className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
-                    {tb('fields.code')}
-                  </Label>
-                  <ScanInput
-                    onScan={(val) => setValue('code', val, { shouldValidate: true })}
-                    placeholder="Scan or type barcode..."
-                    className="h-11 font-mono font-bold text-xs text-status-secondary"
-                  />
-                  <input type="hidden" {...register('code')} />
-                  {errors.code && <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-tight">{errors.code.message}</p>}
-                </div>
+ <div className="space-y-6">
+ <div className="space-y-2">
+ <Label htmlFor="bc-val" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+ {tb('fields.code')}
+ </Label>
+ <ScanInput
+ onScan={(val) => setValue('code', val, { shouldValidate: true })}
+ placeholder="Scan or type barcode..."
+ className="h-11 font-mono font-bold text-label-sm text-status-secondary"
+ />
+ <input type="hidden" {...register('code')} />
+ {errors.code && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.code.message}</p>}
+ </div>
 
-                {currentCode && (
-                  <div className="p-4 bg-surface-container-highest/20 rounded-md border border-status-secondary/10 flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <BarcodeIcon className="w-5 h-5 text-status-secondary/50" />
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/60">Registered Identity</p>
-                        <p dir="ltr" className="font-mono text-sm font-bold text-status-secondary tracking-[0.15em] uppercase">{currentCode}</p>
-                      </div>
-                    </div>
-                    <div className="h-2 w-2 rounded-full bg-status-secondary animate-pulse" />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+ {currentCode && (
+ <div className="p-4 bg-surface-container-highest/20 rounded-md border border-status-secondary/10 flex items-center justify-between group">
+ <div className="flex items-center gap-3">
+ <BarcodeIcon className="w-5 h-5 text-status-secondary/50" />
+ <div>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/60">Registered Identity</p>
+ <p dir="ltr" className="font-mono text-body-md font-bold text-status-secondary uppercase">{currentCode}</p>
+ </div>
+ </div>
+ <div className="h-2 w-2 rounded-full bg-status-secondary animate-pulse" />
+ </div>
+ )}
+ </div>
+ </CardContent>
+ </Card>
+ </div>
 
-        <div className="space-y-8">
-          <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
-            <CardContent className="p-8 space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-status-active/10 flex items-center justify-center">
-                  <Settings2 className="w-5 h-5 text-status-active" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground uppercase">Configuration</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">Operational Status</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-md border border-surface-variant/5">
-                <div className="space-y-0.5">
-                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em] text-foreground/80">Active Status</Label>
-                  <p className="text-[9px] text-muted-foreground uppercase font-medium">Allow use in transactions</p>
-                </div>
-                <Controller
-                  name="is_active"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-status-active"
-                    />
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
+ <div className="space-y-8">
+ <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
+ <CardContent className="p-8 space-y-6">
+ <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+ <div className="w-10 h-10 rounded-md bg-status-active/10 flex items-center justify-center">
+ <Settings2 className="w-5 h-5 text-status-active" />
+ </div>
+ <div>
+ <h3 className="text-body-md font-semibold text-foreground uppercase">Configuration</h3>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Operational Status</p>
+ </div>
+ </div>
+ 
+ <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-md border border-surface-variant/5">
+ <div className="space-y-0.5">
+ <Label className="text-label-xs font-bold uppercase text-foreground/80">Active Status</Label>
+ <p className="text-label-xxs text-muted-foreground uppercase font-medium">Allow use in transactions</p>
+ </div>
+ <Controller
+ name="is_active"
+ control={control}
+ render={({ field }) => (
+ <Switch
+ checked={field.value}
+ onCheckedChange={field.onChange}
+ className="data-[state=checked]:bg-status-active"
+ />
+ )}
+ />
+ </div>
+ </CardContent>
+ </Card>
 
-          <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
-            <CardContent className="p-8 space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <Cpu className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground uppercase">{tc('quick_tips')}</h3>
-                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] mt-0.5">{tc('hardware_usage')}</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-4">
-                <li className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
-                  <span className="text-status-active/60 font-semibold">/</span>
-                  <span>Multiple barcodes can exist for the same item if UoMs differ.</span>
-                </li>
-                <li className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
-                  <span className="text-status-active/60 font-semibold">/</span>
-                  <span>Barcodes must be unique across the entire system.</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </MasterDataFormLayout>
-  );
+ <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
+ <CardContent className="p-8 space-y-6">
+ <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+ <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+ <Cpu className="w-5 h-5 text-tertiary" />
+ </div>
+ <div>
+ <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('quick_tips')}</h3>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tc('hardware_usage')}</p>
+ </div>
+ </div>
+ 
+ <ul className="space-y-4">
+ <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
+ <span className="text-status-active/60 font-semibold">/</span>
+ <span>Multiple barcodes can exist for the same item if UoMs differ.</span>
+ </li>
+ <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
+ <span className="text-status-active/60 font-semibold">/</span>
+ <span>Barcodes must be unique across the entire system.</span>
+ </li>
+ </ul>
+ </CardContent>
+ </Card>
+ </div>
+ </div>
+ </MasterDataFormLayout>
+ );
 }
 

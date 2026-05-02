@@ -1,119 +1,132 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { AlertCircle, ArrowLeft, Download, RefreshCw } from 'lucide-react';
+import { AlertCircle, Download, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 
+import { WizardReturn } from '../../hooks/useImportWizard';
+import { ValidationError } from '@/lib/import/validation';
+
 interface StepErrorsProps {
-  wizard: any;
-  locale: string;
+ wizard: WizardReturn;
+ locale: string;
 }
 
 export function StepErrors({ wizard, locale }: StepErrorsProps) {
-  const t = useTranslations('master_data.import');
-  const tc = useTranslations('common');
-  const isRtl = locale === 'ar';
+ const t = useTranslations('master_data.import');
+ const tc = useTranslations('common');
+ const isRtl = locale === 'ar';
 
-  const errors = wizard.errors.filter((e: any) => e.severity === 'error');
-  
-  const downloadErrorReport = () => {
-    // Get unique row numbers with errors
-    const errorRows = Array.from(new Set(errors.map((e: any) => e.row)));
-    
-    // Filter original data for those rows (row number in error is index + 2)
-    const dataWithErrors = wizard.data.filter((_: any, idx: number) => 
-      errorRows.includes(idx + 2)
-    );
+ const handleExportErrors = () => {
+ if (wizard.errors.length === 0) return;
 
-    // Map errors to the data rows for better context in Excel
-    const reportData = dataWithErrors.map((row: any, idx: number) => {
-      const rowNum = errorRows[idx];
-      const rowErrors = errors.filter((e: any) => e.row === rowNum);
-      return {
-        ...row,
-        IMPORT_ERRORS: rowErrors.map((e: any) => `${e.column}: ${e.message}`).join('; ')
-      };
-    });
+ // Get unique row numbers with errors
+ const errorRowIndices = Array.from(new Set(wizard.errors.map((e: ValidationError) => e.row - 2))) as number[];
+ 
+ // Map error rows to a new format including error messages
+ const errorRows = errorRowIndices.map((idx: number) => {
+ const rowData = { ...wizard.data[idx] };
+ const rowErrors = wizard.errors.filter((e: ValidationError) => e.row === idx + 2);
+ rowData.Validation_Errors = rowErrors.map((e: ValidationError) => `[${e.column}] ${e.message}`).join('; ');
+ return rowData;
+ });
 
-    const ws = XLSX.utils.json_to_sheet(reportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Errors');
-    XLSX.writeFile(wb, `error_report_${wizard.importType}.xlsx`);
-  };
+ const ws = XLSX.utils.json_to_sheet(errorRows);
+ const wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, 'Validation Errors');
+ XLSX.writeFile(wb, `${wizard.entity}_import_errors.xlsx`);
+ };
 
-  return (
-    <div className="flex flex-col gap-6 py-6">
-       <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-             <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
-                <AlertCircle className="w-6 h-6" />
-             </div>
-             <div>
-                <h3 className="text-xl font-black tracking-tight">{t('errors_found', { count: errors.length })}</h3>
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">{t('error_step')}</p>
-             </div>
-          </div>
-          <Button 
-            variant="outline" 
-            className="h-12 rounded-xl border-muted-foreground/10 hover:border-red-500/40 hover:bg-red-500/5 transition-all"
-            onClick={downloadErrorReport}
-          >
-             <Download className={cn("w-4 h-4 text-red-500", isRtl ? "ml-2" : "mr-2")} />
-             <span className="font-bold tracking-tight">{t('download_error_report')}</span>
-          </Button>
-       </div>
+ return (
+ <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <div className="flex items-center gap-6 p-8 rounded-3xl bg-red-500/5 border border-red-500/10">
+ <div className="w-16 h-16 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
+ <AlertCircle className="w-10 h-10" />
+ </div>
+ <div>
+ <h2 className="text-headline-lg font-semibold uppercase text-red-500">
+ {t('errors_found_title', { count: wizard.errors.length })}
+ </h2>
+ <p className="text-muted-foreground text-body-md font-medium leading-relaxed">
+ {t('errors_found_description')}
+ </p>
+ </div>
+ </div>
 
-       <Card className="rounded-[2rem] border-none shadow-2xl overflow-hidden bg-background/50 backdrop-blur-md">
-          <div className="overflow-x-auto">
-             <table className="w-full text-left" dir={isRtl ? 'rtl' : 'ltr'}>
-                <thead>
-                   <tr className="border-b border-foreground/5 bg-muted/30">
-                      <th className={cn("p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 text-center w-20", isRtl ? "text-right" : "text-left")}>{t('row')}</th>
-                      <th className={cn("p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50", isRtl ? "text-right" : "text-left")}>{t('field')}</th>
-                      <th className={cn("p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50", isRtl ? "text-right" : "text-left")}>{t('value')}</th>
-                      <th className={cn("p-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50", isRtl ? "text-right" : "text-left")}>{t('error_message')}</th>
-                   </tr>
-                </thead>
-                <tbody className="divide-y divide-foreground/5">
-                   {errors.map((error: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-red-500/[0.02] transition-colors group">
-                         <td className="p-6 font-mono text-xs font-black text-center opacity-40 group-hover:opacity-100 transition-opacity" dir="ltr">
-                            #{error.row}
-                         </td>
-                         <td className="p-6 font-black tracking-tight text-sm uppercase opacity-80">
-                            {error.column}
-                         </td>
-                         <td className="p-6" dir="ltr">
-                            <span className="bg-muted px-2 py-1 rounded text-[10px] font-mono opacity-60">
-                               {String(error.value || 'N/A')}
-                            </span>
-                         </td>
-                         <td className="p-6">
-                            <div className="flex items-center gap-2 text-red-500 font-bold tracking-tight text-sm">
-                               <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                               {error.message}
-                            </div>
-                         </td>
-                      </tr>
-                   ))}
-                </tbody>
-             </table>
-          </div>
-       </Card>
+ {/* Error Table */}
+ <div className="border border-white/5 rounded-2xl overflow-hidden bg-surface-container-low/30 shadow-inner">
+ <div className="overflow-x-auto">
+ <table className="w-full text-left">
+ <thead>
+ <tr className={cn(
+ "bg-surface-container-low/50 border-b border-white/5",
+ isRtl && "text-right"
+ )}>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/60 w-24">{t('row')}</th>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/60 w-40">{t('column')}</th>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/60 w-40">{t('value')}</th>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/60">{t('error_message')}</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-white/5">
+ {wizard.errors.slice(0, 10).map((error: ValidationError, i: number) => (
+ <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
+ <td className="px-6 py-4 font-mono dir-ltr text-label-sm font-bold text-red-400">
+ #{error.row}
+ </td>
+ <td className="px-6 py-4">
+ <span className="text-label-xs font-semibold uppercase bg-red-500/10 text-red-500 px-2.5 py-1 rounded-md">
+ {error.column}
+ </span>
+ </td>
+ <td className="px-6 py-4 text-body-md font-mono text-muted-foreground/60 italic truncate max-w-[160px]">
+ {error.value !== undefined && error.value !== null ? String(error.value) : '—'}
+ </td>
+ <td className="px-6 py-4 text-body-md font-medium text-muted-foreground leading-relaxed">
+ {error.message}
+ </td>
+ </tr>
+ ))}
 
-       <div className="flex gap-4">
-          <Button 
-            variant="outline" 
-            className="flex-1 h-14 rounded-2xl border-muted-foreground/10 hover:bg-muted-foreground/5"
-            onClick={wizard.goToUpload}
-          >
-             <RefreshCw className={cn("w-4 h-4", isRtl ? "ml-2" : "mr-2")} />
-             <span className="font-bold tracking-tight">{t('re_upload')}</span>
-          </Button>
-       </div>
-    </div>
-  );
+ </tbody>
+ </table>
+ </div>
+ {wizard.errors.length > 10 && (
+ <div className="p-4 text-center border-t border-white/5 bg-surface-container-low/20">
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">
+ {t('showing_first_n_errors', { count: 10, total: wizard.errors.length })}
+ </p>
+ </div>
+ )}
+ </div>
+
+ {/* Actions */}
+ <div className={cn(
+ "flex flex-col sm:flex-row gap-4 items-center pt-4",
+ isRtl ? "sm:flex-row-reverse" : "sm:flex-row"
+ )}>
+ <Button 
+ variant="outline" 
+ onClick={handleExportErrors}
+ className="w-full sm:w-auto px-8 h-12 rounded-xl border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-all active:scale-95 group"
+ >
+ <Download className="w-5 h-5 me-3 transition-transform group-hover:translate-y-1" />
+ <span className="font-bold uppercase text-label-sm">{t('export_error_report')}</span>
+ </Button>
+ 
+ <div className="flex-1" />
+
+ <Button 
+ variant="ghost" 
+ onClick={() => wizard.transitionTo('UPLOAD')}
+ className="w-full sm:w-auto px-8 h-12 rounded-xl font-bold uppercase text-label-sm hover:bg-surface-container-high transition-all active:scale-95"
+ >
+ <RotateCcw className={cn("w-4 h-4 me-3", isRtl && "rotate-180")} />
+ {t('try_again')}
+ </Button>
+ </div>
+ </div>
+ );
 }

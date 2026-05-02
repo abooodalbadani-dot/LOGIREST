@@ -1,10 +1,10 @@
 import { ImportWizardClient } from '@/features/import/components/ImportWizardClient';
 
 export default async function BarcodesImportPage({ 
-  params 
+ params 
 }: { 
-  params: Promise<{ locale: string }> 
+ params: Promise<{ locale: string }> 
 }) {
-  const { locale } = await params;
-  return <ImportWizardClient type="barcodes" locale={locale} />;
+ const { locale } = await params;
+ return <ImportWizardClient entity="barcodes" locale={locale} />;
 }

@@ -1,192 +1,214 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { usePO } from '@/features/purchasing/hooks/usePO';
+import { useRouter } from '@/i18n/navigation';
+import { usePO, type AuditLog, type POLine } from '@/features/purchasing/hooks/usePO';
 import { useSubmitPO } from '@/features/purchasing/hooks/useSubmitPO';
 import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
-import { StatusBadge, type BadgeStatus } from '@/components/ui/status-badge';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/po-form';
 import { Badge } from '@/components/ui/badge';
-import { Save, Send, Clock, Wallet, TrendingUp, Truck, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import { Send, CheckCircle, Clock, Wallet, Warehouse, User, ClipboardList } from 'lucide-react';
+import { format } from 'date-fns';
 
-const buildSchema = (t: (k: string) => string) =>
-  z.object({
-    supplier_id:            z.string().min(1, t('validation.supplier_required')),
-    currency_id:            z.string().min(1, t('validation.currency_required')),
-    target_warehouse_id:    z.string().min(1),
-    expected_delivery_date: z.string().optional(),
-  });
-
-type POHeaderFormValues = z.infer<ReturnType<typeof buildSchema>>;
-
+import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar' | 'en' }) {
-  const t = useTranslations('procurement.po');
-  const tCommon = useTranslations('common');
-  const router = useRouter();
-  const { data: po, isLoading } = usePO(id || '');
-  const submitMutation = useSubmitPO();
+ const t = useTranslations('procurement.po');
+ const tCommon = useTranslations('common');
+ const router = useRouter();
+ const { data: po, isLoading } = usePO(id || '');
+ const submitMutation = useSubmitPO();
 
-  const isNew = !id || id === 'new';
-  const isDraft = isNew || po?.status === 'DRAFT';
-  const isSubmitted = po?.status === 'SUBMITTED';
+ const isNew = !id || id === 'new';
+ const isDraft = isNew || po?.status === 'DRAFT';
+ const isSubmitted = po?.status === 'SUBMITTED';
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl animate-pulse">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        </div>
-        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">{t('sync_context')}</p>
-      </div>
-    );
-  }
+ const formattedDate = useMemo(() => {
+ const date = po?.created_at ? new Date(po.created_at) : new Date();
+ return format(date, 'yyyy-MM-dd HH:mm');
+ }, [po?.created_at]);
 
-  const handleSubmit = async () => {
-    if (!id) return;
-    try {
-      await submitMutation.mutateAsync(id);
-      router.refresh();
-    } catch (e) {
-      console.error(e);
-    }
-  };
+ if (isLoading) {
+ return (
+ <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low rounded-lg animate-pulse">
+ <div className="relative">
+ <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+ </div>
+ <p className="mt-6 text-label-xs font-semibold uppercase text-primary/60">{tCommon('loading')}</p>
+ </div>
+ );
+ }
 
-  const timeline = po?.audit_log?.map((log: any) => ({
-    status: log.status.toLowerCase() as Status,
-    at: log.created_at,
-    by: log.user_name || tCommon('system')
-  })) || [];
+ const handleSubmit = async () => {
+ if (!id) return;
+ try {
+ await submitMutation.mutateAsync(id);
+ router.refresh();
+ } catch (e) {
+ console.error(e);
+ }
+ };
 
-  return (
-    <div className="flex flex-col gap-10 relative pb-20">
-      <PageHeader
-        title={isNew ? t('create_new') : `#${po?.document_number}`}
-        description={isNew ? t('commitment_intent') : t('specification')}
-        status={po?.status as BadgeStatus}
-        showStatus={!isNew}
-        actions={
-          <div className="flex items-center gap-3">
-            <PermissionGate action="submit" resource="po">
-              {po?.status === 'DRAFT' && (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitMutation.isPending}
-                  className="bg-operational-cyan text-primary-foreground hover:brightness-110 px-8 h-11 rounded-2xl transition-all font-black uppercase tracking-widest text-[10px]"
-                >
-                  <Send className="w-4 h-4 me-2" />
-                  {t('actions.submit')}
-                </Button>
-              )}
-            </PermissionGate>
+ const timeline = po?.audit_log?.map((log: AuditLog) => ({
+ status: log.status.toLowerCase() as Status,
+ at: log.created_at,
+ by: log.user_name || tCommon('system')
+ })) || [];
 
-            <PermissionGate action="approve" resource="po">
-              {isSubmitted && (
-                <Button
-                  onClick={() => router.push(`/${locale}/purchase-orders/${id}/approve`)}
-                  className="bg-operational-cyan text-primary-foreground hover:brightness-110 px-8 h-11 rounded-2xl transition-all font-black uppercase tracking-widest text-[10px]"
-                >
-                  <CheckCircle className="w-4 h-4 me-2" />
-                  {t('actions.go_to_approval')}
-                </Button>
-              )}
-            </PermissionGate>
-          </div>
-        }
-      />
+ return (
+ <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
+ {/* Ledger Header (Solid, No Glass) */}
+ <div className="w-full bg-surface-container-lowest border-b border-outline-variant/50 shadow-sm">
+ <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+ <div className="flex flex-col">
+ <div className="flex items-center gap-2 mb-1">
+ <span className="text-label-xs font-semibold uppercase text-muted-foreground/50">
+ {isNew ? t('create_new') : t('specification')}
+ </span>
+ {!isNew && (
+ <>
+ <span className="text-muted-foreground/20 text-label-xs">|</span>
+ <div className="flex items-center gap-1.5 text-label-xs font-bold text-muted-foreground/40 uppercase">
+ <Clock className="w-3 h-3" />
+ <span dir="ltr">{formattedDate}</span>
+ </div>
+ </>
+ )}
+ </div>
+ <div className="flex items-center gap-3">
+ <h1 className="font-semibold text-headline-lg">
+ {isNew ? t('create_new') : `#${po?.document_number}`}
+ </h1>
+ {!isNew && <StatusBadge status={po?.status as BadgeStatus} />}
+ </div>
+ </div>
 
-      {isDraft ? (
-        <PurchaseOrderForm initialData={po} mode={isNew ? 'create' : 'edit'} />
-      ) : (
-        <div className="space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-             <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">{tCommon('supplier')}</p>
-                <p className="font-bold text-lg tracking-tight mt-2">{po?.supplier_name || po?.supplier_id}</p>
-             </div>
-             <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">{tCommon('order_currency')}</p>
-                <p className="font-mono font-bold text-lg tracking-tight text-operational-cyan mt-2">{po?.currency_id}</p>
-             </div>
-             <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">{t('target_warehouse')}</p>
-                <p className="font-bold text-lg tracking-tight mt-2">{po?.warehouse_name || po?.target_warehouse_id}</p>
-             </div>
-             <div className="bg-surface-container-low p-6 rounded-2xl shadow-sm flex flex-col gap-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">{t('expected_delivery_date')}</p>
-                <p className="font-mono font-bold text-lg tracking-tight mt-2" dir="ltr">{po?.expected_delivery_date || '—'}</p>
-             </div>
-          </div>
+ <div className="flex items-center gap-3">
+ <PermissionGate action="submit" resource="po">
+ {po?.status === 'DRAFT' && (
+ <Button
+ onClick={handleSubmit}
+ disabled={submitMutation.isPending}
+ className="bg-primary text-primary-foreground hover:brightness-110 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs"
+ >
+ <Send className="w-4 h-4 me-2" />
+ {t('actions.submit')}
+ </Button>
+ )}
+ </PermissionGate>
 
-          <DocumentReadOnlyOverlay isPosted={true}>
-            <div className="bg-surface-container-low rounded-3xl overflow-hidden shadow-xl border border-white/5">
-              <table className="w-full text-start border-collapse">
-                <thead>
-                  <tr className="bg-surface-container-high/50 border-b border-white/5">
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 text-start">{tCommon('item')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 text-end">{tCommon('quantity')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 text-end">{t('unit_price')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 text-end">{t('subtotal')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {po?.lines?.map((line: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[11px] font-black text-operational-cyan tracking-widest uppercase">{line.item_sku || line.item_id}</span>
-                          <span className="text-sm font-bold text-foreground/80">{line.item_name || tCommon('not_available')}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-end">
-                        <span dir="ltr" className="font-mono font-bold text-foreground/80">{line.quantity || line.qty} {line.uom_id}</span>
-                      </td>
-                      <td className="px-6 py-4 text-end">
-                        <span dir="ltr" className="font-mono font-bold text-operational-cyan">{line.unit_price || line.unit_cost_foreign}</span>
-                      </td>
-                      <td className="px-6 py-4 text-end">
-                        <span dir="ltr" className="font-mono font-black text-foreground">
-                          {((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0)).toLocaleString()}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </DocumentReadOnlyOverlay>
+ <PermissionGate action="approve" resource="po">
+ {isSubmitted && (
+ <Button
+ onClick={() => router.push(`/ ${locale}/purchase-orders/ ${id}/approve`)}
+ className="bg-surface-container-highest text-foreground hover:bg-surface-container-high h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-outline-variant/50"
+ >
+ <CheckCircle className="w-4 h-4 me-2" />
+ {t('actions.go_to_approval')}
+ </Button>
+ )}
+ </PermissionGate>
+ </div>
+ </div>
+ </div>
 
-          <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8">
-            <div className="bg-surface-container-high p-8 rounded-3xl shadow-2xl relative overflow-hidden min-w-[320px] border border-white/5">
-              <div className="absolute top-0 end-0 w-1.5 h-full bg-operational-cyan shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.5)]" />
-              <div className="space-y-4">
-                <div className="flex justify-between items-center gap-10">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{t('order_total')}</p>
-                  <p dir="ltr" className="text-3xl font-display font-black tracking-tighter text-foreground">
-                    {po?.total?.toLocaleString() || '0'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+ <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
+ {isDraft ? (
+ <PurchaseOrderForm initialData={po} mode={isNew ? 'create' : 'edit'} />
+ ) : (
+ <div className="space-y-8">
+ <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+ {[
+ { label: tCommon('supplier'), value: po?.supplier_name || po?.supplier_id, icon: User, color: 'text-primary' },
+ { label: tCommon('order_currency'), value: po?.currency_id, icon: Wallet, color: 'text-operational-cyan' },
+ { label: t('target_warehouse'), value: po?.warehouse_name || po?.target_warehouse_id, icon: Warehouse, color: 'text-emerald-500' },
+ { label: t('expected_delivery_date'), value: po?.expected_delivery_date || '—', icon: Clock, color: 'text-amber-500' },
+ ].map((item, idx) => (
+ <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 rounded-lg relative overflow-hidden group">
+ <div className="flex items-center justify-between relative z-10">
+ <div className={cn("w-10 h-10 rounded-lg bg-current/10 flex items-center justify-center", item.color)}>
+ <item.icon className="w-5 h-5" />
+ </div>
+ <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{item.label}</span>
+ </div>
+ <div className="flex flex-col relative z-10">
+ <span className="text-title-sm font-semibold text-foreground line-clamp-1">{item.value}</span>
+ </div>
+ </Card>
+ ))}
+ </div>
 
-          {timeline.length > 0 && (
-            <div className="bg-surface-container-low p-8 rounded-3xl shadow-lg border border-white/5 transition-all">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mb-10">{t('ledger_history')}</h3>
-              <StatusTimeline entries={timeline} />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+ <DocumentReadOnlyOverlay isPosted={true}>
+ <Card className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm border-none">
+ <div className="p-6 border-b border-outline-variant/50">
+ <h3 className="text-body-md font-semibold text-foreground uppercase">{tCommon('order_details')}</h3>
+ </div>
+ <div className="overflow-x-auto">
+ <table className="w-full text-start border-collapse">
+ <thead>
+ <tr className="bg-surface-container-low/50 border-b border-outline-variant/50">
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-start h-10">{tCommon('item')}</th>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-end h-10">{tCommon('quantity')}</th>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-end h-10">{t('unit_price')}</th>
+ <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-end h-10">{t('subtotal')}</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-outline-variant/30">
+ {po?.lines?.map((line: POLine, idx: number) => (
+ <tr key={idx} className="hover:bg-surface-container-low/50 transition-colors group">
+ <td className="px-6 py-4">
+ <div className="flex flex-col gap-0.5">
+ <span className="text-label-xs font-bold text-primary uppercase">{line.item_sku || line.item_id}</span>
+ <span className="text-body-md font-bold text-foreground group-hover:text-primary transition-colors">{line.item_name || tCommon('not_available')}</span>
+ </div>
+ </td>
+ <td className="px-6 py-4 text-end">
+ <span dir="ltr" className="font-mono text-label-sm font-bold text-foreground/80">{line.quantity || line.qty} {line.uom_id}</span>
+ </td>
+ <td className="px-6 py-4 text-end">
+ <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">{line.unit_price || line.unit_cost_foreign}</span>
+ </td>
+ <td className="px-6 py-4 text-end">
+ <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
+ {((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0)).toLocaleString()}
+ </span>
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+
+ <div className="p-8 bg-surface-container-low/30 border-t border-outline-variant/50 flex justify-end">
+ <div className="flex items-center gap-10">
+ <div className="flex flex-col items-end">
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('order_total')}</p>
+ <p dir="ltr" className="text-headline-lg font-semibold text-primary">
+ {po?.total?.toLocaleString() || '0'}
+ <span className="text-body-md ms-2 text-muted-foreground/40">{po?.currency_id}</span>
+ </p>
+ </div>
+ </div>
+ </div>
+ </Card>
+ </DocumentReadOnlyOverlay>
+
+ {timeline.length > 0 && (
+ <Card className="bg-surface-container-lowest p-8 rounded-lg shadow-sm border-none transition-all">
+ <h3 className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-10">{t('ledger_history')}</h3>
+ <StatusTimeline entries={timeline} />
+ </Card>
+ )}
+ </div>
+ )}
+ </div>
+ </div>
+ );
 }
+

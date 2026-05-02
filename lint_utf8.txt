@@ -1,0 +1,788 @@
+﻿
+> logirest@0.1.0 lint
+> eslint
+
+
+E:\KitchenظّStore Inventory System\scratch\compare_i18n.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+E:\KitchenظّStore Inventory System\scratch\find_duplicates.js
+  2:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+E:\KitchenظّStore Inventory System\scratch\find_same_level_duplicates.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+E:\KitchenظّStore Inventory System\scripts\extract-routes.js
+   1:12  error    A `require()` style import is forbidden                                                                  @typescript-eslint/no-require-imports
+   2:14  error    A `require()` style import is forbidden                                                                  @typescript-eslint/no-require-imports
+   6:7   warning  'ROUTE_IGNORE' is assigned a value but never used                                                        @typescript-eslint/no-unused-vars
+  69:9   error    Do not assign to the variable `module`. See: https://nextjs.org/docs/messages/no-assign-module-variable  @next/next/no-assign-module-variable
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\adjustments\[id]\AdjustmentDetailClient.tsx
+   96:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\adjustments\[id]\AdjustmentDetailClient.tsx:96:7
+  94 |   useEffect(() => {
+  95 |     if (adjustment) {
+> 96 |       setWarehouseId(adjustment.warehouse_id);
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  97 |       setReason(adjustment.reason);
+  98 |       setNotes(adjustment.notes ?? '');
+  99 |       setLines(adjustment.lines);  react-hooks/set-state-in-effect
+  134:6  warning  React Hook useEffect has a missing dependency: 'lines'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\adjustments\new\AdjustmentCreateClient.tsx
+   3:10  warning  'useState' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  67:31  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\adjustments\new\AdjustmentCreateClient.tsx:67:31
+  65 |   });
+  66 |
+> 67 |   const selectedWarehouseId = watch('warehouse_id');
+     |                               ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  68 |   const selectedItemId = watch('item_id');
+  69 |   const { data: lockState } = useWarehouseLock(selectedWarehouseId);
+  70 |     react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx
+  79:7  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\issues\new\issue-form.tsx
+  83:28  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\issues\new\issue-form.tsx:83:28
+  81 |   });
+  82 |
+> 83 |   const watchedWarehouse = form.watch("warehouseId");
+     |                            ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  84 |   const isWarehouseLocked = LOCKED_WAREHOUSES.has(watchedWarehouse);
+  85 |
+  86 |   const handleOpenAllocator = (index: number) => {  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\issues\page.tsx
+  12:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\kitchen-requests\KitchenRequestsListClient.tsx
+   33:3  warning  'locale' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+  105:6  warning  React Hook useMemo has an unnecessary dependency: 'tc'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\kitchen-requests\[id]\KitchenRequestDetailClient.tsx
+  220:85   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  220:101  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  355:41   warning  'idx' is defined but never used                                  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\kitchen-requests\new\KitchenRequestFormClient.tsx
+    3:10  warning  'useState' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+    8:10  warning  'z' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   32:3   warning  'Package' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  212:40  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\kitchen-requests\new\KitchenRequestFormClient.tsx:212:40
+  210 |             ) : (
+  211 |               fields.map((field, index) => {
+> 212 |                 const selectedItemId = form.watch(`items.${index}.itemId`);
+      |                                        ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  213 |                 const selectedItem = items?.find(i => i.id === selectedItemId);
+  214 |                 
+  215 |                 return (  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\kitchen-requests\new\page.tsx
+  1:10  warning  'getMessages' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\StocktakeListClient.tsx
+  121:6  warning  React Hook useMemo has an unnecessary dependency: 'locale'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\[id]\StocktakeDetailClient.tsx
+   31:31  warning  'StatusTimelineEntry' is defined but never used  @typescript-eslint/no-unused-vars
+  229:57  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\[id]\count\StocktakeCountClient.tsx
+  12:10  warning  'cn' is defined but never used              @typescript-eslint/no-unused-vars
+  29:37  warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\[id]\page.tsx
+  6:19  warning  'id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\[id]\post\StocktakePostClient.tsx
+   9:3   warning  'BarChart3' is defined but never used     @typescript-eslint/no-unused-vars
+  10:3   warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+  21:10  warning  'Badge' is defined but never used         @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\[id]\start\page.tsx
+  1:10  warning  'getTranslations' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\[id]\variance\StocktakeVarianceClient.tsx
+  30:37  warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx
+  43:10  warning  'Skeleton' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  75:28  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx:75:28
+  73 |   });
+  74 |
+> 75 |   const watchedWarehouse = form.watch("warehouseId");
+     |                            ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  76 |   const { data: lockStatus } = useWarehouseLock(watchedWarehouse);
+  77 |   const isWarehouseLocked = !!lockStatus?.is_locked;
+  78 |  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\transfers\[id]\TransferDetailClient.tsx
+  34:9  warning  'isPosted' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\transfers\[id]\receive\TransferReceiveClient.tsx
+   18:10  warning  'cn' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   40:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\transfers\[id]\receive\TransferReceiveClient.tsx:40:7
+  38 |   useEffect(() => {
+  39 |     if (transfer) {
+> 40 |       setLines(transfer.lines.map(l => ({ 
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  41 |         ...l, 
+  42 |         _receivedQty: l.qty 
+  43 |       })));  react-hooks/set-state-in-effect
+  251:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  261:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\transfers\[id]\ship\TransferShipClient.tsx
+   13:23  warning  'TransferLine' is defined but never used  @typescript-eslint/no-unused-vars
+  187:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\transfers\new\TransferNewClient.tsx
+  40:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(operations)\transfers\new\page.tsx
+  11:11  warning  'locale' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\goods-received\[id]\GRNDetailClient.tsx
+    7:10  warning  'useQueryClient' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   11:10  warning  'PageHeader' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   18:10  warning  'PostConfirmDialog' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   19:10  warning  'FXRateCapture' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   22:23  warning  'GRNDetail' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   38:10  warning  'Input' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   64:9   warning  'postGRN' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   71:34  warning  'setIsWarehouseLockedError' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   78:21  warning  'handleSubmit' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   88:22  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\goods-received\[id]\GRNDetailClient.tsx:88:22
+  86 |   });
+  87 |
+> 88 |   const currencyId = watch('currency_id');
+     |                      ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  89 |   const warehouseId = watch('warehouse_id');
+  90 |
+  91 |   const { data: lockState } = useWarehouseLock(warehouseId);  react-hooks/incompatible-library
+  145:13  warning  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\goods-received\new\grn-form.tsx
+  13:33  warning  'Plus' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  13:47  warning  'ArrowRight' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  18:10  warning  'Separator' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  62:31  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\goods-received\new\grn-form.tsx:62:31
+  60 |   });
+  61 |
+> 62 |   const selectedWarehouseId = form.watch("warehouseId");
+     |                               ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  63 |   const { data: lockState } = useWarehouseLock(selectedWarehouseId || null);
+  64 |   const isTargetWarehouseLocked = !!lockState?.is_locked;
+  65 |  react-hooks/incompatible-library
+  66:39  warning  'isPoLoading' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\goods-received\page.tsx
+   2:10  warning  'PageHeader' is defined but never used  @typescript-eslint/no-unused-vars
+   3:10  warning  'Button' is defined but never used      @typescript-eslint/no-unused-vars
+   4:8   warning  'Link' is defined but never used        @typescript-eslint/no-unused-vars
+  23:9   warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-orders\POListClient.tsx
+  29:23  warning  'setSupplierId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-orders\[id]\PODetailClient.tsx
+  13:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  14:61  warning  'ClipboardList' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  72:72  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-orders\[id]\PODetailClient.tsx:72:72
+  70 |                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+  71 |                     <Clock className="w-3 h-3" />
+> 72 |                     <span dir="ltr">{format(new Date(po?.created_at || Date.now()), 'yyyy-MM-dd HH:mm')}</span>
+     |                                                                        ^^^^^^^^^^ Cannot call impure function
+  73 |                   </div>
+  74 |                 </>
+  75 |               )}  react-hooks/purity
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-orders\[id]\approve\POApproveClient.tsx
+  18:3   warning  'FileText' is defined but never used  @typescript-eslint/no-unused-vars
+  23:10  warning  'cn' is defined but never used        @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-orders\new\page.tsx
+  1:10  warning  'PageHeader' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-requests\[id]\PRDetailClient.tsx
+  15:3  warning  'CheckCircle' is defined but never used   @typescript-eslint/no-unused-vars
+  23:3  warning  'ExternalLink' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-requests\[id]\approve\PRApprovalClient.tsx
+  36:10  warning  'StatusBadge' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\(procurement)\purchase-requests\page.tsx
+  16:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\restaurant-profile\ProfileFormClient.tsx
+   40:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\restaurant-profile\ProfileFormClient.tsx:40:23
+  38 |   });
+  39 |
+> 40 |   const logoPreview = watch('logo');
+     |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  41 |
+  42 |   useEffect(() => {
+  43 |     if (profile) {  react-hooks/incompatible-library
+  113:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                           @next/next/no-img-element
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx
+   8:10  warning  'Card' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   8:16  warning  'CardContent' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   8:29  warning  'CardHeader' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  13:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  20:9   warning  'router' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  31:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx:31:7
+  29 |   useEffect(() => {
+  30 |     if (role) {
+> 31 |       setLocalPermissions(JSON.parse(JSON.stringify(role.permissions)));
+     |       ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  32 |     }
+  33 |   }, [role]);
+  34 |  react-hooks/set-state-in-effect
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\roles\[id]\page.tsx
+  8:9  warning  'messages' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\settings\SettingsClient.tsx
+   6:10  warning  'Shield' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   6:41  warning  'Coins' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  28:31  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\settings\SettingsClient.tsx:28:31
+  26 |   });
+  27 |
+> 28 |   const watchedBaseCurrency = watch('base_currency');
+     |                               ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  29 |   const [initialBaseCurrency, setInitialBaseCurrency] = useState<string | null>(null);
+  30 |
+  31 |   useEffect(() => {  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\settings\page.tsx
+  8:9  warning  'messages' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\users\UserListClient.tsx
+  6:10  warning  'UserX' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx
+  13:10  warning  'PermissionGate' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  17:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  47:9   warning  'tCommon' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  96:24  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:96:24
+  94 |   // Auto-reset dependent selections when parent changes
+  95 |   useEffect(() => {
+> 96 |     const currentWhs = watch('warehouse_ids') || [];
+     |                        ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  97 |     const validWhs = currentWhs.filter(whId => filteredWarehouses.some(f => f.id === whId));
+  98 |     if (validWhs.length !== currentWhs.length) {
+  99 |       setValue('warehouse_ids', validWhs);  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\admin\users\page.tsx
+  8:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx
+  80:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/incompatible-library')
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\communications\notifications\templates\page.tsx
+  8:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\context-selector\ContextSelectorClient.tsx
+   8:10  warning  'Card' is defined but never used             @typescript-eslint/no-unused-vars
+   8:16  warning  'CardContent' is defined but never used      @typescript-eslint/no-unused-vars
+  15:3   warning  'LayoutDashboard' is defined but never used  @typescript-eslint/no-unused-vars
+  23:9   warning  't' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  25:11  warning  'user' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\context-selector\page.tsx
+  7:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\dashboard\DashboardClient.tsx
+  22:9  warning  'isRtl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\balance\StockBalanceClient.tsx
+   33:10  warning  'Badge' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   44:46  warning  'title' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   50:27  warning  'setWarehouseFilter' is assigned a value but never used                                                  @typescript-eslint/no-unused-vars
+   54:17  warning  'warehouses' is assigned a value but never used                                                          @typescript-eslint/no-unused-vars
+  106:16  warning  'row' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+  148:6   warning  React Hook useMemo has an unnecessary dependency: 't'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx
+   13:3   warning  'ExternalLink' is defined but never used                         @typescript-eslint/no-unused-vars
+   16:10  warning  'cn' is defined but never used                                   @typescript-eslint/no-unused-vars
+   50:41  warning  'locale' is defined but never used                               @typescript-eslint/no-unused-vars
+   52:9   warning  'tCommon' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+  108:25  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  108:37  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\lots\LotBalanceClient.tsx
+   3:10  warning  'useState' is defined but never used     @typescript-eslint/no-unused-vars
+  13:3   warning  'ShieldCheck' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\lots\page.tsx
+  8:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\movements\MovementsClient.tsx
+  11:10  warning  'Card' is defined but never used         @typescript-eslint/no-unused-vars
+  11:16  warning  'CardContent' is defined but never used  @typescript-eslint/no-unused-vars
+  12:58  warning  'Filter' is defined but never used       @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\movements\page.tsx
+  8:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx
+   5:41  warning  'AlertCircle' is defined but never used             @typescript-eslint/no-unused-vars
+  10:10  warning  'isScanning' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  10:22  warning  'setIsScanning' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx
+  53:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:53:23
+  51 |     });
+  52 |
+> 53 |   const currentCode = watch('code');
+     |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  54 |
+  55 |   useEffect(() => {
+  56 |     if (barcode) {  react-hooks/incompatible-library
+  75:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\barcodes\BarcodeListClient.tsx
+   7:16  warning  'Tag' is defined but never used                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  32:9   warning  The 'barcodes' logical expression could make the dependencies of useMemo Hook (at line 42) change on every render. To fix this, wrap the initialization of 'barcodes' in its own useMemo() Hook                                    react-hooks/exhaustive-deps
+  33:9   warning  The 'items' logical expression could make the dependencies of useMemo Hook (at line 134) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'items' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  34:9   warning  The 'uoms' logical expression could make the dependencies of useMemo Hook (at line 134) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'uoms' in its own useMemo() Hook    react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\barcodes\[id]\edit\page.tsx
+  1:10  warning  'useTranslations' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\branches\BranchFormClient.tsx
+   8:34  warning  'Globe2' is defined but never used  @typescript-eslint/no-unused-vars
+   8:42  warning  'Hash' is defined but never used    @typescript-eslint/no-unused-vars
+  59:14  warning  'error' is defined but never used   @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\branches\BranchListClient.tsx
+  25:10  warning  'page' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\categories\CategoryFormClient.tsx
+  23:9   warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  45:14  warning  'error' is defined but never used       @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx
+  41:3  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:41:3
+  39 |
+  40 |   // Intentional dynamic watch() usage. React Compiler skip memoization allowed.
+> 41 |   watch('code');
+     |   ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  42 |
+  43 |   useEffect(() => {
+  44 |     if (currency) {  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\departments\DepartmentFormClient.tsx
+   8:44  warning  'Activity' is defined but never used   @typescript-eslint/no-unused-vars
+   8:54  warning  'Warehouse' is defined but never used  @typescript-eslint/no-unused-vars
+  94:14  warning  'error' is defined but never used      @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\departments\DepartmentListClient.tsx
+   7:27  warning  'CheckCircle2' is defined but never used                                                                                                                                                               @typescript-eslint/no-unused-vars
+  24:10  warning  'page' is assigned a value but never used                                                                                                                                                              @typescript-eslint/no-unused-vars
+  28:9   warning  The 'departments' logical expression could make the dependencies of useMemo Hook (at line 35) change on every render. To fix this, wrap the initialization of 'departments' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\fx-rates\FXRateFormClient.tsx
+   17:48   warning  'History' is defined but never used                     @typescript-eslint/no-unused-vars
+   18:10   warning  'cn' is defined but never used                          @typescript-eslint/no-unused-vars
+   28:9    warning  'tc' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+   32:36   warning  'loadingRate' is assigned a value but never used        @typescript-eslint/no-unused-vars
+   33:45   warning  'loadingCurrencies' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   37:42   warning  'watch' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   69:14   warning  'error' is defined but never used                       @typescript-eslint/no-unused-vars
+  138:165  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  171:161  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  194:141  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  213:161  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\fx-rates\FXRateListClient.tsx
+   7:76  warning  'ShieldCheck' is defined but never used  @typescript-eslint/no-unused-vars
+  13:28  warning  'Currency' is defined but never used     @typescript-eslint/no-unused-vars
+  20:10  warning  'Badge' is defined but never used        @typescript-eslint/no-unused-vars
+  21:10  warning  'cn' is defined but never used           @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\fx-rates\[id]\edit\page.tsx
+  16:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\fx-rates\new\page.tsx
+  11:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\fx-rates\page.tsx
+  1:10  warning  'getMessages' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\import\components\Step1Upload.tsx
+   7:10  warning  'cn' is defined but never used            @typescript-eslint/no-unused-vars
+  11:11  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:39  warning  'locale' is defined but never used        @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\import\components\Step2Validate.tsx
+  11:11  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  24:6   warning  React Hook useEffect has a missing dependency: 'wizard'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  48:47  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  49:49  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\import\components\Step3Errors.tsx
+   4:56  warning  'Table' is defined but never used         @typescript-eslint/no-unused-vars
+  13:11  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:37  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\import\components\Step4Commit.tsx
+  11:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\items\ItemFormClient.tsx
+   24:47   warning  'CategorySchema' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   27:10   warning  'Breadcrumb' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   77:21   warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\items\ItemFormClient.tsx:77:21
+  75 |
+  76 |   const isSaving = create.isPending || update.isPending;
+> 77 |   const trackLots = watch('track_lots');
+     |                     ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  78 |   const isActive = watch('is_active');
+  79 |
+  80 |   const breadcrumbs = [  react-hooks/incompatible-library
+   80:9    warning  'breadcrumbs' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  118:146  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  137:152  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  145:152  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  150:152  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  182:54   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  191:160  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  215:166  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\suppliers\SupplierFormClient.tsx
+    8:42  warning  'Hash' is defined but never used             @typescript-eslint/no-unused-vars
+    8:48  warning  'Globe2' is defined but never used           @typescript-eslint/no-unused-vars
+    8:56  warning  'Coins' is defined but never used            @typescript-eslint/no-unused-vars
+    8:63  warning  'ScrollText' is defined but never used       @typescript-eslint/no-unused-vars
+   14:29  warning  'CardHeader' is defined but never used       @typescript-eslint/no-unused-vars
+   14:41  warning  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+   14:52  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+   73:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  168:48  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\units-of-measure\UoMDetailClient.tsx
+  11:10  warning  'cn' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\units-of-measure\UoMFormClient.tsx
+  64:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\warehouses\WarehouseFormClient.tsx
+   51:20  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\warehouses\WarehouseFormClient.tsx:51:20
+  49 |     });
+  50 |
+> 51 |   const isActive = watch('is_active');
+     |                    ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  52 |
+  53 |   useEffect(() => {
+  54 |     if (data) {  react-hooks/incompatible-library
+   67:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  186:64  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\warehouses\WarehouseListClient.tsx
+  24:10  warning  'page' is assigned a value but never used                                                                                                                                                            @typescript-eslint/no-unused-vars
+  35:9   warning  The 'warehouses' logical expression could make the dependencies of useMemo Hook (at line 43) change on every render. To fix this, wrap the initialization of 'warehouses' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\master-data\warehouses\page.tsx
+   4:10  warning  'PageHeader' is defined but never used  @typescript-eslint/no-unused-vars
+  18:9   warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\profile\ChangePasswordClient.tsx
+   8:46  warning  'Lock' is defined but never used    @typescript-eslint/no-unused-vars
+  36:27  warning  'values' is defined but never used  @typescript-eslint/no-unused-vars
+  46:14  warning  'error' is defined but never used   @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\profile\page.tsx
+  4:10  warning  'User' is defined but never used             @typescript-eslint/no-unused-vars
+  4:24  warning  'Info' is defined but never used             @typescript-eslint/no-unused-vars
+  6:29  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(app)\search\SearchClient.tsx
+  15:3  warning  'Layers' is defined but never used       @typescript-eslint/no-unused-vars
+  19:3  warning  'LayoutGrid' is defined but never used   @typescript-eslint/no-unused-vars
+  20:3  warning  'Calendar' is defined but never used     @typescript-eslint/no-unused-vars
+  49:9  warning  'tc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(auth)\forgot-password\page.tsx
+   9:10  warning  'KeyRound' is defined but never used  @typescript-eslint/no-unused-vars
+  45:14  warning  'err' is defined but never used       @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(auth)\login\page.tsx
+  47:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\app\[locale]\(auth)\reset-password\page.tsx
+  63:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\layouts\Sidebar.tsx
+   17:3   warning  'Database' is defined but never used  @typescript-eslint/no-unused-vars
+  139:51  warning  'item' is defined but never used      @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\layouts\Topbar.tsx
+  22:11  warning  'isAvailable' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  22:24  warning  'registeredTools' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\DataTable\DataTable.tsx
+  60:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\components\shared\DataTable\DataTable.tsx:60:17
+  58 |   const t = useTranslations('common.datatable');
+  59 |   const locale = useLocale();
+> 60 |   const table = useReactTable({
+     |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  61 |     data: data || [],
+  62 |     columns,
+  63 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\components\shared\DataTable\Pagination.tsx
+  1:10  warning  'useTranslations' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\FEFOLotAllocator\ExpiredOverrideInline.tsx
+  5:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\FEFOLotAllocator\FEFOLotAllocator.tsx
+  56:17  warning  '__unused_id' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\FXRateCapture.tsx
+  39:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\PostConfirmDialog.tsx
+  3:27  warning  'useEffect' is defined but never used          @typescript-eslint/no-unused-vars
+  9:3   warning  'AlertDialogAction' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\ReportExportMenu.tsx
+  13:39  warning  'TableIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\ReportHeader.tsx
+  33:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\KitchenظّStore Inventory System\src\components\shared\ScanInput\ScanInput.tsx
+   3:29  warning  'useState' is defined but never used          @typescript-eslint/no-unused-vars
+  23:3   warning  'onError' is defined but never used           @typescript-eslint/no-unused-vars
+  27:3   warning  'onCameraActivate' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\SessionTimeoutModal.tsx
+   3:10  warning  'useSession' is defined but never used  @typescript-eslint/no-unused-vars
+  18:11  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\StatusTimeline.tsx
+  47:9  warning  'locale' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\shared\ThemeToggle.tsx
+  5:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  5:21  warning  'useState' is defined but never used   @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\ui\data-table.tsx
+  55:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\components\ui\data-table.tsx:55:17
+  53 |   const t = useTranslations("common");
+  54 |
+> 55 |   const table = useReactTable({
+     |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  56 |     data,
+  57 |     columns,
+  58 |     getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+  70:10  warning  'isRtl' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\components\ui\fefo-lot-allocator.tsx
+   4:60  warning  'DialogFooter' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   8:10  warning  'AlertTriangle' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+  38:6   warning  React Hook React.useMemo has an unnecessary dependency: 'isOpen'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\components\ui\metric-card.tsx
+  50:3  warning  'dir' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\admin\hooks\useAdminUsers.ts
+   93:15  warning  'originalUser' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  125:38  warning  'role' is defined but never used                   @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\branches\components\branch-form.tsx
+  21:10  warning  'CreateBranchDTO' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\categories\hooks\useCategories.ts
+  128:13  warning  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\dashboard\components\AdminDashboard.tsx
+  15:3  warning  'LayoutDashboard' is defined but never used  @typescript-eslint/no-unused-vars
+  30:9  warning  'tc' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\dashboard\components\KPICard.tsx
+  4:10  warning  'Card' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\dashboard\components\KitchenDashboard.tsx
+  25:9  warning  't' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  26:9  warning  'tc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\dashboard\components\NearExpiryWidget.tsx
+   2:10  warning  'AlertCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  33:27  warning  'idx' is defined but never used          @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\dashboard\components\PendingDocumentsWidget.tsx
+  32:25  warning  'idx' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\dashboard\components\StoreManagerDashboard.tsx
+  12:3   warning  'Search' is defined but never used           @typescript-eslint/no-unused-vars
+  13:3   warning  'MoveDown' is defined but never used         @typescript-eslint/no-unused-vars
+  19:10  warning  'Card' is defined but never used             @typescript-eslint/no-unused-vars
+  19:16  warning  'CardHeader' is defined but never used       @typescript-eslint/no-unused-vars
+  19:28  warning  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+  19:39  warning  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+  19:56  warning  'CardContent' is defined but never used      @typescript-eslint/no-unused-vars
+  25:9   warning  't' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  26:9   warning  'tc' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\fx-rates\hooks\useFXRates.ts
+  6:51  warning  'Currency' is defined but never used                       @typescript-eslint/no-unused-vars
+  9:7   warning  'CURRENCIES_QUERY_KEY' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\import\components\ImportWizardClient.tsx
+  8:10  warning  'ImportIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\import\components\steps\StepCommit.tsx
+  18:9  warning  'tc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\import\components\steps\StepErrors.tsx
+   4:44  warning  'ChevronLeft' is defined but never used   @typescript-eslint/no-unused-vars
+   4:57  warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+  19:9   warning  'tc' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\import\components\steps\StepUpload.tsx
+  18:38  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\import\components\steps\StepValidate.tsx
+   5:29  warning  'CheckCircle2' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   5:43  warning  'AlertCircle' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+  15:40  warning  'locale' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+  28:6   warning  React Hook useEffect has a missing dependency: 'wizard'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\src\features\import\hooks\useImportWizard.ts
+  1:33  warning  'useRef' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\items\api\useItems.ts
+  3:10  warning  'apiClient' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\src\features\items\components\item-form.tsx
+   31:12   warning  'ImageIcon' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   34:10   warning  'Card' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  119:25   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @next/next/no-img-element
+  157:109  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\features\items\components\item-form.tsx:157:109
+  155 |                <div className="flex justify-between items-center">
+  156 |                   <span className="text-[11px] font-black text-muted-foreground/60">{t('glance.sku')}</span>
+> 157 |                   <span className="font-mono text-xs font-black text-foreground uppercase tracking-widest">{form.watch('sku') || 'ظ¤'}</span>
+      |                                                                                                             ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  158 |                </div>
+  159 |                <div className="flex justify-between items-center">
+  160 |                   <span className="text-[11px] font-black text-muted-foreground/60">{t('glance.category')}</span>  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\features\purchasing\components\po-form.tsx
+  98:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\src\features\purchasing\components\po-form.tsx:98:17
+   96 |
+   97 |   // Intentional dynamic watch() usage. React Compiler skip memoization allowed.
+>  98 |   const lines = form.watch("lines");
+      |                 ^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+   99 |   const currency = form.watch("currency_code");
+  100 |   const rate = form.watch("exchange_rate");
+  101 |  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\src\providers\WebMCPProvider.tsx
+  84:30  warning  '_execute' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+ظ£û 289 problems (43 errors, 246 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+

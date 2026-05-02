@@ -1,10 +1,10 @@
 import { ImportWizardClient } from '@/features/import/components/ImportWizardClient';
 
 export default async function ItemsImportPage({ 
-  params 
+ params 
 }: { 
-  params: Promise<{ locale: string }> 
+ params: Promise<{ locale: string }> 
 }) {
-  const { locale } = await params;
-  return <ImportWizardClient type="items" locale={locale} />;
+ const { locale } = await params;
+ return <ImportWizardClient entity="items" locale={locale} />;
 }

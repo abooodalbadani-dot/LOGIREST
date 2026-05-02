@@ -3,13 +3,13 @@ import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { UserListClient } from './UserListClient';
 
 export default async function UsersPage(props: { params: Promise<{ locale: string }> }) {
-  const { locale } = await props.params;
-  setRequestLocale(locale);
-  const t = await getTranslations('admin');
+ const { locale } = await props.params;
+ setRequestLocale(locale);
+ const t = await getTranslations('admin');
 
-  return (
-    <ProtectedRoute roles={["ADMIN"]}>
-      <UserListClient locale={locale} />
-    </ProtectedRoute>
-  );
+ return (
+ <ProtectedRoute requiredResource="user" requiredAction="view">
+ <UserListClient locale={locale} />
+ </ProtectedRoute>
+ );
 }

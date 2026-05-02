@@ -5,8 +5,18 @@
 
 @theme {
   /* Fonts */
-  --font-sans: var(--font-cairo), var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-cairo), sans-serif;
+  --font-sans: var(--font-ibm-plex-arabic), var(--font-ibm-plex), sans-serif;
+  --font-display: var(--font-tajawal), var(--font-ibm-plex-arabic), sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Typography Scale - Standardized */
+  --text-headline-lg: 2rem;
+  --text-title-lg: 1.25rem;
+  --text-title-sm: 1rem;
+  --text-body-md: 0.875rem;
+  --text-label-sm: 0.75rem;
+  --text-label-xs: 0.625rem;
+  --text-label-xxs: 0.5rem;
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -232,6 +242,8 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   :lang(ar) * {
@@ -254,7 +266,7 @@
   :lang(ar) h5,
   :lang(ar) h6,
   :lang(ar) .font-bold,
-  :lang(ar) .font-black {
+  :lang(ar) .font-semibold {
     font-weight: 700 !important;
     opacity: 1 !important;
   }
@@ -270,14 +282,7 @@
     color: #e5e7eb !important;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  label,
-  p {
+  h1, h2, h3, h4, h5, h6, label, p, th {
     unicode-bidi: isolate;
   }
 
@@ -294,21 +299,27 @@
     box-shadow: none !important;
   }
 
-  /* High Density Reset */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply tracking-tight font-bold;
-  }
+  /* Typography Refinement Pass - Global Tags */
+  h1 { @apply text-headline-lg font-semibold tracking-[0.08em]; } /* Page Titles */
+  h2, h3 { @apply text-title-lg font-semibold tracking-[0.05em]; } /* Section Headers */
+  h4, h5, h6 { @apply text-title-sm font-semibold tracking-[0.05em]; } 
+  th { @apply text-label-sm font-semibold tracking-[0.06em] uppercase text-muted-foreground/60; } /* Table Headers */
 
-  /* Cairo for large numbers/displays */
+  /* Tajawal for large numbers/displays ONLY */
   .font-display {
     font-family: var(--font-display);
   }
 }
+
+/* Scale Tokens with Integrated Tracking Discipline */
+@utility text-display-lg { @apply text-[4rem] font-semibold tracking-normal; }
+@utility text-headline-lg { @apply text-[2rem] font-semibold tracking-[0.08em]; }
+@utility text-title-lg { @apply text-[1.25rem] font-semibold tracking-[0.05em]; }
+@utility text-title-sm { @apply text-[1rem] font-semibold tracking-[0.05em]; }
+@utility text-body-md { @apply text-[0.875rem] font-normal tracking-normal; }
+@utility text-label-sm { @apply text-[0.75rem] font-medium tracking-[0.04em]; }
+@utility text-label-xs { @apply text-[0.625rem] font-medium tracking-[0.02em]; }
+@utility text-label-xxs { @apply text-[0.5rem] font-medium tracking-normal; }
 
 /* Stitch Special Utilities */
 .ghost-border {
@@ -316,9 +327,16 @@
 }
 
 .primary-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%) !important;
+}
+
+.glass-header {
+  @apply sticky top-0 z-50;
+  background: color-mix(in srgb, var(--surface-container-low) 80%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent);
 }
 
 @utility ambient-shadow {
-  box-shadow: 0 0 24px 0 rgba(var(--on-surface-rgb), 0.06);
+  box-shadow: 0 0 24px 0 rgba(var(--on-surface-rgb), 0.04);
 }

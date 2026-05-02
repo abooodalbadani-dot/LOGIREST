@@ -2,13 +2,13 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 
 export default async function LocaleRootPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  const cookieStore = await cookies();
-  const token = cookieStore.get('logirest_token')?.value;
+ const { locale } = await params;
+ const cookieStore = await cookies();
+ const token = cookieStore.get('logirest_token')?.value;
 
-  if (token) {
-    redirect(`/${locale}/dashboard`);
-  }
-  
-  redirect(`/${locale}/login`);
+ if (token) {
+ redirect(`/ ${locale}/dashboard`);
+ }
+ 
+ redirect(`/ ${locale}/login`);
 }

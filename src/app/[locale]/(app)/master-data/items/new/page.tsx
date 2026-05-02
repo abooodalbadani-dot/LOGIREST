@@ -1,24 +1,28 @@
-import { ItemForm } from "@/features/items/components/item-form";
+import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { ItemFormClient } from '../ItemFormClient';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
-export const metadata = {
-  title: "New Item | LogiRest",
-  description: "Create a new master catalog item.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+ const { locale } = await params;
+ const t = await getTranslations({ locale, namespace: 'master_data.items' });
+ return {
+ title: `${t('create_title')} | LogiRest`,
+ };
+}
 
-export default function NewItemPage() {
-  return (
-    <div className="flex-col md:flex">
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            Create New Item (SKU)
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            Establish a new master product in the global catalog. This definition will sync across all branches.
-          </p>
-        </div>
-        <ItemForm />
-      </div>
-    </div>
-  );
+export default async function NewItemPage(props: { params: Promise<{ locale: string }> }) {
+ const params = await props.params;
+ setRequestLocale(params.locale);
+ const t = await getTranslations('master_data.items');
+ 
+ return (
+ <ProtectedRoute requiredAction="create" requiredResource="master_data_items">
+ <ItemFormClient
+ id={null}
+ createTitle={t('create_title')}
+ editTitle={t('edit_title')}
+ locale={params.locale}
+ />
+ </ProtectedRoute>
+ );
 }

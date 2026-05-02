@@ -5,10 +5,10 @@ import { usePermission } from '@/hooks/usePermission';
 import { type ResourceType, type ActionType } from '@/types/rbac';
 
 interface PermissionGateProps {
-  action: ActionType;
-  resource: ResourceType;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+ action: ActionType;
+ resource: ResourceType;
+ children: React.ReactNode;
+ fallback?: React.ReactNode;
 }
 
 /**
@@ -18,16 +18,16 @@ interface PermissionGateProps {
  * Used to wrap action buttons (Create, Edit, Delete, Post, Approve).
  */
 export function PermissionGate({
-  action,
-  resource,
-  children,
-  fallback = null
+ action,
+ resource,
+ children,
+ fallback = null
 }: PermissionGateProps) {
-  const hasPermission = usePermission(action, resource);
+ const hasPermission = usePermission(action, resource);
 
-  if (!hasPermission) {
-    return <>{fallback}</>;
-  }
+ if (!hasPermission) {
+ return <>{fallback}</>;
+ }
 
-  return <>{children}</>;
+ return <>{children}</>;
 }

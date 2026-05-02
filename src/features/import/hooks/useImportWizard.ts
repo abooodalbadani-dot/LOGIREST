@@ -1,161 +1,154 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ImportEntity } from '@/lib/import/templates';
+import { ValidationError } from '@/lib/import/validation';
 
-export type ImportType = 'items' | 'uoms' | 'barcodes';
+export type ImportStep = 'UPLOAD' | 'VALIDATING' | 'ERRORS' | 'COMMIT' | 'SUCCESS';
+export type ImportType = ImportEntity;
 
-export type ImportStep =
-  | 'UPLOAD'
-  | 'VALIDATING'
-  | 'ERRORS'
-  | 'COMMIT'
-  | 'SUCCESS';
 
-export interface ValidationError {
-  row: number;
-  column: string;
-  message: string;
-  value: any;
-  severity: 'error' | 'warning';
-}
-
-export interface FileMetadata {
-  name: string;
-  size: number;
-  type: string;
+export interface ImportMetadata {
+ fileName: string;
+ fileSize: number;
+ recordCount: number;
 }
 
 export interface ImportState {
-  currentStep: ImportStep;
-  importType: ImportType;
-  fileMetadata: FileMetadata | null;
-  data: any[];
-  errors: ValidationError[];
-  successCount: number;
-  idempotencyKey: string | null;
+ step: ImportStep;
+ entity: ImportEntity;
+ metadata: ImportMetadata | null;
+ data: Record<string, unknown>[];
+ errors: ValidationError[];
+ idempotencyKey: string | null;
 }
 
-export const useImportWizard = (initialType: ImportType) => {
-  const [state, setState] = useState<ImportState>({
-    currentStep: 'UPLOAD',
-    importType: initialType,
-    fileMetadata: null,
-    data: [],
-    errors: [],
-    successCount: 0,
-    idempotencyKey: null,
-  });
+export interface WizardReturn extends ImportState {
+ isCommitting: boolean;
+ setFileData: (fileName: string, fileSize: number, data: Record<string, unknown>[]) => void;
+ setValidationResults: (errors: ValidationError[]) => void;
+ handleCommit: () => void;
+ transitionTo: (nextStep: ImportStep) => void;
+ reset: () => void;
+}
 
-  const queryClient = useQueryClient();
+export const useImportWizard = (initialEntity: ImportEntity): WizardReturn => {
+ const queryClient = useQueryClient();
+ 
+ const [state, setState] = useState<ImportState>({
+ step: 'UPLOAD',
+ entity: initialEntity,
+ metadata: null,
+ data: [],
+ errors: [],
+ idempotencyKey: null,
+ });
 
-  const reset = () => {
-    setState({
-      currentStep: 'UPLOAD',
-      importType: initialType,
-      fileMetadata: null,
-      data: [],
-      errors: [],
-      successCount: 0,
-      idempotencyKey: null,
-    });
-  };
+ const transitionTo = useCallback((nextStep: ImportStep) => {
+ setState((prev) => {
+ // STRICT State Machine Guards
+ const allowedTransitions: Record<ImportStep, ImportStep[]> = {
+ UPLOAD: ['VALIDATING'],
+ VALIDATING: ['ERRORS', 'COMMIT'],
+ ERRORS: ['UPLOAD'],
+ COMMIT: ['SUCCESS'],
+ SUCCESS: ['UPLOAD'], // For reset/starting over
+ };
 
-  const setFileMetadata = (metadata: FileMetadata) => {
-    setState((prev) => ({ ...prev, fileMetadata: metadata }));
-  };
+ if (!allowedTransitions[prev.step].includes(nextStep)) {
+ console.error(`[Wizard Error] Illegal transition: ${prev.step} -> ${nextStep}`);
+ return prev;
+ }
 
-  const setParsedData = (data: any[]) => {
-    setState((prev) => ({ ...prev, data }));
-  };
+ // Idempotency Key Generation - ONLY when entering COMMIT
+ let nextIdempotencyKey = prev.idempotencyKey;
+ if (nextStep === 'COMMIT' && !nextIdempotencyKey) {
+ nextIdempotencyKey = crypto.randomUUID();
+ }
 
-  const startValidation = () => {
-    setState((prev) => ({ ...prev, currentStep: 'VALIDATING' }));
-    validateMutation.mutate(state.data);
-  };
+ return {
+ ...prev,
+ step: nextStep,
+ idempotencyKey: nextIdempotencyKey,
+ };
+ });
+ }, []);
 
-  const validateMutation = useMutation({
-    mutationFn: async (data: any[]) => {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      const errors: ValidationError[] = [];
-      
-      data.forEach((row, index) => {
-        const rowNum = index + 2;
+ const setFileData = useCallback((fileName: string, fileSize: number, data: Record<string, unknown>[]) => {
+ setState((prev) => ({
+ ...prev,
+ metadata: {
+ fileName,
+ fileSize,
+ recordCount: data.length,
+ },
+ data,
+ errors: [],
+ }));
+ transitionTo('VALIDATING');
+ }, [transitionTo]);
 
-        if (state.importType === 'items') {
-          if (!row.Code) errors.push({ row: rowNum, column: 'Code', message: 'Required', value: '', severity: 'error' });
-          if (!row.Name) errors.push({ row: rowNum, column: 'Name', message: 'Required', value: '', severity: 'error' });
-          if (row.Code === 'ERR-101') {
-            errors.push({ row: rowNum, column: 'Code', message: 'Simulated System Error', value: row.Code, severity: 'error' });
-          }
-        }
+ const setValidationResults = useCallback((errors: ValidationError[]) => {
+ setState((prev) => ({ ...prev, errors }));
+ if (errors.length > 0) {
+ transitionTo('ERRORS');
+ } else {
+ transitionTo('COMMIT');
+ }
+ }, [transitionTo]);
 
-        if (state.importType === 'uoms') {
-          if (!row.Code) errors.push({ row: rowNum, column: 'Code', message: 'Required', value: '', severity: 'error' });
-        }
+ const commitMutation = useMutation({
+ mutationFn: async ({ entity, payload, idempotencyKey }: { entity: ImportEntity, payload: Record<string, unknown>[], idempotencyKey: string }) => {
+ // Simulate API Call with strict 2s delay
+ console.log(`[Import] Committing ${payload.length} records for ${entity} (Key: ${idempotencyKey})`);
+ await new Promise((resolve) => setTimeout(resolve, 2000));
+ return { success: true, count: payload.length };
+ },
+ onSuccess: (_, variables) => {
+ // Atomic Cache Update via TanStack Query
+ const queryKey = [variables.entity];
+ queryClient.setQueryData(queryKey, (prev: Record<string, unknown>[] = []) => {
+ return [...prev, ...variables.payload];
+ });
+ 
+ // Invalidate to ensure consistency
+ queryClient.invalidateQueries({ queryKey });
+ 
+ transitionTo('SUCCESS');
+ },
+ });
 
-        if (state.importType === 'barcodes') {
-          if (!row.Barcode) errors.push({ row: rowNum, column: 'Barcode', message: 'Required', value: '', severity: 'error' });
-        }
-      });
+ const handleCommit = useCallback(() => {
+ // Double submission prevention & state guard
+ if (commitMutation.isPending || state.step !== 'COMMIT' || !state.idempotencyKey) {
+ return;
+ }
 
-      return errors;
-    },
-    onSuccess: (errors) => {
-      if (errors.some(e => e.severity === 'error')) {
-        setState((prev) => ({ ...prev, errors, currentStep: 'ERRORS' }));
-      } else {
-        setState((prev) => ({ 
-          ...prev, 
-          errors, 
-          currentStep: 'COMMIT',
-          idempotencyKey: crypto.randomUUID()
-        }));
-      }
-    },
-  });
+ commitMutation.mutate({
+ entity: state.entity,
+ payload: state.data,
+ idempotencyKey: state.idempotencyKey,
+ });
+ }, [commitMutation, state.step, state.entity, state.data, state.idempotencyKey]);
 
-  const commitMutation = useMutation({
-    mutationFn: async ({ entity, payload, idempotencyKey }: { entity: ImportType, payload: any[], idempotencyKey: string }) => {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-      console.log(`Committing ${payload.length} ${entity} with key ${idempotencyKey}`);
-      return payload.length;
-    },
-    onSuccess: (count) => {
-      setState((prev) => ({ ...prev, successCount: count, currentStep: 'SUCCESS' }));
-      
-      // Atomic cache update simulation
-      queryClient.setQueryData([state.importType], (old: any[] = []) => {
-        // In a real app, this would be a more complex merge or a full invalidation
-        return [...state.data, ...old];
-      });
-      
-      queryClient.invalidateQueries({ queryKey: [state.importType] });
-    },
-  });
+ const reset = useCallback(() => {
+ setState({
+ step: 'UPLOAD',
+ entity: initialEntity,
+ metadata: null,
+ data: [],
+ errors: [],
+ idempotencyKey: null,
+ });
+ }, [initialEntity]);
 
-  const goToUpload = () => {
-    setState((prev) => ({ ...prev, currentStep: 'UPLOAD', errors: [] }));
-  };
-
-  return {
-    ...state,
-    setFileMetadata,
-    setParsedData,
-    startValidation,
-    isValidating: validateMutation.isPending,
-    commit: () => {
-      if (state.idempotencyKey) {
-        commitMutation.mutate({
-          entity: state.importType,
-          payload: state.data,
-          idempotencyKey: state.idempotencyKey
-        });
-      }
-    },
-    isCommitting: commitMutation.isPending,
-    goToUpload,
-    reset,
-  };
+ return {
+ ...state,
+ isCommitting: commitMutation.isPending,
+ setFileData,
+ setValidationResults,
+ handleCommit,
+ transitionTo,
+ reset,
+ };
 };
+

@@ -9,17 +9,17 @@ import { reportsMocks } from './reports';
 
 type MockDb = Record<string, unknown>;
 const db: MockDb = { 
-  ...purchasingMocks, 
-  ...operationsMocks, 
-  ...masterDataMocks, 
-  ...inventoryMocks, 
-  ...notificationsMocks, 
-  ...adminMocks,
-  ...authMocks,
-  ...reportsMocks
+ ...purchasingMocks, 
+ ...operationsMocks, 
+ ...masterDataMocks, 
+ ...inventoryMocks, 
+ ...notificationsMocks, 
+ ...adminMocks,
+ ...authMocks,
+ ...reportsMocks
 };
 
 export function getMockResponse(method: string, path: string): unknown {
-  const key = `${method.toUpperCase()} ${path.split('?')[0]}`;
-  return db[key];
+ const key = `${method.toUpperCase()} ${path.split('?')[0]}`;
+ return db[key];
 }

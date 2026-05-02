@@ -2,96 +2,126 @@ import { useQuery } from '@tanstack/react-query';
 import { PurchaseRequest } from '../types';
 
 export function usePurchaseRequests() {
-  return useQuery({
-    queryKey: ['purchaseRequests'],
-    queryFn: async () => {
-      // Mock data returned for front-end iteration.
-      return new Promise<PurchaseRequest[]>((resolve) => {
-        setTimeout(() => {
-          resolve([
-            { 
-              id: 'PR-1001', 
-              prNumber: 'PR-2026-001',
-              branchId: '1', // Riyadh Main Branch
-              requestedBy: 'Khalid Abdullah',
-              expectedDate: '2026-04-25T00:00:00Z',
-              status: 'PENDING_APPROVAL',
-              totalAmount: 14500.00,
-              items: [
-                { itemId: 'IT-1', itemName: 'Industrial Oven', quantity: 100, estimatedUnitCost: 45.50 },
-                { itemId: 'IT-2', itemName: 'Cooling Unit', quantity: 5, estimatedUnitCost: 1250.00 },
-              ],
-              notes: 'Monthly staples replenishment.',
-              createdAt: '2026-04-18T09:00:00Z', 
-              updatedAt: '2026-04-18T09:00:00Z' 
-            },
-            { 
-              id: 'PR-1002', 
-              prNumber: 'PR-2026-002',
-              branchId: '2', // Jeddah Branch
-              requestedBy: 'Fatima Ali',
-              expectedDate: '2026-04-20T00:00:00Z',
-              status: 'APPROVED',
-              totalAmount: 350.00,
-              items: [
-                { itemId: 'IT-3', itemName: 'Fresh Tomatoes', quantity: 10, estimatedUnitCost: 35.00 },
-              ],
-              notes: 'Urgent cleaning supplies.',
-              createdAt: '2026-04-17T11:30:00Z', 
-              updatedAt: '2026-04-17T14:15:00Z' 
-            },
-          ]);
-        }, 800);
-      });
-    }
-  });
+ return useQuery({
+ queryKey: ['purchaseRequests'],
+ queryFn: async () => {
+ // Mock data returned for front-end iteration.
+ return new Promise<PurchaseRequest[]>((resolve) => {
+ setTimeout(() => {
+ resolve([
+ { 
+ id: 'PR-1001', 
+ document_number: 'PR-2026-001',
+ department_id: '1', // Riyadh Main Branch
+ expected_date: '2026-04-25T00:00:00Z',
+ status: 'SUBMITTED',
+ lines: [
+ { 
+ id: 'L1',
+ item: { 
+ id: 'IT-1', 
+ code: 'OVEN-01', 
+ name_ar: 'فرن صناعي', 
+ name_en: 'Industrial Oven',
+ primary_uom: { id: 'U1', code: 'PCS' }
+ }, 
+ req_qty: 100,
+ uom_id: 'PCS'
+ },
+ ],
+ notes: 'Monthly staples replenishment.',
+ created_at: '2026-04-18T09:00:00Z', 
+ },
+ { 
+ id: 'PR-1002', 
+ document_number: 'PR-2026-002',
+ department_id: '2', // Jeddah Branch
+ expected_date: '2026-04-20T00:00:00Z',
+ status: 'APPROVED',
+ lines: [
+ { 
+ id: 'L2',
+ item: { 
+ id: 'IT-3', 
+ code: 'TOM-01', 
+ name_ar: 'طماطم طازجة', 
+ name_en: 'Fresh Tomatoes',
+ primary_uom: { id: 'U1', code: 'PCS' }
+ }, 
+ req_qty: 10,
+ uom_id: 'PCS'
+ },
+ ],
+ notes: 'Urgent cleaning supplies.',
+ created_at: '2026-04-17T11:30:00Z', 
+ },
+ ]);
+ }, 800);
+ });
+ }
+ });
 }
 
 export function usePurchaseRequest(id: string) {
-  return useQuery({
-    queryKey: ['purchaseRequest', id],
-    queryFn: async () => {
-      return new Promise<PurchaseRequest>((resolve, reject) => {
-        setTimeout(() => {
-          const prs: PurchaseRequest[] = [
-            { 
-              id: 'PR-1001', 
-              prNumber: 'PR-2026-001',
-              branchId: '1',
-              requestedBy: 'Khalid Abdullah',
-              expectedDate: '2026-04-25T00:00:00Z',
-              status: 'PENDING_APPROVAL',
-              totalAmount: 14500.00,
-              items: [
-                { itemId: 'IT-1', itemName: 'Industrial Oven', quantity: 100, estimatedUnitCost: 45.50 },
-                { itemId: 'IT-2', itemName: 'Cooling Unit', quantity: 5, estimatedUnitCost: 1250.00 },
-              ],
-              notes: 'Monthly staples replenishment.',
-              createdAt: '2026-04-18T09:00:00Z', 
-              updatedAt: '2026-04-18T09:00:00Z' 
-            },
-            { 
-              id: 'PR-1002', 
-              prNumber: 'PR-2026-002',
-              branchId: '2',
-              requestedBy: 'Fatima Ali',
-              expectedDate: '2026-04-20T00:00:00Z',
-              status: 'APPROVED',
-              totalAmount: 350.00,
-              items: [
-                { itemId: 'IT-3', itemName: 'Fresh Tomatoes', quantity: 10, estimatedUnitCost: 35.00 },
-              ],
-              notes: 'Urgent cleaning supplies.',
-              createdAt: '2026-04-17T11:30:00Z', 
-              updatedAt: '2026-04-17T14:15:00Z' 
-            },
-          ];
-          
-          const found = prs.find(p => p.id === id || p.prNumber === id);
-          if (found) resolve(found);
-          else reject(new Error("Not found"));
-        }, 500);
-      });
-    }
-  });
+ return useQuery({
+ queryKey: ['purchaseRequest', id],
+ queryFn: async () => {
+ return new Promise<PurchaseRequest>((resolve, reject) => {
+ setTimeout(() => {
+ const prs: PurchaseRequest[] = [
+ { 
+ id: 'PR-1001', 
+ document_number: 'PR-2026-001',
+ department_id: '1',
+ expected_date: '2026-04-25T00:00:00Z',
+ status: 'SUBMITTED',
+ lines: [
+ { 
+ id: 'L1',
+ item: { 
+ id: 'IT-1', 
+ code: 'OVEN-01', 
+ name_ar: 'فرن صناعي', 
+ name_en: 'Industrial Oven',
+ primary_uom: { id: 'U1', code: 'PCS' }
+ }, 
+ req_qty: 100,
+ uom_id: 'PCS'
+ },
+ ],
+ notes: 'Monthly staples replenishment.',
+ created_at: '2026-04-18T09:00:00Z', 
+ },
+ { 
+ id: 'PR-1002', 
+ document_number: 'PR-2026-002',
+ department_id: '2',
+ expected_date: '2026-04-20T00:00:00Z',
+ status: 'APPROVED',
+ lines: [
+ { 
+ id: 'L2',
+ item: { 
+ id: 'IT-3', 
+ code: 'TOM-01', 
+ name_ar: 'طماطم طازجة', 
+ name_en: 'Fresh Tomatoes',
+ primary_uom: { id: 'U1', code: 'PCS' }
+ }, 
+ req_qty: 10,
+ uom_id: 'PCS'
+ },
+ ],
+ notes: 'Urgent cleaning supplies.',
+ created_at: '2026-04-17T11:30:00Z', 
+ },
+ ];
+ 
+ const found = prs.find(p => p.id === id || p.document_number === id);
+ if (found) resolve(found);
+ else reject(new Error("Not found"));
+ }, 500);
+ });
+ }
+ });
 }

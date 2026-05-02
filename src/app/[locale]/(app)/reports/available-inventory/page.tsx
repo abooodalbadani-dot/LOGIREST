@@ -1,11 +1,16 @@
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import AvailableInventoryClient from './AvailableInventoryClient';
 
 export async function generateMetadata() {
-  return {
-    title: 'Available Inventory Report | LogiRest'
-  };
+ return {
+ title: 'Available Inventory Report | LogiRest'
+ };
 }
 
 export default function AvailableInventoryPage() {
-  return <AvailableInventoryClient />;
+ return (
+ <ProtectedRoute requiredResource="reports" requiredAction="view">
+ <AvailableInventoryClient />
+ </ProtectedRoute>
+ );
 }

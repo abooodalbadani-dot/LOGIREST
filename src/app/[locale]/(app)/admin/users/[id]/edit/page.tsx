@@ -3,20 +3,20 @@ import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { UserFormClient } from '../UserFormClient';
 
 export default async function EditUserPage(props: {
-  params: Promise<{ locale: string; id: string }>;
+ params: Promise<{ locale: string; id: string }>;
 }) {
-  const { locale, id } = await props.params;
-  setRequestLocale(locale);
-  const t = await getTranslations('admin.users');
+ const { locale, id } = await props.params;
+ setRequestLocale(locale);
+ const t = await getTranslations('admin.users');
 
-  return (
-    <ProtectedRoute roles={["ADMIN"]}>
-      <UserFormClient
-        id={id}
-        createTitle={t('create_title')}
-        editTitle={t('edit_title')}
-        locale={locale}
-      />
-    </ProtectedRoute>
-  );
+ return (
+ <ProtectedRoute roles={["ADMIN"]}>
+ <UserFormClient
+ id={id}
+ createTitle={t('create_title')}
+ editTitle={t('edit_title')}
+ locale={locale}
+ />
+ </ProtectedRoute>
+ );
 }

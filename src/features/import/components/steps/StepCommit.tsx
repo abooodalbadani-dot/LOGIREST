@@ -1,115 +1,151 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Save, Loader2, CheckCircle2, ArrowRight, Database } from 'lucide-react';
+import { Save, CheckCircle2, ChevronRight, Loader2, ArrowLeft, Database, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
+import { WizardReturn } from '../../hooks/useImportWizard';
+
 interface StepCommitProps {
-  wizard: any;
-  locale: string;
+ wizard: WizardReturn;
+ locale: string;
 }
 
 export function StepCommit({ wizard, locale }: StepCommitProps) {
-  const t = useTranslations('master_data.import');
-  const tc = useTranslations('common');
-  const isRtl = locale === 'ar';
-  const router = useRouter();
+ const t = useTranslations('master_data.import');
+ const tc = useTranslations('common');
+ const router = useRouter();
+ const isRtl = locale === 'ar';
 
-  if (wizard.currentStep === 'SUCCESS') {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-8 animate-in zoom-in duration-700">
-         <div className="relative">
-            <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full animate-pulse" />
-            <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 relative z-10 border-none shadow-[0_0_40px_rgba(16,185,129,0.2)]">
-               <CheckCircle2 className="w-12 h-12" />
-            </div>
-         </div>
-         <div className="text-center">
-            <h3 className="text-3xl font-black tracking-tight mb-4 text-emerald-500">
-               {t('import_success', { count: wizard.successCount })}
-            </h3>
-            <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
-               All records have been successfully synchronized with the inventory engine. You can now view and manage them in the respective modules.
-            </p>
-         </div>
-         <Button 
-           className="h-16 px-12 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-cyan-500/20 group"
-           onClick={() => router.push(`/${locale}/master-data/${wizard.importType}`)}
-         >
-            {t('go_to_list', { entity: t(wizard.importType) })}
-            <ArrowRight className={cn("w-4 h-4 transition-transform group-hover:translate-x-1", isRtl ? "mr-2 rotate-180" : "ml-2")} />
-         </Button>
-      </div>
-    );
-  }
+ const isSuccess = wizard.step === 'SUCCESS';
 
-  return (
-    <div className="max-w-2xl mx-auto flex flex-col gap-6 py-12">
-       <Card className="p-10 rounded-[2.5rem] border-none shadow-2xl bg-background/50 backdrop-blur-md flex flex-col items-center gap-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-             <Database className="w-48 h-48" />
-          </div>
+ const handleFinish = () => {
+ router.push(`/ ${locale}/master-data/ ${wizard.entity}`);
+ };
 
-          <div className="w-24 h-24 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-500 border-none shadow-[0_0_30px_rgba(6,182,212,0.1)]">
-             <Save className="w-10 h-10" />
-          </div>
+ if (isSuccess) {
+ return (
+ <div className="flex flex-col items-center justify-center gap-10 py-16 text-center animate-in fade-in zoom-in duration-700">
+ <div className="relative">
+ <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping duration-[3000ms]" />
+ <div className="w-32 h-32 rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-neon-emerald">
+ <CheckCircle2 className="w-16 h-16" />
+ </div>
+ </div>
 
-          <div className="text-center">
-             <h3 className="text-2xl font-black tracking-tight mb-2">{t('commit_step')}</h3>
-             <p className="text-muted-foreground font-medium">
-                {t('commit_warning', { count: wizard.data.length })}
-             </p>
-          </div>
+ <div className="space-y-4 max-w-lg">
+ <h2 className="text-headline-lg font-semibold uppercase text-emerald-500">
+ {t('success_title')}
+ </h2>
+ <p className="text-muted-foreground text-body-md leading-relaxed font-medium">
+ {t('success_description', { count: wizard.metadata?.recordCount ?? 0 })}
+ </p>
+ </div>
 
-          <div className="w-full bg-amber-500/5 border border-amber-500/10 p-6 rounded-2xl flex gap-4 items-start">
-             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                <AlertCircle className="w-5 h-5" />
-             </div>
-             <div className="flex flex-col gap-1">
-                <p className="text-xs font-black uppercase tracking-widest text-amber-500/60">Data Integrity Notice</p>
-                <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed">
-                   Records will be inserted atomically. If a duplicate SKU or Code is found, it will be updated. This operation cannot be undone.
-                </p>
-             </div>
-          </div>
+ <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mt-6">
+ <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1">
+ <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('imported_records')}</p>
+ <p className="text-headline-lg font-semibold font-mono dir-ltr text-emerald-500">{wizard.metadata?.recordCount || 0}</p>
+ </div>
+ <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1 text-center">
+ <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('status')}</p>
+ <p className="text-body-md font-bold text-emerald-500 uppercase leading-9">{t('committed')}</p>
+ </div>
+ </div>
 
-          {/* Idempotency Key Display (Internal Only) */}
-          <div className="flex items-center gap-2 opacity-20 hover:opacity-100 transition-opacity">
-             <span className="text-[8px] font-mono uppercase tracking-widest">Idempotency Key:</span>
-             <span className="text-[8px] font-mono">{wizard.idempotencyKey}</span>
-          </div>
+ <Button 
+ onClick={handleFinish}
+ className="px-16 h-16 rounded-2xl font-semibold uppercase text-body-md primary-gradient shadow-neon-sm group transition-all hover:scale-105 active:scale-95"
+ >
+ {t('view_records_cta')}
+ {isRtl ? (
+ <ArrowLeft className="w-5 h-5 ms-4 transition-transform group-hover:-translate-x-2" />
+ ) : (
+ <ChevronRight className="w-5 h-5 ms-4 transition-transform group-hover:translate-x-2" />
+ )}
+ </Button>
+ </div>
+ );
+ }
 
-          <div className="flex gap-4 w-full mt-4">
-             <Button 
-               variant="outline" 
-               className="flex-1 h-14 rounded-2xl border-muted-foreground/10 hover:bg-muted-foreground/5"
-               onClick={wizard.goToUpload}
-               disabled={wizard.isCommitting}
-             >
-                {tc('cancel')}
-             </Button>
-             <Button 
-               className="flex-1 h-14 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-cyan-500/20 transition-all active:scale-95 disabled:opacity-50"
-               onClick={wizard.commit}
-               disabled={wizard.isCommitting}
-             >
-                {wizard.isCommitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    {t('commit_step')}...
-                  </>
-                ) : (
-                  <>
-                    {t('commit_step')}
-                    <Save className={cn("w-4 h-4", isRtl ? "mr-2" : "ml-2")} />
-                  </>
-                )}
-             </Button>
-          </div>
-       </Card>
-    </div>
-  );
+ return (
+ <div className="flex flex-col gap-10 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <div className="space-y-4">
+ <h2 className="text-headline-lg font-semibold uppercase text-foreground">
+ {t('commit_title')}
+ </h2>
+ <p className="text-muted-foreground text-body-md leading-relaxed max-w-2xl">
+ {t('commit_description')}
+ </p>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+ <div className="p-8 rounded-3xl bg-surface-container-low/50 border border-white/5 space-y-4 relative overflow-hidden group">
+ <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+ <Database className="w-20 h-20" />
+ </div>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('entity_type')}</p>
+ <p className="text-headline-lg font-semibold uppercase text-cyan-500">{wizard.entity}</p>
+ </div>
+
+ <div className="p-8 rounded-3xl bg-surface-container-low/50 border border-white/5 space-y-4 relative overflow-hidden group">
+ <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+ <Save className="w-20 h-20" />
+ </div>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('total_records')}</p>
+ <p className="text-headline-lg font-semibold font-mono dir-ltr">{wizard.metadata?.recordCount || 0}</p>
+ </div>
+
+ <div className="p-8 rounded-3xl bg-surface-container-low/50 border border-white/5 space-y-4 relative overflow-hidden group">
+ <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+ <AlertCircle className="w-20 h-20" />
+ </div>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('idempotency_key')}</p>
+ <p className="text-label-xs font-mono dir-ltr text-muted-foreground/60 break-all">{wizard.idempotencyKey}</p>
+ </div>
+ </div>
+
+ <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-6 flex gap-4 items-center">
+ <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+ <AlertCircle className="w-6 h-6" />
+ </div>
+ <p className="text-label-sm font-bold text-amber-500/80 uppercase leading-relaxed">
+ {t('commit_warning')}
+ </p>
+ </div>
+
+ <div className={cn(
+ "flex flex-col sm:flex-row gap-4 items-center justify-end pt-4",
+ isRtl && "sm:flex-row-reverse"
+ )}>
+ <Button 
+ variant="ghost" 
+ onClick={() => wizard.transitionTo('UPLOAD')}
+ className="w-full sm:w-auto px-10 h-14 rounded-xl font-bold uppercase text-label-sm transition-all active:scale-95"
+ >
+ {t('cancel')}
+ </Button>
+ 
+ <Button 
+ disabled={wizard.isCommitting}
+ onClick={wizard.handleCommit}
+ className="w-full sm:w-auto px-16 h-14 rounded-xl font-semibold uppercase text-label-sm primary-gradient shadow-neon-sm transition-all active:scale-95"
+ >
+ {wizard.isCommitting ? (
+ <>
+ <Loader2 className="w-5 h-5 animate-spin me-4" />
+ {t('committing')}
+ </>
+ ) : (
+ <>
+ <Save className="w-5 h-5 me-4" />
+ {t('confirm_import')}
+ </>
+ )}
+ </Button>
+ </div>
+ </div>
+ );
 }

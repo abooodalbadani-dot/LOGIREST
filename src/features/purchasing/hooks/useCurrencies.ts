@@ -4,18 +4,18 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
 export const CurrencySchema = z.object({
-  id: z.string(),
-  code: z.string(),
-  is_base: z.boolean(),
-  name: z.string(),
+ id: z.string(),
+ code: z.string(),
+ is_base: z.boolean(),
+ name: z.string(),
 });
 
 export type Currency = z.infer<typeof CurrencySchema>;
 
 export function useCurrencies() {
-  return useQuery({
-    queryKey: ['currencies'],
-    queryFn: () => apiClient.get('/currencies', z.object({ data: z.array(CurrencySchema) })).then(res => res.data),
-    staleTime: Infinity,
-  });
+ return useQuery({
+ queryKey: ['currencies'],
+ queryFn: () => apiClient.get('/currencies', z.object({ data: z.array(CurrencySchema) })).then(res => res.data),
+ staleTime: Infinity,
+ });
 }

@@ -1,44 +1,71 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Database, Loader2, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Database, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { validateImportData } from '@/lib/import/validation';
+
+import { WizardReturn } from '../../hooks/useImportWizard';
 
 interface StepValidateProps {
-  wizard: any;
-  locale: string;
+ wizard: WizardReturn;
+ locale: string;
 }
 
 export function StepValidate({ wizard, locale }: StepValidateProps) {
-  const t = useTranslations('master_data.import');
-  const tc = useTranslations('common');
-  const isRtl = locale === 'ar';
+ const t = useTranslations('master_data.import');
 
-  if (wizard.isValidating || wizard.currentStep === 'VALIDATING') {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-8">
-         <div className="relative">
-            <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full animate-pulse" />
-            <div className="relative">
-               <Loader2 className="w-24 h-24 text-cyan-500 animate-spin opacity-20" />
-               <Database className="w-10 h-10 text-cyan-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce" />
-            </div>
-         </div>
-         <div className="text-center">
-            <h3 className="text-2xl font-black tracking-tight mb-2 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
-              {t('validating')}
-            </h3>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.3em] opacity-60">
-              Processing {wizard.data.length} entries for data integrity
-            </p>
-         </div>
-      </div>
-    );
-  }
+ useEffect(() => {
+ const runValidation = async () => {
+ // Simulate validation delay for better UX
+ await new Promise(resolve => setTimeout(resolve, 2000));
+ 
+ const result = validateImportData(wizard.entity, wizard.data);
+ wizard.setValidationResults(result.errors);
+ };
 
-  // This part shouldn't really be visible if the state machine works perfectly (it transitions to ERRORS or COMMIT)
-  // But we keep it as a fallback or for review if needed
-  return null;
+ runValidation();
+ }, [wizard.entity, wizard.data, wizard.setValidationResults]);
+
+ return (
+ <div className="flex flex-col items-center justify-center gap-12 py-20 animate-in fade-in zoom-in-95 duration-500">
+ <div className="relative">
+ {/* Pulsing rings */}
+ <div className="absolute inset-0 rounded-full bg-cyan-500/10 animate-ping duration-[2000ms]" />
+ <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-pulse duration-[1500ms]" />
+ 
+ <div className="relative w-32 h-32 rounded-3xl bg-surface-container-low flex items-center justify-center border border-white/5 shadow-2xl">
+ <Database className="w-16 h-16 text-cyan-500" />
+ <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-background border border-white/5 shadow-lg flex items-center justify-center">
+ <Loader2 className="w-6 h-6 text-cyan-500 animate-spin" />
+ </div>
+ </div>
+ </div>
+
+ <div className="text-center space-y-4">
+ <h2 className="text-headline-lg font-semibold uppercase text-foreground">
+ {t('validating_title')}
+ </h2>
+ <div className="flex items-center justify-center gap-3">
+ <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:-0.3s]" />
+ <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:-0.15s]" />
+ <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce" />
+ <p className="text-muted-foreground text-label-sm font-bold uppercase ms-2">
+ {t('integrity_check_in_progress')}
+ </p>
+ </div>
+ </div>
+
+ <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+ <div className="p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1">
+ <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('total_records')}</p>
+ <p className="text-headline-lg font-semibold font-mono dir-ltr">{wizard.metadata?.recordCount || 0}</p>
+ </div>
+ <div className="p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1">
+ <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('status')}</p>
+ <p className="text-body-md font-bold text-cyan-500 uppercase leading-9 animate-pulse">{t('analyzing')}</p>
+ </div>
+ </div>
+ </div>
+ );
 }

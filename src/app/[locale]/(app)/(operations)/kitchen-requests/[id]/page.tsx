@@ -3,16 +3,16 @@ import { KitchenRequestDetailClient } from './KitchenRequestDetailClient';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 export default async function KitchenRequestDetailPage({
-  params,
+ params,
 }: {
-  params: Promise<{ locale: string; id: string }>;
+ params: Promise<{ locale: string; id: string }>;
 }) {
-  const { locale, id } = await params;
-  setRequestLocale(locale);
+ const { locale, id } = await params;
+ setRequestLocale(locale);
 
-  return (
-    <ProtectedRoute requiredAction="view" requiredResource="kitchen_requests">
-      <KitchenRequestDetailClient id={id} locale={locale as 'ar' | 'en'} />
-    </ProtectedRoute>
-  );
+ return (
+ <ProtectedRoute requiredAction="view" requiredResource="kitchen_requests">
+ <KitchenRequestDetailClient id={id} locale={locale as 'ar' | 'en'} />
+ </ProtectedRoute>
+ );
 }
