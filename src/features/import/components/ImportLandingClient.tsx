@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { Package, Hash, Ruler, ArrowRight, ImportIcon } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -23,7 +23,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  title: t('items'),
  description: t('items_desc'),
  icon: Package,
- href: `/ ${locale}/master-data/import/items`,
+ href: `/${locale}/master-data/import/items`,
  color: 'cyan'
  },
  {
@@ -31,7 +31,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  title: t('uoms'),
  description: t('uoms_desc'),
  icon: Ruler,
- href: `/ ${locale}/master-data/import/uoms`,
+ href: `/${locale}/master-data/import/uoms`,
  color: 'emerald'
  },
  {
@@ -39,7 +39,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  title: t('barcodes'),
  description: t('barcodes_desc'),
  icon: Hash,
- href: `/ ${locale}/master-data/import/barcodes`,
+ href: `/${locale}/master-data/import/barcodes`,
  color: 'blue'
  }
  ];
@@ -48,7 +48,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto animate-in fade-in duration-700">
  <Breadcrumb
  items={[
- { label: tc('navigation.master_data'), href: `/ ${locale}/master-data` },
+ { label: tc('navigation.master_data'), href: `/${locale}/master-data` },
  { label: t('title') }
  ]}
  />

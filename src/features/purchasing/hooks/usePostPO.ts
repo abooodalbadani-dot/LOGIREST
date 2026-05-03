@@ -7,7 +7,7 @@ export function usePostPO() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: (id: string) => 
- apiClient.post(`/procurement/purchase-orders/ ${id}/post`, successSchema, {}),
+ apiClient.post(`/procurement/purchase-orders/${id}/post`, successSchema, {}),
  onSuccess: (_, id) => {
  queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
  queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });

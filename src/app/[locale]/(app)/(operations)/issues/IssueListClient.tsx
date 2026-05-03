@@ -2,8 +2,9 @@
  
 import * as React from 'react';
 import { useMemo } from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter, usePathname, Link } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
@@ -15,13 +16,13 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck } from 'lucide-react';
-import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
  
-export function IssueListClient({ initialStatus, initialPage, locale }: { initialStatus?: string; initialPage: number; locale: 'ar' | 'en' }) {
+export function IssueListClient({ initialStatus, initialPage }: { initialStatus?: string; initialPage: number }) {
  const t = useTranslations('operations.issue');
  const tc = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
  const pathname = usePathname();
  const searchParams = useSearchParams();
@@ -67,7 +68,7 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500">
  {row.original.document_number}
  </span>
- <span className="text-label-xxs font-semibold text-muted-foreground/60/30 uppercase">
+ <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">
  Internal Voucher
  </span>
  </div>
@@ -79,9 +80,9 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  cell: ({ row }) => (
  <div className="flex items-center gap-2">
  <div className="p-1.5 rounded-lg bg-surface-container-highest/50">
- <Activity className="w-3 h-3 text-muted-foreground/60/40" />
+ <Activity className="w-3 h-3 text-muted-foreground/60" />
  </div>
- <span className="text-label-xs font-semibold text-muted-foreground/60/80">
+ <span className="text-label-xs font-semibold text-muted-foreground/40">
  {row.original.destination_department_id || '—'}
  </span>
  </div>
@@ -112,7 +113,7 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  className="group/btn h-9 w-9 rounded-md bg-surface-container-highest/30 hover:bg-cyan-500 hover:text-white transition-all duration-300"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/issues/ ${row.original.id}`);
+ router.push(`/issues/${row.original.id}`);
  }}
  >
  <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 rtl:group-hover/btn:-translate-x-0.5" />
@@ -120,7 +121,7 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  </div>
  ),
  },
- ], [t, tc, locale, router]);
+ ], [t, tc, router]);
  
  const meta = data?.meta?.pagination;
  const totalItemsCount = meta?.total || 0;
@@ -132,10 +133,10 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  
  <PageHeader 
  title={t('title')} 
- description={t('description') || 'Internal stock consumption and department issues.'} actions={
+ description={t('description')} actions={
  <div className="flex items-center gap-4">
  <PermissionGate action="create" resource="issue">
- <Link href={`/ ${locale}/issues/new`}>
+ <Link href="/issues/new">
  <Button className="h-10 px-6 rounded-md bg-surface-container-low border border-outline-low/5 text-label-xs font-semibold uppercase gap-2 group transition-all hover:bg-surface-container-medium shadow-sm">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -172,12 +173,12 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  <div className="flex items-center gap-3">
  <div className="flex -space-x-2 rtl:space-x-reverse">
  {[1,2,3].map(i => (
- <div key={i} className="w-7 h-7 rounded-full bg-surface-container-highest border-2 border-surface-container-low flex items-center justify-center text-label-xxs font-semibold text-muted-foreground/60/40">
+ <div key={i} className="w-7 h-7 rounded-full bg-surface-container-highest border-2 border-surface-container-low flex items-center justify-center text-label-xxs font-semibold text-muted-foreground/60">
  OP
  </div>
  ))}
  </div>
- <div className="text-label-xxs font-semibold text-muted-foreground/60/40 leading-tight">
+ <div className="text-label-xxs font-semibold text-muted-foreground/60 leading-tight">
  <span className="text-foreground">3 Operators</span> active<br/>in fulfillment stream
  </div>
  </div>
@@ -188,11 +189,11 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  <div className="bg-surface-container-low p-6 rounded-lg border border-outline-low/5 shadow-sm">
  <div className="flex flex-wrap items-center gap-6">
  <div className="flex-1 min-w-[300px] relative group">
- <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-cyan-500 text-muted-foreground/60/30">
+ <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-cyan-500 text-muted-foreground/40">
  <Search className="w-4 h-4" />
  </div>
  <Input
- placeholder={t('search_placeholder') || 'Search by Document Number...'} className="w-full bg-surface-container-high/50 border-none h-14 ps-14 pe-6 text-label-xs font-semibold rounded-md shadow-inner shadow-black/5 focus-visible:ring-2 focus-visible:ring-cyan-500/10 transition-all"
+ placeholder={t('search_placeholder')} className="w-full bg-surface-container-high/50 border-none h-14 ps-14 pe-6 text-label-xs font-semibold rounded-md shadow-inner shadow-black/5 focus-visible:ring-2 focus-visible:ring-cyan-500/10 transition-all"
  />
  </div>
  
@@ -222,7 +223,7 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  
  <div className="flex items-center gap-1 bg-surface-container-high/50 p-1.5 rounded-md shadow-inner shadow-black/5 ms-auto">
  <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-cyan-500 bg-surface-container-low shadow-sm"><LayoutGrid className="w-4 h-4" /></Button>
- <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-muted-foreground/60/20"><ListIcon className="w-4 h-4" /></Button>
+ <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-muted-foreground/40"><ListIcon className="w-4 h-4" /></Button>
  </div>
  </div>
  </div>
@@ -233,14 +234,14 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: IssueSummary) => router.push(`/ ${locale}/issues/ ${row.id}`)}
+ onRowClick={(row: IssueSummary) => router.push(`/issues/${row.id}`)}
  collectionName="operations_issues"
  emptyState={
  <EmptyState 
- title={t('no_records') || 'No Issues Found'} description={t('description') || 'Departmental stock consumption vouchers will appear here.'} action={
+ title={t('no_records')} description={t('description')} action={
  <PermissionGate action="create" resource="issue">
  <Button 
- onClick={() => router.push(`/ ${locale}/issues/new`)}
+ onClick={() => router.push(`/issues/new`)}
  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
  >
  <Plus className="w-4 h-4 me-2" />

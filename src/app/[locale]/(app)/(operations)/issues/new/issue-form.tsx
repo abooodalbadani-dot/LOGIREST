@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter } from '@/i18n/navigation';
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { 
@@ -110,7 +110,7 @@ export function IssueForm({ locale }: { locale: string }) {
  if (!allLinesAllocated) return;
  createIssue.mutate(data, {
  onSuccess: (issue) => {
- router.push(`/ ${locale}/issues/ ${issue.id}`);
+ router.push(`/${locale}/issues/${issue.id}`);
  },
  onError: () => console.error("Failed to create issue"),
  });
@@ -128,7 +128,7 @@ export function IssueForm({ locale }: { locale: string }) {
  </div>
  <div>
  <h2 className="text-headline-lg font-semibold text-foreground">{t('title')}</h2>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase mt-1 italic">{t('new_description')}</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-1 italic">{t('new_description')}</p>
  </div>
  <div className="ms-auto flex items-center gap-2">
  <Badge className="bg-surface-container-high text-muted-foreground/60 border-none font-semibold text-label-xxs uppercase px-4 h-9 rounded-xl">{tc('warehouses.main')}</Badge>
@@ -147,7 +147,7 @@ export function IssueForm({ locale }: { locale: string }) {
  name="warehouseId"
  render={({ field }) => (
  <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+ <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-3 flex items-center gap-2">
  <Warehouse className="w-3.5 h-3.5" />
  {tc('warehouse')}
  </FormLabel>
@@ -172,7 +172,7 @@ export function IssueForm({ locale }: { locale: string }) {
  name="departmentId"
  render={({ field }) => (
  <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+ <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-3 flex items-center gap-2">
  <Building2 className="w-3.5 h-3.5" />
  {t('destination')}
  </FormLabel>
@@ -197,7 +197,7 @@ export function IssueForm({ locale }: { locale: string }) {
  name="notes"
  render={({ field }) => (
  <FormItem className="lg:col-span-3">
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+ <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-3 flex items-center gap-2">
  <FileText className="w-3.5 h-3.5" />
  {t('operational_notes')}
  </FormLabel>
@@ -219,8 +219,8 @@ export function IssueForm({ locale }: { locale: string }) {
  <Calculator className="w-5 h-5" />
  </div>
  <div>
- <h3 className="text-body-md font-semibold uppercase text-muted-foreground/60/70">{t('ledger_title')}</h3>
- <p className="text-label-xxs font-semibold text-muted-foreground/60/20 uppercase mt-1">{t('ledger_subtitle')}</p>
+ <h3 className="text-body-md font-semibold uppercase text-muted-foreground/40">{t('ledger_title')}</h3>
+ <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('ledger_subtitle')}</p>
  </div>
  </div>
  <Button 
@@ -238,10 +238,10 @@ export function IssueForm({ locale }: { locale: string }) {
  <div className="grid grid-cols-1 gap-5">
  {fields.length === 0 ? (
  <div className="py-24 text-center bg-surface-container-low rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
- <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
+ <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/40">
  <ListFilter className="w-10 h-10" />
  </div>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">{t('empty_manifest')}</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase">{t('empty_manifest')}</p>
  </div>
  ) : (
  fields.map((field, index) => {
@@ -256,7 +256,7 @@ export function IssueForm({ locale }: { locale: string }) {
  name={`items.${index}.itemId`}
  render={({ field: inputField }) => (
  <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3">{t('item_label')}</FormLabel>
+ <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60 mb-3">{t('item_label')}</FormLabel>
  <FormControl>
  <Input placeholder={t('sku_placeholder')} className="bg-surface-container-high/30 border-none h-12 px-5 text-label-xs font-semibold font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
  </FormControl>
@@ -270,7 +270,7 @@ export function IssueForm({ locale }: { locale: string }) {
  name={`items.${index}.requestedQuantity`}
  render={({ field: inputField }) => (
  <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3 text-center block w-full">{t('request_qty')}</FormLabel>
+ <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60 mb-3 text-center block w-full">{t('request_qty')}</FormLabel>
  <FormControl>
  <Input 
  type="number" 
@@ -288,8 +288,8 @@ export function IssueForm({ locale }: { locale: string }) {
  />
 
  <div className="flex flex-col items-center gap-1.5 pb-1">
- <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40">{t('fulfillment_status')}</span>
- <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/60/20"}`}>
+ <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60">{t('fulfillment_status')}</span>
+ <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/40"}`}>
  <span className="text-label-sm font-semibold tabular-nums">{field.allocatedQuantity || 0}</span>
  {isAllocated ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4 opacity-30" />}
  </div>
@@ -312,7 +312,7 @@ export function IssueForm({ locale }: { locale: string }) {
  type="button" 
  variant="ghost" 
  size="icon" 
- className="w-10 h-10 rounded-xl text-muted-foreground/60/20 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20" 
+ className="w-10 h-10 rounded-xl text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20" 
  onClick={() => remove(index)}
  >
  <Trash2 className="w-4 h-4" />
@@ -332,7 +332,7 @@ export function IssueForm({ locale }: { locale: string }) {
  <PackageCheck className="w-8 h-8 text-cyan-500" />
  </div>
  <div>
- <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
+ <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 mb-1">{t('sync_commitment')}</div>
  <div className="text-title-lg font-bold text-foreground">
  {fields.filter(f => (f.allocatedQuantity ?? 0) >= (f.requestedQuantity ?? 0)).length} / {fields.length} {t('protocol_validations')}
  </div>
@@ -344,7 +344,7 @@ export function IssueForm({ locale }: { locale: string }) {
  type="button" 
  variant="ghost" 
  onClick={() => router.back()} 
- className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 hover:text-foreground h-14 px-10 rounded-2xl"
+ className="text-label-xs font-semibold uppercase text-muted-foreground/60 hover:text-foreground h-14 px-10 rounded-2xl"
  >
  {t('discard_sequence')}
  </Button>

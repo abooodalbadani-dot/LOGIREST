@@ -55,7 +55,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
 
  // Status check: Must be COUNTING_COMPLETED or VarianceSubmitted
  if (!['COUNTING_COMPLETED', 'VarianceSubmitted'].includes(session.status)) {
- router.replace(`/stocktake/ ${id}`);
+ router.replace(`/stocktake/${id}`);
  return null;
  }
 
@@ -82,7 +82,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  }))
  await submitVariance.mutateAsync({ id, items: updates })
  toast.success(t('posted_success_variance'))
- router.push(`/stocktake/ ${id}`)
+ router.push(`/stocktake/${id}`)
  } catch {
  toast.error(common('error'))
  }
@@ -94,7 +94,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  <PageHeader
  title={t('variance_review')}
  subtitle={`${warehouseName} ${common('dash')} ${t('variance_review_desc')}`}
- backHref={`/stocktake/ ${id}/count`}
+ backHref={`/stocktake/${id}/count`}
  >
  <div className="flex items-center gap-4">
  <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-4 py-1">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,7 +55,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/branches`);
+ router.push('/master-data/branches');
  } catch (error) {
  // Error handled by mutation hook via toast
  }
@@ -66,7 +66,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/branches`}
+ backHref="/master-data/branches"
  isSaving={isSaving}
  onSubmit={onSubmit}
  >

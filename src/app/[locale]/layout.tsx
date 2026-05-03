@@ -25,39 +25,36 @@ export const viewport: Viewport = {
  initialScale: 1,
 };
 
-export default async function LocaleLayout({
- children,
- params
-}: {
- children: React.ReactNode;
- params: Promise<{ locale: string }>;
+export default async function LocaleLayout({ 
+  children, 
+  params 
+}: { 
+  children: React.ReactNode; 
+  params: Promise<{ locale: string }> 
 }) {
- const { locale } = await params;
- const messages = await getMessages();
- const direction = locale === 'ar' ? 'rtl' : 'ltr';
- const cookieStore = await cookies();
- const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'dark';
+  const { locale } = await params;
+  const messages = await getMessages();
 
-
- return (
- <html lang={locale} dir={direction} className={theme} suppressHydrationWarning>
- <body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${tajawal.variable}`}>
- <NextIntlClientProvider messages={messages} locale={locale}>
- <QueryProvider>
- <AuthProvider>
- <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
- <WarehouseScopeProvider>
- <WebMCPProvider>
- {children}
- <SessionTimeoutModal />
- <Toaster richColors position="top-center" dir={direction as 'rtl' | 'ltr'} />
- </WebMCPProvider>
- </WarehouseScopeProvider>
- </ThemeProvider>
- </AuthProvider>
- </QueryProvider>
- </NextIntlClientProvider>
- </body>
- </html>
- );
+  return (
+    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
+      <body className={locale === 'ar' ? tajawal.className : ibmPlexSans.className}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <QueryProvider>
+            <AuthProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <WarehouseScopeProvider>
+                  <WebMCPProvider>
+                    {children}
+                    <SessionTimeoutModal />
+                    <Toaster position="top-center" richColors closeButton />
+                  </WebMCPProvider>
+                </WarehouseScopeProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
 }
+

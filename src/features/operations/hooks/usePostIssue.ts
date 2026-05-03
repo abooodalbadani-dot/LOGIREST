@@ -8,7 +8,7 @@ export function usePostIssue(id: string) {
  
  return useMutation({
  mutationFn: (data: { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' }) => 
- apiClient.post(`/operations/issues/ ${id}/post`, successSchema, data),
+ apiClient.post(`/operations/issues/${id}/post`, successSchema, data),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['issues'] });
  queryClient.invalidateQueries({ queryKey: ['issue', id] });

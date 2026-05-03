@@ -54,7 +54,7 @@ export type GRNDetail = z.infer<typeof GRNDetailSchema>;
 export function useGRN(id: string | null) {
  return useQuery({
  queryKey: ['grn', id],
- queryFn: () => apiClient.get(`/procurement/grns/ ${id}`, z.object({ data: GRNDetailSchema })).then(res => res.data),
+ queryFn: () => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema })).then(res => res.data),
  enabled: !!id && id !== 'new',
  staleTime: 60_000,
  });

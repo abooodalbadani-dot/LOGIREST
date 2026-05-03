@@ -16,7 +16,7 @@ export default async function IssuesPage(props: {
  <IssueListClient 
  initialStatus={status} 
  initialPage={Number(page ?? 1)} 
- locale={locale as 'ar' | 'en'} />
+ />
  </ProtectedRoute>
  );
 }

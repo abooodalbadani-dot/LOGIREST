@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
@@ -71,7 +71,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, locale }: Props)
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/barcodes`);
+ router.push(`/master-data/barcodes`);
  } catch (error) {
  // Error handled by mutation toast
  }
@@ -80,7 +80,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, locale }: Props)
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/barcodes`}
+ backHref={`/master-data/barcodes`}
  isSaving={create.isPending || update.isPending} 
  onSubmit={onSubmit}
  >

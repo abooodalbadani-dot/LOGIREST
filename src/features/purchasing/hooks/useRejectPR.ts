@@ -7,7 +7,7 @@ export function useRejectPR() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: ({ id, reason }: { id: string; reason: string }) => 
- apiClient.post(`/procurement/purchase-requests/ ${id}/reject`, successSchema, { reason }),
+ apiClient.post(`/procurement/purchase-requests/${id}/reject`, successSchema, { reason }),
  onSuccess: (_, { id }) => {
  // Simulate state transition in cache
  queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {

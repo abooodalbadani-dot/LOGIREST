@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -15,8 +15,10 @@ import { useRejectAdjustment } from '@/features/operations/hooks/useRejectAdjust
 import { useUpdateAdjustment } from '@/features/operations/hooks/useUpdateAdjustment';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { StatusTimeline, Status } from '@/components/shared/StatusTimeline';
-import { format } from 'date-fns';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { formatQuantity } from '@/lib/utils';
 import { 
  ArrowUp, 
  ArrowDown, 
@@ -78,7 +80,8 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
  
  const isReadOnly = !isDraft && !isNew && !isRejected;
 
- const [warehouseId, setWarehouseId] = useState('wh-1');
+ const { data: warehousesData } = useWarehouses();
+ const [warehouseId, setWarehouseId] = useState('W-001');
  const { data: lockState } = useWarehouseLock(warehouseId);
  const [reason, setReason] = useState<string>('DAMAGE');
  const [notes, setNotes] = useState('');
@@ -155,7 +158,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
 
  if (isNew) {
  await createAdjustment.mutateAsync(payload);
- router.push(`/ ${locale}/adjustments`);
+ router.push('/adjustments');
  } else {
  await updateAdjustment.mutateAsync({ id, payload });
  }
@@ -200,7 +203,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
  try {
  await postAdjustment.mutateAsync(id);
  setPostDialogOpen(false);
- router.push(`/ ${locale}/adjustments`);
+ router.push('/adjustments');
  } catch (e) {
  console.error(e);
  }
@@ -426,8 +429,11 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
  <SelectValue />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
- <SelectItem value="wh-1" className="font-bold text-body-md">Main Store</SelectItem>
- <SelectItem value="wh-2" className="font-bold text-body-md">Kitchen Warehouse</SelectItem>
+ {warehousesData?.data?.map(wh => (
+ <SelectItem key={wh.id} value={wh.id} className="font-bold text-body-md">
+ {locale === 'ar' ? wh.name_ar : wh.name_en}
+ </SelectItem>
+ ))}
  </SelectContent>
  </Select>
  </div>
@@ -444,7 +450,7 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
  </SelectTrigger>
  <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
  {REASON_OPTIONS.map(opt => (
- <SelectItem key={opt} value={opt} className="font-bold text-body-md">{t(`reason_${opt.toLowerCase()}`)}</SelectItem>
+ <SelectItem key={opt} value={opt} className="font-bold text-body-md">{t(`reasons.${opt.toLowerCase()}`)}</SelectItem>
  ))}
  </SelectContent>
  </Select>
@@ -544,24 +550,24 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
  </Select>
  )}
  </td>
- <td className="px-6 py-6 text-center tabular-nums">
+ <td className="px-6 py-6 text-center tabular-nums" dir="ltr">
  <div className="flex flex-col items-center gap-0.5">
- <span className="text-body-md font-bold text-muted-foreground/40">{line.qty_before.toFixed(3)}</span>
+ <span className="text-body-md font-bold font-mono text-muted-foreground/40">{formatQuantity(line.qty_before, locale)}</span>
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
  </div>
  </td>
- <td className="px-6 py-6 text-center tabular-nums">
+ <td className="px-6 py-6 text-center tabular-nums" dir="ltr">
  <div className="flex flex-col items-center gap-0.5">
  {isReadOnly ? (
- <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
- {line.direction === 'INCREASE' ? '+' : '−'}{line.qty_adjusted.toFixed(3)}
+ <span className={cn("text-body-md font-mono font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
+ {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qty_adjusted, locale)}
  </span>
  ) : (
  <input 
  type="number"
  value={line.qty_adjusted}
  onChange={e => updateLine(line.id, { qty_adjusted: Number(e.target.value) })}
- className="bg-surface-container-low border-none h-10 w-24 text-center rounded-lg font-semibold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10"
+ className="bg-surface-container-low border-none h-10 w-24 text-center rounded-lg font-mono font-semibold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10"
  step="0.001"
  min="0"
  />
@@ -569,13 +575,13 @@ export function AdjustmentDetailClient({ id, locale }: { id: string; locale: 'ar
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
  </div>
  </td>
- <td className="px-6 py-6 text-center tabular-nums">
+ <td className="px-6 py-6 text-center tabular-nums" dir="ltr">
  <div className="flex flex-col items-center gap-0.5">
  <span className={cn(
- "text-body-md font-bold",
+ "text-body-md font-bold font-mono",
  (line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted) < 0 ? "text-red-500" : "text-foreground"
  )}>
- {(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted).toFixed(3)}
+ {formatQuantity(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted, locale)}
  </span>
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
  </div>

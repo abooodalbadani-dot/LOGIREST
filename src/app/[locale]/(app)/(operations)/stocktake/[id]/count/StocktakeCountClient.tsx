@@ -65,7 +65,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
  // Redirect if not in Started or Counting status
  if (!['STARTED', 'COUNTING'].includes(session.status)) {
- router.replace(`/stocktake/ ${id}`);
+ router.replace(`/stocktake/${id}`);
  return null;
  }
 
@@ -103,7 +103,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
  try {
  await completeCounting.mutateAsync(id)
  toast.success(t('posted_success'))
- router.push(`/stocktake/ ${id}/variance`)
+ router.push(`/stocktake/${id}/variance`)
  } catch {
  toast.error(common('error'))
  }
@@ -117,7 +117,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
  <PageHeader
  title={session.sessionName}
  subtitle={warehouseName}
- backHref={`/stocktake/ ${id}`}
+ backHref={`/stocktake/${id}`}
  >
  <div className="flex items-center gap-4">
  {updateCount.isPending && (

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslations } from "next-intl"
-import { useRouter } from "next/navigation"
+import { useRouter } from '@/i18n/navigation'
 import { useBranches } from "@/features/branches/hooks/useBranches"
 import { type Branch } from "@/types/master-data"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -35,8 +35,8 @@ type WarehouseFormValues = z.infer<typeof formSchema>;
  
 export function WarehouseForm() {
  const router = useRouter()
- const t = useTranslations("masterData.warehouses")
- const tc = useTranslations("masterData.common")
+ const t = useTranslations("master_data.warehouses")
+ const tc = useTranslations("master_data.common")
  const [isSubmitting, setIsSubmitting] = React.useState(false)
  const { data: branches, isLoading: branchesLoading } = useBranches()
  

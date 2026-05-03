@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
 
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  setToken(null);
  setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
  const locale = document.documentElement.lang || 'ar';
- router.replace(`/ ${locale}/login`);
+ router.replace(`/${locale}/login`);
  };
 
  return (

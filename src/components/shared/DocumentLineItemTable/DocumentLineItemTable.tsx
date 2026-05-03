@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatQuantity, formatDate } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import type { LotAllocation } from '@/types/documents';
 
@@ -108,17 +108,17 @@ export function DocumentLineItemTable<T extends LineItem>({
  {!hideLotColumns && (
  <>
  <td className="px-6 font-mono text-label-xs text-muted-foreground/60">
- {line.lot ? <span dir="ltr">{line.lot.lot_number}</span> : '—'}
+ {line.lot ? <span dir="ltr" className="font-mono">{line.lot.lot_number}</span> : '—'}
  </td>
  <td className="px-6 font-mono text-label-xs text-muted-foreground/60">
  {line.lot?.expiry_date
- ? <span dir="ltr">{new Date(line.lot.expiry_date).toLocaleDateString()}</span>
+ ? <span dir="ltr" className="font-mono">{formatDate(line.lot.expiry_date, locale)}</span>
  : '—'}
  </td>
  </>
  )}
  <td className="px-6 text-center">
- <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">{line.qty}</span>
+ <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">{formatQuantity(line.qty, locale)}</span>
  </td>
  <td className="px-6">
  <span dir="ltr" className="text-label-xs font-semibold uppercase text-muted-foreground/40">{line.item.primary_uom.code}</span>

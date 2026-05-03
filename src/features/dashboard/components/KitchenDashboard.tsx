@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { 
  ClipboardList, 
  AlertTriangle, 
@@ -47,7 +47,7 @@ export function KitchenDashboard() {
  </h2>
  </div>
  <PermissionGate action="create" resource="operations_issues">
- <Link href={`/ ${locale}/issues/new`} className="contents">
+ <Link href={`/${locale}/issues/new`} className="contents">
  <Button className="primary-gradient text-white font-semibold uppercase px-8 rounded-xl h-12">
  <Plus className="w-5 h-5 me-2" /> New Request
  </Button>
@@ -98,7 +98,7 @@ export function KitchenDashboard() {
  <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">Tracking departmental flow</CardDescription>
  </div>
  <PermissionGate action="view" resource="operations_issues">
- <Link href={`/ ${locale}/issues`}>
+ <Link href={`/${locale}/issues`}>
  <Button variant="link" className="text-status-warning font-semibold uppercase text-label-xs">View History</Button>
  </Link>
  </PermissionGate>
@@ -168,7 +168,7 @@ export function KitchenDashboard() {
  </div>
  ))}
  <PermissionGate action="create" resource="operations_issues">
- <Link href={`/ ${locale}/issues/new`} className="w-full">
+ <Link href={`/${locale}/issues/new`} className="w-full">
  <Button variant="outline" className="w-full bg-surface-container-low border-none text-label-xs font-semibold uppercase h-10 hover:bg-operational-cyan/20 hover:text-operational-cyan transition-all">
  Quick Record Usage <ArrowUpRight className="w-3 h-3 ms-2" />
  </Button>

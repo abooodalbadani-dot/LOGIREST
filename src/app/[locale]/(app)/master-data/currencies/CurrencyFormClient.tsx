@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,7 +59,7 @@ export function CurrencyFormClient({ id, createTitle, editTitle, locale }: Props
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/currencies`);
+ router.push(`/master-data/currencies`);
  } catch {
  // Error handled by mutation toast
  }
@@ -68,7 +68,7 @@ export function CurrencyFormClient({ id, createTitle, editTitle, locale }: Props
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/currencies`}
+ backHref={`/master-data/currencies`}
  isSaving={create.isPending || update.isPending} 
  onSubmit={onSubmit}
  >

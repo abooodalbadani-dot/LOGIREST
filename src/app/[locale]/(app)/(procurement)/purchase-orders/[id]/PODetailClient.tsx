@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { usePO, type AuditLog, type POLine } from '@/features/purchasing/hooks/usePO';
 import { useSubmitPO } from '@/features/purchasing/hooks/useSubmitPO';
@@ -15,10 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import { Send, CheckCircle, Clock, Wallet, Warehouse, User, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 
-import { cn } from '@/lib/utils';
+import { cn, formatQuantity, formatCurrency, formatDate } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
-export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar' | 'en' }) {
+export function PODetailClient({ id }: { id: string | null }) {
+ const locale = useLocale() as 'ar' | 'en';
  const t = useTranslations('procurement.po');
  const tCommon = useTranslations('common');
  const router = useRouter();
@@ -30,9 +31,9 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
  const isSubmitted = po?.status === 'SUBMITTED';
 
  const formattedDate = useMemo(() => {
- const date = po?.created_at ? new Date(po.created_at) : new Date();
- return format(date, 'yyyy-MM-dd HH:mm');
- }, [po?.created_at]);
+    if (!po?.created_at) return '---';
+    return formatDate(po.created_at, locale);
+  }, [po?.created_at, locale]);
 
  if (isLoading) {
  return (
@@ -76,14 +77,14 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
  <span className="text-muted-foreground/20 text-label-xs">|</span>
  <div className="flex items-center gap-1.5 text-label-xs font-bold text-muted-foreground/40 uppercase">
  <Clock className="w-3 h-3" />
- <span dir="ltr">{formattedDate}</span>
+ <span dir="ltr" className="font-mono">{formattedDate}</span>
  </div>
  </>
  )}
  </div>
  <div className="flex items-center gap-3">
  <h1 className="font-semibold text-headline-lg">
- {isNew ? t('create_new') : `#${po?.document_number}`}
+ <span dir="ltr" className="font-mono">{isNew ? t('create_new') : `#${po?.document_number}`}</span>
  </h1>
  {!isNew && <StatusBadge status={po?.status as BadgeStatus} />}
  </div>
@@ -106,7 +107,7 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
  <PermissionGate action="approve" resource="po">
  {isSubmitted && (
  <Button
- onClick={() => router.push(`/ ${locale}/purchase-orders/ ${id}/approve`)}
+ onClick={() => router.push(`/purchase-orders/${id}/approve`)}
  className="bg-surface-container-highest text-foreground hover:bg-surface-container-high h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-outline-variant/50"
  >
  <CheckCircle className="w-4 h-4 me-2" />
@@ -138,7 +139,7 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
  <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{item.label}</span>
  </div>
  <div className="flex flex-col relative z-10">
- <span className="text-title-sm font-semibold text-foreground line-clamp-1">{item.value}</span>
+ <span dir="ltr" className="text-title-sm font-mono font-semibold text-foreground line-clamp-1">{item.value}</span>
  </div>
  </Card>
  ))}
@@ -164,19 +165,23 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
  <tr key={idx} className="hover:bg-surface-container-low/50 transition-colors group">
  <td className="px-6 py-4">
  <div className="flex flex-col gap-0.5">
- <span className="text-label-xs font-bold text-primary uppercase">{line.item_sku || line.item_id}</span>
+ <span dir="ltr" className="text-label-xs font-mono font-bold text-primary uppercase">{line.item_sku || line.item_id}</span>
  <span className="text-body-md font-bold text-foreground group-hover:text-primary transition-colors">{line.item_name || tCommon('not_available')}</span>
  </div>
  </td>
  <td className="px-6 py-4 text-end">
- <span dir="ltr" className="font-mono text-label-sm font-bold text-foreground/80">{line.quantity || line.qty} {line.uom_id}</span>
+ <span dir="ltr" className="font-mono text-label-sm font-bold text-foreground/80">
+ {formatQuantity(line.quantity || line.qty || 0, locale)} {line.uom_id}
+ </span>
  </td>
  <td className="px-6 py-4 text-end">
- <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">{line.unit_price || line.unit_cost_foreign}</span>
+ <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">
+ {formatCurrency(line.unit_price || line.unit_cost_foreign || 0, po?.currency_id || 'USD', locale)}
+ </span>
  </td>
  <td className="px-6 py-4 text-end">
  <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
- {((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0)).toLocaleString()}
+ {formatCurrency((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0), po?.currency_id || 'USD', locale)}
  </span>
  </td>
  </tr>
@@ -189,9 +194,8 @@ export function PODetailClient({ id, locale }: { id: string | null; locale: 'ar'
  <div className="flex items-center gap-10">
  <div className="flex flex-col items-end">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('order_total')}</p>
- <p dir="ltr" className="text-headline-lg font-semibold text-primary">
- {po?.total?.toLocaleString() || '0'}
- <span className="text-body-md ms-2 text-muted-foreground/40">{po?.currency_id}</span>
+ <p dir="ltr" className="text-headline-lg font-mono font-semibold text-primary">
+ {formatCurrency(po?.total || 0, po?.currency_id || 'USD', locale)}
  </p>
  </div>
  </div>

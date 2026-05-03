@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/providers/AuthProvider';
 import type { Lot } from '@/types/master-data';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import type { LotAllocation } from '@/types/documents';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
@@ -122,7 +122,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  try {
  await postIssue.mutateAsync({ confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' });
  setIsPostDialogOpen(false);
- router.push(`/ ${locale}/issues`);
+ router.push(`/${locale}/issues`);
  } catch (err: unknown) {
  const apiErr = err as { code?: string };
  if (apiErr?.code === 'WAREHOUSE_LOCKED') setIsWarehouseLockedError(true);
@@ -151,7 +151,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  </div>
  <div className="flex items-center gap-4">
  <StatusBadge status={(issue?.status ?? 'DRAFT') as BadgeStatus} />
- <Link href={`/ ${locale}/issues/ ${id}`}>
+ <Link href={`/${locale}/issues/${id}`}>
  <Button variant="outline" size="sm">Exit Scan Mode</Button>
  </Link>
  </div>

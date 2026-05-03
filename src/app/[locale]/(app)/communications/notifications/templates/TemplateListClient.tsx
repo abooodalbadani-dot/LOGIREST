@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
@@ -49,7 +49,7 @@ export function TemplateListClient({ locale }: { locale: string }) {
  columns={columns}
  data={data?.data ?? []}
  isLoading={isLoading}
- onRowClick={(row: NotificationTemplateRow) => router.push(`/ ${locale}/communications/notifications/templates/ ${row.id}`)}
+ onRowClick={(row: NotificationTemplateRow) => router.push(`/communications/notifications/templates/${row.id}`)}
  />
  {data?.meta && data.meta.total_pages > 1 && (
  <Pagination page={page} totalPages={data.meta.total_pages} onPageChange={setPage} />

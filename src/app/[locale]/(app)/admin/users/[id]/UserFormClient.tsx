@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
@@ -129,7 +129,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
  } else {
  await createUser.mutateAsync(values);
  }
- router.push(`/ ${locale}/admin/users`);
+ router.push(`/admin/users`);
  });
 
 
@@ -145,7 +145,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/admin/users`}
+ backHref={`/admin/users`}
  isSaving={isSubmitting}
  onSubmit={onSubmit}
  >

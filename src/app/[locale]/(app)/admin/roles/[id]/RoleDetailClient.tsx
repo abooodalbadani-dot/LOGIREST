@@ -1,16 +1,25 @@
 'use client';
 import { useState, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { useAdminRole, useUpdateRolePermissions, type Permission, type RoleAction } from '@/features/admin/hooks/useAdminRoles';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { ArrowLeft, ShieldCheck, Lock, Save, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter, Link } from '@/i18n/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { 
+  ArrowLeft, 
+  Lock, 
+  ShieldCheck, 
+  Save, 
+  AlertCircle 
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { 
+  useAdminRole, 
+  useUpdateRolePermissions,
+  type Permission,
+  type RoleAction 
+} from '@/features/admin/hooks/useAdminRoles';
 
 const ACTION_KEYS: RoleAction[] = ['view', 'create', 'edit', 'approve', 'post'];
 
@@ -87,7 +96,7 @@ export function RoleDetailClient({ locale, id }: { locale: string; id: string })
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline-low pb-8">
  <div className="space-y-4">
  <Link 
- href={`/ ${locale}/admin/roles`}
+ href={`/admin/roles`}
  className="inline-flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground hover:text-cyan-500 transition-colors"
  >
  <ArrowLeft className="w-3 h-3 rtl:rotate-180" />

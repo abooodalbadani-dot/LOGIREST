@@ -55,7 +55,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
 
  // Access Control: Only APPROVER/ADMIN and status VarianceSubmitted
  if (session.status !== 'VarianceSubmitted') {
- router.replace(`/stocktake/ ${id}`);
+ router.replace(`/stocktake/${id}`);
  return null;
  }
 
@@ -79,7 +79,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  try {
  await approveStocktake.mutateAsync({ id });
  toast.success(t('approved_success'));
- router.push(`/stocktake/ ${id}`);
+ router.push(`/stocktake/${id}`);
  } catch {
  toast.error(common('error'));
  }
@@ -94,7 +94,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  await rejectStocktake.mutateAsync({ id, comment: rejectionReason });
  toast.success(t('rejected_success'));
  setIsRejectDialogOpen(false);
- router.push(`/stocktake/ ${id}`);
+ router.push(`/stocktake/${id}`);
  } catch {
  toast.error(common('error'));
  }
@@ -144,7 +144,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  />
  </div>
  }
- backHref={`/stocktake/ ${id}`}
+ backHref={`/stocktake/${id}`}
  />
 
  {/* Metrics Grid */}

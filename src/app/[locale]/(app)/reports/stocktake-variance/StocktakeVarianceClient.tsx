@@ -1,14 +1,17 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useStocktakeVarianceReport, StocktakeVarianceReport } from '@/features/reports/hooks/useReports';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
+import { formatQuantity } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function StocktakeVarianceClient() {
  const t = useTranslations('reports');
+ const locale = useLocale() as 'ar' | 'en';
  const { data, isLoading } = useStocktakeVarianceReport();
 
  const columns: ColumnDef<StocktakeVarianceReport>[] = [
@@ -24,11 +27,21 @@ export default function StocktakeVarianceClient() {
  accessorKey: 'system_qty',
  header: t('table.system_qty'),
  meta: { numeric: true },
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatQuantity(row.original.system_qty, locale)}
+ </span>
+ ),
  },
  {
  accessorKey: 'counted_qty',
  header: t('table.counted_qty'),
  meta: { numeric: true },
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatQuantity(row.original.counted_qty, locale)}
+ </span>
+ ),
  },
  {
  accessorKey: 'variance',
@@ -37,8 +50,14 @@ export default function StocktakeVarianceClient() {
  cell: ({ row }) => {
  const val = row.getValue('variance') as number;
  return (
- <span className={val < 0 ? 'text-destructive font-bold' : val > 0 ? 'text-operational-cyan font-bold' : ''}>
- {val > 0 ? `+${val}` : val}
+ <span 
+ dir="ltr" 
+ className={cn(
+ "font-mono",
+ val < 0 ? 'text-destructive font-bold' : val > 0 ? 'text-operational-cyan font-bold' : ''
+ )}
+ >
+ {val > 0 ? `+${formatQuantity(val, locale)}` : formatQuantity(val, locale)}
  </span>
  );
  }

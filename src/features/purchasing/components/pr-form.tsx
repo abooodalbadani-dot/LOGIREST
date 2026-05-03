@@ -5,8 +5,8 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Trash2, Plus, Calendar, Package, Calculator, ArrowLeft, Send, Save, Building2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
 import {
@@ -49,12 +49,12 @@ type PurchaseRequestFormValues = z.infer<typeof formSchema>;
 
 interface PurchaseRequestFormProps {
  initialData?: PRDetail;
- locale: 'ar' | 'en';
 }
 
-export function PurchaseRequestForm({ initialData, locale }: PurchaseRequestFormProps) {
+export function PurchaseRequestForm({ initialData }: PurchaseRequestFormProps) {
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
  const [isSubmitting, setIsSubmitting] = React.useState(false);
  const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
@@ -130,7 +130,7 @@ export function PurchaseRequestForm({ initialData, locale }: PurchaseRequestForm
  toast.success(tc('save') + ' ' + tc('completed'));
  }
 
- router.push(`/ ${locale}/purchase-requests`);
+ router.push(`/purchase-requests`);
  } catch (error) {
  console.error(error);
  toast.error(tc('error'));

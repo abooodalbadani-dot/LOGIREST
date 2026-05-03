@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
- const t = await getTranslations({ locale, namespace: 'masterData.branches' });
+ const t = await getTranslations({ locale, namespace: 'master_data.branches' });
  return {
  title: `${t('title')} | LogiRest`,
  description: 'Branch and retail location management',
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function BranchesPage(props: { params: Promise<{ locale: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('masterData.branches');
+ const t = await getTranslations('master_data.branches');
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">

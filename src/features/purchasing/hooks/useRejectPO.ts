@@ -8,7 +8,7 @@ export function useRejectPO() {
 
  return useMutation({
  mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
- const response = await apiClient.post(`/procurement/purchase-orders/ ${id}/reject`, successSchema, { reason });
+ const response = await apiClient.post(`/procurement/purchase-orders/${id}/reject`, successSchema, { reason });
  return response;
  },
  onSuccess: (_, { id }) => {

@@ -4,7 +4,9 @@
     "name_en": "Name (English)",
     "name_ar": "Name (Arabic)",
     "save": "Save",
+    "save_changes": "Save Changes",
     "saving": "Saving...",
+    "loading": "Loading...",
     "create": "Create",
     "create_branch": "Create Branch",
     "permission_denied": "Access Denied",
@@ -20,6 +22,7 @@
     "filters_button": "Refine Stream",
     "reset": "Reset",
     "doc_number": "Document No",
+    "quantity": "Quantity",
     "notes": "Notes",
     "item": "Item",
     "lot": "Lot",
@@ -41,12 +44,22 @@
     "system": "System",
     "posted_at": "Posted At",
     "view": "View",
+    "edit": "Edit",
+    "print": "Print",
+    "delete": "Delete",
+    "date": "Date",
+    "user": "User",
+    "remarks": "Remarks",
     "not_available": "N/A",
     "created_at": "Created At",
+    "locked": "Locked",
+    "locked_at": "Locked at",
     "logout": "Logout",
     "not_logged_in": "Not Logged In",
-    "not_found": "Not found",
+    "not_found": "Not Found",
     "excel": "Excel",
+    "warehouse_locked": "Warehouse Locked",
+    "stocktake_in_progress_desc": "Transactions are restricted due to an active stocktake.",
     "status_filtering": "Status Filtering",
     "total_users": "Total Users",
     "total_locations": "Total Locations",
@@ -106,18 +119,19 @@
       "approved": "Approved",
       "posted": "Posted",
       "rejected": "Rejected",
+      "fulfilled": "Fulfilled",
+      "partial": "Partial",
       "cancelled": "Cancelled",
       "in_transit": "In Transit",
       "open": "Open",
       "counting": "Counting",
       "review": "Review",
-      "submitted": "Submitted",
       "all": "All Statuses",
       "active": "Active",
       "inactive": "Inactive",
       "started": "Started",
       "counting_completed": "Counting Completed",
-      "variancesubmitted": "Variance Submitted",
+      "variance_submitted": "Variance Submitted",
       "healthy": "Healthy",
       "low": "Low Stock",
       "critical": "Critical",
@@ -140,6 +154,11 @@
       "last_sync": "Last Sync"
     },
     "no_records": "No records found.",
+    "order_details": "Order Details",
+    "line_items": "Line Items",
+    "no_notes": "No notes provided",
+    "notes_placeholder": "Type any additional notes here...",
+    "or": "OR",
     "sidebar": {
       "group_dashboard": "Dashboard",
       "dashboard": "Dashboard Overview",
@@ -280,33 +299,33 @@
       "title": "Purchase Requests",
       "requests": "Requests",
       "home": "Home",
-      "create_new": "New Request",
-      "description": "Internal stock replenishment requests and approval pipeline",
+      "create_new": "Create New PR",
+      "description": "Internal procurement requests and approval workflow",
       "metrics": {
         "total": "Total Requests",
-        "approved": "Approved",
-        "pending": "Pending"
+        "approved": "Approved PRs",
+        "pending": "Pending Review"
       },
-      "search_placeholder": "Search by doc number or warehouse...",
-      "detail_title": "Purchase Request",
+      "search_placeholder": "Search by number or department...",
+      "detail_title": "PR Composition",
       "doc_number": "Document No",
       "department": "Department",
-      "expected_date": "Expected Delivery Date",
+      "expected_date": "Expected Date",
       "save_draft": "Save Draft",
       "submit": "Submit for Approval",
       "convert_to_po": "Convert to PO",
-      "approve_pr": "Approve",
-      "reject_pr": "Reject",
+      "approve_pr": "Approve Request",
+      "reject_pr": "Reject Request",
       "approve_confirm_title": "Confirm Approval",
-      "approve_confirm_desc": "Approving this PR will make it available for PO conversion.",
+      "approve_confirm_desc": "You are about to authorize this purchase request.",
       "reject_confirm_title": "Confirm Rejection",
-      "reject_confirm_desc": "Rejecting this PR will close it.",
+      "reject_confirm_desc": "Are you sure you want to reject this request? This action is irreversible.",
       "posted_success": "Action performed successfully.",
-      "sync_context": "Synchronizing Request Context...",
+      "sync_context": "Syncing Request Data...",
       "new_intent": "New Request Intent",
-      "specification": "Resource Acquisition Details",
+      "specification": "Document Specification",
       "status_init": "Status Pending",
-      "requested_qty": "Requested Qty",
+      "requested_qty": "Req Qty",
       "approved_qty": "Approved Qty",
       "irreversible": "This action cannot be undone.",
       "pr_detail": "PR Detail",
@@ -319,8 +338,8 @@
         "qty_greater_than_zero": "Quantity must be greater than zero",
         "rejection_reason_min": "Rejection reason must be at least 15 characters"
       },
-      "no_requests_title": "No Purchase Requests Found",
-      "no_requests_desc": "Request items from the store to replenish your department stock.",
+      "no_requests_title": "No Purchase Requests",
+      "no_requests_desc": "Start the procurement cycle by creating a new request.",
       "reject": "Reject Request",
       "approve": "Approve Request",
       "draft": "Draft",
@@ -328,29 +347,44 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "create_title": "Create Purchase Request",
+      "create_desc": "Submit a new request for items needed by your branch.",
       "submit_confirm_title": "Confirm Submission",
       "rejection_reason_label": "Rejection Reason",
       "return_to_pr_list": "Return to PR List",
       "go_to_approval": "Go to Approval",
       "edit_pr": "Edit Request",
-      "approval_title": "Purchase Request Approval"
+      "approval_title": "Purchase Request Approval",
+      "invalid_state": "Invalid Request State",
+      "approval_workflow": "Approval Workflow",
+      "approval_desc": "Review items and confirm or reject the request",
+      "reject_reason_title": "Rejection Reason",
+      "reject_reason_placeholder": "Explain why this request is being rejected...",
+      "reject_reason_min_chars": "Reason must be at least 15 characters",
+      "submit_success": "PR Submitted Successfully",
+      "approve_success": "PR Approved Successfully",
+      "reject_success": "PR Rejected Successfully",
+      "rejection_reason": "Rejection Reason",
+      "rejection_reason_placeholder": "Describe why this request is being rejected...",
+      "confirm_rejection": "Confirm Rejection",
+      "edit_not_allowed": "Edit Locked",
+      "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited."
     },
     "po": {
       "title": "Purchase Orders",
       "orders": "Orders",
       "home": "Home",
-      "create_new": "Create PO",
-      "description": "Manage procurement commitments and supply chain pipeline.",
-      "detail_title": "Purchase Order",
+      "create_new": "Create New PO",
+      "description": "Manage supplier orders and procurement execution",
+      "detail_title": "PO Composition",
       "doc_number": "Document No",
       "supplier": "Supplier",
       "target_warehouse": "Target Warehouse",
-      "expected_date": "Expected Delivery Date",
+      "expected_date": "Expected Date",
       "expected_delivery_date": "Expected Delivery Date",
       "supplier_currency": "Supplier Currency",
-      "fx_rate": "Exchange Rate",
+      "fx_rate": "FX Rate (to SAR)",
       "general_notes": "General Notes",
-      "notes_placeholder": "Specify shipping instructions or special handling...",
+      "notes_placeholder": "e.g. Special packaging required",
       "line_items": "Line Items",
       "add_item": "Add Item",
       "item_sku": "Item SKU",
@@ -362,7 +396,7 @@
       "total_amount": "Total Amount",
       "save_draft": "Save Draft",
       "actions": {
-        "submit": "Submit for Approval",
+        "submit": "Submit Purchase Order",
         "submitting": "Submitting...",
         "go_to_approval": "Go to Approval",
         "approve": "Approve",
@@ -371,17 +405,17 @@
         "cancel": "Cancel Order"
       },
       "approve_confirm_title": "Confirm Approval",
-      "approve_confirm_desc": "Are you sure you want to approve this purchase order?",
+      "approve_confirm_desc": "You are about to authorize this purchase order.",
       "reject_confirm_title": "Confirm Rejection",
-      "reject_confirm_desc": "Are you sure you want to reject this purchase order? You must provide a reason.",
+      "reject_confirm_desc": "Are you sure you want to reject this order? This action is irreversible.",
       "post_po": "Post PO",
       "post_confirm_title": "Confirm PO Posting",
       "post_confirm_desc": "After posting, the PO cannot be edited.",
       "posted_success": "Action performed successfully.",
-      "submit_success": "Purchase order submitted successfully.",
+      "submit_success": "PO Submitted Successfully",
       "edit_success": "Purchase order updated successfully.",
       "commitment_intent": "New Purchase Commitment",
-      "specification": "PO Specification",
+      "specification": "Order Specification",
       "origin_context": "Origin Context",
       "pending_linking": "Pending Linkage",
       "independent_order": "Independent Order",
@@ -392,12 +426,12 @@
       "local_equiv": "Local Equivalent",
       "ledger_history": "Operational Ledger History",
       "warning_irreversible": "This action will post the order to the ledger and cannot be reversed.",
-      "sync_context": "Synchronizing Order Context...",
+      "sync_context": "Syncing Order Data...",
       "select_warehouse": "Select Warehouse...",
-      "select_supplier": "Select Supplier...",
-      "linked_pr": "Linked PR",
+      "select_supplier": "Select Supplier",
+      "linked_pr": "Linked PR (Optional)",
       "rejection_reason_label": "Rejection Reason",
-      "rejection_reason_placeholder": "Describe why this order is being rejected (min 15 chars)...",
+      "rejection_reason_placeholder": "Describe why this order is being rejected...",
       "return_to_list": "Return to PO List",
       "edit_po": "Edit Order",
       "approval_title": "Purchase Order Approval",
@@ -406,6 +440,43 @@
         "currency_required": "Currency is required",
         "at_least_one_item": "At least one item is required",
         "rejection_reason_min": "Rejection reason must be at least 15 characters"
+      },
+      "po_number": "PO Number",
+      "currency": "Currency",
+      "exchange_rate": "Exchange Rate",
+      "new_intent": "New Order Intent",
+      "submit": "Submit Order",
+      "invalid_state": "Invalid Order State",
+      "search_placeholder": "Search by PO number or supplier...",
+      "no_orders_title": "No Purchase Orders",
+      "no_orders_desc": "Start procuring items by creating your first purchase order.",
+      "metrics": {
+        "total": "Total Orders",
+        "pending": "Pending Approval",
+        "approved": "Active Orders"
+      },
+      "go_to_approval": "Go to Approval",
+      "approval_workflow": "Approval Workflow",
+      "approval_desc": "Review order details and confirm procurement commitment",
+      "reject_po": "Reject Order",
+      "rejection_hint": "Provide a clear reason for the supplier or team.",
+      "irreversible": "This action cannot be undone.",
+      "edit_not_allowed": "Modification Locked",
+      "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited.",
+      "approve_success": "PO Approved Successfully",
+      "reject_success": "PO Rejected Successfully",
+      "rejection_reason": "Rejection Reason",
+      "rejection_reason_min_chars": "Reason must be at least 15 characters",
+      "confirm_rejection": "Confirm Rejection",
+      "back_to_list": "Back to Orders",
+      "no_grns_title": "No Goods Received",
+      "no_grns_desc": "No GRNs have been processed for this purchase order yet.",
+      "approval": {
+        "summary_title": "Order Summary",
+        "comment_label": "Approval/Rejection Comment",
+        "comment_placeholder": "Enter your decision remarks here...",
+        "comment_hint": "Min 15 characters required for rejection",
+        "comment_min_chars": "{count} more characters required"
       }
     }
   },
@@ -510,6 +581,7 @@
       "fulfill": "Fulfill Items",
       "partially_fulfill": "Partial Fulfillment",
       "rejection_reason_label": "Rejection Reason",
+      "rejection_reason_description": "Please provide a reason for rejecting this request. This will be visible to the requester.",
       "rejection_reason_placeholder": "Describe why this request is being rejected...",
       "notes_placeholder": "Specify special handling or urgent requirements...",
       "validation": {
@@ -532,12 +604,12 @@
       "fulfilling": "Fulfilling",
       "post_fulfillment": "Post Fulfillment",
       "statuses": {
-        "DRAFT": "Draft",
-        "SUBMITTED": "Submitted",
-        "APPROVED": "Approved",
-        "REJECTED": "Rejected",
-        "FULFILLED": "Fulfilled",
-        "PARTIAL": "Partial"
+        "draft": "Draft",
+        "submitted": "Submitted",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "fulfilled": "Fulfilled",
+        "partial": "Partial"
       }
     },
     "transfer": {
@@ -613,6 +685,7 @@
       "warehouse": "Warehouse",
       "reason": "Reason",
       "reference": "Reference",
+      "lot_placeholder": "Enter lot number if applicable...",
       "posted_direct": "Posted Direct",
       "pending_execution": "Pending Execution",
       "detail_title": "Adjustment Details",
@@ -687,7 +760,7 @@
       "description": "Conduct physical inventory audits and warehouse counts.",
       "retrieving_manifest": "Synchronizing Audit Substrate...",
       "offline": "Audit Session [OFFLINE]",
-      "count_sheet_desc": "Operational audit ledger and variance tracking",
+      "count_sheet_desc": "Enter physical quantities for all items in scope",
       "variance_reason_required": "Variance reason is required for any non-zero variance.",
       "uid": "UID",
       "status": "Status",
@@ -711,7 +784,6 @@
       "start_confirm_desc": "Starting the session will lock the warehouse and prevent all stock movements until the stocktake is completed.",
       "already_locked": "This warehouse already has an active stocktake session.",
       "count_sheet_title": "Count Sheet",
-      "count_sheet_desc": "Enter physical quantities for all items in scope",
       "snapshot_qty": "Snapshot Qty",
       "counted_qty": "Counted Qty",
       "variance": "Variance",
@@ -746,7 +818,7 @@
       "initialize_session": "Initialize Session",
       "ready_to_initialize": "Ready to initialize draft session",
       "create_confirm_title": "Initialize Audit Sequence?",
-      "create_confirm_desc": "This will create a new draft stocktake session. You can add items and adjust the scope before starting the count.",
+      "create_confirm_desc": "This will create a new draft stocktake session. You can review the scope before starting the actual count.",
       "validation": {
         "warehouse_required": "Please select a warehouse to audit.",
         "session_name_required": "Session name is required (min 3 characters).",
@@ -800,7 +872,7 @@
       "counting_completed_status": "Counting Completed",
       "approved_success": "Stocktake approved successfully.",
       "rejected_success": "Stocktake rejected successfully.",
-      "variancesubmitted_status": "Awaiting Approval",
+      "variance_submitted_status": "Awaiting Approval",
       "rejected_status": "Rejected",
       "approved_status": "Approved",
       "posted_status": "Posted",
@@ -824,14 +896,12 @@
       "reason": "Reason",
       "review_approval": "Review for Approval",
       "go_to_post": "Proceed to Posting",
-      "variance_status": "Variance Review",
       "critical_lockdown_protocol": "Critical System Lockdown Protocol",
       "session_details": "Session Details",
-      "operational_audit_config": "Operational Audit Configuration",
-      "create_confirm_desc": "This will create a new draft stocktake session. You can review the scope before starting the actual count."
+      "operational_audit_config": "Operational Audit Configuration"
     }
   },
-  "masterData": {
+  "master_data": {
     "common": {
       "code": "Code",
       "name": "Name",
@@ -924,21 +994,34 @@
       }
     },
     "branches": {
-      "title": "Branches",
-      "description": "Management of physical locations and operational nodes.",
-      "create_title": "New Branch",
-      "edit_title": "Edit Branch",
+      "title": "Branch Registry",
+      "description": "Organizational structure and primary location hubs",
+      "create_title": "Register New Branch",
+      "edit_title": "Modify Branch Hub",
       "created_at": "Created At",
       "total_locations": "Total Locations",
       "active_status": "Active Status",
       "operational_compliance": "Operational Compliance",
-      "search_placeholder": "Filter locations by name or code..."
+      "search_placeholder": "Filter locations by name or code...",
+      "created_success": "Branch registered successfully",
+      "updated_success": "Branch identity updated",
+      "deleted_success": "Branch removed from registry",
+      "errors": {
+        "deactivate_linked_warehouses": "Cannot deactivate branch with active warehouses.",
+        "update_failed": "Failed to update branch identity"
+      },
+      "fields": {
+        "code": "Branch Code",
+        "name_en": "Branch Name (EN)",
+        "name_ar": "Branch Name (AR)",
+        "is_active": "Status"
+      }
     },
     "warehouses": {
-      "title": "Warehouses",
-      "description": "Physical and virtual inventory nodes across the global supply network.",
-      "create_title": "New Warehouse",
-      "edit_title": "Edit Warehouse",
+      "title": "Warehouse Management",
+      "description": "Logistics nodes and physical storage locations",
+      "create_title": "Register New Warehouse",
+      "edit_title": "Modify Warehouse Node",
       "branch": "Branch",
       "type": "Type",
       "code": "WH Code",
@@ -961,21 +1044,43 @@
       "physical_sites": "Physical Sites",
       "search_placeholder": "Search warehouses by name or code...",
       "types": {
-        "main": "Main Distribution Center",
+        "main": "Main",
         "dry": "Dry Storage",
-        "cold": "Cold Chain Facility",
-        "virtual": "Virtual Node"
+        "cold": "Cold Storage",
+        "virtual": "Virtual"
       },
       "warehouse_configuration": "Warehouse Configuration",
       "branch_mapping_details": "Branch mapping and node details",
       "physical_location_settings": "Physical Location & Settings",
       "operational_status": "Operational Status",
-      "status_description": "Control the visibility and operational availability of this node."
+      "status_description": "Control the visibility and operational availability of this node.",
+      "created_success": "Warehouse registered successfully",
+      "updated_success": "Warehouse details updated",
+      "errors": {
+        "cannot_deactivate_warehouse_in_use": "Cannot deactivate warehouse with active departments or inventory.",
+        "cannot_change_branch_with_departments": "Cannot change branch for a warehouse that has linked departments.",
+        "update_failed": "Failed to update warehouse details"
+      },
+      "fields": {
+        "branch": "Operating Branch",
+        "code": "Warehouse Code",
+        "name_en": "Warehouse Name (EN)",
+        "name_ar": "Warehouse Name (AR)",
+        "type": "Storage Type",
+        "is_active": "Status"
+      },
+      "validation": {
+        "branch_required": "Operating branch is required",
+        "code_min": "Code must be at least 2 characters",
+        "code_format": "Code must be uppercase alphanumeric",
+        "name_en_min": "English name must be at least 3 characters",
+        "name_ar_min": "Arabic name must be at least 3 characters"
+      }
     },
     "items": {
-      "title": "Items",
-      "create_title": "New Item",
-      "edit_title": "Edit Item",
+      "title": "Items Master Data",
+      "create_title": "Register New Item",
+      "edit_title": "Modify Item Specifications",
       "barcode": "Barcode",
       "category": "Category",
       "classification": "Classification",
@@ -994,17 +1099,52 @@
       "inventory_rules": "Inventory Rules",
       "stock_thresholds": "Stock Thresholds",
       "no_conversions_defined": "No conversions defined",
-      "description": "Inventory asset registry and SKU depth management",
+      "description": "Centralized inventory catalog and specification management",
       "no_items_title": "No Inventory Items Found",
-      "no_items_desc": "Your master data catalog is currently empty. Start by adding your first SKU."
+      "no_items_desc": "Your master data catalog is currently empty. Start by adding your first SKU.",
+      "created_success": "Item registered successfully",
+      "updated_success": "Item specifications updated",
+      "deactivated_success": "Item deactivated",
+      "errors": {
+        "cannot_deactivate_with_stock": "Cannot deactivate item with remaining stock.",
+        "sku_exists": "An item with this SKU already exists.",
+        "update_failed": "Failed to update item details"
+      },
+      "sections": {
+        "identity": "Item Identity",
+        "identity_desc": "Fundamental identification and coding",
+        "categorization": "Taxonomy",
+        "categorization_desc": "Logical grouping and classification",
+        "inventory_rules": "Inventory Rules",
+        "inventory_rules_desc": "Control parameters and safety levels"
+      },
+      "fields": {
+        "sku": "Item Code (SKU)",
+        "barcode": "Barcode / GTIN",
+        "name_en": "Item Name (EN)",
+        "name_ar": "Item Name (AR)",
+        "category": "Classification",
+        "base_unit": "Stock Unit",
+        "min_stock": "Safety Stock (Min)",
+        "reorder_point": "Reorder Threshold",
+        "is_active": "Status"
+      },
+      "validation": {
+        "code_required": "SKU code is required",
+        "barcode_required": "Barcode is required",
+        "name_en_required": "English name is required",
+        "name_ar_required": "Arabic name is required",
+        "category_required": "Category is required",
+        "uom_required": "Primary UoM is required"
+      }
     },
     "suppliers": {
-      "title": "Suppliers",
-      "create_title": "New Supplier",
-      "edit_title": "Edit Supplier",
+      "title": "Supplier Registry",
+      "create_title": "Register New Supplier",
+      "edit_title": "Modify Supplier Profile",
       "currency": "Default Currency",
       "payment_terms": "Payment Terms",
-      "description": "Management of supply partners and financial agreements.",
+      "description": "External procurement partners and fulfillment hubs",
       "partner_identity": "Partner Identity",
       "financial_terms": "Financial Terms",
       "operational_settings": "Operational Settings",
@@ -1018,46 +1158,75 @@
       "email": "Email Address",
       "tax_number": "VAT / Tax Number",
       "search_placeholder": "Search suppliers by name or code...",
-      "terms_placeholder": "e.g., Net 30 days",
+      "terms_placeholder": "Describe payment cycles or special agreements...",
       "actions": {
         "create": "Create Supplier",
         "save": "Save Changes"
       },
       "no_suppliers_title": "No Suppliers Found",
-      "no_suppliers_desc": "Manage your external procurement partners and global vendor network here."
+      "no_suppliers_desc": "Manage your external procurement partners and global vendor network here.",
+      "partner_identity_desc": "Registration details and branding",
+      "financial_terms_desc": "Currency and payment agreements",
+      "created_success": "Supplier registered",
+      "updated_success": "Supplier profile updated",
+      "deleted_success": "Supplier removed",
+      "errors": {
+        "deactivate_linked_pos": "Cannot deactivate supplier with active purchase orders.",
+        "update_failed": "Failed to update supplier profile"
+      },
+      "fields": {
+        "code": "Supplier Code",
+        "name_en": "Supplier Name (EN)",
+        "name_ar": "Supplier Name (AR)",
+        "currency": "Preferred Currency",
+        "payment_terms": "Payment Terms",
+        "is_active": "Status"
+      }
     },
     "currencies": {
-      "title": "Currencies",
-      "create_title": "New Currency",
-      "edit_title": "Edit Currency",
-      "description": "Management of currencies and financial standards.",
+      "title": "Currency Master",
+      "create_title": "Define New Currency",
+      "edit_title": "Modify Currency Standards",
+      "description": "Global currency definitions and exchange rate management",
       "search_placeholder": "Search currencies...",
       "symbol": "Symbol",
       "is_base": "Base Currency",
       "fields": {
         "code": "Currency Code",
         "symbol": "Symbol",
-        "is_base": "Base",
-        "is_active": "Active"
+        "is_base": "Base Currency",
+        "is_active": "Status",
+        "name_en": "Currency Name (EN)",
+        "name_ar": "Currency Name (AR)"
       },
       "tips": {
-        "base_currency_title": "Base Currency",
-        "base_currency_desc": "Only one currency can be base. This defines the system's primary accounting unit.",
-        "iso_standard_title": "ISO Standards",
-        "iso_standard_desc": "Always use 3-letter uppercase ISO codes for global compatibility."
+        "base_currency_title": "Base Currency Singleton",
+        "base_currency_desc": "Only one currency can be 'Base'. All system valuations and accounting will use this currency.",
+        "iso_standard_title": "ISO 4217 Standards",
+        "iso_standard_desc": "Use standard 3-letter codes (e.g., SAR, USD) to ensure compatibility with international banking and exchange providers."
       },
       "validation": {
         "code_length": "Code must be exactly 3 characters",
-        "code_format": "Code must be 3 uppercase letters",
+        "code_format": "Code must be 3 uppercase letters (ISO 4217)",
         "name_ar_required": "Arabic name is required",
-        "name_en_required": "English name is required"
+        "name_en_required": "English name is required",
+        "code_required": "Currency code is required"
+      },
+      "created_success": "Currency defined successfully",
+      "updated_success": "Currency updated",
+      "errors": {
+        "code_exists": "Currency code already exists.",
+        "cannot_deactivate_base": "Cannot deactivate the base currency.",
+        "cannot_deactivate_in_use": "Cannot deactivate currency used in active Purchase Orders or GRNs.",
+        "base_required": "At least one currency must be set as base.",
+        "update_failed": "Failed to update currency"
       }
     },
     "fx_rates": {
-      "title": "FX Rates",
-      "create_title": "New Exchange Rate",
-      "edit_title": "Edit Exchange Rate",
-      "description": "Temporal financial reference data for multi-currency operations.",
+      "title": "FX Rates Ledger",
+      "create_title": "Register Exchange Rate",
+      "edit_title": "Modify Rate Parameters",
+      "description": "Historical currency exchange rates and temporal valuation references",
       "search_placeholder": "Search by currency...",
       "from_currency": "From Currency",
       "to_currency": "To Currency",
@@ -1069,37 +1238,71 @@
       "fields": {
         "from": "From",
         "to": "To",
-        "rate": "Rate",
+        "rate": "Exchange Rate",
         "date": "Effective Date",
-        "status": "Status"
+        "status": "Status",
+        "from_currency": "From Currency",
+        "to_currency": "To Currency",
+        "effective_date": "Effective Date"
       },
       "tips": {
-        "temporal_title": "Temporal Logic",
-        "temporal_desc": "Rates are applied based on the document date matching the effective date sequence.",
+        "temporal_title": "Temporal Reference",
+        "temporal_desc": "FX rates are date-sensitive. The system uses the rate effective on the document date for financial valuations.",
         "immutable_title": "Historical Integrity",
         "immutable_desc": "Rates should not be deleted to maintain audit trail integrity."
       },
       "validation": {
         "from_currency_required": "Source currency is required",
         "to_currency_required": "Target currency is required",
-        "rate_positive": "Rate must be greater than zero",
-        "rate_precision": "Maximum 6 decimal places",
+        "rate_positive": "Rate must be greater than 0",
+        "rate_precision": "Rate supports up to 6 decimal places",
         "date_required": "Effective date is required",
-        "currencies_must_differ": "From and To currencies must be different"
+        "currencies_must_differ": "Source and target currencies must be different"
+      },
+      "save_success": "FX Rate registered successfully",
+      "update_success": "FX Rate updated",
+      "errors": {
+        "cannot_duplicate_rate": "A rate already exists for this currency pair and effective date.",
+        "cannot_deactivate_rate_in_use": "Cannot deactivate rate currently in use by posted GRN documents.",
+        "update_failed": "Failed to update FX rate"
       }
     },
     "departments": {
-      "title": "Departments",
-      "create_title": "New Department",
-      "edit_title": "Edit Department",
-      "description": "Management of departments and organizational entities.",
+      "title": "Cost Centers & Departments",
+      "create_title": "Register New Department",
+      "edit_title": "Modify Department Profile",
+      "description": "Internal consumption points and operational units",
       "search_placeholder": "Filter departments by name or code...",
       "branch": "Branch",
       "total_units": "Total Units",
       "active_capacity": "Active Capacity",
       "structural_audit": "Structural Audit",
       "basic_info": "Basic Information",
-      "operational_details": "Operational Details"
+      "operational_details": "Operational Details",
+      "created_success": "Department registered successfully",
+      "updated_success": "Department profile updated",
+      "errors": {
+        "cannot_deactivate_department_in_use": "Cannot deactivate department linked to active kitchen requests or stocktakes.",
+        "update_failed": "Failed to update department profile"
+      },
+      "fields": {
+        "branch": "Operating Branch",
+        "warehouse": "Parent Warehouse",
+        "code": "Department Code",
+        "name_en": "Department Name (EN)",
+        "name_ar": "Department Name (AR)",
+        "manager": "Unit Manager",
+        "cost_center": "Cost Center ID",
+        "is_active": "Status"
+      },
+      "validation": {
+        "branch_required": "Branch selection is required",
+        "warehouse_required": "Parent warehouse is required",
+        "code_min": "Code must be at least 2 characters",
+        "code_format": "Code must be uppercase alphanumeric",
+        "name_en_min": "English name must be at least 3 characters",
+        "name_ar_min": "Arabic name must be at least 3 characters"
+      }
     },
     "uom": {
       "title": "Units of Measure",
@@ -1113,22 +1316,33 @@
       "precision_description": "Standard metrics for inventory precision and conversion accuracy across all supply chain nodes."
     },
     "categories": {
-      "title": "Categories",
-      "create_title": "New Category",
-      "edit_title": "Edit Category",
-      "description": "Categorization of items for reporting and analysis purposes.",
+      "title": "Category Taxonomy",
+      "create_title": "Register New Category",
+      "edit_title": "Modify Classification",
+      "description": "Logical classification of materials and assets",
       "search_placeholder": "Filter categories by name or code...",
       "total_groups": "Total Groups",
       "hierarchy_depth": "Hierarchy Depth",
       "mapping_status": "Mapping Status",
       "layers": "Layers",
-      "category_mapping": "Category Mapping"
+      "category_mapping": "Category Mapping",
+      "created_success": "Category registered successfully",
+      "updated_success": "Classification updated",
+      "deleted_success": "Classification removed",
+      "errors": {
+        "delete_linked_items": "Cannot remove classification with active inventory items.",
+        "delete_failed": "Failed to remove classification"
+      },
+      "fields": {
+        "name_en": "Category Name (EN)",
+        "name_ar": "Category Name (AR)"
+      }
     },
     "barcodes": {
-      "title": "Barcodes",
-      "create_title": "New Barcode",
-      "edit_title": "Edit Barcode",
-      "description": "Barcode registry and item mapping.",
+      "title": "Barcode Registry",
+      "create_title": "Register New Barcode",
+      "edit_title": "Modify Barcode Specifications",
+      "description": "Multi-unit barcode mapping and GTIN management",
       "search_placeholder": "Search barcodes...",
       "item": "Target Item",
       "barcode": "Barcode",
@@ -1145,20 +1359,128 @@
       "scan_description": "Real-time physical acquisition via scanning protocol",
       "current_identity": "Current Identity",
       "tip_1": "Ensure barcode clarity for consistent scanning.",
-      "tip_2": "Default quantity will pre-fill during receipt."
+      "tip_2": "Default quantity will pre-fill during receipt.",
+      "created_success": "Barcode registered successfully",
+      "updated_success": "Barcode mapping updated",
+      "deactivated_success": "Barcode deactivated",
+      "errors": {
+        "code_exists": "This barcode code is already registered.",
+        "cannot_deactivate_in_use": "Cannot deactivate barcode linked to active transactions.",
+        "update_failed": "Failed to update barcode specifications"
+      },
+      "fields": {
+        "item": "Inventory Item",
+        "uom": "Measurement Unit",
+        "code": "Barcode / GTIN",
+        "default_qty": "Default Quantity",
+        "is_active": "Status"
+      },
+      "validation": {
+        "item_required": "Inventory item is required",
+        "uom_required": "Measurement unit is required",
+        "code_required": "Barcode code is required",
+        "qty_positive": "Default quantity must be greater than 0"
+      },
+      "tips": {
+        "multi_unit_title": "Multi-Unit Mapping",
+        "multi_unit_desc": "Associate different barcodes for each measurement unit (e.g., Box vs Piece) to automate conversion.",
+        "gtin_standard_title": "GTIN Standards",
+        "gtin_standard_desc": "Use standard GS1 GTIN-13 or GTIN-8 barcodes for seamless vendor integration and catalog accuracy."
+      }
     },
     "import": {
-      "title": "Bulk Import",
+      "title": "Data Import Wizard",
       "step_upload": "Upload",
       "step_validate": "Validate",
       "step_review": "Review",
       "step_commit": "Commit",
       "select_file": "Select CSV/Excel File",
-      "upload_cta": "Upload and Validate",
+      "upload_cta": "Process Manifest",
       "validation_success": "Validation successful. {count} records ready.",
       "validation_error": "Validation failed. {count} errors found.",
       "import_now": "Import Now",
-      "import_success": "Successfully imported {count} records."
+      "import_success": "Successfully imported {count} records.",
+      "select_type": "Select Master Data Domain",
+      "items": "Items Registry",
+      "items_desc": "Batch import products, ingredients, and materials including SKUs and categories.",
+      "uoms": "Units of Measure",
+      "uoms_desc": "Define system-wide measurement units and precision standards in bulk.",
+      "barcodes": "Barcode Mapping",
+      "barcodes_desc": "Associate GTINs and internal barcodes with items and specific units.",
+      "start_import": "Initialize Sequence",
+      "note_title": "Import Protocol",
+      "note_description": "Ensure your XLSX files follow the official templates to prevent validation failures.",
+      "upload_step": "Acquisition",
+      "validate_step": "Audit",
+      "error_step": "Discrepancies",
+      "commit_step": "Finalize",
+      "upload_title": "Source Acquisition",
+      "upload_description": "Upload your Master Data manifest in XLSX format. The system will perform a structural audit before commitment.",
+      "click_to_upload": "Click to select or drag manifest",
+      "invalid_file_type": "Invalid format. Only .xlsx files are accepted.",
+      "file_too_large": "File exceeds 20MB limit.",
+      "empty_file": "manifest contains no data records.",
+      "parse_error": "Failed to parse the manifest. Ensure the file is not corrupted.",
+      "download_template": "Download Template",
+      "upload_warning": "Large manifests (1000+ rows) may take several minutes to synchronize.",
+      "validating_title": "Integrity Audit",
+      "integrity_check_in_progress": "Analyzing structural integrity...",
+      "total_records": "Manifest Rows",
+      "status": "State",
+      "analyzing": "Analyzing...",
+      "errors_found_title": "{count} Discrepancies Detected",
+      "errors_found_description": "Structural or logical errors were found. Resolve these in your manifest and re-upload.",
+      "row": "Row",
+      "column": "Column",
+      "value": "Offending Value",
+      "error_message": "Fault Description",
+      "showing_first_n_errors": "Displaying first {count} of {total} discrepancies",
+      "export_error_report": "Export Fault Log",
+      "try_again": "Re-initialize",
+      "success_title": "Import Successful",
+      "success_description": "Successfully synchronized {count} records with the Master Data Hub.",
+      "imported_records": "Synchronized",
+      "committed": "Committed",
+      "view_records_cta": "View Registry",
+      "commit_title": "Commitment Authorization",
+      "commit_description": "Review the manifest summary before final ledger synchronization.",
+      "entity_type": "Target Domain",
+      "idempotency_key": "Idempotency Token",
+      "commit_warning": "Authorization is irreversible. Data will be merged into the production registry.",
+      "cancel": "Abort",
+      "committing": "Synchronizing...",
+      "confirm_import": "Authorize Commitment"
+    },
+    "uoms": {
+      "title": "Units of Measure",
+      "description": "Standardized metrics and measurement specifications",
+      "create_title": "Define New Unit",
+      "edit_title": "Modify Measurement Unit",
+      "created_success": "Measurement unit defined",
+      "updated_success": "Unit specifications updated",
+      "deactivated_success": "Measurement unit deactivated",
+      "total_metrics": "Total Registry",
+      "precision": "High Precision",
+      "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
+      "registry_sync": "Registry Sync",
+      "search_placeholder": "Search units by code or name...",
+      "errors": {
+        "cannot_deactivate_uom_in_use": "Cannot deactivate unit currently assigned to active items.",
+        "update_failed": "Failed to update unit specifications"
+      },
+      "fields": {
+        "code": "Unit Code",
+        "name_en": "Unit Name (EN)",
+        "name_ar": "Unit Name (AR)",
+        "is_active": "Status",
+        "created_at": "Created At"
+      },
+      "validation": {
+        "code_required": "Unit code is required",
+        "code_uppercase": "Code must be uppercase alphabetic",
+        "name_en_required": "English name is required",
+        "name_ar_required": "Arabic name is required"
+      }
     }
   },
   "inventory": {
@@ -1284,54 +1606,56 @@
     "department_placeholder": "Select Department"
   },
   "dashboard": {
-    "title": "Operations Overview",
-    "description": "Real-time overview of warehouse performance and critical indicators",
+    "title": "Culinary Dashboard",
+    "description": "Operational Intelligence & Stream Overview",
     "kpi": {
       "total_stock": "Total Stock Value",
-      "pending_prs": "Pending Purchase Requests",
+      "pending_prs": "Pending Requests",
       "active_stocktakes": "Active Stocktakes",
-      "low_stock": "Low Stock Items",
-      "vs_last_month": "vs. last month",
+      "low_stock": "Low Stock",
+      "vs_last_month": "vs last month",
       "immediate_review": "Immediate review required",
-      "warehouse_locked": "Warehouse(s) Locked",
+      "warehouse_locked": "Warehouse Locked",
       "reorder_suggested": "Reorder suggested",
-      "critical_items": "Critical items"
+      "critical_items": "Items below safety level",
+      "low_stock_items": "Low Stock Items",
+      "jeddah_riyadh_active": "Jeddah & Riyadh active"
     },
     "near_expiry": {
-      "title": "Near Expiry Items",
-      "alert": "Alert",
-      "expires": "Expires: ",
-      "rotation_report": "Generate Inventory Rotation Report"
+      "title": "Near Expiry Control",
+      "alert": "Priority Rotation",
+      "expires": "Expires",
+      "rotation_report": "View Rotation Report"
     },
     "pending_approvals": {
       "title": "Pending Approvals",
-      "tasks": "Tasks",
-      "view_all": "View All Intelligence"
+      "tasks": "tasks",
+      "view_all": "View All Workflow"
     },
-    "expiry_control": "EXPIRY CONTROL",
-    "approval_workflow": "APPROVAL WORKFLOW",
-    "business_intelligence": "BUSINESS INTELLIGENCE",
+    "expiry_control": "Expiry Control & Monitoring",
+    "approval_workflow": "Pending Approvals & Workflow",
+    "business_intelligence": "Business Intelligence & Forecasts",
     "system_health": {
-      "title": "System Integrity",
+      "title": "System Health",
       "optimal": "Optimal",
-      "health_suffix": "Health",
-      "node_description": "Real-time Performance Node",
-      "backup": "Backup",
-      "online": "Online",
+      "health_suffix": "Stability",
+      "node_description": "Active Node Performance",
+      "backup": "Last Backup",
+      "online": "Active Users",
       "sessions": "Sessions"
     },
     "audit": {
-      "title": "Administrative Audit",
-      "subtitle": "Recent Master Activity",
+      "title": "Audit Stream",
+      "subtitle": "Recent Security & Data Mutations",
       "updated_sku": "Updated SKU",
       "role_mutation": "Role Mutation",
       "branch_sync": "Branch Sync Complete"
     },
     "analytics": {
-      "title": "System Analytics",
-      "velocity": "Operational Velocity",
-      "full_report": "Full Report",
-      "processing": "Processing Visual Stream"
+      "title": "Intelligence",
+      "velocity": "Movement Velocity",
+      "full_report": "Full Analysis",
+      "processing": "Processing Data Streams..."
     }
   },
   "notifications": {
@@ -1416,9 +1740,59 @@
     "total_users": "Total Users",
     "admins": "Admins",
     "operators": "Operators",
-    "users": "Users",
+    "users": {
+      "title": "Access Management",
+      "description": "Authorized identity registry and operational scoping",
+      "create_title": "Create User Account",
+      "edit_title": "Modify User Identity",
+      "name": "Full Name",
+      "email": "Email Address",
+      "role": "System Role",
+      "status": "Account Status",
+      "language": "Preferred Language",
+      "branch": "Branch Scope",
+      "warehouse": "Warehouse Scope",
+      "department": "Department Scope",
+      "activate": "Activate Account",
+      "deactivate": "Deactivate Account",
+      "cannot_modify_self": "Security policy prevents self-modification of roles or status.",
+      "cannot_deactivate_self": "You cannot deactivate your own account.",
+      "cannot_deactivate_last_admin": "System protection: At least one active administrator must remain.",
+      "email_already_exists": "This email address is already registered in the system.",
+      "return_to_users": "Return to User Registry",
+      "user_identity": "User Identity",
+      "access_scopes": "Access Scopes",
+      "governance": "Governance & Roles",
+      "create_user": "Create User",
+      "branch_scope": "Branch Scope",
+      "warehouse_scope": "Warehouse Scope",
+      "department_scope": "Department Scope",
+      "name_min_length": "Name must be at least 3 characters",
+      "invalid_email": "Invalid email address format"
+    },
     "description": "Authorized identity registry and operational scoping.",
-    "roles": "Roles & Permissions",
+    "roles": {
+      "roles_title": "Role Governance",
+      "roles_description": "Define operational boundaries and functional permissions",
+      "role_detail_title": "Permission Matrix",
+      "module": "System Module",
+      "actions": "Actions",
+      "view": "View",
+      "create": "Create",
+      "edit": "Edit",
+      "approve": "Approve",
+      "post": "Post",
+      "confirm_update_permissions": "Confirm Permission Update",
+      "permissions_updated": "Permissions updated successfully",
+      "admin_role_locked": "Administrative permissions are system-locked",
+      "save_changes": "Save Permission Map",
+      "at_least_one_view": "Role must have at least one module visibility",
+      "confirm_warning": "This will affect all users assigned to this role",
+      "role_name": "Role Name",
+      "description": "Description",
+      "users_count": "Users Count",
+      "view_detail": "View Details"
+    },
     "audit_log": "Audit Log",
     "create_user": "Create User",
     "edit_user": "Edit User",
@@ -1439,7 +1813,56 @@
     "user_name": "User",
     "created_at": "Created At",
     "changes": "Changes",
-    "export_csv": "Export CSV"
+    "export_csv": "Export CSV",
+    "settings": {
+      "settings_title": "System Settings",
+      "general_section": "General Settings",
+      "email_section": "Email Settings",
+      "system_name": "System Name",
+      "default_language": "Default Language",
+      "base_currency": "Base Currency",
+      "sender_name": "Sender Name",
+      "reply_to_email": "Reply-to Email",
+      "confirm_base_currency_title": "Confirm Base Currency Change",
+      "confirm_base_currency_warning": "This will affect all reports across the system.",
+      "settings_saved": "System settings updated successfully",
+      "return_to_admin": "Return to Admin Panel",
+      "base_currency_warning": "Changing the base currency affects all financial reports."
+    },
+    "restaurant_profile": {
+      "title": "Restaurant Profile",
+      "subtitle": "Culinary Architect Identity & Branding",
+      "description": "Manage restaurant branding for official documents and report headers.",
+      "fields": {
+        "name": "Restaurant Name",
+        "logo": "Logo (PNG/JPG)",
+        "address": "Full Address",
+        "phone": "Phone Number",
+        "email": "Email Address",
+        "tax_number": "Tax Number (VAT)",
+        "commercial_registration": "Commercial Registration (CR)"
+      },
+      "placeholders": {
+        "address": "Enter full street address, city, and zip...",
+        "phone": "e.g. +966 12 345 6789",
+        "email": "contact@restaurant.com"
+      },
+      "validation": {
+        "name_required": "Restaurant name is required",
+        "address_required": "Address is required",
+        "phone_required": "Phone number is required",
+        "email_required": "Valid email address is required"
+      },
+      "save_success": "Restaurant profile updated successfully",
+      "upload_logo": "Upload Logo",
+      "change_logo": "Change Logo",
+      "logo_hint": "Recommended: Square 512x512 PNG with transparent background.",
+      "sections": {
+        "identity": "Brand Identity",
+        "contact": "Contact Protocol",
+        "legal": "Legal Metadata"
+      }
+    }
   },
   "operational": {
     "inventory": {
@@ -1601,617 +2024,5 @@
         "min_stock_negative": "Cannot be negative"
       }
     }
-  },
-  "procurement": {
-    "pr": {
-      "title": "Purchase Requests",
-      "description": "Internal procurement requests and approval workflow",
-      "create_new": "Create New PR",
-      "requested_by": "Requested By",
-      "department": "Department",
-      "expected_date": "Expected Date",
-      "specification": "Document Specification",
-      "detail_title": "PR Composition",
-      "new_intent": "New Request Intent",
-      "requested_qty": "Req Qty",
-      "submit": "Submit for Approval",
-      "sync_context": "Syncing Request Data...",
-      "invalid_state": "Invalid Request State",
-      "search_placeholder": "Search by number or department...",
-      "no_requests_title": "No Purchase Requests",
-      "no_requests_desc": "Start the procurement cycle by creating a new request.",
-      "metrics": {
-        "total": "Total Requests",
-        "approved": "Approved PRs",
-        "pending": "Pending Review"
-      },
-      "go_to_approval": "Go to Approval",
-      "convert_to_po": "Convert to PO",
-      "approval_workflow": "Approval Workflow",
-      "approval_desc": "Review items and confirm or reject the request",
-      "reject_pr": "Reject Request",
-      "reject_reason_title": "Rejection Reason",
-      "reject_reason_placeholder": "Explain why this request is being rejected...",
-      "reject_reason_min_chars": "Reason must be at least 15 characters",
-      "approve_pr": "Approve Request",
-      "submit_success": "PR Submitted Successfully",
-      "approve_success": "PR Approved Successfully",
-      "reject_success": "PR Rejected Successfully",
-      "reject_confirm_desc": "Are you sure you want to reject this request? This action is irreversible.",
-      "rejection_reason": "Rejection Reason",
-      "rejection_reason_placeholder": "Describe why this request is being rejected...",
-      "confirm_rejection": "Confirm Rejection",
-      "approve_confirm_title": "Confirm Approval",
-      "approve_confirm_desc": "You are about to authorize this purchase request."
-    },
-    "po": {
-      "title": "Purchase Orders",
-      "description": "Manage supplier orders and procurement execution",
-      "create_new": "Create New PO",
-      "po_number": "PO Number",
-      "supplier": "Supplier",
-      "currency": "Currency",
-      "exchange_rate": "Exchange Rate",
-      "expected_date": "Expected Date",
-      "specification": "Order Specification",
-      "detail_title": "PO Composition",
-      "new_intent": "New Order Intent",
-      "unit_price": "Unit Price",
-      "total_amount": "Total Amount",
-      "submit": "Submit Order",
-      "sync_context": "Syncing Order Data...",
-      "invalid_state": "Invalid Order State",
-      "search_placeholder": "Search by PO number or supplier...",
-      "no_orders_title": "No Purchase Orders",
-      "no_orders_desc": "Start procuring items by creating your first purchase order.",
-      "metrics": {
-        "total": "Total Orders",
-        "pending": "Pending Approval",
-        "approved": "Active Orders"
-      },
-      "go_to_approval": "Go to Approval",
-      "approval_workflow": "Approval Workflow",
-      "approval_desc": "Review order details and confirm procurement commitment",
-      "reject_po": "Reject Order",
-      "rejection_hint": "Provide a clear reason for the supplier or team.",
-      "irreversible": "This action cannot be undone.",
-      "edit_not_allowed": "Modification Locked",
-      "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited.",
-      "linked_pr": "Linked PR (Optional)",
-      "supplier_currency": "Supplier Currency",
-      "fx_rate": "FX Rate (to SAR)",
-      "general_notes": "General Notes",
-      "line_items": "Line Items",
-      "add_item": "Add Item",
-      "item_sku": "Item SKU",
-      "quantity": "Quantity",
-      "line_notes": "Line Notes",
-      "supplier_total": "Supplier Total",
-      "base_total": "Base Total (SAR)",
-      "select_supplier": "Select Supplier",
-      "notes_placeholder": "e.g. Special packaging required",
-      "submit_success": "PO Submitted Successfully",
-      "approve_success": "PO Approved Successfully",
-      "reject_success": "PO Rejected Successfully",
-      "reject_confirm_desc": "Are you sure you want to reject this order? This action is irreversible.",
-      "rejection_reason": "Rejection Reason",
-      "rejection_reason_placeholder": "Describe why this order is being rejected...",
-      "rejection_reason_min_chars": "Reason must be at least 15 characters",
-      "confirm_rejection": "Confirm Rejection",
-      "approve_confirm_title": "Confirm Approval",
-      "approve_confirm_desc": "You are about to authorize this purchase order.",
-      "actions": {
-        "submit": "Submit Purchase Order",
-        "submitting": "Submitting..."
-      }
-    }
-  },
-  "dashboard": {
-    "title": "Culinary Dashboard",
-    "description": "Operational Intelligence & Stream Overview",
-    "kpi": {
-      "total_stock": "Total Stock Value",
-      "vs_last_month": "vs last month",
-      "pending_prs": "Pending Requests",
-      "immediate_review": "Immediate review required",
-      "active_stocktakes": "Active Stocktakes",
-      "warehouse_locked": "Warehouse Locked",
-      "low_stock": "Low Stock",
-      "low_stock_items": "Low Stock Items",
-      "reorder_suggested": "Reorder suggested",
-      "critical_items": "Items below safety level",
-      "jeddah_riyadh_active": "Jeddah & Riyadh active"
-    },
-    "expiry_control": "Expiry Control & Monitoring",
-    "approval_workflow": "Pending Approvals & Workflow",
-    "business_intelligence": "Business Intelligence & Forecasts",
-    "near_expiry": {
-      "title": "Near Expiry Control",
-      "alert": "Priority Rotation",
-      "expires": "Expires",
-      "rotation_report": "View Rotation Report"
-    },
-    "pending_approvals": {
-      "title": "Pending Approvals",
-      "tasks": "tasks",
-      "view_all": "View All Workflow"
-    },
-    "system_health": {
-      "title": "System Health",
-      "optimal": "Optimal",
-      "health_suffix": "Stability",
-      "node_description": "Active Node Performance",
-      "backup": "Last Backup",
-      "online": "Active Users",
-      "sessions": "Sessions"
-    },
-    "audit": {
-      "title": "Audit Stream",
-      "subtitle": "Recent Security & Data Mutations"
-    },
-    "analytics": {
-      "title": "Intelligence",
-      "velocity": "Movement Velocity",
-      "full_report": "Full Analysis",
-      "processing": "Processing Data Streams..."
-    }
-  },
-  "admin": {
-    "users": {
-      "title": "Access Management",
-      "description": "Authorized identity registry and operational scoping",
-      "create_title": "Create User Account",
-      "edit_title": "Modify User Identity",
-      "name": "Full Name",
-      "email": "Email Address",
-      "role": "System Role",
-      "status": "Account Status",
-      "language": "Preferred Language",
-      "branch": "Branch Scope",
-      "warehouse": "Warehouse Scope",
-      "department": "Department Scope",
-      "activate": "Activate Account",
-      "deactivate": "Deactivate Account",
-      "cannot_modify_self": "Security policy prevents self-modification of roles or status.",
-      "cannot_deactivate_self": "You cannot deactivate your own account.",
-      "cannot_deactivate_last_admin": "System protection: At least one active administrator must remain.",
-      "email_already_exists": "This email address is already registered in the system.",
-      "return_to_users": "Return to User Registry",
-      "user_identity": "User Identity",
-      "access_scopes": "Access Scopes",
-      "governance": "Governance & Roles",
-      "create_user": "Create User",
-      "branch_scope": "Branch Scope",
-      "warehouse_scope": "Warehouse Scope",
-      "department_scope": "Department Scope",
-      "name_min_length": "Name must be at least 3 characters",
-      "invalid_email": "Invalid email address format"
-    },
-    "roles": {
-      "roles_title": "Role Governance",
-      "roles_description": "Define operational boundaries and functional permissions",
-      "role_detail_title": "Permission Matrix",
-      "module": "System Module",
-      "actions": "Actions",
-      "view": "View",
-      "create": "Create",
-      "edit": "Edit",
-      "approve": "Approve",
-      "post": "Post",
-      "confirm_update_permissions": "Confirm Permission Update",
-      "permissions_updated": "Permissions updated successfully",
-      "admin_role_locked": "Administrative permissions are system-locked",
-      "save_changes": "Save Permission Map",
-      "at_least_one_view": "Role must have at least one module visibility",
-      "confirm_warning": "This will affect all users assigned to this role",
-      "role_name": "Role Name",
-      "description": "Description",
-      "users_count": "Users Count",
-      "view_detail": "View Details"
-    },
-    "settings": {
-      "settings_title": "System Settings",
-      "general_section": "General Settings",
-      "email_section": "Email Settings",
-      "system_name": "System Name",
-      "default_language": "Default Language",
-      "base_currency": "Base Currency",
-      "sender_name": "Sender Name",
-      "reply_to_email": "Reply-to Email",
-      "confirm_base_currency_title": "Confirm Base Currency Change",
-      "confirm_base_currency_warning": "This will affect all reports across the system.",
-      "settings_saved": "System settings updated successfully",
-      "return_to_admin": "Return to Admin Panel",
-      "base_currency_warning": "Changing the base currency affects all financial reports."
-    },
-    "restaurant_profile": {
-      "title": "Restaurant Profile",
-      "subtitle": "Culinary Architect Identity & Branding",
-      "description": "Manage restaurant branding for official documents and report headers.",
-      "fields": {
-        "name": "Restaurant Name",
-        "logo": "Logo (PNG/JPG)",
-        "address": "Full Address",
-        "phone": "Phone Number",
-        "email": "Email Address",
-        "tax_number": "Tax Number (VAT)",
-        "commercial_registration": "Commercial Registration (CR)"
-      },
-      "placeholders": {
-        "address": "Enter full street address, city, and zip...",
-        "phone": "e.g. +966 12 345 6789",
-        "email": "contact@restaurant.com"
-      },
-      "validation": {
-        "name_required": "Restaurant name is required",
-        "address_required": "Address is required",
-        "phone_required": "Phone number is required",
-        "email_required": "Valid email address is required"
-      },
-      "save_success": "Restaurant profile updated successfully",
-      "upload_logo": "Upload Logo",
-      "change_logo": "Change Logo",
-      "logo_hint": "Recommended: Square 512x512 PNG with transparent background.",
-      "sections": {
-        "identity": "Brand Identity",
-        "contact": "Contact Protocol",
-        "legal": "Legal Metadata"
-      }
-    }
-  },
-  "master_data": {
-    "branches": {
-      "title": "Branch Registry",
-      "description": "Organizational structure and primary location hubs",
-      "create_title": "Register New Branch",
-      "edit_title": "Modify Branch Hub",
-      "created_success": "Branch registered successfully",
-      "updated_success": "Branch identity updated",
-      "deleted_success": "Branch removed from registry",
-      "errors": {
-        "deactivate_linked_warehouses": "Cannot deactivate branch with active warehouses.",
-        "update_failed": "Failed to update branch identity"
-      },
-      "fields": {
-        "code": "Branch Code",
-        "name_en": "Branch Name (EN)",
-        "name_ar": "Branch Name (AR)",
-        "is_active": "Status"
-      }
-    },
-    "categories": {
-      "title": "Category Taxonomy",
-      "description": "Logical classification of materials and assets",
-      "create_title": "Register New Category",
-      "edit_title": "Modify Classification",
-      "created_success": "Category registered successfully",
-      "updated_success": "Classification updated",
-      "deleted_success": "Classification removed",
-      "errors": {
-        "delete_linked_items": "Cannot remove classification with active inventory items.",
-        "delete_failed": "Failed to remove classification"
-      },
-      "fields": {
-        "name_en": "Category Name (EN)",
-        "name_ar": "Category Name (AR)"
-      }
-    },
-    "warehouses": {
-      "title": "Warehouse Management",
-      "description": "Logistics nodes and physical storage locations",
-      "create_title": "Register New Warehouse",
-      "edit_title": "Modify Warehouse Node",
-      "created_success": "Warehouse registered successfully",
-      "updated_success": "Warehouse details updated",
-      "errors": {
-        "cannot_deactivate_warehouse_in_use": "Cannot deactivate warehouse with active departments or inventory.",
-        "cannot_change_branch_with_departments": "Cannot change branch for a warehouse that has linked departments.",
-        "update_failed": "Failed to update warehouse details"
-      },
-      "fields": {
-        "branch": "Operating Branch",
-        "code": "Warehouse Code",
-        "name_en": "Warehouse Name (EN)",
-        "name_ar": "Warehouse Name (AR)",
-        "type": "Storage Type",
-        "is_active": "Status"
-      },
-      "types": {
-        "main": "Main",
-        "dry": "Dry Storage",
-        "cold": "Cold Storage",
-        "virtual": "Virtual"
-      },
-      "validation": {
-        "branch_required": "Operating branch is required",
-        "code_min": "Code must be at least 2 characters",
-        "code_format": "Code must be uppercase alphanumeric",
-        "name_en_min": "English name must be at least 3 characters",
-        "name_ar_min": "Arabic name must be at least 3 characters"
-      }
-    },
-    "departments": {
-      "title": "Cost Centers & Departments",
-      "description": "Internal consumption points and operational units",
-      "create_title": "Register New Department",
-      "edit_title": "Modify Department Profile",
-      "created_success": "Department registered successfully",
-      "updated_success": "Department profile updated",
-      "errors": {
-        "cannot_deactivate_department_in_use": "Cannot deactivate department linked to active kitchen requests or stocktakes.",
-        "update_failed": "Failed to update department profile"
-      },
-      "fields": {
-        "branch": "Operating Branch",
-        "warehouse": "Parent Warehouse",
-        "code": "Department Code",
-        "name_en": "Department Name (EN)",
-        "name_ar": "Department Name (AR)",
-        "manager": "Unit Manager",
-        "cost_center": "Cost Center ID",
-        "is_active": "Status"
-      },
-      "validation": {
-        "branch_required": "Branch selection is required",
-        "warehouse_required": "Parent warehouse is required",
-        "code_min": "Code must be at least 2 characters",
-        "code_format": "Code must be uppercase alphanumeric",
-        "name_en_min": "English name must be at least 3 characters",
-        "name_ar_min": "Arabic name must be at least 3 characters"
-      }
-    },
-    "suppliers": {
-      "title": "Supplier Registry",
-      "description": "External procurement partners and fulfillment hubs",
-      "create_title": "Register New Supplier",
-      "edit_title": "Modify Supplier Profile",
-      "partner_identity": "Partner Identity",
-      "partner_identity_desc": "Registration details and branding",
-      "financial_terms": "Financial Terms",
-      "financial_terms_desc": "Currency and payment agreements",
-      "terms_placeholder": "Describe payment cycles or special agreements...",
-      "created_success": "Supplier registered",
-      "updated_success": "Supplier profile updated",
-      "deleted_success": "Supplier removed",
-      "errors": {
-        "deactivate_linked_pos": "Cannot deactivate supplier with active purchase orders.",
-        "update_failed": "Failed to update supplier profile"
-      },
-      "fields": {
-        "code": "Supplier Code",
-        "name_en": "Supplier Name (EN)",
-        "name_ar": "Supplier Name (AR)",
-        "currency": "Preferred Currency",
-        "payment_terms": "Payment Terms",
-        "is_active": "Status"
-      }
-    },
-    "items": {
-      "title": "Items Master Data",
-      "description": "Centralized inventory catalog and specification management",
-      "create_title": "Register New Item",
-      "edit_title": "Modify Item Specifications",
-      "created_success": "Item registered successfully",
-      "updated_success": "Item specifications updated",
-      "deactivated_success": "Item deactivated",
-      "errors": {
-        "cannot_deactivate_with_stock": "Cannot deactivate item with remaining stock.",
-        "sku_exists": "An item with this SKU already exists.",
-        "update_failed": "Failed to update item details"
-      },
-      "sections": {
-        "identity": "Item Identity",
-        "identity_desc": "Fundamental identification and coding",
-        "categorization": "Taxonomy",
-        "categorization_desc": "Logical grouping and classification",
-        "inventory_rules": "Inventory Rules",
-        "inventory_rules_desc": "Control parameters and safety levels"
-      },
-      "fields": {
-        "sku": "Item Code (SKU)",
-        "barcode": "Barcode / GTIN",
-        "name_en": "Item Name (EN)",
-        "name_ar": "Item Name (AR)",
-        "category": "Classification",
-        "base_unit": "Stock Unit",
-        "min_stock": "Safety Stock (Min)",
-        "reorder_point": "Reorder Threshold",
-        "is_active": "Status"
-      },
-      "validation": {
-        "code_required": "SKU code is required",
-        "barcode_required": "Barcode is required",
-        "name_en_required": "English name is required",
-        "name_ar_required": "Arabic name is required",
-        "category_required": "Category is required",
-        "uom_required": "Primary UoM is required"
-      }
-    },
-    "uoms": {
-      "title": "Units of Measure",
-      "description": "Standardized metrics and measurement specifications",
-      "create_title": "Define New Unit",
-      "edit_title": "Modify Measurement Unit",
-      "created_success": "Measurement unit defined",
-      "updated_success": "Unit specifications updated",
-      "deactivated_success": "Measurement unit deactivated",
-      "total_metrics": "Total Registry",
-      "precision": "High Precision",
-      "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
-      "registry_sync": "Registry Sync",
-      "search_placeholder": "Search units by code or name...",
-      "errors": {
-        "cannot_deactivate_uom_in_use": "Cannot deactivate unit currently assigned to active items.",
-        "update_failed": "Failed to update unit specifications"
-      },
-      "fields": {
-        "code": "Unit Code",
-        "name_en": "Unit Name (EN)",
-        "name_ar": "Unit Name (AR)",
-        "is_active": "Status",
-        "created_at": "Created At"
-      },
-      "validation": {
-        "code_required": "Unit code is required",
-        "code_uppercase": "Code must be uppercase alphabetic",
-        "name_en_required": "English name is required",
-        "name_ar_required": "Arabic name is required"
-      }
-    },
-    "barcodes": {
-      "title": "Barcode Registry",
-      "description": "Multi-unit barcode mapping and GTIN management",
-      "create_title": "Register New Barcode",
-      "edit_title": "Modify Barcode Specifications",
-      "created_success": "Barcode registered successfully",
-      "updated_success": "Barcode mapping updated",
-      "deactivated_success": "Barcode deactivated",
-      "errors": {
-        "code_exists": "This barcode code is already registered.",
-        "cannot_deactivate_in_use": "Cannot deactivate barcode linked to active transactions.",
-        "update_failed": "Failed to update barcode specifications"
-      },
-      "fields": {
-        "item": "Inventory Item",
-        "uom": "Measurement Unit",
-        "code": "Barcode / GTIN",
-        "default_qty": "Default Quantity",
-        "is_active": "Status"
-      },
-      "validation": {
-        "item_required": "Inventory item is required",
-        "uom_required": "Measurement unit is required",
-        "code_required": "Barcode code is required",
-        "qty_positive": "Default quantity must be greater than 0"
-      },
-      "tips": {
-        "multi_unit_title": "Multi-Unit Mapping",
-        "multi_unit_desc": "Associate different barcodes for each measurement unit (e.g., Box vs Piece) to automate conversion.",
-        "gtin_standard_title": "GTIN Standards",
-        "gtin_standard_desc": "Use standard GS1 GTIN-13 or GTIN-8 barcodes for seamless vendor integration and catalog accuracy."
-      }
-    },
-    "currencies": {
-      "title": "Currency Master",
-      "description": "Global currency definitions and exchange rate management",
-      "create_title": "Define New Currency",
-      "edit_title": "Modify Currency Standards",
-      "created_success": "Currency defined successfully",
-      "updated_success": "Currency updated",
-      "fields": {
-        "name_en": "Currency Name (EN)",
-        "name_ar": "Currency Name (AR)",
-        "code": "Currency Code",
-        "symbol": "Symbol",
-        "is_base": "Base Currency",
-        "is_active": "Status"
-      },
-      "validation": {
-        "name_en_required": "English name is required",
-        "name_ar_required": "Arabic name is required",
-        "code_required": "Currency code is required",
-        "code_length": "Code must be exactly 3 characters",
-        "code_format": "Code must be 3 uppercase letters (ISO 4217)"
-      },
-      "errors": {
-        "code_exists": "Currency code already exists.",
-        "cannot_deactivate_base": "Cannot deactivate the base currency.",
-        "cannot_deactivate_in_use": "Cannot deactivate currency used in active Purchase Orders or GRNs.",
-        "base_required": "At least one currency must be set as base.",
-        "update_failed": "Failed to update currency"
-      },
-      "tips": {
-        "base_currency_title": "Base Currency Singleton",
-        "base_currency_desc": "Only one currency can be 'Base'. All system valuations and accounting will use this currency.",
-        "iso_standard_title": "ISO 4217 Standards",
-        "iso_standard_desc": "Use standard 3-letter codes (e.g., SAR, USD) to ensure compatibility with international banking and exchange providers."
-      }
-    },
-    "fx_rates": {
-      "title": "FX Rates Ledger",
-      "description": "Historical currency exchange rates and temporal valuation references",
-      "create_title": "Register Exchange Rate",
-      "edit_title": "Modify Rate Parameters",
-      "save_success": "FX Rate registered successfully",
-      "update_success": "FX Rate updated",
-      "fields": {
-        "from_currency": "From Currency",
-        "to_currency": "To Currency",
-        "rate": "Exchange Rate",
-        "effective_date": "Effective Date",
-        "status": "Status"
-      },
-      "validation": {
-        "from_currency_required": "Source currency is required",
-        "to_currency_required": "Target currency is required",
-        "rate_positive": "Rate must be greater than 0",
-        "rate_precision": "Rate supports up to 6 decimal places",
-        "date_required": "Effective date is required",
-        "currencies_must_differ": "Source and target currencies must be different"
-      },
-      "errors": {
-        "cannot_duplicate_rate": "A rate already exists for this currency pair and effective date.",
-        "cannot_deactivate_rate_in_use": "Cannot deactivate rate currently in use by posted GRN documents.",
-        "update_failed": "Failed to update FX rate"
-      },
-      "tips": {
-        "temporal_title": "Temporal Reference",
-        "temporal_desc": "FX rates are date-sensitive. The system uses the rate effective on the document date for financial valuations."
-      }
-    },
-    "import": {
-      "title": "Data Import Wizard",
-      "select_type": "Select Master Data Domain",
-      "items": "Items Registry",
-      "items_desc": "Batch import products, ingredients, and materials including SKUs and categories.",
-      "uoms": "Units of Measure",
-      "uoms_desc": "Define system-wide measurement units and precision standards in bulk.",
-      "barcodes": "Barcode Mapping",
-      "barcodes_desc": "Associate GTINs and internal barcodes with items and specific units.",
-      "start_import": "Initialize Sequence",
-      "note_title": "Import Protocol",
-      "note_description": "Ensure your XLSX files follow the official templates to prevent validation failures.",
-      "upload_step": "Acquisition",
-      "validate_step": "Audit",
-      "error_step": "Discrepancies",
-      "commit_step": "Finalize",
-      "upload_title": "Source Acquisition",
-      "upload_description": "Upload your Master Data manifest in XLSX format. The system will perform a structural audit before commitment.",
-      "click_to_upload": "Click to select or drag manifest",
-      "invalid_file_type": "Invalid format. Only .xlsx files are accepted.",
-      "file_too_large": "File exceeds 20MB limit.",
-      "empty_file": "manifest contains no data records.",
-      "parse_error": "Failed to parse the manifest. Ensure the file is not corrupted.",
-      "download_template": "Download Template",
-      "upload_cta": "Process Manifest",
-      "upload_warning": "Large manifests (1000+ rows) may take several minutes to synchronize.",
-      "validating_title": "Integrity Audit",
-      "integrity_check_in_progress": "Analyzing structural integrity...",
-      "total_records": "Manifest Rows",
-      "status": "State",
-      "analyzing": "Analyzing...",
-      "errors_found_title": "{count} Discrepancies Detected",
-      "errors_found_description": "Structural or logical errors were found. Resolve these in your manifest and re-upload.",
-      "row": "Row",
-      "column": "Column",
-      "value": "Offending Value",
-      "error_message": "Fault Description",
-      "showing_first_n_errors": "Displaying first {count} of {total} discrepancies",
-      "export_error_report": "Export Fault Log",
-      "try_again": "Re-initialize",
-      "success_title": "Import Successful",
-      "success_description": "Successfully synchronized {count} records with the Master Data Hub.",
-      "imported_records": "Synchronized",
-      "committed": "Committed",
-      "view_records_cta": "View Registry",
-      "commit_title": "Commitment Authorization",
-      "commit_description": "Review the manifest summary before final ledger synchronization.",
-      "entity_type": "Target Domain",
-      "idempotency_key": "Idempotency Token",
-      "commit_warning": "Authorization is irreversible. Data will be merged into the production registry.",
-      "cancel": "Abort",
-      "committing": "Synchronizing...",
-      "confirm_import": "Authorize Commitment"
-    }
   }
-}
+}

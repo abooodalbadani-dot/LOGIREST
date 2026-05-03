@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -71,7 +71,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
  try {
  await createRequest.mutateAsync({ ...values, isDraft });
- router.push(`/ ${locale}/kitchen-requests`);
+ router.push(`/${locale}/kitchen-requests`);
  } catch (error) {
  console.error('Failed to create kitchen request', error);
  }
@@ -82,7 +82,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  <Breadcrumb 
  items={[
  { label: tCommon('inventory'), href: '#' },
- { label: t('title'), href: `/ ${locale}/kitchen-requests` },
+ { label: t('title'), href: `/${locale}/kitchen-requests` },
  { label: t('create_new') }
  ]} 
  />

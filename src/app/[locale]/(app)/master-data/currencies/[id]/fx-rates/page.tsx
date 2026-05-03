@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
- const t = await getTranslations({ locale, namespace: 'masterData.currencies' });
+ const t = await getTranslations({ locale, namespace: 'master_data.currencies' });
  return {
  title: `${t('fx_rates_title')} | LogiRest`,
  description: 'Historical exchange rates and currency conversion management',

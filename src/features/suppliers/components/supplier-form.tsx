@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslations } from "next-intl"
-import { useRouter } from "next/navigation"
+import { useRouter } from '@/i18n/navigation'
 
 const formSchema = z.object({
  code: z.string().min(1).max(50),
@@ -32,8 +32,8 @@ const formSchema = z.object({
 
 export function SupplierForm() {
  const router = useRouter()
- const t = useTranslations("masterData.suppliers")
- const tc = useTranslations("masterData.common")
+ const t = useTranslations("master_data.suppliers")
+ const tc = useTranslations("master_data.common")
  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
  const form = useForm<z.infer<typeof formSchema>>({

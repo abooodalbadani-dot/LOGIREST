@@ -42,7 +42,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
 
  // Access Control: Only ADMIN and status APPROVED
  if (session.status !== 'APPROVED') {
- router.replace(`/stocktake/ ${id}`);
+ router.replace(`/stocktake/${id}`);
  return null;
  }
 
@@ -55,7 +55,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  try {
  await postStocktake.mutateAsync(id);
  toast.success(t('posted_success_variance'));
- router.push(`/stocktake/ ${id}`);
+ router.push(`/stocktake/${id}`);
  } catch {
  toast.error(common('error'));
  }
@@ -84,7 +84,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  </div>
  </div>
  }
- backHref={`/stocktake/ ${id}`}
+ backHref={`/stocktake/${id}`}
  />
 
  {/* Warning Panel */}
@@ -145,7 +145,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
 
  {/* Read-only manifest link */}
  <div className="flex justify-center">
- <Button variant="link" onClick={() => router.push(`/stocktake/ ${id}`)} className="text-muted-foreground/40 hover:text-primary transition-colors text-label-xs font-semibold uppercase">
+ <Button variant="link" onClick={() => router.push(`/stocktake/${id}`)} className="text-muted-foreground/40 hover:text-primary transition-colors text-label-xs font-semibold uppercase">
  {t('return_to_manifest')}
  </Button>
  </div>

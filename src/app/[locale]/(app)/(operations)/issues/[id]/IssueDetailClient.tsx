@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft, Save, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
@@ -26,9 +26,10 @@ import type { LotAllocation } from '@/types/documents';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
-
-export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
+ 
+export function IssueDetailClient({ id }: { id: string }) {
  const t = useTranslations('operations.issue');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
  const { user } = useAuth();
  
@@ -121,7 +122,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
  try {
  await postIssue.mutateAsync({ confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' });
  setIsPostDialogOpen(false);
- router.push(`/ ${locale}/issues`);
+ router.push(`/issues`);
  } catch (err: unknown) {
  const apiErr = err as { code?: string };
  if (apiErr?.code === 'WAREHOUSE_LOCKED') {
@@ -367,7 +368,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
  <div className="space-y-3 group">
  <div className="flex items-center gap-2">
  <User className="w-3 h-3 text-cyan-500/50" />
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by') || 'Requested By'}</label>
+ <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by')}</label>
  </div>
  <Input 
  type="text"

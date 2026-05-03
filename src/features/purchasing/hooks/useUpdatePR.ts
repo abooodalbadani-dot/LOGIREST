@@ -22,7 +22,7 @@ export function useUpdatePR() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: ({ id, payload }: { id: string; payload: UpdatePRPayload }) => 
- apiClient.put(`/procurement/purchase-requests/ ${id}`, PRDetailSchema, UpdatePRPayloadSchema.parse(payload)),
+ apiClient.put(`/procurement/purchase-requests/${id}`, PRDetailSchema, UpdatePRPayloadSchema.parse(payload)),
  onSuccess: (data) => {
  // Update individual PR cache with the returned data
  queryClient.setQueryData(['purchase-request', data.id], data);

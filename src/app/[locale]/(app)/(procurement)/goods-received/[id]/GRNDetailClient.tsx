@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,14 +49,14 @@ type LineItem = z.infer<typeof LineItemSchema>;
 
 interface GRNDetailClientProps {
  id: string;
- locale: 'ar' | 'en';
 }
 
-export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
+export function GRNDetailClient({ id: idParam }: GRNDetailClientProps) {
  const t = useTranslations('procurement.grn');
  const tc = useTranslations('common');
  const router = useRouter();
  const { user } = useAuth();
+ const locale = useLocale() as 'ar' | 'en';
  
  const id = idParam;
  const isNew = id === 'new';
@@ -233,7 +233,7 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
  {isApproved && (
  <Button 
  disabled={isLocked}
- onClick={() => router.push(`/ ${locale}/goods-received/ ${id}/post`)}
+ onClick={() => router.push(`/goods-received/${id}/post`)}
  className="h-10 px-8 primary-gradient text-white text-label-xs font-semibold uppercase shadow-xl shadow-primary/20 transition-all rounded-lg"
  >
  <Send className="w-4 h-4 me-2" />
@@ -282,7 +282,7 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
  </div>
  <Label htmlFor="currency-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</Label>
  {isPosted ? (
- <p className="font-mono font-semibold text-title-sm text-primary mt-2">{grn?.currency_id}</p>
+ <p dir="ltr" className="font-mono font-semibold text-title-sm text-primary mt-2">{grn?.currency_id}</p>
  ) : (
  <>
  <Controller
@@ -290,7 +290,7 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
  control={control}
  render={({ field }) => (
  <Select onValueChange={field.onChange} value={field.value} disabled={isPosted}>
- <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-lg px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+ <SelectTrigger dir="ltr" className="mt-2 h-12 bg-surface-container-low border-none rounded-lg px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
  <SelectValue />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
@@ -439,7 +439,7 @@ export function GRNDetailClient({ id: idParam, locale }: GRNDetailClientProps) {
  <div className="space-y-6 relative z-10">
  <div className="flex justify-between items-baseline gap-10">
  <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId })}</p>
- <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{totalForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+ <p dir="ltr" className="text-headline-lg font-mono font-semibold text-foreground">{totalForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
  </div>
  
  <div className="h-px bg-surface-container-high/20 w-full" />

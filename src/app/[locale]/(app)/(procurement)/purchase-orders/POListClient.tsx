@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter, Link } from '@/i18n/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { usePOList, POSummary } from '@/features/purchasing/hooks/usePOList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck } from 'lucide-react';
-import Link from 'next/link';
+
 import { format } from 'date-fns';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -18,10 +18,12 @@ import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { formatDate, formatCurrency } from '@/lib/utils';
 
-export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
+export function POListClient() {
  const t = useTranslations('procurement.po');
  const tc = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
 
  const [page, setPage] = useState(1);
@@ -61,7 +63,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  cell: ({ row }) => (
  <div className="flex flex-col text-start">
  <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
- {format(new Date(row.original.expected_date), 'dd/MM/yyyy')}
+ {formatDate(row.original.expected_date, locale)}
  </span>
  <span className="text-label-xxs uppercase opacity-30 font-semibold">{t('expected_date')}</span>
  </div>
@@ -73,10 +75,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  cell: ({ row }) => (
  <div className="flex flex-col text-end">
  <span dir="ltr" className="text-body-md font-mono font-semibold text-foreground/90">
- {new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
- minimumFractionDigits: 2,
- maximumFractionDigits: 2,
- }).format(row.original.supplier_total_amount)} {row.original.currency_code}
+ {formatCurrency(row.original.supplier_total_amount, row.original.currency_code, locale)}
  </span>
  <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('total_amount')}</span>
  </div>
@@ -94,7 +93,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-amber-500/20 text-muted-foreground/60 hover:text-amber-500 transition-all group"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/purchase-orders/ ${row.original.id}`);
+ router.push(`/purchase-orders/${row.original.id}`);
  }}
  >
  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
@@ -106,8 +105,8 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  ], [t, tc, locale, router]);
 
  const breadcrumbs = [
- { label: tc('sidebar.dashboard'), href: `/ ${locale}/dashboard` },
- { label: t('title'), href: `/ ${locale}/purchase-orders` },
+ { label: tc('sidebar.dashboard'), href: `/dashboard` },
+ { label: t('title'), href: `/purchase-orders` },
  ];
 
  const totalPOs = data?.meta?.total || 0;
@@ -123,7 +122,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  description={t('description')}
  actions={
  <PermissionGate action="create" resource="po">
- <Link href={`/ ${locale}/purchase-orders/new`}>
+ <Link href={`/purchase-orders/new`}>
  <Button className="h-12 px-8 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-amber-900/20">
  <Plus className="w-4 h-4 me-2" />
  {t('create_new')}
@@ -160,7 +159,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: POSummary) => router.push(`/ ${locale}/purchase-orders/ ${row.id}`)}
+ onRowClick={(row: POSummary) => router.push(`/purchase-orders/${row.id}`)}
  collectionName="procurement_po"
  emptyState={
  <EmptyState 
@@ -169,7 +168,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  icon={Truck}
  action={
  <PermissionGate action="create" resource="po">
- <Link href={`/ ${locale}/purchase-orders/new`}>
+ <Link href="/purchase-orders/new">
  <Button className="h-10 px-6 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}

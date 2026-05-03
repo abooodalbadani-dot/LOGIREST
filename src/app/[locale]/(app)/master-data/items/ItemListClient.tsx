@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { useRouter, Link } from '@/i18n/navigation';
 import { Plus, Package, CheckCircle2, Search, Barcode, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
@@ -100,7 +99,7 @@ export function ItemListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/master-data/items/ ${row.original.id}`);
+ router.push(`/master-data/items/${row.original.id}`);
  }}
  >
  {t('view')}
@@ -112,9 +111,9 @@ export function ItemListClient({ locale }: { locale: string }) {
  ], [t, ti, locale, router]);
 
  const breadcrumbs = [
- { label: t('home'), href: `/ ${locale}/dashboard` },
- { label: t('master_data'), href: `/ ${locale}/master-data` },
- { label: ti('title'), href: `/ ${locale}/master-data/items` }
+ { label: t('home'), href: `/dashboard` },
+ { label: t('master_data'), href: `/master-data` },
+ { label: ti('title'), href: `/master-data/items` }
  ];
 
  return (
@@ -126,7 +125,7 @@ export function ItemListClient({ locale }: { locale: string }) {
  description={ti('description')}
  actions={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/items/new`}>
+ <Link href={`/master-data/items/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -174,7 +173,7 @@ export function ItemListClient({ locale }: { locale: string }) {
  description={ti('empty.description')}
  action={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/items/new`}>
+ <Link href={`/master-data/items/new`}>
  <Button className="h-10 px-6 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -184,7 +183,7 @@ export function ItemListClient({ locale }: { locale: string }) {
  }
  />
  }
- onRowClick={(r: Item) => router.push(`/ ${locale}/master-data/items/ ${r.id}`)}
+ onRowClick={(r: Item) => router.push(`/master-data/items/${r.id}`)}
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
  <div className="flex flex-col gap-2 min-w-[300px] flex-1">

@@ -39,7 +39,7 @@ export function useKitchenRequestList(filters: { status?: string; department_id?
 export function useKitchenRequest(id: string) {
  return useQuery({
  queryKey: ['kitchen-requests', id],
- queryFn: () => apiClient.get(`/operations/kitchen-requests/ ${id}`, KitchenRequestDetailSchema),
+ queryFn: () => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema),
  enabled: !!id,
  });
 }
@@ -62,7 +62,7 @@ export function useUpdateKitchenRequestStatus() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: ({ id, status, reason }: { id: string; status: string; reason?: string }) =>
- apiClient.post(`/operations/kitchen-requests/ ${id}/status`, KitchenRequestDetailSchema, { status, reason }),
+ apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason }),
  onSuccess: (_, variables) => {
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
@@ -77,7 +77,7 @@ export function useFulfillKitchenRequest() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: ({ id, items }: { id: string; items: { itemId: string; fulfilledQuantity: number }[] }) =>
- apiClient.post(`/operations/kitchen-requests/ ${id}/fulfill`, KitchenRequestDetailSchema, { items }),
+ apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items }),
  onSuccess: (_, variables) => {
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });

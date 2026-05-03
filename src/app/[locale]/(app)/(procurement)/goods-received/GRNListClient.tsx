@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useGRNList, type GRNSummary } from '@/features/purchasing/hooks/useGRNList';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -13,7 +13,6 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -95,7 +94,7 @@ export function GRNListClient({
  className="text-label-xxs font-semibold uppercase text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-md transition-all group"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/goods-received/ ${row.original.id}`);
+ router.push(`/goods-received/${row.original.id}`);
  }}
  >
  {tc('view')}
@@ -116,7 +115,7 @@ export function GRNListClient({
  <div className="space-y-4">
  <Breadcrumb 
  items={[
- { label: tc('sidebar.dashboard'), href: `/ ${locale}/dashboard` },
+ { label: tc('sidebar.dashboard'), href: `/dashboard` },
  { label: tc('sidebar.grn') }
  ]} 
  />
@@ -126,7 +125,7 @@ export function GRNListClient({
  actions={
  <div className="flex items-center gap-6">
  <PermissionGate action="create" resource="grn">
- <Link href={`/ ${locale}/goods-received/new`}>
+ <Link href={`/goods-received/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-lg shadow-cyan-900/10 border-none">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -164,13 +163,13 @@ export function GRNListClient({
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: GRNSummary) => router.push(`/ ${locale}/goods-received/ ${row.id}`)}
+ onRowClick={(row: GRNSummary) => router.push(`/goods-received/${row.id}`)}
  collectionName="procurement_grn"
  emptyState={
  <EmptyState 
- title={t('no_grns_title') || 'No Goods Received Notes'} description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} action={
+ title={t('no_grns_title')} description={t('no_grns_desc')} action={
  <PermissionGate action="create" resource="grn">
- <Link href={`/ ${locale}/goods-received/new`}>
+ <Link href={`/goods-received/new`}>
  <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-label-xs font-semibold uppercase rounded-md transition-all">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}

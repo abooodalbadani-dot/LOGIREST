@@ -1,7 +1,7 @@
 'use client';
  
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -12,7 +12,6 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Plus, CheckCircle2, Clock, Activity, FileCheck, AlertTriangle, Filter } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -112,7 +111,7 @@ export function AdjustmentListClient() {
  className="text-label-xs font-bold uppercase text-status-active hover:bg-status-active/10 h-8 px-4 rounded-md"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`adjustments/ ${row.original.id}`);
+ router.push(`/adjustments/${row.original.id}`);
  }}
  >
  {tCommon('view')}
@@ -136,7 +135,7 @@ export function AdjustmentListClient() {
  />
  <PageHeader 
  title={t('title')} 
- description={t('description') || 'Corrective inventory volume adjustments and audits'} actions={
+ description={t('description')} actions={
  <div className="flex items-center gap-6">
  <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex">
  <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
@@ -148,7 +147,7 @@ export function AdjustmentListClient() {
  </div>
  </div>
  <PermissionGate action="create" resource="adjustment">
- <Link href="adjustments/new">
+ <Link href="/adjustments/new">
  <Button className="h-10 px-8 bg-surface-container-low border border-outline-low/10 text-status-active text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-medium shadow-sm gap-2">
  <Plus className="w-3.5 h-3.5" />
  {t('create_new')}
@@ -187,14 +186,14 @@ export function AdjustmentListClient() {
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: AdjustmentSummary) => router.push(`adjustments/ ${row.id}`)}
+ onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
  collectionName="operations_adjustments"
  emptyState={
  <EmptyState 
- title={t('no_records') || 'No Adjustments Found'} description={t('description') || 'Register your first inventory adjustment to recalibrate stock levels.'} action={
+ title={t('no_records')} description={t('description')} action={
  <PermissionGate action="create" resource="adjustment">
  <Button 
- onClick={() => router.push('adjustments/new')}
+ onClick={() => router.push('/adjustments/new')}
  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
  >
  <Plus className="w-4 h-4 me-2" />
@@ -238,7 +237,7 @@ export function AdjustmentListClient() {
  <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('search')}</label>
  <div className="relative group">
  <Input
- placeholder={t('search_placeholder') || 'Search Adjustment Documents...'} className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20"
+ placeholder={t('search_placeholder')} className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20"
  />
  <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-active/40 transition-colors group-hover:text-status-active/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
  </div>

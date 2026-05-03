@@ -19,6 +19,6 @@ export default async function PRApprovalPage(props: { params: Promise<{ locale: 
  }
 
  return (
- <PRApprovalClient id={params.id} locale={params.locale as 'ar' | 'en'} />
+ <PRApprovalClient id={params.id} />
  );
 }

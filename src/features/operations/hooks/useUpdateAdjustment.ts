@@ -29,7 +29,7 @@ export function useUpdateAdjustment() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: ({ id, payload }: { id: string; payload: UpdateAdjustmentPayload }) => 
- apiClient.put(`/operations/adjustments/ ${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload)),
+ apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload)),
  onSuccess: (data) => {
  queryClient.setQueryData(['adjustment', data.id], data);
  queryClient.invalidateQueries({ queryKey: ['adjustments'] });

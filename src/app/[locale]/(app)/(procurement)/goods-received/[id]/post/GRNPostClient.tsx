@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -19,12 +19,12 @@ import { cn } from '@/lib/utils';
 
 interface GRNPostClientProps {
  id: string;
- locale: 'ar' | 'en';
 }
 
-export function GRNPostClient({ id, locale }: GRNPostClientProps) {
+export function GRNPostClient({ id }: GRNPostClientProps) {
  const t = useTranslations('procurement.grn');
  const tc = useTranslations('common');
+ const locale = useLocale();
  const router = useRouter();
  const queryClient = useQueryClient();
  const { user } = useAuth();
@@ -72,12 +72,12 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  useEffect(() => {
  if (grn && !isLoadingGRN) {
  if (grn.status === 'POSTED') {
- router.replace(`/ ${locale}/goods-received/ ${id}`);
+ router.replace(`/goods-received/${id}`);
  }
  
  // Strict enforcement: only APPROVED documents can be posted
  if (grn.status !== 'APPROVED') {
- router.replace(`/ ${locale}/goods-received/ ${id}`);
+ router.replace(`/goods-received/${id}`);
  }
  }
  }, [grn, isLoadingGRN, id, locale, router]);
@@ -104,7 +104,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
  toast.success(t('posted_success'));
  setIsPostDialogOpen(false);
- router.push(`/ ${locale}/goods-received/ ${id}`);
+ router.push(`/goods-received/${id}`);
  } catch {
  toast.error(tc('error'));
  } finally {
@@ -132,7 +132,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  return (
  <div className="flex flex-col gap-10 pb-20">
  <PageHeader
- title={`#${grn.document_number}`}
+ title={<span dir="ltr" className="font-mono">{`#${grn.document_number}`}</span>}
  description={t('fx_capture_title')}
  showStatus
  status={grn.status}
@@ -183,14 +183,14 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="space-y-4">
  <Label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{tc('order_currency')}</Label>
  <div className="bg-surface-container-highest h-16 rounded-2xl flex items-center px-6 border border-white/5">
- <span className="font-mono font-semibold text-title-lg text-foreground/40">{supplierCurrency}</span>
+ <span dir="ltr" className="font-mono font-semibold text-title-lg text-foreground/40">{supplierCurrency}</span>
  </div>
  </div>
 
  <div className="space-y-4">
  <Label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{tc('base_currency')}</Label>
  <div className="bg-surface-container-highest h-16 rounded-2xl flex items-center px-6 border border-white/5">
- <span className="font-mono font-semibold text-title-lg text-foreground/40">{baseCurrency}</span>
+ <span dir="ltr" className="font-mono font-semibold text-title-lg text-foreground/40">{baseCurrency}</span>
  </div>
  </div>
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -52,9 +52,10 @@ const rejectionSchema = z.object({
 
 type RejectionFormValues = z.infer<typeof rejectionSchema>;
 
-export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
+export function PRApprovalClient({ id }: { id: string }) {
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
 
  const { data: pr, isLoading } = usePR(id);
@@ -73,7 +74,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  try {
  await approveMutation.mutateAsync(id);
  toast.success(t('approve_success'));
- router.push(`/ ${locale}/purchase-requests`);
+ router.push(`/${locale}/purchase-requests`);
  } catch (e) {
  console.error(e);
  toast.error(tc('error'));
@@ -85,7 +86,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  await rejectMutation.mutateAsync({ id, reason: values.reason });
  toast.success(t('reject_success'));
  setRejectModalOpen(false);
- router.push(`/ ${locale}/purchase-requests`);
+ router.push(`/${locale}/purchase-requests`);
  } catch (e) {
  console.error(e);
  toast.error(tc('error'));
@@ -122,7 +123,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  <span>{t('approval_workflow')}</span>
  </div>
  <PageHeader
- title={pr.document_number}
+ title={<span dir="ltr" className="font-mono">{pr.document_number}</span>}
  description={t('approval_desc')}
  status={pr.status as BadgeStatus}
  actions={
@@ -208,7 +209,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  qty: l.req_qty,
  uom_id: l.uom_id
  })) as LineItem[]}
- locale={locale}
+  locale={locale}
  isReadOnly={true}
  />
  </div>
@@ -242,7 +243,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  </FormLabel>
  <FormControl>
  <Textarea 
- placeholder={t('rejection_reason_placeholder') || 'Enter reason for rejection...'} className="min-h-[120px] bg-surface-container-low border-surface-variant/10 focus:ring- operational-cyan rounded-2xl text-body-md font-medium resize-none shadow-inner"
+ placeholder={t('rejection_reason_placeholder')} className="min-h-[120px] bg-surface-container-low border-surface-variant/10 focus:ring- operational-cyan rounded-2xl text-body-md font-medium resize-none shadow-inner"
  {...field} 
  />
  </FormControl>

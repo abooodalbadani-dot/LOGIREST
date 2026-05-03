@@ -56,7 +56,7 @@ export function KitchenRequestsListClient({
  cell: ({ row }) => (
  <div className="flex flex-col">
  <Link 
- href={`/kitchen-requests/ ${row.original.id}`}
+ href={`/kitchen-requests/${row.original.id}`}
  className="font-mono text-body-md font-semibold text-cyan-500 hover:text-cyan-400 transition-colors"
  >
  {row.original.request_number}
@@ -132,25 +132,25 @@ export function KitchenRequestsListClient({
 
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
  <MetricCard
- label={t('statuses.SUBMITTED')}
+ label={t('statuses.submitted')}
  value={data?.meta?.total ?? 0}
  icon={<Clock className="w-4 h-4" />}
  color="cyan"
  />
  <MetricCard
- label={t('statuses.APPROVED')}
+ label={t('statuses.approved')}
  value={0}
  icon={<CheckCircle2 className="w-4 h-4" />}
  color="emerald"
  />
  <MetricCard
- label={t('statuses.REJECTED')}
+ label={t('statuses.rejected')}
  value={0}
  icon={<AlertCircle className="w-4 h-4" />}
  color="rose"
  />
  <MetricCard
- label={t('statuses.FULFILLED')}
+ label={t('statuses.fulfilled')}
  value={0}
  icon={<FileText className="w-4 h-4" />}
  color="indigo"

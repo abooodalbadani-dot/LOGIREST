@@ -8,7 +8,7 @@ export function usePostGRN(id: string) {
  
  return useMutation({
  mutationFn: (data: { fx_rate: number; confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' }) => 
- apiClient.post(`/procurement/grns/ ${id}/post`, successSchema, data),
+ apiClient.post(`/procurement/grns/${id}/post`, successSchema, data),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['grns'] });
  queryClient.invalidateQueries({ queryKey: ['grn', id] });

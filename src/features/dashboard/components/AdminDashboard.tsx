@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 
 export function AdminDashboard() {
@@ -106,7 +106,7 @@ export function AdminDashboard() {
  <span className="text-label-sm font-bold text-foreground">{stats.lastBackup}</span>
  </div>
  <div className="p-3 bg-surface-container-low rounded-xl border-none space-y-1">
- <Link href={`/ ${locale}/admin/users`} className="contents">
+ <Link href={`/${locale}/admin/users`} className="contents">
  <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5 hover:text-operational-cyan cursor-pointer transition-colors">
  <Users className="w-3 h-3" /> {t('system_health.online')}
  </span>
@@ -124,7 +124,7 @@ export function AdminDashboard() {
  <History className="w-3 h-3" /> 
  {t('audit.title')}
  </span>
- <Link href={`/ ${locale}/reports`}>
+ <Link href={`/${locale}/reports`}>
  <Button variant="ghost" size="sm" className="h-6 text-label-xxs font-semibold uppercase text-muted-foreground/40 hover:text-operational-cyan">
  View All
  </Button>
@@ -167,7 +167,7 @@ export function AdminDashboard() {
  <CardTitle className="text-headline-lg font-semibold uppercase italic">{t('analytics.velocity')}</CardTitle>
  </div>
  <PermissionGate action="view" resource="reports">
- <Link href={`/ ${locale}/reports`}>
+ <Link href={`/${locale}/reports`}>
  <Button variant="outline" size="sm" className="bg-muted/10 border-border-surface text-label-xs font-semibold uppercase px-4 h-8 rounded-xl hover:bg-operational-cyan hover:text-black hover:border-operational-cyan transition-all">
  {t('analytics.full_report')} <TrendingUp className="w-3 h-3 ms-2" />
  </Button>

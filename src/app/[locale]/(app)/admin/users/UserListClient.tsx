@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { UserX, ShieldCheck, Search, Shield, Users, Plus } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -16,6 +14,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
+import { Plus, Users, ShieldCheck, Shield, Search } from 'lucide-react';
 
 const roleVariants: Record<string, string> = {
  ADMIN: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
@@ -124,7 +123,7 @@ export function UserListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/admin/users/ ${row.original.id}`);
+ router.push(`/admin/users/${row.original.id}`);
  }}
  >
  {tCommon('view')}
@@ -137,9 +136,9 @@ export function UserListClient({ locale }: { locale: string }) {
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <PageHeader 
- title={t('title') || 'Access Management'} description={t('description') || 'Authorized identity registry and operational scoping'} actions={
+ title={t('title')} description={t('description')} actions={
  <PermissionGate action="create" resource="admin">
- <Link href={`/ ${locale}/admin/users/new`}>
+ <Link href={`/admin/users/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_user')}
@@ -172,7 +171,7 @@ export function UserListClient({ locale }: { locale: string }) {
  data={data?.data ?? []}
  isLoading={isLoading}
  collectionName="admin_users"
- onRowClick={(row: AdminUserRow) => router.push(`/ ${locale}/admin/users/ ${row.id}`)}
+ onRowClick={(row: AdminUserRow) => router.push(`/admin/users/${row.id}`)}
  pagination={data?.meta ? {
  page: page,
  pageSize: 10,

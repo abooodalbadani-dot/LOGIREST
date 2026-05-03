@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { 
  Search as SearchIcon, 
@@ -41,7 +42,7 @@ export default function SearchClient() {
  const isRtl = locale === 'ar';
  const searchParams = useSearchParams();
  const router = useRouter();
- const query = searchParams.get('q') || '';
+ const query = searchParams.get('q');
  const [searchTerm, setSearchTerm] = useState(query);
  const [isLoading, setIsLoading] = useState(false);
  
@@ -69,7 +70,7 @@ export default function SearchClient() {
  subtitle: 'SKU: BR-001',
  status: 'ACTIVE',
  metadata: { [isRtl ? 'المخزون' : 'Stock']: '1,200 KG', [isRtl ? 'الموقع' : 'Location']: 'WH-01' },
- link: `/ ${locale}/inventory/balance`,
+ link: `/inventory/balance`,
  },
  {
  id: '2',
@@ -78,7 +79,7 @@ export default function SearchClient() {
  subtitle: isRtl ? 'مورد: بهارات العالم' : 'Vendor: Global Spice',
  status: 'PENDING',
  metadata: { [isRtl ? 'التاريخ' : 'Date']: '2024-04-20', [isRtl ? 'الإجمالي' : 'Total']: '4,250 SAR' },
- link: `/ ${locale}/purchase-orders/PO-2024-0042`,
+ link: `/purchase-orders/PO-2024-0042`,
  },
  {
  id: '3',
@@ -86,7 +87,7 @@ export default function SearchClient() {
  title: 'LOT-9942-A',
  subtitle: isRtl ? 'زيت زيتون بكر' : 'Extra Virgin Olive Oil',
  metadata: { [isRtl ? 'الانتهاء' : 'Expiry']: '2025-12-31', [isRtl ? 'الكمية' : 'Qty']: '45' },
- link: `/ ${locale}/inventory/lots/LOT-9942-A`,
+ link: `/inventory/lots/LOT-9942-A`,
  },
  {
  id: '4',
@@ -95,7 +96,7 @@ export default function SearchClient() {
  subtitle: 'SUP-882',
  status: 'ACTIVE',
  metadata: { [isRtl ? 'التقييم' : 'Rating']: '4.8/5' },
- link: `/ ${locale}/master-data/suppliers/SUP-882`,
+ link: `/master-data/suppliers/SUP-882`,
  },
  ]);
  setIsLoading(false);
@@ -135,7 +136,7 @@ export default function SearchClient() {
  {t('title')}
  </h1>
  <div className="flex items-center gap-2">
- <span className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">
+ <span className="text-label-xs font-semibold text-muted-foreground/60 uppercase">
  {query 
  ? t('identified_matches', { count: results.length, query }) 
  : t('search_hint')}
@@ -160,7 +161,7 @@ export default function SearchClient() {
  value={searchTerm}
  onChange={(e) => setSearchTerm(e.target.value)}
  placeholder={t('placeholder')}
- className="h-24 ps-20 pe-40 rounded-3xl bg-surface-container-low border border-border-surface text-title-lg font-bold placeholder:text-muted-foreground/60/30 focus-visible:ring-4 focus-visible:ring-operational-cyan/10 transition-all outline-none"
+ className="h-24 ps-20 pe-40 rounded-3xl bg-surface-container-low border border-border-surface text-title-lg font-bold placeholder:text-muted-foreground/40 focus-visible:ring-4 focus-visible:ring-operational-cyan/10 transition-all outline-none"
  />
  <div className="absolute inset-y-0 end-0 pe-4 flex items-center">
  <Button type="submit" className="h-16 px-10 rounded-2xl bg-surface-ledger hover:bg-surface-ledger/90 text-white font-semibold text-body-md uppercase gap-3 transition-all hover:scale-[0.98] active:scale-95">
@@ -189,7 +190,7 @@ export default function SearchClient() {
 
  <div className="space-y-8">
  <div className="space-y-4">
- <span className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase ps-1">{t('main_category')}</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase ps-1">{t('main_category')}</span>
  <div className="flex flex-col gap-2">
  {['All', 'Food', 'Packaging', 'Equipment'].map(c => (
  <button key={c} className="flex items-center justify-between px-5 py-3 rounded-xl bg-surface-container-low border border-surface-variant/10 hover:border-operational-cyan/30 transition-all group">
@@ -201,7 +202,7 @@ export default function SearchClient() {
  </div>
 
  <div className="space-y-4">
- <span className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase ps-1">{t('operational_status')}</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase ps-1">{t('operational_status')}</span>
  <div className="flex flex-wrap gap-2">
  {['Active', 'Draft', 'Alert'].map(s => (
  <Badge key={s} className="bg-surface-container-low border border-surface-variant/10 text-label-xxs font-semibold uppercase px-3 py-1.5 rounded-lg cursor-pointer hover:bg-operational-cyan/10 hover:text-operational-cyan transition-all">
@@ -220,7 +221,7 @@ export default function SearchClient() {
  </div>
  <div className="space-y-3">
  {['Lot #992', 'Premium Rice', 'Supplier Al-Baraka'].map(s => (
- <div key={s} className="flex items-center justify-between text-label-xs font-semibold text-muted-foreground/60/40 hover:text-operational-cyan cursor-pointer transition-colors px-2 py-1">
+ <div key={s} className="flex items-center justify-between text-label-xs font-semibold text-muted-foreground/60 hover:text-operational-cyan cursor-pointer transition-colors px-2 py-1">
  <span>{s}</span>
  <ChevronRight className={`w-3 h-3 ${isRtl ? 'rotate-180' : ''}`} />
  </div>
@@ -250,14 +251,14 @@ export default function SearchClient() {
  </div>
  <div className="flex flex-col gap-0.5">
  <h3 className="text-title-lg font-semibold text-foreground uppercase">{section.title}</h3>
- <span className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase">{sectionResults.length} {t('records')}</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase">{sectionResults.length} {t('records')}</span>
  </div>
  <div className="flex-1 h-px bg-on-surface/5" />
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
  {sectionResults.map(result => (
- <a key={result.id} href={result.link} className="group flex flex-col p-8 rounded-3xl bg-surface-container-low/60 border border-surface-variant/10 hover:bg-surface-container-low hover:scale-[0.98] active:scale-95 transition-all duration-500 relative overflow-hidden">
+ <Link key={result.id} href={result.link} className="group flex flex-col p-8 rounded-3xl bg-surface-container-low/60 border border-surface-variant/10 hover:bg-surface-container-low hover:scale-[0.98] active:scale-95 transition-all duration-500 relative overflow-hidden">
  <div className="flex items-start justify-between mb-8">
  <div className="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center border border-surface-variant/10">
  {result.type === 'item' ? <Package className="w-7 h-7 text-operational-cyan/40" /> : <Database className="w-7 h-7 text-status-success/40" />}
@@ -271,20 +272,20 @@ export default function SearchClient() {
 
  <div className="space-y-1 mb-8">
  <h5 className="text-title-sm font-semibold group-hover:text-operational-cyan transition-colors uppercase">{result.title}</h5>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">{result.subtitle}</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase">{result.subtitle}</p>
  </div>
 
  {result.metadata && (
  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-surface-variant/10">
  {Object.entries(result.metadata).map(([k, v]) => (
  <div key={k}>
- <p className="text-label-xxs font-semibold text-muted-foreground/60/30 uppercase mb-1">{k}</p>
+ <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mb-1">{k}</p>
  <p className="text-label-xs font-semibold text-foreground">{v}</p>
  </div>
  ))}
  </div>
  )}
- </a>
+ </Link>
  ))}
  </div>
  </div>
@@ -318,7 +319,7 @@ export default function SearchClient() {
  </div>
  <div className="space-y-2">
  <h4 className="text-title-sm font-semibold uppercase text-foreground">{tip.title}</h4>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase leading-relaxed">{tip.desc}</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase leading-relaxed">{tip.desc}</p>
  </div>
  </div>
  ))}

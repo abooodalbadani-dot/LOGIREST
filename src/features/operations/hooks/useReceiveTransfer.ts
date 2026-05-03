@@ -21,7 +21,7 @@ export function useReceiveTransfer(id: string) {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: (body: ReceivePayload) =>
- apiClient.post(`/operations/transfers/ ${id}/receive`, successSchema, ReceivePayloadSchema.parse(body)),
+ apiClient.post(`/operations/transfers/${id}/receive`, successSchema, ReceivePayloadSchema.parse(body)),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['transfers'] });
  queryClient.invalidateQueries({ queryKey: ['transfer', id] });

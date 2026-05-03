@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -83,7 +84,7 @@ export function TransferNewClient() {
  uom_id: l.uom_id
  }))
  });
- router.push(`/ ${locale}/transfers`);
+ router.push(`/transfers`);
  } catch (e) {
  console.error(e);
  }
@@ -95,8 +96,8 @@ export function TransferNewClient() {
  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <Breadcrumb 
  items={[
- { label: tCommon('modules.operations'), href: `/ ${locale}/transfers` },
- { label: t('title'), href: `/ ${locale}/transfers` },
+ { label: tCommon('modules.operations'), href: `/transfers` },
+ { label: t('title'), href: `/transfers` },
  { label: t('create_new') }
  ]} 
  />
@@ -188,7 +189,7 @@ export function TransferNewClient() {
  </Select>
  {fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId && (
  <p className="text-label-xxs font-bold text-status-error uppercase px-1 mt-1">
- {t('warehouse_match_error') || 'Source and destination cannot be the same'}
+ {t('warehouse_match_error')}
  </p>
  )}
  </div>
@@ -230,7 +231,7 @@ export function TransferNewClient() {
  <div className="mb-8">
  <ScanInput 
  onScan={handleAddItem}
- placeholder={t('scan_item_placeholder') || 'Scan item SKU or barcode...'} className="max-w-md mx-auto"
+ placeholder={t('scan_item_placeholder')} className="max-w-md mx-auto"
  />
  </div>
 

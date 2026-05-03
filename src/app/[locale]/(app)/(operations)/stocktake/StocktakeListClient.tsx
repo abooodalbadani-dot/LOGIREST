@@ -23,13 +23,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export function StocktakeListClient({
  initialStatus,
  initialPage,
- initialWarehouseId,
- locale
+ initialWarehouseId
 }: {
  initialStatus?: string;
  initialPage: number;
  initialWarehouseId?: string;
- locale: 'ar' | 'en'
 }) {
  const t = useTranslations('operations.stocktake');
  const router = useRouter();
@@ -63,7 +61,7 @@ export function StocktakeListClient({
  const columns = useMemo<ColumnDef<StocktakeSummary>[]>(() => [
  {
  accessorKey: 'session_number',
- header: t('session_number') || 'Session',
+ header: t('session_number'),
  cell: ({ row }) => (
  <div className="flex flex-col">
  <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
@@ -83,7 +81,7 @@ export function StocktakeListClient({
  },
  {
  accessorKey: 'warehouse_id',
- header: tc('warehouse') || 'Warehouse',
+ header: tc('warehouse'),
  cell: ({ row }) => (
  <div className="flex items-center gap-2">
  <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
@@ -95,7 +93,7 @@ export function StocktakeListClient({
  },
  {
  accessorKey: 'status',
- header: tc('status_label') || 'State',
+ header: tc('status_label'),
  cell: ({ row }) => <StatusBadge status={row.original.status} />,
  },
  {
@@ -109,16 +107,16 @@ export function StocktakeListClient({
  className="h-8 px-4 text-label-xxs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md group/btn transition-all"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/stocktake/ ${row.original.id}`);
+ router.push(`/stocktake/${row.original.id}`);
  }}
  >
- {tc('view') || 'Inspect'}
+ {tc('view')}
  <Plus className="w-3 h-3 ms-2 group-hover/btn:rotate-90 transition-transform" />
  </Button>
  </div>
  ),
  },
- ], [t, tc, locale, router]);
+ ], [t, tc, router]);
 
  const activeSessionsCount = data?.meta?.total || 0;
  const inProgressCount = data?.data?.filter(i => ['STARTED', 'COUNTING', 'COUNTING_COMPLETED', 'VarianceSubmitted', 'REJECTED'].includes(i.status.toUpperCase())).length || 0;
@@ -135,7 +133,7 @@ export function StocktakeListClient({
  />
  <PageHeader
  title={t('title')}
- description={t('description') || 'Physical inventory verification and variance auditing'} actions={
+ description={t('description')} actions={
  <div className="flex items-center gap-8">
  <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-8 hidden md:flex">
  <div className="text-label-xs font-semibold uppercase text-cyan-500 flex items-center gap-2">
@@ -188,7 +186,7 @@ export function StocktakeListClient({
  <div className="flex flex-col gap-3 min-w-[280px] flex-1">
  <div className="flex items-center gap-2 ms-1">
  <Filter className="w-3 h-3 text-cyan-500/60" />
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
+ <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label')}</label>
  </div>
  <Select
  value={initialStatus || 'ALL'} onValueChange={handleStatusChange}
@@ -217,7 +215,7 @@ export function StocktakeListClient({
  </div>
  <div className="relative group">
  <input
- placeholder={t('search_placeholder') || 'Search by Session ID...'} className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
+ placeholder={t('search_placeholder')} className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
  />
  </div>
  </div>
@@ -232,11 +230,11 @@ export function StocktakeListClient({
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/ ${row.id}`)}
+ onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
  collectionName="operations_stocktake"
  emptyState={
  <EmptyState 
- title={t('no_records') || 'No Stocktakes Found'} description={t('description') || 'Physical inventory verification sessions will appear here.'} action={
+ title={t('no_records')} description={t('description')} action={
  <PermissionGate action="create" resource="stocktake">
  <Button 
  onClick={() => router.push(`/stocktake/new`)}

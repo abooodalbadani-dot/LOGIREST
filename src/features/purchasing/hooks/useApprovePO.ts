@@ -8,7 +8,7 @@ export function useApprovePO() {
 
  return useMutation({
  mutationFn: async (id: string) => {
- const response = await apiClient.post(`/procurement/purchase-orders/ ${id}/approve`, successSchema);
+ const response = await apiClient.post(`/procurement/purchase-orders/${id}/approve`, successSchema);
  return response;
  },
  onSuccess: (_, id) => {

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { 
  ArrowLeft, 
  CheckCircle2, 
@@ -36,9 +36,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { cn, formatQuantity, formatDate } from '@/lib/utils';
 import type { Status } from '@/components/shared/StatusTimeline';
-
+ 
 export function KitchenRequestDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.kitchen_request');
  const tCommon = useTranslations('common');
@@ -133,7 +133,7 @@ export function KitchenRequestDetailClient({ id, locale }: { id: string; locale:
  <Breadcrumb 
  items={[
  { label: tCommon('inventory'), href: '#' },
- { label: t('title'), href: `/ ${locale}/kitchen-requests` },
+ { label: t('title'), href: `/kitchen-requests` },
  { label: request.request_number }
  ]} 
  />
@@ -147,7 +147,7 @@ export function KitchenRequestDetailClient({ id, locale }: { id: string; locale:
  <StatusBadge status={request.status} />
  <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
  <Clock className="w-3 h-3" />
- {new Date(request.created_at).toLocaleString()}
+ {formatDate(request.created_at, locale)}
  </span>
  </div>
  </div>
@@ -262,19 +262,19 @@ export function KitchenRequestDetailClient({ id, locale }: { id: string; locale:
  <span className="text-label-xxs font-mono text-muted-foreground/40 mt-1 uppercase">ID: {item.item_id}</span>
  </div>
  </td>
- <td className="px-8 py-6 text-center">
+ <td className="px-8 py-6">
  <div className="flex flex-col items-center gap-0.5">
- <span className="text-body-md font-semibold text-cyan-500 tabular-nums">{item.quantity}</span>
+ <span dir="ltr" className="text-body-md font-semibold text-cyan-500 font-mono">{formatQuantity(item.quantity, locale)}</span>
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
  </div>
  </td>
  {request.status === 'FULFILLED' || request.status === 'PARTIAL' ? (
  <td className="px-8 py-6 text-center">
  <div className="flex flex-col items-center gap-0.5">
- <span className={cn(
- "text-body-md font-semibold tabular-nums",
+ <span dir="ltr" className={cn(
+ "text-body-md font-semibold font-mono",
  (item.fulfilled_quantity || 0) < item.quantity ? "text-amber-500" : "text-emerald-500"
- )}>{item.fulfilled_quantity || 0}</span>
+ )}>{formatQuantity(item.fulfilled_quantity || 0, locale)}</span>
  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
  </div>
  </td>
@@ -318,7 +318,7 @@ export function KitchenRequestDetailClient({ id, locale }: { id: string; locale:
  <DialogHeader>
  <DialogTitle className="text-title-lg font-semibold uppercase italic text-red-500">{t('reject')}</DialogTitle>
  <DialogDescription className="text-label-sm font-medium text-muted-foreground">
- {t('rejection_reason_description') || "Please provide a reason for rejecting this request. This will be visible to the requester."}
+ {t('rejection_reason_description')}
  </DialogDescription>
  </DialogHeader>
  <Textarea 
@@ -356,7 +356,7 @@ export function KitchenRequestDetailClient({ id, locale }: { id: string; locale:
  <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-lg border border-surface-container-high/50">
  <div className="space-y-1">
  <p className="text-label-sm font-bold">{item.item_name}</p>
- <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
+ <p dir="ltr" className="text-label-xxs font-semibold text-muted-foreground/40 uppercase font-mono">{t('requested')}: {formatQuantity(item.quantity, locale)} {item.uom}</p>
  </div>
  <div className="text-center">
  <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-1 block">{t('fulfilling')}</span>

@@ -25,7 +25,7 @@ export function useUpdatePO(id: string) {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: (payload: UpdatePOPayload) => 
- apiClient.put(`/procurement/purchase-orders/ ${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload)).then(res => res.data),
+ apiClient.put(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload)).then(res => res.data),
  onSuccess: (data) => {
  // Update cache
  queryClient.setQueryData(['purchase-order', id], data);

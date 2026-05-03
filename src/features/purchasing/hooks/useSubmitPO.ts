@@ -10,7 +10,7 @@ export function useSubmitPO() {
 
  return useMutation({
  mutationFn: async (id: string) => {
- const response = await apiClient.post(`/procurement/purchase-orders/ ${id}/submit`, successSchema);
+ const response = await apiClient.post(`/procurement/purchase-orders/${id}/submit`, successSchema);
  return response;
  },
  onSuccess: (_, id) => {

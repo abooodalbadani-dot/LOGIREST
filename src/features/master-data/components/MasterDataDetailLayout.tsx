@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, X } from 'lucide-react';
 import { PermissionGate } from '@/components/shared/PermissionGate';

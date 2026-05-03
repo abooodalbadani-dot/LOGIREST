@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -91,7 +91,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/departments`);
+ router.push('/master-data/departments');
  } catch (error) {
  // Error handled by mutation hook
  }
@@ -102,7 +102,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, locale }: Pro
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/departments`}
+ backHref="/master-data/departments"
  isSaving={isSaving}
  onSubmit={onSubmit}
  >

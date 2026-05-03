@@ -7,7 +7,7 @@ import { z } from "zod"
 
 export const BadgeStatusSchema = z.enum([
  'DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'RECEIVED', 'REJECTED', 'CANCELLED', 
- 'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL',
+ 'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL', 'FULFILLED',
  'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 'COUNTING_COMPLETED', 'VARIANCESUBMITTED'
 ]);
 
@@ -50,7 +50,7 @@ export function StatusBadge({ className, variant, status, children, ...props }: 
  
  if (!mappedVariant && status) {
  const s = status.toUpperCase();
- if (["APPROVED", "DELIVERED", "COMPLETED", "IN_STOCK", "ACTIVE", "HEALTHY"].includes(s)) {
+ if (["APPROVED", "DELIVERED", "COMPLETED", "IN_STOCK", "ACTIVE", "HEALTHY", "FULFILLED"].includes(s)) {
  mappedVariant = "success";
  } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL", "VARIANCESUBMITTED"].includes(s)) {
  mappedVariant = "warning";

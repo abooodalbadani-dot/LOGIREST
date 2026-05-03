@@ -9,7 +9,7 @@ export function useRejectAdjustment(id: string) {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: (reject: string) =>
- apiClient.post(`/operations/adjustments/ ${id}/reject`, successSchema, { reject }),
+ apiClient.post(`/operations/adjustments/${id}/reject`, successSchema, { reject }),
  onSuccess: (_, reject) => {
  queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
  if (!old) return old;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
@@ -39,7 +39,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  warehouseId: selectedWarehouseId,
  departmentId: activeScope.departmentId // Preserve department if any
  });
- router.push(`/ ${locale}/dashboard`);
+    router.push('/dashboard');
  };
 
  const filteredWarehouses = warehouses?.filter(wh => wh.branch_id === selectedBranchId) || [];
@@ -140,7 +140,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  className={cn(
  "relative p-6 rounded-[2rem] text-start transition-all duration-500 group overflow-hidden border border-white/5",
  selectedWarehouseId === wh.id 
- ? "bg- operational-cyan shadow-[0_20px_40px_rgba(var(--operational-cyan-rgb),0.2)]" 
+        ? "bg-operational-cyan shadow-[0_20px_40px_rgba(var(--operational-cyan-rgb),0.2)]" 
  : "bg-surface-container-low hover:bg-surface-container-high"
  )}
  >

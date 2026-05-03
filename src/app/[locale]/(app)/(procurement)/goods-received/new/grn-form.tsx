@@ -2,7 +2,8 @@
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';;
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  const onSubmit = (data: GRNFormValues) => {
  createGRN.mutate(data, {
  onSuccess: () => {
- router.push(`/ ${locale}/goods-received`);
+ router.push(`/${locale}/goods-received`);
  },
  });
  };
@@ -112,8 +113,8 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  <div className="p-10 max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
  <Breadcrumb 
  items={[
- { label: tc('sidebar.dashboard'), href: `/ ${locale}` },
- { label: tc('sidebar.grn'), href: `/ ${locale}/goods-received` },
+ { label: tc('sidebar.dashboard'), href: `/${locale}` },
+ { label: tc('sidebar.grn'), href: `/${locale}/goods-received` },
  { label: t('create_new') }
  ]} 
  />
@@ -213,7 +214,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  <Box className="w-5 h-5 text-amber-400" />
  </div>
  <div>
- <CardTitle className="text-label-xs font-semibold uppercase text-foreground">{tc('line_items') || 'Line Items'}</CardTitle>
+ <CardTitle className="text-label-xs font-semibold uppercase text-foreground">{tc('line_items')}</CardTitle>
  <CardDescription className="text-label-xxs font-bold uppercase text-muted-foreground/40">{t('received_manifest_sub')}</CardDescription>
  </div>
  </div>
@@ -222,7 +223,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  {fields.length === 0 ? (
  <div className="p-20 text-center space-y-4 bg-surface-container-highest/5">
  <Package className="w-12 h-12 mx-auto opacity-10" />
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/20">{t('no_items') || 'No items linked to reference'}</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/20">{t('no_items')}</p>
  </div>
  ) : (
  <div className="divide-y divide-white/5">
@@ -313,7 +314,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  </div>
 
  <div className="p-6 bg-surface-container-highest/10 rounded-sm border border-white/5 space-y-4">
- <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('partner_identity') || 'Partner Identity'}</div>
+ <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('partner_identity')}</div>
  <div className="space-y-1">
  <div className="text-label-sm font-semibold uppercase text-foreground/80">
  {supplier ? (locale === 'ar' ? supplier.name_ar : supplier.name_en) : watchedSupplierId || tc('not_available')}
@@ -338,7 +339,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  </CardHeader>
  <CardContent className="p-8">
  <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-sm bg-surface-container-highest/5">
- <p className="text-label-xxs font-semibold uppercase text-muted-foreground/20">{tc('no_records') || 'No Audit Records'}</p>
+ <p className="text-label-xxs font-semibold uppercase text-muted-foreground/20">{tc('no_records')}</p>
  </div>
  </CardContent>
  </Card>

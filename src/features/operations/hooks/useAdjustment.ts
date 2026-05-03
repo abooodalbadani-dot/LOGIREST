@@ -52,7 +52,7 @@ export type AdjustmentLine = z.infer<typeof AdjustmentLineSchema>;
 export function useAdjustment(id: string | null) {
  return useQuery({
  queryKey: ['adjustment', id],
- queryFn: () => apiClient.get(`/operations/adjustments/ ${id}`, AdjustmentDetailSchema),
+ queryFn: () => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema),
  enabled: !!id,
  staleTime: 60_000,
  });

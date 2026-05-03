@@ -7,7 +7,7 @@ export function usePostTransfer() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: (id: string) => 
- apiClient.post(`/operations/transfers/ ${id}/post`, successSchema, {}),
+ apiClient.post(`/operations/transfers/${id}/post`, successSchema, {}),
  onSuccess: (_, id) => {
  queryClient.invalidateQueries({ queryKey: ['transfers'] });
  queryClient.invalidateQueries({ queryKey: ['transfer', id] });

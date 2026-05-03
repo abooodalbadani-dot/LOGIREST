@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { useRouter, Link } from '@/i18n/navigation';
 import { Plus, Users, CheckCircle2, ExternalLink, CreditCard, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
@@ -84,7 +83,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-primary hover:text-primary-foreground hover:bg-primary h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/master-data/suppliers/ ${row.original.id}`);
+ router.push(`/master-data/suppliers/${row.original.id}`);
  }}
  >
  {t('view')}
@@ -93,12 +92,12 @@ export function SupplierListClient({ locale }: { locale: string }) {
  </div>
  ),
  },
- ], [t, tc, locale, router]);
+ ], [t, tc, router]);
 
  const breadcrumbs = [
- { label: t('home'), href: `/ ${locale}/dashboard` },
- { label: t('master_data'), href: `/ ${locale}/master-data` },
- { label: tc('title'), href: `/ ${locale}/master-data/suppliers` },
+ { label: t('home'), href: `/dashboard` },
+ { label: t('master_data'), href: `/master-data` },
+ { label: tc('title'), href: `/master-data/suppliers` },
  ];
 
  return (
@@ -110,7 +109,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
  description={tc('description')}
  actions={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/suppliers/new`}>
+ <Link href={`/master-data/suppliers/new`}>
  <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -151,7 +150,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
  data={data?.data ?? []}
  isLoading={isLoading}
  collectionName="master_data_suppliers"
- onRowClick={(r: Supplier) => router.push(`/ ${locale}/master-data/suppliers/ ${r.id}`)}
+ onRowClick={(r: Supplier) => router.push(`/master-data/suppliers/${r.id}`)}
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
  <div className="flex flex-col gap-2 min-w-[300px] flex-1">

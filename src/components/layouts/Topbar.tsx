@@ -9,7 +9,7 @@ import { WebMCPBadge } from '@/components/shared/WebMCPBadge';
 import { useTranslations } from 'next-intl';
 import { useWebMCP } from '@/providers/WebMCPProvider';
 import { Globe, ChevronDown, LogOut, Loader2, Menu, Search } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface TopbarProps {
  locale: string;
@@ -72,7 +72,7 @@ export function Topbar({ locale, onMenuClick }: TopbarProps) {
 
  <div className="flex items-center gap-2 md:gap-4">
  <Link 
- href={`/ ${locale}/search`}
+ href={`/${locale}/search`}
  className="p-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all"
  title={tc('search')}
  >
@@ -89,7 +89,7 @@ export function Topbar({ locale, onMenuClick }: TopbarProps) {
  {user ? (
  <>
  <Link 
- href={`/ ${locale}/profile`}
+ href={`/${locale}/profile`}
  className="flex items-center gap-3 pe-2 md:pe-4 group"
  >
  <div className="hidden sm:flex flex-col items-end leading-tight text-end" dir="ltr">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { 
  Truck, 
  AlertCircle, 
@@ -50,14 +50,14 @@ export function StoreManagerDashboard() {
  </div>
  <div className="flex gap-4">
  <PermissionGate action="view" resource="operations_stocktake">
- <Link href={`/ ${locale}/stocktake`} className="contents">
+ <Link href={`/${locale}/stocktake`} className="contents">
  <Button variant="outline" className="border-none bg-surface-container-low rounded-xl h-14 px-8 font-semibold uppercase text-label-xs hover:bg-status-success hover:text-black transition-all">
  Inventory Audit
  </Button>
  </Link>
  </PermissionGate>
  <PermissionGate action="create" resource="operations_issues">
- <Link href={`/ ${locale}/issues/new`} className="contents">
+ <Link href={`/${locale}/issues/new`} className="contents">
  <Button className="primary-gradient text-white font-semibold uppercase px-10 rounded-xl h-14 transition-all hover:scale-[0.98] hover:brightness-110 active:scale-95">
  Batch Issue
  </Button>
@@ -190,7 +190,7 @@ export function StoreManagerDashboard() {
  </div>
  ))}
  <PermissionGate action="create" resource="operations_adjustments">
- <Link href={`/ ${locale}/adjustments/new`} className="w-full">
+ <Link href={`/${locale}/adjustments/new`} className="w-full">
  <Button className="w-full bg-surface-container-high hover:bg-status-success hover:text-black border-none rounded-2xl text-label-xs font-semibold uppercase h-14 mt-6 transition-all hover:scale-[0.98] hover:brightness-110 active:scale-95">
  Generate Disposal Log
  </Button>

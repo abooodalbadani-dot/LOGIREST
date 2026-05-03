@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -118,7 +118,7 @@ export function PurchaseOrderForm({ initialData, mode = "create" }: PurchaseOrde
  } else {
  const result = await createMutation.mutateAsync(values);
  toast.success(t("submit_success"));
- router.push(`/ ${window.location.pathname.split('/')[1]}/purchase-orders/ ${result.id}`);
+      router.push(`/purchase-orders/${result.id}`);
  }
  } catch (error) {
  console.error(error);

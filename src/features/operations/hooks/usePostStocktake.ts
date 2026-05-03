@@ -7,7 +7,7 @@ export function usePostStocktake(sessionId: string, warehouseId: string) {
  const qc = useQueryClient();
  return useMutation({
  mutationFn: () =>
- apiClient.post(`/stocktake/sessions/ ${sessionId}/post`, StocktakeSessionSchema, { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' }),
+ apiClient.post(`/stocktake/sessions/${sessionId}/post`, StocktakeSessionSchema, { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' }),
  onSuccess: () => {
  qc.invalidateQueries({ queryKey: ['stocktake-sessions'] });
  qc.invalidateQueries({ queryKey: ['stocktake-session', sessionId] });

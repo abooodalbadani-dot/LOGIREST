@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -86,7 +86,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  lot_allocations: data.lot_number ? [{ lot_id: data.lot_number, qty: data.quantity }] : undefined
  }]
  });
- router.push(`/ ${locale}/adjustments`);
+ router.push(`/${locale}/adjustments`);
  } catch (e) {
  console.error(e);
  }
@@ -97,14 +97,14 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  <Breadcrumb 
  items={[
  { label: tCommon('inventory'), href: '#' },
- { label: t('title'), href: `/ ${locale}/adjustments` },
+ { label: t('title'), href: `/${locale}/adjustments` },
  { label: t('create_new') }
  ]} 
  />
  
  <PageHeader
  title={t('create_new')}
- description={t('subtitle') || 'Inventory Calibrate Protocol'} actions={
+ description={t('subtitle')} actions={
  <Button 
  onClick={handleSubmit(onSubmit)} 
  disabled={!isValid || createAdjustment.isPending || !!lockState?.is_locked}
@@ -128,7 +128,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  <div className="flex items-center gap-3 mb-2">
  <Info className="w-4 h-4 text-cyan-500" />
  <h3 className={cn("text-label-xs font-semibold uppercase text-foreground/60")}>
- {t('details_section') || 'Document Details'}
+ {t('details_section')}
  </h3>
  </div>
 
@@ -204,7 +204,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  <div className="flex items-center gap-3 mb-2">
  <Package className="w-4 h-4 text-emerald-500" />
  <h3 className={cn("text-label-xs font-semibold uppercase text-foreground/60")}>
- {t('lines_section') || 'Adjustment Lines'}
+ {t('lines_section')}
  </h3>
  </div>
 
@@ -302,7 +302,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  </label>
  <Input
  {...register('lot_number')}
- placeholder={t('lot_placeholder') || 'Enter lot number if applicable...'} className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-mono text-body-md border-none focus:bg-primary-fixed-dim/10 transition-all outline-none shadow-none ring-0 focus-visible:ring-0 px-6"
+ placeholder={t('lot_placeholder')} className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-mono text-body-md border-none focus:bg-primary-fixed-dim/10 transition-all outline-none shadow-none ring-0 focus-visible:ring-0 px-6"
  />
  </div>
 

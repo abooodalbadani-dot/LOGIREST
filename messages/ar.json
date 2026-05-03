@@ -1,18 +1,20 @@
 {
   "common": {
-    "code": "Code",
-    "name_en": "Name (English)",
-    "name_ar": "Name (Arabic)",
-    "save": "Save",
-    "saving": "Saving...",
-    "create": "Create",
-    "create_branch": "Create Branch",
-    "permission_denied": "غير مصرح",
+    "code": "الكود",
+    "name_en": "الاسم (إنجليزي)",
+    "name_ar": "الاسم (عربي)",
+    "save": "حفظ",
+    "save_changes": "حفظ التغييرات",
+    "saving": "جاري الحفظ...",
+    "loading": "جاري التحميل...",
+    "create": "إنشاء",
+    "create_branch": "إنشاء فرع",
+    "permission_denied": "وصول مرفوض",
     "permission_denied_body": "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
     "back": "رجوع",
     "confirm": "تأكيد",
     "cancel": "إلغاء",
-    "posting_irreversible": "هذا الإجراء لا يمكن التراجع عنه.",
+    "posting_irreversible": "هذا الإجراء غير قابل للتراجع.",
     "confirm_word_prompt": "اكتب \"{keyword}\" للتأكيد:",
     "posted_read_only": "مرحّل - للقراءة فقط",
     "confirm_rate": "تأكيد السعر",
@@ -20,6 +22,7 @@
     "filters_button": "تخصيص العرض",
     "reset": "إعادة تعيين",
     "doc_number": "رقم المستند",
+    "quantity": "الكمية",
     "notes": "ملاحظات",
     "item": "الصنف",
     "lot": "الدفعة",
@@ -41,14 +44,23 @@
     "system": "النظام",
     "posted_at": "تاريخ الترحيل",
     "view": "عرض",
+    "edit": "تعديل",
+    "print": "طباعة",
+    "delete": "حذف",
+    "date": "التاريخ",
+    "user": "المستخدم",
+    "remarks": "ملاحظات",
     "not_available": "غير متوفر",
     "dash": "—",
     "created_at": "تاريخ الإنشاء",
     "locked": "مقفل",
+    "locked_at": "تم الإقفال في",
     "logout": "تسجيل الخروج",
     "not_logged_in": "غير مسجل دخول",
     "not_found": "غير موجود",
     "excel": "إكسل",
+    "warehouse_locked": "المستودع مقفل",
+    "stocktake_in_progress_desc": "العمليات مقيدة بسبب وجود جرد نشط.",
     "status_filtering": "تصفية الحالات",
     "total_users": "إجمالي المستخدمين",
     "total_locations": "إجمالي المواقع",
@@ -104,10 +116,12 @@
     },
     "status": {
       "draft": "مسودة",
-      "submitted": "مقدم",
+      "submitted": "تم الإرسال",
       "approved": "معتمد",
       "posted": "مرحّل",
       "rejected": "مرفوض",
+      "fulfilled": "مكتمل",
+      "partial": "مكتمل جزئياً",
       "cancelled": "ملغي",
       "in_transit": "في الطريق",
       "open": "مفتوح",
@@ -118,7 +132,7 @@
       "inactive": "غير نشط",
       "started": "تم البدء",
       "counting_completed": "اكتمل العد",
-      "variancesubmitted": "بانتظار الاعتماد",
+      "variance_submitted": "بانتظار الاعتماد",
       "healthy": "سليم",
       "low": "مخزون منخفض",
       "critical": "حرج",
@@ -141,18 +155,23 @@
       "last_sync": "آخر مزامنة"
     },
     "no_records": "لم يتم العثور على سجلات.",
+    "order_details": "تفاصيل الطلب",
+    "line_items": "بنود الطلب",
+    "no_notes": "لا توجد ملاحظات",
+    "notes_placeholder": "اكتب أي ملاحظات إضافية هنا...",
+    "or": "أو",
     "sidebar": {
       "group_dashboard": "لوحة القيادة",
       "dashboard": "نظرة عامة على لوحة القيادة",
       "operations": "العمليات",
       "group_inventory": "إدارة المخزون",
-      "grn": "استلام البضائع",
-      "issue": "صرف البضائع",
-      "transfer": "التحويلات",
+      "grn": "أذونات الاستلام",
+      "issue": "سندات الصرف",
+      "transfer": "تحويل المخزون",
       "pr": "طلبات الشراء",
       "po": "أوامر الشراء",
-      "stocktake": "الجرد",
-      "adjustment": "التسويات",
+      "stocktake": "جرد المخزون",
+      "adjustment": "تسوية المخزون",
       "balance": "أرصدة المخزون",
       "group_procurement": "سلسلة التوريد",
       "group_communications": "الاتصالات",
@@ -201,8 +220,8 @@
   },
   "procurement": {
     "grn": {
-      "title": "سندات الاستلام",
-      "grns": "سندات الاستلام",
+      "title": "إذن استلام",
+      "grns": "أذونات الاستلام",
       "home": "الرئيسية",
       "create_new": "إنشاء سند جديد",
       "description": "تسجيل ومعالجة البضائع الواردة من الموردين.",
@@ -275,42 +294,43 @@
       "awaiting_hardware": "في انتظار نبض الاستحواذ على الأجهزة",
       "lot_required": "رقم الدفعة مطلوب",
       "expiry_required": "تاريخ الانتهاء مطلوب",
-      "qty_greater_than_zero": "يجب أن تكون الكمية أكبر من الصفر"
+      "qty_greater_than_zero": "يجب أن تكون الكمية أكبر من الصفر",
+      "back_to_list": "العودة إلى قائمة الاستلام"
     },
     "pr": {
       "title": "طلبات الشراء",
-      "requests": "الطلبات",
+      "requests": "طلبات الشراء",
       "home": "الرئيسية",
-      "create_new": "طلب جديد",
-      "description": "طلبات تعبئة المخزون الداخلية وسير عمل الموافقات",
-      "detail_title": "طلب شراء",
+      "create_new": "إنشاء طلب جديد",
+      "description": "طلبات الشراء الداخلية وسير عمل الاعتماد",
+      "detail_title": "تكوين طلب الشراء",
       "doc_number": "رقم المستند",
       "department": "القسم",
-      "expected_date": "تاريخ التسليم المتوقع",
+      "expected_date": "التاريخ المتوقع",
       "save_draft": "حفظ كمسودة",
       "submit": "إرسال للاعتماد",
       "convert_to_po": "تحويل إلى أمر شراء",
-      "approve_pr": "موافقة",
-      "reject_pr": "رفض",
-      "approve_confirm_title": "تأكيد الموافقة",
-      "approve_confirm_desc": "ستؤدي الموافقة على طلب الشراء هذا إلى إتاحته للتحويل إلى أمر شراء.",
+      "approve_pr": "اعتماد الطلب",
+      "reject_pr": "رفض الطلب",
+      "approve_confirm_title": "تأكيد الاعتماد",
+      "approve_confirm_desc": "أنت على وشك التصريح بطلب الشراء هذا.",
       "reject_confirm_title": "تأكيد الرفض",
-      "reject_confirm_desc": "سيؤدي رفض طلب الشراء إلى إغلاقه.",
+      "reject_confirm_desc": "هل أنت متأكد من رفض هذا الطلب؟ هذا الإجراء غير قابل للتراجع.",
       "posted_success": "تمت العملية بنجاح.",
-      "sync_context": "جاري تهيئة سياق الطلب...",
-      "new_intent": "طلب شراء جديد",
-      "specification": "تفاصيل الحصول على الموارد",
+      "sync_context": "جاري مزامنة بيانات الطلب...",
+      "new_intent": "غرض طلب جديد",
+      "specification": "مواصفات المستند",
       "status_init": "الحالة معلقة",
       "requested_qty": "الكمية المطلوبة",
       "approved_qty": "الكمية المعتمدة",
       "irreversible": "هذا الإجراء لا يمكن التراجع عنه.",
       "pr_detail": "تفاصيل طلب الشراء",
       "requested_by": "بواسطة",
-      "search_placeholder": "بحث برقم المستند أو المستودع...",
+      "search_placeholder": "البحث بالرقم أو القسم...",
       "metrics": {
         "total": "إجمالي الطلبات",
-        "approved": "المعتمدة",
-        "pending": "المعلقة"
+        "approved": "الطلبات المعتمدة",
+        "pending": "قيد المراجعة"
       },
       "validation": {
         "department_required": "القسم مطلوب",
@@ -320,43 +340,65 @@
         "qty_greater_than_zero": "يجب أن تكون الكمية أكبر من الصفر",
         "rejection_reason_min": "يجب أن يكون سبب الرفض 15 حرفاً على الأقل"
       },
-      "no_requests_title": "لم يتم العثور على طلبات شراء",
-      "no_requests_desc": "اطلب أصنافاً من المخزن لتزويد قسمك بالمخزون اللازم.",
+      "no_requests_title": "لا توجد طلبات شراء",
+      "no_requests_desc": "ابدأ دورة المشتريات عن طريق إنشاء طلب جديد.",
       "reject": "رفض الطلب",
       "approve": "اعتماد الطلب",
       "draft": "مسودة",
       "submitted": "مقدم",
       "approved": "معتمد",
-      "rejected": "مرفوض"
+      "rejected": "مرفوض",
+      "create_title": "إنشاء طلب شراء",
+      "create_desc": "تقديم طلب جديد للأصناف التي يحتاجها فرعك.",
+      "submit_confirm_title": "تأكيد الإرسال",
+      "rejection_reason_label": "سبب الرفض",
+      "return_to_pr_list": "العودة إلى قائمة طلبات الشراء",
+      "edit_pr": "تعديل الطلب",
+      "approval_title": "اعتماد طلب الشراء",
+      "invalid_state": "حالة طلب غير صالحة",
+      "go_to_approval": "الانتقال للاعتماد",
+      "approval_workflow": "سير عمل الاعتماد",
+      "approval_desc": "مراجعة الأصناف وتأكيد أو رفض الطلب",
+      "reject_reason_title": "سبب الرفض",
+      "reject_reason_placeholder": "اشرح سبب رفض هذا الطلب...",
+      "reject_reason_min_chars": "يجب أن يكون السبب 15 حرفاً على الأقل",
+      "submit_success": "تم إرسال الطلب بنجاح",
+      "approve_success": "تم اعتماد الطلب بنجاح",
+      "reject_success": "تم رفض الطلب بنجاح",
+      "rejection_reason": "سبب الرفض",
+      "rejection_reason_placeholder": "صف سبب رفض هذا الطلب...",
+      "confirm_rejection": "تأكيد الرفض",
+      "edit_not_allowed": "التعديل مغلق",
+      "edit_not_allowed_desc": "لقد تم إرسال هذا المستند أو معالجته بالفعل ولا يمكن تعديله."
     },
     "po": {
-      "title": "أوامر الشراء",
-      "orders": "الأوامر",
+      "title": "أمر شراء",
+      "orders": "أوامر الشراء",
       "home": "الرئيسية",
-      "create_new": "إنشاء أمر شراء",
-      "description": "إدارة التزامات المشتريات وسلسلة التوريد.",
-      "detail_title": "أمر شراء",
+      "create_new": "إنشاء أمر شراء جديد",
+      "description": "إدارة طلبات الموردين وتنفيذ عمليات الشراء",
+      "detail_title": "تكوين أمر الشراء",
       "doc_number": "رقم المستند",
       "supplier": "المورد",
       "target_warehouse": "المستودع المستهدف",
-      "expected_date": "تاريخ التسليم المتوقع",
+      "expected_date": "التاريخ المتوقع",
       "expected_delivery_date": "تاريخ التسليم المتوقع",
       "supplier_currency": "عملة المورد",
-      "fx_rate": "سعر الصرف",
+      "fx_rate": "سعر الصرف (إلى ريال سعودي)",
       "general_notes": "ملاحظات عامة",
-      "notes_placeholder": "حدد تعليمات الشحن أو المناولة الخاصة...",
-      "line_items": "بنود الأمر",
+      "notes_placeholder": "مثال: مطلوب تغليف خاص",
+      "line_items": "الأصناف المطلوبة",
       "add_item": "إضافة صنف",
-      "item_sku": "كود الصنف",
+      "item_sku": "رمز الصنف",
       "quantity": "الكمية",
       "unit_price": "سعر الوحدة",
       "line_notes": "ملاحظات البند",
       "supplier_total": "إجمالي المورد",
-      "base_total": "الإجمالي الأساسي (ر.س)",
+      "base_total": "الإجمالي بالعملة الأساسية (ريال)",
       "total_amount": "إجمالي المبلغ",
       "save_draft": "حفظ مسودة",
       "actions": {
-        "submit": "إرسال للاعتماد",
+        "submit": "إرسال أمر الشراء",
         "submitting": "جاري الإرسال...",
         "go_to_approval": "الانتقال للاعتماد",
         "approve": "اعتماد",
@@ -365,17 +407,17 @@
         "cancel": "إلغاء الأمر"
       },
       "approve_confirm_title": "تأكيد الاعتماد",
-      "approve_confirm_desc": "هل أنت متأكد من اعتماد أمر الشراء هذا؟",
+      "approve_confirm_desc": "أنت على وشك التصريح بأمر الشراء هذا.",
       "reject_confirm_title": "تأكيد الرفض",
-      "reject_confirm_desc": "هل أنت متأكد من رفض أمر الشراء هذا؟ يجب تقديم سبب واضح.",
+      "reject_confirm_desc": "هل أنت متأكد من رفض هذا الأمر؟ هذا الإجراء غير قابل للتراجع.",
       "post_po": "ترحيل الأمر",
       "post_confirm_title": "تأكيد الترحيل",
       "post_confirm_desc": "بعد الترحيل، لا يمكن تعديل أمر الشراء.",
       "posted_success": "تمت العملية بنجاح.",
-      "submit_success": "تم إرسال أمر الشراء بنجاح.",
+      "submit_success": "تم إرسال أمر الشراء بنجاح",
       "edit_success": "تم تحديث أمر الشراء بنجاح.",
       "commitment_intent": "التزام شراء جديد",
-      "specification": "مواصفات أمر الشراء",
+      "specification": "مواصفات الأمر",
       "origin_context": "سياق المصدر",
       "pending_linking": "ارتباط معلق",
       "independent_order": "طلب مستقل",
@@ -386,12 +428,12 @@
       "local_equiv": "المعادل المحلي",
       "ledger_history": "سجل العمليات التشغيلية",
       "warning_irreversible": "سيؤدي هذا الإجراء إلى ترحيل الطلب إلى السجل ولا يمكن التراجع عنه.",
-      "sync_context": "جاري مزامنة سياق الأمر...",
+      "sync_context": "جاري مزامنة بيانات الأمر...",
       "select_warehouse": "اختر المستودع...",
-      "select_supplier": "اختر المورد...",
-      "linked_pr": "طلب الشراء المرتبط",
+      "select_supplier": "اختر المورد",
+      "linked_pr": "طلب شراء مرتبط (اختياري)",
       "rejection_reason_label": "سبب الرفض",
-      "rejection_reason_placeholder": "صف سبب رفض هذا الأمر (15 حرفاً على الأقل)...",
+      "rejection_reason_placeholder": "اشرح سبب رفض هذا الأمر...",
       "return_to_list": "العودة لقائمة أوامر الشراء",
       "edit_po": "تعديل الأمر",
       "approval_title": "اعتماد أمر الشراء",
@@ -400,12 +442,49 @@
         "currency_required": "العملة مطلوبة",
         "at_least_one_item": "يجب إضافة صنف واحد على الأقل",
         "rejection_reason_min": "يجب أن يكون سبب الرفض 15 حرفاً على الأقل"
+      },
+      "po_number": "رقم أمر الشراء",
+      "currency": "العملة",
+      "exchange_rate": "سعر الصرف",
+      "new_intent": "غرض أمر جديد",
+      "submit": "إرسال الأمر",
+      "invalid_state": "حالة أمر غير صالحة",
+      "search_placeholder": "البحث برقم الأمر أو المورد...",
+      "no_orders_title": "لا توجد أوامر شراء",
+      "no_orders_desc": "ابدأ شراء الأصناف عن طريق إنشاء أول أمر شراء لك.",
+      "metrics": {
+        "total": "إجمالي الأوامر",
+        "pending": "قيد الاعتماد",
+        "approved": "الأوامر النشطة"
+      },
+      "go_to_approval": "الانتقال للاعتماد",
+      "approval_workflow": "سير عمل الاعتماد",
+      "approval_desc": "مراجعة تفاصيل الأمر وتأكيد التزام الشراء",
+      "reject_po": "رفض الأمر",
+      "rejection_hint": "قدم سبباً واضحاً للمورد أو الفريق.",
+      "irreversible": "هذا الإجراء لا يمكن التراجع عنه.",
+      "edit_not_allowed": "التعديل مغلق",
+      "edit_not_allowed_desc": "لقد تم إرسال هذا المستند أو معالجته بالفعل ولا يمكن تعديله.",
+      "approve_success": "تم اعتماد أمر الشراء بنجاح",
+      "reject_success": "تم رفض أمر الشراء بنجاح",
+      "rejection_reason": "سبب الرفض",
+      "rejection_reason_min_chars": "يجب أن يكون السبب 15 حرفاً على الأقل",
+      "confirm_rejection": "تأكيد الرفض",
+      "back_to_list": "العودة إلى طلبات الشراء",
+      "no_grns_title": "لا توجد مذكرات استلام",
+      "no_grns_desc": "لم يتم معالجة أي مذكرات استلام لطلب الشراء هذا بعد.",
+      "approval": {
+        "summary_title": "ملخص الطلب",
+        "comment_label": "تعليق الموافقة/الرفض",
+        "comment_placeholder": "أدخل ملاحظات القرار هنا...",
+        "comment_hint": "الحد الأدنى 15 حرفًا مطلوب للرفض",
+        "comment_min_chars": "مطلوب {count} أحرف إضافية"
       }
     }
   },
   "operations": {
     "issue": {
-      "title": "سندات الصرف",
+      "title": "صرف مخزون",
       "issues": "سندات الصرف",
       "home": "الرئيسية",
       "create_new": "إنشاء سند صرف",
@@ -504,6 +583,7 @@
       "fulfill": "تجهيز الأصناف",
       "partially_fulfill": "تجهيز جزئي",
       "rejection_reason_label": "سبب الرفض",
+      "rejection_reason_description": "يرجى تقديم سبب لرفض هذا الطلب. سيكون هذا مرئياً لمقدم الطلب.",
       "rejection_reason_placeholder": "صف سبب رفض هذا الطلب...",
       "notes_placeholder": "حدد أي متطلبات خاصة أو عاجلة...",
       "validation": {
@@ -526,17 +606,17 @@
       "fulfilling": "جاري التجهيز",
       "post_fulfillment": "ترحيل التجهيز",
       "statuses": {
-        "DRAFT": "مسودة",
-        "SUBMITTED": "تم الإرسال",
-        "APPROVED": "معتمد",
-        "REJECTED": "مرفوض",
-        "FULFILLED": "مكتمل",
-        "PARTIAL": "مكتمل جزئياً"
+        "draft": "مسودة",
+        "submitted": "تم الإرسال",
+        "approved": "معتمد",
+        "rejected": "مرفوض",
+        "fulfilled": "مكتمل",
+        "partial": "مكتمل جزئياً"
       }
     },
     "transfer": {
-      "title": "نقل المخزون",
-      "transfers": "عمليات النقل",
+      "title": "تحويل مخزون",
+      "transfers": "حركات التحويل",
       "home": "الرئيسية",
       "create_new": "إنشاء عملية نقل",
       "description": "نقل المخزون بين مواقع المستودعات.",
@@ -596,8 +676,8 @@
       "scan_error": "الصنف ليس في البيان"
     },
     "adjustment": {
-      "title": "تعديلات المخزون",
-      "adjustments": "التسويات",
+      "title": "تسوية مخزون",
+      "adjustments": "تسويات المخزون",
       "home": "الرئيسية",
       "create_new": "تعديل جديد",
       "description": "قم بتسجيل أول تعديل للمخزون لإعادة معايرة مستويات المخزون.",
@@ -607,6 +687,7 @@
       "warehouse": "المستودع",
       "reason": "السبب",
       "reference": "المرجع",
+      "lot_placeholder": "أدخل رقم الدفعة إذا كان متاحاً...",
       "posted_direct": "تم الترحيل مباشرة",
       "pending_execution": "قيد التنفيذ",
       "detail_title": "تفاصيل التعديل",
@@ -677,7 +758,7 @@
       }
     },
     "stocktake": {
-      "title": "جلسات الجرد",
+      "title": "جرد مخزون",
       "description": "إجراء عمليات تدقيق المخزون المادي وإحصاء المستودعات.",
       "create_new": "بدء جلسة جديدة",
       "total_sessions": "إجمالي حجم التدقيق",
@@ -770,7 +851,7 @@
       "summary_card": "ملخص الجرد",
       "approved_success": "تم اعتماد الجرد بنجاح.",
       "rejected_success": "تم رفض الجرد بنجاح.",
-      "variancesubmitted_status": "انتظار الاعتماد",
+      "variance_submitted_status": "انتظار الاعتماد",
       "rejected_status": "مرفوض",
       "approved_status": "معتمد",
       "posted_status": "مرحل",
@@ -806,7 +887,7 @@
       "go_to_post": "الانتقال للترحيل"
     }
   },
-  "masterData": {
+  "master_data": {
     "common": {
       "code": "الكود",
       "name": "الاسم",
@@ -899,21 +980,34 @@
       }
     },
     "branches": {
-      "title": "الفروع",
-      "description": "إدارة المواقع المادية والعقد التشغيلية.",
-      "create_title": "فرع جديد",
-      "edit_title": "تعديل فرع",
+      "title": "سجل الفروع",
+      "description": "الهيكل التنظيمي ومراكز المواقع الأساسية",
+      "create_title": "تسجيل فرع جديد",
+      "edit_title": "تعديل مركز الفرع",
       "created_at": "تاريخ الإنشاء",
       "total_locations": "إجمالي المواقع",
       "active_status": "حالة النشاط",
       "operational_compliance": "الامتثال التشغيلي",
-      "search_placeholder": "تصفية المواقع حسب الاسم أو الكود..."
+      "search_placeholder": "تصفية المواقع حسب الاسم أو الكود...",
+      "created_success": "تم تسجيل الفرع بنجاح",
+      "updated_success": "تم تحديث هوية الفرع",
+      "deleted_success": "تمت إزالة الفرع من السجل",
+      "errors": {
+        "deactivate_linked_warehouses": "لا يمكن إلغاء تنشيط الفرع المرتبط بمستودعات نشطة.",
+        "update_failed": "فشل تحديث هوية الفرع"
+      },
+      "fields": {
+        "code": "كود الفرع",
+        "name_en": "اسم الفرع (EN)",
+        "name_ar": "اسم الفرع (AR)",
+        "is_active": "الحالة"
+      }
     },
     "warehouses": {
-      "title": "المستودعات",
-      "description": "عقد المخزون المادية والافتراضية عبر شبكة التوريد العالمية.",
-      "create_title": "مستودع جديد",
-      "edit_title": "تعديل مستودع",
+      "title": "إدارة المستودعات",
+      "description": "العقد اللوجستية ومواقع التخزين الفعلية",
+      "create_title": "تسجيل مستودع جديد",
+      "edit_title": "تعديل عقدة المستودع",
       "branch": "الفرع",
       "type": "النوع",
       "code": "كود المستودع",
@@ -936,21 +1030,43 @@
       "physical_sites": "المواقع المادية",
       "search_placeholder": "البحث في المستودعات حسب الاسم أو الكود...",
       "types": {
-        "main": "مركز التوزيع الرئيسي",
-        "dry": "مخزن جاف",
-        "cold": "سلسلة التبريد",
-        "virtual": "عقدة افتراضية"
+        "main": "رئيسي",
+        "dry": "جاف",
+        "cold": "مبرد",
+        "virtual": "افتراضي"
       },
       "warehouse_configuration": "تكوين المستودع",
       "branch_mapping_details": "تفاصيل ربط الفرع والعقدة",
       "physical_location_settings": "الموقع المادي والإعدادات",
       "operational_status": "الحالة التشغيلية",
-      "status_description": "التحكم في رؤية ومدى توفر هذه العقدة تشغيلياً."
+      "status_description": "التحكم في رؤية ومدى توفر هذه العقدة تشغيلياً.",
+      "created_success": "تم تسجيل المستودع بنجاح",
+      "updated_success": "تم تحديث تفاصيل المستودع",
+      "errors": {
+        "cannot_deactivate_warehouse_in_use": "لا يمكن إيقاف تنشيط المستودع المرتبط بأقسام أو مخزون نشط.",
+        "cannot_change_branch_with_departments": "لا يمكن تغيير الفرع لمستودع مرتبط بأقسام.",
+        "update_failed": "فشل تحديث تفاصيل المستودع"
+      },
+      "fields": {
+        "branch": "الفرع التشغيلي",
+        "code": "كود المستودع",
+        "name_en": "اسم المستودع (EN)",
+        "name_ar": "اسم المستودع (AR)",
+        "type": "نوع التخزين",
+        "is_active": "الحالة"
+      },
+      "validation": {
+        "branch_required": "الفرع التشغيلي مطلوب",
+        "code_min": "يجب أن يكون الكود حرفين على الأقل",
+        "code_format": "يجب أن يكون الكود أحرف كبيرة وأرقام فقط",
+        "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
+        "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل"
+      }
     },
     "items": {
-      "title": "الأصناف",
-      "create_title": "صنف جديد",
-      "edit_title": "تعديل صنف",
+      "title": "سجل الأصناف",
+      "create_title": "تسجيل صنف جديد",
+      "edit_title": "تعديل مواصفات الصنف",
       "barcode": "باركود",
       "category": "الفئة",
       "classification": "التصنيف",
@@ -969,17 +1085,52 @@
       "inventory_rules": "قواعد المخزون",
       "stock_thresholds": "عتبات المخزون",
       "no_conversions_defined": "لا توجد تحويلات معرفة",
-      "description": "سجل أصول المخزون وإدارة عمق الأصناف",
+      "description": "كتالوج المخزون المركزي وإدارة المواصفات",
       "no_items_title": "لم يتم العثور على أصناف مخزون",
-      "no_items_desc": "كتالوج البيانات الأساسية فارغ حالياً. ابدأ بإضافة أول صنف لك."
+      "no_items_desc": "كتالوج البيانات الأساسية فارغ حالياً. ابدأ بإضافة أول صنف لك.",
+      "created_success": "تم تسجيل الصنف بنجاح",
+      "updated_success": "تم تحديث مواصفات الصنف",
+      "deactivated_success": "تم إيقاف الصنف",
+      "errors": {
+        "cannot_deactivate_with_stock": "لا يمكن إيقاف صنف لا يزال لديه مخزون.",
+        "sku_exists": "يوجد صنف مسجل بهذا الكود بالفعل.",
+        "update_failed": "فشل تحديث بيانات الصنف"
+      },
+      "sections": {
+        "identity": "هوية الصنف",
+        "identity_desc": "التعريف الأساسي والتكويد",
+        "categorization": "التصنيف",
+        "categorization_desc": "التجميع المنطقي والتبويب",
+        "inventory_rules": "قواعد المخزون",
+        "inventory_rules_desc": "معايير التحكم ومستويات الأمان"
+      },
+      "fields": {
+        "sku": "كود الصنف (SKU)",
+        "barcode": "باركود / GTIN",
+        "name_en": "اسم الصنف (EN)",
+        "name_ar": "اسم الصنف (AR)",
+        "category": "التصنيف",
+        "base_unit": "وحدة المخزون",
+        "min_stock": "حد الأمان (الأدنى)",
+        "reorder_point": "نقطة إعادة الطلب",
+        "is_active": "الحالة"
+      },
+      "validation": {
+        "code_required": "كود الصنف مطلوب",
+        "barcode_required": "الباركود مطلوب",
+        "name_en_required": "الاسم بالإنجليزية مطلوب",
+        "name_ar_required": "الاسم بالعربية مطلوب",
+        "category_required": "التصنيف مطلوب",
+        "uom_required": "وحدة القياس الأساسية مطلوبة"
+      }
     },
     "suppliers": {
-      "title": "الموردون",
-      "create_title": "مورد جديد",
-      "edit_title": "تعديل مورد",
+      "title": "سجل الموردين",
+      "create_title": "تسجيل مورد جديد",
+      "edit_title": "تعديل ملف المورد",
       "currency": "العملة الافتراضية",
       "payment_terms": "شروط الدفع",
-      "description": "إدارة شركاء التوريد والاتفاقيات المالية.",
+      "description": "شركاء المشتريات الخارجيين ومراكز التنفيذ",
       "partner_identity": "هوية الشريك",
       "financial_terms": "الشروط المالية",
       "operational_settings": "الإعدادات التشغيلية",
@@ -993,46 +1144,75 @@
       "email": "البريد الإلكتروني",
       "tax_number": "الرقم الضريبي",
       "search_placeholder": "البحث في الموردين حسب الاسم أو الكود...",
-      "terms_placeholder": "مثال: صافي 30 يومًا",
+      "terms_placeholder": "صف دورات الدفع أو الاتفاقيات الخاصة...",
       "actions": {
         "create": "إنشاء مورد",
         "save": "حفظ التغييرات"
       },
       "no_suppliers_title": "لم يتم العثور على موردين",
-      "no_suppliers_desc": "إدارة شركاء الشراء الخارجيين وشبكة الموردين العالمية الخاصة بك هنا."
+      "no_suppliers_desc": "إدارة شركاء الشراء الخارجيين وشبكة الموردين العالمية الخاصة بك هنا.",
+      "partner_identity_desc": "تفاصيل التسجيل والعلامة التجارية",
+      "financial_terms_desc": "اتفاقيات العملة والدفع",
+      "created_success": "تم تسجيل المورد",
+      "updated_success": "تم تحديث ملف المورد",
+      "deleted_success": "تمت إزالة المورد",
+      "errors": {
+        "deactivate_linked_pos": "لا يمكن إلغاء تنشيط المورد المرتبط بأوامر شراء نشطة.",
+        "update_failed": "فشل تحديث ملف المورد"
+      },
+      "fields": {
+        "code": "كود المورد",
+        "name_en": "اسم المورد (EN)",
+        "name_ar": "اسم المورد (AR)",
+        "currency": "العملة المفضلة",
+        "payment_terms": "شروط الدفع",
+        "is_active": "الحالة"
+      }
     },
     "currencies": {
-      "title": "العملات",
-      "create_title": "عملة جديدة",
-      "edit_title": "تعديل عملة",
-      "description": "إدارة العملات والمعايير المالية.",
+      "title": "أستاذ العملات",
+      "create_title": "تعريف عملة جديدة",
+      "edit_title": "تعديل معايير العملة",
+      "description": "تعريف العملات العالمية وإدارة أسعار الصرف",
       "search_placeholder": "البحث في العملات...",
       "symbol": "الرمز",
       "is_base": "العملة الأساسية",
       "fields": {
-        "code": "كود العملة",
-        "symbol": "الرمز",
-        "is_base": "أساسية",
-        "is_active": "نشطة"
+        "code": "رمز العملة",
+        "symbol": "العلامة",
+        "is_base": "العملة الأساسية",
+        "is_active": "الحالة",
+        "name_en": "اسم العملة (EN)",
+        "name_ar": "اسم العملة (AR)"
       },
       "tips": {
-        "base_currency_title": "العملة الأساسية",
-        "base_currency_desc": "يمكن أن تكون عملة واحدة فقط هي الأساسية. تحدد هذه العملة وحدة المحاسبة الرئيسية للنظام.",
-        "iso_standard_title": "معايير ISO",
-        "iso_standard_desc": "استخدم دائماً أكواد ISO المكونة من 3 أحرف كبيرة للتوافق العالمي."
+        "base_currency_title": "العملة الأساسية الواحدة",
+        "base_currency_desc": "يمكن أن تكون عملة واحدة فقط هي 'الأساسية'. ستستخدم جميع تقييمات النظام والمحاسبة هذه العملة.",
+        "iso_standard_title": "معايير ISO 4217",
+        "iso_standard_desc": "استخدم الرموز القياسية المكونة من 3 أحرف (مثلاً SAR، USD) لضمان التوافق مع مزودي الخدمات المصرفية والصرف الدوليين."
       },
       "validation": {
-        "code_length": "يجب أن يتكون الكود من 3 أحرف بالضبط",
-        "code_format": "يجب أن يتكون الكود من 3 أحرف كبيرة",
-        "name_ar_required": "الاسم بالعربي مطلوب",
-        "name_en_required": "الاسم بالإنجليزي مطلوب"
+        "code_length": "يجب أن يكون الرمز 3 أحرف بالضبط",
+        "code_format": "يجب أن يكون الرمز 3 أحرف كبيرة (ISO 4217)",
+        "name_ar_required": "الاسم العربي مطلوب",
+        "name_en_required": "الاسم الإنجليزي مطلوب",
+        "code_required": "رمز العملة مطلوب"
+      },
+      "created_success": "تم تعريف العملة بنجاح",
+      "updated_success": "تم تحديث العملة",
+      "errors": {
+        "code_exists": "رمز العملة موجود مسبقاً.",
+        "cannot_deactivate_base": "لا يمكن إلغاء تنشيط العملة الأساسية.",
+        "cannot_deactivate_in_use": "لا يمكن إلغاء تنشيط عملة مستخدمة في أوامر شراء أو مذكرات استلام نشطة.",
+        "base_required": "يجب تعيين عملة واحدة على الأقل كعملة أساسية.",
+        "update_failed": "فشل تحديث العملة"
       }
     },
     "fx_rates": {
-      "title": "أسعار الصرف",
-      "create_title": "سعر صرف جديد",
-      "edit_title": "تعديل سعر الصرف",
-      "description": "بيانات مرجعية مالية زمنية للعمليات متعددة العملات.",
+      "title": "سجل أسعار الصرف",
+      "create_title": "تسجيل سعر صرف",
+      "edit_title": "تعديل معايير السعر",
+      "description": "أسعار صرف العملات التاريخية ومراجع التقييم الزمني",
       "search_placeholder": "البحث حسب العملة...",
       "from_currency": "من عملة",
       "to_currency": "إلى عملة",
@@ -1044,37 +1224,71 @@
       "fields": {
         "from": "من",
         "to": "إلى",
-        "rate": "السعر",
+        "rate": "سعر الصرف",
         "date": "تاريخ السريان",
-        "status": "الحالة"
+        "status": "الحالة",
+        "from_currency": "من عملة",
+        "to_currency": "إلى عملة",
+        "effective_date": "تاريخ السريان"
       },
       "tips": {
-        "temporal_title": "المنطق الزمني",
-        "temporal_desc": "يتم تطبيق الأسعار بناءً على تاريخ المستند المطابق لتسلسل تاريخ السريان.",
+        "temporal_title": "المرجع الزمني",
+        "temporal_desc": "أسعار الصرف حساسة للتاريخ. يستخدم النظام السعر الساري في تاريخ المستند للتقييمات المالية.",
         "immutable_title": "النزاهة التاريخية",
         "immutable_desc": "لا ينبغي حذف الأسعار للحفاظ على نزاهة سجل التدقيق."
       },
       "validation": {
-        "from_currency_required": "عملة المصدر مطلوبة",
-        "to_currency_required": "عملة الهدف مطلوبة",
-        "rate_positive": "يجب أن يكون السعر أكبر من الصفر",
-        "rate_precision": "6 خانات عشرية كحد أقصى",
+        "from_currency_required": "العملة المصدر مطلوبة",
+        "to_currency_required": "العملة الهدف مطلوبة",
+        "rate_positive": "يجب أن يكون السعر أكبر من 0",
+        "rate_precision": "يدعم السعر حتى 6 خانات عشرية",
         "date_required": "تاريخ السريان مطلوب",
-        "currencies_must_differ": "يجب أن تكون عملة المصدر والهدف مختلفتين"
+        "currencies_must_differ": "يجب أن تختلف العملة المصدر عن العملة الهدف"
+      },
+      "save_success": "تم تسجيل سعر الصرف بنجاح",
+      "update_success": "تم تحديث سعر الصرف",
+      "errors": {
+        "cannot_duplicate_rate": "يوجد سعر مسجل بالفعل لهذا الزوج من العملات وتاريخ السريان.",
+        "cannot_deactivate_rate_in_use": "لا يمكن إلغاء تنشيط سعر مستخدم حالياً في مستندات استلام بضائع (GRN) مرحلة.",
+        "update_failed": "فشل تحديث سعر الصرف"
       }
     },
     "departments": {
-      "title": "الأقسام",
-      "create_title": "قسم جديد",
-      "edit_title": "تعديل قسم",
-      "description": "إدارة الأقسام والكيانات التنظيمية.",
+      "title": "مراكز التكلفة والأقسام",
+      "create_title": "تسجيل قسم جديد",
+      "edit_title": "تعديل ملف القسم",
+      "description": "نقاط الاستهلاك الداخلي والوحدات التشغيلية",
       "search_placeholder": "تصفية الأقسام حسب الاسم أو الكود...",
       "branch": "الفرع",
       "total_units": "إجمالي الوحدات",
       "active_capacity": "السعة النشطة",
       "structural_audit": "التدقيق الهيكلي",
       "basic_info": "المعلومات الأساسية",
-      "operational_details": "التفاصيل التشغيلية"
+      "operational_details": "التفاصيل التشغيلية",
+      "created_success": "تم تسجيل القسم بنجاح",
+      "updated_success": "تم تحديث ملف القسم بنجاح",
+      "errors": {
+        "cannot_deactivate_department_in_use": "لا يمكن إيقاف القسم المرتبط بطلبات مطبخ أو جرد نشط.",
+        "update_failed": "فشل تحديث ملف القسم"
+      },
+      "fields": {
+        "branch": "الفرع التشغيلي",
+        "warehouse": "المستودع الأب",
+        "code": "كود القسم",
+        "name_en": "اسم القسم (EN)",
+        "name_ar": "اسم القسم (AR)",
+        "manager": "مدير الوحدة",
+        "cost_center": "معرف مركز التكلفة",
+        "is_active": "الحالة"
+      },
+      "validation": {
+        "branch_required": "اختيار الفرع مطلوب",
+        "warehouse_required": "المستودع الأب مطلوب",
+        "code_min": "يجب أن يكون الكود حرفين على الأقل",
+        "code_format": "يجب أن يكون الكود أحرف كبيرة وأرقام فقط",
+        "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
+        "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل"
+      }
     },
     "uom": {
       "title": "وحدات القياس",
@@ -1088,22 +1302,33 @@
       "precision_description": "مقاييس قياسية لدقة المخزون ودقة التحويل عبر جميع نقاط سلسلة التوريد."
     },
     "categories": {
-      "title": "الفئات",
-      "create_title": "فئة جديدة",
-      "edit_title": "تعديل فئة",
-      "description": "تصنيف الأصناف لأغراض التقارير والتحليل.",
+      "title": "تصنيفات الأصناف",
+      "create_title": "تصنيف جديد",
+      "edit_title": "تعديل التصنيف",
+      "description": "التجميع الدلالي وتصنيف المخزون",
       "search_placeholder": "تصفية الفئات حسب الاسم أو الكود...",
       "total_groups": "إجمالي المجموعات",
       "hierarchy_depth": "عمق التسلسل الهرمي",
       "mapping_status": "حالة الربط",
       "layers": "الطبقات",
-      "category_mapping": "ربط الفئات"
+      "category_mapping": "ربط الفئات",
+      "created_success": "تم إنشاء التصنيف",
+      "updated_success": "تم تحديث التصنيف",
+      "deleted_success": "تمت إزالة التصنيف",
+      "errors": {
+        "delete_linked_items": "لا يمكن إزالة التصنيف المرتبط بأصناف مخزون نشطة.",
+        "delete_failed": "فشل إزالة التصنيف"
+      },
+      "fields": {
+        "name_en": "اسم التصنيف (EN)",
+        "name_ar": "اسم التصنيف (AR)"
+      }
     },
     "barcodes": {
-      "title": "الباركود",
-      "create_title": "باركود جديد",
-      "edit_title": "تعديل باركود",
-      "description": "سجل الباركود وربط الأصناف.",
+      "title": "سجل الباركود",
+      "create_title": "تسجيل باركود جديد",
+      "edit_title": "تعديل مواصفات الباركود",
+      "description": "إدارة خرائط الباركود متعددة الوحدات و GTIN",
       "search_placeholder": "البحث في الباركود...",
       "item": "الصنف المستهدف",
       "barcode": "الباركود",
@@ -1120,20 +1345,128 @@
       "scan_description": "الاستحواذ المادي في الوقت الفعلي عبر بروتوكول المسح",
       "current_identity": "الهوية الحالية",
       "tip_1": "تأكد من وضوح الباركود لضمان اتساق المسح.",
-      "tip_2": "سيتم ملء الكمية الافتراضية مسبقاً أثناء الاستلام."
+      "tip_2": "سيتم ملء الكمية الافتراضية مسبقاً أثناء الاستلام.",
+      "created_success": "تم تسجيل الباركود بنجاح",
+      "updated_success": "تم تحديث خريطة الباركود",
+      "deactivated_success": "تم إلغاء تفعيل الباركود",
+      "errors": {
+        "code_exists": "رمز الباركود هذا مسجل بالفعل.",
+        "cannot_deactivate_in_use": "لا يمكن إلغاء تفعيل باركود مرتبط بعمليات نشطة.",
+        "update_failed": "فشل في تحديث مواصفات الباركود"
+      },
+      "fields": {
+        "item": "الصنف المخزني",
+        "uom": "وحدة القياس",
+        "code": "الباركود / GTIN",
+        "default_qty": "الكمية الافتراضية",
+        "is_active": "الحالة"
+      },
+      "validation": {
+        "item_required": "الصنف المخزني مطلوب",
+        "uom_required": "وحدة القياس مطلوبة",
+        "code_required": "رمز الباركود مطلوب",
+        "qty_positive": "الكمية الافتراضية يجب أن تكون أكبر من 0"
+      },
+      "tips": {
+        "multi_unit_title": "ربط وحدات متعددة",
+        "multi_unit_desc": "اربط باركود مختلف لكل وحدة قياس (مثل الصندوق مقابل القطعة) لأتمتة التحويل.",
+        "gtin_standard_title": "معايير GTIN",
+        "gtin_standard_desc": "استخدم باركود GS1 القياسي GTIN-13 أو GTIN-8 للتكامل السلس مع الموردين ودقة الكتالوج."
+      }
     },
     "import": {
-      "title": "استيراد جماعي",
+      "title": "معالج استيراد البيانات",
       "step_upload": "تحميل",
       "step_validate": "تحقق",
       "step_review": "مراجعة",
       "step_commit": "تنفيذ",
       "select_file": "اختر ملف CSV/Excel",
-      "upload_cta": "تحميل وتحقق",
+      "upload_cta": "معالجة البيان",
       "validation_success": "نجح التحقق. {count} سجل جاهز.",
       "validation_error": "فشل التحقق. تم العثور على {count} أخطاء.",
       "import_now": "استيراد الآن",
-      "import_success": "تم استيراد {count} سجل بنجاح."
+      "import_success": "تم استيراد {count} سجل بنجاح.",
+      "select_type": "اختيار نطاق البيانات الأساسية",
+      "items": "سجل الأصناف",
+      "items_desc": "استيراد جماعي للمنتجات والمكونات والمواد بما في ذلك الرموز والتصنيفات.",
+      "uoms": "وحدات القياس",
+      "uoms_desc": "تعريف وحدات القياس ومعايير الدقة على مستوى النظام بشكل جماعي.",
+      "barcodes": "ربط الباركود",
+      "barcodes_desc": "ربط رموز GTIN والباركود الداخلي بالأصناف ووحدات محددة.",
+      "start_import": "بدء تسلسل الاستيراد",
+      "note_title": "بروتوكول الاستيراد",
+      "note_description": "تأكد من مطابقة ملفات XLSX للنماذج الرسمية لتجنب فشل التحقق.",
+      "upload_step": "الاستحواذ",
+      "validate_step": "التدقيق",
+      "error_step": "الفوارق",
+      "commit_step": "الإنهاء",
+      "upload_title": "الاستحواذ على المصدر",
+      "upload_description": "قم برفع بيان البيانات الأساسية بتنسيق XLSX. سيقوم النظام بإجراء تدقيق هيكلي قبل الاعتماد.",
+      "click_to_upload": "انقر للاختيار أو اسحب البيان هنا",
+      "invalid_file_type": "تنسيق غير صالح. يتم قبول ملفات .xlsx فقط.",
+      "file_too_large": "حجم الملف يتجاوز الحد الأقصى 20 ميجابايت.",
+      "empty_file": "البيان لا يحتوي على سجلات بيانات.",
+      "parse_error": "فشل تحليل البيان. تأكد من أن الملف غير تالف.",
+      "download_template": "تحميل النموذج",
+      "upload_warning": "البيانات الضخمة (أكثر من 1000 صف) قد تستغرق عدة دقائق للمزامنة.",
+      "validating_title": "تدقيق السلامة",
+      "integrity_check_in_progress": "جاري تحليل سلامة الهيكل...",
+      "total_records": "صفوف البيان",
+      "status": "الحالة",
+      "analyzing": "جاري التحليل...",
+      "errors_found_title": "تم اكتشاف {count} فوارق",
+      "errors_found_description": "تم العثور على أخطاء هيكلية أو منطقية. يرجى معالجتها في البيان وإعادة الرفع.",
+      "row": "الصف",
+      "column": "العمود",
+      "value": "القيمة المتسببة",
+      "error_message": "وصف الخلل",
+      "showing_first_n_errors": "عرض أول {count} من أصل {total} فوارق",
+      "export_error_report": "تصدير سجل الأعطال",
+      "try_again": "إعادة التهيئة",
+      "success_title": "نجح الاستيراد",
+      "success_description": "تم مزامنة {count} سجل بنجاح مع مركز البيانات الأساسية.",
+      "imported_records": "متزامن",
+      "committed": "معتمد",
+      "view_records_cta": "عرض السجل",
+      "commit_title": "تفويض الاعتماد",
+      "commit_description": "راجع ملخص البيان قبل المزامنة النهائية لدفتر الحسابات.",
+      "entity_type": "النطاق المستهدف",
+      "idempotency_key": "رمز منع التكرار",
+      "commit_warning": "التفويض غير قابل للتراجع. سيتم دمج البيانات في السجل الإنتاجي.",
+      "cancel": "إلغاء",
+      "committing": "جاري المزامنة...",
+      "confirm_import": "تفويض الاعتماد"
+    },
+    "uoms": {
+      "title": "وحدات القياس",
+      "description": "المقاييس الموحدة ومواصفات القياس",
+      "create_title": "تعريف وحدة جديدة",
+      "edit_title": "تعديل وحدة القياس",
+      "created_success": "تم تعريف وحدة القياس",
+      "updated_success": "تم تحديث مواصفات الوحدة",
+      "deactivated_success": "تم إيقاف وحدة القياس",
+      "total_metrics": "إجمالي السجل",
+      "precision": "دقة عالية",
+      "precision_description": "يتم معايرة الوحدات لضمان دقة المخزون على مستوى المؤسسة والتسوية المالية.",
+      "registry_sync": "مزامنة السجل",
+      "search_placeholder": "البحث عن الوحدات بالكود أو الاسم...",
+      "errors": {
+        "cannot_deactivate_uom_in_use": "لا يمكن إيقاف وحدة مرتبطة حالياً بأصناف نشطة.",
+        "update_failed": "فشل تحديث مواصفات الوحدة"
+      },
+      "fields": {
+        "code": "كود الوحدة",
+        "name_en": "اسم الوحدة (EN)",
+        "name_ar": "اسم الوحدة (AR)",
+        "is_active": "الحالة",
+        "created_at": "تاريخ الإنشاء"
+      },
+      "validation": {
+        "code_required": "كود الوحدة مطلوب",
+        "code_uppercase": "يجب أن يكون الكود أحرف كبيرة فقط",
+        "name_en_required": "الاسم بالإنجليزية مطلوب",
+        "name_ar_required": "الاسم بالعربية مطلوب"
+      }
     }
   },
   "inventory": {
@@ -1244,54 +1577,56 @@
     "department_placeholder": "اختر القسم"
   },
   "dashboard": {
-    "title": "نظرة عامة على العمليات",
-    "description": "عرض حي لأداء المخازن والمؤشرات الحرجة",
+    "title": "لوحة القيادة المطبخية",
+    "description": "الذكاء التشغيلي ونظرة عامة على التدفق",
     "kpi": {
       "total_stock": "إجمالي قيمة المخزون",
-      "pending_prs": "طلبات شراء معلقة",
-      "active_stocktakes": "جلسات جرد نشطة",
-      "low_stock": "أصناف منخفضة المخزون",
-      "vs_last_month": "من الشهر الماضي",
-      "immediate_review": "تتطلب مراجعة فورية",
-      "warehouse_locked": "المستودعات مقفلة",
-      "reorder_suggested": "إعادة الطلب مقترحة",
-      "critical_items": "أصناف حرجة"
+      "pending_prs": "طلبات قيد الانتظار",
+      "active_stocktakes": "عمليات جرد نشطة",
+      "low_stock": "مخزون منخفض",
+      "vs_last_month": "مقابل الشهر الماضي",
+      "immediate_review": "يتطلب مراجعة فورية",
+      "warehouse_locked": "المستودع مقفل",
+      "reorder_suggested": "يُقترح إعادة الطلب",
+      "critical_items": "أصناف تحت مستوى الأمان",
+      "low_stock_items": "أصناف منخفضة المخزون",
+      "jeddah_riyadh_active": "جدة والرياض نشطة"
     },
     "near_expiry": {
-      "title": "أصناف قريبة الانتهاء",
-      "alert": "تنبيه",
-      "expires": "ينتهي في: ",
-      "rotation_report": "توليد تقرير تدوير المخزون"
+      "title": "مراقبة قرب الانتهاء",
+      "alert": "تدوير الأولوية",
+      "expires": "تنتهي في",
+      "rotation_report": "عرض تقرير التدوير"
     },
     "pending_approvals": {
-      "title": "مستندات قيد الانتظار",
+      "title": "الموافقات المعلقة",
       "tasks": "مهام",
-      "view_all": "عرض الكل"
+      "view_all": "عرض كافة سير العمل"
     },
-    "expiry_control": "الرقابة على الصلاحية",
-    "approval_workflow": "سير عمل الموافقات",
-    "business_intelligence": "تحليلات ذكاء الأعمال",
+    "expiry_control": "مراقبة ومتابعة الصلاحية",
+    "approval_workflow": "الموافقات المعلقة وسير العمل",
+    "business_intelligence": "ذكاء الأعمال والتوقعات",
     "system_health": {
       "title": "سلامة النظام",
       "optimal": "مثالي",
-      "health_suffix": "صحة النظام",
-      "node_description": "نقطة الأداء في الوقت الحقيقي",
-      "backup": "نسخة احتياطية",
-      "online": "متصل",
+      "health_suffix": "الاستقرار",
+      "node_description": "أداء العقد النشطة",
+      "backup": "آخر نسخة احتياطية",
+      "online": "المستخدمين النشطين",
       "sessions": "جلسات"
     },
     "audit": {
-      "title": "التدقيق الإداري",
-      "subtitle": "النشاط الرئيسي الأخير",
+      "title": "تدفق المراجعة",
+      "subtitle": "تغييرات البيانات والأمن الأخيرة",
       "updated_sku": "تم تحديث SKU",
       "role_mutation": "تعديل الدور",
       "branch_sync": "مزامنة الفرع مكتملة"
     },
     "analytics": {
-      "title": "تحليلات النظام",
-      "velocity": "السرعة التشغيلية",
-      "full_report": "تقرير كامل",
-      "processing": "جاري معالجة البيانات..."
+      "title": "الذكاء",
+      "velocity": "سرعة الحركة",
+      "full_report": "التحليل الكامل",
+      "processing": "جاري معالجة تدفقات البيانات..."
     }
   },
   "notifications": {
@@ -1381,9 +1716,59 @@
     "total_users": "إجمالي المستخدمين",
     "admins": "المسؤولين",
     "operators": "المشغلين",
-    "users": "المستخدمون",
+    "users": {
+      "title": "إدارة الوصول",
+      "description": "سجل الهوية المعتمد والنطاق التشغيلي",
+      "create_title": "إنشاء حساب مستخدم",
+      "edit_title": "تعديل هوية المستخدم",
+      "name": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "role": "الدور في النظام",
+      "status": "حالة الحساب",
+      "language": "اللغة المفضلة",
+      "branch": "نطاق الفرع",
+      "warehouse": "نطاق المستودع",
+      "department": "نطاق القسم",
+      "activate": "تنشيط الحساب",
+      "deactivate": "إيقاف الحساب",
+      "cannot_modify_self": "تمنع السياسة الأمنية تعديل الأدوار أو الحالة لنفسك.",
+      "cannot_deactivate_self": "لا يمكنك إلغاء تنشيط حسابك الخاص.",
+      "cannot_deactivate_last_admin": "حماية النظام: يجب أن يتبقى مسؤول نشط واحد على الأقل.",
+      "email_already_exists": "هذا البريد الإلكتروني مسجل بالفعل في النظام.",
+      "return_to_users": "العودة إلى سجل المستخدمين",
+      "user_identity": "هوية المستخدم",
+      "access_scopes": "نطاقات الوصول",
+      "governance": "الحوكمة والأدوار",
+      "create_user": "إنشاء مستخدم",
+      "branch_scope": "نطاق الفرع",
+      "warehouse_scope": "نطاق المستودع",
+      "department_scope": "نطاق القسم",
+      "name_min_length": "يجب أن يكون الاسم 3 أحرف على الأقل",
+      "invalid_email": "صيغة البريد الإلكتروني غير صحيحة"
+    },
     "description": "سجل الهوية المعتمد والنطاق التشغيلي.",
-    "roles": "الأدوار والصلاحيات",
+    "roles": {
+      "roles_title": "حوكمة الأدوار",
+      "roles_description": "تحديد الحدود التشغيلية والصلاحيات الوظيفية",
+      "role_detail_title": "مصفوفة الصلاحيات",
+      "module": "وحدة النظام",
+      "actions": "الإجراءات",
+      "view": "عرض",
+      "create": "إنشاء",
+      "edit": "تعديل",
+      "approve": "اعتماد",
+      "post": "ترحيل",
+      "confirm_update_permissions": "تأكيد تحديث الصلاحيات",
+      "permissions_updated": "تم تحديث الصلاحيات بنجاح",
+      "admin_role_locked": "صلاحيات المشرف مغلقة من قبل النظام",
+      "save_changes": "حفظ خريطة الصلاحيات",
+      "at_least_one_view": "يجب أن يكون للدور صلاحية عرض واحدة على الأقل",
+      "confirm_warning": "سيؤثر هذا على جميع مستخدمي هذا الدور",
+      "role_name": "اسم الدور",
+      "description": "الوصف",
+      "users_count": "عدد المستخدمين",
+      "view_detail": "عرض التفاصيل"
+    },
     "audit_log": "سجل التدقيق",
     "create_user": "إنشاء مستخدم",
     "edit_user": "تعديل المستخدم",
@@ -1479,7 +1864,56 @@
     "user_name": "اسم المستخدم",
     "created_at": "تاريخ الإنشاء",
     "changes": "التغييرات",
-    "export_csv": "تصدير CSV"
+    "export_csv": "تصدير CSV",
+    "settings": {
+      "settings_title": "إعدادات النظام",
+      "general_section": "الإعدادات العامة",
+      "email_section": "إعدادات البريد الإلكتروني",
+      "system_name": "اسم النظام",
+      "default_language": "اللغة الافتراضية",
+      "base_currency": "العملة الأساسية",
+      "sender_name": "اسم المرسل",
+      "reply_to_email": "بريد الرد",
+      "confirm_base_currency_title": "تأكيد تغيير العملة الأساسية",
+      "confirm_base_currency_warning": "سيؤثر هذا على جميع التقارير في النظام.",
+      "settings_saved": "تم تحديث إعدادات النظام بنجاح",
+      "return_to_admin": "العودة إلى لوحة الإدارة",
+      "base_currency_warning": "تغيير العملة الأساسية يؤثر على جميع التقارير المالية."
+    },
+    "restaurant_profile": {
+      "title": "ملف المطعم",
+      "subtitle": "هوية وسمعة المصمم المتميز",
+      "description": "إدارة هوية المطعم للمستندات الرسمية ورؤوس التقارير.",
+      "fields": {
+        "name": "اسم المطعم",
+        "logo": "الشعار (PNG/JPG)",
+        "address": "العنوان الكامل",
+        "phone": "رقم الهاتف",
+        "email": "البريد الإلكتروني",
+        "tax_number": "الرقم الضريبي (VAT)",
+        "commercial_registration": "السجل التجاري (CR)"
+      },
+      "placeholders": {
+        "address": "أدخل عنوان الشارع والمدينة والرمز البريدي...",
+        "phone": "مثال: +966 12 345 6789",
+        "email": "contact@restaurant.com"
+      },
+      "validation": {
+        "name_required": "اسم المطعم مطلوب",
+        "address_required": "العنوان مطلوب",
+        "phone_required": "رقم الهاتف مطلوب",
+        "email_required": "البريد الإلكتروني مطلوب بشكل صحيح"
+      },
+      "save_success": "تم تحديث ملف المطعم بنجاح",
+      "upload_logo": "رفع الشعار",
+      "change_logo": "تغيير الشعار",
+      "logo_hint": "موصى به: مربع 512x512 PNG بخلفية شفافة.",
+      "sections": {
+        "identity": "الهوية التجارية",
+        "contact": "بروتوكول الاتصال",
+        "legal": "البيانات القانونية"
+      }
+    }
   },
   "operational": {
     "inventory": {
@@ -1639,620 +2073,5 @@
         "min_stock_negative": "لا يمكن أن يكون القيمة سالبة"
       }
     }
-  },
-  "procurement": {
-    "pr": {
-      "title": "طلبات الشراء",
-      "description": "طلبات الشراء الداخلية وسير عمل الاعتماد",
-      "create_new": "إنشاء طلب جديد",
-      "requested_by": "بواسطة",
-      "department": "القسم",
-      "expected_date": "التاريخ المتوقع",
-      "specification": "مواصفات المستند",
-      "detail_title": "تكوين طلب الشراء",
-      "new_intent": "غرض طلب جديد",
-      "requested_qty": "الكمية المطلوبة",
-      "submit": "إرسال للاعتماد",
-      "sync_context": "جاري مزامنة بيانات الطلب...",
-      "invalid_state": "حالة طلب غير صالحة",
-      "search_placeholder": "البحث بالرقم أو القسم...",
-      "no_requests_title": "لا توجد طلبات شراء",
-      "no_requests_desc": "ابدأ دورة المشتريات عن طريق إنشاء طلب جديد.",
-      "metrics": {
-        "total": "إجمالي الطلبات",
-        "approved": "الطلبات المعتمدة",
-        "pending": "قيد المراجعة"
-      },
-      "go_to_approval": "الانتقال للاعتماد",
-      "convert_to_po": "تحويل إلى أمر شراء",
-      "approval_workflow": "سير عمل الاعتماد",
-      "approval_desc": "مراجعة الأصناف وتأكيد أو رفض الطلب",
-      "reject_pr": "رفض الطلب",
-      "reject_reason_title": "سبب الرفض",
-      "reject_reason_placeholder": "اشرح سبب رفض هذا الطلب...",
-      "reject_reason_min_chars": "يجب أن يكون السبب 15 حرفاً على الأقل",
-      "approve_pr": "اعتماد الطلب",
-      "submit_success": "تم إرسال الطلب بنجاح",
-      "approve_success": "تم اعتماد الطلب بنجاح",
-      "reject_success": "تم رفض الطلب بنجاح",
-      "reject_confirm_desc": "هل أنت متأكد من رفض هذا الطلب؟ هذا الإجراء غير قابل للتراجع.",
-      "rejection_reason": "سبب الرفض",
-      "rejection_reason_placeholder": "صف سبب رفض هذا الطلب...",
-      "confirm_rejection": "تأكيد الرفض",
-      "approve_confirm_title": "تأكيد الاعتماد",
-      "approve_confirm_desc": "أنت على وشك التصريح بطلب الشراء هذا.",
-      "irreversible": "هذا الإجراء لا يمكن التراجع عنه.",
-      "edit_not_allowed": "التعديل مغلق",
-      "edit_not_allowed_desc": "لقد تم إرسال هذا المستند أو معالجته بالفعل ولا يمكن تعديله."
-    },
-    "po": {
-      "title": "أوامر الشراء",
-      "description": "إدارة طلبات الموردين وتنفيذ عمليات الشراء",
-      "create_new": "إنشاء أمر شراء جديد",
-      "po_number": "رقم أمر الشراء",
-      "supplier": "المورد",
-      "currency": "العملة",
-      "exchange_rate": "سعر الصرف",
-      "expected_date": "التاريخ المتوقع",
-      "specification": "مواصفات الأمر",
-      "detail_title": "تكوين أمر الشراء",
-      "new_intent": "غرض أمر جديد",
-      "unit_price": "سعر الوحدة",
-      "total_amount": "إجمالي المبلغ",
-      "submit": "إرسال الأمر",
-      "sync_context": "جاري مزامنة بيانات الأمر...",
-      "invalid_state": "حالة أمر غير صالحة",
-      "search_placeholder": "البحث برقم الأمر أو المورد...",
-      "no_orders_title": "لا توجد أوامر شراء",
-      "no_orders_desc": "ابدأ شراء الأصناف عن طريق إنشاء أول أمر شراء لك.",
-      "metrics": {
-        "total": "إجمالي الأوامر",
-        "pending": "قيد الاعتماد",
-        "approved": "الأوامر النشطة"
-      },
-      "go_to_approval": "الانتقال للاعتماد",
-      "approval_workflow": "سير عمل الاعتماد",
-      "approval_desc": "مراجعة تفاصيل الأمر وتأكيد التزام الشراء",
-      "reject_po": "رفض الأمر",
-      "rejection_hint": "قدم سبباً واضحاً للمورد أو الفريق.",
-      "irreversible": "هذا الإجراء لا يمكن التراجع عنه.",
-      "edit_not_allowed": "التعديل مغلق",
-      "edit_not_allowed_desc": "لقد تم إرسال هذا المستند أو معالجته بالفعل ولا يمكن تعديله.",
-      "linked_pr": "طلب شراء مرتبط (اختياري)",
-      "supplier_currency": "عملة المورد",
-      "fx_rate": "سعر الصرف (إلى ريال سعودي)",
-      "general_notes": "ملاحظات عامة",
-      "line_items": "الأصناف المطلوبة",
-      "add_item": "إضافة صنف",
-      "item_sku": "رمز الصنف",
-      "quantity": "الكمية",
-      "line_notes": "ملاحظات البند",
-      "supplier_total": "إجمالي المورد",
-      "base_total": "الإجمالي بالعملة الأساسية (ريال)",
-      "select_supplier": "اختر المورد",
-      "notes_placeholder": "مثال: مطلوب تغليف خاص",
-      "submit_success": "تم إرسال أمر الشراء بنجاح",
-      "approve_success": "تم اعتماد أمر الشراء بنجاح",
-      "reject_success": "تم رفض أمر الشراء بنجاح",
-      "reject_confirm_desc": "هل أنت متأكد من رفض هذا الأمر؟ هذا الإجراء غير قابل للتراجع.",
-      "rejection_reason": "سبب الرفض",
-      "rejection_reason_placeholder": "اشرح سبب رفض هذا الأمر...",
-      "rejection_reason_min_chars": "يجب أن يكون السبب 15 حرفاً على الأقل",
-      "confirm_rejection": "تأكيد الرفض",
-      "approve_confirm_title": "تأكيد الاعتماد",
-      "approve_confirm_desc": "أنت على وشك التصريح بأمر الشراء هذا.",
-      "actions": {
-        "submit": "إرسال أمر الشراء",
-        "submitting": "جاري الإرسال..."
-      }
-    }
-  },
-  "dashboard": {
-    "title": "لوحة القيادة المطبخية",
-    "description": "الذكاء التشغيلي ونظرة عامة على التدفق",
-    "kpi": {
-      "total_stock": "إجمالي قيمة المخزون",
-      "vs_last_month": "مقابل الشهر الماضي",
-      "pending_prs": "طلبات قيد الانتظار",
-      "immediate_review": "يتطلب مراجعة فورية",
-      "active_stocktakes": "عمليات جرد نشطة",
-      "warehouse_locked": "المستودع مقفل",
-      "low_stock": "مخزون منخفض",
-      "low_stock_items": "أصناف منخفضة المخزون",
-      "reorder_suggested": "يُقترح إعادة الطلب",
-      "critical_items": "أصناف تحت مستوى الأمان",
-      "jeddah_riyadh_active": "جدة والرياض نشطة"
-    },
-    "expiry_control": "مراقبة ومتابعة الصلاحية",
-    "approval_workflow": "الموافقات المعلقة وسير العمل",
-    "business_intelligence": "ذكاء الأعمال والتوقعات",
-    "near_expiry": {
-      "title": "مراقبة قرب الانتهاء",
-      "alert": "تدوير الأولوية",
-      "expires": "تنتهي في",
-      "rotation_report": "عرض تقرير التدوير"
-    },
-    "pending_approvals": {
-      "title": "الموافقات المعلقة",
-      "tasks": "مهام",
-      "view_all": "عرض كافة سير العمل"
-    },
-    "system_health": {
-      "title": "سلامة النظام",
-      "optimal": "مثالي",
-      "health_suffix": "الاستقرار",
-      "node_description": "أداء العقد النشطة",
-      "backup": "آخر نسخة احتياطية",
-      "online": "المستخدمين النشطين",
-      "sessions": "جلسات"
-    },
-    "audit": {
-      "title": "تدفق المراجعة",
-      "subtitle": "تغييرات البيانات والأمن الأخيرة"
-    },
-    "analytics": {
-      "title": "الذكاء",
-      "velocity": "سرعة الحركة",
-      "full_report": "التحليل الكامل",
-      "processing": "جاري معالجة تدفقات البيانات..."
-    }
-  },
-  "admin": {
-    "users": {
-      "title": "إدارة الوصول",
-      "description": "سجل الهوية المعتمد والنطاق التشغيلي",
-      "create_title": "إنشاء حساب مستخدم",
-      "edit_title": "تعديل هوية المستخدم",
-      "name": "الاسم الكامل",
-      "email": "البريد الإلكتروني",
-      "role": "الدور في النظام",
-      "status": "حالة الحساب",
-      "language": "اللغة المفضلة",
-      "branch": "نطاق الفرع",
-      "warehouse": "نطاق المستودع",
-      "department": "نطاق القسم",
-      "activate": "تنشيط الحساب",
-      "deactivate": "إيقاف الحساب",
-      "cannot_modify_self": "تمنع السياسة الأمنية تعديل الأدوار أو الحالة لنفسك.",
-      "cannot_deactivate_self": "لا يمكنك إلغاء تنشيط حسابك الخاص.",
-      "cannot_deactivate_last_admin": "حماية النظام: يجب أن يتبقى مسؤول نشط واحد على الأقل.",
-      "email_already_exists": "هذا البريد الإلكتروني مسجل بالفعل في النظام.",
-      "return_to_users": "العودة إلى سجل المستخدمين",
-      "user_identity": "هوية المستخدم",
-      "access_scopes": "نطاقات الوصول",
-      "governance": "الحوكمة والأدوار",
-      "create_user": "إنشاء مستخدم",
-      "branch_scope": "نطاق الفرع",
-      "warehouse_scope": "نطاق المستودع",
-      "department_scope": "نطاق القسم",
-      "name_min_length": "يجب أن يكون الاسم 3 أحرف على الأقل",
-      "invalid_email": "صيغة البريد الإلكتروني غير صحيحة"
-    },
-    "roles": {
-      "roles_title": "حوكمة الأدوار",
-      "roles_description": "تحديد الحدود التشغيلية والصلاحيات الوظيفية",
-      "role_detail_title": "مصفوفة الصلاحيات",
-      "module": "وحدة النظام",
-      "actions": "الإجراءات",
-      "view": "عرض",
-      "create": "إنشاء",
-      "edit": "تعديل",
-      "approve": "اعتماد",
-      "post": "ترحيل",
-      "confirm_update_permissions": "تأكيد تحديث الصلاحيات",
-      "permissions_updated": "تم تحديث الصلاحيات بنجاح",
-      "admin_role_locked": "صلاحيات المشرف مغلقة من قبل النظام",
-      "save_changes": "حفظ خريطة الصلاحيات",
-      "at_least_one_view": "يجب أن يكون للدور صلاحية عرض واحدة على الأقل",
-      "confirm_warning": "سيؤثر هذا على جميع مستخدمي هذا الدور",
-      "role_name": "اسم الدور",
-      "description": "الوصف",
-      "users_count": "عدد المستخدمين",
-      "view_detail": "عرض التفاصيل"
-    },
-    "settings": {
-      "settings_title": "إعدادات النظام",
-      "general_section": "الإعدادات العامة",
-      "email_section": "إعدادات البريد الإلكتروني",
-      "system_name": "اسم النظام",
-      "default_language": "اللغة الافتراضية",
-      "base_currency": "العملة الأساسية",
-      "sender_name": "اسم المرسل",
-      "reply_to_email": "بريد الرد",
-      "confirm_base_currency_title": "تأكيد تغيير العملة الأساسية",
-      "confirm_base_currency_warning": "سيؤثر هذا على جميع التقارير في النظام.",
-      "settings_saved": "تم تحديث إعدادات النظام بنجاح",
-      "return_to_admin": "العودة إلى لوحة الإدارة",
-      "base_currency_warning": "تغيير العملة الأساسية يؤثر على جميع التقارير المالية."
-    },
-    "restaurant_profile": {
-      "title": "ملف المطعم",
-      "subtitle": "هوية وسمعة المصمم المتميز",
-      "description": "إدارة هوية المطعم للمستندات الرسمية ورؤوس التقارير.",
-      "fields": {
-        "name": "اسم المطعم",
-        "logo": "الشعار (PNG/JPG)",
-        "address": "العنوان الكامل",
-        "phone": "رقم الهاتف",
-        "email": "البريد الإلكتروني",
-        "tax_number": "الرقم الضريبي (VAT)",
-        "commercial_registration": "السجل التجاري (CR)"
-      },
-      "placeholders": {
-        "address": "أدخل عنوان الشارع والمدينة والرمز البريدي...",
-        "phone": "مثال: +966 12 345 6789",
-        "email": "contact@restaurant.com"
-      },
-      "validation": {
-        "name_required": "اسم المطعم مطلوب",
-        "address_required": "العنوان مطلوب",
-        "phone_required": "رقم الهاتف مطلوب",
-        "email_required": "البريد الإلكتروني مطلوب بشكل صحيح"
-      },
-      "save_success": "تم تحديث ملف المطعم بنجاح",
-      "upload_logo": "رفع الشعار",
-      "change_logo": "تغيير الشعار",
-      "logo_hint": "موصى به: مربع 512x512 PNG بخلفية شفافة.",
-      "sections": {
-        "identity": "الهوية التجارية",
-        "contact": "بروتوكول الاتصال",
-        "legal": "البيانات القانونية"
-      }
-    }
-  },
-  "master_data": {
-    "branches": {
-      "title": "سجل الفروع",
-      "description": "الهيكل التنظيمي ومراكز المواقع الأساسية",
-      "create_title": "تسجيل فرع جديد",
-      "edit_title": "تعديل مركز الفرع",
-      "created_success": "تم تسجيل الفرع بنجاح",
-      "updated_success": "تم تحديث هوية الفرع",
-      "deleted_success": "تمت إزالة الفرع من السجل",
-      "errors": {
-        "deactivate_linked_warehouses": "لا يمكن إلغاء تنشيط الفرع المرتبط بمستودعات نشطة.",
-        "update_failed": "فشل تحديث هوية الفرع"
-      },
-      "fields": {
-        "code": "كود الفرع",
-        "name_en": "اسم الفرع (EN)",
-        "name_ar": "اسم الفرع (AR)",
-        "is_active": "الحالة"
-      }
-    },
-    "categories": {
-      "title": "تصنيفات الأصناف",
-      "description": "التجميع الدلالي وتصنيف المخزون",
-      "create_title": "تصنيف جديد",
-      "edit_title": "تعديل التصنيف",
-      "created_success": "تم إنشاء التصنيف",
-      "updated_success": "تم تحديث التصنيف",
-      "deleted_success": "تمت إزالة التصنيف",
-      "errors": {
-        "delete_linked_items": "لا يمكن إزالة التصنيف المرتبط بأصناف مخزون نشطة.",
-        "delete_failed": "فشل إزالة التصنيف"
-      },
-      "fields": {
-        "name_en": "اسم التصنيف (EN)",
-        "name_ar": "اسم التصنيف (AR)"
-      }
-    },
-    "warehouses": {
-      "title": "إدارة المستودعات",
-      "description": "العقد اللوجستية ومواقع التخزين الفعلية",
-      "create_title": "تسجيل مستودع جديد",
-      "edit_title": "تعديل عقدة المستودع",
-      "created_success": "تم تسجيل المستودع بنجاح",
-      "updated_success": "تم تحديث تفاصيل المستودع",
-      "errors": {
-        "cannot_deactivate_warehouse_in_use": "لا يمكن إيقاف تنشيط المستودع المرتبط بأقسام أو مخزون نشط.",
-        "cannot_change_branch_with_departments": "لا يمكن تغيير الفرع لمستودع مرتبط بأقسام.",
-        "update_failed": "فشل تحديث تفاصيل المستودع"
-      },
-      "fields": {
-        "branch": "الفرع التشغيلي",
-        "code": "كود المستودع",
-        "name_en": "اسم المستودع (EN)",
-        "name_ar": "اسم المستودع (AR)",
-        "type": "نوع التخزين",
-        "is_active": "الحالة"
-      },
-      "validation": {
-        "branch_required": "الفرع التشغيلي مطلوب",
-        "code_min": "يجب أن يكون الكود حرفين على الأقل",
-        "code_format": "يجب أن يكون الكود أحرف كبيرة وأرقام فقط",
-        "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
-        "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل"
-      },
-      "types": {
-        "main": "رئيسي",
-        "dry": "جاف",
-        "cold": "مبرد",
-        "virtual": "افتراضي"
-      }
-    },
-    "departments": {
-      "title": "مراكز التكلفة والأقسام",
-      "description": "نقاط الاستهلاك الداخلي والوحدات التشغيلية",
-      "create_title": "تسجيل قسم جديد",
-      "edit_title": "تعديل ملف القسم",
-      "created_success": "تم تسجيل القسم بنجاح",
-      "updated_success": "تم تحديث ملف القسم بنجاح",
-      "errors": {
-        "cannot_deactivate_department_in_use": "لا يمكن إيقاف القسم المرتبط بطلبات مطبخ أو جرد نشط.",
-        "update_failed": "فشل تحديث ملف القسم"
-      },
-      "fields": {
-        "branch": "الفرع التشغيلي",
-        "warehouse": "المستودع الأب",
-        "code": "كود القسم",
-        "name_en": "اسم القسم (EN)",
-        "name_ar": "اسم القسم (AR)",
-        "manager": "مدير الوحدة",
-        "cost_center": "معرف مركز التكلفة",
-        "is_active": "الحالة"
-      },
-      "validation": {
-        "branch_required": "اختيار الفرع مطلوب",
-        "warehouse_required": "المستودع الأب مطلوب",
-        "code_min": "يجب أن يكون الكود حرفين على الأقل",
-        "code_format": "يجب أن يكون الكود أحرف كبيرة وأرقام فقط",
-        "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
-        "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل"
-      }
-    },
-    "suppliers": {
-      "title": "سجل الموردين",
-      "description": "شركاء المشتريات الخارجيين ومراكز التنفيذ",
-      "create_title": "تسجيل مورد جديد",
-      "edit_title": "تعديل ملف المورد",
-      "partner_identity": "هوية الشريك",
-      "partner_identity_desc": "تفاصيل التسجيل والعلامة التجارية",
-      "financial_terms": "الشروط المالية",
-      "financial_terms_desc": "اتفاقيات العملة والدفع",
-      "terms_placeholder": "صف دورات الدفع أو الاتفاقيات الخاصة...",
-      "created_success": "تم تسجيل المورد",
-      "updated_success": "تم تحديث ملف المورد",
-      "deleted_success": "تمت إزالة المورد",
-      "errors": {
-        "deactivate_linked_pos": "لا يمكن إلغاء تنشيط المورد المرتبط بأوامر شراء نشطة.",
-        "update_failed": "فشل تحديث ملف المورد"
-      },
-      "fields": {
-        "code": "كود المورد",
-        "name_en": "اسم المورد (EN)",
-        "name_ar": "اسم المورد (AR)",
-        "currency": "العملة المفضلة",
-        "payment_terms": "شروط الدفع",
-        "is_active": "الحالة"
-      }
-    },
-    "items": {
-      "title": "سجل الأصناف",
-      "description": "كتالوج المخزون المركزي وإدارة المواصفات",
-      "create_title": "تسجيل صنف جديد",
-      "edit_title": "تعديل مواصفات الصنف",
-      "created_success": "تم تسجيل الصنف بنجاح",
-      "updated_success": "تم تحديث مواصفات الصنف",
-      "deactivated_success": "تم إيقاف الصنف",
-      "errors": {
-        "cannot_deactivate_with_stock": "لا يمكن إيقاف صنف لا يزال لديه مخزون.",
-        "sku_exists": "يوجد صنف مسجل بهذا الكود بالفعل.",
-        "update_failed": "فشل تحديث بيانات الصنف"
-      },
-      "sections": {
-        "identity": "هوية الصنف",
-        "identity_desc": "التعريف الأساسي والتكويد",
-        "categorization": "التصنيف",
-        "categorization_desc": "التجميع المنطقي والتبويب",
-        "inventory_rules": "قواعد المخزون",
-        "inventory_rules_desc": "معايير التحكم ومستويات الأمان"
-      },
-      "fields": {
-        "sku": "كود الصنف (SKU)",
-        "barcode": "باركود / GTIN",
-        "name_en": "اسم الصنف (EN)",
-        "name_ar": "اسم الصنف (AR)",
-        "category": "التصنيف",
-        "base_unit": "وحدة المخزون",
-        "min_stock": "حد الأمان (الأدنى)",
-        "reorder_point": "نقطة إعادة الطلب",
-        "is_active": "الحالة"
-      },
-      "validation": {
-        "code_required": "كود الصنف مطلوب",
-        "barcode_required": "الباركود مطلوب",
-        "name_en_required": "الاسم بالإنجليزية مطلوب",
-        "name_ar_required": "الاسم بالعربية مطلوب",
-        "category_required": "التصنيف مطلوب",
-        "uom_required": "وحدة القياس الأساسية مطلوبة"
-      }
-    },
-    "uoms": {
-      "title": "وحدات القياس",
-      "description": "المقاييس الموحدة ومواصفات القياس",
-      "create_title": "تعريف وحدة جديدة",
-      "edit_title": "تعديل وحدة القياس",
-      "created_success": "تم تعريف وحدة القياس",
-      "updated_success": "تم تحديث مواصفات الوحدة",
-      "deactivated_success": "تم إيقاف وحدة القياس",
-      "total_metrics": "إجمالي السجل",
-      "precision": "دقة عالية",
-      "precision_description": "يتم معايرة الوحدات لضمان دقة المخزون على مستوى المؤسسة والتسوية المالية.",
-      "registry_sync": "مزامنة السجل",
-      "search_placeholder": "البحث عن الوحدات بالكود أو الاسم...",
-      "errors": {
-        "cannot_deactivate_uom_in_use": "لا يمكن إيقاف وحدة مرتبطة حالياً بأصناف نشطة.",
-        "update_failed": "فشل تحديث مواصفات الوحدة"
-      },
-      "fields": {
-        "code": "كود الوحدة",
-        "name_en": "اسم الوحدة (EN)",
-        "name_ar": "اسم الوحدة (AR)",
-        "is_active": "الحالة",
-        "created_at": "تاريخ الإنشاء"
-      },
-      "validation": {
-        "code_required": "كود الوحدة مطلوب",
-        "code_uppercase": "يجب أن يكون الكود أحرف كبيرة فقط",
-        "name_en_required": "الاسم بالإنجليزية مطلوب",
-        "name_ar_required": "الاسم بالعربية مطلوب"
-      }
-    },
-    "barcodes": {
-      "title": "سجل الباركود",
-      "description": "إدارة خرائط الباركود متعددة الوحدات و GTIN",
-      "create_title": "تسجيل باركود جديد",
-      "edit_title": "تعديل مواصفات الباركود",
-      "created_success": "تم تسجيل الباركود بنجاح",
-      "updated_success": "تم تحديث خريطة الباركود",
-      "deactivated_success": "تم إلغاء تفعيل الباركود",
-      "errors": {
-        "code_exists": "رمز الباركود هذا مسجل بالفعل.",
-        "cannot_deactivate_in_use": "لا يمكن إلغاء تفعيل باركود مرتبط بعمليات نشطة.",
-        "update_failed": "فشل في تحديث مواصفات الباركود"
-      },
-      "fields": {
-        "item": "الصنف المخزني",
-        "uom": "وحدة القياس",
-        "code": "الباركود / GTIN",
-        "default_qty": "الكمية الافتراضية",
-        "is_active": "الحالة"
-      },
-      "validation": {
-        "item_required": "الصنف المخزني مطلوب",
-        "uom_required": "وحدة القياس مطلوبة",
-        "code_required": "رمز الباركود مطلوب",
-        "qty_positive": "الكمية الافتراضية يجب أن تكون أكبر من 0"
-      },
-      "tips": {
-        "multi_unit_title": "ربط وحدات متعددة",
-        "multi_unit_desc": "اربط باركود مختلف لكل وحدة قياس (مثل الصندوق مقابل القطعة) لأتمتة التحويل.",
-        "gtin_standard_title": "معايير GTIN",
-        "gtin_standard_desc": "استخدم باركود GS1 القياسي GTIN-13 أو GTIN-8 للتكامل السلس مع الموردين ودقة الكتالوج."
-      }
-    },
-    "currencies": {
-      "title": "أستاذ العملات",
-      "description": "تعريف العملات العالمية وإدارة أسعار الصرف",
-      "create_title": "تعريف عملة جديدة",
-      "edit_title": "تعديل معايير العملة",
-      "created_success": "تم تعريف العملة بنجاح",
-      "updated_success": "تم تحديث العملة",
-      "fields": {
-        "name_en": "اسم العملة (EN)",
-        "name_ar": "اسم العملة (AR)",
-        "code": "رمز العملة",
-        "symbol": "العلامة",
-        "is_base": "العملة الأساسية",
-        "is_active": "الحالة"
-      },
-      "validation": {
-        "name_en_required": "الاسم الإنجليزي مطلوب",
-        "name_ar_required": "الاسم العربي مطلوب",
-        "code_required": "رمز العملة مطلوب",
-        "code_length": "يجب أن يكون الرمز 3 أحرف بالضبط",
-        "code_format": "يجب أن يكون الرمز 3 أحرف كبيرة (ISO 4217)"
-      },
-      "errors": {
-        "code_exists": "رمز العملة موجود مسبقاً.",
-        "cannot_deactivate_base": "لا يمكن إلغاء تنشيط العملة الأساسية.",
-        "cannot_deactivate_in_use": "لا يمكن إلغاء تنشيط عملة مستخدمة في أوامر شراء أو مذكرات استلام نشطة.",
-        "base_required": "يجب تعيين عملة واحدة على الأقل كعملة أساسية.",
-        "update_failed": "فشل تحديث العملة"
-      },
-      "tips": {
-        "base_currency_title": "العملة الأساسية الواحدة",
-        "base_currency_desc": "يمكن أن تكون عملة واحدة فقط هي 'الأساسية'. ستستخدم جميع تقييمات النظام والمحاسبة هذه العملة.",
-        "iso_standard_title": "معايير ISO 4217",
-        "iso_standard_desc": "استخدم الرموز القياسية المكونة من 3 أحرف (مثلاً SAR، USD) لضمان التوافق مع مزودي الخدمات المصرفية والصرف الدوليين."
-      }
-    },
-    "fx_rates": {
-      "title": "سجل أسعار الصرف",
-      "description": "أسعار صرف العملات التاريخية ومراجع التقييم الزمني",
-      "create_title": "تسجيل سعر صرف",
-      "edit_title": "تعديل معايير السعر",
-      "save_success": "تم تسجيل سعر الصرف بنجاح",
-      "update_success": "تم تحديث سعر الصرف",
-      "fields": {
-        "from_currency": "من عملة",
-        "to_currency": "إلى عملة",
-        "rate": "سعر الصرف",
-        "effective_date": "تاريخ السريان",
-        "status": "الحالة"
-      },
-      "validation": {
-        "from_currency_required": "العملة المصدر مطلوبة",
-        "to_currency_required": "العملة الهدف مطلوبة",
-        "rate_positive": "يجب أن يكون السعر أكبر من 0",
-        "rate_precision": "يدعم السعر حتى 6 خانات عشرية",
-        "date_required": "تاريخ السريان مطلوب",
-        "currencies_must_differ": "يجب أن تختلف العملة المصدر عن العملة الهدف"
-      },
-      "errors": {
-        "cannot_duplicate_rate": "يوجد سعر مسجل بالفعل لهذا الزوج من العملات وتاريخ السريان.",
-        "cannot_deactivate_rate_in_use": "لا يمكن إلغاء تنشيط سعر مستخدم حالياً في مستندات استلام بضائع (GRN) مرحلة.",
-        "update_failed": "فشل تحديث سعر الصرف"
-      },
-      "tips": {
-        "temporal_title": "المرجع الزمني",
-        "temporal_desc": "أسعار الصرف حساسة للتاريخ. يستخدم النظام السعر الساري في تاريخ المستند للتقييمات المالية."
-      }
-    },
-    "import": {
-      "title": "معالج استيراد البيانات",
-      "select_type": "اختيار نطاق البيانات الأساسية",
-      "items": "سجل الأصناف",
-      "items_desc": "استيراد جماعي للمنتجات والمكونات والمواد بما في ذلك الرموز والتصنيفات.",
-      "uoms": "وحدات القياس",
-      "uoms_desc": "تعريف وحدات القياس ومعايير الدقة على مستوى النظام بشكل جماعي.",
-      "barcodes": "ربط الباركود",
-      "barcodes_desc": "ربط رموز GTIN والباركود الداخلي بالأصناف ووحدات محددة.",
-      "start_import": "بدء تسلسل الاستيراد",
-      "note_title": "بروتوكول الاستيراد",
-      "note_description": "تأكد من مطابقة ملفات XLSX للنماذج الرسمية لتجنب فشل التحقق.",
-      "upload_step": "الاستحواذ",
-      "validate_step": "التدقيق",
-      "error_step": "الفوارق",
-      "commit_step": "الإنهاء",
-      "upload_title": "الاستحواذ على المصدر",
-      "upload_description": "قم برفع بيان البيانات الأساسية بتنسيق XLSX. سيقوم النظام بإجراء تدقيق هيكلي قبل الاعتماد.",
-      "click_to_upload": "انقر للاختيار أو اسحب البيان هنا",
-      "invalid_file_type": "تنسيق غير صالح. يتم قبول ملفات .xlsx فقط.",
-      "file_too_large": "حجم الملف يتجاوز الحد الأقصى 20 ميجابايت.",
-      "empty_file": "البيان لا يحتوي على سجلات بيانات.",
-      "parse_error": "فشل تحليل البيان. تأكد من أن الملف غير تالف.",
-      "download_template": "تحميل النموذج",
-      "upload_cta": "معالجة البيان",
-      "upload_warning": "البيانات الضخمة (أكثر من 1000 صف) قد تستغرق عدة دقائق للمزامنة.",
-      "validating_title": "تدقيق السلامة",
-      "integrity_check_in_progress": "جاري تحليل سلامة الهيكل...",
-      "total_records": "صفوف البيان",
-      "status": "الحالة",
-      "analyzing": "جاري التحليل...",
-      "errors_found_title": "تم اكتشاف {count} فوارق",
-      "errors_found_description": "تم العثور على أخطاء هيكلية أو منطقية. يرجى معالجتها في البيان وإعادة الرفع.",
-      "row": "الصف",
-      "column": "العمود",
-      "value": "القيمة المتسببة",
-      "error_message": "وصف الخلل",
-      "showing_first_n_errors": "عرض أول {count} من أصل {total} فوارق",
-      "export_error_report": "تصدير سجل الأعطال",
-      "try_again": "إعادة التهيئة",
-      "success_title": "نجح الاستيراد",
-      "success_description": "تم مزامنة {count} سجل بنجاح مع مركز البيانات الأساسية.",
-      "imported_records": "متزامن",
-      "committed": "معتمد",
-      "view_records_cta": "عرض السجل",
-      "commit_title": "تفويض الاعتماد",
-      "commit_description": "راجع ملخص البيان قبل المزامنة النهائية لدفتر الحسابات.",
-      "entity_type": "النطاق المستهدف",
-      "idempotency_key": "رمز منع التكرار",
-      "commit_warning": "التفويض غير قابل للتراجع. سيتم دمج البيانات في السجل الإنتاجي.",
-      "cancel": "إلغاء",
-      "committing": "جاري المزامنة...",
-      "confirm_import": "تفويض الاعتماد"
-    }
   }
-}
+}

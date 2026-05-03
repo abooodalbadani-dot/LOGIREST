@@ -54,7 +54,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
  if (grn.status !== "DRAFT" && grn.status !== "RECEIVED") {
  // In many systems DRAFT is the only editable state. 
  // The prompt specifically mentioned DRAFT.
- router.replace(`/goods-received/ ${id}`)
+ router.replace(`/goods-received/${id}`)
  return null
  }
 
@@ -149,12 +149,12 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
  <PageHeader
  title={t("scan_mode")}
  subtitle={grn.grnNumber}
- backHref={`/goods-received/ ${id}`}
+ backHref={`/goods-received/${id}`}
  >
  <div className="flex items-center gap-3">
  <StatusBadge status={grn.status} />
  <Button 
- onClick={() => router.push(`/goods-received/ ${id}`)}
+ onClick={() => router.push(`/goods-received/${id}`)}
  className="rounded-xl font-semibold text-label-xs uppercase px-6"
  >
  {t("finish_scanning")}

@@ -4,7 +4,7 @@ import { BranchFormClient } from '../BranchFormClient';
 export default async function BranchDetailPage(props: { params: Promise<{ locale: string; id: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('masterData.branches');
+ const t = await getTranslations('master_data.branches');
 
  return (
  <BranchFormClient

@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { Scan, Camera, X, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ScannerClient() {
  const t = useTranslations('operational.inventory');
+ const router = useRouter();
  const [isScanning, setIsScanning] = useState(true);
  const [result, setResult] = useState<string | null>(null);
  const [status, setStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('scanning');
@@ -38,7 +40,7 @@ export default function ScannerClient() {
  <span className="text-label-xs font-semibold uppercase text-operational-cyan">Scanner Active</span>
  </div>
  <h1 className="text-headline-lg font-semibold" dir="auto" style={{ unicodeBidi: 'isolate' }}>{t('barcode_scanner')}</h1>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identify assets via optical matrix scan</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identify assets via optical matrix scan</p>
  </div>
 
  {/* Scanner Viewport */}
@@ -71,12 +73,12 @@ export default function ScannerClient() {
  <CheckCircle2 className="w-12 h-12 text-status-success" />
  </div>
  <div className="text-center space-y-1">
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identified Record:</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identified Record:</p>
  <p className="text-headline-lg font-semibold text-status-success uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}><span dir="ltr" className="font-mono">{result}</span></p>
  </div>
  <div className="flex flex-col gap-3 w-64">
  <Button 
- onClick={() => window.location.href = `/ ${t('lots.route') || 'inventory/lots'}`}
+ onClick={() => router.push('/inventory/lots')}
  className="w-full h-12 bg-status-success hover:bg-status-success/90 text-white rounded-2xl font-semibold uppercase text-label-xs"
  >
  Load Operational Data
@@ -84,7 +86,7 @@ export default function ScannerClient() {
  <Button 
  variant="ghost" 
  onClick={resetScanner}
- className="w-full h-10 text-muted-foreground/60/40 hover:text-foreground font-semibold uppercase text-label-xs gap-2"
+ className="w-full h-10 text-muted-foreground/60 hover:text-foreground font-semibold uppercase text-label-xs gap-2"
  >
  <RefreshCw className="w-3 h-3" />
  Rescan matrix
@@ -102,11 +104,11 @@ export default function ScannerClient() {
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="p-3 bg-surface-container-low/50 rounded-xl border border-surface-variant/10">
- <p className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase mb-1">Battery Level</p>
+ <p className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-1">Battery Level</p>
  <p className="text-body-md font-semibold">94%</p>
  </div>
  <div className="p-3 bg-surface-container-low/50 rounded-xl border border-surface-variant/10">
- <p className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase mb-1">AI Confidence</p>
+ <p className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-1">AI Confidence</p>
  <p className="text-body-md font-semibold text-operational-cyan">99.8%</p>
  </div>
  </div>
@@ -116,7 +118,7 @@ export default function ScannerClient() {
  <div className="flex justify-center">
  <Button 
  variant="ghost" 
- onClick={() => window.history.back()}
+ onClick={() => router.back()}
  className="rounded-full w-14 h-14 bg-surface-container-low border border-surface-variant/10 hover:bg-status-error/10 hover:text-status-error transition-all shadow-xl"
  >
  <X className="w-6 h-6" />

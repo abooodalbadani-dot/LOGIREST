@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useRouter } from "next/navigation"
+import { useRouter } from '@/i18n/navigation'
 import { CreateBranchDTO } from "../types"
 
 const formSchema = z.object({
@@ -68,7 +68,7 @@ export function BranchForm() {
  name="code"
  render={({ field }) => (
  <FormItem className="space-y-1.5">
- <FormLabel className="text-label-xs font-bold uppercase text-muted-foreground/60">{t("code") || "Branch Code"}</FormLabel>
+ <FormLabel className="text-label-xs font-bold uppercase text-muted-foreground/60">{t("code")}</FormLabel>
  <FormControl>
  <Input 
  placeholder="e.g. BR-001" 
@@ -147,7 +147,7 @@ export function BranchForm() {
  disabled={isSubmitting}
  className="h-11 px-8 text-label-xs font-bold uppercase bg-transparent border-none hover:bg-surface-container-high hover:text-foreground transition-all rounded-xl"
  >
- {t("cancel") || "Cancel"}
+ {t("cancel")}
  </Button>
  <Button 
  type="submit" 

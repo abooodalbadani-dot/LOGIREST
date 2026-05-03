@@ -158,7 +158,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/items/ ${args.id}`, ItemSchema);
+ return apiClient.get(`/items/${args.id}`, ItemSchema);
  }
  });
 
@@ -174,7 +174,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/suppliers/ ${args.id}`, SupplierSchema);
+ return apiClient.get(`/suppliers/${args.id}`, SupplierSchema);
  }
  });
 
@@ -190,7 +190,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/warehouses/ ${args.id}`, WarehouseSchema);
+ return apiClient.get(`/warehouses/${args.id}`, WarehouseSchema);
  }
  });
 
@@ -341,7 +341,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/operations/stocktakes/ ${args.id}`, StocktakeSessionSchema);
+ return apiClient.get(`/operations/stocktakes/${args.id}`, StocktakeSessionSchema);
  }
  });
 
@@ -357,7 +357,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/operations/issues/ ${args.id}`, StockIssueSchema);
+ return apiClient.get(`/operations/issues/${args.id}`, StockIssueSchema);
  }
  });
 
@@ -377,10 +377,10 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  execute: async (args: Record<string, unknown>) => {
  const { id, action, comment } = args as { id: string; action: string; comment?: string };
  const pathMap: Record<string, string> = {
- 'start': `/operations/stocktakes/ ${id}/start`,
- 'begin-counting': `/operations/stocktakes/ ${id}/begin-counting`,
- 'approve': `/operations/stocktakes/ ${id}/approve`,
- 'post': `/operations/stocktakes/ ${id}/post`
+ 'start': `/operations/stocktakes/${id}/start`,
+ 'begin-counting': `/operations/stocktakes/${id}/begin-counting`,
+ 'approve': `/operations/stocktakes/${id}/approve`,
+ 'post': `/operations/stocktakes/${id}/post`
  };
  const path = pathMap[action];
  if (!path) throw new Error('Invalid action');
@@ -704,7 +704,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  },
  execute: async (args: Record<string, unknown>) => {
  const { order_id } = args as { order_id: string };
- return apiClient.post(`/procurement/purchase-orders/ ${order_id}/post`, PurchaseOrderSchema, {});
+ return apiClient.post(`/procurement/purchase-orders/${order_id}/post`, PurchaseOrderSchema, {});
  }
  });
 
@@ -723,7 +723,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  },
  execute: async (args: Record<string, unknown>) => {
  const { grn_id, ...payload } = args as { grn_id: string, fx_rate: number, confirmation: string };
- return apiClient.post(`/procurement/grns/ ${grn_id}/post`, GRNSchema, payload);
+ return apiClient.post(`/procurement/grns/${grn_id}/post`, GRNSchema, payload);
  }
  });
 
@@ -806,7 +806,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  },
  execute: async (args: Record<string, unknown>) => {
  const { issue_id } = args as { issue_id: string };
- return apiClient.post(`/operations/issues/ ${issue_id}/post`, StockIssueSchema, {});
+ return apiClient.post(`/operations/issues/${issue_id}/post`, StockIssueSchema, {});
  }
  });
 

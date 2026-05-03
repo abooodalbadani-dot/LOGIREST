@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
- const t = await getTranslations({ locale, namespace: 'masterData.categories' });
+ const t = await getTranslations({ locale, namespace: 'master_data.categories' });
  return {
  title: `${t('title')} | LogiRest`,
  description: 'Item category and classification management',
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function CategoriesPage(props: { params: Promise<{ locale: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('masterData.categories');
+ const t = await getTranslations('master_data.categories');
  
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
@@ -24,7 +24,7 @@ export default async function CategoriesPage(props: { params: Promise<{ locale: 
  title={t('title')} 
  description="Item category and classification management"
  />
- <CategoryListClient locale={params.locale} />
+ <CategoryListClient />
  </div>
  </ProtectedRoute>
  );

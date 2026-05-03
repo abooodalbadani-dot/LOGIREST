@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -68,28 +68,28 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  }, [data, reset]);
 
  const onSubmit = handleSubmit(async (values) => {
- if (id) await update.mutateAsync({ id, values });
- else await create.mutateAsync(values);
- router.push(`/ ${locale}/master-data/items`);
- });
+    if (id) await update.mutateAsync({ id, values });
+    else await create.mutateAsync(values);
+    router.push(`/master-data/items`);
+  });
 
  const isSaving = create.isPending || update.isPending;
  const trackLots = useWatch({ control, name: 'track_lots' });
  const isActive = useWatch({ control, name: 'is_active' });
 
- const breadcrumbs = [
- { label: t('master_data'), href: `/ ${locale}/master-data` },
- { label: ti('title'), href: `/ ${locale}/master-data/items` },
- { label: id ? editTitle : createTitle, href: '#' }
- ];
+  const breadcrumbs = [
+    { label: t('master_data'), href: `/master-data` },
+    { label: ti('title'), href: `/master-data/items` },
+    { label: id ? editTitle : createTitle, href: '#' }
+  ];
 
  return (
- <MasterDataFormLayout 
- title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/items`} 
- isSaving={isSaving} 
- onSubmit={onSubmit}
- >
+  <MasterDataFormLayout 
+    title={id ? editTitle : createTitle} 
+    backHref={`/master-data/items`} 
+    isSaving={isSaving} 
+    onSubmit={onSubmit}
+  >
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-8">
  {/* Main Identity Section */}

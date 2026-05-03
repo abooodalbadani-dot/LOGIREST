@@ -45,8 +45,8 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
  <div className="flex flex-col gap-6 p-6 max-w-5xl mx-auto">
  <Breadcrumb
  items={[
- { label: tc('navigation.master_data'), href: `/ ${locale}/master-data` },
- { label: t('title'), href: `/ ${locale}/master-data/import` },
+ { label: tc('navigation.master_data'), href: `/${locale}/master-data` },
+ { label: t('title'), href: `/${locale}/master-data/import` },
  { label: getEntityTitle() },
  ]}
  />

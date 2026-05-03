@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -11,7 +11,6 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Repeat, Truck, CheckCircle } from 'lucide-react';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -91,7 +90,7 @@ export function TransferListClient() {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`transfers/ ${row.original.id}`);
+ router.push(`/transfers/${row.original.id}`);
  }}
  >
  {tCommon('view') || 'Inspect'}
@@ -109,7 +108,7 @@ export function TransferListClient() {
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <Breadcrumb 
  items={[
- { label: tCommon('modules.operations'), href: `transfers` },
+ { label: tCommon('modules.operations'), href: `/transfers` },
  { label: t('title') }
  ]} 
  />
@@ -129,7 +128,7 @@ export function TransferListClient() {
  </div>
  </div>
  <PermissionGate action="create" resource="transfer">
- <Link href="transfers/new">
+ <Link href="/transfers/new">
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-lg shadow-cyan-900/10">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -168,14 +167,14 @@ export function TransferListClient() {
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: TransferSummary) => router.push(`transfers/ ${row.id}`)}
+ onRowClick={(row: TransferSummary) => router.push(`/transfers/${row.id}`)}
  collectionName="operations_transfers"
  emptyState={
  <EmptyState 
- title={t('no_records') || 'No Transfers Found'} description={t('description') || 'Warehouse transfer vouchers will appear here.'} action={
+ title={t('no_records')} description={t('description')} action={
  <PermissionGate action="create" resource="transfer">
  <Button 
- onClick={() => router.push(`transfers/new`)}
+ onClick={() => router.push(`/transfers/new`)}
  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20 rounded-md"
  >
  <Plus className="w-4 h-4 me-2" />

@@ -14,7 +14,7 @@ const LockSchema = z.object({
 export function useWarehouseLock(warehouseId: string | null) {
  return useQuery<WarehouseLockState>({
  queryKey: ['warehouse-lock', warehouseId],
- queryFn: () => apiClient.get(`/inventory/warehouses/ ${warehouseId}/lock`, LockSchema),
+ queryFn: () => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema),
  staleTime: 30_000,
  enabled: !!warehouseId,
  });

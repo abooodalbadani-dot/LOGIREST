@@ -9,7 +9,7 @@ export function usePostAdjustment() {
  const queryClient = useQueryClient();
  return useMutation({
  mutationFn: (id: string) => 
- apiClient.post(`/operations/adjustments/ ${id}/post`, successSchema, {}),
+ apiClient.post(`/operations/adjustments/${id}/post`, successSchema, {}),
  onSuccess: (_, id) => {
  queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
  if (!old) return old;

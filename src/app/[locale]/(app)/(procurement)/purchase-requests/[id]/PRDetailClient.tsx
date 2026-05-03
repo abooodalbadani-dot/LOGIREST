@@ -1,10 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { usePR } from '@/features/purchasing/hooks/usePR';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { useAuth } from '@/providers/AuthProvider';
+import { canPerformAction, isDocumentLocked } from '@/core/workflow/document-engine';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -23,11 +25,13 @@ import {
  ExternalLink
 } from 'lucide-react';
 
-export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar' | 'en' }) {
+export function PRDetailClient({ id }: { id: string | null }) {
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
 
+ const { user } = useAuth();
  const { data: pr, isLoading } = usePR(id);
 
  if (isLoading) return (
@@ -45,7 +49,7 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
 
  if (!pr) return null;
 
- const isReadOnly = pr.status !== 'DRAFT';
+ const isReadOnly = isDocumentLocked('PURCHASE_REQUEST', pr.status);
  const mockTimeline = [
  { status: 'draft' as Status, at: pr.created_at || new Date().toISOString(), by: pr.created_by || 'System' },
  ...(pr.status === 'SUBMITTED' || pr.status === 'APPROVED' || pr.status === 'REJECTED' ? [
@@ -61,10 +65,10 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
 
  const headerActions = (
  <div className="flex items-center gap-3">
- {pr.status === 'DRAFT' && (
+ {canPerformAction('PURCHASE_REQUEST', pr.status, 'EDIT', user?.role) && (
  <PermissionGate action="update" resource="pr">
  <Button
- onClick={() => router.push(`/ ${locale}/purchase-requests/ ${id}/edit`)}
+ onClick={() => router.push(`/purchase-requests/${id}/edit`)}
  variant="outline"
  className="h-11 px-6 text-label-xs font-semibold uppercase rounded-[var(--radius)] border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/5 hover:border-operational-cyan/40 transition-all"
  >
@@ -74,10 +78,10 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
  </PermissionGate>
  )}
 
- {pr.status === 'SUBMITTED' && (
+ {canPerformAction('PURCHASE_REQUEST', pr.status, 'APPROVE', user?.role) && (
  <PermissionGate action="approve" resource="pr">
  <Button
- onClick={() => router.push(`/ ${locale}/purchase-requests/ ${id}/approve`)}
+ onClick={() => router.push(`/purchase-requests/${id}/approve`)}
  className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-primary-foreground text-label-xs font-semibold uppercase shadow-sm rounded-[var(--radius)] transition-all active:scale-95"
  >
  <ShieldCheck className="w-4 h-4 me-2" />
@@ -86,10 +90,10 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
  </PermissionGate>
  )}
 
- {pr.status === 'APPROVED' && (
+ {canPerformAction('PURCHASE_REQUEST', pr.status, 'CONVERT', user?.role) && (
  <PermissionGate action="create" resource="po">
  <Button
- onClick={() => router.push(`/ ${locale}/purchase-orders/new?pr_id=${id}`)}
+ onClick={() => router.push(`/purchase-orders/new?pr_id=${id}`)}
  className="primary-gradient h-11 px-8 text-white text-label-xs font-semibold uppercase rounded-lg transition-all active:scale-95 border-none"
  >
  <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
@@ -140,7 +144,7 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
  </label>
  <div className="flex items-center gap-2">
  <StatusBadge status={pr.status as BadgeStatus} />
- <span className="text-label-xs font-semibold uppercase text-operational-cyan opacity-40">#{pr.id.split('-').pop()}</span>
+ <span dir="ltr" className="text-label-xs font-mono font-semibold uppercase text-operational-cyan opacity-40">#{pr.id.split('-').pop()}</span>
  </div>
  </div>
  </div>
@@ -172,7 +176,7 @@ export function PRDetailClient({ id, locale }: { id: string | null; locale: 'ar'
  qty: l.req_qty,
  uom_id: l.uom_id
  })) as LineItem[]}
- locale={locale}
+  locale={locale}
  isReadOnly={true}
  />
  </div>

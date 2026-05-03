@@ -19,7 +19,7 @@ export function useUpdateCount(sessionId: string) {
  const qc = useQueryClient();
  return useMutation({
  mutationFn: ({ countId, counted_qty, variance_reason }: { countId: string; counted_qty: number; variance_reason?: string }) =>
- apiClient.put(`/stocktake/sessions/ ${sessionId}/counts/ ${countId}`, CountSchema, { counted_qty, variance_reason }),
+ apiClient.put(`/stocktake/sessions/${sessionId}/counts/${countId}`, CountSchema, { counted_qty, variance_reason }),
  onSuccess: () => {
  qc.invalidateQueries({ queryKey: ['stocktake-session', sessionId] });
  },

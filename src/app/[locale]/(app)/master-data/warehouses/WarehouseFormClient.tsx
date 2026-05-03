@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,7 +64,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/warehouses`);
+ router.push(`/master-data/warehouses`);
  } catch (error) {
  // Error handled by mutation hook
  }
@@ -75,7 +75,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/warehouses`} 
+ backHref={`/master-data/warehouses`} 
  isSaving={isSaving} 
  onSubmit={onSubmit}
  >

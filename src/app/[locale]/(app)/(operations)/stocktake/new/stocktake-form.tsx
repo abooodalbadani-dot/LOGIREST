@@ -82,7 +82,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  const onSubmit = (data: StocktakeFormValues) => {
  createStocktake.mutate(data, {
  onSuccess: (session) => {
- router.push(`/stocktake/ ${session.id}`);
+ router.push(`/stocktake/${session.id}`);
  },
  onError: (error) => {
  console.error("Failed to create stocktake session", error);

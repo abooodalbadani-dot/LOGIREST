@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpiredOverrideModal } from "@/components/operations/expired-override-modal";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { ScanLine, RotateCcw, AlertTriangle, CheckCircle2, ArrowLeft, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from '@/i18n/navigation';
 
 interface ScannedLine {
  id: string;

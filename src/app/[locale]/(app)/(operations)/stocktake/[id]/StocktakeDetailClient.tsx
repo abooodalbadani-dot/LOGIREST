@@ -4,7 +4,7 @@ import * as React from "react";
 import { useStocktake } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { format } from "date-fns";
 import { 
@@ -18,7 +18,8 @@ import {
  History
 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, formatQuantity, formatDate } from "@/lib/utils";
+import { formatTime } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,8 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { LockBanner } from "@/components/shared/LockBanner";
 import { StatusTimeline, type StatusTimelineEntry } from "@/components/shared/StatusTimeline";
 
-export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
+export function StocktakeDetailClient({ id }: { id: string }) {
+ const locale = useLocale() as 'ar' | 'en';
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
  const router = useRouter()
@@ -40,7 +42,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  const { data: lockState } = useWarehouseLock(session?.warehouseId ?? null);
 
  if (isLoading) return <LoadingSkeleton />
- if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
+ if (error || !session) return <ErrorState onRetry={() => router.refresh()} />
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
@@ -74,19 +76,19 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  <div className="flex items-center gap-3">
  <PermissionGate action="edit" resource="operations_stocktake">
  {session.status === 'DRAFT' && (
- <Button onClick={() => router.push(`/stocktake/ ${id}/start`)} variant="outline" size="sm" className="h-9 rounded-lg">
+ <Button onClick={() => router.push(`/stocktake/${id}/start`)} variant="outline" size="sm" className="h-9 rounded-lg">
  <Play className="w-4 h-4 me-2 fill-current" />
  {t('start_session')}
  </Button>
  )}
  {isCounting && (
- <Button onClick={() => router.push(`/stocktake/ ${id}/count`)} variant="outline" size="sm" className="h-9 rounded-lg">
+ <Button onClick={() => router.push(`/stocktake/${id}/count`)} variant="outline" size="sm" className="h-9 rounded-lg">
  <ClipboardList className="w-4 h-4 me-2" />
  {t('go_to_count')}
  </Button>
  )}
  {isReviewing && (
- <Button onClick={() => router.push(`/stocktake/ ${id}/variance`)} variant="outline" size="sm" className="h-9 rounded-lg">
+ <Button onClick={() => router.push(`/stocktake/${id}/variance`)} variant="outline" size="sm" className="h-9 rounded-lg">
  <AlertTriangle className="w-4 h-4 me-2" />
  {t('review_variance')}
  </Button>
@@ -95,7 +97,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
 
  <PermissionGate action="approve" resource="operations_stocktake">
  {session.status === 'VarianceSubmitted' && (
- <Button onClick={() => router.push(`/stocktake/ ${id}/approve`)} variant="outline" size="sm" className="h-9 rounded-lg">
+ <Button onClick={() => router.push(`/stocktake/${id}/approve`)} variant="outline" size="sm" className="h-9 rounded-lg">
  <CheckCircle2 className="w-4 h-4 me-2" />
  {t('review_approval')}
  </Button>
@@ -104,7 +106,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
 
  <PermissionGate action="post" resource="operations_stocktake">
  {isApproved && (
- <Button onClick={() => router.push(`/stocktake/ ${id}/post`)} variant="outline" size="sm" className="h-9 rounded-lg">
+ <Button onClick={() => router.push(`/stocktake/${id}/post`)} variant="outline" size="sm" className="h-9 rounded-lg">
  <CheckCircle2 className="w-4 h-4 me-2" />
  {t('go_to_post')}
  </Button>
@@ -120,8 +122,8 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  {[
  { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
  { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-emerald-500' },
- { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
- { label: t('last_updated'), value: format(new Date(session.updatedAt), 'HH:mm'), icon: Clock, color: 'text-amber-500' },
+ { label: t('items_count'), value: `${session.items.length.toLocaleString(locale === 'ar' ? 'ar-u-nu-latn' : 'en-US')} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
+ { label: t('last_updated'), value: formatTime(new Date(session.updatedAt), locale), icon: Clock, color: 'text-amber-500' },
  ].map((item, idx) => (
  <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-lg relative overflow-hidden">
  <div className="flex items-center justify-between relative z-10">
@@ -174,11 +176,11 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  <span className="text-label-xs font-medium text-muted-foreground/50 font-mono" dir="ltr">{item.barcode}</span>
  </div>
  </TableCell>
- <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60">
- {showSnapshot ? `${item.snapshotQty} ${item.uom}` : common('dash')}
+ <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
+ {showSnapshot ? `${formatQuantity(item.snapshotQty, locale)} ${item.uom}` : common('dash')}
  </TableCell>
- <TableCell className="text-center font-mono text-label-sm font-bold text-foreground">
- {hasCounted ? `${item.countedQty} ${item.uom}` : common('dash')}
+ <TableCell className="text-center font-mono text-label-sm font-bold text-foreground" dir="ltr">
+ {hasCounted ? `${formatQuantity(item.countedQty, locale)} ${item.uom}` : common('dash')}
  </TableCell>
  <TableCell className="text-center">
  {showSnapshot && hasCounted ? (
@@ -187,7 +189,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
  variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
  variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
  )} dir="ltr">
- {variance > 0 ? '+' : ''}{variance}
+ {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
  </div>
  ) : common('dash')}
  </TableCell>

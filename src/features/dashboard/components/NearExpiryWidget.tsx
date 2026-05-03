@@ -2,7 +2,7 @@
 import { AlertCircle, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 export function NearExpiryWidget({ locale }: { locale: string }) {
  const t = useTranslations('dashboard.near_expiry');
@@ -61,7 +61,7 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
  ))}
  </div>
  <div className="p-3 bg-muted/10 text-center">
- <Link href={`/ ${locale}/reports`}>
+ <Link href={`/${locale}/reports`}>
  <button className="text-label-xxs font-semibold text-muted-foreground/40 hover:text-operational-cyan uppercase transition-all">
  {t('rotation_report')}
  </button>

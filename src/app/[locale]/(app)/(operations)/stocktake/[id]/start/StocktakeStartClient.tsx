@@ -51,7 +51,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  // Redirect if already started
  useEffect(() => {
  if (session && !['DRAFT', 'PENDING'].includes(session.status)) {
- router.replace(`/stocktake/ ${id}`);
+ router.replace(`/stocktake/${id}`);
  }
  }, [session, id, locale, router]);
 
@@ -66,7 +66,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  const handleStart = () => {
  startStocktake.mutate(id, {
  onSuccess: () => {
- router.push(`/stocktake/ ${id}/count`);
+ router.push(`/stocktake/${id}/count`);
  }
  });
  };

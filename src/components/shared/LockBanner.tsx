@@ -27,10 +27,10 @@ export function LockBanner({ lockState }: { lockState: WarehouseLockState | unde
  <span className="text-status-warning/80 text-label-sm font-bold leading-relaxed">
  {startTime ? (
  <span className="flex items-center gap-1.5">
- {tc('lockedAt') || 'Locked at'}: <span dir="ltr" className="font-mono font-semibold bg-status-warning/20 px-2 py-0.5 rounded-lg text-label-xs">{startTime}</span>
+ {tc('locked_at')}: <span dir="ltr" className="font-mono font-semibold bg-status-warning/20 px-2 py-0.5 rounded-lg text-label-xs">{startTime}</span>
  </span>
  ) : (
- tc('stocktakeInProgressDesc') || "Transactions are restricted due to an active stocktake."
+ tc('stocktake_in_progress_desc')
  )}
  </span>
  </div>

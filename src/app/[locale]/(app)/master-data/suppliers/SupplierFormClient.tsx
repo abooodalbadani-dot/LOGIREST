@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -69,7 +69,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/suppliers`);
+ router.push(`/master-data/suppliers`);
  } catch (error) {
  // Error handled by mutation toast
  }
@@ -80,7 +80,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/suppliers`}
+ backHref={`/master-data/suppliers`}
  isSaving={isSaving}
  onSubmit={onSubmit}
  >

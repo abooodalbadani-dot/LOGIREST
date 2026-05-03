@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,10 +21,10 @@ interface Props {
  id: string | null; 
  createTitle: string; 
  editTitle: string; 
+ locale: string;
 }
 
-export function FXRateFormClient({ id, createTitle, editTitle }: Props) {
- const { locale } = useParams();
+export function FXRateFormClient({ id, createTitle, editTitle, locale }: Props) {
  const tc = useTranslations('common');
  const t = useTranslations('master_data.fx_rates');
  const router = useRouter();
@@ -65,7 +65,7 @@ export function FXRateFormClient({ id, createTitle, editTitle }: Props) {
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/fx-rates`);
+ router.push('/master-data/fx-rates');
  } catch (error) {
  // Handled by mutation toast
  }
@@ -76,7 +76,7 @@ export function FXRateFormClient({ id, createTitle, editTitle }: Props) {
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/fx-rates`}
+ backHref="/master-data/fx-rates"
  isSaving={create.isPending || update.isPending} 
  onSubmit={onSubmit}
  >

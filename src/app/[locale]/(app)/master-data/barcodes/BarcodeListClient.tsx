@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { useRouter, Link } from '@/i18n/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { Plus, Tag, CheckCircle2, Package, Search, Barcode as BarcodeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
@@ -18,10 +17,12 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
+import { formatQuantity } from '@/lib/utils';
 
-export function BarcodeListClient({ locale }: { locale: string }) {
+export function BarcodeListClient() {
  const tc = useTranslations('common');
  const t = useTranslations('master_data.barcodes');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
  const [search, setSearch] = useState('');
 
@@ -90,7 +91,9 @@ export function BarcodeListClient({ locale }: { locale: string }) {
  return (
  <div className="flex items-center gap-1.5 font-mono">
  <span className="text-label-xs text-muted-foreground/40 font-bold italic">x</span>
- <span className="font-semibold text-amber-500/80">{row.original.default_qty}</span>
+ <span dir="ltr" className="font-semibold text-amber-500/80">
+ {formatQuantity(row.original.default_qty, locale)}
+ </span>
  {uom && (
  <span className="text-label-xs font-bold text-muted-foreground/30 uppercase">
  {uom.code}
@@ -121,7 +124,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/master-data/barcodes/ ${row.original.id}`);
+ router.push(`/master-data/barcodes/${row.original.id}`);
  }}
  >
  {tc('view')}
@@ -130,15 +133,15 @@ export function BarcodeListClient({ locale }: { locale: string }) {
  </div>
  ),
  },
- ], [tc, t, locale, router, items, uoms]);
+ ], [tc, t, router, items, uoms]);
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <div className="space-y-4">
  <Breadcrumb 
  items={[
- { label: tc('home'), href: `/ ${locale}/dashboard` },
- { label: tc('master_data'), href: `/ ${locale}/master-data` },
+ { label: tc('home'), href: `/dashboard` },
+ { label: tc('master_data'), href: `/master-data` },
  { label: t('title') }
  ]} 
  />
@@ -147,7 +150,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
  description={t('description')}
  actions={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/barcodes/new`}>
+ <Link href={`/master-data/barcodes/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {tc('create')}
@@ -158,38 +161,35 @@ export function BarcodeListClient({ locale }: { locale: string }) {
  />
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <MetricCard
- label={tc('total_records')}
- value={stats.total}
- icon={BarcodeIcon}
- color="cyan"
- dir="ltr"
- />
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <MetricCard
+      label={tc('total_records')}
+      value={<span dir="ltr" className="font-mono">{stats.total.toLocaleString(locale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}</span>}
+      icon={BarcodeIcon}
+      color="cyan"
+    />
 
- <MetricCard
- label={tc('status.active')}
- value={stats.active}
- icon={CheckCircle2}
- color="emerald"
- dir="ltr"
- />
+    <MetricCard
+      label={tc('status.active')}
+      value={<span dir="ltr" className="font-mono">{stats.active.toLocaleString(locale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}</span>}
+      icon={CheckCircle2}
+      color="emerald"
+    />
 
- <MetricCard
- label={t('fields.item')}
- value={stats.items}
- icon={Package}
- color="amber"
- dir="ltr"
- />
- </div>
+    <MetricCard
+      label={t('fields.item')}
+      value={<span dir="ltr" className="font-mono">{stats.items.toLocaleString(locale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}</span>}
+      icon={Package}
+      color="amber"
+    />
+  </div>
 
  <DataTable 
  columns={columns} 
  data={barcodes} 
  isLoading={isLoadingBarcodes}
  collectionName="master_data_barcodes"
- onRowClick={(r: Barcode) => router.push(`/ ${locale}/master-data/barcodes/ ${r.id}`)}
+ onRowClick={(r: Barcode) => router.push(`/master-data/barcodes/${r.id}`)}
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30 rounded-sm">
  <div className="flex flex-col gap-2 min-w-[300px] flex-1">

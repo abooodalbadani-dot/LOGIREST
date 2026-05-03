@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,7 +41,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
  try {
  if (id) await update.mutateAsync({ id, values });
  else await create.mutateAsync(values);
- router.push(`/ ${locale}/master-data/categories`);
+ router.push(`/master-data/categories`);
  } catch (error) {
  // Handled by mutation hook
  }
@@ -52,7 +52,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, locale }: Props
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/categories`}
+ backHref={`/master-data/categories`}
  isSaving={create.isPending || update.isPending}
  onSubmit={onSubmit}
  >

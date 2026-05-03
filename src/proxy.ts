@@ -25,14 +25,14 @@ export default function proxy(request: NextRequest) {
  !pathname.includes('/favicon.ico')
  ) {
  const locale = pathname.split('/')[1] || 'ar';
- const loginUrl = new URL(`/ ${locale}/login`, request.url);
+ const loginUrl = new URL(`/${locale}/login`, request.url);
  return NextResponse.redirect(loginUrl);
  }
 
  // If the user is authenticated and trying to access the login page
  if (token && isPublicPage) {
  const locale = pathname.split('/')[1] || 'ar';
- const dashboardUrl = new URL(`/ ${locale}/dashboard`, request.url);
+ const dashboardUrl = new URL(`/${locale}/dashboard`, request.url);
  return NextResponse.redirect(dashboardUrl);
  }
 

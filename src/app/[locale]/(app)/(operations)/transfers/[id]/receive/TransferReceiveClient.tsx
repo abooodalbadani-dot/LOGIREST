@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,10 @@ import { PackageCheck, ArrowLeft, AlertCircle, Info } from 'lucide-react';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { cn } from '@/lib/utils';
 
-export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
+export function TransferReceiveClient({ id }: { id: string }) {
  const t = useTranslations('operations.transfer');
  const tCommon = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
 
  const { data: transfer, isLoading } = useTransfer(id);
@@ -61,7 +62,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
  variance_reason: hasVariance ? varianceReason : undefined
  });
  
- router.push(`/ ${locale}/transfers/ ${id}`);
+ router.push(`/transfers/${id}`);
  } catch (e) {
  console.error(e);
  }
@@ -82,7 +83,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
  <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
  <AlertCircle className="w-12 h-12 text-status-error" />
  <p className="font-bold text-title-sm">{t('invalid_status_for_receive')}</p>
- <Button onClick={() => router.push(`/ ${locale}/transfers/ ${id}`)} variant="outline">
+ <Button onClick={() => router.push(`/transfers/${id}`)} variant="outline">
  {tCommon('back')}
  </Button>
  </div>
@@ -94,8 +95,8 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
  <div className="flex items-center justify-between">
  <Breadcrumb 
  items={[
- { label: t('title'), href: `/ ${locale}/transfers` },
- { label: transfer.document_number, href: `/ ${locale}/transfers/ ${id}` },
+ { label: t('title'), href: `/transfers` },
+ { label: transfer.document_number, href: `/transfers/${id}` },
  { label: t('receive') }
  ]} 
  />

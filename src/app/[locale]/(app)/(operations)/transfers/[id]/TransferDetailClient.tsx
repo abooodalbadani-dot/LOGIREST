@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,9 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { useTransfer, TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { cn, formatQuantity, formatDate } from '@/lib/utils';
 import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
-import Link from 'next/link';
 
 export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.transfer');
@@ -55,8 +55,8 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  <div className="flex items-center justify-between">
  <Breadcrumb 
  items={[
- { label: tCommon('modules.operations'), href: `/ ${locale}/transfers` },
- { label: t('title'), href: `/ ${locale}/transfers` },
+ { label: tCommon('modules.operations'), href: `/transfers` },
+ { label: t('title'), href: `/transfers` },
  { label: t('detail_title') }
  ]} 
  />
@@ -94,7 +94,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  {isDraft && (
  <PermissionGate action="post" resource="transfer">
  <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
- <Link href={`/ ${locale}/transfers/ ${id}/ship`}>
+ <Link href={`/transfers/${id}/ship`}>
  <Button
  disabled={isEitherLocked}
  className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-label-xs font-semibold uppercase transition-all shadow-lg shadow-cyan-900/20"
@@ -110,7 +110,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  {isInTransit && (
  <PermissionGate action="post" resource="transfer">
  <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
- <Link href={`/ ${locale}/transfers/ ${id}/receive`}>
+ <Link href={`/transfers/${id}/receive`}>
  <Button
  disabled={isEitherLocked}
  className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-11 px-8 text-label-xs font-semibold uppercase transition-all shadow-lg shadow-emerald-900/20"
@@ -155,7 +155,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
  <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
  <span dir="ltr" className="font-mono text-body-md font-bold text-cyan-500/80">
- {format(new Date(transfer.shipped_at), 'MMM dd, yyyy HH:mm')}
+ {formatDate(transfer.shipped_at, locale)}
  </span>
  <Truck className="w-4 h-4 text-cyan-500/40" />
  </div>
@@ -167,7 +167,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
  <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
  <span dir="ltr" className="font-mono text-body-md font-bold text-emerald-500/80">
- {format(new Date(transfer.received_at), 'MMM dd, yyyy HH:mm')}
+ {formatDate(transfer.received_at, locale)}
  </span>
  <PackageCheck className="w-4 h-4 text-emerald-500/40" />
  </div>
@@ -210,7 +210,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  cell: (line: TransferLine) => (
  <div className="flex justify-center">
  <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
- {line.shipped_qty ?? line.qty}
+ {formatQuantity(line.shipped_qty ?? line.qty ?? 0, locale)}
  </span>
  </div>
  ),
@@ -220,7 +220,7 @@ export function TransferDetailClient({ id, locale }: { id: string; locale: 'ar' 
  cell: (line: TransferLine) => (
  <div className="flex justify-center">
  <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.received_qty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
- {line.received_qty ?? '—'}
+ {line.received_qty ? formatQuantity(line.received_qty, locale) : '—'}
  </span>
  </div>
  ),

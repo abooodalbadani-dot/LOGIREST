@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { usePO } from '@/features/purchasing/hooks/usePO';
 import { useApprovePO } from '@/features/purchasing/hooks/useApprovePO';
@@ -24,10 +24,9 @@ import { cn } from '@/lib/utils';
 
 interface Props {
  id: string;
- locale: string;
 }
 
-export function POApproveClient({ id, locale }: Props) {
+export function POApproveClient({ id }: Props) {
  const t = useTranslations('procurement.po');
  const tCommon = useTranslations('common');
  const router = useRouter();
@@ -52,7 +51,7 @@ export function POApproveClient({ id, locale }: Props) {
  const handleApprove = async () => {
  try {
  await approveMutation.mutateAsync(id);
- router.push(`/ ${locale}/purchase-orders/ ${id}`);
+ router.push(`/purchase-orders/${id}`);
  } catch (e) {
  console.error(e);
  }
@@ -62,7 +61,7 @@ export function POApproveClient({ id, locale }: Props) {
  if (!comment) return;
  try {
  await rejectMutation.mutateAsync({ id, reason: comment });
- router.push(`/ ${locale}/purchase-orders/ ${id}`);
+ router.push(`/purchase-orders/${id}`);
  } catch (e) {
  console.error(e);
  }
