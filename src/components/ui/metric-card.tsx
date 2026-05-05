@@ -78,7 +78,7 @@ export function MetricCard({
  {label}
  </CardDescription>
  <CardTitle className={cn("text-headline-lg font-display font-bold", styles.text)} dir="auto" style={{ unicodeBidi: 'isolate' }}>
- <span dir="ltr">{value}</span>
+ <span dir="ltr" className="font-mono">{value}</span>
  </CardTitle>
  </div>
  </CardHeader>

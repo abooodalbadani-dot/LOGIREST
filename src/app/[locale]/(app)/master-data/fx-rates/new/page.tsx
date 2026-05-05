@@ -1,22 +1,25 @@
-import { getMessages } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { FXRateFormClient } from '../FXRateFormClient';
 
-export async function generateMetadata() {
- return {
- title: 'New FX Rate | LogiRest'
- };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'master_data.fx_rates' });
+  return {
+    title: `${t('create_title')} | LogiRest`
+  };
 }
 
-export default async function NewFXRatePage() {
- const messages: any = await getMessages();
- const createTitle = messages.master_data.fx_rates.create_title;
- const editTitle = messages.master_data.fx_rates.edit_title;
+export default async function NewFXRatePage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
+  setRequestLocale(params.locale);
+  const t = await getTranslations({ locale: params.locale, namespace: 'master_data.fx_rates' });
 
- return (
- <FXRateFormClient 
- id={null} 
- createTitle={createTitle} 
- editTitle={editTitle} 
- />
- );
+  return (
+    <FXRateFormClient 
+      id={null} 
+      locale={params.locale}
+      createTitle={t('create_title')} 
+      editTitle={t('edit_title')} 
+    />
+  );
 }

@@ -26,7 +26,7 @@ export default async function NotificationsPage(props: { params: Promise<{ local
  />
  <div className="flex flex-col items-center justify-center py-24 gap-4 text-muted-foreground/40">
  <Bell className="w-12 h-12 opacity-20" />
- <p className="text-body-md font-bold uppercase">{t('no_notifications') ?? 'No notifications'}</p>
+ <p className="text-body-md font-bold uppercase">{t('no_notifications')}</p>
  </div>
  </div>
  </ProtectedRoute>

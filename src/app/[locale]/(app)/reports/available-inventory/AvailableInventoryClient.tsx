@@ -1,14 +1,16 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useAvailableInventoryReport, AvailableInventoryReport } from '@/features/reports/hooks/useReports';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
+import { formatQuantity } from '@/lib/utils';
 
 export default function AvailableInventoryClient() {
  const t = useTranslations('reports');
+ const locale = useLocale() as 'ar' | 'en';
  const { data, isLoading } = useAvailableInventoryReport();
 
  const columns: ColumnDef<AvailableInventoryReport>[] = [
@@ -28,16 +30,31 @@ export default function AvailableInventoryClient() {
  accessorKey: 'qty_physical',
  header: t('table.qty_physical'),
  meta: { numeric: true },
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatQuantity(row.original.qty_physical, locale)}
+ </span>
+ ),
  },
  {
  accessorKey: 'qty_reserved',
  header: t('table.qty_reserved'),
  meta: { numeric: true },
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatQuantity(row.original.qty_reserved, locale)}
+ </span>
+ ),
  },
  {
  accessorKey: 'qty_available',
  header: t('table.qty_available'),
  meta: { numeric: true },
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatQuantity(row.original.qty_available, locale)}
+ </span>
+ ),
  },
  ];
 

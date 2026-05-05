@@ -17,8 +17,8 @@ import { Card, CardContent } from '@/components/ui/card';
 interface Props { currencyId: string; locale: string; }
 
 export function FXRatesClient({ currencyId, locale }: Props) {
- const t = useTranslations('masterData.currencies');
- const tc = useTranslations('masterData.common');
+ const t = useTranslations('master_data.currencies');
+ const tc = useTranslations('master_data.common');
 
  // Fetch current currency details for context
  const { data: baseCurrency } = useMasterDataItem('currencies', currencyId, CurrencySchema);

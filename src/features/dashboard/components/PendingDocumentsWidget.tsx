@@ -1,6 +1,6 @@
 'use client';
 import { FileText, ChevronRight, Timer, ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 
 export function PendingDocumentsWidget({ locale }: { locale: string }) {

@@ -29,6 +29,19 @@ export function formatNumber(value: number, locale: 'ar' | 'en'): string {
  const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
  return new Intl.NumberFormat(formatterLocale).format(value);
 }
+
+/**
+ * Format a quantity with ERP standard 3-decimal precision.
+ * Calling component should wrap output in <span dir="ltr"> in RTL context.
+ */
+export function formatQuantity(value: number, locale: 'ar' | 'en'): string {
+  const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  return new Intl.NumberFormat(formatterLocale, {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  }).format(value);
+}
+
 /**
  * Format a time string with standardized numerals.
  */

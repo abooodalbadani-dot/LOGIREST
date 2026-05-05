@@ -17,7 +17,7 @@ export default async function StocktakeDetailPage(props: { params: Promise<{ loc
  
  return (
  <ProtectedRoute requiredAction="view" requiredResource="stocktake">
- <StocktakeDetailClient id={params.id} locale={params.locale as 'ar' | 'en'} />
+ <StocktakeDetailClient id={params.id} />
  </ProtectedRoute>
  );
 }

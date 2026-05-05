@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
- const t = await getTranslations({ locale, namespace: 'masterData.barcodes' });
+ const t = await getTranslations({ locale, namespace: 'master_data.barcodes' });
  return {
  title: `${t('title')} | LogiRest`,
  description: 'Item barcode and label management',
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function BarcodesPage(props: { params: Promise<{ locale: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('masterData.barcodes');
+ const t = await getTranslations('master_data.barcodes');
  
  return (
  <ProtectedRoute requiredAction="view" requiredResource="master_data">
@@ -24,7 +24,7 @@ export default async function BarcodesPage(props: { params: Promise<{ locale: st
  title={t('title')} 
  description="Item barcode and label management"
  />
- <BarcodeListClient locale={params.locale} />
+ <BarcodeListClient />
  </div>
  </ProtectedRoute>
  );

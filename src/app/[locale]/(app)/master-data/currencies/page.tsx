@@ -21,7 +21,7 @@ export default async function CurrenciesPage(props: { params: Promise<{ locale: 
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description={t('description') || 'Multi-currency support and exchange rate management'} />
+ description={t('description')} />
  <CurrencyListClient locale={params.locale} />
  </div>
  </ProtectedRoute>

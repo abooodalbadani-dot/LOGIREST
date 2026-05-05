@@ -1,22 +1,27 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useStockMovementsReport, StockMovementsReport } from '@/features/reports/hooks/useReports';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatQuantity } from '@/lib/utils';
 
 export default function StockMovementsClient() {
  const t = useTranslations('reports');
+ const locale = useLocale() as 'ar' | 'en';
  const { data, isLoading } = useStockMovementsReport();
 
  const columns: ColumnDef<StockMovementsReport>[] = [
  {
  accessorKey: 'date',
  header: t('table.date'),
- cell: ({ row }) => formatDate(row.getValue('date')),
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatDate(row.getValue('date'), locale)}
+ </span>
+ ),
  },
  {
  accessorKey: 'reference',
@@ -34,6 +39,11 @@ export default function StockMovementsClient() {
  accessorKey: 'qty',
  header: t('table.qty'),
  meta: { numeric: true },
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatQuantity(row.getValue('qty'), locale)}
+ </span>
+ ),
  },
  {
  accessorKey: 'from',

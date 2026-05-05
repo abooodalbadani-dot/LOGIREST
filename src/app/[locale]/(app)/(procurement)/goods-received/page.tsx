@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { GRNListClient } from './GRNListClient';
 
@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'procurement.grn' });
  return {
  title: `${t('title')} | LogiRest`,
- description: t('description') || 'Incoming supply chain verification and warehouse reception ledger',
+ description: t('description'),
  };
 }
 

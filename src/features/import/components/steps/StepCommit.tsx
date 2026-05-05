@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Save, CheckCircle2, ChevronRight, Loader2, ArrowLeft, Database, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 
 import { WizardReturn } from '../../hooks/useImportWizard';
 

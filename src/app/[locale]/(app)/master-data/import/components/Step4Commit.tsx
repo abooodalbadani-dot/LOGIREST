@@ -5,7 +5,7 @@ import { Save, CheckCircle2, Loader2, ArrowLeft, Database, ExternalLink } from '
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 
 interface Step4CommitProps {
  wizard: any;

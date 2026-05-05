@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -112,12 +112,12 @@ export default function LoginPage() {
  </label>
  <div className="relative">
  <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none">
- <BadgeCheck className="w-4 h-4 text-muted-foreground/60/50" />
+ <BadgeCheck className="w-4 h-4 text-muted-foreground/40" />
  </div>
  <input
  type="email"
  placeholder={t('login.operator_id_placeholder')}
- className="w-full bg-surface-container-lowest border border-border-muted/30 focus:border-operational-cyan/30 text-foreground text-body-md ps-10 pe-4 py-3 rounded-md outline-none transition-all placeholder:text-muted-foreground/60/30 focus:bg-surface-container-low"
+ className="w-full bg-surface-container-lowest border border-border-muted/30 focus:border-operational-cyan/30 text-foreground text-body-md ps-10 pe-4 py-3 rounded-md outline-none transition-all placeholder:text-muted-foreground/40 focus:bg-surface-container-low"
  {...register('email')}
  />
  </div>
@@ -136,16 +136,16 @@ export default function LoginPage() {
  </div>
  <div className="relative">
  <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none">
- <Key className="w-4 h-4 text-muted-foreground/60/50" />
+ <Key className="w-4 h-4 text-muted-foreground/40" />
  </div>
  <input
  type="password"
  placeholder={t('login.password_placeholder')}
- className="w-full bg-surface-container-lowest border border-border-muted/30 focus:border-operational-cyan/30 text-foreground text-body-md ps-10 pe-10 py-3 rounded-md outline-none transition-all placeholder:text-muted-foreground/60/30 focus:bg-surface-container-low"
+ className="w-full bg-surface-container-lowest border border-border-muted/30 focus:border-operational-cyan/30 text-foreground text-body-md ps-10 pe-10 py-3 rounded-md outline-none transition-all placeholder:text-muted-foreground/40 focus:bg-surface-container-low"
  {...register('password')}
  />
  <div className="absolute inset-y-0 end-0 pe-3.5 flex items-center cursor-pointer">
- <EyeOff className="w-4 h-4 text-muted-foreground/60/50 hover:text-muted-foreground/60 transition-colors" />
+ <EyeOff className="w-4 h-4 text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors" />
  </div>
  </div>
  {errors.password && <p className="text-label-xs text-status-error mt-1">{errors.password.message}</p>}
@@ -193,7 +193,7 @@ export default function LoginPage() {
  }}
  >
  <div className="text-label-xxs font-bold text-muted-foreground/60 group-hover:text-operational-cyan transition-colors">{cred.role}</div>
- <div className="text-label-xs font-mono text-muted-foreground/60/50 truncate">{cred.email}</div>
+ <div className="text-label-xs font-mono text-muted-foreground/40 truncate">{cred.email}</div>
  </div>
  ))}
  </div>
@@ -204,7 +204,7 @@ export default function LoginPage() {
  <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan" />
  <span className="text-label-xs text-muted-foreground/60 font-medium">{t('login.system_online')}</span>
  </div>
- <span className="text-label-xs text-muted-foreground/60/50 font-mono">v3.1.04</span>
+ <span className="text-label-xs text-muted-foreground/40 font-mono">v3.1.04</span>
  </div>
  </div>
  </div>

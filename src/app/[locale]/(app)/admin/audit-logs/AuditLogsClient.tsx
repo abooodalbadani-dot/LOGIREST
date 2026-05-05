@@ -124,7 +124,7 @@ export function AuditLogsClient() {
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <PageHeader 
- title={t('audit_log') || 'System Ledger'} description="Cryptographic evidence of all administrative and operational state changes"
+ title={t('audit_log')} description="Cryptographic evidence of all administrative and operational state changes"
  actions={
  <PermissionGate action="export" resource="admin_audit_logs">
  <Button 
@@ -132,7 +132,7 @@ export function AuditLogsClient() {
  className="h-11 px-8 bg-surface-container-high hover:bg-surface-container-highest text-white text-label-xs font-semibold uppercase rounded-sm transition-all border border-white/5"
  >
  <Download className="w-3.5 h-3.5 me-2" />
- {t('export') || 'Export Ledger'}
+ {t('export')}
  </Button>
  </PermissionGate>
  }
@@ -187,7 +187,7 @@ export function AuditLogsClient() {
  <div className="p-8 rounded-sm border border-white/5 bg-surface-container-low animate-in slide-in-from-top-4 duration-500 shadow-2xl">
  <div className="flex items-center gap-3 mb-6 text-cyan-500 font-semibold text-label-xs uppercase">
  <History className="w-4 h-4" />
- {t('changes') || 'Object State Delta'}
+ {t('changes')}
  </div>
  <div className="rounded-sm overflow-hidden border border-white/10 bg-black/40">
  <AuditDiffViewer changes={entry.changes} />

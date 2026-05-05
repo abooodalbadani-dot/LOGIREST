@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function MasterDataFormLayout({ title, backHref, children, isSaving, onSubmit }: Props) {
- const t = useTranslations('masterData.common');
+ const t = useTranslations('master_data.common');
  return (
  <div className="p-8 max-w-[1000px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12">

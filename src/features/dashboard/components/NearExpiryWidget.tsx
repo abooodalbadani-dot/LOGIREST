@@ -2,7 +2,7 @@
 import { AlertCircle, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 export function NearExpiryWidget({ locale }: { locale: string }) {
  const t = useTranslations('dashboard.near_expiry');

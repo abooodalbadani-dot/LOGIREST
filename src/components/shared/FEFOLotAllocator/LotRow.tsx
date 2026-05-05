@@ -47,7 +47,7 @@ export function LotRow({
  
  <div className="flex items-center gap-2">
  {isExpired && !canOverride && (
- <span className="text-label-sm bg-status-error text-white px-2 py-1 rounded font-bold">{tc('expired_status') || '⛔ منتهي الصلاحية'}</span>
+ <span className="text-label-sm bg-status-error text-white px-2 py-1 rounded font-bold">{tc('expired_status')}</span>
  )}
  
  <input 

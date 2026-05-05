@@ -17,6 +17,7 @@ export default function CurrencySummariesClient() {
  {
  accessorKey: 'currency',
  header: t('table.currency'),
+ meta: { numeric: true },
  },
  {
  accessorKey: 'total',

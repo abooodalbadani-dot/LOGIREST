@@ -18,8 +18,7 @@ export default async function StocktakeListPage({
  <StocktakeListClient
  initialStatus={status}
  initialPage={Number(page ?? 1)}
- initialWarehouseId={warehouse_id}
- locale={locale as 'ar' | 'en'} />
+ initialWarehouseId={warehouse_id} />
  </ProtectedRoute>
  );
 }

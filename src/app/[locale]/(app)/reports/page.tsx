@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'reports' });
  return {
  title: `${t('title')} | LogiRest`,
- description: t('description') || 'Business intelligence and operational analysis reports',
+ description: t('description'),
  };
 }
 
@@ -22,7 +22,7 @@ export default async function ReportsPage(props: { params: Promise<{ locale: str
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description={t('description') || 'Business intelligence and operational analysis reports'} />
+ description={t('description')} />
  <ReportsHubClient />
  </div>
  </ProtectedRoute>
