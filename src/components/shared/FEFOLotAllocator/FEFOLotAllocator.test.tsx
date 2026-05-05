@@ -61,7 +61,7 @@ describe('FEFOLotAllocator', () => {
 
  const assertAllocated = (current: number, total: number) => {
  const statusEl = screen.getByText(/Allocated:/i).parentElement;
- expect(statusEl?.textContent).toContain(`${current} / ${total}`);
+ expect(statusEl?.textContent).toContain(`${current} /${total}`);
  };
 
  it('allocates lots based on FEFO (earliest expiry first)', () => {
@@ -311,3 +311,4 @@ describe('FEFOLotAllocator', () => {
  assertAllocated(0, 10); 
  });
 });
+

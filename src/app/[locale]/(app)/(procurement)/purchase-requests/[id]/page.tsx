@@ -20,7 +20,7 @@ export default async function PurchaseRequestDetailPage(props: { params: Promise
 
  return (
  <ProtectedRoute requiredAction={isNew ? "create" : "view"} requiredResource="procurement_pr">
- <PRDetailClient id={isNew ? null : params.id} locale={params.locale as 'ar' | 'en'} />
+ <PRDetailClient id={isNew ? null : params.id} />
  </ProtectedRoute>
  );
 }

@@ -5,8 +5,8 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Trash2, Plus, Calendar, Package, Calculator, ArrowLeft, Send, Save, Building2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter, Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
 import {
@@ -21,10 +21,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { useCreatePR } from '../hooks/useCreatePR';
-import { useUpdatePR } from '../hooks/useUpdatePR';
-import { useSubmitPR } from '../hooks/useSubmitPR';
-import { PRDetail } from '../hooks/usePR';
+import { useCreatePR } from '@/features/purchasing/hooks/useCreatePR';
+import { useUpdatePR } from '@/features/purchasing/hooks/useUpdatePR';
+import { useSubmitPR } from '@/features/purchasing/hooks/useSubmitPR';
+import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
@@ -48,11 +48,12 @@ const formSchema = z.object({
 type PurchaseRequestFormValues = z.infer<typeof formSchema>;
 
 interface PurchaseRequestFormProps {
- initialData?: PRDetail;
- locale: 'ar' | 'en';
+  initialData?: PRDetail;
+  onConflict?: () => void;
 }
 
-export function PurchaseRequestForm({ initialData, locale }: PurchaseRequestFormProps) {
+export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequestFormProps) {
+  const locale = useLocale();
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
  const router = useRouter();
@@ -64,9 +65,9 @@ export function PurchaseRequestForm({ initialData, locale }: PurchaseRequestForm
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
  const { data: itemsData } = useMasterDataList('items', ItemSchema);
 
- const createPR = useCreatePR();
- const updatePR = useUpdatePR();
- const submitPR = useSubmitPR();
+  const createPR = useCreatePR();
+  const updatePR = useUpdatePR({ onConflict });
+  const submitPR = useSubmitPR({ onConflict });
 
  const form = useForm<PurchaseRequestFormValues>({
  resolver: zodResolver(formSchema),
@@ -116,21 +117,25 @@ export function PurchaseRequestForm({ initialData, locale }: PurchaseRequestForm
  try {
  let prId = initialData?.id;
  
- if (prId) {
- await updatePR.mutateAsync({ id: prId, payload: values });
- } else {
- const res = await createPR.mutateAsync(values);
- prId = res.id;
- }
+  if (prId) {
+  await updatePR.mutateAsync({ 
+  id: prId, 
+  payload: { ...values, version: initialData?.version ?? 0 } 
+  });
+  } else {
+  const res = await createPR.mutateAsync(values);
+  prId = res.id;
+  }
 
- if (submitAfterSave && prId) {
- await submitPR.mutateAsync(prId);
- toast.success(t('submit_success'));
- } else {
- toast.success(tc('save') + ' ' + tc('completed'));
- }
+  if (submitAfterSave && prId) {
+  const currentVersion = initialData ? ((initialData.version ?? 0) + 1) : 1;
+  await submitPR.mutateAsync({ id: prId, version: currentVersion });
+  toast.success(t('submit_success'));
+  } else {
+  toast.success(tc('save') + ' ' + tc('completed'));
+  }
 
- router.push(`/ ${locale}/purchase-requests`);
+ router.push('/purchase-requests');
  } catch (error) {
  console.error(error);
  toast.error(tc('error'));

@@ -59,7 +59,7 @@ export function CurrencyFormClient({ id, createTitle, editTitle, locale }: Props
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/currencies`);
+ router.push(`/${locale}/master-data/currencies`);
  } catch {
  // Error handled by mutation toast
  }
@@ -68,7 +68,7 @@ export function CurrencyFormClient({ id, createTitle, editTitle, locale }: Props
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/currencies`}
+ backHref={`/${locale}/master-data/currencies`}
  isSaving={create.isPending || update.isPending} 
  onSubmit={onSubmit}
  >

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,13 +26,13 @@ import {
  SelectTrigger,
  SelectValue,
 } from "@/components/ui/select";
-import { useCreatePO } from "../hooks/useCreatePO";
-import { useUpdatePO } from "../hooks/useUpdatePO";
-import { PODetail } from "../hooks/usePO";
-import { useSuppliers } from "../hooks/useSuppliers";
-import { useCurrencies } from "../hooks/useCurrencies";
+import { useCreatePO } from "@/features/purchasing/hooks/useCreatePO";
+import { useUpdatePO } from "@/features/purchasing/hooks/useUpdatePO";
+import { PODetail } from "@/features/purchasing/hooks/usePO";
+import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
+import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
-import { useFXRates } from "../hooks/useFXRates";
+import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 
 
 const lineItemSchema = z.object({
@@ -57,17 +57,18 @@ const formSchema = z.object({
 type PurchaseOrderFormValues = z.infer<typeof formSchema>;
 
 interface PurchaseOrderFormProps {
- initialData?: PODetail;
- mode?: "create" | "edit";
+  initialData?: PODetail;
+  mode?: "create" | "edit";
+  onConflict?: () => void;
 }
 
-export function PurchaseOrderForm({ initialData, mode = "create" }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: PurchaseOrderFormProps) {
  const router = useRouter();
  const t = useTranslations("procurement.po");
  const tc = useTranslations("common");
  
  const createMutation = useCreatePO();
- const updateMutation = useUpdatePO(initialData?.id || "");
+ const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
 
  const form = useForm<PurchaseOrderFormValues>({
  resolver: zodResolver(formSchema),
@@ -113,12 +114,12 @@ export function PurchaseOrderForm({ initialData, mode = "create" }: PurchaseOrde
  async function onSubmit(values: PurchaseOrderFormValues) {
  try {
  if (mode === "edit" && initialData) {
- await updateMutation.mutateAsync(values);
+ await updateMutation.mutateAsync({ ...values, version: initialData.version || 1 });
  toast.success(t("edit_success"));
  } else {
  const result = await createMutation.mutateAsync(values);
  toast.success(t("submit_success"));
- router.push(`/ ${window.location.pathname.split('/')[1]}/purchase-orders/ ${result.id}`);
+  router.push(`/purchase-orders/${result.id}`);
  }
  } catch (error) {
  console.error(error);

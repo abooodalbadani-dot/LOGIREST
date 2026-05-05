@@ -1,7 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Layers, Database, History, Scan } from 'lucide-react';
@@ -12,14 +11,13 @@ export default function InventoryLayout({
  children: React.ReactNode;
 }) {
  const pathname = usePathname();
- const locale = useLocale();
  const t = useTranslations('operational.inventory.tabs');
 
  const tabs = [
- { name: t('balance'), href: `/ ${locale}/inventory/balance`, icon: Layers },
- { name: t('lots'), href: `/ ${locale}/inventory/lots`, icon: Database },
- { name: t('movements'), href: `/ ${locale}/inventory/movements`, icon: History },
- { name: t('scan'), href: `/ ${locale}/inventory/scan-mode`, icon: Scan },
+ { name: t('balance'), href: `/inventory/balance`, icon: Layers },
+ { name: t('lots'), href: `/inventory/lots`, icon: Database },
+ { name: t('movements'), href: `/inventory/movements`, icon: History },
+ { name: t('scan'), href: `/inventory/scan-mode`, icon: Scan },
  ];
 
  return (

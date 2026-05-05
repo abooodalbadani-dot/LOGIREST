@@ -61,7 +61,7 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
  ))}
  </div>
  <div className="p-3 bg-muted/10 text-center">
- <Link href={`/ ${locale}/reports`}>
+ <Link href={`/${locale}/reports`}>
  <button className="text-label-xxs font-semibold text-muted-foreground/40 hover:text-operational-cyan uppercase transition-all">
  {t('rotation_report')}
  </button>
@@ -70,3 +70,4 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
  </div>
  );
 }
+

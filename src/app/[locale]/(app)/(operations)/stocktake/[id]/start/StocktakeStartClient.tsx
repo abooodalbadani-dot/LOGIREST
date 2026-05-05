@@ -51,7 +51,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  // Redirect if already started
  useEffect(() => {
  if (session && !['DRAFT', 'PENDING'].includes(session.status)) {
- router.replace(`/stocktake/ ${id}`);
+ router.replace(`/stocktake/${id}`);
  }
  }, [session, id, locale, router]);
 
@@ -61,12 +61,12 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
- const isAlreadyLocked = !lockLoading && lockState?.is_locked && lockState.session_id !== id;
+ const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 
  const handleStart = () => {
  startStocktake.mutate(id, {
  onSuccess: () => {
- router.push(`/stocktake/ ${id}/count`);
+ router.push(`/stocktake/${id}/count`);
  }
  });
  };
@@ -122,7 +122,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  {common('created_at')}
  </p>
  <p className="text-body-md font-semibold text-foreground" dir="ltr">
- {format(new Date(session.createdAt), 'yyyy-MM-dd HH:mm')}
+ {format(new Date(session.createdAt ?? session.snapshotAt), 'yyyy-MM-dd HH:mm')}
  </p>
  </div>
  <div className="space-y-2">

@@ -66,7 +66,7 @@ export default function StocktakeVarianceClient() {
  backHref="/reports"
  />
 
- <DataTable
+  <DataTable
  data={data || []}
  columns={columns}
  isLoading={isLoading}
@@ -79,6 +79,8 @@ export default function StocktakeVarianceClient() {
  />
  }
  collectionName="reports"
+ enableVirtualization={true}
+ containerHeight="600px"
  />
  </div>
  );

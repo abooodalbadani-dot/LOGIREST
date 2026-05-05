@@ -37,6 +37,8 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { usePR } from '@/features/purchasing/hooks/usePR';
 import { useApprovePR } from '@/features/purchasing/hooks/useApprovePR';
 import { useRejectPR } from '@/features/purchasing/hooks/useRejectPR';
+import { useAuth } from '@/providers/AuthProvider';
+import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 import { 
  Dialog, 
  DialogContent, 
@@ -56,6 +58,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
  const router = useRouter();
+ const { user } = useAuth();
 
  const { data: pr, isLoading } = usePR(id);
  const approveMutation = useApprovePR();
@@ -71,9 +74,9 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
 
  const handleApprove = async () => {
  try {
- await approveMutation.mutateAsync(id);
+ await approveMutation.mutateAsync({ id, version: pr?.version ?? 0 });
  toast.success(t('approve_success'));
- router.push(`/ ${locale}/purchase-requests`);
+ router.push(`/${locale}/purchase-requests`);
  } catch (e) {
  console.error(e);
  toast.error(tc('error'));
@@ -82,10 +85,10 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
 
  const onRejectSubmit = async (values: RejectionFormValues) => {
  try {
- await rejectMutation.mutateAsync({ id, reason: values.reason });
+ await rejectMutation.mutateAsync({ id, reason: values.reason, version: pr?.version ?? 0 });
  toast.success(t('reject_success'));
  setRejectModalOpen(false);
- router.push(`/ ${locale}/purchase-requests`);
+ router.push(`/${locale}/purchase-requests`);
  } catch (e) {
  console.error(e);
  toast.error(tc('error'));
@@ -101,7 +104,7 @@ export function PRApprovalClient({ id, locale }: { id: string; locale: 'ar' | 'e
  );
  }
 
- if (!pr || pr.status !== 'SUBMITTED') {
+ if (!pr || !canPerformActionV2('PR', pr.status as DocumentStatus, 'APPROVE', user?.role)) {
  return (
  <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl">
  <AlertCircle className="w-16 h-16 text-status-error mb-4 opacity-20" />

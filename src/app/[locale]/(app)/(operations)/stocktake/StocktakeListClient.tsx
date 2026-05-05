@@ -19,6 +19,9 @@ import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse,
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+import { QueryBoundary } from '@/core/query/QueryBoundary';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export function StocktakeListClient({
  initialStatus,
@@ -109,7 +112,7 @@ export function StocktakeListClient({
  className="h-8 px-4 text-label-xxs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md group/btn transition-all"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/stocktake/ ${row.original.id}`);
+ router.push(`/stocktake/${row.original.id}`);
  }}
  >
  {tc('view') || 'Inspect'}
@@ -121,8 +124,8 @@ export function StocktakeListClient({
  ], [t, tc, locale, router]);
 
  const activeSessionsCount = data?.meta?.total || 0;
- const inProgressCount = data?.data?.filter(i => ['STARTED', 'COUNTING', 'COUNTING_COMPLETED', 'VarianceSubmitted', 'REJECTED'].includes(i.status.toUpperCase())).length || 0;
- const postedCount = data?.data?.filter(i => i.status.toUpperCase() === 'POSTED').length || 0;
+ const inProgressCount = data?.data?.filter(i => isPendingStatus('STOCKTAKE', i.status as DocumentStatus)).length || 0;
+ const postedCount = data?.data?.filter(i => isPostedStatus('STOCKTAKE', i.status as DocumentStatus)).length || 0;
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -160,105 +163,116 @@ export function StocktakeListClient({
  />
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <MetricCard
- label={t('total_sessions')}
- value={activeSessionsCount}
- icon={FileText}
- trend="active"
- />
- <MetricCard
- label={t('in_progress')}
- value={inProgressCount}
- icon={AlertCircle}
- trend="active"
- color="amber"
- />
- <MetricCard
- label={t('posted')}
- value={postedCount}
- icon={ClipboardCheck}
- trend="active"
- color="emerald"
- />
- </div>
+ <QueryBoundary 
+        isLoading={isLoading} 
+        error={data === undefined && !isLoading ? new Error('Failed to load data') : null}
+        loadingFallback={<PageSkeleton />}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <MetricCard
+            label={t('total_sessions')}
+            value={activeSessionsCount}
+            icon={FileText}
+            trend="active"
+          />
+          <MetricCard
+            label={t('in_progress')}
+            value={inProgressCount}
+            icon={AlertCircle}
+            trend="active"
+            color="amber"
+          />
+          <MetricCard
+            label={t('posted')}
+            value={postedCount}
+            icon={ClipboardCheck}
+            trend="active"
+            color="emerald"
+          />
+        </div>
 
- <div className="space-y-6">
- <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-surface-container-low rounded-lg border border-outline-low shadow-2xl">
- <div className="flex flex-col gap-3 min-w-[280px] flex-1">
- <div className="flex items-center gap-2 ms-1">
- <Filter className="w-3 h-3 text-cyan-500/60" />
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
- </div>
- <Select
- value={initialStatus || 'ALL'} onValueChange={handleStatusChange}
- >
- <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
- <SelectValue placeholder={tc('status.all')} />
- </SelectTrigger>
- <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
- <SelectItem value="ALL" className="text-label-sm font-bold">{tc('status.all')}</SelectItem>
- <SelectItem value="DRAFT" className="text-label-sm font-bold">{tc('status.draft')}</SelectItem>
- <SelectItem value="STARTED" className="text-label-sm font-bold">{tc('status.started')}</SelectItem>
- <SelectItem value="COUNTING_COMPLETED" className="text-label-sm font-bold">{tc('status.counting_completed')}</SelectItem>
- <SelectItem value="VarianceSubmitted" className="text-label-sm font-bold">{tc('status.variancesubmitted')}</SelectItem>
- <SelectItem value="APPROVED" className="text-label-sm font-bold">{tc('status.approved')}</SelectItem>
- <SelectItem value="POSTED" className="text-label-sm font-bold">{tc('status.posted')}</SelectItem>
- <SelectItem value="REJECTED" className="text-label-sm font-bold">{tc('status.rejected')}</SelectItem>
- <SelectItem value="CANCELLED" className="text-label-sm font-bold">{tc('status.cancelled')}</SelectItem>
- </SelectContent>
- </Select>
- </div>
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-surface-container-low rounded-lg border border-outline-low shadow-2xl">
+            <div className="flex flex-col gap-3 min-w-[280px] flex-1">
+              <div className="flex items-center gap-2 ms-1">
+                <Filter className="w-3 h-3 text-cyan-500/60" />
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
+              </div>
+              <Select
+                value={initialStatus || 'ALL'} 
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
+                  <SelectValue placeholder={tc('status.all')} />
+                </SelectTrigger>
+                <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
+                  <SelectItem value="ALL" className="text-label-sm font-bold">{tc('status.all')}</SelectItem>
+                  <SelectItem value="DRAFT" className="text-label-sm font-bold">{tc('status.draft')}</SelectItem>
+                  <SelectItem value="STARTED" className="text-label-sm font-bold">{tc('status.started')}</SelectItem>
+                  <SelectItem value="VARIANCE_SUBMITTED" className="text-label-sm font-bold">{tc('status.variance_submitted')}</SelectItem>
+                  <SelectItem value="APPROVED" className="text-label-sm font-bold">{tc('status.approved')}</SelectItem>
+                  <SelectItem value="POSTED" className="text-label-sm font-bold">{tc('status.posted')}</SelectItem>
+                  <SelectItem value="REJECTED" className="text-label-sm font-bold">{tc('status.rejected')}</SelectItem>
+                  <SelectItem value="CANCELLED" className="text-label-sm font-bold">{tc('status.cancelled')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
- <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">
- <div className="flex items-center gap-2 ms-1">
- <Search className="w-3 h-3 text-cyan-500/60" />
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
- </div>
- <div className="relative group">
- <input
- placeholder={t('search_placeholder') || 'Search by Session ID...'} className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
- />
- </div>
- </div>
+            <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">
+              <div className="flex items-center gap-2 ms-1">
+                <Search className="w-3 h-3 text-cyan-500/60" />
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
+              </div>
+              <div className="relative group">
+                <input
+                  placeholder={t('search_placeholder') || 'Search by Session ID...'} 
+                  className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
+                />
+              </div>
+            </div>
 
- <Button className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low hover:text-foreground">
- {tc('filters_button')}
- </Button>
- </div>
+            <Button className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low hover:text-foreground">
+              {tc('filters_button')}
+            </Button>
+          </div>
 
- <div className="bg-surface-container-lowest rounded-lg border border-outline-low overflow-hidden shadow-2xl">
- <DataTable
- columns={columns}
- data={data?.data || []}
- isLoading={isLoading}
- onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/ ${row.id}`)}
- collectionName="operations_stocktake"
- emptyState={
- <EmptyState 
- title={t('no_records') || 'No Stocktakes Found'} description={t('description') || 'Physical inventory verification sessions will appear here.'} action={
- <PermissionGate action="create" resource="stocktake">
- <Button 
- onClick={() => router.push(`/stocktake/new`)}
- className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
- >
- <Plus className="w-4 h-4 me-2" />
- {t('create_new')}
- </Button>
- </PermissionGate>
- }
- />
- }
- pagination={data?.meta ? {
- page: data.meta.page,
- pageSize: data.meta.page_size,
- total: data.meta.total,
- totalPages: data.meta.total_pages,
- onPageChange: handlePageChange
- } : undefined}
- />
- </div>
- </div>
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-low overflow-hidden shadow-2xl">
+            <DataTable
+              columns={columns}
+              data={data?.data || []}
+              isLoading={false}
+              onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
+              collectionName="operations_stocktake"
+              enableVirtualization={true}
+              containerHeight="600px"
+              emptyState={
+                <EmptyState 
+                  title={t('no_records') || 'No Stocktakes Found'} 
+                  description={t('description') || 'Physical inventory verification sessions will appear here.'} 
+                  action={
+                    <PermissionGate action="create" resource="stocktake">
+                      <Button 
+                        onClick={() => router.push(`/stocktake/new`)}
+                        className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
+                      >
+                        <Plus className="w-4 h-4 me-2" />
+                        {t('create_new')}
+                      </Button>
+                    </PermissionGate>
+                  }
+                />
+              }
+              pagination={data?.meta ? {
+                page: data.meta.page,
+                pageSize: data.meta.page_size,
+                total: data.meta.total,
+                totalPages: data.meta.total_pages,
+                onPageChange: handlePageChange
+              } : undefined}
+            />
+          </div>
+        </div>
+      </QueryBoundary>
  </div>
  );
 }

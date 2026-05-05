@@ -20,7 +20,7 @@ export default async function GoodsReceivedDetailPage(props: { params: Promise<{
 
  return (
  <ProtectedRoute requiredAction={isNew ? "create" : "view"} requiredResource="grn">
- <GRNDetailClient id={params.id} locale={params.locale as 'ar' | 'en'} />
+ <GRNDetailClient id={params.id} />
  </ProtectedRoute>
  );
 }

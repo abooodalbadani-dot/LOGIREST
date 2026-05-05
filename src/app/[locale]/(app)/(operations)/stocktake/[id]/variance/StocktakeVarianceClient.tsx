@@ -33,19 +33,19 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
 
  const [reasons, setReasons] = React.useState<Record<string, string>>({})
 
- const isInitialized = React.useRef(false)
- React.useEffect(() => {
- if (session?.items && !isInitialized.current) {
- const initialReasons: Record<string, string> = {}
- session.items.forEach(item => {
- if (item.varianceReason) {
- initialReasons[item.itemId] = item.varianceReason
- }
- })
- setReasons(initialReasons)
- isInitialized.current = true
- }
- }, [session?.items])
+  const isInitialized = React.useRef(false)
+  React.useEffect(() => {
+    if (session?.items && !isInitialized.current) {
+      const initialReasons: Record<string, string> = {}
+      session.items.forEach(item => {
+        if (item.varianceReason) {
+          initialReasons[item.id] = item.varianceReason
+        }
+      })
+      setReasons(initialReasons)
+      isInitialized.current = true
+    }
+  }, [session?.items])
 
  if (isLoading) return <LoadingSkeleton />
  if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
@@ -53,40 +53,40 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
- // Status check: Must be COUNTING_COMPLETED or VarianceSubmitted
- if (!['COUNTING_COMPLETED', 'VarianceSubmitted'].includes(session.status)) {
- router.replace(`/stocktake/ ${id}`);
+ // Status check: Must be VARIANCE_SUBMITTED
+ if (!['VARIANCE_SUBMITTED'].includes(session.status)) {
+ router.replace(`/stocktake/${id}`);
  return null;
  }
 
- const handleReasonChange = (itemId: string, value: string) => {
- setReasons(prev => ({ ...prev, [itemId]: value }))
- }
+  const handleReasonChange = (lineId: string, value: string) => {
+    setReasons(prev => ({ ...prev, [lineId]: value }))
+  }
 
- const isReasonValid = (itemId: string, variance: number) => {
- if (variance === 0) return true
- const reason = reasons[itemId] || ""
- return reason.trim().length >= 10
- }
+  const isReasonValid = (lineId: string, variance: number) => {
+    if (variance === 0) return true
+    const reason = reasons[lineId] || ""
+    return reason.trim().length >= 10
+  }
 
- const canSubmit = session.items.every(item => {
- const variance = (item.countedQty || 0) - item.snapshotQty
- return isReasonValid(item.itemId, variance)
- })
+  const canSubmit = session.items.every(item => {
+    const variance = (item.countedQty || 0) - (item.snapshotQty ?? 0)
+    return isReasonValid(item.id, variance)
+  })
 
- const handleSubmit = async () => {
- try {
- const updates = session.items.map(item => ({
- itemId: item.itemId,
- varianceReason: reasons[item.itemId] || ""
- }))
- await submitVariance.mutateAsync({ id, items: updates })
- toast.success(t('posted_success_variance'))
- router.push(`/stocktake/ ${id}`)
- } catch {
- toast.error(common('error'))
- }
- }
+  const handleSubmit = async () => {
+    try {
+      const updates = session.items.map(item => ({
+        lineId: item.id,
+        varianceReason: reasons[item.id] || ""
+      }))
+      await submitVariance.mutateAsync({ id, items: updates })
+      toast.success(t('posted_success_variance'))
+      router.push(`/stocktake/${id}`)
+    } catch {
+      toast.error(common('error'))
+    }
+  }
 
  return (
  <PermissionGate action="edit" resource="operations_stocktake">
@@ -94,7 +94,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  <PageHeader
  title={t('variance_review')}
  subtitle={`${warehouseName} ${common('dash')} ${t('variance_review_desc')}`}
- backHref={`/stocktake/ ${id}/count`}
+ backHref={`/stocktake/${id}/count`}
  >
  <div className="flex items-center gap-4">
  <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-4 py-1">
@@ -129,9 +129,9 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  <TableBody>
  {session.items.map((item) => {
  const counted = item.countedQty || 0
- const variance = counted - item.snapshotQty
+ const variance = counted - (item.snapshotQty ?? 0)
  const hasVariance = variance !== 0
- const reasonError = hasVariance && !isReasonValid(item.itemId, variance)
+  const reasonError = hasVariance && !isReasonValid(item.id, variance)
 
  return (
  <TableRow key={item.id} className={cn("transition-colors border-none group", hasVariance ? "bg-amber-500/[0.02] hover:bg-amber-500/[0.04]" : "hover:bg-white/[0.01]")}>
@@ -170,14 +170,15 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  <TableCell>
  {hasVariance ? (
  <div className="space-y-1.5">
- <Textarea
- value={reasons[item.itemId] || ""} onChange={(e) => handleReasonChange(item.itemId, e.target.value)}
- placeholder={t('mandatory_reason')}
- className={cn(
- "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
- reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
- )}
- />
+                    <Textarea
+                      value={reasons[item.id] || ""} 
+                      onChange={(e) => handleReasonChange(item.id, e.target.value)}
+                      placeholder={t('mandatory_reason')}
+                      className={cn(
+                        "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
+                        reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
+                      )}
+                    />
  {reasonError && (
  <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
  {t('validation.variance_reason_min')}

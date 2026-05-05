@@ -76,7 +76,7 @@ export default function ScannerClient() {
  </div>
  <div className="flex flex-col gap-3 w-64">
  <Button 
- onClick={() => window.location.href = `/ ${t('lots.route') || 'inventory/lots'}`}
+ onClick={() => window.location.href = `/${t('lots.route') || 'inventory/lots'}`}
  className="w-full h-12 bg-status-success hover:bg-status-success/90 text-white rounded-2xl font-semibold uppercase text-label-xs"
  >
  Load Operational Data

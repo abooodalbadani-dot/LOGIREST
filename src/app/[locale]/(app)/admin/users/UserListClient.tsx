@@ -124,7 +124,7 @@ export function UserListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/admin/users/ ${row.original.id}`);
+ router.push(`/${locale}/admin/users/${row.original.id}`);
  }}
  >
  {tCommon('view')}
@@ -139,7 +139,7 @@ export function UserListClient({ locale }: { locale: string }) {
  <PageHeader 
  title={t('title') || 'Access Management'} description={t('description') || 'Authorized identity registry and operational scoping'} actions={
  <PermissionGate action="create" resource="admin">
- <Link href={`/ ${locale}/admin/users/new`}>
+ <Link href={`/${locale}/admin/users/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_user')}
@@ -172,7 +172,7 @@ export function UserListClient({ locale }: { locale: string }) {
  data={data?.data ?? []}
  isLoading={isLoading}
  collectionName="admin_users"
- onRowClick={(row: AdminUserRow) => router.push(`/ ${locale}/admin/users/ ${row.id}`)}
+ onRowClick={(row: AdminUserRow) => router.push(`/${locale}/admin/users/${row.id}`)}
  pagination={data?.meta ? {
  page: page,
  pageSize: 10,

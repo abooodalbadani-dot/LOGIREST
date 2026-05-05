@@ -64,7 +64,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  name: "warehouseId",
  });
  const { data: lockState } = useWarehouseLock(selectedWarehouseId || null);
- const isTargetWarehouseLocked = !!lockState?.is_locked;
+ const isTargetWarehouseLocked = !!lockState?.isLocked;
 
  const { data: poDetails, isLoading: isPoLoading } = usePurchaseOrder(poIdParam || "");
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
@@ -103,7 +103,7 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  const onSubmit = (data: GRNFormValues) => {
  createGRN.mutate(data, {
  onSuccess: () => {
- router.push(`/ ${locale}/goods-received`);
+ router.push(`/${locale}/goods-received`);
  },
  });
  };
@@ -112,8 +112,8 @@ export function GRNForm({ locale }: { locale: 'ar' | 'en' }) {
  <div className="p-10 max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
  <Breadcrumb 
  items={[
- { label: tc('sidebar.dashboard'), href: `/ ${locale}` },
- { label: tc('sidebar.grn'), href: `/ ${locale}/goods-received` },
+ { label: tc('sidebar.dashboard'), href: `/${locale}` },
+ { label: tc('sidebar.grn'), href: `/${locale}/goods-received` },
  { label: t('create_new') }
  ]} 
  />

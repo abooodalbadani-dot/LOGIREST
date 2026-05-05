@@ -36,7 +36,7 @@ export function useAdminUsers(filters: { page?: number } = {}) {
 export function useAdminUser(id: string | null) {
  return useQuery({
  queryKey: ['admin/users', id],
- queryFn: () => apiClient.get(`/admin/users/ ${id}`, AuthUserSchema),
+ queryFn: () => apiClient.get(`/admin/users/${id}`, AuthUserSchema),
  enabled: !!id,
  });
 }

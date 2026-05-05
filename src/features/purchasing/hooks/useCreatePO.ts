@@ -1,11 +1,13 @@
 'use client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { PODetailSchema } from './usePO';
 
 const CreatePOPayloadSchema = z.object({
  pr_id: z.string().optional(),
+ target_warehouse_id: z.string().optional(),
  supplier_id: z.string(),
  currency_code: z.string(),
  exchange_rate: z.number(),
@@ -22,9 +24,10 @@ const CreatePOPayloadSchema = z.object({
 
 export type CreatePOPayload = z.infer<typeof CreatePOPayloadSchema>;
 
-export function useCreatePO() {
+export function useCreatePO(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: (payload: CreatePOPayload) => 
  apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload)).then(res => res.data),
  onSuccess: (data) => {

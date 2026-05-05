@@ -7,6 +7,7 @@ import { useGoodsReceipt, useUpdateGRNLine } from "@/features/purchasing/api/use
 import { useItems } from "@/features/items/api/useItems"
 import { PackageSearch } from "lucide-react"
 import { toast } from "sonner"
+import { isDocumentLocked, type DocumentStatus } from "@/core/workflow/document-engine"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -51,10 +52,10 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
  if (!grn) return <ErrorState onRetry={() => window.location.reload()} />
 
  // Security: Only DRAFT can be scanned
- if (grn.status !== "DRAFT" && grn.status !== "RECEIVED") {
+  if (isDocumentLocked('GRN', grn.status as DocumentStatus)) {
  // In many systems DRAFT is the only editable state. 
  // The prompt specifically mentioned DRAFT.
- router.replace(`/goods-received/ ${id}`)
+ router.replace(`/goods-received/${id}`)
  return null
  }
 
@@ -149,12 +150,12 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
  <PageHeader
  title={t("scan_mode")}
  subtitle={grn.grnNumber}
- backHref={`/goods-received/ ${id}`}
+ backHref={`/goods-received/${id}`}
  >
  <div className="flex items-center gap-3">
  <StatusBadge status={grn.status} />
  <Button 
- onClick={() => router.push(`/goods-received/ ${id}`)}
+ onClick={() => router.push(`/goods-received/${id}`)}
  className="rounded-xl font-semibold text-label-xs uppercase px-6"
  >
  {t("finish_scanning")}
@@ -181,6 +182,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
  statusMessage={statusMessage}
  isScanning={updateLine.isPending}
  placeholder={t("scan_placeholder")}
+ scannerMode={true}
  />
 
  <div className="pt-4 border-t border-white/5">

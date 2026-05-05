@@ -64,7 +64,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/warehouses`);
+ router.push(`/${locale}/master-data/warehouses`);
  } catch (error) {
  // Error handled by mutation hook
  }
@@ -75,7 +75,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, locale }: Prop
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/warehouses`} 
+ backHref={`/${locale}/master-data/warehouses`} 
  isSaving={isSaving} 
  onSubmit={onSubmit}
  >

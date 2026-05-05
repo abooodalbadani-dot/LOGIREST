@@ -10,6 +10,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useGRN, type GRNDetail } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
+import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { Label } from '@/components/ui/label';
@@ -66,21 +67,26 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  const expectedRate = grn?.po_fx_rate || fxRates?.[0]?.rate || 1;
  const rateVariance = ((fxRate - expectedRate) / expectedRate) * 100;
 
- // Enforce role: ADMIN or PROC_OFF (PART 1)
- const canPost = user?.role === 'ADMIN' || user?.role === 'PROC_OFFICER';
+ // Enforce role and workflow status (PART 1)
+ const canPost = useMemo(() => {
+ if (!grn || !user) return false;
+ return canPerformActionV2('GRN', grn.status as DocumentStatus, 'POST', user.role);
+ }, [grn, user]);
 
  useEffect(() => {
  if (grn && !isLoadingGRN) {
- if (grn.status === 'POSTED') {
- router.replace(`/ ${locale}/goods-received/ ${id}`);
+ // If already posted, redirect
+ if (isDocumentLocked('GRN', grn.status as DocumentStatus)) {
+ router.replace(`/${locale}/goods-received/${id}`);
+ return;
  }
  
- // Strict enforcement: only APPROVED documents can be posted
- if (grn.status !== 'APPROVED') {
- router.replace(`/ ${locale}/goods-received/ ${id}`);
+ // Strict enforcement: only documents allowed by the engine can be posted
+ if (!canPerformActionV2('GRN', grn.status as DocumentStatus, 'POST', user?.role)) {
+ router.replace(`/${locale}/goods-received/${id}`);
  }
  }
- }, [grn, isLoadingGRN, id, locale, router]);
+ }, [grn, isLoadingGRN, id, locale, router, canPost]);
 
  const handlePost = async () => {
  setIsPosting(true);
@@ -104,7 +110,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
  toast.success(t('posted_success'));
  setIsPostDialogOpen(false);
- router.push(`/ ${locale}/goods-received/ ${id}`);
+ router.push(`/${locale}/goods-received/${id}`);
  } catch {
  toast.error(tc('error'));
  } finally {

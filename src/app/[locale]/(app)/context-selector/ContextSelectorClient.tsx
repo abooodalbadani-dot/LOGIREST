@@ -39,7 +39,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  warehouseId: selectedWarehouseId,
  departmentId: activeScope.departmentId // Preserve department if any
  });
- router.push(`/ ${locale}/dashboard`);
+ router.push(`/${locale}/dashboard`);
  };
 
  const filteredWarehouses = warehouses?.filter(wh => wh.branch_id === selectedBranchId) || [];

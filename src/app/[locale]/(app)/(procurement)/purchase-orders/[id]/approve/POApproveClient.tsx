@@ -11,6 +11,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/providers/AuthProvider';
+import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 import { 
  CheckCircle2, 
  XCircle, 
@@ -31,6 +33,7 @@ export function POApproveClient({ id, locale }: Props) {
  const t = useTranslations('procurement.po');
  const tCommon = useTranslations('common');
  const router = useRouter();
+ const { user } = useAuth();
  
  const { data: po, isLoading } = usePO(id);
  const approveMutation = useApprovePO();
@@ -38,6 +41,9 @@ export function POApproveClient({ id, locale }: Props) {
  
  const [comment, setComment] = useState('');
  const [isRejecting, setIsRejecting] = useState(false);
+
+ const canApprove = po ? canPerformActionV2('PO', po.status as DocumentStatus, 'APPROVE', user?.role) : false;
+ const canReject = po ? canPerformActionV2('PO', po.status as DocumentStatus, 'REJECT', user?.role) : false;
 
  if (isLoading) {
  return (
@@ -50,23 +56,23 @@ export function POApproveClient({ id, locale }: Props) {
  if (!po) return null;
 
  const handleApprove = async () => {
- try {
- await approveMutation.mutateAsync(id);
- router.push(`/ ${locale}/purchase-orders/ ${id}`);
- } catch (e) {
- console.error(e);
- }
- };
+    try {
+      await approveMutation.mutateAsync({ id, version: po.version || 1 });
+      router.push(`/${locale}/purchase-orders/${id}`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
- const handleReject = async () => {
- if (!comment) return;
- try {
- await rejectMutation.mutateAsync({ id, reason: comment });
- router.push(`/ ${locale}/purchase-orders/ ${id}`);
- } catch (e) {
- console.error(e);
- }
- };
+  const handleReject = async () => {
+    if (!comment) return;
+    try {
+      await rejectMutation.mutateAsync({ id, reason: comment, version: po.version || 1 });
+      router.push(`/${locale}/purchase-orders/${id}`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
  return (
  <div className="flex flex-col gap-8 pb-20 max-w-5xl mx-auto">
@@ -165,7 +171,7 @@ export function POApproveClient({ id, locale }: Props) {
  <div className="space-y-6">
  <Button
  onClick={handleApprove}
- disabled={approveMutation.isPending || rejectMutation.isPending || isRejecting}
+ disabled={approveMutation.isPending || rejectMutation.isPending || isRejecting || !canApprove}
  className="w-full bg-operational-cyan text-primary-foreground hover:brightness-110 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs shadow-[0_8px_20px_rgba(var(--operational-cyan-rgb),0.2)]"
  >
  <CheckCircle2 className="w-5 h-5 me-3" />
@@ -185,7 +191,8 @@ export function POApproveClient({ id, locale }: Props) {
  <Button
  variant="outline"
  onClick={() => setIsRejecting(true)}
- className="w-full border-white/5 hover:bg-rose-400/10 hover:text-rose-400 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs"
+ disabled={!canReject}
+ className="w-full border-white/5 hover:bg-rose-400/10 hover:text-rose-400 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs disabled:opacity-50"
  >
  <XCircle className="w-5 h-5 me-3" />
  {t('actions.reject')}

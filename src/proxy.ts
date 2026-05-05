@@ -4,47 +4,63 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
-export default function proxy(request: NextRequest) {
- const pathname = request.nextUrl.pathname;
+/**
+ * Proxy function for handling internationalization and authentication.
+ * Renamed from `middleware` to `proxy` per Next.js 16 convention.
+ *
+ * CRITICAL RULES:
+ * 1. Call intlMiddleware(request) FIRST
+ * 2. No pathname splitting
+ * 3. No manual locale prefixing (e.g., /${locale}/)
+ * 4. Use request.nextUrl.clone() for redirects
+ * 5. Set pathname without locale prefix for internal routing
+ */
+export function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
 
- // Public paths that don't require authentication
- const isPublicPage =
- pathname.includes('/login') ||
- pathname.includes('/forgot-password') ||
- pathname.includes('/reset-password');
+  // 1. Skip static/internal paths immediately
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.includes('/api/') ||
+    pathname.includes('/static') ||
+    pathname.includes('/favicon.ico')
+  ) {
+    return NextResponse.next();
+  }
 
- // Check for authentication token in cookies
- const token = request.cookies.get('logirest_token')?.value;
+  // 2. Handle Authentication
+  const token = request.cookies.get('logirest_token')?.value;
+  const publicPaths = ['/login', '/forgot-password', '/reset-password'];
 
- // If the user is not authenticated and trying to access a protected page
- if (
- !token &&
- !isPublicPage &&
- pathname !== '/' &&
- !pathname.includes('/static') &&
- !pathname.includes('/favicon.ico')
- ) {
- const locale = pathname.split('/')[1] || 'ar';
- const loginUrl = new URL(`/ ${locale}/login`, request.url);
- return NextResponse.redirect(loginUrl);
- }
+  // Check if it's a public path (ignoring locale prefix if present)
+  const isPublicPage = publicPaths.some(path =>
+    pathname.endsWith(path) || pathname === path
+  );
 
- // If the user is authenticated and trying to access the login page
- if (token && isPublicPage) {
- const locale = pathname.split('/')[1] || 'ar';
- const dashboardUrl = new URL(`/ ${locale}/dashboard`, request.url);
- return NextResponse.redirect(dashboardUrl);
- }
+  if (!token && !isPublicPage && pathname !== '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
 
- return intlMiddleware(request);
+  if (token && isPublicPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
+
+  // 3. Apply intlMiddleware last for routing
+  return intlMiddleware(request);
 }
 
 export const config = {
- // Match all pathnames except for
- // - /api (API routes)
- // - /_next (Next.js internals)
- // - /static (static files)
- // - /_vercel (Vercel internals)
- // - favicon.ico, sitemap.xml, robots.txt (static files)
- matcher: ['/((?!api|_next|static|_vercel|favicon.ico|sitemap.xml|robots.txt).*)'],
+  // Match all pathnames except for internal Next.js and static files
+  matcher: [
+    // Match all pathnames except for:
+    // - api (API routes)
+    // - _next/static (static files)
+    // - _next/image (image optimization files)
+    // - favicon.ico (favicon file)
+    '/((?!api|_next/static|_next/image|favicon.ico|static).*)',
+  ],
 };

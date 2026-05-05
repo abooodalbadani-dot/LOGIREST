@@ -92,7 +92,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/master-data/warehouses/ ${row.original.id}`);
+ router.push(`/${locale}/master-data/warehouses/${row.original.id}`);
  }}
  >
  {tc('view')}
@@ -108,8 +108,8 @@ export function WarehouseListClient({ locale }: { locale: string }) {
  <div className="space-y-4">
  <Breadcrumb 
  items={[
- { label: tc('home'), href: `/ ${locale}/dashboard` },
- { label: tc('master_data'), href: `/ ${locale}/master-data` },
+ { label: tc('home'), href: `/${locale}/dashboard` },
+ { label: tc('master_data'), href: `/${locale}/master-data` },
  { label: t('title') }
  ]} 
  />
@@ -118,7 +118,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
  description={t('description')}
  actions={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/warehouses/new`}>
+ <Link href={`/${locale}/master-data/warehouses/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {tc('create')}
@@ -160,7 +160,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
  data={warehouses} 
  isLoading={isLoading}
  collectionName="master_data_warehouses"
- onRowClick={(r: Warehouse) => router.push(`/ ${locale}/master-data/warehouses/ ${r.id}`)}
+ onRowClick={(r: Warehouse) => router.push(`/${locale}/master-data/warehouses/${r.id}`)}
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30 rounded-sm">
  <div className="flex flex-col gap-2 min-w-[300px] flex-1">

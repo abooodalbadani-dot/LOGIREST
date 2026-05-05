@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { 
@@ -42,6 +43,7 @@ const MOCK_MOVEMENTS: LotMovement[] = [
 
 export default function LotBalanceClient() {
  const locale = useLocale() as 'ar' | 'en';
+ const router = useRouter();
  const isRtl = locale === 'ar';
  const t = useTranslations('operational.lots');
  const tc = useTranslations('common');
@@ -210,7 +212,7 @@ export default function LotBalanceClient() {
  <div className="flex items-center gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-2xl transition-all hover:scale-[1.02] group">
  <div className="flex items-center gap-6">
  <button 
- onClick={() => window.location.href = `/ ${locale}/inventory/scan-mode`}
+ onClick={() => router.push('/inventory/scan-mode')}
  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
  >
  <Scan className="w-4 h-4 text-operational-cyan" />
@@ -218,7 +220,7 @@ export default function LotBalanceClient() {
  </button>
  <div className="w-px h-6 bg-white/5" />
  <button 
- onClick={() => window.location.href = `/ ${locale}/transfers/new`}
+ onClick={() => router.push('/transfers/new')}
  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
  >
  <MapPin className="w-4 h-4 text-operational-cyan/60" />
@@ -234,7 +236,7 @@ export default function LotBalanceClient() {
  </button>
  <div className="w-px h-6 bg-white/5" />
  <button 
- onClick={() => window.location.href = `/ ${locale}/adjustments/new`}
+ onClick={() => router.push('/adjustments/new')}
  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
  >
  <Edit className="w-4 h-4 text-operational-cyan/60" />

@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter, Link } from '@/i18n/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { usePRList, PRSummary } from '@/features/purchasing/hooks/usePRList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search } from 'lucide-react';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -18,8 +17,10 @@ import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { isDocumentLocked, canPerformActionV2, DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
 
-export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
+export function PRListClient() {
+ const locale = useLocale();
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
  const router = useRouter();
@@ -86,9 +87,8 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
  variant="ghost" 
  size="icon" 
  className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-cyan-500/20 text-muted-foreground/60 hover:text-cyan-500 transition-all group"
- onClick={(e) => {
- e.stopPropagation();
- router.push(`/ ${locale}/purchase-requests/ ${row.original.id}`);
+ onClick={() => {
+  router.push(`/purchase-requests/${row.original.id}`);
  }}
  >
  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
@@ -100,13 +100,15 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
  ], [t, tc, locale, router]);
 
  const breadcrumbs = [
- { label: tc('sidebar.dashboard'), href: `/ ${locale}/dashboard` },
- { label: t('title'), href: `/ ${locale}/purchase-requests` },
+  { label: tc('sidebar.dashboard'), href: '/dashboard' },
+  { label: t('title'), href: '/purchase-requests' },
  ];
 
- const totalPRs = data?.meta?.total || 0;
- const approvedCount = data?.data?.filter(p => p.status === 'APPROVED').length || 0;
- const pendingCount = data?.data?.filter(p => p.status === 'DRAFT' || p.status === 'SUBMITTED').length || 0;
+  const totalPRs = data?.meta?.total || 0;
+  
+  // Metrics calculation (Note: calculated from current page data.data)
+  const approvedCount = data?.data?.filter(p => isApprovedStatus('PR', p.status as DocumentStatus)).length || 0;
+  const pendingCount = data?.data?.filter(p => isPendingStatus('PR', p.status as DocumentStatus)).length || 0;
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -117,7 +119,7 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
  description={t('description')}
  actions={
  <PermissionGate action="create" resource="pr">
- <Link href={`/ ${locale}/purchase-requests/new`}>
+  <Link href="/purchase-requests/new">
  <Button className="h-12 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-4 h-4 me-2" />
  {t('create_new')}
@@ -154,7 +156,7 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: PRSummary) => router.push(`/ ${locale}/purchase-requests/ ${row.id}`)}
+  onRowClick={(row: PRSummary) => router.push(`/purchase-requests/${row.id}`)}
  collectionName="procurement_pr"
  emptyState={
  <EmptyState 
@@ -162,7 +164,7 @@ export function PRListClient({ locale }: { locale: 'ar' | 'en' }) {
  description={t('no_requests_desc')}
  action={
  <PermissionGate action="create" resource="pr">
- <Link href={`/ ${locale}/purchase-requests/new`}>
+  <Link href="/purchase-requests/new">
  <Button className="h-10 px-6 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}

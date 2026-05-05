@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,12 @@ import { useTransfer, TransferLine } from '@/features/operations/hooks/useTransf
 import { useShipTransfer } from '@/features/operations/hooks/useShipTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { Truck, ArrowLeft, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { useAuth } from '@/providers/AuthProvider';
+import { AlertCircle, Truck, ArrowLeft } from 'lucide-react';
 
 export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.transfer');
@@ -23,6 +27,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  const router = useRouter();
 
  const { data: transfer, isLoading } = useTransfer(id);
+ const { user } = useAuth();
  const shipTransfer = useShipTransfer();
 
  const [scannedLines, setScannedLines] = useState<Record<string, number>>({});
@@ -32,7 +37,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
 
  const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
  const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
- const isEitherLocked = (fromLockState?.is_locked || toLockState?.is_locked) ?? false;
+ const isEitherLocked = (fromLockState?.isLocked || toLockState?.isLocked) ?? false;
 
  const handleScan = useCallback((barcode: string) => {
  const line = transfer?.lines.find(l => l.item?.code === barcode);
@@ -49,18 +54,19 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  setStatusMessage(t('scan_error'));
  setTimeout(() => setScanStatus('idle'), 2000);
  }
- }, [transfer, t]);
+ }, [transfer, t, locale]);
 
  const handleShip = async () => {
  try {
- await shipTransfer.mutateAsync(id);
- router.push(`/ ${locale}/transfers/ ${id}`);
+ if (!transfer) return;
+ await shipTransfer.mutateAsync({ id, version: transfer.version || 1 });
+ router.push(`/transfers/${id}`);
  } catch (e) {
  console.error(e);
  }
  };
 
- if (isLoading) {
+ if (isLoading || !transfer) {
  return (
  <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
  <div className="relative w-24 h-24 flex items-center justify-center text-cyan-500">
@@ -70,12 +76,12 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  );
  }
 
- if (transfer?.transfer_status !== 'DRAFT') {
+  if (!canPerformActionV2('TRANSFER', transfer?.transfer_status as DocumentStatus, 'SHIP', user?.role)) {
  return (
  <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
  <AlertCircle className="w-12 h-12 text-status-error" />
  <p className="font-bold text-title-sm">{t('invalid_status_for_ship')}</p>
- <Button onClick={() => router.push(`/ ${locale}/transfers/ ${id}`)} variant="outline">
+ <Button onClick={() => router.push(`/transfers/${id}`)} variant="outline">
  {tCommon('back')}
  </Button>
  </div>
@@ -89,8 +95,8 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  <div className="flex items-center justify-between">
  <Breadcrumb 
  items={[
- { label: t('title'), href: `/ ${locale}/transfers` },
- { label: transfer.document_number, href: `/ ${locale}/transfers/ ${id}` },
+ { label: t('title'), href: `/transfers` },
+ { label: transfer.document_number, href: `/transfers/${id}` },
  { label: t('ship') }
  ]} 
  />
@@ -122,8 +128,8 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  />
 
  <div className="space-y-4">
- {fromLockState?.is_locked && <LockBanner lockState={fromLockState} />}
- {toLockState?.is_locked && toLockState.session_id !== fromLockState?.session_id && (
+ {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
+ {toLockState?.isLocked && toLockState.sessionId !== fromLockState?.sessionId && (
  <LockBanner lockState={toLockState} />
  )}
  </div>
@@ -150,6 +156,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  placeholder={t('scan_placeholder_ship')}
  scanStatus={scanStatus}
  statusMessage={statusMessage}
+ scannerMode={true}
  className="w-full"
  />
  </div>
@@ -197,7 +204,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
  ? "bg-cyan-500/10 text-cyan-500 border border-cyan-500/20"
  : "bg-surface-container-highest text-muted-foreground/40 border border-white/5"
  )}>
- {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/ ${line.qty}`}
+ {isFullyScanned ? `✓ ${t('verified_label')}` : `${scanned}/${line.qty}`}
  </div>
  </div>
  );

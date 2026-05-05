@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
@@ -39,51 +40,55 @@ export function useKitchenRequestList(filters: { status?: string; department_id?
 export function useKitchenRequest(id: string) {
  return useQuery({
  queryKey: ['kitchen-requests', id],
- queryFn: () => apiClient.get(`/operations/kitchen-requests/ ${id}`, KitchenRequestDetailSchema),
+ queryFn: () => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema),
  enabled: !!id,
  });
 }
 
-export function useCreateKitchenRequest() {
+export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: (data: CreateKitchenRequestDTO & { isDraft?: boolean }) => 
  apiClient.post('/operations/kitchen-requests', KitchenRequestDetailSchema, data),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
  },
- onError: (error: Error) => {
+ onError: (error) => {
  console.error('Failed to create kitchen request:', error);
  },
  });
 }
 
-export function useUpdateKitchenRequestStatus() {
- const queryClient = useQueryClient();
- return useMutation({
- mutationFn: ({ id, status, reason }: { id: string; status: string; reason?: string }) =>
- apiClient.post(`/operations/kitchen-requests/ ${id}/status`, KitchenRequestDetailSchema, { status, reason }),
- onSuccess: (_, variables) => {
- queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
- queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
- },
- onError: (error: Error) => {
- console.error('Failed to update kitchen request status:', error);
- },
- });
+export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+   return useSafeMutation({
+     onConflict: options?.onConflict,
+     mutationFn: ({ id, status, reason, version }: { id: string; status: string; reason?: string; version: number }) =>
+       apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason, version }),
+  onSuccess: (_, variables) => {
+  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
+  queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
+  },
+  onError: (error) => {
+    console.error('Failed to update kitchen request status:', error);
+  },
+  });
 }
 
-export function useFulfillKitchenRequest() {
- const queryClient = useQueryClient();
- return useMutation({
- mutationFn: ({ id, items }: { id: string; items: { itemId: string; fulfilledQuantity: number }[] }) =>
- apiClient.post(`/operations/kitchen-requests/ ${id}/fulfill`, KitchenRequestDetailSchema, { items }),
- onSuccess: (_, variables) => {
- queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
- queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
- },
- onError: (error: Error) => {
- console.error('Failed to fulfill kitchen request:', error);
- },
- });
+export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+   return useSafeMutation({
+     onConflict: options?.onConflict,
+     mutationFn: ({ id, items, version }: { id: string; items: { itemId: string; fulfilledQuantity: number }[]; version: number }) =>
+       apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items, version }),
+  onSuccess: (_, variables) => {
+  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
+  queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
+  },
+  onError: (error) => {
+    console.error('Failed to fulfill kitchen request:', error);
+  },
+  });
 }
+

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,7 @@ export function TransferNewClient() {
  // Warehouse locks
  const { data: fromLockState } = useWarehouseLock(fromWarehouseId);
  const { data: toLockState } = useWarehouseLock(toWarehouseId);
- const isEitherLocked = !!fromLockState?.is_locked || !!toLockState?.is_locked;
+ const isEitherLocked = !!fromLockState?.isLocked || !!toLockState?.isLocked;
 
  const handleAddItem = (barcode: string) => {
  const item = items?.find(i => i.sku === barcode);
@@ -83,7 +84,7 @@ export function TransferNewClient() {
  uom_id: l.uom_id
  }))
  });
- router.push(`/ ${locale}/transfers`);
+ router.push(`/transfers`);
  } catch (e) {
  console.error(e);
  }
@@ -95,8 +96,8 @@ export function TransferNewClient() {
  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <Breadcrumb 
  items={[
- { label: tCommon('modules.operations'), href: `/ ${locale}/transfers` },
- { label: t('title'), href: `/ ${locale}/transfers` },
+ { label: tCommon('modules.operations'), href: `/transfers` },
+ { label: t('title'), href: `/transfers` },
  { label: t('create_new') }
  ]} 
  />
@@ -127,8 +128,8 @@ export function TransferNewClient() {
  />
 
  <div className="space-y-2">
- {fromLockState?.is_locked && <LockBanner lockState={fromLockState} />}
- {toLockState?.is_locked && toLockState.session_id !== fromLockState?.session_id && (
+ {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
+ {toLockState?.isLocked && toLockState.sessionId !== fromLockState?.sessionId && (
  <LockBanner lockState={toLockState} />
  )}
  </div>

@@ -8,7 +8,8 @@ import { z } from "zod"
 export const BadgeStatusSchema = z.enum([
  'DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'RECEIVED', 'REJECTED', 'CANCELLED', 
  'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL',
- 'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 'COUNTING_COMPLETED', 'VARIANCESUBMITTED'
+ 'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 'COUNTING_COMPLETED', 'VARIANCE_SUBMITTED',
+ 'FULFILLED'
 ]);
 
 export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
@@ -52,7 +53,7 @@ export function StatusBadge({ className, variant, status, children, ...props }: 
  const s = status.toUpperCase();
  if (["APPROVED", "DELIVERED", "COMPLETED", "IN_STOCK", "ACTIVE", "HEALTHY"].includes(s)) {
  mappedVariant = "success";
- } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL", "VARIANCESUBMITTED"].includes(s)) {
+ } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL", "VARIANCE_SUBMITTED"].includes(s)) {
  mappedVariant = "warning";
  } else if (["REJECTED", "CANCELLED", "OUT_OF_STOCK", "EXPIRED", "LOCKED", "INACTIVE"].includes(s)) {
  mappedVariant = "error";

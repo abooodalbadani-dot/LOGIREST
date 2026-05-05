@@ -7,9 +7,9 @@ export function LockBanner({ lockState }: { lockState: WarehouseLockState | unde
  const t = useTranslations('operations.stocktake');
  const tc = useTranslations('common');
  
- if (!lockState?.is_locked) return null;
+ if (!lockState?.isLocked) return null;
  
- const startTime = lockState.lock_started_at ? new Date(lockState.lock_started_at).toLocaleString() : '';
+ const startTime = lockState.lockStartedAt ? new Date(lockState.lockStartedAt).toLocaleString() : '';
 
  return (
  <div className="w-full bg-status-warning/10 sm:rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-700 relative overflow-hidden group backdrop-blur-md">
@@ -22,7 +22,7 @@ export function LockBanner({ lockState }: { lockState: WarehouseLockState | unde
  </div>
  <div className="flex flex-col gap-0.5">
  <span className="font-semibold text-status-warning uppercase text-label-xs">
- {t('warehouse_locked_banner', { sessionNumber: lockState.session_number || 'N/A' })}
+ {t('warehouse_locked_banner', { sessionNumber: lockState.sessionNumber || 'N/A' })}
  </span>
  <span className="text-status-warning/80 text-label-sm font-bold leading-relaxed">
  {startTime ? (

@@ -41,7 +41,7 @@ export function PageHeader({
  href={backHref}
  className="p-2 -ms-2 hover:bg-surface-container-high rounded-full transition-colors text-muted-foreground hover:text-foreground"
  >
- <ArrowLeft className="w-6 h-6" />
+ <ArrowLeft className="w-6 h-6 rtl:rotate-180" />
  </Link>
  )}
  {icon && <div className="flex-shrink-0">{icon}</div>}

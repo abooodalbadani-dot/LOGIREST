@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -68,24 +68,24 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  name: "items",
  });
 
- const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
- try {
- await createRequest.mutateAsync({ ...values, isDraft });
- router.push(`/ ${locale}/kitchen-requests`);
- } catch (error) {
- console.error('Failed to create kitchen request', error);
- }
- };
+  const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
+    try {
+      await createRequest.mutateAsync({ ...values, isDraft });
+      router.push('/kitchen-requests');
+    } catch (error) {
+      console.error('Failed to create kitchen request', error);
+    }
+  };
 
- return (
- <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
- <Breadcrumb 
- items={[
- { label: tCommon('inventory'), href: '#' },
- { label: t('title'), href: `/ ${locale}/kitchen-requests` },
- { label: t('create_new') }
- ]} 
- />
+  return (
+    <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <Breadcrumb 
+        items={[
+          { label: tCommon('inventory'), href: '#' },
+          { label: t('title'), href: '/kitchen-requests' },
+          { label: t('create_new') }
+        ]} 
+      />
  
  <PageHeader
  title={t('create_new')}

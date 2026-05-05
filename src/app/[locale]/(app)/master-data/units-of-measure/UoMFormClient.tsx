@@ -60,7 +60,7 @@ export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/units-of-measure`);
+ router.push(`/${locale}/master-data/units-of-measure`);
  } catch (error) {
  // Handled in hook
  }
@@ -73,7 +73,7 @@ export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/units-of-measure`}
+ backHref={`/${locale}/master-data/units-of-measure`}
  isSaving={isSaving}
  onSubmit={onSubmit}
  >

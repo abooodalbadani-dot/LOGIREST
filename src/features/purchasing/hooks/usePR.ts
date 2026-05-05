@@ -27,6 +27,7 @@ export const PRDetailSchema = z.object({
  status: BadgeStatusSchema,
  department_id: z.string(),
  expected_date: z.string(),
+ version: z.number().optional(),
  notes: z.string().nullable().optional(),
  created_at: z.string().optional(),
  created_by: z.string().optional(),
@@ -38,7 +39,7 @@ export type PRDetail = z.infer<typeof PRDetailSchema>;
 export function usePR(id: string | null) {
  return useQuery({
  queryKey: ['purchase-request', id],
- queryFn: () => apiClient.get(`/procurement/purchase-requests/ ${id}`, z.object({ data: PRDetailSchema })).then(res => res.data),
+ queryFn: () => apiClient.get(`/procurement/purchase-requests/${id}`, z.object({ data: PRDetailSchema })).then(res => res.data),
  enabled: !!id,
  staleTime: 60_000,
  });

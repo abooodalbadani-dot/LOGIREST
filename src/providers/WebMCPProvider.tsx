@@ -24,9 +24,18 @@ import {
  TransferSchema, 
  AdjustmentSchema 
 } from '@/types/documents';
-import { StocktakeSessionSchema } from '@/types/stocktake';
+import { StocktakeSessionSchema, StocktakeCountSchema } from '@/types/stocktake';
 import { AuthUserSchema } from '@/types/auth';
 import { AuditLogEntrySchema } from '@/types/notifications';
+import { 
+  AvailableInventoryReportSchema, 
+  StockMovementsReportSchema, 
+  ExpiryReportSchema, 
+  StocktakeVarianceReportSchema, 
+  ProcurementStatusReportSchema, 
+  CurrencySummaryReportSchema 
+} from '@/features/reports/hooks/useReports';
+import { SettingsSchema } from '@/features/admin/hooks/useAdminSettings';
 import { z } from 'zod';
 
 interface WebMCPContextType {
@@ -120,7 +129,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  if (params.warehouse_id) qs.append('warehouse_id', String(params.warehouse_id));
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- const path = `/inventory/balance ${qs.toString() ? `?${qs.toString()}` : ''}`;
+ const path = `/inventory/balance${qs.toString() ? `?${qs.toString()}` : ''}`;
  return apiClient.get(path, paginatedSchema(StockBalanceItemSchema));
  }
  });
@@ -158,7 +167,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/items/ ${args.id}`, ItemSchema);
+ return apiClient.get(`/items/${args.id}`, ItemSchema);
  }
  });
 
@@ -174,7 +183,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/suppliers/ ${args.id}`, SupplierSchema);
+ return apiClient.get(`/suppliers/${args.id}`, SupplierSchema);
  }
  });
 
@@ -190,7 +199,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/warehouses/ ${args.id}`, WarehouseSchema);
+ return apiClient.get(`/warehouses/${args.id}`, WarehouseSchema);
  }
  });
 
@@ -212,7 +221,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
  if (params.document_type) qs.append('document_type', String(params.document_type));
- const path = `/inventory/movements ${qs.toString() ? `?${qs.toString()}` : ''}`;
+ const path = `/inventory/movements${qs.toString() ? `?${qs.toString()}` : ''}`;
  return apiClient.get(path, paginatedSchema(InventoryMovementSchema));
  }
  });
@@ -285,7 +294,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.status) qs.append('transfer_status', String(params.status));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/operations/transfers ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(TransferSchema));
+ return apiClient.get(`/operations/transfers${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(TransferSchema));
  }
  });
 
@@ -305,44 +314,45 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.status) qs.append('status', String(params.status));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/operations/adjustments ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(AdjustmentSchema));
+ return apiClient.get(`/operations/adjustments${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(AdjustmentSchema));
  }
  });
 
  // Register Stocktakes Tool
  register({
- name: 'get_stocktakes',
- description: 'Fetch the list of stocktake sessions.',
- parameters: {
- type: 'object',
- properties: {
- status: { type: 'string', description: 'Filter by status (DRAFT, COMPLETED)' },
- page: { type: 'number', description: 'Page number' }
- }
- },
- execute: async (args: Record<string, unknown>) => {
- const params = args as { status?: string; page?: number };
- const qs = new URLSearchParams();
- if (params.status) qs.append('status', String(params.status));
- if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/operations/stocktakes ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(StocktakeSessionSchema));
- }
+   name: 'get_stocktakes',
+   description: 'Fetch the list of stocktake sessions.',
+   parameters: {
+     type: 'object',
+     properties: {
+       status: { type: 'string', description: 'Filter by status (DRAFT, COMPLETED)' },
+       page: { type: 'number', description: 'Page number' }
+     }
+   },
+   execute: async (args: Record<string, unknown>) => {
+     const params = args as { status?: string; page?: number };
+     const qs = new URLSearchParams();
+     if (params.status) qs.append('status', String(params.status));
+     if (params.page) qs.append('page', String(params.page));
+     const path = `/stocktake/sessions${qs.toString() ? `?${qs.toString()}` : ''}`;
+     return apiClient.get(path, paginatedSchema(StocktakeSessionSchema));
+   }
  });
 
  // Register Stocktake Details Tool
  register({
- name: 'get_stocktake_details',
- description: 'Fetch detailed information about a stocktake session, including snapshotted and counted quantities.',
- parameters: {
- type: 'object',
- properties: {
- id: { type: 'string', description: 'Stocktake ID' }
- },
- required: ['id']
- },
- execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/operations/stocktakes/ ${args.id}`, StocktakeSessionSchema);
- }
+   name: 'get_stocktake_details',
+   description: 'Fetch detailed information about a stocktake session, including snapshotted and counted quantities.',
+   parameters: {
+     type: 'object',
+     properties: {
+       id: { type: 'string', description: 'Stocktake ID' }
+     },
+     required: ['id']
+   },
+   execute: async (args: Record<string, unknown>) => {
+     return apiClient.get(`/stocktake/sessions/${args.id}`, StocktakeSessionSchema);
+   }
  });
 
  // Register Issue Details Tool
@@ -357,36 +367,53 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  required: ['id']
  },
  execute: async (args: Record<string, unknown>) => {
- return apiClient.get(`/operations/issues/ ${args.id}`, StockIssueSchema);
+ return apiClient.get(`/operations/issues/${args.id}`, StockIssueSchema);
  }
  });
 
  // Register Stocktake Actions Tool
- register({
- name: 'manage_stocktake_status',
- description: 'Change the status of a stocktake session (START, BEGIN_COUNTING, APPROVE, POST).',
- parameters: {
- type: 'object',
- properties: {
- id: { type: 'string', description: 'Stocktake ID' },
- action: { type: 'string', description: 'Action to perform (start, begin-counting, approve, post)' },
- comment: { type: 'string', description: 'Optional comment for approval' }
- },
- required: ['id', 'action']
- },
- execute: async (args: Record<string, unknown>) => {
- const { id, action, comment } = args as { id: string; action: string; comment?: string };
- const pathMap: Record<string, string> = {
- 'start': `/operations/stocktakes/ ${id}/start`,
- 'begin-counting': `/operations/stocktakes/ ${id}/begin-counting`,
- 'approve': `/operations/stocktakes/ ${id}/approve`,
- 'post': `/operations/stocktakes/ ${id}/post`
- };
- const path = pathMap[action];
- if (!path) throw new Error('Invalid action');
- return apiClient.post(path, StocktakeSessionSchema, { comment });
- }
- });
+  register({
+    name: 'manage_stocktake_status',
+    description: 'Change the status of a stocktake session (START, COUNT, SUBMIT, APPROVE, POST).',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Stocktake ID' },
+        action: { type: 'string', description: 'Action to perform (start, count, submit, approve, post)' },
+        comment: { type: 'string', description: 'Optional comment for approval' },
+        version: { type: 'number', description: 'Optimistic concurrency version' },
+        confirmation: { type: 'string', description: 'Confirmation string for destructive actions (e.g., ACKNOWLEDGE_IRREVERSIBLE)' }
+      },
+      required: ['id', 'action']
+    },
+    execute: async (args: Record<string, unknown>) => {
+      const { id, action, ...payload } = args as { id: string; action: string; comment?: string; version?: number; confirmation?: string };
+      // Normalize action to match API expectation (start, count, submit, approve, post)
+      const normalizedAction = action.toLowerCase();
+      return apiClient.post(`/stocktake/sessions/${id}/${normalizedAction}`, StocktakeSessionSchema, payload);
+    }
+  });
+
+  // Register Stocktake Item Update Tool
+  register({
+    name: 'update_item_count',
+    description: 'Update the counted quantity for a specific item in an active stocktake session.',
+    parameters: {
+      type: 'object',
+      properties: {
+        stocktake_id: { type: 'string', description: 'ID of the stocktake session' },
+        line_id: { type: 'string', description: 'ID of the line item (cnt-X)' },
+        counted_qty: { type: 'number', description: 'The physical count recorded' },
+        variance_reason: { type: 'string', description: 'Optional reason for discrepancy' },
+        version: { type: 'number', description: 'Optimistic concurrency version' }
+      },
+      required: ['stocktake_id', 'line_id', 'counted_qty']
+    },
+    execute: async (args: Record<string, unknown>) => {
+      const { stocktake_id, line_id, ...body } = args as { stocktake_id: string; line_id: string; counted_qty: number; variance_reason?: string; version?: number };
+      return apiClient.put(`/stocktake/sessions/${stocktake_id}/counts/${line_id}`, StocktakeCountSchema, body);
+    }
+  });
 
  // Register Suppliers Tool
  register({
@@ -404,7 +431,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/suppliers ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(SupplierSchema));
+ return apiClient.get(`/suppliers${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(SupplierSchema));
  }
  });
 
@@ -424,7 +451,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/branches ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(BranchSchema));
+ return apiClient.get(`/branches${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(BranchSchema));
  }
  });
 
@@ -446,7 +473,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  if (params.search) qs.append('search', String(params.search));
  if (params.category_id) qs.append('category_id', String(params.category_id));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/items ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(ItemSchema));
+ return apiClient.get(`/items${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(ItemSchema));
  }
  });
 
@@ -466,7 +493,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.status) qs.append('status', String(params.status));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/procurement/purchase-orders ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(PurchaseOrderSchema));
+ return apiClient.get(`/procurement/purchase-orders${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(PurchaseOrderSchema));
  }
  });
 
@@ -486,7 +513,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.status) qs.append('status', String(params.status));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/procurement/purchase-requests ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(PurchaseRequestSchema));
+ return apiClient.get(`/procurement/purchase-requests${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(PurchaseRequestSchema));
  }
  });
 
@@ -506,7 +533,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.status) qs.append('status', String(params.status));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/procurement/goods-received ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(GRNSchema));
+ return apiClient.get(`/procurement/goods-received${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(GRNSchema));
  }
  });
 
@@ -526,7 +553,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/warehouses ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(WarehouseSchema));
+ return apiClient.get(`/warehouses${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(WarehouseSchema));
  }
  });
 
@@ -546,7 +573,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/barcodes ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(BarcodeSchema));
+ return apiClient.get(`/barcodes${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(BarcodeSchema));
  }
  });
 
@@ -566,7 +593,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/categories ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(CategorySchema));
+ return apiClient.get(`/categories${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(CategorySchema));
  }
  });
 
@@ -586,7 +613,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/currencies ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(CurrencySchema));
+ return apiClient.get(`/currencies${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(CurrencySchema));
  }
  });
 
@@ -606,7 +633,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/departments ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(DepartmentSchema));
+ return apiClient.get(`/departments${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(DepartmentSchema));
  }
  });
 
@@ -626,7 +653,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const qs = new URLSearchParams();
  if (params.search) qs.append('search', String(params.search));
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/units-of-measure ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(UoMSchema));
+ return apiClient.get(`/units-of-measure${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(UoMSchema));
  }
  });
 
@@ -644,7 +671,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const params = args as { page?: number };
  const qs = new URLSearchParams();
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/admin/users ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(AuthUserSchema));
+ return apiClient.get(`/admin/users${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(AuthUserSchema));
  }
  });
 
@@ -662,7 +689,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  const params = args as { page?: number };
  const qs = new URLSearchParams();
  if (params.page) qs.append('page', String(params.page));
- return apiClient.get(`/admin/audit-logs ${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(AuditLogEntrySchema));
+ return apiClient.get(`/admin/audit-logs${qs.toString() ? `?${qs.toString()}` : ''}`, paginatedSchema(AuditLogEntrySchema));
  }
  });
 
@@ -704,7 +731,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  },
  execute: async (args: Record<string, unknown>) => {
  const { order_id } = args as { order_id: string };
- return apiClient.post(`/procurement/purchase-orders/ ${order_id}/post`, PurchaseOrderSchema, {});
+ return apiClient.post(`/procurement/purchase-orders/${order_id}/post`, PurchaseOrderSchema, {});
  }
  });
 
@@ -723,7 +750,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  },
  execute: async (args: Record<string, unknown>) => {
  const { grn_id, ...payload } = args as { grn_id: string, fx_rate: number, confirmation: string };
- return apiClient.post(`/procurement/grns/ ${grn_id}/post`, GRNSchema, payload);
+ return apiClient.post(`/procurement/grns/${grn_id}/post`, GRNSchema, payload);
  }
  });
 
@@ -806,7 +833,7 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  },
  execute: async (args: Record<string, unknown>) => {
  const { issue_id } = args as { issue_id: string };
- return apiClient.post(`/operations/issues/ ${issue_id}/post`, StockIssueSchema, {});
+ return apiClient.post(`/operations/issues/${issue_id}/post`, StockIssueSchema, {});
  }
  });
 
@@ -832,18 +859,105 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  }
  });
 
- // Register Dashboard KPIs Tool
- register({
- name: 'get_dashboard_kpis',
- description: 'Fetch high-level performance indicators (inventory value, low stock count, etc.).',
- parameters: {
- type: 'object',
- properties: {}
- },
- execute: async () => {
- return apiClient.get('/dashboard/kpis', DashboardKPISchema);
- }
- });
+  register({
+    name: 'get_current_user',
+    description: 'Fetch information about the currently logged-in user, including role and permissions.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => {
+      return apiClient.get('/auth/me', AuthUserSchema);
+    }
+  });
+
+  // Register Dashboard KPIs Tool
+  register({
+    name: 'get_dashboard_kpis',
+    description: 'Fetch high-level performance indicators (inventory value, low stock count, etc.).',
+    parameters: {
+      type: 'object',
+      properties: {}
+    },
+    execute: async () => {
+      return apiClient.get('/dashboard/kpis', DashboardKPISchema);
+    }
+  });
+
+  // --- REPORTING TOOLS ---
+
+  register({
+    name: 'get_available_inventory_report',
+    description: 'Fetch a detailed report of current stock levels, reserved quantities, and available balances.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => apiClient.get('/reports/available-inventory', z.array(AvailableInventoryReportSchema))
+  });
+
+  register({
+    name: 'get_stock_movements_report',
+    description: 'Fetch a historical report of all stock movements across the system.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => apiClient.get('/reports/movements', z.array(StockMovementsReportSchema))
+  });
+
+  register({
+    name: 'get_expiry_report',
+    description: 'Fetch a report of items nearing expiry or already expired.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => apiClient.get('/reports/expiry', z.array(ExpiryReportSchema))
+  });
+
+  register({
+    name: 'get_stocktake_variance_report',
+    description: 'Fetch the most recent stocktake variance report.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => apiClient.get('/reports/stocktake-variance', z.array(StocktakeVarianceReportSchema))
+  });
+
+  register({
+    name: 'get_procurement_status_report',
+    description: 'Fetch a summary report of all active and historical procurement documents.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => apiClient.get('/reports/procurement-status', z.array(ProcurementStatusReportSchema))
+  });
+
+  register({
+    name: 'get_currency_summary_report',
+    description: 'Fetch a summary of total spend and balances across different currencies.',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => apiClient.get('/reports/currency-summaries', z.array(CurrencySummaryReportSchema))
+  });
+
+  // --- ADMIN TOOLS ---
+
+  register({
+    name: 'get_system_settings',
+    description: 'Fetch global system settings (name, default language, base currency).',
+    parameters: { type: 'object', properties: {} },
+    execute: async () => {
+      // Mocked in useAdminSettings, we simulate the same here
+      return {
+        system_name: 'LogiRest Enterprise',
+        default_language: 'en',
+        base_currency: 'SAR',
+        sender_name: 'LogiRest System',
+        reply_to_email: 'no-reply@logirest.com',
+      };
+    }
+  });
+
+  register({
+    name: 'update_system_settings',
+    description: 'Update global system settings. (Admin only)',
+    parameters: {
+      type: 'object',
+      properties: {
+        system_name: { type: 'string' },
+        default_language: { type: 'string' },
+        base_currency: { type: 'string' }
+      }
+    },
+    execute: async (args: Record<string, unknown>) => {
+      return apiClient.post('/admin/settings', SettingsSchema, args);
+    }
+  });
 
  setTimeout(() => setRegisteredTools(toolsMetadata), 0);
  console.log('⚡ WebMCP tools registered successfully');
@@ -859,3 +973,4 @@ export function WebMCPProvider({ children }: { children: React.ReactNode }) {
  </WebMCPContext.Provider>
  );
 }
+

@@ -25,7 +25,7 @@ export default async function GRNPostPage(props: { params: Promise<{ locale: str
  let grn;
  try {
  // We try to fetch the GRN to check status server-side
- const response = await apiClient.get(`/procurement/grns/ ${params.id}`, z.object({ data: GRNDetailSchema }));
+ const response = await apiClient.get(`/procurement/grns/${params.id}`, z.object({ data: GRNDetailSchema }));
  grn = response.data;
  } catch {
  // Fallback if API fails (e.g. in development without mock server)
@@ -35,10 +35,10 @@ export default async function GRNPostPage(props: { params: Promise<{ locale: str
  // PART 1 logic
  if (grn) {
  if (grn.status === 'POSTED') {
- redirect(`/ ${params.locale}/goods-received/ ${params.id}`);
+ redirect(`/${params.locale}/goods-received/${params.id}`);
  }
  if (grn.status !== 'APPROVED') { 
- redirect(`/ ${params.locale}/goods-received/ ${params.id}`);
+ redirect(`/${params.locale}/goods-received/${params.id}`);
  }
  }
 

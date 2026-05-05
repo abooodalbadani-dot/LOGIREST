@@ -19,100 +19,104 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 
+import { canPerformActionV2, type DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
+
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
- const t = useTranslations('procurement.po');
- const tc = useTranslations('common');
- const router = useRouter();
+  const t = useTranslations('procurement.po');
+  const tc = useTranslations('common');
+  const router = useRouter();
 
- const [page, setPage] = useState(1);
- const [status, setStatus] = useState<string>('');
- const [supplier_id, setSupplierId] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<string>('');
+  const [supplier_id, setSupplierId] = useState<string>('');
 
- const { data, isLoading } = usePOList({ status, supplier_id, page });
+  const { data, isLoading } = usePOList({ status, supplier_id, page });
 
- const columns = useMemo<ColumnDef<POSummary, unknown>[]>(() => [
- {
- accessorKey: 'status',
- header: tc('status_label'),
- cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
- },
- {
- accessorKey: 'document_number',
- header: tc('doc_number'),
- cell: ({ row }) => (
- <span dir="ltr" className="font-mono text-amber-500 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">
- {row.original.document_number}
- </span>
- ),
- },
- {
- accessorKey: 'supplier_id',
- header: t('supplier'),
- cell: ({ row }) => (
- <div className="flex flex-col text-start">
- <span className="opacity-90 font-bold text-body-md">{row.original.supplier_id}</span>
- <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('supplier')}</span>
- </div>
- ),
- },
- {
- accessorKey: 'expected_date',
- header: t('expected_date'),
- cell: ({ row }) => (
- <div className="flex flex-col text-start">
- <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
- {format(new Date(row.original.expected_date), 'dd/MM/yyyy')}
- </span>
- <span className="text-label-xxs uppercase opacity-30 font-semibold">{t('expected_date')}</span>
- </div>
- ),
- },
- {
- accessorKey: 'supplier_total_amount',
- header: t('total_amount'),
- cell: ({ row }) => (
- <div className="flex flex-col text-end">
- <span dir="ltr" className="text-body-md font-mono font-semibold text-foreground/90">
- {new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
- minimumFractionDigits: 2,
- maximumFractionDigits: 2,
- }).format(row.original.supplier_total_amount)} {row.original.currency_code}
- </span>
- <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('total_amount')}</span>
- </div>
- ),
- },
- {
- id: 'actions',
- header: '',
- cell: ({ row }) => (
- <div className="flex justify-end">
- <PermissionGate action="view" resource="po">
- <Button 
- variant="ghost" 
- size="icon" 
- className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-amber-500/20 text-muted-foreground/60 hover:text-amber-500 transition-all group"
- onClick={(e) => {
- e.stopPropagation();
- router.push(`/ ${locale}/purchase-orders/ ${row.original.id}`);
- }}
- >
- <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
- </Button>
- </PermissionGate>
- </div>
- ),
- },
- ], [t, tc, locale, router]);
+  const columns = useMemo<ColumnDef<POSummary, unknown>[]>(() => [
+    {
+      accessorKey: 'status',
+      header: tc('status_label'),
+      cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
+    },
+    {
+      accessorKey: 'document_number',
+      header: tc('doc_number'),
+      cell: ({ row }) => (
+        <span dir="ltr" className="font-mono text-amber-500 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">
+          {row.original.document_number}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'supplier_id',
+      header: t('supplier'),
+      cell: ({ row }) => (
+        <div className="flex flex-col text-start">
+          <span className="opacity-90 font-bold text-body-md">{row.original.supplier_id}</span>
+          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('supplier')}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'expected_date',
+      header: t('expected_date'),
+      cell: ({ row }) => (
+        <div className="flex flex-col text-start">
+          <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
+            {format(new Date(row.original.expected_date), 'dd/MM/yyyy')}
+          </span>
+          <span className="text-label-xxs uppercase opacity-30 font-semibold">{t('expected_date')}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'supplier_total_amount',
+      header: t('total_amount'),
+      cell: ({ row }) => (
+        <div className="flex flex-col text-end">
+          <span dir="ltr" className="text-body-md font-mono font-semibold text-foreground/90">
+            {new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(row.original.supplier_total_amount)} {row.original.currency_code}
+          </span>
+          <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('total_amount')}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <PermissionGate action="view" resource="po">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-amber-500/20 text-muted-foreground/60 hover:text-amber-500 transition-all group"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${locale}/purchase-orders/${row.original.id}`);
+              }}
+            >
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
+            </Button>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ], [t, tc, locale, router]);
 
- const breadcrumbs = [
- { label: tc('sidebar.dashboard'), href: `/ ${locale}/dashboard` },
- { label: t('title'), href: `/ ${locale}/purchase-orders` },
- ];
+  const breadcrumbs = [
+    { label: tc('sidebar.dashboard'), href: `/${locale}/dashboard` },
+    { label: t('title'), href: `/${locale}/purchase-orders` },
+  ];
 
- const totalPOs = data?.meta?.total || 0;
- const approvedCount = data?.data?.filter(p => p.status === 'APPROVED').length || 0;
- const pendingCount = data?.data?.filter(p => p.status === 'DRAFT' || p.status === 'SUBMITTED').length || 0;
+  const totalPOs = data?.meta?.total || 0;
+  
+  // Metrics calculation (Note: calculated from current page data.data)
+  const approvedCount = data?.data?.filter(p => isApprovedStatus('PO', p.status as DocumentStatus)).length || 0;
+  const pendingCount = data?.data?.filter(p => isPendingStatus('PO', p.status as DocumentStatus)).length || 0;
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -123,7 +127,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  description={t('description')}
  actions={
  <PermissionGate action="create" resource="po">
- <Link href={`/ ${locale}/purchase-orders/new`}>
+ <Link href={`/${locale}/purchase-orders/new`}>
  <Button className="h-12 px-8 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-amber-900/20">
  <Plus className="w-4 h-4 me-2" />
  {t('create_new')}
@@ -160,7 +164,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: POSummary) => router.push(`/ ${locale}/purchase-orders/ ${row.id}`)}
+ onRowClick={(row: POSummary) => router.push(`/${locale}/purchase-orders/${row.id}`)}
  collectionName="procurement_po"
  emptyState={
  <EmptyState 
@@ -169,7 +173,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  icon={Truck}
  action={
  <PermissionGate action="create" resource="po">
- <Link href={`/ ${locale}/purchase-orders/new`}>
+ <Link href={`/${locale}/purchase-orders/new`}>
  <Button className="h-10 px-6 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}

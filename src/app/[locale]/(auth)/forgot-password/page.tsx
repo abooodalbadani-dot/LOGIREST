@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
  {t('email_sent_desc', { email: form.getValues('email') })}
  </p>
  <Link
- href={`/ ${locale}/login`}
+ href={`/${locale}/login`}
  className="inline-flex items-center gap-2 text-operational-cyan hover:text-operational-cyan/80 font-medium transition-colors group"
  >
  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
 
  <div className="text-center mt-6">
  <Link
- href={`/ ${locale}/login`}
+ href={`/${locale}/login`}
  className="text-body-md text-muted-foreground/60 hover:text-operational-cyan transition-colors inline-flex items-center gap-2 group"
  >
  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />

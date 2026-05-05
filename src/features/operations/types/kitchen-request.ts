@@ -1,12 +1,7 @@
 import { z } from 'zod';
+import { ALL_DOCUMENT_STATUSES, DocumentStatus } from '@/types/DocumentStatus';
 
-export type KitchenRequestStatus =
- | 'DRAFT'
- | 'SUBMITTED'
- | 'APPROVED'
- | 'REJECTED'
- | 'FULFILLED'
- | 'PARTIAL';
+export type KitchenRequestStatus = DocumentStatus;
 
 export interface KitchenRequestItem {
  id: string;
@@ -37,8 +32,9 @@ export interface KitchenRequest {
  rejection_reason?: string;
  fulfilled_by?: string;
  fulfilled_at?: string;
- created_at: string;
- updated_at: string;
+  created_at: string;
+  updated_at: string;
+  version: number;
 }
 
 export const KitchenRequestItemSchema = z.object({
@@ -63,7 +59,7 @@ export const KitchenRequestDetailSchema = z.object({
  department_name: z.string().optional(),
  warehouse_id: z.string(),
  warehouse_name: z.string().optional(),
- status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'FULFILLED', 'PARTIAL']),
+ status: z.enum(ALL_DOCUMENT_STATUSES),
  items: z.array(z.object({
  id: z.string(),
  item_id: z.string(),
@@ -82,9 +78,10 @@ export const KitchenRequestDetailSchema = z.object({
  rejected_at: z.string().optional(),
  rejection_reason: z.string().optional(),
  fulfilled_by: z.string().optional(),
- fulfilled_at: z.string().optional(),
- created_at: z.string(),
- updated_at: z.string(),
+  fulfilled_at: z.string().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  version: z.number().default(1),
 });
 
 export type KitchenRequestDetail = z.infer<typeof KitchenRequestDetailSchema>;

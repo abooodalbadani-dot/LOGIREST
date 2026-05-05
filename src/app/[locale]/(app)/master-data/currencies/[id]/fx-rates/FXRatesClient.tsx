@@ -105,7 +105,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  return (
  <MasterDataFormLayout
  title={`${t('fx_rates_for')} ${baseCurrency?.code || currencyId}`}
- backHref={`/ ${locale}/master-data/currencies`}
+ backHref={`/${locale}/master-data/currencies`}
  isSaving={create.isPending}
  onSubmit={onSubmit}
  >

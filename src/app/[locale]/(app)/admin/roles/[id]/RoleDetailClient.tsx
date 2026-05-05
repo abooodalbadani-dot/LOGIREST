@@ -87,7 +87,7 @@ export function RoleDetailClient({ locale, id }: { locale: string; id: string })
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline-low pb-8">
  <div className="space-y-4">
  <Link 
- href={`/ ${locale}/admin/roles`}
+ href={`/${locale}/admin/roles`}
  className="inline-flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground hover:text-cyan-500 transition-colors"
  >
  <ArrowLeft className="w-3 h-3 rtl:rotate-180" />

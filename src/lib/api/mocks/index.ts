@@ -19,7 +19,27 @@ const db: MockDb = {
  ...reportsMocks
 };
 
-export function getMockResponse(method: string, path: string): unknown {
- const key = `${method.toUpperCase()} ${path.split('?')[0]}`;
- return db[key];
+export function getMockResponse(method: string, path: string, body?: any): unknown {
+  const normalizedPath = path.split('?')[0];
+  const key = `${method.toUpperCase()} ${normalizedPath}`;
+
+  // Try exact match
+  if (db[key]) {
+    const mock = db[key];
+    return typeof mock === 'function' ? mock(body, normalizedPath) : mock;
+  }
+
+  // Try pattern matching
+  for (const dbKey in db) {
+    if (dbKey.includes(':')) {
+      const pattern = dbKey.replace(/:[a-zA-Z]+/g, '[^/]+');
+      const regex = new RegExp(`^${pattern}$`);
+      if (regex.test(key)) {
+        const mock = db[dbKey];
+        return typeof mock === 'function' ? mock(body, normalizedPath) : mock;
+      }
+    }
+  }
+
+  return undefined;
 }

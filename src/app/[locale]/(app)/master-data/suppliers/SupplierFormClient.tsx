@@ -69,7 +69,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/suppliers`);
+ router.push(`/${locale}/master-data/suppliers`);
  } catch (error) {
  // Error handled by mutation toast
  }
@@ -80,7 +80,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, locale }: Props
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/suppliers`}
+ backHref={`/${locale}/master-data/suppliers`}
  isSaving={isSaving}
  onSubmit={onSubmit}
  >

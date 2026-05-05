@@ -1,5 +1,6 @@
 'use client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { AdjustmentDetailSchema } from './useAdjustment';
@@ -24,9 +25,10 @@ const CreateAdjustmentPayloadSchema = z.object({
 
 export type CreateAdjustmentPayload = z.infer<typeof CreateAdjustmentPayloadSchema>;
 
-export function useCreateAdjustment() {
+export function useCreateAdjustment(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: (payload: CreateAdjustmentPayload) => 
  apiClient.post('/operations/adjustments', AdjustmentDetailSchema, CreateAdjustmentPayloadSchema.parse(payload)),
  onSuccess: () => {

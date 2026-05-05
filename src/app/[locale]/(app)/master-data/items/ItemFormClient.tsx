@@ -21,10 +21,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, CategorySchema, UoMSchema } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormValues, UoMSchema } from '@/types/master-data';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
 
 
 interface Props { id: string | null; createTitle: string; editTitle: string; locale: string; }
@@ -38,8 +39,10 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  const { data } = useItem(id);
  const { data: categories } = useCategories();
  const { data: uoms } = useMasterDataList('units-of-measure', UoMSchema);
+ 
  const create = useCreateItem();
- const update = useUpdateItem();
+ const conflict = useConflictHandler('item', id ?? '');
+ const update = useUpdateItem({ onConflict: conflict.triggerConflict });
 
  const { register, handleSubmit, reset, setValue, control, formState: { errors } } =
  useForm<ItemFormValues>({
@@ -47,6 +50,7 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  defaultValues: {
  code: '', barcode: '', name_ar: '', name_en: '', category_id: '', primary_uom_id: '',
  track_lots: false, min_stock_level: 0, reorder_point: 0, uom_conversions: [], is_active: true,
+ version: undefined,
  },
  });
 
@@ -63,6 +67,7 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  from_uom_id: c.from_uom_id, to_uom_id: c.to_uom_id, factor: c.factor,
  })),
  is_active: data.is_active,
+ version: data.version,
  });
  }
  }, [data, reset]);
@@ -70,23 +75,18 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  const onSubmit = handleSubmit(async (values) => {
  if (id) await update.mutateAsync({ id, values });
  else await create.mutateAsync(values);
- router.push(`/ ${locale}/master-data/items`);
+ router.push(`/${locale}/master-data/items`);
  });
 
  const isSaving = create.isPending || update.isPending;
  const trackLots = useWatch({ control, name: 'track_lots' });
  const isActive = useWatch({ control, name: 'is_active' });
 
- const breadcrumbs = [
- { label: t('master_data'), href: `/ ${locale}/master-data` },
- { label: ti('title'), href: `/ ${locale}/master-data/items` },
- { label: id ? editTitle : createTitle, href: '#' }
- ];
-
  return (
+ <>
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/items`} 
+ backHref={`/${locale}/master-data/items`} 
  isSaving={isSaving} 
  onSubmit={onSubmit}
  >
@@ -249,13 +249,13 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  {fields.map((field, idx) => (
  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.5fr_auto] gap-4 items-end p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 transition-all hover:bg-surface-container-highest/30">
  <div className="space-y-2">
- <Label htmlFor={`uom-from- ${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('from_uom')}</Label>
+ <Label htmlFor={`uom-from-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('from_uom')}</Label>
  <Controller
  name={`uom_conversions.${idx}.from_uom_id`}
  control={control}
  render={({ field }) => (
  <Select value={field.value} onValueChange={field.onChange}>
- <SelectTrigger id={`uom-from- ${idx}`}>
+ <SelectTrigger id={`uom-from-${idx}`}>
  <SelectValue placeholder="—" />
  </SelectTrigger>
  <SelectContent>
@@ -271,13 +271,13 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  />
  </div>
  <div className="space-y-2">
- <Label htmlFor={`uom-to- ${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('to_uom')}</Label>
+ <Label htmlFor={`uom-to-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('to_uom')}</Label>
  <Controller
  name={`uom_conversions.${idx}.to_uom_id`}
  control={control}
  render={({ field }) => (
  <Select value={field.value} onValueChange={field.onChange}>
- <SelectTrigger id={`uom-to- ${idx}`}>
+ <SelectTrigger id={`uom-to-${idx}`}>
  <SelectValue placeholder="—" />
  </SelectTrigger>
  <SelectContent>
@@ -293,8 +293,8 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  />
  </div>
  <div className="space-y-2">
- <Label htmlFor={`uom-factor- ${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('factor')}</Label>
- <Input id={`uom-factor- ${idx}`} type="number" dir="ltr" min={0} step="any" 
+ <Label htmlFor={`uom-factor-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('factor')}</Label>
+ <Input id={`uom-factor-${idx}`} type="number" dir="ltr" min={0} step="any" 
  className="font-mono font-semibold text-status-secondary"
  {...register(`uom_conversions.${idx}.factor`, { valueAsNumber: true })} />
  </div>
@@ -375,5 +375,12 @@ export function ItemFormClient({ id, createTitle, editTitle, locale }: Props) {
  </div>
  </div>
  </MasterDataFormLayout>
+
+ <ConflictDialog
+ open={conflict.open}
+ onReload={conflict.handleReload}
+ onClose={conflict.handleClose}
+ />
+ </>
  );
 }

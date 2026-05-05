@@ -65,7 +65,7 @@ export function FXRateFormClient({ id, createTitle, editTitle }: Props) {
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/fx-rates`);
+ router.push(`/${locale}/master-data/fx-rates`);
  } catch (error) {
  // Handled by mutation toast
  }
@@ -76,7 +76,7 @@ export function FXRateFormClient({ id, createTitle, editTitle }: Props) {
  return (
  <MasterDataFormLayout 
  title={id ? editTitle : createTitle} 
- backHref={`/ ${locale}/master-data/fx-rates`}
+ backHref={`/${locale}/master-data/fx-rates`}
  isSaving={create.isPending || update.isPending} 
  onSubmit={onSubmit}
  >
