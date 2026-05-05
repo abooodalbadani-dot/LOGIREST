@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 
 export default function LocaleSwitcher() {

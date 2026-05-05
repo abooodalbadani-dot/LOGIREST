@@ -55,7 +55,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  <div className="bg-surface-container-lowest border border-transparent rounded-2xl p-6">
  <h3 className="text-title-sm font-bold text-foreground mb-4 flex items-center gap-2">
  <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
- {t('fx_capture_title') || 'سعر الصرف عند الترحيل'}
+ {t('fx_capture_title')}
  </h3>
  
  <div className="flex flex-col gap-5">
@@ -84,7 +84,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  <div className="text-label-sm text-status-warning bg-status-warning/10 border border-status-warning/20 rounded-xl p-4 flex items-start gap-3">
  <div className="w-1 h-1 rounded-full bg-status-warning mt-1.5 shrink-0" />
  <p className="leading-relaxed opacity-90">
- {t('fx_permanent_warning') || 'سيُحفظ هذا السعر مع الوثيقة ولا يمكن تغييره لاحقاً.'}
+ {t('fx_permanent_warning')}
  </p>
  </div>
  

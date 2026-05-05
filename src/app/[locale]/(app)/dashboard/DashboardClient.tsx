@@ -90,7 +90,7 @@ export default function DashboardClient() {
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
  <div className="space-y-4">
  <div className="flex items-center justify-between px-1">
- <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/60/70">
+ <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/40">
  {t('expiry_control')}
  </h4>
  <div className="h-px flex-1 mx-6 bg-surface-container-high/30" />
@@ -100,7 +100,7 @@ export default function DashboardClient() {
  
  <div className="space-y-4">
  <div className="flex items-center justify-between px-1">
- <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/60/70">
+ <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/40">
  {t('approval_workflow')}
  </h4>
  <div className="h-px flex-1 mx-6 bg-surface-container-high/30" />
@@ -146,11 +146,11 @@ export default function DashboardClient() {
  </div>
  <div className="flex items-center gap-3 mt-1">
  <div className="flex items-center gap-1.5">
- <Database className="w-3 h-3 text-muted-foreground/60/40" />
+ <Database className="w-3 h-3 text-muted-foreground/60" />
  <span className="text-label-xs font-bold text-muted-foreground/60">Backup: {stats.lastBackup}</span>
  </div>
  <div className="flex items-center gap-1.5">
- <Users className="w-3 h-3 text-muted-foreground/60/40" />
+ <Users className="w-3 h-3 text-muted-foreground/60" />
  <span className="text-label-xs font-bold text-muted-foreground/60">{stats.activeUsers} Users Online</span>
  </div>
  </div>
@@ -164,18 +164,18 @@ export default function DashboardClient() {
  {/* Intelligence & Analytics Section - Global */}
  <div className="space-y-4 pt-6">
  <div className="flex items-center justify-between px-1">
- <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/60/40">
+ <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/60">
  {t('business_intelligence')}
  </h4>
  <div className="h-px flex-1 mx-6 bg-surface-container-high/10" />
  </div>
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 opacity-30 grayscale pointer-events-none filter blur-[0.5px] transition-all hover:opacity-100 hover:grayscale-0 hover:blur-0">
  <div className="lg:col-span-2 h-56 rounded-2xl bg-surface-container-low border border-dashed border-surface-container-high flex flex-col items-center justify-center gap-4">
- <Activity className="w-8 h-8 text-muted-foreground/60/20" />
+ <Activity className="w-8 h-8 text-muted-foreground/40" />
  <span className="text-muted-foreground/60 italic text-label-xs font-semibold uppercase">Movement Analytics (Phase 12)</span>
  </div>
  <div className="h-56 rounded-2xl bg-surface-container-low border border-dashed border-surface-container-high flex flex-col items-center justify-center gap-4">
- <Activity className="w-8 h-8 text-muted-foreground/60/20" />
+ <Activity className="w-8 h-8 text-muted-foreground/40" />
  <span className="text-muted-foreground/60 italic text-label-xs font-semibold uppercase">Audit Logs</span>
  </div>
  </div>

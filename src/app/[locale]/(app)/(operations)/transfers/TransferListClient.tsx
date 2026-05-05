@@ -174,7 +174,7 @@ export function TransferListClient() {
  containerHeight="600px"
  emptyState={
  <EmptyState 
- title={t('no_records') || 'No Transfers Found'} description={t('description') || 'Warehouse transfer vouchers will appear here.'} action={
+ title={t('no_records')} description={t('description')} action={
  <PermissionGate action="create" resource="transfer">
  <Button 
  onClick={() => router.push(`/transfers/new`)}

@@ -4,7 +4,7 @@ import { ItemFormClient } from '../ItemFormClient';
 export default async function ItemDetailPage(props: { params: Promise<{ locale: string; id: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('masterData.items');
+ const t = await getTranslations('master_data.items');
  return (
  <ItemFormClient
  id={params.id === 'new' ? null : params.id}

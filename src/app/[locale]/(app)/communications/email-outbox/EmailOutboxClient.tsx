@@ -38,7 +38,7 @@ export function EmailOutboxClient() {
  },
  {
  accessorKey: 'subject',
- header: tc('subject') || 'Subject',
+ header: tc('subject'),
  cell: ({ row }) => <span className="text-body-md font-medium line-clamp-1 opacity-80">{row.original.subject}</span>,
  },
  {

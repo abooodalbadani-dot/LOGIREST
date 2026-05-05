@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { Package, Hash, Ruler, ArrowRight, ImportIcon } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';

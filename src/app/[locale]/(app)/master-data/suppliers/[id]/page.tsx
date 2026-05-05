@@ -4,7 +4,7 @@ import { SupplierFormClient } from '../SupplierFormClient';
 export default async function SupplierDetailPage(props: { params: Promise<{ locale: string; id: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('masterData.suppliers');
+ const t = await getTranslations('master_data.suppliers');
  return (
  <SupplierFormClient
  id={params.id === 'new' ? null : params.id}

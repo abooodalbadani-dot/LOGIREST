@@ -160,6 +160,7 @@
   --status-warning-rgb: 245, 158, 11;
   --status-error-rgb: 239, 68, 68;
   --on-surface-rgb: 24, 28, 32;
+  --foreground-ar-muted: #2d363b;
   --radius: 16px;
 }
 
@@ -175,7 +176,8 @@
   --status-error: #ff4b4b;
   --status-info: #00b4d8;
 
-  --background: #0e1416;
+  --background: #0a0e10;
+  --surface: #0e1416;
   --foreground: #dee3e6;
 
   --primary: #4cd6fb;
@@ -206,8 +208,8 @@
   --popover: #1b2023;
   --popover-foreground: #dee3e6;
 
-  --surface-container-lowest: #090f11;
-  --surface-container-low: #0d1517;
+  --surface-container-lowest: #161c1e;
+  --surface-container-low: #080a0c;
   --surface-container: #111b1d;
   --surface-container-high: #162325;
   --surface-container-highest: #1d2d30;
@@ -231,6 +233,7 @@
   --status-warning-rgb: 235, 143, 59;
   --status-error-rgb: 255, 75, 75;
   --on-surface-rgb: 222, 227, 230;
+  --foreground-ar-muted: #a1adb2;
 }
 
 @layer base {
@@ -272,15 +275,15 @@
     opacity: 1 !important;
   }
 
-  :lang(ar) label,
-  :lang(ar) .text-muted-foreground {
+  :lang(ar) label {
     font-weight: 500 !important;
     color: var(--foreground) !important;
     opacity: 1 !important;
   }
 
-  .dark :lang(ar) .text-muted-foreground {
-    color: #e5e7eb !important;
+  :lang(ar) .text-muted-foreground {
+    color: var(--foreground-ar-muted) !important;
+    opacity: 1 !important;
   }
 
   h1,

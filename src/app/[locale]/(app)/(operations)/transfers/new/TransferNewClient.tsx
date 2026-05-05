@@ -189,7 +189,7 @@ export function TransferNewClient() {
  </Select>
  {fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId && (
  <p className="text-label-xxs font-bold text-status-error uppercase px-1 mt-1">
- {t('warehouse_match_error') || 'Source and destination cannot be the same'}
+ {t('warehouse_match_error')}
  </p>
  )}
  </div>
@@ -231,7 +231,7 @@ export function TransferNewClient() {
  <div className="mb-8">
  <ScanInput 
  onScan={handleAddItem}
- placeholder={t('scan_item_placeholder') || 'Scan item SKU or barcode...'} className="max-w-md mx-auto"
+ placeholder={t('scan_item_placeholder')} className="max-w-md mx-auto"
  />
  </div>
 

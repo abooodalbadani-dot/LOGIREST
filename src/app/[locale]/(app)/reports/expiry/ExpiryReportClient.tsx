@@ -26,16 +26,33 @@ export default function ExpiryReportClient() {
  {
  accessorKey: 'lot_no',
  header: t('table.lot_no'),
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono opacity-70 uppercase">
+ {row.getValue('lot_no')}
+ </span>
+ ),
  },
  {
  accessorKey: 'expiry_date',
  header: t('table.expiry_date'),
- cell: ({ row }) => formatDate(row.getValue('expiry_date'), locale as 'ar' | 'en'),
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatDate(row.getValue('expiry_date'), locale as 'ar' | 'en')}
+ </span>
+ ),
  },
  {
  accessorKey: 'days_remaining',
  header: t('table.days_remaining'),
  meta: { numeric: true },
+ cell: ({ row }) => {
+ const days = row.getValue('days_remaining') as number;
+ return (
+ <span dir="ltr" className="font-mono font-bold">
+ {days.toLocaleString(locale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}
+ </span>
+ );
+ }
  },
  {
  accessorKey: 'status',

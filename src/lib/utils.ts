@@ -23,6 +23,7 @@ export function formatDate(date: string | Date | number, locale: "ar" | "en" = "
 }
 
 /**
- * Re-export currency formatter for centralized access.
+ * Re-export currency and quantity formatters for centralized access.
  */
 export const formatCurrency = currencyFormatter;
+export { formatQuantity } from "@/utils/currency";

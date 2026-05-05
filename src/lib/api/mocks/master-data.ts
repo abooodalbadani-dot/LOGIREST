@@ -1,4 +1,4 @@
-export const masterDataMocks: Record<string, unknown> = {
+export const master_data_mocks: Record<string, unknown> = {
  // Branches
  'GET /branches': {
  data: [

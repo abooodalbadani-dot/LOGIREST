@@ -1,6 +1,6 @@
 import { purchasingMocks } from './purchasing';
 import { operationsMocks } from './operations';
-import { masterDataMocks } from './master-data';
+import { master_data_mocks } from './master-data';
 import { inventoryMocks } from './inventory';
 import { notificationsMocks } from './notifications';
 import { adminMocks } from './admin';
@@ -11,7 +11,7 @@ type MockDb = Record<string, unknown>;
 const db: MockDb = { 
  ...purchasingMocks, 
  ...operationsMocks, 
- ...masterDataMocks, 
+ ...master_data_mocks, 
  ...inventoryMocks, 
  ...notificationsMocks, 
  ...adminMocks,

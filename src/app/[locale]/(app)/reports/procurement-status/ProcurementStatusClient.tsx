@@ -18,11 +18,20 @@ export default function ProcurementStatusClient() {
  {
  accessorKey: 'po_no',
  header: t('table.po_no'),
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono opacity-70">
+ {row.getValue('po_no')}
+ </span>
+ ),
  },
  {
  accessorKey: 'date',
  header: t('table.date'),
- cell: ({ row }) => formatDate(row.getValue('date')),
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono">
+ {formatDate(row.getValue('date'), locale as 'ar' | 'en')}
+ </span>
+ ),
  },
  {
  accessorKey: 'supplier',
@@ -32,7 +41,11 @@ export default function ProcurementStatusClient() {
  accessorKey: 'total',
  header: t('table.total'),
  meta: { numeric: true },
- cell: ({ row }) => formatCurrency(row.getValue('total'), row.original.currency, locale as 'ar' | 'en'),
+ cell: ({ row }) => (
+ <span dir="ltr" className="font-mono font-bold">
+ {formatCurrency(row.getValue('total'), row.original.currency, locale as 'ar' | 'en')}
+ </span>
+ ),
  },
  {
  accessorKey: 'status',
