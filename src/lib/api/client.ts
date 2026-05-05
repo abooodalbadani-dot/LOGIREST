@@ -7,13 +7,19 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
  const token = typeof window !== 'undefined' ? localStorage.getItem('logirest_token') : null;
  const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
  
- if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
- const { getMockResponse } = await import('./mocks/index');
- const mockData = getMockResponse(method, path);
- if (mockData !== undefined) return schema.parse(mockData);
- }
+  if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+    const { getMockResponse } = await import('./mocks/index');
+    const mockData = getMockResponse(method, path, body);
+    if (mockData !== undefined) {
+      // Detect mock error responses and throw them as API errors
+      if (mockData && typeof mockData === 'object' && 'error' in (mockData as any)) {
+        throw (mockData as any).error;
+      }
+      return schema.parse(mockData);
+    }
+  }
 
- const res = await fetch(`${BASE} ${path}`, {
+ const res = await fetch(`${BASE}${path}`, {
  method,
  headers: {
  'Content-Type': 'application/json',

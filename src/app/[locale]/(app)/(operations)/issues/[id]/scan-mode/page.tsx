@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -20,7 +20,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/providers/AuthProvider';
 import type { Lot } from '@/types/master-data';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
-import Link from 'next/link';
 import type { LotAllocation } from '@/types/documents';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
@@ -120,9 +119,9 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
 
  const handlePost = async () => {
  try {
- await postIssue.mutateAsync({ confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' });
+ await postIssue.mutateAsync({ confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', version: (issue as any)?.version || 0 });
  setIsPostDialogOpen(false);
- router.push(`/ ${locale}/issues`);
+ router.push("/issues");
  } catch (err: unknown) {
  const apiErr = err as { code?: string };
  if (apiErr?.code === 'WAREHOUSE_LOCKED') setIsWarehouseLockedError(true);
@@ -131,7 +130,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  };
 
  const isPosted = issue?.status === 'POSTED';
- const isLocked = (lockState?.is_locked ?? false) || isWarehouseLockedError;
+ const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
 
  if (isLoading) return <div className="p-8 text-center">Loading...</div>;
 
@@ -151,7 +150,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  </div>
  <div className="flex items-center gap-4">
  <StatusBadge status={(issue?.status ?? 'DRAFT') as BadgeStatus} />
- <Link href={`/ ${locale}/issues/ ${id}`}>
+ <Link href={`/issues/${id}`}>
  <Button variant="outline" size="sm">Exit Scan Mode</Button>
  </Link>
  </div>
@@ -166,6 +165,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  disabled={isPosted || isLocked} 
  placeholder="READY FOR BARCODE..." 
  className="text-headline-lg py-10 font-mono text-center bg-surface-container-highest border-none rounded-3xl focus:ring-4 focus:ring-operational-cyan/30 transition-all placeholder:text-foreground/30 shadow-inner"
+ scannerMode={true}
  />
  {scanError && <div className="text-status-error text-center mt-6 text-title-lg font-bold animate-bounce uppercase">{scanError}</div>}
  

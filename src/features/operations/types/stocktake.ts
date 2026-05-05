@@ -1,93 +1,59 @@
 import { z } from 'zod';
+import { ALL_DOCUMENT_STATUSES, DocumentStatus } from '@/types/DocumentStatus';
 
-export type StocktakeStatus =
- | 'DRAFT'
- | 'STARTED'
- | 'COUNTING_COMPLETED'
- | 'VarianceSubmitted'
- | 'APPROVED'
- | 'REJECTED'
- | 'POSTED';
-
-/**
- * Safely normalizes incoming status strings from legacy or external sources.
- * 'VARIANCE' -> 'VarianceSubmitted'
- * 'COUNTING' -> 'STARTED'
- */
-export function normalizeStocktakeStatus(status: string): StocktakeStatus {
- if (status === 'VARIANCE') return 'VarianceSubmitted';
- if (status === 'COUNTING') return 'STARTED';
- return status as StocktakeStatus;
-}
+export type StocktakeStatus = DocumentStatus;
 
 export const StocktakeItemSchema = z.object({
- id: z.string(),
- itemId: z.string(),
- itemName: z.string(),
- barcode: z.string().optional(),
- uom: z.string(),
- snapshotQty: z.number(),
- countedQty: z.number().optional(),
- variance: z.number().optional(),
- varianceReason: z.string().optional(),
- lotNumber: z.string().optional(),
- expiryDate: z.string().optional(),
- unitCost: z.number(),
+  id: z.string(),
+  itemId: z.string(),
+  itemName: z.string(),
+  barcode: z.string().optional(),
+  uom: z.string(),
+  snapshotQty: z.number().nullable(), // Allow null during counting if needed, but usually filled
+  countedQty: z.number().nullable(),
+  variance: z.number().nullable(),
+  varianceReason: z.string().nullable(),
+  lotNumber: z.string().optional(),
+  expiryDate: z.string().optional(),
+  unitCost: z.number(),
 });
 
 export const StocktakeSessionSchema = z.object({
- id: z.string(),
- session_number: z.string(),
- warehouse_id: z.string(),
- status: z.enum(['OPEN', 'COUNTING', 'REVIEW', 'POSTED', 'CANCELLED']),
- snapshot_at: z.string(),
- started_by: z.string(),
- posted_at: z.string().nullable(),
- posted_by: z.string().nullable(),
- counts: z.array(StocktakeItemSchema),
+  id: z.string(),
+  sessionNumber: z.string(),
+  sessionName: z.string(),
+  warehouseId: z.string(),
+  warehouseName: z.string().optional(),
+  status: z.enum(ALL_DOCUMENT_STATUSES),
+  snapshotAt: z.string(),
+  startedBy: z.string(),
+  postedAt: z.string().nullable(),
+  postedBy: z.string().nullable(),
+  items: z.array(StocktakeItemSchema),
+  version: z.number().default(1),
+  description: z.string().optional(),
+  approverComment: z.string().optional(),
+  approvedAt: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export type StocktakeSession = z.infer<typeof StocktakeSessionSchema>;
+export type StocktakeItem = z.infer<typeof StocktakeItemSchema>;
 
-export interface StocktakeItem {
- id: string;
- itemId: string;
- itemName: string;
- barcode?: string;
- uom: string;
- snapshotQty: number; // System qty at lock time (hidden during COUNTING)
- countedQty?: number; // Entered by WH keeper
- variance?: number; // countedQty - snapshotQty (computed)
- varianceReason?: string; // Required when variance !== 0
- lotNumber?: string;
- expiryDate?: string;
- unitCost: number; // Added for financial impact calculation
-}
-
-export interface Stocktake {
- id: string;
- sessionName: string;
- warehouseId: string;
- warehouseName?: string; // Added for UI display
- status: StocktakeStatus;
- items: StocktakeItem[];
- description?: string;
- approverComment?: string;
- approvedBy?: string;
- approvedAt?: string;
- postedBy?: string;
- postedAt?: string;
- createdAt: string;
- updatedAt: string;
+export interface Stocktake extends StocktakeSession {
+  // Keeping this for backward compatibility if needed, 
+  // but StocktakeSession is now the source of truth
 }
 
 export interface CreateStocktakeDTO {
- sessionName: string;
- warehouseId: string;
- description?: string;
+  sessionName: string;
+  warehouseId: string;
+  description?: string;
 }
 
 export interface SubmitCountDTO {
- stocktakeId: string;
- counts: { itemId: string; countedQty: number; varianceReason?: string }[];
+  stocktakeId: string;
+  counts: { itemId: string; countedQty: number; varianceReason?: string }[];
 }
+

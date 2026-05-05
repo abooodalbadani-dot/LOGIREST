@@ -26,6 +26,8 @@ import {
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 
+import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+
 export function KitchenRequestsListClient({
  initialStatus,
  initialDepartmentId,
@@ -56,7 +58,7 @@ export function KitchenRequestsListClient({
  cell: ({ row }) => (
  <div className="flex flex-col">
  <Link 
- href={`/kitchen-requests/ ${row.original.id}`}
+ href={`/kitchen-requests/${row.original.id}`}
  className="font-mono text-body-md font-semibold text-cyan-500 hover:text-cyan-400 transition-colors"
  >
  {row.original.request_number}
@@ -104,6 +106,12 @@ export function KitchenRequestsListClient({
  },
  ], [t, tc]);
 
+ const submittedCount = data?.data?.filter(doc => isPendingStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
+ const approvedCount = data?.data?.filter(r => isApprovedStatus('KITCHEN_REQUEST', r.status)).length || 0;
+ const completedCount = data?.data?.filter(doc => isCompletedStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
+ const rejectedCount = data?.data?.filter(r => r.status === 'CANCELLED').length || 0;
+ const fulfilledCount = data?.data?.filter(r => r.status === 'FULFILLED').length || 0;
+
  return (
  <div className="flex flex-col gap-6 p-6">
  <Breadcrumb
@@ -133,25 +141,25 @@ export function KitchenRequestsListClient({
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
  <MetricCard
  label={t('statuses.SUBMITTED')}
- value={data?.meta?.total ?? 0}
+ value={submittedCount}
  icon={<Clock className="w-4 h-4" />}
  color="cyan"
  />
  <MetricCard
  label={t('statuses.APPROVED')}
- value={0}
+ value={approvedCount}
  icon={<CheckCircle2 className="w-4 h-4" />}
  color="emerald"
  />
  <MetricCard
  label={t('statuses.REJECTED')}
- value={0}
+ value={rejectedCount}
  icon={<AlertCircle className="w-4 h-4" />}
  color="rose"
  />
  <MetricCard
  label={t('statuses.FULFILLED')}
- value={0}
+ value={fulfilledCount}
  icon={<FileText className="w-4 h-4" />}
  color="indigo"
  />

@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname, Link } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
@@ -15,11 +16,11 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck } from 'lucide-react';
-import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { isPendingStatus, isPostedStatus } from '@/core/workflow/document-engine';
  
-export function IssueListClient({ initialStatus, initialPage, locale }: { initialStatus?: string; initialPage: number; locale: 'ar' | 'en' }) {
+export function IssueListClient({ initialStatus, initialPage }: { initialStatus?: string; initialPage: number }) {
  const t = useTranslations('operations.issue');
  const tc = useTranslations('common');
  const router = useRouter();
@@ -112,7 +113,7 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  className="group/btn h-9 w-9 rounded-md bg-surface-container-highest/30 hover:bg-cyan-500 hover:text-white transition-all duration-300"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/issues/ ${row.original.id}`);
+ router.push(`/issues/${row.original.id}`);
  }}
  >
  <ArrowUpRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 rtl:group-hover/btn:-translate-x-0.5" />
@@ -120,12 +121,13 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  </div>
  ),
  },
- ], [t, tc, locale, router]);
+ ], [t, tc, router]);
  
  const meta = data?.meta?.pagination;
  const totalItemsCount = meta?.total || 0;
+ const pendingCount = data?.data?.filter(i => isPendingStatus('ISSUE', i.status as any)).length || 0;
+ const postedCount = data?.data?.filter(i => isPostedStatus('ISSUE', i.status as any)).length || 0;
  const draftCount = data?.data?.filter(i => i.status === 'DRAFT').length || 0;
- const postedCount = data?.data?.filter(i => i.status === 'POSTED').length || 0;
  
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -135,7 +137,7 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  description={t('description') || 'Internal stock consumption and department issues.'} actions={
  <div className="flex items-center gap-4">
  <PermissionGate action="create" resource="issue">
- <Link href={`/ ${locale}/issues/new`}>
+ <Link href={`/issues/new`}>
  <Button className="h-10 px-6 rounded-md bg-surface-container-low border border-outline-low/5 text-label-xs font-semibold uppercase gap-2 group transition-all hover:bg-surface-container-medium shadow-sm">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -233,14 +235,16 @@ export function IssueListClient({ initialStatus, initialPage, locale }: { initia
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: IssueSummary) => router.push(`/ ${locale}/issues/ ${row.id}`)}
+ onRowClick={(row: IssueSummary) => router.push(`/issues/${row.id}`)}
  collectionName="operations_issues"
+ enableVirtualization={true}
+ containerHeight="600px"
  emptyState={
  <EmptyState 
  title={t('no_records') || 'No Issues Found'} description={t('description') || 'Departmental stock consumption vouchers will appear here.'} action={
  <PermissionGate action="create" resource="issue">
  <Button 
- onClick={() => router.push(`/ ${locale}/issues/new`)}
+ onClick={() => router.push(`/issues/new`)}
  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
  >
  <Plus className="w-4 h-4 me-2" />

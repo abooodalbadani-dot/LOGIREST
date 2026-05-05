@@ -53,7 +53,7 @@ export function CategoryListClient({ locale }: { locale: string }) {
  className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/master-data/categories/ ${row.original.id}`);
+ router.push(`/${locale}/master-data/categories/${row.original.id}`);
  }}
  >
  {t('view')}
@@ -65,9 +65,9 @@ export function CategoryListClient({ locale }: { locale: string }) {
  ], [t, router, locale]);
 
  const breadcrumbs = [
- { label: t('home'), href: `/ ${locale}/dashboard` },
- { label: t('master_data'), href: `/ ${locale}/master-data` },
- { label: tc('title'), href: `/ ${locale}/master-data/categories` },
+ { label: t('home'), href: `/${locale}/dashboard` },
+ { label: t('master_data'), href: `/${locale}/master-data` },
+ { label: tc('title'), href: `/${locale}/master-data/categories` },
  ];
 
  return (
@@ -79,7 +79,7 @@ export function CategoryListClient({ locale }: { locale: string }) {
  description={tc('description')}
  actions={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/categories/new`}>
+ <Link href={`/${locale}/master-data/categories/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -124,7 +124,7 @@ export function CategoryListClient({ locale }: { locale: string }) {
  description={tc('empty.description')}
  action={
  <PermissionGate action="create" resource="master_data">
- <Link href={`/ ${locale}/master-data/categories/new`}>
+ <Link href={`/${locale}/master-data/categories/new`}>
  <Button className="h-10 px-6 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -134,7 +134,7 @@ export function CategoryListClient({ locale }: { locale: string }) {
  }
  />
  }
- onRowClick={(r: Category) => router.push(`/ ${locale}/master-data/categories/ ${r.id}`)}
+ onRowClick={(r: Category) => router.push(`/${locale}/master-data/categories/${r.id}`)}
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">
  <div className="flex flex-col gap-2 min-w-[300px] flex-1">

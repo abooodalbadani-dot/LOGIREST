@@ -18,6 +18,9 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { format } from 'date-fns';
+import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+import { QueryBoundary } from '@/core/query/QueryBoundary';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export function GRNListClient({
  initialStatus,
@@ -95,7 +98,7 @@ export function GRNListClient({
  className="text-label-xxs font-semibold uppercase text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-md transition-all group"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`/ ${locale}/goods-received/ ${row.original.id}`);
+ router.push(`/${locale}/goods-received/${row.original.id}`);
  }}
  >
  {tc('view')}
@@ -108,15 +111,15 @@ export function GRNListClient({
  ], [locale, router, t, tc]);
 
  const totalGRNs = data?.meta?.total || 0;
- const postedCount = data?.data?.filter(g => g.status === 'POSTED').length || 0;
- const draftCount = data?.data?.filter(g => g.status === 'DRAFT').length || 0;
+ const postedCount = data?.data?.filter(p => isPostedStatus('GRN', p.status as DocumentStatus)).length || 0;
+ const draftCount = data?.data?.filter(p => isPendingStatus('GRN', p.status as DocumentStatus)).length || 0;
 
  return (
  <div className="p-10 max-w-[1600px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
  <div className="space-y-4">
  <Breadcrumb 
  items={[
- { label: tc('sidebar.dashboard'), href: `/ ${locale}/dashboard` },
+ { label: tc('sidebar.dashboard'), href: `/${locale}/dashboard` },
  { label: tc('sidebar.grn') }
  ]} 
  />
@@ -126,7 +129,7 @@ export function GRNListClient({
  actions={
  <div className="flex items-center gap-6">
  <PermissionGate action="create" resource="grn">
- <Link href={`/ ${locale}/goods-received/new`}>
+ <Link href={`/${locale}/goods-received/new`}>
  <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-lg shadow-cyan-900/10 border-none">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
@@ -138,106 +141,116 @@ export function GRNListClient({
  />
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
- <MetricCard
- label={t('stats.total_manifests')}
- value={totalGRNs}
- icon={Inbox}
- color="cyan"
- />
- <MetricCard
- label={t('stats.committed_batches')}
- value={postedCount}
- icon={CheckCircle2}
- color="emerald"
- />
- <MetricCard
- label={t('stats.awaiting_audit')}
- value={draftCount}
- icon={Clock}
- color="amber"
- />
- </div>
+ <QueryBoundary 
+        isLoading={isLoading} 
+        error={data === undefined && !isLoading ? new Error('Failed to load data') : null}
+        loadingFallback={<PageSkeleton />}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <MetricCard
+            label={t('stats.total_manifests')}
+            value={totalGRNs}
+            icon={Inbox}
+            color="cyan"
+          />
+          <MetricCard
+            label={t('stats.committed_batches')}
+            value={postedCount}
+            icon={CheckCircle2}
+            color="emerald"
+          />
+          <MetricCard
+            label={t('stats.awaiting_audit')}
+            value={draftCount}
+            icon={Clock}
+            color="amber"
+          />
+        </div>
 
- <div className="bg-surface-container-lowest border border-surface-variant/5 rounded-lg p-1">
- <DataTable
- columns={columns}
- data={data?.data || []}
- isLoading={isLoading}
- onRowClick={(row: GRNSummary) => router.push(`/ ${locale}/goods-received/ ${row.id}`)}
- collectionName="procurement_grn"
- emptyState={
- <EmptyState 
- title={t('no_grns_title') || 'No Goods Received Notes'} description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} action={
- <PermissionGate action="create" resource="grn">
- <Link href={`/ ${locale}/goods-received/new`}>
- <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-label-xs font-semibold uppercase rounded-md transition-all">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- }
- />
- }
- pagination={data?.meta ? {
- page: data.meta.page,
- pageSize: data.meta.page_size,
- total: data.meta.total,
- totalPages: data.meta.total_pages,
- onPageChange: setPage
- } : undefined}
- filters={
- <div className="flex flex-wrap items-end gap-8 w-full py-6 px-8 bg-surface-container-low border-b border-surface-variant/10">
- <div className="flex flex-col gap-3 min-w-[240px] flex-1">
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_filtering')}</label>
- <Select
- value={status || 'ALL'} onValueChange={(val) => { setStatus(val === 'ALL' ? undefined : (val ?? undefined)); setPage(1); }}
- >
- <SelectTrigger className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 px-4 text-label-xs font-semibold uppercase focus:ring-cyan-500/10 rounded-md">
- <SelectValue placeholder={tc('status.all')} />
- </SelectTrigger>
- <SelectContent className="bg-surface-container-high border-surface-variant/5 rounded-md">
- <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('status.all')}</SelectItem>
- <SelectItem value="DRAFT" className="text-label-xs font-semibold uppercase">{tc('status.draft')}</SelectItem>
- <SelectItem value="POSTED" className="text-label-xs font-semibold uppercase">{tc('status.posted')}</SelectItem>
- </SelectContent>
- </Select>
- </div>
+        <div className="bg-surface-container-lowest border border-surface-variant/5 rounded-lg p-1">
+          <DataTable
+            columns={columns}
+            data={data?.data || []}
+            onRowClick={(row: GRNSummary) => router.push(`/${locale}/goods-received/${row.id}`)}
+            collectionName="procurement_grn"
+            enableVirtualization={true}
+            containerHeight="600px"
+            emptyState={
+              <EmptyState 
+                title={t('no_grns_title') || 'No Goods Received Notes'} 
+                description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} 
+                action={
+                  <PermissionGate action="create" resource="grn">
+                    <Link href={`/${locale}/goods-received/new`}>
+                      <Button className="h-10 px-6 bg-cyan-500 hover:bg-cyan-400 text-black text-label-xs font-semibold uppercase rounded-md transition-all">
+                        <Plus className="w-3.5 h-3.5 me-2" />
+                        {t('create_new')}
+                      </Button>
+                    </Link>
+                  </PermissionGate>
+                }
+              />
+            }
+            pagination={data?.meta ? {
+              page: data.meta.page,
+              pageSize: data.meta.page_size,
+              total: data.meta.total,
+              totalPages: data.meta.total_pages,
+              onPageChange: setPage
+            } : undefined}
+            filters={
+              <div className="flex flex-wrap items-end gap-8 w-full py-6 px-8 bg-surface-container-low border-b border-surface-variant/10">
+                <div className="flex flex-col gap-3 min-w-[240px] flex-1">
+                  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_filtering')}</label>
+                  <Select
+                    value={status || 'ALL'} 
+                    onValueChange={(val) => { setStatus(val === 'ALL' ? undefined : (val ?? undefined)); setPage(1); }}
+                  >
+                    <SelectTrigger className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 px-4 text-label-xs font-semibold uppercase focus:ring-cyan-500/10 rounded-md">
+                      <SelectValue placeholder={tc('status.all')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface-container-high border-surface-variant/5 rounded-md">
+                      <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('status.all')}</SelectItem>
+                      <SelectItem value="DRAFT" className="text-label-xs font-semibold uppercase">{tc('status.draft')}</SelectItem>
+                      <SelectItem value="POSTED" className="text-label-xs font-semibold uppercase">{tc('status.posted')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
- <div className="flex flex-col gap-3 min-w-[300px] flex-[2]">
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('stream_identifier')}</label>
- <div className="relative">
- <Input
- placeholder={t('search_placeholder')}
- value={search}
- onChange={(e) => { setSearch(e.target.value); setPage(1); }}
- className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 ps-12 pe-4 text-label-sm font-semibold focus:ring-cyan-500/10 placeholder:text-muted-foreground/20 rounded-md"
- />
- <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-500/40" />
- {search && (
- <button 
- onClick={() => { setSearch(''); setPage(1); }}
- className="absolute end-4 top-1/2 -translate-y-1/2 text-label-xs font-semibold uppercase text-muted-foreground/40 hover:text-cyan-500 transition-colors"
- >
- {tc('reset')}
- </button>
- )}
- </div>
- </div>
+                <div className="flex flex-col gap-3 min-w-[300px] flex-[2]">
+                  <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('stream_identifier')}</label>
+                  <div className="relative">
+                    <Input
+                      placeholder={t('search_placeholder')}
+                      value={search}
+                      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                      className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 ps-12 pe-4 text-label-sm font-semibold focus:ring-cyan-500/10 placeholder:text-muted-foreground/20 rounded-md"
+                    />
+                    <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-500/40" />
+                    {search && (
+                      <button 
+                        onClick={() => { setSearch(''); setPage(1); }}
+                        className="absolute end-4 top-1/2 -translate-y-1/2 text-label-xs font-semibold uppercase text-muted-foreground/40 hover:text-cyan-500 transition-colors"
+                      >
+                        {tc('reset')}
+                      </button>
+                    )}
+                  </div>
+                </div>
 
- <Button 
- variant="outline"
- onClick={() => { setStatus(undefined); setSearch(''); setPage(1); }}
- className="h-12 px-10 bg-surface-container-highest/30 hover:bg-surface-container-highest text-label-xs font-semibold uppercase rounded-md transition-all border border-surface-variant/5 group"
- >
- <Filter className="w-4 h-4 me-2 group-hover:text-cyan-500 transition-colors" />
- {tc('reset')}
- </Button>
- </div>
- }
- />
- </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => { setStatus(undefined); setSearch(''); setPage(1); }}
+                  className="h-12 px-10 bg-surface-container-highest/30 hover:bg-surface-container-highest text-label-xs font-semibold uppercase rounded-md transition-all border border-surface-variant/5 group"
+                >
+                  <Filter className="w-4 h-4 me-2 group-hover:text-cyan-500 transition-colors" />
+                  {tc('reset')}
+                </Button>
+              </div>
+            }
+          />
+        </div>
+      </QueryBoundary>
  </div>
  );
 }

@@ -1,5 +1,6 @@
 'use client';
 // use no memo
+import * as React from 'react';
 import { 
  useReactTable, 
  getCoreRowModel, 
@@ -7,6 +8,7 @@ import {
  ColumnDef,
  RowData
 } from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { type ResourceType } from '@/types/rbac';
 
 declare module '@tanstack/react-table' {
@@ -23,45 +25,72 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { cn } from '@/lib/utils';
 
 interface DataTableProps<T> {
- data: T[];
- columns: ColumnDef<T, unknown>[];
- isLoading?: boolean;
- pagination?: {
- page: number;
- pageSize: number;
- total: number;
- totalPages: number;
- onPageChange: (page: number) => void;
- };
- onExport?: () => void;
- exportComponent?: React.ReactNode;
- emptyState?: React.ReactNode;
- filters?: React.ReactNode;
- onRowClick?: (row: T) => void;
- rowClassName?: (row: T) => string;
- collectionName?: ResourceType;
+  data: T[];
+  columns: ColumnDef<T, unknown>[];
+  isLoading?: boolean;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  };
+  onExport?: () => void;
+  exportComponent?: React.ReactNode;
+  emptyState?: React.ReactNode;
+  filters?: React.ReactNode;
+  onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string;
+  collectionName?: ResourceType;
+  enableVirtualization?: boolean;
+  virtualRowHeight?: number;
+  containerHeight?: string | number;
 }
 
 export function DataTable<T>({
- data,
- columns,
- isLoading,
- pagination,
- onExport,
- exportComponent,
- emptyState,
- filters,
- onRowClick,
- rowClassName,
- collectionName
+  data,
+  columns,
+  isLoading,
+  pagination,
+  onExport,
+  exportComponent,
+  emptyState,
+  filters,
+  onRowClick,
+  rowClassName,
+  collectionName,
+  enableVirtualization = false,
+  virtualRowHeight = 48,
+  containerHeight = '600px'
 }: DataTableProps<T>) {
  const t = useTranslations('common.datatable');
  const locale = useLocale();
+ const parentRef = React.useRef<HTMLDivElement>(null);
+
  const table = useReactTable({
  data: data || [],
  columns,
  getCoreRowModel: getCoreRowModel(),
  });
+
+ const { rows } = table.getRowModel();
+
+ const rowVirtualizer = useVirtualizer({
+   count: rows.length,
+   getScrollElement: () => parentRef.current,
+   estimateSize: () => virtualRowHeight,
+   overscan: 10,
+   enabled: enableVirtualization,
+ });
+
+ const virtualRows = rowVirtualizer.getVirtualItems();
+ const totalSize = rowVirtualizer.getTotalSize();
+
+ const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
+ const paddingBottom =
+   virtualRows.length > 0
+     ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
+     : 0;
 
  return (
  <div className="flex flex-col gap-6 w-full">
@@ -102,12 +131,16 @@ export function DataTable<T>({
  </div>
  )}
 
- <div className="overflow-x-auto rounded-lg bg-surface-container-lowest ambient-shadow">
+ <div 
+   ref={parentRef}
+   className="overflow-auto rounded-lg bg-surface-container-lowest ambient-shadow"
+   style={enableVirtualization ? { height: containerHeight } : {}}
+ >
  <table 
  className="w-full text-start border-collapse min-w-[800px]"
  data-webmcp-collection={collectionName || 'generic_table'}
  >
- <thead className="bg-surface-container-low/30 text-muted-foreground">
+ <thead className="bg-surface-container-low/30 text-muted-foreground sticky top-0 z-10">
  {table.getHeaderGroups().map(headerGroup => (
  <tr key={headerGroup.id}>
  {headerGroup.headers.map((header, idx) => {
@@ -117,7 +150,7 @@ export function DataTable<T>({
  return (
  <th 
  key={header.id} 
- className={`px-4 h-14 font-bold whitespace-nowrap ${isNumeric ? 'text-end' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
+ className={`px-4 h-14 font-bold whitespace-nowrap bg-surface-container-low/30 backdrop-blur-sm ${isNumeric ? 'text-end' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
  >
  {flexRender(header.column.columnDef.header, header.getContext())}
  </th>
@@ -143,11 +176,54 @@ export function DataTable<T>({
  {emptyState || t('no_records')}
  </td>
  </tr>
+ ) : enableVirtualization ? (
+   <>
+     {paddingTop > 0 && (
+       <tr>
+         <td style={{ height: `${paddingTop}px` }} colSpan={columns.length} />
+       </tr>
+     )}
+     {virtualRows.map((virtualRow) => {
+       const row = rows[virtualRow.index];
+       const i = virtualRow.index;
+       return (
+         <tr 
+           key={row.id} 
+           className={`transition-all duration-[140ms] ease-out ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
+           style={{ height: `${virtualRowHeight}px` }}
+           onClick={() => onRowClick && onRowClick(row.original)}
+           data-webmcp-row={row.id}
+         >
+           {row.getVisibleCells().map((cell, idx) => {
+             const isNumeric = cell.column.columnDef.meta?.numeric === true;
+             const isFirst = idx === 0;
+             const isLast = idx === row.getVisibleCells().length - 1;
+             return (
+               <td 
+                 key={cell.id} 
+                 className={`px-4 text-body-md font-medium border-none ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
+                 dir={isNumeric ? 'ltr' : undefined}
+                 data-webmcp-field={cell.column.id}
+               >
+                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
+               </td>
+             );
+           })}
+         </tr>
+       );
+     })}
+     {paddingBottom > 0 && (
+       <tr>
+         <td style={{ height: `${paddingBottom}px` }} colSpan={columns.length} />
+       </tr>
+     )}
+   </>
  ) : (
  table.getRowModel().rows.map((row, i) => (
  <tr 
  key={row.id} 
- className={`transition-all duration-[140ms] ease-out h-14 ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
+ className={`transition-all duration-[140ms] ease-out ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
+ style={{ height: `${virtualRowHeight}px` }}
  onClick={() => onRowClick && onRowClick(row.original)}
  data-webmcp-row={row.id}
  >

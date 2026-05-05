@@ -73,7 +73,7 @@ export function RolesListClient({ locale }: { locale: string }) {
  variant="ghost"
  className="h-10 px-6 rounded-sm bg-surface-container-highest/20 border border-outline-low hover:bg-cyan-500 hover:text-black hover:border-cyan-500 transition-all font-semibold uppercase text-label-xs gap-2 shadow-none"
  >
- <Link href={`/ ${locale}/admin/roles/ ${role.id}`}>
+ <Link href={`/${locale}/admin/roles/${role.id}`}>
  <Eye className="w-3.5 h-3.5" />
  {t('view_detail')}
  </Link>

@@ -1,7 +1,7 @@
 'use client';
  
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -12,12 +12,12 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Plus, CheckCircle2, Clock, Activity, FileCheck, AlertTriangle, Filter } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
  
 // Reason → Semantic visual styling (Hardened for Culinary Architect)
 const REASON_CHIP: Record<string, string> = {
@@ -112,7 +112,7 @@ export function AdjustmentListClient() {
  className="text-label-xs font-bold uppercase text-status-active hover:bg-status-active/10 h-8 px-4 rounded-md"
  onClick={(e) => {
  e.stopPropagation();
- router.push(`adjustments/ ${row.original.id}`);
+ router.push(`/adjustments/${row.original.id}`);
  }}
  >
  {tCommon('view')}
@@ -123,8 +123,10 @@ export function AdjustmentListClient() {
  ], [t, tCommon, router]);
  
  const totalAdjustments = data?.meta?.total || 0;
- const pendingApprovalsCount = data?.data?.filter(a => a.status === 'DRAFT').length || 0;
+ const inProgressCount = data?.data?.filter(i => isPendingStatus('ADJUSTMENT', i.status as DocumentStatus)).length || 0;
+ const postedCount = data?.data?.filter(i => isPostedStatus('ADJUSTMENT', i.status as DocumentStatus)).length || 0;
  const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
+ const pendingApprovalsCount = inProgressCount;
  
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -148,7 +150,7 @@ export function AdjustmentListClient() {
  </div>
  </div>
  <PermissionGate action="create" resource="adjustment">
- <Link href="adjustments/new">
+ <Link href="/adjustments/new">
  <Button className="h-10 px-8 bg-surface-container-low border border-outline-low/10 text-status-active text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-medium shadow-sm gap-2">
  <Plus className="w-3.5 h-3.5" />
  {t('create_new')}
@@ -187,14 +189,14 @@ export function AdjustmentListClient() {
  columns={columns}
  data={data?.data || []}
  isLoading={isLoading}
- onRowClick={(row: AdjustmentSummary) => router.push(`adjustments/ ${row.id}`)}
+ onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
  collectionName="operations_adjustments"
  emptyState={
  <EmptyState 
  title={t('no_records') || 'No Adjustments Found'} description={t('description') || 'Register your first inventory adjustment to recalibrate stock levels.'} action={
  <PermissionGate action="create" resource="adjustment">
  <Button 
- onClick={() => router.push('adjustments/new')}
+ onClick={() => router.push('/adjustments/new')}
  className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
  >
  <Plus className="w-4 h-4 me-2" />

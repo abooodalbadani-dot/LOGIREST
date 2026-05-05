@@ -5,17 +5,18 @@ import { z } from 'zod';
 import type { WarehouseLockState } from '@/types/stocktake';
 
 const LockSchema = z.object({
- is_locked: z.boolean(),
- session_id: z.string().nullable(),
- session_number: z.string().nullable(),
- lock_started_at: z.string().nullable(),
+  isLocked: z.boolean(),
+  sessionId: z.string().nullable(),
+  sessionNumber: z.string().nullable(),
+  lockStartedAt: z.string().nullable(),
 });
 
 export function useWarehouseLock(warehouseId: string | null) {
  return useQuery<WarehouseLockState>({
  queryKey: ['warehouse-lock', warehouseId],
- queryFn: () => apiClient.get(`/inventory/warehouses/ ${warehouseId}/lock`, LockSchema),
+ queryFn: () => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema),
  staleTime: 30_000,
  enabled: !!warehouseId,
  });
 }
+

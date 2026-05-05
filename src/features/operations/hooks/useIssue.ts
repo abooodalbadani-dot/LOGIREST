@@ -55,7 +55,7 @@ export type StockIssueDetail = z.infer<typeof StockIssueDetailSchema>;
 export function useIssue(id: string | null) {
  return useQuery({
  queryKey: ['issue', id],
- queryFn: () => apiClient.get(`/operations/issues/ ${id}`, StockIssueDetailSchema),
+ queryFn: () => apiClient.get(`/operations/issues/${id}`, StockIssueDetailSchema),
  enabled: !!id && id !== 'new',
  staleTime: 60_000,
  });

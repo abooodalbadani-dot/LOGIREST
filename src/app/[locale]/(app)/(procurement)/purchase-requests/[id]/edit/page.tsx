@@ -19,6 +19,6 @@ export default async function PREditPage(props: { params: Promise<{ locale: stri
  }
 
  return (
- <PRFormClient id={params.id} locale={params.locale as 'ar' | 'en'} />
+ <PRFormClient id={params.id} />
  );
 }

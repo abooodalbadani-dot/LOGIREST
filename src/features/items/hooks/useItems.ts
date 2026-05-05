@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Item, type ItemFormValues } from '@/types/master-data';
@@ -15,12 +16,13 @@ const INITIAL_ITEMS: Item[] = [
  name_en: 'Tomato Paste 400g',
  name_ar: 'معجون طماطم 400 جرام',
  category_id: 'CAT-001',
- primary_uom: { id: 'UOM-001', code: 'PCS', name_en: 'Piece', name_ar: 'حبة', is_active: true, created_at: new Date().toISOString() },
+ primary_uom: { id: 'UOM-001', code: 'PCS', name_en: 'Piece', name_ar: 'حبة', is_active: true, created_at: new Date().toISOString(), version: 1 },
  uom_conversions: [],
  track_lots: true,
  min_stock_level: 50,
  reorder_point: 100,
  is_active: true,
+ version: 1,
  },
  {
  id: 'ITEM-002',
@@ -29,12 +31,13 @@ const INITIAL_ITEMS: Item[] = [
  name_en: 'Olive Oil 1L',
  name_ar: 'زيت زيتون 1 لتر',
  category_id: 'CAT-001',
- primary_uom: { id: 'UOM-002', code: 'L', name_en: 'Liter', name_ar: 'لتر', is_active: true, created_at: new Date().toISOString() },
+ primary_uom: { id: 'UOM-002', code: 'L', name_en: 'Liter', name_ar: 'لتر', is_active: true, created_at: new Date().toISOString(), version: 1 },
  uom_conversions: [],
  track_lots: false,
  min_stock_level: 20,
  reorder_point: 40,
  is_active: true,
+ version: 1,
  },
  {
  id: 'ITEM-003',
@@ -43,12 +46,13 @@ const INITIAL_ITEMS: Item[] = [
  name_en: 'Chef Knife 8"',
  name_ar: 'سكين شيف 8 بوصة',
  category_id: 'CAT-002',
- primary_uom: { id: 'UOM-003', code: 'PCS', name_en: 'Piece', name_ar: 'حبة', is_active: true, created_at: new Date().toISOString() },
+ primary_uom: { id: 'UOM-003', code: 'PCS', name_en: 'Piece', name_ar: 'حبة', is_active: true, created_at: new Date().toISOString(), version: 1 },
  uom_conversions: [],
  track_lots: false,
  min_stock_level: 5,
  reorder_point: 10,
  is_active: true,
+ version: 1,
  },
 ];
 
@@ -148,55 +152,62 @@ export function useCreateItem() {
  });
 }
 
-export function useUpdateItem() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.items');
+export function useUpdateItem(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.items');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: ItemFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 1000));
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    mutationFn: async ({ id, values }: { id: string; values: ItemFormValues & { version?: number } }) => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
- const data = queryClient.getQueryData<Item[]>(QUERY_KEY) || INITIAL_ITEMS;
- const item = data.find(i => i.id === id);
- if (!item) throw new Error('Item not found');
+      const data = queryClient.getQueryData<Item[]>(QUERY_KEY) || INITIAL_ITEMS;
+      const item = data.find(i => i.id === id);
+      if (!item) throw new Error('Item not found');
 
- // OPERATIONAL GUARD: Prevent deactivation if stock exists
- // MOCK: ITEM-001 has stock
- if (id === 'ITEM-001' && values.is_active === false && item.is_active === true) {
- throw new Error('GUARD_STOCK_EXISTS');
- }
+      // OPERATIONAL GUARD: Prevent deactivation if stock exists
+      if (id === 'ITEM-001' && values.is_active === false && item.is_active === true) {
+        throw new Error('GUARD_STOCK_EXISTS');
+      }
 
- const updatedItem: Item = { 
- ...item, 
- ...values,
- code: values.code.toUpperCase(),
- primary_uom: values.primary_uom_id === item.primary_uom.id ? item.primary_uom : {
- id: values.primary_uom_id,
- code: 'PCS', // Mock code
- name_en: 'Mock UoM',
- name_ar: 'وحدة قياس',
- is_active: true,
- created_at: item.primary_uom.created_at
- }
- };
+      // MOCK: Simulate conflict if version mismatch (if values.version is provided)
+      if (values.version !== undefined && values.version < (item as any).version) {
+        const error = new Error('CONFLICT') as any;
+        error.response = { status: 409 };
+        throw error;
+      }
 
- queryClient.setQueryData<Item[]>(QUERY_KEY, (old = INITIAL_ITEMS) => 
- old.map(i => i.id === id ? updatedItem : i)
- );
+      const updatedItem: Item = { 
+        ...item, 
+        ...values,
+        code: values.code.toUpperCase(),
+        primary_uom: values.primary_uom_id === item.primary_uom.id ? item.primary_uom : {
+          id: values.primary_uom_id,
+          code: 'PCS', // Mock code
+          name_en: 'Mock UoM',
+          name_ar: 'وحدة قياس',
+          is_active: true,
+          created_at: item.primary_uom.created_at
+        }
+      };
 
- return updatedItem;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- if (error.message === 'GUARD_STOCK_EXISTS') {
- toast.error(t('errors.cannot_deactivate_with_stock'));
- } else {
- toast.error(t('errors.update_failed'));
- }
- }
- });
+      queryClient.setQueryData<Item[]>(QUERY_KEY, (old = INITIAL_ITEMS) => 
+        old.map(i => i.id === id ? updatedItem : i)
+      );
+
+      return updatedItem;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('created_success'));
+    },
+    onError: (error) => {
+      if (error.message === 'GUARD_STOCK_EXISTS') {
+        toast.error(t('errors.cannot_deactivate_with_stock'));
+      } else {
+        toast.error(t('errors.update_failed'));
+      }
+    }
+  });
 }

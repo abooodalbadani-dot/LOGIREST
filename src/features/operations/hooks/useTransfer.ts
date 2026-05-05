@@ -43,8 +43,10 @@ export const TransferDetailSchema = z.object({
  shipped_at: z.string().nullable().optional(),
  received_at: z.string().nullable().optional(),
  variance_reason: z.string().nullable().optional(),
+ version: z.number().optional(),
  lines: z.array(TransferLineSchema),
 });
+
 
 export type TransferDetail = z.infer<typeof TransferDetailSchema>;
 export type TransferLine = z.infer<typeof TransferLineSchema>;
@@ -52,7 +54,7 @@ export type TransferLine = z.infer<typeof TransferLineSchema>;
 export function useTransfer(id: string | null) {
  return useQuery({
  queryKey: ['transfer', id],
- queryFn: () => apiClient.get(`/operations/transfers/ ${id}`, TransferDetailSchema),
+ queryFn: () => apiClient.get(`/operations/transfers/${id}`, TransferDetailSchema),
  enabled: !!id,
  staleTime: 60_000,
  });

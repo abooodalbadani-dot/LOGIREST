@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -71,7 +71,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  const selectedDirection = useWatch({ control, name: 'direction' });
 
  const onSubmit = async (data: AdjustmentFormValues) => {
- if (!!lockState?.is_locked) return;
+ if (!!lockState?.isLocked) return;
  
  try {
  await createAdjustment.mutateAsync({
@@ -86,7 +86,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  lot_allocations: data.lot_number ? [{ lot_id: data.lot_number, qty: data.quantity }] : undefined
  }]
  });
- router.push(`/ ${locale}/adjustments`);
+ router.push("/adjustments");
  } catch (e) {
  console.error(e);
  }
@@ -97,7 +97,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  <Breadcrumb 
  items={[
  { label: tCommon('inventory'), href: '#' },
- { label: t('title'), href: `/ ${locale}/adjustments` },
+ { label: t('title'), href: "/adjustments" },
  { label: t('create_new') }
  ]} 
  />
@@ -107,7 +107,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  description={t('subtitle') || 'Inventory Calibrate Protocol'} actions={
  <Button 
  onClick={handleSubmit(onSubmit)} 
- disabled={!isValid || createAdjustment.isPending || !!lockState?.is_locked}
+ disabled={!isValid || createAdjustment.isPending || !!lockState?.isLocked}
  className={cn(
  "bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-label-xs font-semibold uppercase transition-all shadow-lg disabled:opacity-50"
  )}

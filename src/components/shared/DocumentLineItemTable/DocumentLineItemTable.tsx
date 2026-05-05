@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { LotAllocation } from '@/types/documents';
 
 export interface LineItem {
@@ -25,7 +25,8 @@ interface DocumentLineItemTableProps<T extends LineItem = LineItem> {
  extraColumns?: ExtraColumn<T>[];
  onRemoveLine?: (lineId: string) => void;
  isReadOnly?: boolean;
- locale: 'ar' | 'en';
+ /** Optional locale override (defaults to useLocale() internally). */
+ locale?: 'ar' | 'en';
  /** Override header labels. Defaults to English. */
  headers?: {
  code?: string;
@@ -39,17 +40,18 @@ interface DocumentLineItemTableProps<T extends LineItem = LineItem> {
  hideLotColumns?: boolean;
 }
 
+
 export function DocumentLineItemTable<T extends LineItem>({
  lines,
  extraColumns = [],
  onRemoveLine,
  isReadOnly,
- locale,
  headers = {},
  hideLotColumns = false,
 }: DocumentLineItemTableProps<T>) {
  const t = useTranslations('common.table_headers');
  const tc = useTranslations('common');
+ const locale = useLocale();
 
  const h = {
  code: headers.code ?? t('code'),

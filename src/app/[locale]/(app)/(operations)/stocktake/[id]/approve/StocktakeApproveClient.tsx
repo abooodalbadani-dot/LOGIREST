@@ -15,6 +15,8 @@ import {
  Calculator
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/providers/AuthProvider";
+import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
  const router = useRouter()
+ const { user } = useAuth();
  
  const { data: session, isLoading, error } = useStocktake(id);
  const { data: warehouses } = useWarehouses();
@@ -50,13 +53,18 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
  const [rejectionReason, setRejectionReason] = React.useState("");
 
+ // Access Control: Enforce role and workflow status via engine
+ const canApprove = React.useMemo(() => {
+  if (!session || !user) return false;
+  return canPerformActionV2('STOCKTAKE', session.status as DocumentStatus, 'APPROVE', user.role);
+ }, [session, user]);
+
  if (isLoading) return <LoadingSkeleton />
  if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
 
- // Access Control: Only APPROVER/ADMIN and status VarianceSubmitted
- if (session.status !== 'VarianceSubmitted') {
- router.replace(`/stocktake/ ${id}`);
- return null;
+ if (!canApprove) {
+  router.replace(`/stocktake/${id}`);
+  return null;
  }
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
@@ -79,7 +87,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  try {
  await approveStocktake.mutateAsync({ id });
  toast.success(t('approved_success'));
- router.push(`/stocktake/ ${id}`);
+ router.push(`/stocktake/${id}`);
  } catch {
  toast.error(common('error'));
  }
@@ -94,7 +102,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  await rejectStocktake.mutateAsync({ id, comment: rejectionReason });
  toast.success(t('rejected_success'));
  setIsRejectDialogOpen(false);
- router.push(`/stocktake/ ${id}`);
+ router.push(`/stocktake/${id}`);
  } catch {
  toast.error(common('error'));
  }
@@ -114,7 +122,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  {session.sessionName}
  </span>
  <div className="flex items-center gap-2 mt-1 text-muted-foreground">
- <StatusBadge status="VarianceSubmitted" />
+ <StatusBadge status="VARIANCE_SUBMITTED" />
  <span className="text-label-xs font-semibold opacity-20 uppercase leading-none">|</span>
  <span className="text-label-xs uppercase font-semibold opacity-40">{warehouseName}</span>
  </div>
@@ -144,7 +152,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  />
  </div>
  }
- backHref={`/stocktake/ ${id}`}
+ backHref={`/stocktake/${id}`}
  />
 
  {/* Metrics Grid */}
@@ -201,7 +209,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </TableHeader>
  <TableBody>
  {session.items.map((item) => {
- const variance = (item.countedQty || 0) - item.snapshotQty;
+ const variance = (item.countedQty || 0) - (item.snapshotQty ?? 0);
  const varianceValue = variance * item.unitCost;
  
  return (

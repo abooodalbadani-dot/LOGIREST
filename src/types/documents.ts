@@ -1,20 +1,22 @@
 import { z } from 'zod';
+import { ALL_DOCUMENT_STATUSES, DocumentStatus } from './DocumentStatus';
 
-export type DocumentStatus = 'DRAFT'|'SUBMITTED'|'APPROVED'|'REJECTED'|'POSTED'|'CANCELLED';
-export type DocumentType = 'GRN'|'ISSUE'|'TRANSFER'|'ADJUSTMENT'|'PR'|'PO';
+export type { DocumentStatus };
+export type DocumentType = 'GRN'|'ISSUE'|'TRANSFER'|'ADJUSTMENT'|'PR'|'PO'|'STOCKTAKE'|'KITCHEN_REQUEST';
 
 export const BaseDocumentSchema = z.object({
- id: z.string(),
- document_number: z.string(),
- type: z.enum(['GRN', 'ISSUE', 'TRANSFER', 'ADJUSTMENT', 'PR', 'PO']),
- status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'POSTED', 'CANCELLED']),
- warehouse_id: z.string(),
- branch_id: z.string(),
- notes: z.string().nullable(),
- created_by: z.string(),
- created_at: z.string(),
- posted_at: z.string().nullable(),
- posted_by: z.string().nullable(),
+  id: z.string(),
+  document_number: z.string(),
+  type: z.enum(['GRN', 'ISSUE', 'TRANSFER', 'ADJUSTMENT', 'PR', 'PO', 'STOCKTAKE', 'KITCHEN_REQUEST']),
+  status: z.enum(ALL_DOCUMENT_STATUSES),
+  warehouse_id: z.string(),
+  branch_id: z.string(),
+  notes: z.string().nullable(),
+  created_by: z.string(),
+  created_at: z.string(),
+  posted_at: z.string().nullable(),
+  posted_by: z.string().nullable(),
+  version: z.number().default(1),
 });
 
 export const LotAllocationSchema = z.object({
@@ -159,7 +161,7 @@ export const TransferSchema = BaseDocumentSchema.extend({
  type: z.literal('TRANSFER'),
  from_warehouse_id: z.string(),
  to_warehouse_id: z.string(),
- transfer_status: z.enum(['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'POSTED']),
+ transfer_status: z.enum(ALL_DOCUMENT_STATUSES),
  shipped_at: z.string().nullable(),
  received_at: z.string().nullable(),
  lines: z.array(TransferLineItemSchema),
@@ -188,7 +190,7 @@ export const AdjustmentSchema = BaseDocumentSchema.extend({
  lines: z.array(AdjustmentLineItemSchema),
 });
 
-export interface BaseDocument { id: string; document_number: string; type: DocumentType; status: DocumentStatus; warehouse_id: string; branch_id: string; notes: string | null; created_by: string; created_at: string; posted_at: string | null; posted_by: string | null; }
+export interface BaseDocument { id: string; document_number: string; type: DocumentType; status: DocumentStatus; warehouse_id: string; branch_id: string; notes: string | null; created_by: string; created_at: string; posted_at: string | null; posted_by: string | null; version: number; }
 export interface LotAllocation { lot_id: string; lot_number: string; expiry_date?: string | null; allocated_qty: number; override_reason?: string | null; }
 export interface GRN extends BaseDocument { type: 'GRN'; po_id: string | null; supplier_id: string; currency_id: string; fx_rate: number | null; fx_rate_captured_at: string | null; lines: GRNLineItem[]; }
 export interface GRNLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; po_qty: number | null; received_qty: number; unit_cost_foreign: number; unit_cost_base: number; }

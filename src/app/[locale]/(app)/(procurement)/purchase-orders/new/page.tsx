@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
-import { PurchaseOrderForm } from "@/features/purchasing/components/po-form";
+import { PurchaseOrderForm } from "@/features/purchasing/components/purchase-order-form";
 
 export default function NewPurchaseOrderPage() {
  return (

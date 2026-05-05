@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
  "fixed inset-y-0 start-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto",
  isSidebarOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0"
  )}>
- <Sidebar locale={locale} onClose={() => setIsSidebarOpen(false)} />
+ <Sidebar onClose={() => setIsSidebarOpen(false)} />
  </div>
 
  <main className={cn(

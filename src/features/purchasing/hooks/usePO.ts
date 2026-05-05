@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { ALL_DOCUMENT_STATUSES } from '@/types/DocumentStatus';
 
 const AuditLogSchema = z.object({
  status: z.string(),
@@ -35,8 +36,9 @@ const POLineSchema = z.object({
 export const PODetailSchema = z.object({
  id: z.string(),
  document_number: z.string(),
- status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']),
+ status: z.enum(ALL_DOCUMENT_STATUSES),
  pr_id: z.string().nullable().optional(),
+ version: z.number().optional(),
  supplier_id: z.string(),
  supplier_name: z.string().optional(),
  warehouse_name: z.string().optional(),
@@ -64,7 +66,7 @@ export type AuditLog = z.infer<typeof AuditLogSchema>;
 export function usePO(id: string) {
  return useQuery({
  queryKey: ['purchase-order', id],
- queryFn: () => apiClient.get(`/procurement/purchase-orders/ ${id}`, z.object({ data: PODetailSchema })).then(res => res.data),
+ queryFn: () => apiClient.get(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema })).then(res => res.data),
  enabled: !!id,
  staleTime: 30_000,
  });

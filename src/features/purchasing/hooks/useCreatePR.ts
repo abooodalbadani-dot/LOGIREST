@@ -1,5 +1,6 @@
 'use client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { PRDetailSchema } from './usePR';
@@ -17,9 +18,10 @@ const CreatePRPayloadSchema = z.object({
 
 export type CreatePRPayload = z.infer<typeof CreatePRPayloadSchema>;
 
-export function useCreatePR() {
+export function useCreatePR(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: (payload: CreatePRPayload) => 
  apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(payload)),
  onSuccess: (data) => {

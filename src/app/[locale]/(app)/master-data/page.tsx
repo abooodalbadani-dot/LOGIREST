@@ -33,17 +33,17 @@ export default async function MasterDataHubPage(props: { params: Promise<{ local
  const commonT = await getTranslations('common');
 
  const modules = [
- { name: t('branches.title'), href: `/ ${locale}/master-data/branches`, icon: Building2, resource: 'branches' },
- { name: t('warehouses.title'), href: `/ ${locale}/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
- { name: t('departments.title'), href: `/ ${locale}/master-data/departments`, icon: Users2, resource: 'departments' },
- { name: t('suppliers.title'), href: `/ ${locale}/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
- { name: t('categories.title'), href: `/ ${locale}/master-data/categories`, icon: Tags, resource: 'categories' },
- { name: t('items.title'), href: `/ ${locale}/master-data/items`, icon: Package, resource: 'items' },
- { name: t('uom.title'), href: `/ ${locale}/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
- { name: t('barcodes.title'), href: `/ ${locale}/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
- { name: t('currencies.title'), href: `/ ${locale}/master-data/currencies`, icon: Coins, resource: 'currencies' },
- { name: t('currencies.fx_rates_title'), href: `/ ${locale}/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
- { name: t('import.title'), href: `/ ${locale}/master-data/import`, icon: Upload, resource: 'import' },
+ { name: t('branches.title'), href: `/${locale}/master-data/branches`, icon: Building2, resource: 'branches' },
+ { name: t('warehouses.title'), href: `/${locale}/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
+ { name: t('departments.title'), href: `/${locale}/master-data/departments`, icon: Users2, resource: 'departments' },
+ { name: t('suppliers.title'), href: `/${locale}/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
+ { name: t('categories.title'), href: `/${locale}/master-data/categories`, icon: Tags, resource: 'categories' },
+ { name: t('items.title'), href: `/${locale}/master-data/items`, icon: Package, resource: 'items' },
+ { name: t('uom.title'), href: `/${locale}/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
+ { name: t('barcodes.title'), href: `/${locale}/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
+ { name: t('currencies.title'), href: `/${locale}/master-data/currencies`, icon: Coins, resource: 'currencies' },
+ { name: t('currencies.fx_rates_title'), href: `/${locale}/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
+ { name: t('import.title'), href: `/${locale}/master-data/import`, icon: Upload, resource: 'import' },
  ];
 
  return (

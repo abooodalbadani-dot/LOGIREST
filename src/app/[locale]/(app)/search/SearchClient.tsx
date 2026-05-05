@@ -69,7 +69,7 @@ export default function SearchClient() {
  subtitle: 'SKU: BR-001',
  status: 'ACTIVE',
  metadata: { [isRtl ? 'المخزون' : 'Stock']: '1,200 KG', [isRtl ? 'الموقع' : 'Location']: 'WH-01' },
- link: `/ ${locale}/inventory/balance`,
+ link: `/${locale}/inventory/balance`,
  },
  {
  id: '2',
@@ -78,7 +78,7 @@ export default function SearchClient() {
  subtitle: isRtl ? 'مورد: بهارات العالم' : 'Vendor: Global Spice',
  status: 'PENDING',
  metadata: { [isRtl ? 'التاريخ' : 'Date']: '2024-04-20', [isRtl ? 'الإجمالي' : 'Total']: '4,250 SAR' },
- link: `/ ${locale}/purchase-orders/PO-2024-0042`,
+ link: `/${locale}/purchase-orders/PO-2024-0042`,
  },
  {
  id: '3',
@@ -86,7 +86,7 @@ export default function SearchClient() {
  title: 'LOT-9942-A',
  subtitle: isRtl ? 'زيت زيتون بكر' : 'Extra Virgin Olive Oil',
  metadata: { [isRtl ? 'الانتهاء' : 'Expiry']: '2025-12-31', [isRtl ? 'الكمية' : 'Qty']: '45' },
- link: `/ ${locale}/inventory/lots/LOT-9942-A`,
+ link: `/${locale}/inventory/lots/LOT-9942-A`,
  },
  {
  id: '4',
@@ -95,7 +95,7 @@ export default function SearchClient() {
  subtitle: 'SUP-882',
  status: 'ACTIVE',
  metadata: { [isRtl ? 'التقييم' : 'Rating']: '4.8/5' },
- link: `/ ${locale}/master-data/suppliers/SUP-882`,
+ link: `/${locale}/master-data/suppliers/SUP-882`,
  },
  ]);
  setIsLoading(false);

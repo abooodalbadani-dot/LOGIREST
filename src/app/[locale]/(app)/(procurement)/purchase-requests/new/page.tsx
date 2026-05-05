@@ -1,4 +1,5 @@
-import { PurchaseRequestForm } from "@/features/purchasing/components/pr-form";
+import { PurchaseRequestForm } from "@/features/purchasing/components/purchase-request-form";
+import { useTranslations } from "next-intl";
 
 export default async function NewPurchaseRequestPage(props: { params: Promise<{ locale: string }> }) {
  const { locale } = await props.params;
@@ -11,7 +12,7 @@ export default async function NewPurchaseRequestPage(props: { params: Promise<{ 
  </p>
  </div>
 
- <PurchaseRequestForm locale={locale as 'ar' | 'en'} />
+ <PurchaseRequestForm />
  </div>
  );
 }

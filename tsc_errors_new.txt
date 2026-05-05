@@ -1,0 +1,11 @@
+﻿src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(116,4): error TS1003: Identifier expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(117,2): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(119,4): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(120,2): error TS1005: ')' expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(121,2): error TS1109: Expression expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(121,3): error TS1128: Declaration or statement expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(122,3): error TS1128: Declaration or statement expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(123,2): error TS1128: Declaration or statement expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(123,3): error TS1128: Declaration or statement expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(123,20): error TS1005: ';' expected.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(266,1): error TS1128: Declaration or statement expected.

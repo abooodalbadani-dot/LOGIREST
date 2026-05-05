@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { 
@@ -53,7 +53,7 @@ type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 // Simulated locked warehouse IDs for demo
 const LOCKED_WAREHOUSES = new Set(["wh-locked-01"]);
 
-export function IssueForm({ locale }: { locale: string }) {
+export function IssueForm() {
  const t = useTranslations("operations.issue");
  const tc = useTranslations("common");
  const router = useRouter();
@@ -110,7 +110,7 @@ export function IssueForm({ locale }: { locale: string }) {
  if (!allLinesAllocated) return;
  createIssue.mutate(data, {
  onSuccess: (issue) => {
- router.push(`/ ${locale}/issues/ ${issue.id}`);
+ router.push(`/issues/${issue.id}`);
  },
  onError: () => console.error("Failed to create issue"),
  });

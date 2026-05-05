@@ -31,7 +31,7 @@ import {
  ChevronRight
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -45,6 +45,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  const t = useTranslations('operational.inventory');
  const tc = useTranslations('common');
  const currentLocale = useLocale();
+ const router = useRouter();
  const isRtl = currentLocale === 'ar';
 
  const [warehouseFilter, setWarehouseFilter] = useState('');
@@ -103,6 +104,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  {
  id: 'unit',
  header: tc('table_headers.uom'),
+ cell: ({ row }) => (
  <span className="text-label-xs font-semibold text-muted-foreground/60 uppercase">
  {tc('uoms.kg')}
  </span>
@@ -199,7 +201,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  />
  </div>
  <PermissionGate action="create" resource="inventory">
- <Link href={`/ ${currentLocale}/master-data/items/new`}>
+ <Link href="/master-data/items/new">
  <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-lg shadow-primary/20">
  <Plus className="w-4 h-4" />
  <span className="text-label-xs font-semibold uppercase">{t('add_item')}</span>
@@ -327,7 +329,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  <div className="flex items-center gap-6">
  <PermissionGate action="view" resource="inventory">
  <button 
- onClick={() => window.location.href = `/ ${currentLocale}/inventory/scan-mode`}
+ onClick={() => router.push('/inventory/scan-mode')}
  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
  >
  <Scan className="w-4 h-4 text-operational-cyan" />
@@ -345,7 +347,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  <div className="w-px h-6 bg-surface-variant/10" />
  <PermissionGate action="create" resource="adjustment">
  <button 
- onClick={() => window.location.href = `/ ${currentLocale}/adjustments/new`}
+ onClick={() => router.push('/adjustments/new')}
  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
  >
  <Scale className="w-4 h-4 text-operational-cyan/60" />

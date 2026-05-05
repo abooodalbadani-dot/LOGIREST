@@ -1,5 +1,6 @@
 'use client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { TransferDetailSchema } from './useTransfer';
@@ -23,9 +24,10 @@ const CreateTransferPayloadSchema = z.object({
 
 export type CreateTransferPayload = z.infer<typeof CreateTransferPayloadSchema>;
 
-export function useCreateTransfer() {
+export function useCreateTransfer(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: (payload: CreateTransferPayload) => 
  apiClient.post('/operations/transfers', TransferDetailSchema, CreateTransferPayloadSchema.parse(payload)),
  onSuccess: () => {

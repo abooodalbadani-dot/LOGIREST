@@ -16,6 +16,6 @@ export default async function PurchaseRequestsPage(props: { params: Promise<{ lo
  const t = await getTranslations('procurement.pr');
 
  return (
- <PRListClient locale={params.locale as 'ar' | 'en'} />
+ <PRListClient />
  );
 }

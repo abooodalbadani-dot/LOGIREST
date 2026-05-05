@@ -55,7 +55,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
  } else {
  await create.mutateAsync(values);
  }
- router.push(`/ ${locale}/master-data/branches`);
+ router.push(`/${locale}/master-data/branches`);
  } catch (error) {
  // Error handled by mutation hook via toast
  }
@@ -66,7 +66,7 @@ export function BranchFormClient({ id, createTitle, editTitle, locale }: Props) 
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/master-data/branches`}
+ backHref={`/${locale}/master-data/branches`}
  isSaving={isSaving}
  onSubmit={onSubmit}
  >

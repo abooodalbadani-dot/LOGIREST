@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
  
  // Auto redirect after 3 seconds
  setTimeout(() => {
- router.push(`/ ${locale}/login`);
+  router.push('/login');
  }, 3000);
  } catch (err) {
  setError(t('invalid_credentials')); // Fallback error
@@ -76,7 +76,7 @@ export default function ResetPasswordPage() {
  {t('invalid_reset_link_desc')}
  </p>
  <Link 
- href={`/ ${locale}/forgot-password`} 
+  href="/forgot-password" 
  className="inline-flex items-center gap-2 text-operational-cyan hover:text-operational-cyan/80 font-medium"
  >
  {t('forgot_password')}
@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
  {t('password_reset_redirect')}
  </p>
  <Link 
- href={`/ ${locale}/login`} 
+  href="/login" 
  className="inline-flex items-center gap-2 text-operational-cyan hover:text-operational-cyan/80 font-medium transition-colors"
  >
  {t('back_to_login')}

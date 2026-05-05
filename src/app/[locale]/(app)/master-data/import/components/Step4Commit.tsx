@@ -18,7 +18,7 @@ export function Step4Commit({ wizard, locale }: Step4CommitProps) {
  const router = useRouter();
 
  const handleFinish = () => {
- router.push(`/master-data/ ${wizard.importType === 'uoms' ? 'units-of-measure' : wizard.importType}`);
+ router.push(`/master-data/${wizard.importType === 'uoms' ? 'units-of-measure' : wizard.importType}`);
  };
 
  if (wizard.successCount > 0) {

@@ -49,7 +49,7 @@ export function TemplateListClient({ locale }: { locale: string }) {
  columns={columns}
  data={data?.data ?? []}
  isLoading={isLoading}
- onRowClick={(row: NotificationTemplateRow) => router.push(`/ ${locale}/communications/notifications/templates/ ${row.id}`)}
+ onRowClick={(row: NotificationTemplateRow) => router.push(`/${locale}/communications/notifications/templates/${row.id}`)}
  />
  {data?.meta && data.meta.total_pages > 1 && (
  <Pagination page={page} totalPages={data.meta.total_pages} onPageChange={setPage} />

@@ -15,8 +15,7 @@ export default async function IssuesPage(props: {
  <ProtectedRoute requiredAction="view" requiredResource="issue">
  <IssueListClient 
  initialStatus={status} 
- initialPage={Number(page ?? 1)} 
- locale={locale as 'ar' | 'en'} />
+ initialPage={Number(page ?? 1)} />
  </ProtectedRoute>
  );
 }

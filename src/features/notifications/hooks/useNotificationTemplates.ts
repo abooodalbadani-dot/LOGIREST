@@ -30,7 +30,7 @@ export function useNotificationTemplates(filters: { page?: number } = {}) {
 export function useNotificationTemplate(id: string | null) {
  return useQuery({
  queryKey: ['notifications/templates', id],
- queryFn: () => apiClient.get(`/notifications/templates/ ${id}`, NotificationTemplateSchema),
+ queryFn: () => apiClient.get(`/notifications/templates/${id}`, NotificationTemplateSchema),
  enabled: !!id,
  });
 }

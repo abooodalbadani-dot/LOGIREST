@@ -74,3 +74,6 @@ commit_diffs.txt
 
 # Agent Config
 .agent/mcp_config.json
+
+# Claude AI workdir
+.claude/

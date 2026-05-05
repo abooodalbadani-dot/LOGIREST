@@ -20,7 +20,7 @@ export default async function TransferDetailPage(props: { params: Promise<{ loca
 
  return (
  <ProtectedRoute requiredAction={isNew ? "create" : "view"} requiredResource="transfer">
- <TransferDetailClient id={params.id} locale={params.locale as 'ar' | 'en'} />
+ <TransferDetailClient id={params.id} />
  </ProtectedRoute>
  );
 }

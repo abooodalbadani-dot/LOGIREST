@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
 import { cookies } from 'next/headers';
 
 export default async function LocaleRootPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -7,8 +7,8 @@ export default async function LocaleRootPage({ params }: { params: Promise<{ loc
  const token = cookieStore.get('logirest_token')?.value;
 
  if (token) {
- redirect(`/ ${locale}/dashboard`);
+   redirect({ href: '/dashboard', locale });
  }
  
- redirect(`/ ${locale}/login`);
+   redirect({ href: '/login', locale });
 }

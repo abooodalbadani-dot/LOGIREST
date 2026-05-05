@@ -1,13 +1,15 @@
 'use client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { StockIssueDetailSchema, StockIssueDetail } from './useIssue';
 
-export function useCreateIssue() {
+export function useCreateIssue(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
  
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: (data: Partial<StockIssueDetail>) => 
  apiClient.post(`/operations/issues`, z.object({ data: StockIssueDetailSchema }), data).then(res => res.data),
  onSuccess: () => {

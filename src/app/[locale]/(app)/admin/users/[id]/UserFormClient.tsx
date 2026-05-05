@@ -129,7 +129,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
  } else {
  await createUser.mutateAsync(values);
  }
- router.push(`/ ${locale}/admin/users`);
+ router.push(`/${locale}/admin/users`);
  });
 
 
@@ -145,7 +145,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale }: Props) {
  return (
  <MasterDataFormLayout
  title={id ? editTitle : createTitle}
- backHref={`/ ${locale}/admin/users`}
+ backHref={`/${locale}/admin/users`}
  isSaving={isSubmitting}
  onSubmit={onSubmit}
  >

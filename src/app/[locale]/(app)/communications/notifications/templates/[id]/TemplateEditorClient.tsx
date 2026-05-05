@@ -65,10 +65,10 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
  }, [data, reset]);
 
  const updateMutation = useMutation({
- mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/ ${id}`, TemplateUpdateSchema, body),
+ mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
  onSuccess: () => {
  qc.invalidateQueries({ queryKey: ['notifications/templates'] });
- router.push(`/ ${locale}/communications/notifications/templates`);
+ router.push(`/${locale}/communications/notifications/templates`);
  },
  });
 
@@ -160,7 +160,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
  <Button
  type="button"
  variant="ghost"
- onClick={() => router.push(`/ ${locale}/communications/notifications/templates`)}
+ onClick={() => router.push(`/${locale}/communications/notifications/templates`)}
  className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high h-11 px-6 font-bold uppercase text-label-xs"
  >
  {t('retry') === 'إعادة المحاولة' ? 'إلغاء' : 'Cancel'}

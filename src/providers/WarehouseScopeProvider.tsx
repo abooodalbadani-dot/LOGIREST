@@ -17,7 +17,7 @@ export function WarehouseScopeProvider({ children }: { children: ReactNode }) {
  const { data: lockState, isLoading } = useWarehouseLock(activeScope.warehouseId);
 
  const value: WarehouseScopeContextValue = {
- isLocked: lockState?.is_locked ?? false,
+ isLocked: lockState?.isLocked ?? false,
  lockState,
  isLoading
  };

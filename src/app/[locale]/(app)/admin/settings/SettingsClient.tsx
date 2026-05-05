@@ -71,7 +71,7 @@ export function SettingsClient({ locale }: { locale: string }) {
  <div className="max-w-4xl mx-auto p-8 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <div className="flex flex-col gap-4 border-b border-outline-low pb-8">
  <Link 
- href={`/ ${locale}/admin`}
+ href={`/${locale}/admin`}
  className="inline-flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground hover:text-operational-cyan transition-colors"
  >
  <ArrowLeft className="w-3 h-3 rtl:rotate-180" />

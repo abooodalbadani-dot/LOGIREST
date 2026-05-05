@@ -32,7 +32,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
  {docs.map((doc, idx) => (
  <Link 
  key={doc.id} 
- href={`/ ${locale}/ ${doc.path}/ ${doc.id}`}
+ href={`/${locale}/${doc.path}/${doc.id}`}
  className="px-6 py-4 transition-all duration-300 flex items-center justify-between group hover:bg-muted/50"
  >
  <div className="flex flex-col gap-1.5">
@@ -62,7 +62,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
  </div>
  <div className="p-4 bg-muted/50 text-center">
  <Link 
- href={`/ ${locale}/purchase-requests`}
+ href={`/${locale}/purchase-requests`}
  className="text-label-xxs font-semibold text-operational-cyan hover:text-operational-cyan/80 uppercase transition-all flex items-center justify-center gap-2"
  >
  {t('view_all')}
@@ -72,3 +72,5 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
  </div>
  );
 }
+
+

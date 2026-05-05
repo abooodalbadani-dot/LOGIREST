@@ -3,7 +3,7 @@
 import { useAuth } from '@/providers/AuthProvider';
 import { usePermission } from '@/hooks/usePermission';
 import { ActionType, ResourceType } from '@/types/rbac';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 import PermissionDenied from './PermissionDenied';
 
@@ -42,8 +42,7 @@ export default function ProtectedRoute({
 
  useEffect(() => {
  if (isMounted && !isLoading && !user) {
- const locale = document.documentElement.lang || 'ar';
- router.replace(`/ ${locale}/login`);
+  router.replace('/login');
  }
  }, [user, isLoading, router, isMounted]);
 
@@ -65,3 +64,4 @@ export default function ProtectedRoute({
 
  return <>{children}</>;
 }
+

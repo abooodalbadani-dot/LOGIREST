@@ -10,7 +10,7 @@ export function useWarehouses() {
  setTimeout(() => {
  resolve([
  { 
- id: 'W-1', 
+ id: 'wh-1', 
  code: 'WH-Riyadh-MAIN', 
  branchId: '1', 
  nameEn: 'Riyadh Central Warehouse', 
@@ -21,7 +21,7 @@ export function useWarehouses() {
  updatedAt: '2023-11-01T10:00:00Z' 
  },
  { 
- id: 'W-2', 
+ id: 'wh-2', 
  code: 'WH-Jeddah-TR', 
  branchId: '2', 
  nameEn: 'Jeddah Transit Hub', 
@@ -32,7 +32,7 @@ export function useWarehouses() {
  updatedAt: '2023-11-15T09:30:00Z' 
  },
  { 
- id: 'W-3', 
+ id: 'wh-3', 
  code: 'WH-Dam-VIR', 
  branchId: '3', 
  nameEn: 'Dammam Virtual Stock', 

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { useInventoryMovements } from '@/features/inventory/hooks/useInventoryMovements';
 import { generateExcel } from '@/utils/export';
@@ -41,15 +41,14 @@ export default function MovementsClient() {
  });
 
  const getDocumentPath = useMemo(() => (movement: InventoryMovement): string => {
- const base = `/ ${currentLocale}`;
  switch (movement.document_type) {
- case 'GRN': return `${base}/procurement/grn/ ${movement.document_id}`;
- case 'ISSUE': return `${base}/operations/issues/ ${movement.document_id}`;
- case 'TRANSFER': return `${base}/operations/transfers/ ${movement.document_id}`;
- case 'ADJUSTMENT': return `${base}/operations/adjustments/ ${movement.document_id}`;
+ case 'GRN': return `/procurement/grn/${movement.document_id}`;
+ case 'ISSUE': return `/operations/issues/${movement.document_id}`;
+ case 'TRANSFER': return `/operations/transfers/${movement.document_id}`;
+ case 'ADJUSTMENT': return `/operations/adjustments/${movement.document_id}`;
  default: return '#';
  }
- }, [currentLocale]);
+ }, []);
 
  const columns = useMemo<ColumnDef<InventoryMovement, unknown>[]>(() => [
  {

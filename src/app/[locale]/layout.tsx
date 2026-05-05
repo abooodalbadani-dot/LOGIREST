@@ -12,6 +12,8 @@ import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono } from '@/lib/font
 
 import { Metadata, Viewport } from 'next';
 import { WebMCPProvider } from '@/providers/WebMCPProvider';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
@@ -48,9 +50,12 @@ export default async function LocaleLayout({
  <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
  <WarehouseScopeProvider>
  <WebMCPProvider>
- {children}
- <SessionTimeoutModal />
- <Toaster richColors position="top-center" dir={direction as 'rtl' | 'ltr'} />
+              <ErrorBoundary>
+                <NetworkStatusBanner />
+                {children}
+                <SessionTimeoutModal />
+                <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
+              </ErrorBoundary>
  </WebMCPProvider>
  </WarehouseScopeProvider>
  </ThemeProvider>
