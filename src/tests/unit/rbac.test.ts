@@ -7,5 +7,10 @@ describe('PERMISSION_MATRIX', () => {
  it('ADMIN can post grn', () => expect(PERMISSION_MATRIX.ADMIN?.grn ?? []).toContain('post'));
  it('WH_KEEPER cannot post adjustment', () => expect(PERMISSION_MATRIX.WH_KEEPER?.adjustment ?? []).not.toContain('post'));
  it('INV_MGR can approve PR', () => expect(PERMISSION_MATRIX.INV_MGR?.pr ?? []).toContain('approve'));
- it('PROC_OFFICER can view issues', () => expect(PERMISSION_MATRIX.PROC_OFFICER?.issue ?? []).toContain('view'));
+  it('PROC_OFFICER can view issues', () => expect(PERMISSION_MATRIX.PROC_OFFICER?.issue ?? []).toContain('view'));
+  
+  it('WH_KEEPER can count stocktake', () => expect(PERMISSION_MATRIX.WH_KEEPER?.stocktake ?? []).toContain('count'));
+  it('WH_KEEPER cannot approve stocktake', () => expect(PERMISSION_MATRIX.WH_KEEPER?.stocktake ?? []).not.toContain('approve'));
+  it('INV_MGR can review_variance stocktake', () => expect(PERMISSION_MATRIX.INV_MGR?.stocktake ?? []).toContain('review_variance'));
+  it('ADMIN can close stocktake', () => expect(PERMISSION_MATRIX.ADMIN?.stocktake ?? []).toContain('close'));
 });

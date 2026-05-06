@@ -20,6 +20,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 
 import { canPerformActionV2, type DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
+import { PO_STATUS } from '@/contracts/statuses';
 
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
@@ -203,13 +204,13 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  <SelectValue placeholder={tc('status.all')} />
  </div>
  </SelectTrigger>
- <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
- <SelectItem value="ALL" className="text-label-xs font-bold">{tc('status.all')}</SelectItem>
- <SelectItem value="DRAFT" className="text-label-xs font-bold">{tc('status.draft')}</SelectItem>
- <SelectItem value="SUBMITTED" className="text-label-xs font-bold">{tc('status.submitted')}</SelectItem>
- <SelectItem value="APPROVED" className="text-label-xs font-bold">{tc('status.approved')}</SelectItem>
- <SelectItem value="REJECTED" className="text-label-xs font-bold">{tc('status.rejected')}</SelectItem>
- </SelectContent>
+              <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
+                <SelectItem value="ALL" className="text-label-xs font-bold">{tc('status.all')}</SelectItem>
+                <SelectItem value={PO_STATUS.DRAFT} className="text-label-xs font-bold">{tc('status.draft')}</SelectItem>
+                <SelectItem value={PO_STATUS.SUBMITTED} className="text-label-xs font-bold">{tc('status.submitted')}</SelectItem>
+                <SelectItem value={PO_STATUS.APPROVED} className="text-label-xs font-bold">{tc('status.approved')}</SelectItem>
+                <SelectItem value={PO_STATUS.REJECTED} className="text-label-xs font-bold">{tc('status.rejected')}</SelectItem>
+              </SelectContent>
  </Select>
  </div>
 

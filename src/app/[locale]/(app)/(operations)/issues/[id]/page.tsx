@@ -20,7 +20,7 @@ export default async function IssueDetailPage(props: { params: Promise<{ locale:
 
  return (
  <ProtectedRoute requiredAction={isNew ? "create" : "view"} requiredResource="issue">
- <IssueDetailClient id={params.id} />
+    <IssueDetailClient id={params.id} locale={params.locale as 'ar' | 'en'} />
  </ProtectedRoute>
  );
 }

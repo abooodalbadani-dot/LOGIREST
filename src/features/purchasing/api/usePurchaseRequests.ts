@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { PurchaseRequest } from '../types';
+import { PR_STATUS } from '@/contracts/statuses';
+
 
 export function usePurchaseRequests() {
  return useQuery({
@@ -14,7 +16,7 @@ export function usePurchaseRequests() {
  document_number: 'PR-2026-001',
  department_id: '1', // Riyadh Main Branch
  expected_date: '2026-04-25T00:00:00Z',
- status: 'SUBMITTED',
+          status: PR_STATUS.SUBMITTED,
  lines: [
  { 
  id: 'L1',
@@ -37,7 +39,7 @@ export function usePurchaseRequests() {
  document_number: 'PR-2026-002',
  department_id: '2', // Jeddah Branch
  expected_date: '2026-04-20T00:00:00Z',
- status: 'APPROVED',
+          status: PR_STATUS.APPROVED,
  lines: [
  { 
  id: 'L2',
@@ -74,7 +76,7 @@ export function usePurchaseRequest(id: string) {
  document_number: 'PR-2026-001',
  department_id: '1',
  expected_date: '2026-04-25T00:00:00Z',
- status: 'SUBMITTED',
+          status: PR_STATUS.SUBMITTED,
  lines: [
  { 
  id: 'L1',
@@ -97,7 +99,7 @@ export function usePurchaseRequest(id: string) {
  document_number: 'PR-2026-002',
  department_id: '2',
  expected_date: '2026-04-20T00:00:00Z',
- status: 'APPROVED',
+          status: PR_STATUS.APPROVED,
  lines: [
  { 
  id: 'L2',

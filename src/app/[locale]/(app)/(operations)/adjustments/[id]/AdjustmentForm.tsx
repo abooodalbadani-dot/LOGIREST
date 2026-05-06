@@ -50,7 +50,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
-import { type DocumentStatus } from '@/core/workflow/document-engine';
+import { ADJUSTMENT_STATUS, type DocumentStatus } from '@/contracts/statuses';
 import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operations/hooks/useAdjustment';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 
@@ -76,7 +76,7 @@ export function AdjustmentForm({
   const { user } = useAuth();
   
   const isNew = id === 'new';
-  const adjustmentStatus = (document?.status as DocumentStatus) ?? 'DRAFT';
+  const adjustmentStatus = (document?.status as DocumentStatus) ?? ADJUSTMENT_STATUS.DRAFT;
 
   const createAdjustment = useCreateAdjustment();
   const submitAdjustment = useSubmitAdjustment(id, { onConflict });
@@ -463,7 +463,7 @@ export function AdjustmentForm({
             </div>
 
             {/* Item Scanning / Adding */}
-            {canEdit && adjustmentStatus !== 'POSTED' && (
+            {canEdit && adjustmentStatus !== ADJUSTMENT_STATUS.POSTED && (
               <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
                 <div className="flex items-center gap-3">
                   <Package className="w-5 h-5 text-primary" />

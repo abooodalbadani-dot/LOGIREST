@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 
 
-export const AdjustmentStatusSchema = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'POSTED']);
-export type AdjustmentStatus = z.infer<typeof AdjustmentStatusSchema>;
+import { AdjustmentStatus, ALL_STATUSES } from '@/contracts/statuses';
+
+export const AdjustmentStatusSchema = z.enum(ALL_STATUSES);
+
 
 export const AdjustmentLineSchema = z.object({
  id: z.string(),

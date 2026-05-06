@@ -18,6 +18,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { isDocumentLocked, canPerformActionV2, DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
+import { PR_STATUS } from '@/contracts/statuses';
 
 export function PRListClient() {
  const locale = useLocale();
@@ -194,13 +195,13 @@ export function PRListClient() {
  <SelectValue placeholder={tc('status.all')} />
  </div>
  </SelectTrigger>
- <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
- <SelectItem value="ALL" className="text-label-xs font-bold">{tc('status.all')}</SelectItem>
- <SelectItem value="DRAFT" className="text-label-xs font-bold">{tc('status.draft')}</SelectItem>
- <SelectItem value="SUBMITTED" className="text-label-xs font-bold">{tc('status.submitted')}</SelectItem>
- <SelectItem value="APPROVED" className="text-label-xs font-bold">{tc('status.approved')}</SelectItem>
- <SelectItem value="REJECTED" className="text-label-xs font-bold">{tc('status.rejected')}</SelectItem>
- </SelectContent>
+                <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
+                  <SelectItem value="ALL" className="text-label-xs font-bold">{tc('status.all')}</SelectItem>
+                  <SelectItem value={PR_STATUS.DRAFT} className="text-label-xs font-bold">{tc('status.draft')}</SelectItem>
+                  <SelectItem value={PR_STATUS.SUBMITTED} className="text-label-xs font-bold">{tc('status.submitted')}</SelectItem>
+                  <SelectItem value={PR_STATUS.APPROVED} className="text-label-xs font-bold">{tc('status.approved')}</SelectItem>
+                  <SelectItem value={PR_STATUS.REJECTED} className="text-label-xs font-bold">{tc('status.rejected')}</SelectItem>
+                </SelectContent>
  </Select>
  </div>
 

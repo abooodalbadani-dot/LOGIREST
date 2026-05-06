@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
@@ -23,17 +23,15 @@ export default function LoginPage() {
  const { login, user, isLoading: authLoading } = useAuth();
  const [error, setError] = useState<string | null>(null);
  const [isSubmitting, setIsSubmitting] = useState(false);
- const [isMounted, setIsMounted] = useState(false);
+ const redirected = useRef(false);
 
+ // Redirect authenticated users to dashboard
  useEffect(() => {
- setTimeout(() => setIsMounted(true), 0);
- }, []);
-
- useEffect(() => {
- if (isMounted && !authLoading && user) {
- router.replace(`dashboard`);
+ if (!authLoading && user && !redirected.current) {
+ redirected.current = true;
+ router.replace('dashboard');
  }
- }, [user, authLoading, router, isMounted]);
+ }, [user, authLoading, router]);
 
  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginValues>({
  resolver: zodResolver(loginSchema),
@@ -50,7 +48,8 @@ export default function LoginPage() {
  }
  };
 
- if (!isMounted || authLoading || user) {
+ // Show overlay spinner only when redirecting (user is authenticated)
+ if (!authLoading && user) {
  return (
  <div className="flex w-full items-center justify-center min-h-screen bg-background">
  <Loader2 className="w-8 h-8 animate-spin text-operational-cyan" />

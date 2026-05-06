@@ -5,6 +5,7 @@ import { useTransfer } from '@/features/operations/hooks/useTransfer';
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { TransferForm } from '@/features/operations/components/transfer-form';
 import { TransferViewer } from '@/features/operations/components/transfer-viewer';
+import { TRANSFER_STATUS } from '@/contracts/statuses';
 
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
@@ -29,7 +30,7 @@ export function TransferDetailClient({ id }: { id: string }) {
     );
   }
 
-  const transferStatus = transfer?.transfer_status ?? 'DRAFT';
+  const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
   const isDocLocked = isDocumentLocked("TRANSFER", transferStatus as DocumentStatus);
 
   if (isDocLocked && transfer) {

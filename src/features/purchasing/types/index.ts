@@ -1,4 +1,5 @@
-export type PRStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+import { PRStatus, POStatus, GRNStatus } from '@/contracts/statuses';
+
 
 export interface PurchaseRequestLineItem {
  id: string;
@@ -39,7 +40,7 @@ export interface CreatePurchaseRequestDTO {
  notes?: string;
 }
 
-export type POStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+
 
 export interface PurchaseOrderLineItem {
  id: string;
@@ -93,7 +94,7 @@ export interface CreatePurchaseOrderDTO {
  notes?: string;
 }
 
-export type GRNStatus = 'DRAFT' | 'RECEIVED' | 'POSTED' | 'CANCELLED';
+
 
 export interface GoodsReceiptLineItem {
  id?: string;

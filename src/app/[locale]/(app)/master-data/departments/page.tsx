@@ -22,7 +22,7 @@ export default async function DepartmentsPage(props: { params: Promise<{ locale:
  <PageHeader 
  title={t('title')} 
  description={t('description')} />
- <DepartmentListClient />
+ <DepartmentListClient locale={params.locale} />
  </div>
  </ProtectedRoute>
  );

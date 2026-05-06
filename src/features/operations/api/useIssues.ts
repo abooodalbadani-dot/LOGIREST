@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Issue, CreateIssueDTO, IssueStatus } from '../types';
+import { Issue, CreateIssueDTO } from '../types';
+import { ISSUE_STATUS } from '@/contracts/statuses';
+
 
 const now = new Date();
 const daysAgo = (d: number) => new Date(now.getTime() - 86400000 * d).toISOString();
@@ -11,7 +13,7 @@ const mockIssues: Issue[] = [
  warehouseId: 'wh-001',
  departmentId: 'dept-kitchen-1',
  requestedBy: 'chef-ali',
- status: 'POSTED',
+  status: ISSUE_STATUS.POSTED,
  items: [
  {
  id: 'il-001',
@@ -34,7 +36,7 @@ const mockIssues: Issue[] = [
  warehouseId: 'wh-001',
  departmentId: 'dept-kitchen-2',
  requestedBy: 'chef-sara',
- status: 'DRAFT',
+  status: ISSUE_STATUS.DRAFT,
  items: [
  {
  id: 'il-002',
@@ -62,7 +64,7 @@ const mockIssues: Issue[] = [
  warehouseId: 'wh-002',
  departmentId: 'dept-kitchen-1',
  requestedBy: 'chef-ali',
- status: 'POSTED',
+  status: ISSUE_STATUS.POSTED,
  items: [
  {
  id: 'il-004',
@@ -119,7 +121,7 @@ export function useCreateIssue() {
  warehouseId: data.warehouseId,
  departmentId: data.departmentId,
  requestedBy: 'current-user',
- status: 'DRAFT',
+  status: ISSUE_STATUS.DRAFT,
  items: data.items.map((it, idx) => ({ ...it, id: `il-new- ${idx}` })),
  notes: data.notes,
  createdAt: new Date().toISOString(),
@@ -141,7 +143,7 @@ export function usePostIssue() {
  if (idx === -1) throw new Error('Issue not found');
  const updated = {
  ...mockIssues[idx],
- status: 'POSTED' as IssueStatus,
+  status: ISSUE_STATUS.POSTED,
  postedAt: new Date().toISOString(),
  postedBy: 'current-user',
  updatedAt: new Date().toISOString(),

@@ -43,6 +43,7 @@ import {
   DocumentStatus 
 } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
+import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
 
 interface KitchenRequestFormProps {
   request: any;
@@ -82,11 +83,11 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       h.push({ status: request.status.toLowerCase() as Status, at: request.fulfilled_at, by: request.fulfilled_by || 'Store Keeper' });
     }
     return h;
-  }, [request]);
+  }, [request, user?.role]);
 
   const handleApprove = async () => {
     try {
-      await updateStatus.mutateAsync({ id, status: 'APPROVED', version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.APPROVED as any, version: request.version ?? 0 });
     } catch (error) {
       console.error('Failed to approve request', error);
     }
@@ -95,7 +96,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const handleReject = async () => {
     if (!rejectionReason.trim()) return;
     try {
-      await updateStatus.mutateAsync({ id, status: 'REJECTED', reason: rejectionReason, version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED as any, reason: rejectionReason, version: request.version ?? 0 });
       setRejectDialogOpen(false);
     } catch (error) {
       console.error('Failed to reject request', error);
@@ -225,7 +226,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   <p className="text-label-sm text-muted-foreground italic leading-relaxed">&quot;{request.notes}&quot;</p>
                 </div>
               )}
-              {status !== 'DRAFT' && request.rejection_reason && (
+              {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejection_reason && (
                 <div className="md:col-span-3 p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
                   <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
                     <AlertCircle className="w-3.5 h-3.5" />

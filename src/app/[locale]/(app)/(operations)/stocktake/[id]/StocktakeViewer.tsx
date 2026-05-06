@@ -21,11 +21,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { StatusTimeline, Status } from "@/components/shared/StatusTimeline";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 
-import { Stocktake, StocktakeItem } from "@/features/operations/types/stocktake";
+import { StocktakeSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
+import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 
 interface StocktakeViewerProps {
-  session: Stocktake;
+  session: StocktakeSessionVM;
   locale: 'ar' | 'en';
   actions?: React.ReactNode;
 }
@@ -55,9 +57,11 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
               <h1 className="font-semibold text-title-sm">
                 {session.sessionName}
               </h1>
-              <Badge variant="outline" className="h-6 px-2 text-label-xxs font-semibold uppercase bg-primary/5 text-primary border-none">
-                {t(`${session.status.toLowerCase()}_status`)}
-              </Badge>
+              <StatusBadge 
+                status={session.status} 
+                configMap={STOCKTAKE_STATUS_UI}
+                className="h-6 px-2 text-label-xxs font-semibold border-none" 
+              />
             </div>
           </div>
 
@@ -128,7 +132,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {session.items.map((item: StocktakeItem) => {
+                {session.items.map((item: StocktakeItemVM) => {
                   const hasCounted = item.countedQty !== undefined
                   const variance = item.variance ?? 0
                   
@@ -158,15 +162,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
                         ) : common('dash')}
                       </TableCell>
                       <TableCell className="text-end px-6">
-                        {hasCounted ? (
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none text-label-xxs font-semibold uppercase h-6">
-                            {common('completed')}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
-                            {common('pending')}
-                          </Badge>
-                        )}
+                         <StatusBadge 
+                           status={hasCounted ? 'COMPLETED' : 'PENDING'} 
+                           className="border-none text-label-xxs font-semibold h-6"
+                         />
                       </TableCell>
                     </TableRow>
                   )

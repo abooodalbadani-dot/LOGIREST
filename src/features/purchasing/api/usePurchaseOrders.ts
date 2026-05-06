@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { PurchaseOrder } from '../types';
+import { PO_STATUS } from '@/contracts/statuses';
+
 
 export function usePurchaseOrders() {
  return useQuery({
@@ -17,7 +19,7 @@ export function usePurchaseOrders() {
  exchange_rate: 3.75,
  created_by: 'Khalid Abdullah',
  expected_date: '2026-04-25T00:00:00Z',
- status: 'APPROVED',
+ status: PO_STATUS.APPROVED,
  supplier_total_amount: 1000.00,
  base_total_amount: 3750.00,
  lines: [
@@ -47,7 +49,7 @@ export function usePurchaseOrders() {
  exchange_rate: 1.0,
  created_by: 'Fatima Ali',
  expected_date: '2026-04-20T00:00:00Z',
- status: 'SUBMITTED',
+ status: PO_STATUS.SUBMITTED,
  supplier_total_amount: 350.00,
  base_total_amount: 350.00,
  lines: [
@@ -92,7 +94,7 @@ export function usePurchaseOrder(id: string) {
  exchange_rate: 3.75,
  created_by: 'Khalid Abdullah',
  expected_date: '2026-04-25T00:00:00Z',
- status: 'APPROVED',
+ status: PO_STATUS.APPROVED,
  supplier_total_amount: 1000.00,
  base_total_amount: 3750.00,
  lines: [
@@ -122,7 +124,7 @@ export function usePurchaseOrder(id: string) {
  exchange_rate: 1.0,
  created_by: 'Fatima Ali',
  expected_date: '2026-04-20T00:00:00Z',
- status: 'SUBMITTED',
+ status: PO_STATUS.SUBMITTED,
  supplier_total_amount: 350.00,
  base_total_amount: 350.00,
  lines: [

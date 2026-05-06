@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ALL_DOCUMENT_STATUSES, DocumentStatus } from './DocumentStatus';
+import { ALL_STATUSES } from '../contracts/statuses';
+import { DocumentStatus } from './DocumentStatus';
 
 export type { DocumentStatus };
 export type DocumentType = 'GRN'|'ISSUE'|'TRANSFER'|'ADJUSTMENT'|'PR'|'PO'|'STOCKTAKE'|'KITCHEN_REQUEST';
@@ -8,7 +9,7 @@ export const BaseDocumentSchema = z.object({
   id: z.string(),
   document_number: z.string(),
   type: z.enum(['GRN', 'ISSUE', 'TRANSFER', 'ADJUSTMENT', 'PR', 'PO', 'STOCKTAKE', 'KITCHEN_REQUEST']),
-  status: z.enum(ALL_DOCUMENT_STATUSES),
+  status: z.enum(ALL_STATUSES),
   warehouse_id: z.string(),
   branch_id: z.string(),
   notes: z.string().nullable(),
@@ -161,7 +162,7 @@ export const TransferSchema = BaseDocumentSchema.extend({
  type: z.literal('TRANSFER'),
  from_warehouse_id: z.string(),
  to_warehouse_id: z.string(),
- transfer_status: z.enum(ALL_DOCUMENT_STATUSES),
+  transfer_status: z.enum(['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'POSTED', 'CANCELLED']),
  shipped_at: z.string().nullable(),
  received_at: z.string().nullable(),
  lines: z.array(TransferLineItemSchema),
@@ -200,7 +201,8 @@ export interface PurchaseOrder extends BaseDocument { type: 'PO'; pr_id: string 
 export interface POLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: number | null; ordered_qty: number; unit_price: number; total_price: number; }
 export interface StockIssue extends BaseDocument { type: 'ISSUE'; destination_dept_id: string; requested_by: string; lines: IssueLineItem[]; }
 export interface IssueLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; requested_qty: number; issued_qty: number; lot_allocations: LotAllocation[]; }
-export interface Transfer extends BaseDocument { type: 'TRANSFER'; from_warehouse_id: string; to_warehouse_id: string; transfer_status: 'DRAFT'|'IN_TRANSIT'|'RECEIVED'|'POSTED'; shipped_at: string | null; received_at: string | null; lines: TransferLineItem[]; }
+import { TransferStatus } from '../contracts/statuses';
+export interface Transfer extends BaseDocument { type: 'TRANSFER'; from_warehouse_id: string; to_warehouse_id: string; transfer_status: TransferStatus; shipped_at: string | null; received_at: string | null; lines: TransferLineItem[]; }
 export interface TransferLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; shipped_qty: number; received_qty: number | null; }
 export type AdjustmentReason = 'DAMAGE'|'EXPIRY'|'THEFT'|'COUNTING_ERROR'|'OTHER';
 export interface Adjustment extends BaseDocument { type: 'ADJUSTMENT'; reason: AdjustmentReason; approved_by: string | null; lines: AdjustmentLineItem[]; }

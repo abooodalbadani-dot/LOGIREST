@@ -1,4 +1,5 @@
-export type IssueStatus = 'DRAFT' | 'POSTED' | 'CANCELLED';
+import { IssueStatus } from '@/contracts/statuses';
+
 
 export interface IssueLot {
  lotNumber: string;

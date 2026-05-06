@@ -19,6 +19,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { format } from 'date-fns';
 import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+import { GRN_STATUS } from '@/contracts/statuses';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
@@ -211,8 +212,8 @@ export function GRNListClient({
                     </SelectTrigger>
                     <SelectContent className="bg-surface-container-high border-surface-variant/5 rounded-md">
                       <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('status.all')}</SelectItem>
-                      <SelectItem value="DRAFT" className="text-label-xs font-semibold uppercase">{tc('status.draft')}</SelectItem>
-                      <SelectItem value="POSTED" className="text-label-xs font-semibold uppercase">{tc('status.posted')}</SelectItem>
+                      <SelectItem value={GRN_STATUS.DRAFT} className="text-label-xs font-semibold uppercase">{tc('status.draft')}</SelectItem>
+                      <SelectItem value={GRN_STATUS.POSTED} className="text-label-xs font-semibold uppercase">{tc('status.posted')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

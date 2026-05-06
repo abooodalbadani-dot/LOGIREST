@@ -22,7 +22,7 @@ export default async function POApprovePage({ params }: Props) {
 
  return (
  <ProtectedRoute requiredAction="approve" requiredResource="po">
- <POApproveClient id={id} />
+ <POApproveClient id={id} locale={locale as "ar" | "en"} />
  </ProtectedRoute>
  );
 }

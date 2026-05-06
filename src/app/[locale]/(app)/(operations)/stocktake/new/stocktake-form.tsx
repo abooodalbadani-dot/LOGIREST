@@ -80,15 +80,19 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  const isWarehouseLocked = !!lockStatus?.isLocked;
 
  const onSubmit = (data: StocktakeFormValues) => {
- createStocktake.mutate(data, {
- onSuccess: (session) => {
- router.push(`/stocktake/${session.id}`);
- },
- onError: (error) => {
- console.error("Failed to create stocktake session", error);
- },
- });
- };
+    createStocktake.mutate({
+      session_name: data.sessionName,
+      warehouse_id: data.warehouseId,
+      description: data.description,
+    }, {
+      onSuccess: (session) => {
+        router.push(`/stocktake/${session.id}`);
+      },
+      onError: (error) => {
+        console.error("Failed to create stocktake session", error);
+      },
+    });
+  };
 
  if (warehousesLoading) {
  return (

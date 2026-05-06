@@ -5,37 +5,38 @@ export type StocktakeStatus = DocumentStatus;
 
 export const StocktakeItemSchema = z.object({
   id: z.string(),
-  itemId: z.string(),
-  itemName: z.string(),
+  item_id: z.string(),
+  item_name: z.string(),
   barcode: z.string().optional(),
   uom: z.string(),
-  snapshotQty: z.number().nullable(), // Allow null during counting if needed, but usually filled
-  countedQty: z.number().nullable(),
+  snapshot_qty: z.number().nullable(),
+  counted_qty: z.number().nullable(),
   variance: z.number().nullable(),
-  varianceReason: z.string().nullable(),
-  lotNumber: z.string().optional(),
-  expiryDate: z.string().optional(),
-  unitCost: z.number(),
+  variance_reason: z.string().nullable(),
+  lot_number: z.string().optional(),
+  expiry_date: z.string().optional(),
+  unit_cost: z.number(),
 });
 
 export const StocktakeSessionSchema = z.object({
   id: z.string(),
-  sessionNumber: z.string(),
-  sessionName: z.string(),
-  warehouseId: z.string(),
-  warehouseName: z.string().optional(),
+  session_number: z.string(),
+  session_name: z.string(),
+  warehouse_id: z.string(),
+  warehouse_name: z.string().optional(),
   status: z.enum(ALL_DOCUMENT_STATUSES),
-  snapshotAt: z.string(),
-  startedBy: z.string(),
-  postedAt: z.string().nullable(),
-  postedBy: z.string().nullable(),
+  snapshot_at: z.string(),
+  started_by: z.string(),
+  started_at: z.string().optional(),
+  posted_at: z.string().nullable(),
+  posted_by: z.string().nullable(),
   items: z.array(StocktakeItemSchema),
   version: z.number().default(1),
   description: z.string().optional(),
-  approverComment: z.string().optional(),
-  approvedAt: z.string().optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
+  approver_comment: z.string().optional(),
+  approved_at: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
 });
 
 export type StocktakeSession = z.infer<typeof StocktakeSessionSchema>;
@@ -47,13 +48,13 @@ export interface Stocktake extends StocktakeSession {
 }
 
 export interface CreateStocktakeDTO {
-  sessionName: string;
-  warehouseId: string;
+  session_name: string;
+  warehouse_id: string;
   description?: string;
 }
 
 export interface SubmitCountDTO {
-  stocktakeId: string;
-  counts: { itemId: string; countedQty: number; varianceReason?: string }[];
+  stocktake_id: string;
+  counts: { item_id: string; counted_qty: number; variance_reason?: string }[];
 }
 

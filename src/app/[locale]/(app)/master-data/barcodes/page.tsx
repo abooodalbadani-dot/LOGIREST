@@ -24,7 +24,7 @@ export default async function BarcodesPage(props: { params: Promise<{ locale: st
  title={t('title')} 
  description="Item barcode and label management"
  />
- <BarcodeListClient />
+ <BarcodeListClient locale={params.locale} />
  </div>
  </ProtectedRoute>
  );

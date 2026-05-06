@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,19 +68,19 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
   return null;
  }
 
- const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+ const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
+ const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouse_name || session.warehouse_id);
  const currency = common('currencies.sar');
 
  // Calculations
  const itemsWithVariance = session.items.filter(item => (item.variance || 0) !== 0);
  const totalPositiveVariance = session.items.reduce((acc, item) => {
  const variance = item.variance || 0;
- return variance > 0 ? acc + (variance * item.unitCost) : acc;
+ return variance > 0 ? acc + (variance * item.unit_cost) : acc;
  }, 0);
  const totalNegativeVariance = session.items.reduce((acc, item) => {
  const variance = item.variance || 0;
- return variance < 0 ? acc + (Math.abs(variance) * item.unitCost) : acc;
+ return variance < 0 ? acc + (Math.abs(variance) * item.unit_cost) : acc;
  }, 0);
  const netImpact = totalPositiveVariance - totalNegativeVariance;
 
@@ -119,10 +120,10 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </div>
  <div className="flex flex-col">
  <span className="font-semibold text-headline-lg">
- {session.sessionName}
+ {session.session_name}
  </span>
  <div className="flex items-center gap-2 mt-1 text-muted-foreground">
- <StatusBadge status="VARIANCE_SUBMITTED" />
+  <StatusBadge status={session.status} configMap={STOCKTAKE_STATUS_UI} />
  <span className="text-label-xs font-semibold opacity-20 uppercase leading-none">|</span>
  <span className="text-label-xs uppercase font-semibold opacity-40">{warehouseName}</span>
  </div>
@@ -209,22 +210,22 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </TableHeader>
  <TableBody>
  {session.items.map((item) => {
- const variance = (item.countedQty || 0) - (item.snapshotQty ?? 0);
- const varianceValue = variance * item.unitCost;
+ const variance = (item.counted_qty || 0) - (item.snapshot_qty ?? 0);
+ const varianceValue = variance * item.unit_cost;
  
  return (
  <TableRow key={item.id} className="hover:bg-white/[0.01] transition-colors border-none group">
  <TableCell className="px-8 py-5">
  <div className="flex flex-col gap-0.5">
- <span className="font-bold text-foreground group-hover:text-primary transition-colors">{item.itemName}</span>
+ <span className="font-bold text-foreground group-hover:text-primary transition-colors">{item.item_name}</span>
  <span className="text-label-xs font-semibold text-muted-foreground/30 font-mono" dir="ltr">{item.barcode}</span>
  </div>
  </TableCell>
  <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
- {item.snapshotQty} {item.uom}
+ {item.snapshot_qty} {item.uom}
  </TableCell>
  <TableCell className="text-center font-mono text-label-sm font-semibold text-foreground" dir="ltr">
- {item.countedQty} {item.uom}
+ {item.counted_qty} {item.uom}
  </TableCell>
  <TableCell className="text-center">
  <div className={cn(
@@ -242,7 +243,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </TableCell>
  <TableCell className="px-8">
  <span className="text-label-sm text-muted-foreground/60 leading-relaxed">
- {item.varianceReason || "—"}
+ {item.variance_reason || "—"}
  </span>
  </TableCell>
  </TableRow>

@@ -8,7 +8,8 @@ import { WarehouseScopeProvider } from '@/providers/WarehouseScopeProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { cookies } from 'next/headers';
 
-import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono } from '@/lib/fonts';
+import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono, yaModernPro } from '@/lib/fonts';
+
 
 import { Metadata, Viewport } from 'next';
 import { WebMCPProvider } from '@/providers/WebMCPProvider';
@@ -38,12 +39,13 @@ export default async function LocaleLayout({
  const messages = await getMessages();
  const direction = locale === 'ar' ? 'rtl' : 'ltr';
  const cookieStore = await cookies();
- const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'dark';
+ const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
 
 
  return (
  <html lang={locale} dir={direction} className={theme} suppressHydrationWarning>
- <body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${tajawal.variable}`}>
+ <body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${tajawal.variable} ${yaModernPro.variable}`}>
+
  <NextIntlClientProvider messages={messages} locale={locale}>
  <QueryProvider>
  <AuthProvider>

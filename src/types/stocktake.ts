@@ -1,14 +1,8 @@
 import { z } from 'zod';
 import { ALL_DOCUMENT_STATUSES } from './DocumentStatus';
 
-export type StocktakeStatus = 
-  | 'DRAFT'
-  | 'STARTED'
-  | 'COUNTING_COMPLETED'
-  | 'VARIANCE_SUBMITTED'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'POSTED';
+import { StocktakeStatus } from '../contracts/statuses';
+
 
 export interface StocktakeCount { 
   id: string; 
@@ -25,12 +19,16 @@ export interface StocktakeCount {
 export interface StocktakeSession { 
   id: string; 
   sessionNumber: string; 
+  sessionName: string;
   warehouseId: string; 
+  warehouseName?: string;
   status: StocktakeStatus; 
   snapshotAt: string; 
   startedBy: string; 
   postedAt: string | null; 
   postedBy: string | null; 
+  createdAt: string;
+  updatedAt: string;
   items: StocktakeCount[]; 
 }
 
@@ -56,12 +54,16 @@ export const StocktakeCountSchema = z.object({
 export const StocktakeSessionSchema = z.object({
   id: z.string(),
   sessionNumber: z.string(),
+  sessionName: z.string(),
   warehouseId: z.string(),
+  warehouseName: z.string().optional(),
   status: z.enum(ALL_DOCUMENT_STATUSES),
   snapshotAt: z.string(),
   startedBy: z.string(),
   postedAt: z.string().nullable(),
   postedBy: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
   items: z.array(StocktakeCountSchema),
 });
 

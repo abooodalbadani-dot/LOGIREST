@@ -12,6 +12,7 @@ import { Send } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { GRN_STATUS } from '@/contracts/statuses';
 
 interface GRNDetailClientProps {
   id: string;
@@ -42,7 +43,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
     );
   }
 
-  const status = (grn?.status || 'DRAFT') as DocumentStatus;
+  const status = (grn?.status || GRN_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('GRN', status);
 
   // Dispatcher Logic

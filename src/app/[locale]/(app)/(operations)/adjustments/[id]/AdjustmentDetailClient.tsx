@@ -5,7 +5,8 @@ import { useAdjustment } from '@/features/operations/hooks/useAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
-import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
+import { isLocked } from '@/domain/status-guards';
 import { AdjustmentForm } from './AdjustmentForm';
 import { AdjustmentViewer } from './AdjustmentViewer';
 
@@ -16,7 +17,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
   
   const isNew = id === 'new';
   const { data: adjustment, isLoading } = useAdjustment(isNew ? null : id);
-  const status = (adjustment?.status as DocumentStatus) ?? 'DRAFT';
+  const status = adjustment?.status ?? ADJUSTMENT_STATUS.DRAFT;
 
   if (isLoading) {
     return (
@@ -27,9 +28,9 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
     );
   }
 
-  const isLocked = isDocumentLocked('ADJUSTMENT', status);
+  const locked = isLocked('ADJUSTMENT', status);
 
-  if (isLocked) {
+  if (locked) {
     return <AdjustmentViewer document={adjustment as any} />;
   }
 
@@ -38,7 +39,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
       <AdjustmentForm 
         document={adjustment}
         id={id}
-        isLocked={isLocked}
+        isLocked={locked}
         onConflict={conflict.triggerConflict}
       />
       <ConflictDialog 

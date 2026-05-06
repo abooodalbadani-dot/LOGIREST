@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
+import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail } from './useAdjustment';
 
 export function useApproveAdjustment(id: string, options?: { onConflict?: () => void }) {
@@ -17,11 +18,11 @@ export function useApproveAdjustment(id: string, options?: { onConflict?: () => 
         if (!old) return old;
         return {
           ...old,
-          status: 'APPROVED' as const,
+          status: ADJUSTMENT_STATUS.APPROVED,
           approved_by: 'Current User',
           timeline: [
             ...(old.timeline || []),
-            { status: 'APPROVED', at: new Date().toISOString(), by: 'Current User' }
+            { status: ADJUSTMENT_STATUS.APPROVED, at: new Date().toISOString(), by: 'Current User' }
           ]
         };
       });

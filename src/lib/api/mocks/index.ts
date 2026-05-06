@@ -1,6 +1,4 @@
-import { purchasingMocks } from './purchasing';
-import { operationsMocks } from './operations';
-import { master_data_mocks } from './master-data';
+import { getMockResponse as getAdapterResponse } from '@/infrastructure/mock/mock-api.adapter';
 import { inventoryMocks } from './inventory';
 import { notificationsMocks } from './notifications';
 import { adminMocks } from './admin';
@@ -9,17 +7,19 @@ import { reportsMocks } from './reports';
 
 type MockDb = Record<string, unknown>;
 const db: MockDb = { 
- ...purchasingMocks, 
- ...operationsMocks, 
- ...master_data_mocks, 
- ...inventoryMocks, 
- ...notificationsMocks, 
- ...adminMocks,
- ...authMocks,
- ...reportsMocks
+  ...inventoryMocks, 
+  ...notificationsMocks, 
+  ...adminMocks,
+  ...authMocks,
+  ...reportsMocks
 };
 
-export function getMockResponse(method: string, path: string, body?: any): unknown {
+export async function getMockResponse(method: string, path: string, body?: any): Promise<unknown> {
+  // 1. Try new Repository-based Mock Adapter first
+  const adapterResponse = await getAdapterResponse(method, path, body);
+  if (adapterResponse !== undefined) return adapterResponse;
+
+  // 2. Fallback to legacy static mocks
   const normalizedPath = path.split('?')[0];
   const key = `${method.toUpperCase()} ${normalizedPath}`;
 

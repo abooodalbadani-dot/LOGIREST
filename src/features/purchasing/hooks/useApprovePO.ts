@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
+import { PO_STATUS } from '@/contracts/statuses';
 import { PODetail } from './usePO';
 
 export function useApprovePO(options?: { onConflict?: () => void }) {
@@ -17,7 +18,7 @@ export function useApprovePO(options?: { onConflict?: () => void }) {
       // Simulate state transition in cache
       queryClient.setQueryData(['purchase-order', id], (old: PODetail | undefined) => {
         if (!old) return old;
-        return { ...old, status: 'APPROVED' as const };
+        return { ...old, status: PO_STATUS.APPROVED };
       });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });

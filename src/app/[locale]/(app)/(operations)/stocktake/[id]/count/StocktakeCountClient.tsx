@@ -9,6 +9,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { mapToSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,16 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+
+import { isStocktakeCounting } from "@/domain/status-guards";
 
 export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
   const router = useRouter()
-  const { data: session, isLoading } = useStocktake(id);
+  const { data: rawSession, isLoading } = useStocktake(id);
+  const session = rawSession ? mapToSessionVM(rawSession) : null;
   const { data: warehouses } = useWarehouses();
   const updateCount = useUpdateItemCount();
   const completeCounting = useCompleteCounting();
@@ -99,7 +104,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   React.useEffect(() => {
     if (session?.items && !isInitialized.current) {
       const counts: Record<string, number> = {}
-      session.items.forEach((i: any) => {
+      session.items.forEach((i) => {
         counts[i.id] = i.countedQty || 0
       })
       setLocalCounts(counts)
@@ -110,18 +115,18 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   if (isLoading) return <LoadingSkeleton />
   if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
   
-  const warehouse = warehouses?.find((w: any) => w.id === session.warehouseId);
+  const warehouse = warehouses?.find((w) => w.id === session.warehouseId);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
-  if (!['STARTED', 'COUNTING'].includes(session.status)) {
+  if (!isStocktakeCounting(session.status)) {
     router.replace(`/stocktake/${id}`);
     return null;
   }
 
   const handleScan = async (barcode: string) => {
-    const index = items.findIndex((i: any) => i.barcode === barcode)
+    const index = items.findIndex((i) => i.barcode === barcode)
     if (index !== -1) {
-      const item = items[index]
+      const item = items[index] as StocktakeItemVM
       const currentQty = localCounts[item.id] || 0
       const newQty = currentQty + 1
       
@@ -158,7 +163,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
     }
   }
 
-  const hasCountedItems = session.items.some((i: any) => (localCounts[i.id] || 0) > 0)
+  const hasCountedItems = session.items.some((i) => (localCounts[i.id] || 0) > 0)
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalSize = rowVirtualizer.getTotalSize();
@@ -178,9 +183,10 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 {t('autosave_active')}
               </div>
             )}
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-4 py-1">
-              {t('counting_status')}
-            </Badge>
+            <StatusBadge 
+              status={session.status} 
+              className="px-4 py-1"
+            />
             <PostConfirmDialog
               title={t('confirm_finish_title')}
               description={t('confirm_finish_desc')}

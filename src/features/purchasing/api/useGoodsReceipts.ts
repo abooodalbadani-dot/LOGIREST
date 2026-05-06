@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { GoodsReceipt, CreateGoodsReceiptDTO, GRNStatus, GoodsReceiptLineItem } from '../types';
+import { GoodsReceipt, CreateGoodsReceiptDTO, GoodsReceiptLineItem } from '../types';
+import { GRN_STATUS } from '@/contracts/statuses';
+
 
 // Mock data
 const mockGoodsReceipts: GoodsReceipt[] = [
@@ -9,7 +11,7 @@ const mockGoodsReceipts: GoodsReceipt[] = [
  poId: 'po-001',
  warehouseId: 'wh-001',
  supplierId: 'sup-001',
- status: 'POSTED',
+  status: GRN_STATUS.POSTED,
  supplierCurrency: 'USD',
  lockedExchangeRate: 3.75,
  baseTotalAmount: 7500,
@@ -36,7 +38,7 @@ const mockGoodsReceipts: GoodsReceipt[] = [
  poId: 'po-002',
  warehouseId: 'wh-001',
  supplierId: 'sup-002',
- status: 'RECEIVED',
+  status: GRN_STATUS.RECEIVED,
  supplierCurrency: 'EUR',
  items: [
  {
@@ -103,7 +105,7 @@ export function useCreateGoodsReceipt() {
  poId: data.poId,
  warehouseId: data.warehouseId,
  supplierId: data.supplierId,
- status: 'RECEIVED',
+  status: GRN_STATUS.RECEIVED,
  supplierCurrency: 'SAR', // Can be refined to fetch from PO
  items: data.items.map((i, idx) => ({ ...i, id: `grn-li-new- ${idx}` })),
  notes: data.notes,
@@ -132,7 +134,7 @@ export function usePostGoodsReceipt() {
  
  const updatedGRN = {
  ...mockGoodsReceipts[index],
- status: 'POSTED' as GRNStatus,
+  status: GRN_STATUS.POSTED,
  lockedExchangeRate,
  baseTotalAmount,
  postedAt: new Date().toISOString(),

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
+import { PR_STATUS } from '@/contracts/statuses';
 import { PRDetail } from './usePR';
 
 export function useApprovePR(options?: { onConflict?: () => void }) {
@@ -14,7 +15,7 @@ export function useApprovePR(options?: { onConflict?: () => void }) {
       // Simulate state transition in cache
       queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {
         if (!old) return old;
-        return { ...old, status: 'APPROVED' as const };
+        return { ...old, status: PR_STATUS.APPROVED };
       });
 
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });

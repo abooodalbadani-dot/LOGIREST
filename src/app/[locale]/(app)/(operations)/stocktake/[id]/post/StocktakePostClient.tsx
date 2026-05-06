@@ -4,6 +4,7 @@ import * as React from "react";
 import { useStocktake, usePostStocktake } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useTranslations } from "next-intl";
+import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { useRouter } from "@/i18n/navigation";
 import { 
  BarChart3, 
@@ -33,7 +34,8 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  const router = useRouter()
  const { user } = useAuth();
  
- const { data: session, isLoading, error } = useStocktake(id);
+ const { data: rawSession, isLoading, error } = useStocktake(id);
+ const session = rawSession ? mapToSessionVM(rawSession) : null;
  const { data: warehouses } = useWarehouses();
  const postStocktake = usePostStocktake();
 

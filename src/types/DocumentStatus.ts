@@ -1,20 +1,4 @@
-export const ALL_DOCUMENT_STATUSES = [
-  'DRAFT',
-  'SUBMITTED',
-  'APPROVED',
-  'REJECTED',
-  'POSTED',
-  'CANCELLED',
-  'RECEIVED',
-  'VARIANCE_SUBMITTED',
-  'FULFILLED',
-  'PARTIAL',
-  'STARTED',
-  'COUNTING',
-  'COUNTING_COMPLETED',
-  'IN_TRANSIT',
-  'OPEN',
-  'REVIEW',
-] as const;
+import { ALL_STATUSES, DocumentStatus } from '../contracts/statuses';
 
-export type DocumentStatus = typeof ALL_DOCUMENT_STATUSES[number];
+export const ALL_DOCUMENT_STATUSES = ALL_STATUSES;
+export type { DocumentStatus };

@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
+import { PO_STATUS } from '@/contracts/statuses';
 import { type PODetail } from './usePO';
 
 export function useSubmitPO(options?: { onConflict?: () => void }) {
@@ -19,7 +20,7 @@ export function useSubmitPO(options?: { onConflict?: () => void }) {
       // Simulate state transition in cache
       queryClient.setQueryData(['purchase-order', id], (old: PODetail | undefined) => {
         if (!old) return old;
-        return { ...old, status: 'SUBMITTED' as const };
+        return { ...old, status: PO_STATUS.SUBMITTED };
       });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });

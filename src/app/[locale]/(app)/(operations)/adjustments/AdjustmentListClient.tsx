@@ -17,7 +17,9 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isAdjustmentPending, isAdjustmentPosted } from '@/domain/status-guards';
+import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
+import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
  
 // Reason → Semantic visual styling (Hardened for Culinary Architect)
 const REASON_CHIP: Record<string, string> = {
@@ -122,11 +124,11 @@ export function AdjustmentListClient() {
  },
  ], [t, tCommon, router]);
  
- const totalAdjustments = data?.meta?.total || 0;
- const inProgressCount = data?.data?.filter(i => isPendingStatus('ADJUSTMENT', i.status as DocumentStatus)).length || 0;
- const postedCount = data?.data?.filter(i => isPostedStatus('ADJUSTMENT', i.status as DocumentStatus)).length || 0;
- const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
- const pendingApprovalsCount = inProgressCount;
+  const totalAdjustments = data?.meta?.total || 0;
+  const inProgressCount = data?.data?.filter(i => isAdjustmentPending(i.status)).length || 0;
+  const postedCount = data?.data?.filter(i => isAdjustmentPosted(i.status)).length || 0;
+  const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
+  const pendingApprovalsCount = inProgressCount;
  
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -227,12 +229,14 @@ export function AdjustmentListClient() {
  <SelectTrigger className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20">
  <SelectValue placeholder={tCommon('status.all')} />
  </SelectTrigger>
- <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
- <SelectItem value="ALL" className="text-label-xs font-bold uppercase">{tCommon('status.all')}</SelectItem>
- <SelectItem value="DRAFT" className="text-label-xs font-bold uppercase">{tCommon('status.draft')}</SelectItem>
- <SelectItem value="APPROVED" className="text-label-xs font-bold uppercase">{tCommon('status.approved')}</SelectItem>
- <SelectItem value="POSTED" className="text-label-xs font-bold uppercase">{tCommon('status.posted')}</SelectItem>
- </SelectContent>
+              <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
+                <SelectItem value="ALL" className="text-label-xs font-bold uppercase">{tCommon('status.all')}</SelectItem>
+                {Object.entries(ADJUSTMENT_STATUS_UI).filter(([key]) => Object.values(ADJUSTMENT_STATUS).includes(key as any)).map(([key, config]) => (
+                  <SelectItem key={key} value={key} className="text-label-xs font-bold uppercase">
+                    {tCommon(config.labelKey)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
  </Select>
  </div>
  

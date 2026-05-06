@@ -1,4 +1,6 @@
 import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic, Tajawal, IBM_Plex_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
+
 
 export const ibmPlexSans = IBM_Plex_Sans({ 
  subsets: ['latin'], 
@@ -27,3 +29,10 @@ export const tajawal = Tajawal({
  variable: '--font-tajawal',
  display: 'swap'
 });
+
+export const yaModernPro = localFont({
+ src: './Ya-ModernPro-Bold.otf',
+ variable: '--font-ya-modern',
+ display: 'swap',
+});
+

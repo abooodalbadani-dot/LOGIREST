@@ -21,6 +21,7 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { GRN_STATUS } from '@/contracts/statuses';
 
 interface GRNViewerProps {
   document: any;
@@ -46,7 +47,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
     at: e.created_at,
     by: e.user_name || tc('system')
   })) || [
-    { status: (document?.status || 'DRAFT').toLowerCase() as Status, at: document?.created_at || new Date().toISOString(), by: 'System' }
+    { status: (document?.status || GRN_STATUS.DRAFT).toLowerCase() as Status, at: document?.created_at || new Date().toISOString(), by: 'System' }
   ];
 
   return (

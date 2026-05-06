@@ -8,12 +8,8 @@ const intlMiddleware = createMiddleware(routing);
  * Proxy function for handling internationalization and authentication.
  * Renamed from `middleware` to `proxy` per Next.js 16 convention.
  *
- * CRITICAL RULES:
- * 1. Call intlMiddleware(request) FIRST
- * 2. No pathname splitting
- * 3. No manual locale prefixing (e.g., /${locale}/)
- * 4. Use request.nextUrl.clone() for redirects
- * 5. Set pathname without locale prefix for internal routing
+ * ROOT FIX: All redirects must include locale prefix because localePrefix: 'always'
+ * means routes like /login do not exist — only /ar/login and /en/login exist.
  */
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -28,39 +24,45 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Handle Authentication
+  // 2. Extract the current locale from the URL path (validated against supported locales)
+  const supportedLocales = routing.locales as readonly string[];
+  const firstSegment = pathname.split('/')[1] || '';
+  const locale = supportedLocales.includes(firstSegment)
+    ? firstSegment
+    : (routing.defaultLocale as string);
+
+  // 3. Handle Authentication
   const token = request.cookies.get('logirest_token')?.value;
   const publicPaths = ['/login', '/forgot-password', '/reset-password'];
 
-  // Check if it's a public path (ignoring locale prefix if present)
-  const isPublicPage = publicPaths.some(path =>
-    pathname.endsWith(path) || pathname === path
+  // Check if it's a public path (compare path without locale prefix)
+  const isPublicPage = publicPaths.some(
+    path => pathname === `/${locale}${path}` || pathname === path
   );
 
-  if (!token && !isPublicPage && pathname !== '/') {
+  // Allow locale root paths like /ar or /en (page.tsx handles redirect there)
+  const isLocaleRoot = pathname === `/${locale}` || pathname === `/${locale}/` || pathname === '/';
+
+  // If no token and not on a public or root page → redirect to /[locale]/login
+  if (!token && !isPublicPage && !isLocaleRoot) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = `/${locale}/login`;
     return NextResponse.redirect(url);
   }
 
+  // If has token and trying to access public page → redirect to /[locale]/dashboard
   if (token && isPublicPage) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    url.pathname = `/${locale}/dashboard`;
     return NextResponse.redirect(url);
   }
 
-  // 3. Apply intlMiddleware last for routing
+  // 4. Apply intlMiddleware last for locale routing
   return intlMiddleware(request);
 }
 
 export const config = {
-  // Match all pathnames except for internal Next.js and static files
   matcher: [
-    // Match all pathnames except for:
-    // - api (API routes)
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico (favicon file)
     '/((?!api|_next/static|_next/image|favicon.ico|static).*)',
   ],
 };

@@ -4,6 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
+import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail } from './useAdjustment';
 
 export function usePostAdjustment(options?: { onConflict?: () => void }) {
@@ -17,11 +18,11 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
         if (!old) return old;
         return {
           ...old,
-          status: 'POSTED' as const,
+          status: ADJUSTMENT_STATUS.POSTED,
           posted_at: new Date().toISOString(),
           timeline: [
             ...(old.timeline || []),
-            { status: 'POSTED', at: new Date().toISOString(), by: 'Current User' }
+            { status: ADJUSTMENT_STATUS.POSTED, at: new Date().toISOString(), by: 'Current User' }
           ]
         };
       });

@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
-import { useRouter, Link } from '@/i18n/navigation';
 import { 
  History, 
  Package, 

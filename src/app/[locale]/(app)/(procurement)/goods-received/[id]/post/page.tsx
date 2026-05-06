@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api/client';
 import { GRNDetailSchema } from '@/features/purchasing/hooks/useGRN';
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
+import { GRN_STATUS } from '@/contracts/statuses';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string, id: string }> }) {
  const { locale } = await params;
@@ -34,12 +35,12 @@ export default async function GRNPostPage(props: { params: Promise<{ locale: str
 
  // PART 1 logic
  if (grn) {
- if (grn.status === 'POSTED') {
- redirect(`/${params.locale}/goods-received/${params.id}`);
- }
- if (grn.status !== 'APPROVED') { 
- redirect(`/${params.locale}/goods-received/${params.id}`);
- }
+  if (grn.status === GRN_STATUS.POSTED) {
+  redirect(`/${params.locale}/goods-received/${params.id}`);
+  }
+  if (grn.status !== GRN_STATUS.RECEIVED) { 
+  redirect(`/${params.locale}/goods-received/${params.id}`);
+  }
  }
 
  return (

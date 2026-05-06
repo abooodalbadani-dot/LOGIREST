@@ -4,13 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { z } from "zod"
+import { DocumentStatus, assertNever } from "@/contracts/statuses"
+
 
 export const BadgeStatusSchema = z.enum([
  'DRAFT', 'SUBMITTED', 'APPROVED', 'POSTED', 'RECEIVED', 'REJECTED', 'CANCELLED', 
  'HEALTHY', 'LOW', 'CRITICAL', 'DELIVERED', 'COMPLETED', 'IN_STOCK', 'OUT_OF_STOCK', 'EXPIRED', 'LOCKED', 'ON_HOLD', 'ISSUED', 'PARTIAL',
- 'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 'COUNTING_COMPLETED', 'VARIANCE_SUBMITTED',
+  'IN_TRANSIT', 'PENDING', 'LOW_STOCK', 'REVIEW', 'OPEN', 'ACTIVE', 'INACTIVE', 'COUNTING', 'STARTED', 
  'FULFILLED'
 ]);
+
 
 export type BadgeStatus = z.infer<typeof BadgeStatusSchema>;
 
@@ -43,36 +46,23 @@ export interface StatusBadgeProps
  extends React.HTMLAttributes<HTMLDivElement>,
  VariantProps<typeof statusBadgeVariants> {
  status?: BadgeStatus | string; 
+ configMap?: Record<string, any>;
 }
 
-export function StatusBadge({ className, variant, status, children, ...props }: StatusBadgeProps) {
- const t = useTranslations('common.status');
- let mappedVariant = variant;
- 
- if (!mappedVariant && status) {
- const s = status.toUpperCase();
- if (["APPROVED", "DELIVERED", "COMPLETED", "IN_STOCK", "ACTIVE", "HEALTHY"].includes(s)) {
- mappedVariant = "success";
- } else if (["PENDING", "IN_TRANSIT", "LOW_STOCK", "ON_HOLD", "REVIEW", "OPEN", "LOW", "CRITICAL", "VARIANCE_SUBMITTED"].includes(s)) {
- mappedVariant = "warning";
- } else if (["REJECTED", "CANCELLED", "OUT_OF_STOCK", "EXPIRED", "LOCKED", "INACTIVE"].includes(s)) {
- mappedVariant = "error";
- } else if (["SUBMITTED", "ISSUED", "RECEIVED"].includes(s)) {
- // Operational Success (Cyan in Dark mode, but Success variant is already Cyan in dark mode)
- mappedVariant = "success"; 
- } else if (["POSTED"].includes(s)) {
- mappedVariant = "outline";
- } else if (["COUNTING", "PARTIAL", "COUNTING_COMPLETED"].includes(s)) {
- mappedVariant = "info";
- } else if (["STARTED", "ACTIVE"].includes(s)) {
- mappedVariant = "brand";
- } else {
- mappedVariant = "default";
- }
- }
+import { getStatusConfig } from "@/domain/status-ui-map";
 
- // Handle translation if status is provided and no children
- const content = children || (status ? t(status.toLowerCase()) : null);
+export function StatusBadge({ className, variant, status, configMap, children, ...props }: StatusBadgeProps) {
+  const t = useTranslations('common.status');
+  
+  const config = React.useMemo(() => {
+    if (!status) return null;
+    return getStatusConfig(status.toUpperCase(), configMap);
+  }, [status, configMap]);
+
+  const mappedVariant = variant || (config?.variant as any) || "default";
+
+  // Handle translation if status is provided and no children
+  const content = children || (status ? t(config?.labelKey.split('.').pop() || status.toLowerCase()) : null);
 
  return (
  <div className={cn(statusBadgeVariants({ variant: mappedVariant }), className)} {...props}>

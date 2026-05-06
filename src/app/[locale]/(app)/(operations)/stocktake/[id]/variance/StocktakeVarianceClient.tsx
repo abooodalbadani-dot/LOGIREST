@@ -3,12 +3,17 @@
 import * as React from "react";
 import { useStocktake, useSubmitVariance } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { 
  AlertTriangle, 
  CheckCircle2 
 } from "lucide-react";
+import { STOCKTAKE_STATUS } from "@/contracts/statuses";
+import { isStocktakeInReview } from "@/domain/status-guards";
+import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +32,8 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
  const router = useRouter()
- const { data: session, isLoading, error } = useStocktake(id);
+ const { data: rawSession, isLoading, error } = useStocktake(id);
+ const session = rawSession ? mapToSessionVM(rawSession) : null;
  const { data: warehouses } = useWarehouses();
  const submitVariance = useSubmitVariance();
 
@@ -53,11 +59,11 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
- // Status check: Must be VARIANCE_SUBMITTED
- if (!['VARIANCE_SUBMITTED'].includes(session.status)) {
- router.replace(`/stocktake/${id}`);
- return null;
- }
+  // Status check: Must be in REVIEW
+  if (!isStocktakeInReview(session.status)) {
+    router.replace(`/stocktake/${id}`);
+    return null;
+  }
 
   const handleReasonChange = (lineId: string, value: string) => {
     setReasons(prev => ({ ...prev, [lineId]: value }))
@@ -77,8 +83,8 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
   const handleSubmit = async () => {
     try {
       const updates = session.items.map(item => ({
-        lineId: item.id,
-        varianceReason: reasons[item.id] || ""
+        line_id: item.id,
+        variance_reason: reasons[item.id] || ""
       }))
       await submitVariance.mutateAsync({ id, items: updates })
       toast.success(t('posted_success_variance'))
@@ -97,9 +103,11 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  backHref={`/stocktake/${id}/count`}
  >
  <div className="flex items-center gap-4">
- <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-4 py-1">
- {t('variance_status')}
- </Badge>
+  <StatusBadge 
+    status={session.status} 
+    configMap={STOCKTAKE_STATUS_UI}
+    className="h-9 px-4 text-label-xs font-semibold border-none" 
+  />
  <PostConfirmDialog
  title={t('confirm_variance_title')}
  description={t('confirm_variance_desc')}

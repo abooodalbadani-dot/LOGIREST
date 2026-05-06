@@ -83,7 +83,7 @@ export function useCompleteCounting() {
 export function useSubmitVariance() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, items }: { id: string; items: { lineId: string; varianceReason?: string }[] }) => 
+    mutationFn: ({ id, items }: { id: string; items: { line_id: string; variance_reason?: string }[] }) => 
       apiClient.post(`/stocktake/sessions/${id}/review_variance`, StocktakeSessionSchema, { items }),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
@@ -96,7 +96,10 @@ export function useUpdateItemCount() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ stocktakeId, itemId, lineId, countedQty, varianceReason }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string }) => 
-      apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { countedQty, varianceReason }),
+      apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { 
+        counted_qty: countedQty, 
+        variance_reason: varianceReason 
+      }),
     onSuccess: (_, { stocktakeId }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes', stocktakeId] });
     },
@@ -111,10 +114,10 @@ export function useSubmitCounts() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: SubmitCountDTO) => 
-      apiClient.post(`/stocktake/sessions/${dto.stocktakeId}/submit`, StocktakeSessionSchema, dto),
+      apiClient.post(`/stocktake/sessions/${dto.stocktake_id}/submit`, StocktakeSessionSchema, dto),
     onSuccess: (_, dto) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
-      qc.invalidateQueries({ queryKey: ['stocktakes', dto.stocktakeId] });
+      qc.invalidateQueries({ queryKey: ['stocktakes', dto.stocktake_id] });
     },
   });
 }

@@ -39,6 +39,7 @@ import { apiClient } from '@/lib/api/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { type GRNDetail, LineItemSchema } from '@/features/purchasing/hooks/useGRN';
 import { type Lot } from '@/types/master-data';
+import { GRN_STATUS } from '@/contracts/statuses';
 
 const grnHeaderSchema = z.object({
   supplier_id: z.string().min(1, 'Required'),
@@ -208,7 +209,7 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
             )}
           </PermissionGate>
           <PermissionGate action="post" resource="grn">
-            <ActionGuard documentType="GRN" status={document?.status as any || 'DRAFT'} action="POST" role={user?.role || 'WH_KEEPER'}>
+            <ActionGuard documentType="GRN" status={document?.status as any || GRN_STATUS.DRAFT} action="POST" role={user?.role || 'WH_KEEPER'}>
               <Button 
                 onClick={() => router.push(`/goods-received/${id}/post`)}
                 className="h-10 px-8 primary-gradient text-white text-label-xs font-semibold uppercase shadow-xl shadow-primary/20 transition-all rounded-lg"

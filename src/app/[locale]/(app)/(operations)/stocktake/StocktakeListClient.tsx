@@ -19,9 +19,11 @@ import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse,
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isStocktakeInProgress, isStocktakePosted } from '@/domain/status-guards';
+import { STOCKTAKE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { STOCKTAKE_STATUS } from '@/contracts/statuses';
 
 export function StocktakeListClient({
  initialStatus,
@@ -123,9 +125,9 @@ export function StocktakeListClient({
  },
  ], [t, tc, locale, router]);
 
- const activeSessionsCount = data?.meta?.total || 0;
- const inProgressCount = data?.data?.filter(i => isPendingStatus('STOCKTAKE', i.status as DocumentStatus)).length || 0;
- const postedCount = data?.data?.filter(i => isPostedStatus('STOCKTAKE', i.status as DocumentStatus)).length || 0;
+  const activeSessionsCount = data?.meta?.total || 0;
+  const inProgressCount = data?.data?.filter(i => isStocktakeInProgress(i.status)).length || 0;
+  const postedCount = data?.data?.filter(i => isStocktakePosted(i.status)).length || 0;
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -205,16 +207,17 @@ export function StocktakeListClient({
                 <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
                   <SelectValue placeholder={tc('status.all')} />
                 </SelectTrigger>
-                <SelectContent className="bg-surface-container-highest border-outline-low rounded-xl">
-                  <SelectItem value="ALL" className="text-label-sm font-bold">{tc('status.all')}</SelectItem>
-                  <SelectItem value="DRAFT" className="text-label-sm font-bold">{tc('status.draft')}</SelectItem>
-                  <SelectItem value="STARTED" className="text-label-sm font-bold">{tc('status.started')}</SelectItem>
-                  <SelectItem value="VARIANCE_SUBMITTED" className="text-label-sm font-bold">{tc('status.variance_submitted')}</SelectItem>
-                  <SelectItem value="APPROVED" className="text-label-sm font-bold">{tc('status.approved')}</SelectItem>
-                  <SelectItem value="POSTED" className="text-label-sm font-bold">{tc('status.posted')}</SelectItem>
-                  <SelectItem value="REJECTED" className="text-label-sm font-bold">{tc('status.rejected')}</SelectItem>
-                  <SelectItem value="CANCELLED" className="text-label-sm font-bold">{tc('status.cancelled')}</SelectItem>
-                </SelectContent>
+                 <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
+                   <SelectItem value="ALL" className="text-label-sm font-bold uppercase">{tc('status.all')}</SelectItem>
+                   {Object.values(STOCKTAKE_STATUS).map((value) => {
+                     const config = getStatusConfig(value, STOCKTAKE_STATUS_UI);
+                     return (
+                       <SelectItem key={value} value={value} className="text-label-sm font-bold uppercase">
+                         {tc(config.labelKey)}
+                       </SelectItem>
+                     );
+                   })}
+                 </SelectContent>
               </Select>
             </div>
 

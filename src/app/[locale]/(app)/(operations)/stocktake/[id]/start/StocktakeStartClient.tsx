@@ -30,30 +30,35 @@ import { LockBanner } from "@/components/shared/LockBanner";
 import { useStocktake, useStartStocktake } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
+import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
+
+import { canStartStocktake } from "@/domain/status-guards";
 
 interface StocktakeStartClientProps {
- id: string;
- locale: 'ar' | 'en';
+  id: string;
+  locale: 'ar' | 'en';
 }
 
 export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) {
- const t = useTranslations("operations.stocktake");
- const common = useTranslations("common");
- const router = useRouter();
- 
- const { data: session, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
- const { data: warehouses } = useWarehouses();
- const { data: lockState, isLoading: lockLoading } = useWarehouseLock(session?.warehouseId ?? null);
- const startStocktake = useStartStocktake();
- 
- const [confirmOpen, setConfirmOpen] = useState(false);
+  const t = useTranslations("operations.stocktake");
+  const common = useTranslations("common");
+  const router = useRouter();
+  
+  const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
+  const session = rawSession ? mapToSessionVM(rawSession) : null;
+  
+  const { data: warehouses } = useWarehouses();
+  const { data: lockState, isLoading: lockLoading } = useWarehouseLock(session?.warehouseId ?? null);
+  const startStocktake = useStartStocktake();
+  
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
- // Redirect if already started
- useEffect(() => {
- if (session && !['DRAFT', 'PENDING'].includes(session.status)) {
- router.replace(`/stocktake/${id}`);
- }
- }, [session, id, locale, router]);
+  // Redirect if already started
+  useEffect(() => {
+    if (session && !canStartStocktake(session.status)) {
+      router.replace(`/stocktake/${id}`);
+    }
+  }, [session, id, locale, router]);
 
  if (sessionLoading) return <LoadingSkeleton />;
  if (sessionError || !session) return <ErrorState onRetry={() => window.location.reload()} />;

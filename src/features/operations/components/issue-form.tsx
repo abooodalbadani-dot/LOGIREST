@@ -25,8 +25,9 @@ import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation } from '@/types/documents';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
+import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
+import { ISSUE_STATUS } from '@/contracts/statuses';
 
 interface IssueFormProps {
   issue: any;
@@ -67,7 +68,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const { data: lockState } = useWarehouseLock(warehouseId);
 
   // Workflow Engine Integrations
-  const status = (issue?.status || 'DRAFT') as DocumentStatus;
+  const status = (issue?.status || ISSUE_STATUS.DRAFT) as DocumentStatus;
   const isDocLocked = isDocumentLocked("ISSUE", status);
   const isWarehouseLocked = !!lockState?.isLocked;
   
@@ -145,10 +146,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const history = useMemo((): StatusTimelineEntry[] => {
     if (!issue) return [];
     const h: StatusTimelineEntry[] = [
-      { status: 'draft', at: issue.created_at ?? '', by: issue.created_by != null ? issue.created_by : 'System' }
+      { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.created_at ?? '', by: issue.created_by != null ? issue.created_by : 'System' }
     ];
     if (issue.posted_at) {
-      h.push({ status: 'posted', at: issue.posted_at, by: issue.posted_by != null ? issue.posted_by : 'System' });
+      h.push({ status: ISSUE_STATUS.POSTED.toLowerCase() as Status, at: issue.posted_at, by: issue.posted_by != null ? issue.posted_by : 'System' });
     }
     return h;
   }, [issue]);

@@ -23,9 +23,15 @@ import { LockBanner } from "@/components/shared/LockBanner";
 import { StatusTimeline } from "@/components/shared/StatusTimeline";
 import { DocumentStatus } from "@/types/DocumentStatus";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
+import { STOCKTAKE_STATUS } from "@/contracts/statuses";
+import { isStocktakeCounting, isStocktakeInReview } from "@/domain/status-guards";
+import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+
+import { StocktakeSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
 
 interface StocktakeFormProps {
-  session: any;
+  session: StocktakeSessionVM;
   locale: 'ar' | 'en';
   actions: React.ReactNode;
   onConflict?: (error: any) => void;
@@ -43,7 +49,7 @@ export function StocktakeForm({ session, locale, actions }: StocktakeFormProps) 
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
   // Note: We use canPerformAction directly for internal flags where ActionGuard (JSX) isn't appropriate
-  const isCounting = status === 'STARTED' || status === 'COUNTING';
+  const isCounting = isStocktakeCounting(status) || status === STOCKTAKE_STATUS.STARTED;
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
@@ -61,9 +67,11 @@ export function StocktakeForm({ session, locale, actions }: StocktakeFormProps) 
               <h1 className="font-semibold text-title-sm">
                 {session.sessionName}
               </h1>
-              <Badge variant="outline" className="h-6 px-2 text-label-xxs font-semibold uppercase bg-primary/5 text-primary border-none">
-                {t(`${session.status.toLowerCase() as any}_status`)}
-              </Badge>
+              <StatusBadge 
+                status={session.status} 
+                configMap={STOCKTAKE_STATUS_UI}
+                className="h-6 px-2 text-label-xxs font-semibold border-none" 
+              />
             </div>
           </div>
 
@@ -78,7 +86,7 @@ export function StocktakeForm({ session, locale, actions }: StocktakeFormProps) 
             { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
             { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-emerald-500' },
             { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
-            { label: t('last_updated'), value: format(new Date(session.updatedAt), 'HH:mm'), icon: Clock, color: 'text-amber-500' },
+            { label: t('last_updated'), value: session.updatedAt ? format(new Date(session.updatedAt), 'HH:mm') : common('dash'), icon: Clock, color: 'text-amber-500' },
           ].map((item, idx) => (
             <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-lg relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
@@ -186,7 +194,7 @@ export function StocktakeForm({ session, locale, actions }: StocktakeFormProps) 
             entries={[
               { 
                 status: session.status.toLowerCase() as any, 
-                at: session.updatedAt, 
+                at: session.updatedAt || session.createdAt || new Date().toISOString(), 
                 by: session.postedBy || common('system') 
               }
             ]} 

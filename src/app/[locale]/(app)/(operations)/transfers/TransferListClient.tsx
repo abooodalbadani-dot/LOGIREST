@@ -17,7 +17,9 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { isPendingStatus, isCompletedStatus } from '@/core/workflow/document-engine';
+import { isTransferInTransit, isTransferPosted } from '@/domain/status-guards';
+import { TRANSFER_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
+import { TRANSFER_STATUS } from '@/contracts/statuses';
 
 export function TransferListClient() {
  const t = useTranslations('operations.transfer');
@@ -101,118 +103,119 @@ export function TransferListClient() {
  },
  ], [t, tCommon, router]);
 
- const totalTransfersCount = data?.meta?.total || 0;
- const inTransitCount = data?.data?.filter(i => isPendingStatus('TRANSFER', i.transfer_status as any)).length || 0;
- const completedCount = data?.data?.filter(i => isCompletedStatus('TRANSFER', i.transfer_status as any)).length || 0;
+  const totalTransfersCount = data?.meta?.total || 0;
+  const inTransitCount = data?.data?.filter(i => isTransferInTransit(i.transfer_status)).length || 0;
+  const completedCount = data?.data?.filter(i => isTransferPosted(i.transfer_status)).length || 0;
 
- return (
- <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
- <Breadcrumb 
- items={[
- { label: tCommon('modules.operations'), href: `/transfers` },
- { label: t('title') }
- ]} 
- />
+  return (
+    <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <Breadcrumb 
+        items={[
+          { label: tCommon('modules.operations'), href: `/transfers` },
+          { label: t('title') }
+        ]} 
+      />
 
- <PageHeader 
- title={t('title')} 
- description={t('description')}
- actions={
- <div className="flex items-center gap-6">
- <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex">
- <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
- <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
- {tCommon('status.live_updates')}
- </div>
- <div className="text-label-xxs font-semibold text-muted-foreground/40" dir="ltr">
- {tCommon('status.last_sync')}: {new Date().toLocaleTimeString()}
- </div>
- </div>
- <PermissionGate action="create" resource="transfer">
- <Link href="/transfers/new">
- <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-lg shadow-cyan-900/10">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- </div>
- }
- />
+      <PageHeader 
+        title={t('title')} 
+        description={t('description')}
+        actions={
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex">
+              <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
+                {tCommon('status.live_updates')}
+              </div>
+              <div className="text-label-xxs font-semibold text-muted-foreground/40" dir="ltr">
+                {tCommon('status.last_sync')}: {new Date().toLocaleTimeString()}
+              </div>
+            </div>
+            <PermissionGate action="create" resource="transfer">
+              <Link href="/transfers/new">
+                <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-lg shadow-cyan-900/10">
+                  <Plus className="w-3.5 h-3.5 me-2" />
+                  {t('create_new')}
+                </Button>
+              </Link>
+            </PermissionGate>
+          </div>
+        }
+      />
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <MetricCard
- label={t('total_transfers')}
- value={totalTransfersCount}
- icon={Repeat}
- trend="active"
- />
- <MetricCard
- label={tCommon('status.in_transit')}
- value={inTransitCount}
- icon={Truck}
- trend="active"
- color="amber"
- />
- <MetricCard
- label={t('completed')}
- value={completedCount}
- icon={CheckCircle}
- trend="active"
- color="emerald"
- />
- </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <MetricCard
+          label={t('total_transfers')}
+          value={totalTransfersCount}
+          icon={Repeat}
+          trend="active"
+        />
+        <MetricCard
+          label={tCommon('status.in_transit')}
+          value={inTransitCount}
+          icon={Truck}
+          trend="active"
+          color="amber"
+        />
+        <MetricCard
+          label={t('completed')}
+          value={completedCount}
+          icon={CheckCircle}
+          trend="active"
+          color="emerald"
+        />
+      </div>
 
- <div className="bg-surface-container-lowest rounded-lg border border-outline-low/5 overflow-hidden shadow-sm">
- <DataTable 
- columns={columns}
- data={data?.data || []}
- isLoading={isLoading}
- onRowClick={(row: TransferSummary) => router.push(`/transfers/${row.id}`)}
- collectionName="operations_transfers"
- enableVirtualization={true}
- containerHeight="600px"
- emptyState={
- <EmptyState 
- title={t('no_records')} description={t('description')} action={
- <PermissionGate action="create" resource="transfer">
- <Button 
- onClick={() => router.push(`/transfers/new`)}
- className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20 rounded-md"
- >
- <Plus className="w-4 h-4 me-2" />
- {t('create_new')}
- </Button>
- </PermissionGate>
- }
- />
- }
- pagination={data?.meta ? {
- page: page,
- pageSize: 10,
- total: data.meta.total,
- totalPages: data.meta.total_pages,
- onPageChange: setPage
- } : undefined}
- filters={
- <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg shadow-sm">
- <div className="flex flex-col gap-2 min-w-[240px] flex-1">
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
- <Select
- value={status || 'ALL'} onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
- >
- <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-label-sm font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10">
- <SelectValue placeholder={tCommon('status.all')} />
- </SelectTrigger>
- <SelectContent className="bg-surface-container-highest border-outline-low/10 rounded-md">
- <SelectItem value="ALL">{tCommon('status.all')}</SelectItem>
- <SelectItem value="DRAFT">{tCommon('status.draft')}</SelectItem>
- <SelectItem value="IN_TRANSIT">{tCommon('status.in_transit')}</SelectItem>
- <SelectItem value="RECEIVED">{tCommon('status.posted')}</SelectItem>
- <SelectItem value="POSTED">{tCommon('status.posted')}</SelectItem>
- </SelectContent>
- </Select>
- </div>
+      <div className="bg-surface-container-lowest rounded-lg border border-outline-low/5 overflow-hidden shadow-sm">
+        <DataTable 
+          columns={columns}
+          data={data?.data || []}
+          isLoading={isLoading}
+          onRowClick={(row: TransferSummary) => router.push(`/transfers/${row.id}`)}
+          collectionName="operations_transfers"
+          enableVirtualization={true}
+          containerHeight="600px"
+          emptyState={
+            <EmptyState 
+              title={t('no_records')} description={t('description')} action={
+                <PermissionGate action="create" resource="transfer">
+                  <Button 
+                    onClick={() => router.push(`/transfers/new`)}
+                    className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20 rounded-md"
+                  >
+                    <Plus className="w-4 h-4 me-2" />
+                    {t('create_new')}
+                  </Button>
+                </PermissionGate>
+              }
+            />
+          }
+          pagination={data?.meta ? {
+            page: page,
+            pageSize: 10,
+            total: data.meta.total,
+            totalPages: data.meta.total_pages,
+            onPageChange: setPage
+          } : undefined}
+          filters={
+            <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg shadow-sm">
+              <div className="flex flex-col gap-2 min-w-[240px] flex-1">
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
+                <Select
+                  value={status || 'ALL'} onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
+                >
+                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-label-sm font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10">
+                    <SelectValue placeholder={tCommon('status.all')} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-container-highest border-outline-low/10 rounded-md">
+                    <SelectItem value="ALL">{tCommon('status.all')}</SelectItem>
+                    {Object.entries(TRANSFER_STATUS).map(([key, value]) => (
+                      <SelectItem key={value} value={value}>
+                        {tCommon(getStatusConfig(value).labelKey)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
  <div className="flex flex-col gap-2 min-w-[300px] flex-[2]">
  <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('search')}</label>

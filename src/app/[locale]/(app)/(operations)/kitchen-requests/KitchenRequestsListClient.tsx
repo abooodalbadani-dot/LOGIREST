@@ -27,6 +27,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 
 import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
+import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
 
 export function KitchenRequestsListClient({
  initialStatus,
@@ -109,8 +110,8 @@ export function KitchenRequestsListClient({
  const submittedCount = data?.data?.filter(doc => isPendingStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
  const approvedCount = data?.data?.filter(r => isApprovedStatus('KITCHEN_REQUEST', r.status)).length || 0;
  const completedCount = data?.data?.filter(doc => isCompletedStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
- const rejectedCount = data?.data?.filter(r => r.status === 'CANCELLED').length || 0;
- const fulfilledCount = data?.data?.filter(r => r.status === 'FULFILLED').length || 0;
+ const rejectedCount = data?.data?.filter(r => r.status === KITCHEN_REQUEST_STATUS.CANCELLED).length || 0;
+ const fulfilledCount = data?.data?.filter(r => r.status === KITCHEN_REQUEST_STATUS.FULFILLED).length || 0;
 
  return (
  <div className="flex flex-col gap-6 p-6">

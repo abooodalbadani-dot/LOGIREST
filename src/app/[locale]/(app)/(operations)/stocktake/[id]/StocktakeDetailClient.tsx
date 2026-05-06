@@ -17,10 +17,10 @@ import { Button } from "@/components/ui/button";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
-import { isDocumentLocked } from "@/core/workflow/document-engine";
+import { isLocked as isDomainLocked } from "@/domain/status-guards";
+import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { StocktakeViewer } from "./StocktakeViewer";
 import { StocktakeForm } from "./StocktakeForm";
-
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
@@ -30,13 +30,14 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
   const { user } = useAuth();
   const conflict = useConflictHandler('stocktake', id);
   
-  const { data: session, isLoading, error } = useStocktake(id);
+  const { data: rawSession, isLoading, error } = useStocktake(id);
+  const session = rawSession ? mapToSessionVM(rawSession) : null;
 
   if (isLoading) return <LoadingSkeleton />
   if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
 
   const status = session.status as DocumentStatus;
-  const isLocked = isDocumentLocked('STOCKTAKE', status);
+  const isLocked = isDomainLocked('STOCKTAKE', status);
 
   // Workflow Actions (Passed to both Viewer and Form for header rendering)
   const headerActions = (

@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import type { LotAllocation } from '@/types/documents';
+import { ISSUE_STATUS } from '@/contracts/statuses';
 
 interface IssueViewerProps {
   issue: any;
@@ -31,14 +32,14 @@ export function IssueViewer({ issue }: IssueViewerProps) {
   const router = useRouter();
   const locale = useLocale();
 
-  const issueStatus = issue?.status ?? 'DRAFT';
+  const issueStatus = issue?.status ?? ISSUE_STATUS.DRAFT;
   
   // Adapt timeline entries
   const timelineEntries = [
-    { status: 'draft' as Status, at: issue.created_at ?? '', by: issue.created_by ?? 'System' }
+    { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.created_at ?? '', by: issue.created_by ?? 'System' }
   ];
   if (issue.posted_at) {
-    timelineEntries.push({ status: 'posted' as Status, at: issue.posted_at, by: issue.posted_by ?? 'System' });
+    timelineEntries.push({ status: ISSUE_STATUS.POSTED.toLowerCase() as Status, at: issue.posted_at, by: issue.posted_by ?? 'System' });
   }
 
   const lines = (issue.lines || []) as unknown as LineItem[];

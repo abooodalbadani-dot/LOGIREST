@@ -15,6 +15,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
+import { TRANSFER_STATUS } from '@/contracts/statuses';
 import { type DocumentStatus } from '@/core/workflow/document-engine';
 import { useAuth } from '@/providers/AuthProvider';
 import Link from 'next/link';
@@ -39,7 +40,7 @@ export function TransferForm({ transfer, id, onConflict }: TransferFormProps) {
   const isToLocked = toLockState?.isLocked ?? false;
   const isEitherLocked = isFromLocked || isToLocked;
 
-  const transferStatus = (transfer?.transfer_status || 'DRAFT') as DocumentStatus;
+  const transferStatus = (transfer?.transfer_status || TRANSFER_STATUS.DRAFT) as DocumentStatus;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">

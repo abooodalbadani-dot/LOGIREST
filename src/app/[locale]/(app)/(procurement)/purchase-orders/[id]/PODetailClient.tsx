@@ -13,6 +13,7 @@ import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { useAuth } from '@/providers/AuthProvider';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { PO_STATUS } from '@/contracts/statuses';
 
 interface PODetailClientProps {
   id: string | null;
@@ -41,7 +42,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
   }
 
   const isNew = !id || id === 'new';
-  const status = (po?.status || 'DRAFT') as DocumentStatus;
+  const status = (po?.status || PO_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('PO', status);
 
   // Generate actions for the viewer (strictly navigation or read-only triggers)

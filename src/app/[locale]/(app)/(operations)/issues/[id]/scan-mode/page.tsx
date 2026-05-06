@@ -22,6 +22,7 @@ import type { Lot } from '@/types/master-data';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';
 import type { LotAllocation } from '@/types/documents';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
+import { isIssuePosted } from '@/domain/status-guards';
 
 type ScanEntry = { barcode: string; item_name: string; timestamp: Date; success: boolean };
 
@@ -129,7 +130,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  }
  };
 
- const isPosted = issue?.status === 'POSTED';
+ const isPosted = isIssuePosted(issue?.status);
  const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
 
  if (isLoading) return <div className="p-8 text-center">Loading...</div>;

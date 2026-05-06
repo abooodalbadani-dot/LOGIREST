@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,14 +18,14 @@ import { ArrowRightLeft, Calendar, TrendingUp, History, Info, ShieldCheck, Activ
 import { cn } from '@/lib/utils';
 
 interface Props { 
- id: string | null; 
- createTitle: string; 
- editTitle: string; 
+  id: string | null; 
+  createTitle: string; 
+  editTitle: string; 
+  locale: string;
 }
 
-export function FXRateFormClient({ id, createTitle, editTitle }: Props) {
- const { locale } = useParams();
- const tc = useTranslations('common');
+export function FXRateFormClient({ id, createTitle, editTitle, locale }: Props) {
+  const tc = useTranslations('common');
  const t = useTranslations('master_data.fx_rates');
  const router = useRouter();
 
