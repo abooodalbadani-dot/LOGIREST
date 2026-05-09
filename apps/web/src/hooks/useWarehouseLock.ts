@@ -11,12 +11,22 @@ const LockSchema = z.object({
   lockStartedAt: z.string().nullable(),
 });
 
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+
 export function useWarehouseLock(warehouseId: string | null) {
- return useQuery<WarehouseLockState>({
+ const query = useQuery<WarehouseLockState>({
  queryKey: ['warehouse-lock', warehouseId],
  queryFn: () => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema),
  staleTime: 30_000,
  enabled: !!warehouseId,
  });
+
+ const { router } = useUnsavedChangesGuard();
+
+ return {
+   ...query,
+   guardedRouter: router,
+ };
 }
+
 

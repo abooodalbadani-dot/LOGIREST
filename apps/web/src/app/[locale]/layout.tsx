@@ -7,12 +7,15 @@ import { SessionTimeoutModal } from '@/components/shared/SessionTimeoutModal';
 import { WarehouseScopeProvider } from '@/providers/WarehouseScopeProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { cookies } from 'next/headers';
+import { UnsavedChangesProvider } from '@/lib/unsaved-changes/UnsavedChangesProvider';
+import { ConflictProvider } from '@/providers/ConflictProvider';
+
 
 import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono, yaModernPro } from '@/lib/fonts';
 
 
 import { Metadata, Viewport } from 'next';
-import { WebMCPProvider } from '@/providers/WebMCPProvider';
+
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
@@ -40,11 +43,18 @@ export default async function LocaleLayout({
  children: React.ReactNode;
  params: Promise<{ locale: string }>;
 }) {
- const { locale } = await params;
- const messages = await getMessages();
- const direction = locale === 'ar' ? 'rtl' : 'ltr';
- const cookieStore = await cookies();
- const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
+  const { locale } = await params;
+  const messages = await getMessages();
+  
+  console.log(`[Layout] Rendering for locale: ${locale}`);
+  console.log(`[Layout] Messages loaded: ${Object.keys(messages).length > 0 ? 'YES' : 'EMPTY'}`);
+  if (Object.keys(messages).length === 0) {
+    console.error(`[Layout] ERROR: No messages loaded for locale: ${locale}`);
+  }
+
+  const direction = locale === 'ar' ? 'rtl' : 'ltr';
+  const cookieStore = await cookies();
+  const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
 
 
  return (
@@ -53,20 +63,24 @@ export default async function LocaleLayout({
 
  <NextIntlClientProvider messages={messages} locale={locale}>
  <QueryProvider>
+ <UnsavedChangesProvider>
+ <ConflictProvider>
  <AuthProvider>
  <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
  <WarehouseScopeProvider>
- <WebMCPProvider>
+ 
               <ErrorBoundary>
                 <NetworkStatusBanner />
                 {children}
                 <SessionTimeoutModal />
                 <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
               </ErrorBoundary>
- </WebMCPProvider>
+ 
  </WarehouseScopeProvider>
  </ThemeProvider>
  </AuthProvider>
+ </ConflictProvider>
+ </UnsavedChangesProvider>
  </QueryProvider>
  </NextIntlClientProvider>
  </body>

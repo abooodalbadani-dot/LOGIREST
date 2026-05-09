@@ -4,8 +4,8 @@ import * as React from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "@/i18n/navigation";
-import { useState } from "react";
+import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { 
  Plus, 
@@ -54,10 +54,10 @@ type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 const LOCKED_WAREHOUSES = new Set(["wh-locked-01"]);
 
 export function IssueForm() {
- const t = useTranslations("operations.issue");
- const tc = useTranslations("common");
- const router = useRouter();
- const createIssue = useCreateIssue();
+  const t = useTranslations("operations.issue");
+  const tc = useTranslations("common");
+  const { router, registerDirty } = useUnsavedChangesGuard();
+  const createIssue = useCreateIssue();
 
  const [allocatorOpen, setAllocatorOpen] = useState(false);
  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
@@ -74,6 +74,11 @@ export function IssueForm() {
  notes: "",
  },
  });
+
+ // Register dirty state
+ useEffect(() => {
+   registerDirty(form.formState.isDirty);
+ }, [form.formState.isDirty, registerDirty]);
 
  const { fields, append, remove, update } = useFieldArray({
  control: form.control,
@@ -110,7 +115,7 @@ export function IssueForm() {
  if (!allLinesAllocated) return;
  createIssue.mutate(data, {
  onSuccess: (issue) => {
- router.push(`/issues/${issue.id}`);
+ router.push(`/issues/${issue.id}`, { skipGuard: true });
  },
  onError: () => console.error("Failed to create issue"),
  });

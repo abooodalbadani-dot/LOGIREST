@@ -45,6 +45,7 @@ export const GRNDetailSchema = z.object({
  warehouse_id: z.string(),
  fx_rate: z.number().nullable(),
  fx_rate_captured_at: z.string().nullable().optional(),
+ version: z.number(),
  notes: z.string().nullable(),
  lines: z.array(LineItemSchema)
 });

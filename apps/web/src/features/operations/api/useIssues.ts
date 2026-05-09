@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { Issue, CreateIssueDTO } from '../types';
 import { ISSUE_STATUS } from '@/contracts/statuses';
 
@@ -110,19 +111,19 @@ export function useIssue(id: string) {
  });
 }
 
-export function useCreateIssue() {
+export function useCreateIssue(options?: { onConflict?: () => void }) {
  const qc = useQueryClient();
- return useMutation({
+ return useSafeMutation({
  mutationFn: async (data: CreateIssueDTO) => {
  await new Promise((r) => setTimeout(r, 900));
  const newIssue: Issue = {
- id: `iss-00 ${nextId++}`,
- issueNumber: `ISS-2024-00 ${nextId}`,
+ id: `iss-00${nextId++}`,
+ issueNumber: `ISS-2024-00${nextId}`,
  warehouseId: data.warehouseId,
  departmentId: data.departmentId,
  requestedBy: 'current-user',
   status: ISSUE_STATUS.DRAFT,
- items: data.items.map((it, idx) => ({ ...it, id: `il-new- ${idx}` })),
+ items: data.items.map((it, idx) => ({ ...it, id: `il-new-${idx}` })),
  notes: data.notes,
  createdAt: new Date().toISOString(),
  updatedAt: new Date().toISOString(),
@@ -131,12 +132,13 @@ export function useCreateIssue() {
  return newIssue;
  },
  onSuccess: () => qc.invalidateQueries({ queryKey: ['issues'] }),
+ onConflict: options?.onConflict,
  });
 }
 
-export function usePostIssue() {
+export function usePostIssue(options?: { onConflict?: () => void }) {
  const qc = useQueryClient();
- return useMutation({
+ return useSafeMutation({
  mutationFn: async (id: string) => {
  await new Promise((r) => setTimeout(r, 800));
  const idx = mockIssues.findIndex((i) => i.id === id);
@@ -155,5 +157,6 @@ export function usePostIssue() {
  qc.invalidateQueries({ queryKey: ['issues'] });
  qc.invalidateQueries({ queryKey: ['issues', id] });
  },
+ onConflict: options?.onConflict,
  });
 }

@@ -12,7 +12,7 @@ export function useInventoryBalance(filters: { warehouse_id?: string; search?: s
  if (filters.warehouse_id) qs.append('warehouse_id', filters.warehouse_id);
  if (filters.search) qs.append('search', filters.search);
  if (filters.page) qs.append('page', filters.page.toString());
- const path = `/inventory/balance ${qs.toString() ? `?${qs.toString()}` : ''}`;
+ const path = `/inventory/balance${qs.toString() ? `?${qs.toString()}` : ''}`;
  return apiClient.get(path, paginatedSchema(StockBalanceItemSchema));
  },
  staleTime: 60_000,

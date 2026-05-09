@@ -6,7 +6,7 @@ import { usePO } from '@/features/purchasing/hooks/usePO';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
-import { PurchaseOrderViewer } from '@/features/purchasing/components/purchase-order-viewer';
+
 import { CheckCircle } from 'lucide-react';
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
@@ -43,7 +43,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
 
   const isNew = !id || id === 'new';
   const status = (po?.status || PO_STATUS.DRAFT) as DocumentStatus;
-  const isLocked = isDocumentLocked('PO', status);
+
 
   // Generate actions for the viewer (strictly navigation or read-only triggers)
   const actions = (
@@ -62,16 +62,13 @@ export function PODetailClient({ id }: PODetailClientProps) {
     </div>
   );
 
-  if (isLocked && po) {
-    return <PurchaseOrderViewer document={po} actions={actions} />;
-  }
-
   return (
     <>
       <PurchaseOrderForm 
         initialData={po} 
         mode={isNew ? 'create' : 'edit'} 
         onConflict={triggerConflict}
+        actions={actions}
       />
       <ConflictDialog 
         open={open}

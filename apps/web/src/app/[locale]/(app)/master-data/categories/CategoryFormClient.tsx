@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Layers } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 interface Props { 
   id: string | null; 
@@ -31,7 +31,6 @@ interface Props {
 export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tc = useTranslations('master_data.categories');
-  const router = useRouter();
 
   const { data, isLoading, isError, isFetched, refetch } = useCategory(id);
   const create = useCreateCategory();
@@ -42,6 +41,8 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     defaultValues: { name_ar: '', name_en: '' },
     disabled: isReadOnly,
   });
+  
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   // 1. Loading State
   if (id && isLoading) {
@@ -63,7 +64,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     return (
       <ErrorState 
         type="not_found"
-        onBack={() => router.push('/master-data/categories')}
+        onBack={() => guardedRouter.push('/master-data/categories', { skipGuard: true })}
       />
     );
   }
@@ -72,14 +73,21 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     if (data) reset({ name_ar: data.name_ar, name_en: data.name_en });
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) await update.mutateAsync({ id, values });
-      else await create.mutateAsync(values);
-      router.push('/master-data/categories');
-    } catch (error) {
-      // Handled by mutation hook
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/categories', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/categories', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -89,6 +97,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     backHref='/master-data/categories'
     isSaving={create.isPending || update.isPending}
     onSubmit={onSubmit}
+    onCancel={() => guardedRouter.push('/master-data/categories')}
     hideSave={isReadOnly}
     resource="master_data"
     saveAction={id ? 'edit' : 'create'}

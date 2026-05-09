@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useUnsavedChanges } from '@/lib/unsaved-changes/UnsavedChangesProvider';
 
 export default function LocaleSwitcher() {
   const t = useTranslations('common');
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
+  const { isDirty, openDialog } = useUnsavedChanges();
   
   // Safe hydration handling for locale
   const currentLocale = params?.locale as string || 'ar';
@@ -16,9 +18,12 @@ export default function LocaleSwitcher() {
   const label = t(`locales.${otherLocale}`);
 
   const toggleLocale = () => {
-    const newPath = pathname.replace(/^\/(ar|en)/, `/${otherLocale}`);
-    document.cookie = `NEXT_LOCALE=${otherLocale}; path=/`;
-    router.replace(newPath || `/${otherLocale}`);
+    if (isDirty) {
+      openDialog(pathname, { locale: otherLocale });
+    } else {
+      document.cookie = `NEXT_LOCALE=${otherLocale}; path=/`;
+      router.replace(pathname, { locale: otherLocale });
+    }
   };
 
   const [isMounted, setIsMounted] = useState(false);

@@ -18,21 +18,24 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { PermissionGate } from "@/components/shared/PermissionGate";
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { LockBanner } from "@/components/shared/LockBanner";
 
+import { useAuth } from "@/providers/AuthProvider";
+import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { useStocktake, useStartStocktake } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
-
 import { canStartStocktake } from "@/domain/status-guards";
+import { type DocumentStatus } from "@/core/workflow/document-engine";
 
 interface StocktakeStartClientProps {
   id: string;
@@ -42,13 +45,12 @@ interface StocktakeStartClientProps {
 export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) {
   const t = useTranslations("operations.stocktake");
   const common = useTranslations("common");
-  const router = useRouter();
-  
   const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
   const session = rawSession ? mapToSessionVM(rawSession) : null;
   
-  const { data: warehouses } = useWarehouses();
-  const { data: lockState, isLoading: lockLoading } = useWarehouseLock(session?.warehouseId ?? null);
+  const { user } = useAuth();
+  const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
+  const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
   const startStocktake = useStartStocktake();
   
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -60,8 +62,8 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
     }
   }, [session, id, locale, router]);
 
- if (sessionLoading) return <LoadingSkeleton />;
- if (sessionError || !session) return <ErrorState onRetry={() => window.location.reload()} />;
+  if (sessionLoading || isLoadingWarehouses || lockLoading) return <PageSkeleton variant="detail" />;
+  if (sessionError || errorWarehouses || errorLock || !session) return <ErrorState onRetry={() => window.location.reload()} />;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
@@ -69,11 +71,11 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 
  const handleStart = () => {
- startStocktake.mutate(id, {
- onSuccess: () => {
- router.push(`/stocktake/${id}/count`);
- }
- });
+   startStocktake.mutate(id, {
+     onSuccess: () => {
+       router.push(`/stocktake/${id}/count`, { skipGuard: true });
+     }
+   });
  };
 
  return (
@@ -183,35 +185,42 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  </CardContent>
  </Card>
 
- <Button
- onClick={() => setConfirmOpen(true)}
- disabled={startStocktake.isPending || isAlreadyLocked || lockLoading}
- className={cn(
- "w-full h-20 rounded-[1.5rem] text-white transition-all group overflow-hidden relative",
- isAlreadyLocked 
- ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50" 
- : "bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)]"
- )}
- >
- <div className="relative z-10 flex items-center justify-center gap-4">
- {startStocktake.isPending ? (
- <Loader2 className="w-6 h-6 animate-spin" />
- ) : isAlreadyLocked ? (
- <>
- <Lock className="w-6 h-6" />
- <span className="text-body-md font-semibold uppercase">{common('locked')}</span>
- </>
- ) : (
- <>
- <Play className="w-6 h-6 fill-current" />
- <span className="text-body-md font-semibold uppercase">{t('start_session')}</span>
- </>
- )}
- </div>
- {!isAlreadyLocked && (
- <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
- )}
- </Button>
+          <ActionGuard 
+            documentType="STOCKTAKE" 
+            status={session.status as DocumentStatus} 
+            action="START" 
+            role={user?.role || ''}
+          >
+            <Button
+              onClick={() => setConfirmOpen(true)}
+              disabled={startStocktake.isPending || isAlreadyLocked || lockLoading}
+              className={cn(
+                "w-full h-20 rounded-[1.5rem] text-white transition-all group overflow-hidden relative",
+                isAlreadyLocked 
+                ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50" 
+                : "bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)]"
+              )}
+            >
+              <div className="relative z-10 flex items-center justify-center gap-4">
+                {startStocktake.isPending ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : isAlreadyLocked ? (
+                  <>
+                    <Lock className="w-6 h-6" />
+                    <span className="text-body-md font-semibold uppercase">{common('locked')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-6 h-6 fill-current" />
+                    <span className="text-body-md font-semibold uppercase">{t('start_session')}</span>
+                  </>
+                )}
+              </div>
+              {!isAlreadyLocked && (
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              )}
+            </Button>
+          </ActionGuard>
  </div>
  </div>
  </div>

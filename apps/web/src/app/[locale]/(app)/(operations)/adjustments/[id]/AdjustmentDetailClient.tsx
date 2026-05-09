@@ -8,7 +8,8 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { isLocked } from '@/domain/status-guards';
 import { AdjustmentForm } from './AdjustmentForm';
-import { AdjustmentViewer } from './AdjustmentViewer';
+
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export function AdjustmentDetailClient({ id }: { id: string }) {
   const tCommon = useTranslations('common');
@@ -17,22 +18,13 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
   
   const isNew = id === 'new';
   const { data: adjustment, isLoading } = useAdjustment(isNew ? null : id);
+
+  if (isLoading) return <PageSkeleton variant="detail" />;
+
   const status = adjustment?.status ?? ADJUSTMENT_STATUS.DRAFT;
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tCommon('loading')}</p>
-      </div>
-    );
-  }
-
   const locked = isLocked('ADJUSTMENT', status);
 
-  if (locked) {
-    return <AdjustmentViewer document={adjustment as any} />;
-  }
+
 
   return (
     <>

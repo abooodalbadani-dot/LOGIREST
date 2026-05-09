@@ -10,10 +10,11 @@ import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { FEFOLotAllocator } from '@/components/shared/FEFOLotAllocator/FEFOLotAllocator';
-import { LockBanner } from '@/components/shared/LockBanner';
+import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
+import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
+import { FormFooter } from '@/components/shared/FormFooter';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
-import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -43,6 +44,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const { user } = useAuth();
   
   const postIssue = usePostIssue(id, { onConflict });
+  const isPostPending = postIssue.isPending;
   
   const [lines, setLines] = useState<LineItem[]>([]);
   const [destinationId, setDestinationId] = useState('');
@@ -57,6 +59,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   // FEFO Allocator State
   const [fefoOpen, setFefoOpen] = useState(false);
   const [activeLine, setActiveLine] = useState<LineItem | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (lines.length > 0 && !!destinationId) {
+      setIsPostDialogOpen(true);
+    }
+  };
 
   // Auto fetch lots when activeLine changes
   const { data: lots = [] } = useLotsByItem({ 
@@ -155,7 +164,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   }, [issue]);
 
   return (
-    <div className="min-h-screen bg-surface-container-low flex flex-col animate-in fade-in duration-1000">
+    <div className="min-h-screen bg-surface-container-low flex flex-col animate-in fade-in duration-1000 pb-32">
       <div className="glass-header sticky top-0 z-50 h-16 px-6 lg:px-10 flex items-center justify-between gap-6">
         <div className="flex items-center gap-6">
           <Button 
@@ -181,69 +190,43 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
             </div>
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <PermissionGate action="create" resource="issue">
-            <ActionGuard documentType="ISSUE" status={status} action="EDIT" role={user?.role || 'WH_KEEPER'}>
-              <Button 
-                variant="ghost" 
-                disabled={isWarehouseLocked}
-                className="h-9 px-6 text-label-xs font-semibold uppercase rounded-lg transition-all"
-              >
-                <Save className="w-4 h-4 me-2 opacity-40" />
-                {t('save_draft')}
-              </Button>
-            </ActionGuard>
-          </PermissionGate>
-          <PermissionGate action="post" resource="issue">
-            <ActionGuard documentType="ISSUE" status={status} action="POST" role={user?.role || 'WH_KEEPER'}>
-              <Button 
-                disabled={isWarehouseLocked || isNew}
-                onClick={() => setIsPostDialogOpen(true)}
-                className="h-9 px-8 primary-gradient text-white text-label-xs font-semibold uppercase shadow-xl shadow-primary/20 transition-all active:scale-95 border-none rounded-lg"
-              >
-                <Send className="w-4 h-4 me-2" />
-                {t('post_issue')}
-              </Button>
-            </ActionGuard>
-          </PermissionGate>
-        </div>
       </div>
 
-      <div className="px-6 lg:px-10 py-10 space-y-10">
-        {(isDocLocked || isWarehouseLockedError) && <LockBanner lockState={lockState} />}
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+        <DocumentLockBanner isLocked={isDocLocked} status={status} />
+        
+        <DocumentLockWrapper isLocked={isDocLocked}>
+          <div className="flex-1 px-6 lg:px-10 py-8">
         
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 lg:col-span-8 space-y-8">
-            <DocumentReadOnlyOverlay isPosted={isDocLocked}>
-              <div className="space-y-8">
-                {canEdit && (
-                  <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
-                    <div className="relative space-y-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Package className="w-4 h-4 text-primary" />
-                        </div>
-                        <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
-                      </div>
-                      <ScanInput 
-                        onScan={handleScan} 
-                        disabled={isDocLocked} 
-                        placeholder={t('scan_placeholder')} 
-                        onError={(bc) => setScanError(t('not_found_prefix') + bc)}
-                        className="bg-surface-container-low rounded-lg transition-all focus-within:ring-1 focus-within:ring-primary-fixed-dim/10 shadow-none border-none"
-                      />
-                      {scanError && (
-                        <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-500">
-                          <AlertCircle className="w-4 h-4" />
-                          {scanError}
-                        </div>
-                      )}
+            {!isDocLocked && (
+              <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                <div className="relative space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-primary" />
                     </div>
+                    <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
                   </div>
-                )}
-                
-                <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
+                  <ScanInput 
+                    onScan={handleScan} 
+                    disabled={isDocLocked} 
+                    placeholder={t('scan_placeholder')} 
+                    onError={(bc) => setScanError(t('not_found_prefix') + bc)}
+                    className="bg-surface-container-low rounded-lg transition-all focus-within:ring-1 focus-within:ring-primary-fixed-dim/10 shadow-none border-none"
+                  />
+                  {scanError && (
+                    <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-500">
+                      <AlertCircle className="w-4 h-4" />
+                      {scanError}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
                   <div className="p-8 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-1 h-6 bg-primary/20 rounded-full" />
@@ -322,9 +305,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     ]}
                   />
                 </div>
-              </div>
-            </DocumentReadOnlyOverlay>
-          </div>
+            </div>
+
 
           <div className="col-span-12 lg:col-span-4 space-y-8">
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
@@ -423,18 +405,32 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 </div>
               )}
             </div>
+
           </div>
-          
-          <PostConfirmDialog 
-            open={isPostDialogOpen} 
-            onOpenChange={setIsPostDialogOpen}
-            title={t('post_confirm_title')}
-            description={t('post_confirm_desc')}
-            warningText=""
-            requiresTextConfirmation={true}
-            onConfirm={handlePost}
-            isLoading={postIssue.isPending}
-          />
+            </div>
+          </div>
+        </DocumentLockWrapper>
+
+        <FormFooter 
+          isLocked={isDocLocked}
+          onCancel={() => router.push('/issues')}
+          onSubmit={() => setIsPostDialogOpen(true)}
+          isPending={isPostPending}
+          submitLabel={t('post_issue')}
+          canSubmit={lines.length > 0 && !!destinationId}
+        />
+      </form>
+
+      <PostConfirmDialog 
+        open={isPostDialogOpen} 
+        onOpenChange={setIsPostDialogOpen}
+        title={t('post_confirm_title')}
+        description={t('post_confirm_desc')}
+        warningText=""
+        requiresTextConfirmation={true}
+        onConfirm={handlePost}
+        isLoading={isPostPending}
+      />
 
           <Dialog open={fefoOpen} onOpenChange={setFefoOpen}>
             <DialogContent className="max-h-[85vh] max-w-2xl bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden">
@@ -460,11 +456,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     onClose={() => setFefoOpen(false)}
                   />
                 )}
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

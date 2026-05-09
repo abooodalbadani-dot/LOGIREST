@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +24,7 @@ import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 interface Props {
   id: string | null;
@@ -38,8 +38,7 @@ interface Props {
 export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const tc = useTranslations('common');
   const ts = useTranslations('master_data.suppliers');
-  const tv = useTranslations('validation'); // Assuming validation translations exist
-  const router = useRouter();
+  const tv = useTranslations();
 
   const { data, isLoading, isError, refetch } = useSupplier(id);
   const { data: currencies, isLoading: isCurrenciesLoading } = useCurrencies();
@@ -52,6 +51,8 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       disabled: isReadOnly,
       defaultValues: { code: '', name_ar: '', name_en: '', currency_id: '', payment_terms: '', is_active: true },
     });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
 
@@ -68,17 +69,21 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/suppliers');
-    } catch (error) {
-      // Error handled by mutation toast
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -86,7 +91,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
 
   if (id && isLoading) return <PageSkeleton variant="detail" />;
   if (id && isError) return <ErrorState onRetry={refetch} />;
-  if (id && !data && !isLoading) return <ErrorState type="not_found" onRetry={() => router.push('/master-data/suppliers')} />;
+  if (id && !data && !isLoading) return <ErrorState type="not_found" onRetry={() => guardedRouter.push('/master-data/suppliers')} />;
   
   if (isCurrenciesLoading && !id) return <PageSkeleton variant="detail" />;
 
@@ -96,6 +101,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       backHref='/master-data/suppliers'
       isSaving={isSaving}
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/suppliers')}
       hideSave={isReadOnly}
       resource="master_data"
       saveAction={id ? 'edit' : 'create'}
@@ -127,7 +133,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                     className="font-mono font-semibold uppercase text-status-active" 
                     placeholder="e.g. SUP-001" 
                   />
-                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.code.message}</p>}
+                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -141,7 +147,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       className="font-semibold" 
                       placeholder="Supplier Name" 
                     />
-                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.name_en.message}</p>}
+                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as any)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -154,7 +160,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       className="font-semibold text-end" 
                       placeholder="اسم المورد" 
                     />
-                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.name_ar.message}</p>}
+                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as any)}</p>}
                   </div>
                 </div>
               </div>
@@ -195,7 +201,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       </Select>
                     )}
                   />
-                  {errors.currency_id && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.currency_id.message}</p>}
+                  {errors.currency_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as any)}</p>}
                 </div>
 
                 <div className="space-y-2">

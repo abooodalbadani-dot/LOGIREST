@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,7 +44,6 @@ interface Props {
 export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tw = useTranslations('master_data.warehouses');
-  const router = useRouter();
 
   const { data, isLoading, isError, isFetched, refetch } = useWarehouse(id);
   const { data: branchesData, isLoading: isLoadingBranches, isError: isErrorBranches } = useBranches();
@@ -58,6 +57,8 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
       disabled: isReadOnly,
       defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'MAIN', is_active: true },
     });
+  
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
 
@@ -77,7 +78,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
     return (
       <ErrorState 
         type="not_found" 
-        onRetry={() => router.push('/master-data/warehouses')} 
+        onRetry={() => guardedRouter.push('/master-data/warehouses', { skipGuard: true })} 
       />
     );
   }
@@ -92,17 +93,21 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
     );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/warehouses');
-    } catch (error) {
-      // Error handled by mutation hook
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -119,6 +124,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
       backHref='/master-data/warehouses' 
       isSaving={isSaving} 
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/warehouses')}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}

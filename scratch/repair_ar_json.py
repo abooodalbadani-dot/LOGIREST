@@ -1,107 +1,60 @@
-
 import json
-import re
+import os
 
-def recover_string(s):
-    if not s: return s
-    # Common Mojibake: UTF-8 read as CP1256
-    try:
-        # We need to handle the fact that some bytes might have been 
-        # interpreted as CP1252 chars (like the soft hyphen or the double dagger)
-        # instead of CP1256.
-        # Let's try to map them back to bytes.
-        
-        # A common set of chars that appear when UTF-8 is read as CP1256/CP1252
-        # is problematic. Let's try a direct approach:
-        b = s.encode('cp1256', errors='ignore')
-        return b.decode('utf-8', errors='ignore')
-    except:
-        return s
+def recursive_merge(d1, d2):
+    for k, v in d2.items():
+        if k in d1 and isinstance(d1[k], dict) and isinstance(v, dict):
+            recursive_merge(d1[k], v)
+        else:
+            d1[k] = v
 
-def fix_json_syntax(content):
-    # Fix the specific pattern found: .",something",
-    content = re.sub(r'\.",[^"]+",', r'",', content)
-    # Fix double descriptions
-    content = re.sub(r'("reject_desc": "[^"]+"),[^"]+",', r'\1",', content)
-    
-    # Try to find lines that are merged
-    # e.g. "key": "value" "next_key": "next_value"
-    content = re.sub(r'(":[^"]+")\s*("[^"]+":)', r'\1,\n\2', content)
-    
-    return content
+def object_pairs_hook_merge(pairs):
+    d = {}
+    for k, v in pairs:
+        if k in d and isinstance(d[k], dict) and isinstance(v, dict):
+            recursive_merge(d[k], v)
+        else:
+            d[k] = v
+    return d
 
-def main():
-    path = 'messages/ar.json'
-    with open(path, 'r', encoding='utf-8') as f:
+def repair_and_clean_ar_json():
+    file_path = 'apps/web/messages/ar.json'
+    with open(file_path, 'rb') as f:
         content = f.read()
+
+    # 1. Fix the corruption at byte 90919
+    # The pattern we found: b'"export": "\xd8\xaa\xd8\xb5\xd8\xaf\xd9\x8a\xd8\xb1 \xd8  }\r\n}\r\n'
+    # We want to replace it with something valid.
+    # Looking at en.json, it should be part of a larger object.
     
-    # Pre-fix syntax
-    content = fix_json_syntax(content)
+    bad_pattern = b'"export": "\xd8\xaa\xd8\xb5\xd8\xaf\xd9\x8a\xd8\xb1 \xd8  }\r\n}\r\n'
+    good_replacement = b'"export": "\xd8\xaa\xd8\xb5\xd8\xaf\xd9\x8a\xd8\xb1",\n'
     
-    # Try to parse. If it fails, we need more aggressive fixing.
+    if bad_pattern in content:
+        print("Found and fixing corruption at 90919...")
+        content = content.replace(bad_pattern, good_replacement)
+    else:
+        print("Corruption pattern not found exactly, trying fuzzy match...")
+        # Fuzzy match: just find the "export": "..." that ends with } }
+        content_str = content.decode('utf-8', errors='replace')
+        import re
+        content_str = re.sub(r'"export": "تصدير .*?}\s*}\s*', r'"export": "تصدير",\n', content_str)
+        content = content_str.encode('utf-8')
+
+    # 2. Parse and merge duplicate keys
     try:
-        data = json.loads(content)
-    except json.JSONDecodeError as e:
-        print(f"Initial JSON parse failed: {e}")
-        # Let's try to fix line by line
-        lines = content.split('\n')
-        new_lines = []
-        for i, line in enumerate(lines):
-            # If a line has multiple key-value pairs, split them
-            # This is a common corruption in this file
-            line = re.sub(r'("[^"]+":\s*"[^"]+")\s*("[^"]+":)', r'\1,\n\2', line)
-            new_lines.append(line)
-        content = '\n'.join(new_lines)
+        # We use 'replace' for decoding to handle any other minor bad bytes
+        data = json.loads(content.decode('utf-8', errors='replace'), object_pairs_hook=object_pairs_hook_merge)
         
-        # Try again with some manual fixes for known broken lines
-        # Line 1195 and 1197 were reported as broken
-        # Let's just remove everything after the first valid entry on those lines
-        try:
-            data = json.loads(content)
-        except:
-            print("Still failing. Using regex to extract keys and values.")
-            # Last resort: extract all "key": "value" pairs and rebuild
-            pairs = re.findall(r'"([^"]+)":\s*"([^"]+)"', content)
-            # This won't preserve nesting perfectly but might recover strings
-            data = {}
-            for k, v in pairs:
-                data[k] = recover_string(v)
-            
-            with open('messages/ar_recovered.json', 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            print("Recovered into ar_recovered.json (flat structure)")
-            return
+        # 3. Save it back
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print("Successfully repaired and merged ar.json")
+    except Exception as e:
+        print(f"Error during JSON processing: {e}")
+        # If it fails, let's try to output the line number
+        import traceback
+        traceback.print_exc()
 
-    # Recursive recovery of strings
-    def recover_dict(d):
-        for k, v in d.items():
-            if isinstance(v, dict):
-                recover_dict(v)
-            elif isinstance(v, str):
-                d[k] = recover_string(v)
-    
-    recover_dict(data)
-    
-    # Apply terminology harmonization
-    terms = {
-        "Purchase Request": "طلب شراء",
-        "Purchase Order": "أمر شراء",
-        "Goods Received Note": "إذن استلام",
-        "Stock Movement": "حركة مخزون",
-        "Adjustment": "تسوية مخزون",
-        "Transfer": "تحويل مخزون",
-        "Stocktake": "جرد مخزون",
-        "Ledger": "سجل الحركات",
-        "FX Rate": "سعر الصرف",
-        "Unit of Measure": "وحدة قياس",
-        "Inventory": "المخزون"
-    }
-    
-    # ... we'll do terminology fix in a next step if needed ...
-
-    with open('messages/ar.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print("Successfully repaired ar.json")
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    repair_and_clean_ar_json()

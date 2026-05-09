@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { GoodsReceipt, CreateGoodsReceiptDTO, GoodsReceiptLineItem } from '../types';
 import { GRN_STATUS } from '@/contracts/statuses';
 
@@ -95,7 +96,7 @@ export function useGoodsReceipt(id: string) {
 export function useCreateGoodsReceipt() {
  const queryClient = useQueryClient();
 
- return useMutation({
+ return useSafeMutation({
  mutationFn: async (data: CreateGoodsReceiptDTO) => {
  await new Promise((resolve) => setTimeout(resolve, 1000));
  
@@ -126,7 +127,7 @@ export function useCreateGoodsReceipt() {
 export function usePostGoodsReceipt() {
  const queryClient = useQueryClient();
 
- return useMutation({
+ return useSafeMutation({
  mutationFn: async ({ id, lockedExchangeRate, baseTotalAmount }: { id: string, lockedExchangeRate: number, baseTotalAmount: number }) => {
  await new Promise((resolve) => setTimeout(resolve, 1000));
  const index = mockGoodsReceipts.findIndex((p) => p.id === id);
@@ -151,10 +152,11 @@ export function usePostGoodsReceipt() {
  },
  });
 }
-export function useUpdateGRNLine() {
+export function useUpdateGRNLine(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
 
- return useMutation({
+ return useSafeMutation({
+ onConflict: options?.onConflict,
  mutationFn: async ({ grnId, item }: { grnId: string, item: GoodsReceiptLineItem }) => {
  // Simulation: no real network call
  await new Promise((resolve) => setTimeout(resolve, 300));

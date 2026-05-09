@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { 
@@ -36,16 +37,17 @@ export function useStocktake(id: string) {
 
 export function useCreateStocktake() {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
     mutationFn: (data: CreateStocktakeDTO) => 
       apiClient.post('/stocktake/sessions', StocktakeSessionSchema, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stocktakes'] }),
   });
 }
 
-export function useStartStocktake() {
+export function useStartStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: (id: string) => 
       apiClient.post(`/stocktake/sessions/${id}/start`, StocktakeSessionSchema),
     onSuccess: (_, id) => {
@@ -56,9 +58,10 @@ export function useStartStocktake() {
   });
 }
 
-export function useBeginCounting() {
+export function useBeginCounting(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: (id: string) => 
       apiClient.post(`/stocktake/sessions/${id}/count`, StocktakeSessionSchema),
     onSuccess: (_, id) => {
@@ -68,9 +71,10 @@ export function useBeginCounting() {
   });
 }
 
-export function useCompleteCounting() {
+export function useCompleteCounting(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: (id: string) => 
       apiClient.post(`/stocktake/sessions/${id}/submit`, StocktakeSessionSchema),
     onSuccess: (_, id) => {
@@ -80,9 +84,10 @@ export function useCompleteCounting() {
   });
 }
 
-export function useSubmitVariance() {
+export function useSubmitVariance(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: ({ id, items }: { id: string; items: { line_id: string; variance_reason?: string }[] }) => 
       apiClient.post(`/stocktake/sessions/${id}/review_variance`, StocktakeSessionSchema, { items }),
     onSuccess: (_, { id }) => {
@@ -92,9 +97,10 @@ export function useSubmitVariance() {
   });
 }
 
-export function useUpdateItemCount() {
+export function useUpdateItemCount(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: ({ stocktakeId, itemId, lineId, countedQty, varianceReason }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string }) => 
       apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { 
         counted_qty: countedQty, 
@@ -110,9 +116,10 @@ export function useUpdateItemCount() {
  * @deprecated Use useUpdateItemCount for real-time saving. 
  * This remains for bulk submission if needed by legacy parts of the UI.
  */
-export function useSubmitCounts() {
+export function useSubmitCounts(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: (dto: SubmitCountDTO) => 
       apiClient.post(`/stocktake/sessions/${dto.stocktake_id}/submit`, StocktakeSessionSchema, dto),
     onSuccess: (_, dto) => {
@@ -122,9 +129,10 @@ export function useSubmitCounts() {
   });
 }
 
-export function useApproveStocktake() {
+export function useApproveStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: ({ id, comment }: { id: string; comment?: string }) => 
       apiClient.post(`/stocktake/sessions/${id}/approve`, StocktakeSessionSchema, { comment }),
     onSuccess: (_, { id }) => {
@@ -134,9 +142,10 @@ export function useApproveStocktake() {
   });
 }
 
-export function useRejectStocktake() {
+export function useRejectStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: ({ id, comment }: { id: string; comment: string }) => 
       apiClient.post(`/stocktake/sessions/${id}/reject`, StocktakeSessionSchema, { comment }),
     onSuccess: (_, { id }) => {
@@ -146,9 +155,10 @@ export function useRejectStocktake() {
   });
 }
 
-export function usePostStocktake() {
+export function usePostStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
-  return useMutation({
+  return useSafeMutation({
+    onConflict: options?.onConflict,
     mutationFn: (id: string) => 
       apiClient.post(`/stocktake/sessions/${id}/post`, StocktakeSessionSchema),
     onSuccess: (_, id) => {

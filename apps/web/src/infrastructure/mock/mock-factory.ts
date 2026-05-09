@@ -61,6 +61,8 @@ export const MockFactory = {
     po_id: null,
     supplier_id: 'SUP-001',
     currency_id: 'SAR',
+    fx_rate: 1.0,
+    fx_rate_captured_at: new Date().toISOString(),
     lines: [],
     ...overrides
   }) as GRN,

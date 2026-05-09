@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
@@ -36,8 +37,7 @@ interface Props {
 export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const tc = useTranslations('common');
   const tb = useTranslations('master_data.barcodes');
-  const router = useRouter();
-
+  
   const { data: barcode } = useBarcode(id);
   const { data: items } = useItems();
   const { data: uoms } = useUoMs();
@@ -45,7 +45,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const create = useCreateBarcode();
   const update = useUpdateBarcode();
 
-  const { register, handleSubmit, reset, setValue, control, formState: { errors } } =
+  const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<BarcodeFormValues>({
       resolver: zodResolver(BarcodeFormSchema),
       defaultValues: { 
@@ -57,8 +57,10 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
       },
       disabled: isReadOnly,
     });
+    
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
- const currentCode = useWatch({ control, name: 'code' });
+  const currentCode = useWatch({ control, name: 'code' });
 
  useEffect(() => {
  if (barcode) {
@@ -72,18 +74,23 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  }
  }, [barcode, reset]);
 
- const onSubmit = handleSubmit(async (values) => {
- try {
- if (id) {
- await update.mutateAsync({ id, values });
- } else {
- await create.mutateAsync(values);
- }
- router.push('/master-data/barcodes');
- } catch (error) {
- // Error handled by mutation toast
- }
- });
+  const onSubmit = handleSubmit((values) => {
+    if (isReadOnly) return;
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/barcodes', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/barcodes', { skipGuard: true });
+        }
+      });
+    }
+  });
 
  return (
     <MasterDataFormLayout 
@@ -91,7 +98,10 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
       backHref='/master-data/barcodes'
       isSaving={create.isPending || update.isPending} 
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/barcodes')}
       hideSave={isReadOnly}
+      isDirty={isDirty}
+      isValid={isValid}
     >
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-8">

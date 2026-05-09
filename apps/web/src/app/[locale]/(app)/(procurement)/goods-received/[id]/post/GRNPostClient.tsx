@@ -17,6 +17,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, TrendingUp, ShieldCheck, Wallet, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useForm } from 'react-hook-form';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { usePostGRN } from '@/features/purchasing/hooks/usePostGRN';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ErrorState } from '@/components/shared/ErrorState';
 
 interface GRNPostClientProps {
  id: string;
@@ -35,25 +40,27 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  const { data: grn, isLoading: isLoadingGRN } = useGRN(id);
  const { data: currencies } = useCurrencies();
  
- const [fxRate, setFxRate] = useState<number>(1);
- const [isPosting, setIsPosting] = useState(false);
- const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const form = useForm({
+    defaultValues: {
+      fx_rate: 1
+    }
+  });
 
- const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
- const supplierCurrency = grn?.currency_id || 'SAR';
+  const fxRate = form.watch('fx_rate');
+  const { guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
+  const postMutation = usePostGRN(id);
 
- // Live FX conversion logic for display
- const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
- 
- useEffect(() => {
- if (fxRates?.[0]?.rate && fxRate === 1) {
- // Use a timeout to avoid synchronous setState in effect which triggers a lint error
- const timer = setTimeout(() => {
- setFxRate(fxRates[0].rate);
- }, 0);
- return () => clearTimeout(timer);
- }
- }, [fxRates, fxRate]);
+  const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
+  const supplierCurrency = grn?.currency_id || 'SAR';
+
+  // Live FX conversion logic for display
+  const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
+  
+  useEffect(() => {
+    if (fxRates?.[0]?.rate && !form.formState.isDirty) {
+      form.reset({ fx_rate: fxRates[0].rate });
+    }
+  }, [fxRates, form]);
 
  const totalSupplier = useMemo(() => {
  return grn?.lines.reduce((acc, line) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
@@ -88,43 +95,29 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  }
  }, [grn, isLoadingGRN, id, router, canPost, user]);
 
- const handlePost = async () => {
- setIsPosting(true);
- 
- // Simulate latency (800ms for production feel)
- await new Promise(resolve => setTimeout(resolve, 800));
+  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
- try {
- // Simulate status change using TanStack Query cache (PART 5)
- const updatedGRN: GRNDetail = {
- ...grn!,
- status: 'POSTED',
- fx_rate: fxRate,
- fx_rate_captured_at: new Date().toISOString()
- };
+  const handlePost = () => {
+    postMutation.mutate({
+      fx_rate: fxRate,
+      confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
+      version: grn?.version || 1
+    }, {
+      onSuccess: () => {
+        toast.success(t('posted_success'));
+        setIsPostDialogOpen(false);
+        guardedRouter.push(`/goods-received/${id}`, { skipGuard: true });
+      }
+    });
+  };
 
- queryClient.setQueryData(['grn', id], updatedGRN);
- 
- // Invalidate list to reflect status
- queryClient.invalidateQueries({ queryKey: ['grns'] });
+  if (isLoadingGRN) {
+    return <PageSkeleton />;
+  }
 
- toast.success(t('posted_success'));
- setIsPostDialogOpen(false);
- router.push(`/goods-received/${id}`);
- } catch {
- toast.error(tc('error'));
- } finally {
- setIsPosting(false);
- }
- };
-
- if (isLoadingGRN || !grn) {
- return (
- <div className="flex flex-col h-[60vh] items-center justify-center animate-pulse">
- <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
- </div>
- );
- }
+  if (!grn) {
+    return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['grn', id] })} />;
+  }
 
  if (!canPost) {
  return (
@@ -147,24 +140,24 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <Button variant="ghost" onClick={() => router.back()} className="rounded-2xl">
  {tc('cancel')}
  </Button>
- <PostConfirmDialog
- open={isPostDialogOpen}
- onOpenChange={setIsPostDialogOpen}
- title={t('post_confirm_title')}
- description={t('post_confirm_desc')}
- warningText={t('post_irreversible')}
- requiresTextConfirmation={true}
- onConfirm={handlePost}
- isLoading={isPosting}
- confirmKeyword={t('confirm_keyword')}
- >
- <Button 
- disabled={isPosting || fxRate <= 0 || grn.lines.length === 0}
- className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase shadow-lg shadow-primary/20 rounded-2xl"
- >
- {t('post_grn')}
- </Button>
- </PostConfirmDialog>
+          <PostConfirmDialog
+            open={isPostDialogOpen}
+            onOpenChange={setIsPostDialogOpen}
+            title={t('post_confirm_title')}
+            description={t('post_confirm_desc')}
+            warningText={t('post_irreversible')}
+            requiresTextConfirmation={true}
+            onConfirm={handlePost}
+            isLoading={postMutation.isPending}
+            confirmKeyword={t('confirm_keyword')}
+          >
+            <Button 
+              disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0}
+              className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase shadow-lg shadow-primary/20 rounded-2xl"
+            >
+              {t('post_grn')}
+            </Button>
+          </PostConfirmDialog>
  </div>
  }
  />
@@ -203,14 +196,13 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="space-y-4">
  <Label className="text-label-xs font-semibold uppercase text-primary/80">{t('fx_capture_title')}</Label>
  <div className="relative group">
- <Input 
- type="number"
- step="0.0001"
- dir="ltr"
- className="h-16 bg-surface-container-highest rounded-2xl border-white/10 focus:border-primary/50 text-headline-lg font-mono font-semibold"
- value={fxRate}
- onChange={(e) => setFxRate(parseFloat(e.target.value) || 0)}
- />
+                <Input 
+                  type="number"
+                  step="0.0001"
+                  dir="ltr"
+                  className="h-16 bg-surface-container-highest rounded-2xl border-white/10 focus:border-primary/50 text-headline-lg font-mono font-semibold"
+                  {...form.register('fx_rate', { valueAsNumber: true })}
+                />
  <div className="absolute inset-y-0 end-4 flex items-center">
  <TrendingUp className="w-5 h-5 text-primary/40 group-focus-within:text-primary transition-colors" />
  </div>

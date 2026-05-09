@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
@@ -38,8 +39,7 @@ export function FXRateFormClient({
 }: Props) {
   const tc = useTranslations('common');
   const t = useTranslations('master_data.fx_rates');
-  const router = useRouter();
-
+  
   const { data: fxRate, isLoading: loadingRate, isError: rateError, refetch: refetchRate } = useFXRate(id);
   const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError, refetch: refetchCurrencies } = useCurrencies();
   
@@ -58,6 +58,8 @@ export function FXRateFormClient({
         is_active: true
       },
     });
+    
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (fxRate) {
@@ -88,20 +90,29 @@ export function FXRateFormClient({
   }
 
   if (id && !fxRate && !loadingRate) {
-    return <ErrorState error={404} />;
+    return (
+      <ErrorState 
+        error={404} 
+        onBack={() => guardedRouter.push('/master-data/fx-rates', { skipGuard: true })}
+      />
+    );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnlyProp) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/fx-rates');
-    } catch (error) {
-      // Handled by mutation toast
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -114,6 +125,7 @@ export function FXRateFormClient({
       backHref='/master-data/fx-rates'
       isSaving={create.isPending || update.isPending} 
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/fx-rates')}
       hideSave={isReadOnlyProp}
       isDirty={isDirty}
       isValid={isValid}

@@ -15,6 +15,7 @@ import { isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { toast } from "sonner";
+import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,13 +26,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 
 export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
- const router = useRouter()
+ const baseRouter = useRouter()
  const { data: rawSession, isLoading, error } = useStocktake(id);
  const session = rawSession ? mapToSessionVM(rawSession) : null;
  const { data: warehouses } = useWarehouses();
@@ -53,17 +54,27 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
     }
   }, [session?.items])
 
- if (isLoading) return <LoadingSkeleton />
+ if (isLoading) return <PageSkeleton variant="list" />;
  if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
+ const isDirty = React.useMemo(() => {
+   return session.items.some(item => {
+     const currentReason = reasons[item.id] || "";
+     const originalReason = item.varianceReason || "";
+     return currentReason !== originalReason;
+   });
+ }, [reasons, session.items]);
+
   // Status check: Must be in REVIEW
   if (!isStocktakeInReview(session.status)) {
-    router.replace(`/stocktake/${id}`);
+    baseRouter.replace(`/stocktake/${id}`);
     return null;
   }
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const handleReasonChange = (lineId: string, value: string) => {
     setReasons(prev => ({ ...prev, [lineId]: value }))
@@ -80,18 +91,24 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
     return isReasonValid(item.id, variance)
   })
 
-  const handleSubmit = async () => {
-    try {
-      const updates = session.items.map(item => ({
-        line_id: item.id,
-        variance_reason: reasons[item.id] || ""
-      }))
-      await submitVariance.mutateAsync({ id, items: updates })
-      toast.success(t('posted_success_variance'))
-      router.push(`/stocktake/${id}`)
-    } catch {
-      toast.error(common('error'))
-    }
+  const handleSubmit = () => {
+    const updates = session.items.map(item => ({
+      line_id: item.id,
+      variance_reason: reasons[item.id] || ""
+    }))
+
+    submitVariance.mutate(
+      { id, items: updates },
+      {
+        onSuccess: () => {
+          toast.success(t('posted_success_variance'))
+          guardedRouter.push(`/stocktake/${id}`, { skipGuard: true })
+        },
+        onError: () => {
+          toast.error(common('error'))
+        }
+      }
+    )
   }
 
  return (

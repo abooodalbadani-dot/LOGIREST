@@ -38,8 +38,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { useAuth } from '@/providers/AuthProvider';
+import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
+import { FormFooter } from '@/components/shared/FormFooter';
 import { 
   canPerformActionV2,
+  isDocumentLocked,
   DocumentStatus 
 } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
@@ -123,13 +126,16 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   };
 
   const status = request.status as DocumentStatus;
+  const isDocLocked = isDocumentLocked('KITCHEN_REQUEST', status);
+  const isPending = updateStatus.isPending || fulfillRequest.isPending;
 
 
   const workflowActions = (
-    <div className="flex items-center gap-3">
+    <>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="REJECT" role={user?.role || 'WH_KEEPER'}>
         <Button 
           variant="outline" 
+          disabled={isPending}
           className="rounded-lg border-red-500/30 text-red-500 hover:bg-red-500/5 h-12 px-6 text-label-xs font-semibold uppercase"
           onClick={() => setRejectDialogOpen(true)}
         >
@@ -139,6 +145,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
         <Button 
+          disabled={isPending}
           className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg h-12 px-8 text-label-xs font-semibold uppercase shadow-lg shadow-emerald-900/20"
           onClick={handleApprove}
         >
@@ -148,6 +155,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role || 'WH_KEEPER'}>
         <Button 
+          disabled={isPending}
           className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg h-12 px-10 text-label-xs font-semibold uppercase shadow-xl shadow-cyan-900/20"
           onClick={openFulfillDialog}
         >
@@ -155,12 +163,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           {t('fulfill')}
         </Button>
       </ActionGuard>
-    </div>
+    </>
   );
 
   return (
-    <div className="min-h-screen bg-surface-container-low">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="min-h-screen bg-surface-container-low flex flex-col animate-in fade-in duration-1000 pb-32">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
             <Breadcrumb 
@@ -186,217 +194,228 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
               </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            {workflowActions}
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Details and Items */}
-          <div className="lg:col-span-8 space-y-8">
-            <div className="bg-surface-container-lowest p-8 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-1">
-                <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5" />
-                  {t('department')}
-                </span>
-                <p className="text-body-md font-bold">{request.department_name}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
-                  <Warehouse className="w-3.5 h-3.5" />
-                  {t('warehouse')}
-                </span>
-                <p className="text-body-md font-bold">{request.warehouse_name}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
-                  <User className="w-3.5 h-3.5" />
-                  {t('requested_by')}
-                </span>
-                <p className="text-body-md font-bold">{request.requested_by}</p>
-              </div>
-              {request.notes && (
-                <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
-                  <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    {tCommon('notes')}
-                  </span>
-                  <p className="text-label-sm text-muted-foreground italic leading-relaxed">&quot;{request.notes}&quot;</p>
-                </div>
-              )}
-              {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejection_reason && (
-                <div className="md:col-span-3 p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
-                  <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {t('rejection_reason_label')}
-                  </span>
-                  <p className="text-label-sm font-bold text-red-500">{request.rejection_reason}</p>
-                </div>
-              )}
-            </div>
+        <form 
+          onSubmit={(e) => e.preventDefault()}
+          className="space-y-10"
+        >
+          <DocumentLockBanner isLocked={isDocLocked} status={status} />
 
-            <div className="bg-surface-container-lowest rounded-lg border border-surface-container-high/20 overflow-hidden">
-              <div className="p-8 border-b border-surface-container-high/50 flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-1.5 h-6 bg-cyan-500 rounded-full" />
-                  <h3 className="text-label-sm font-semibold uppercase">{t('items')}</h3>
+          <DocumentLockWrapper isLocked={isDocLocked && status !== KITCHEN_REQUEST_STATUS.SUBMITTED}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column: Details and Items */}
+              <div className="lg:col-span-8 space-y-8">
+                <div className="bg-surface-container-lowest p-8 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="space-y-1">
+                    <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+                      <Building2 className="w-3.5 h-3.5" />
+                      {t('department')}
+                    </span>
+                    <p className="text-body-md font-bold">{request.department_name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+                      <Warehouse className="w-3.5 h-3.5" />
+                      {t('warehouse')}
+                    </span>
+                    <p className="text-body-md font-bold">{request.warehouse_name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+                      <User className="w-3.5 h-3.5" />
+                      {t('requested_by')}
+                    </span>
+                    <p className="text-body-md font-bold">{request.requested_by}</p>
+                  </div>
+                  {request.notes && (
+                    <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
+                      <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5" />
+                        {tCommon('notes')}
+                      </span>
+                      <p className="text-label-sm text-muted-foreground italic leading-relaxed">&quot;{request.notes}&quot;</p>
+                    </div>
+                  )}
+                  {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejection_reason && (
+                    <div className="md:col-span-3 p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
+                      <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {t('rejection_reason_label')}
+                      </span>
+                      <p className="text-label-sm font-bold text-red-500">{request.rejection_reason}</p>
+                    </div>
+                  )}
                 </div>
-                <Badge variant="outline" className="rounded-lg text-label-xxs font-semibold px-3 py-1 border-none bg-surface-container-high text-muted-foreground/60">
-                  {request.items.length} {t('entries')}
-                </Badge>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left rtl:text-right border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-high/30">
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('item')}</th>
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{tCommon('quantity')}</th>
-                      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="INTERNAL_MOVEMENT" role={user?.role || 'WH_KEEPER'}>
-                        <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{t('fulfilled')}</th>
-                      </ActionGuard>
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-container-high/30">
-                    {request.items.map((item: any) => (
-                      <tr key={item.id} className="group hover:bg-surface-container-medium/30 transition-all">
-                        <td className="px-8 py-6">
-                          <div className="flex flex-col">
-                            <span className="text-label-sm font-bold text-foreground">{item.item_name}</span>
-                            <span className="text-label-xxs font-mono text-muted-foreground/40 mt-1 uppercase">ID: {item.item_id}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6 text-center">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-body-md font-semibold text-cyan-500 tabular-nums">{item.quantity}</span>
-                            <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
-                          </div>
-                        </td>
+
+                <div className="bg-surface-container-lowest rounded-lg border border-surface-container-high/20 overflow-hidden">
+                  <div className="p-8 border-b border-surface-container-high/50 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="w-1.5 h-6 bg-cyan-500 rounded-full" />
+                      <h3 className="text-label-sm font-semibold uppercase">{t('items')}</h3>
+                    </div>
+                    <Badge variant="outline" className="rounded-lg text-label-xxs font-semibold px-3 py-1 border-none bg-surface-container-high text-muted-foreground/60">
+                      {request.items.length} {t('entries')}
+                    </Badge>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left rtl:text-right border-collapse">
+                      <thead>
+                        <tr className="bg-surface-container-high/30">
+                          <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('item')}</th>
+                          <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{tCommon('quantity')}</th>
                           <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="INTERNAL_MOVEMENT" role={user?.role || 'WH_KEEPER'}>
+                            <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{t('fulfilled')}</th>
+                          </ActionGuard>
+                          <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-surface-container-high/30">
+                        {request.items.map((item: any) => (
+                          <tr key={item.id} className="group hover:bg-surface-container-medium/30 transition-all">
+                            <td className="px-8 py-6">
+                              <div className="flex flex-col">
+                                <span className="text-label-sm font-bold text-foreground">{item.item_name}</span>
+                                <span className="text-label-xxs font-mono text-muted-foreground/40 mt-1 uppercase">ID: {item.item_id}</span>
+                              </div>
+                            </td>
                             <td className="px-8 py-6 text-center">
                               <div className="flex flex-col items-center gap-0.5">
-                                <span className={cn(
-                                  "text-body-md font-semibold tabular-nums",
-                                  (item.fulfilled_quantity || 0) < item.quantity ? "text-amber-500" : "text-emerald-500"
-                                )}>{item.fulfilled_quantity || 0}</span>
+                                <span className="text-body-md font-semibold text-cyan-500 tabular-nums">{item.quantity}</span>
                                 <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
                               </div>
                             </td>
-                          </ActionGuard>
-                        <td className="px-8 py-6">
-                          <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
-                            {item.notes || '—'}
-                          </p>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Timeline and Meta */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="bg-surface-container-lowest p-8 rounded-lg border border-surface-container-high/20 relative overflow-hidden group">
-              <div className="absolute top-0 end-0 w-32 h-32 bg-cyan-500/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-cyan-500/10 transition-all duration-700" />
-              <div className="relative space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <History className="w-5 h-5 text-cyan-500" />
+                              <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="INTERNAL_MOVEMENT" role={user?.role || 'WH_KEEPER'}>
+                                <td className="px-8 py-6 text-center">
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <span className={cn(
+                                      "text-body-md font-semibold tabular-nums",
+                                      (item.fulfilled_quantity || 0) < item.quantity ? "text-amber-500" : "text-emerald-500"
+                                    )}>{item.fulfilled_quantity || 0}</span>
+                                    <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
+                                  </div>
+                                </td>
+                              </ActionGuard>
+                            <td className="px-8 py-6">
+                              <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
+                                {item.notes || '—'}
+                              </p>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <h4 className="text-label-xs font-semibold uppercase">{tCommon('history')}</h4>
-                </div>
-                <div className="ps-2">
-                  <StatusTimeline entries={history} />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Reject Dialog */}
-        <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-          <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-md">
-            <div className="p-8 space-y-6">
-              <DialogHeader>
-                <DialogTitle className="text-title-lg font-semibold uppercase italic text-red-500">{t('reject')}</DialogTitle>
-                <DialogDescription className="text-label-sm font-medium text-muted-foreground">
-                  {t('rejection_reason_description') || "Please provide a reason for rejecting this request. This will be visible to the requester."}
-                </DialogDescription>
-              </DialogHeader>
-              <Textarea 
-                placeholder={t('rejection_reason_placeholder')}
-                className="bg-surface-container-highest border-none rounded-lg p-5 text-body-md min-h-[120px] transition-all"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-              />
-            </div>
-            <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
-              <Button variant="ghost" onClick={() => setRejectDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">{t('cancel')}</Button>
-              <Button 
-                className="bg-red-600 hover:bg-red-500 text-white rounded-lg h-12 px-8 text-label-xs font-semibold uppercase"
-                onClick={handleReject}
-                disabled={!rejectionReason.trim()}
-              >
-                {t('confirm_rejection')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Fulfill Dialog */}
-        <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
-          <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-2xl">
-            <div className="p-8 space-y-6">
-              <DialogHeader>
-                <DialogTitle className="text-title-lg font-semibold uppercase italic text-cyan-500">{t('fulfill')}</DialogTitle>
-                <DialogDescription className="text-label-sm font-medium text-muted-foreground">
-                  {t('fulfillment_desc')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                {request.items.map((item: any) => (
-                  <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-lg border border-surface-container-high/50">
-                    <div className="space-y-1">
-                      <p className="text-label-sm font-bold">{item.item_name}</p>
-                      <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
+              {/* Right Column: Timeline and Meta */}
+              <div className="lg:col-span-4 space-y-8">
+                <div className="bg-surface-container-lowest p-8 rounded-lg border border-surface-container-high/20 relative overflow-hidden group">
+                  <div className="absolute top-0 end-0 w-32 h-32 bg-cyan-500/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-cyan-500/10 transition-all duration-700" />
+                  <div className="relative space-y-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                        <History className="w-5 h-5 text-cyan-500" />
+                      </div>
+                      <h4 className="text-label-xs font-semibold uppercase">{tCommon('history')}</h4>
                     </div>
-                    <div className="text-center">
-                      <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-1 block">{t('fulfilling')}</span>
-                      <Input 
-                        type="number"
-                        step="0.01"
-                        dir="ltr"
-                        className="bg-surface-container-highest border-none h-10 text-center font-semibold text-body-md rounded-lg transition-all"
-                        value={fulfillmentData.find(f => f.itemId === item.item_id)?.fulfilledQuantity || 0}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setFulfillmentData(prev => prev.map(f => f.itemId === item.item_id ? { ...f, fulfilledQuantity: val } : f));
-                        }}
-                      />
-                    </div>
-                    <div className="text-center pt-4">
-                      <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
+                    <div className="ps-2">
+                      <StatusTimeline entries={history} />
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
-              <Button variant="ghost" onClick={() => setFulfillDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">{t('cancel')}</Button>
-              <Button 
-                className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg h-12 px-10 text-label-xs font-semibold uppercase shadow-lg shadow-cyan-900/20"
-                onClick={handleFulfill}
-              >
-                {t('post_fulfillment')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </DocumentLockWrapper>
+
+          <FormFooter 
+            isLocked={isDocLocked && status !== KITCHEN_REQUEST_STATUS.SUBMITTED}
+            onCancel={() => router.push('/kitchen-requests')}
+            actions={workflowActions}
+            isSaving={isPending}
+          />
+        </form>
       </div>
+
+      {/* Dialogs */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-md">
+          <div className="p-8 space-y-6">
+            <DialogHeader>
+              <DialogTitle className="text-title-lg font-semibold uppercase italic text-red-500">{t('reject')}</DialogTitle>
+              <DialogDescription className="text-label-sm font-medium text-muted-foreground">
+                {t('rejection_reason_description') || "Please provide a reason for rejecting this request."}
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea 
+              placeholder={t('rejection_reason_placeholder')}
+              className="bg-surface-container-highest border-none rounded-lg p-5 text-body-md min-h-[120px] transition-all"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
+            <Button variant="ghost" onClick={() => setRejectDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">{t('cancel')}</Button>
+            <Button 
+              className="bg-red-600 hover:bg-red-500 text-white rounded-lg h-12 px-8 text-label-xs font-semibold uppercase"
+              onClick={handleReject}
+              disabled={!rejectionReason.trim()}
+            >
+              {t('confirm_rejection')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
+        <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-2xl">
+          <div className="p-8 space-y-6">
+            <DialogHeader>
+              <DialogTitle className="text-title-lg font-semibold uppercase italic text-cyan-500">{t('fulfill')}</DialogTitle>
+              <DialogDescription className="text-label-sm font-medium text-muted-foreground">
+                {t('fulfillment_desc')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+              {request.items.map((item: any) => (
+                <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-lg border border-surface-container-high/50">
+                  <div className="space-y-1">
+                    <p className="text-label-sm font-bold">{item.item_name}</p>
+                    <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-1 block">{t('fulfilling')}</span>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      dir="ltr"
+                      className="bg-surface-container-highest border-none h-10 text-center font-semibold text-body-md rounded-lg transition-all"
+                      value={fulfillmentData.find(f => f.itemId === item.item_id)?.fulfilledQuantity || 0}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setFulfillmentData(prev => prev.map(f => f.itemId === item.item_id ? { ...f, fulfilledQuantity: val } : f));
+                      }}
+                    />
+                  </div>
+                  <div className="text-center pt-4">
+                    <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
+            <Button variant="ghost" onClick={() => setFulfillDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">{t('cancel')}</Button>
+            <Button 
+              className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg h-12 px-10 text-label-xs font-semibold uppercase shadow-lg shadow-cyan-900/20"
+              onClick={handleFulfill}
+            >
+              {t('post_fulfillment')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

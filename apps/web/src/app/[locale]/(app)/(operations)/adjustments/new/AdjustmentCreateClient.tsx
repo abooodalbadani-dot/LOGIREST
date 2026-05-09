@@ -39,21 +39,18 @@ const AdjustmentFormSchema = z.object({
 
 type AdjustmentFormValues = z.infer<typeof AdjustmentFormSchema>;
 
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+
 export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.adjustment');
  const tCommon = useTranslations('common');
- const router = useRouter();
- 
- const { data: warehouses } = useWarehouses();
- const { data: items } = useItems();
- const createAdjustment = useCreateAdjustment();
  
  const {
  register,
  handleSubmit,
  setValue,
  control,
- formState: { errors, isValid },
+ formState: { errors, isValid, isDirty },
  } = useForm<AdjustmentFormValues>({
  resolver: zodResolver(AdjustmentFormSchema),
  defaultValues: {
@@ -63,6 +60,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  }
  });
 
+ const { router } = useUnsavedChangesGuard(isDirty);
+ 
+ const { data: warehouses } = useWarehouses();
+ const { data: items } = useItems();
+ const createAdjustment = useCreateAdjustment();
+ 
  const selectedWarehouseId = useWatch({ control, name: 'warehouse_id' });
  const selectedItemId = useWatch({ control, name: 'item_id' });
  const { data: lockState } = useWarehouseLock(selectedWarehouseId);
@@ -70,26 +73,25 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  const selectedItem = items?.find(i => i.id === selectedItemId);
  const selectedDirection = useWatch({ control, name: 'direction' });
 
- const onSubmit = async (data: AdjustmentFormValues) => {
- if (!!lockState?.isLocked) return;
- 
- try {
- await createAdjustment.mutateAsync({
- warehouse_id: data.warehouse_id,
- reason: data.reason_category,
- notes: data.notes,
- lines: [{
- item_id: data.item_id,
- qty: data.quantity,
- uom_id: selectedItem?.uom || 'EA', // Use the UOM from selected item
- direction: data.direction,
- lot_allocations: data.lot_number ? [{ lot_id: data.lot_number, qty: data.quantity }] : undefined
- }]
- });
- router.push("/adjustments");
- } catch (e) {
- console.error(e);
- }
+ const onSubmit = (data: AdjustmentFormValues) => {
+   if (!!lockState?.isLocked) return;
+   
+   createAdjustment.mutate({
+     warehouse_id: data.warehouse_id,
+     reason: data.reason_category,
+     notes: data.notes,
+     lines: [{
+       item_id: data.item_id,
+       qty: data.quantity,
+       uom_id: selectedItem?.uom || 'EA', // Use the UOM from selected item
+       direction: data.direction,
+       lot_allocations: data.lot_number ? [{ lot_id: data.lot_number, qty: data.quantity }] : undefined
+     }]
+   }, {
+     onSuccess: () => {
+       router.push("/adjustments", { skipGuard: true });
+     }
+   });
  };
 
  return (

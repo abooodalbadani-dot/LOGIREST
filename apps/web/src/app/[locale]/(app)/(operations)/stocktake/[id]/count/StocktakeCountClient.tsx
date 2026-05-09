@@ -4,10 +4,11 @@ import * as React from "react";
 import { useStocktake, useUpdateItemCount, useCompleteCounting } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { useRouter } from "@/i18n/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { mapToSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
 
@@ -21,19 +22,24 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
+import { useAuth } from "@/providers/AuthProvider";
+import { ActionGuard } from "@/core/workflow/ActionGuard";
+import { type DocumentStatus } from "@/core/workflow/document-engine";
 import { isStocktakeCounting } from "@/domain/status-guards";
 
 export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
-  const router = useRouter()
-  const { data: rawSession, isLoading } = useStocktake(id);
+  const baseRouter = useRouter();
+  const { user } = useAuth();
+  const { router: guardedRouter } = useUnsavedChangesGuard(false);
+  const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
   const session = rawSession ? mapToSessionVM(rawSession) : null;
-  const { data: warehouses } = useWarehouses();
+  const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const updateCount = useUpdateItemCount();
   const completeCounting = useCompleteCounting();
 
@@ -112,14 +118,14 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
     }
   }, [session?.items])
 
-  if (isLoading) return <LoadingSkeleton />
-  if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
+  if (sessionLoading || isLoadingWarehouses) return <PageSkeleton variant="list" />;
+  if (sessionError || errorWarehouses || !session) return <ErrorState onRetry={() => window.location.reload()} />;
   
   const warehouse = warehouses?.find((w) => w.id === session.warehouseId);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
   if (!isStocktakeCounting(session.status)) {
-    router.replace(`/stocktake/${id}`);
+    baseRouter.replace(`/stocktake/${id}`);
     return null;
   }
 
@@ -131,7 +137,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       const newQty = currentQty + 1
       
       setLocalCounts(prev => ({ ...prev, [item.id]: newQty }))
-      await updateCount.mutateAsync({ stocktakeId: id, itemId: item.itemId, lineId: item.id, countedQty: newQty })
+      updateCount.mutate({ stocktakeId: id, itemId: item.itemId, lineId: item.id, countedQty: newQty })
       
       setScanStatus("success")
       setStatusMessage(`${item.itemName}: ${newQty}`)
@@ -153,14 +159,16 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
     }
   }
 
-  const handleFinish = async () => {
-    try {
-      await completeCounting.mutateAsync(id)
-      toast.success(t('posted_success'))
-      router.push(`/stocktake/${id}/variance`)
-    } catch {
-      toast.error(common('error'))
-    }
+  const handleFinish = () => {
+    completeCounting.mutate(id, {
+      onSuccess: () => {
+        toast.success(t('posted_success'))
+        guardedRouter.push(`/stocktake/${id}/variance`, { skipGuard: true })
+      },
+      onError: () => {
+        toast.error(common('error'))
+      }
+    })
   }
 
   const hasCountedItems = session.items.some((i) => (localCounts[i.id] || 0) > 0)
@@ -187,16 +195,23 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               status={session.status} 
               className="px-4 py-1"
             />
-            <PostConfirmDialog
-              title={t('confirm_finish_title')}
-              description={t('confirm_finish_desc')}
-              onConfirm={handleFinish}
-              trigger={
-                <Button disabled={!hasCountedItems || completeCounting.isPending}>
-                  {t('finish_counting')}
-                </Button>
-              }
-            />
+            <ActionGuard 
+              documentType="STOCKTAKE" 
+              status={session.status as DocumentStatus} 
+              action="SUBMIT" 
+              role={user?.role || ''}
+            >
+              <PostConfirmDialog
+                title={t('confirm_finish_title')}
+                description={t('confirm_finish_desc')}
+                onConfirm={handleFinish}
+                trigger={
+                  <Button disabled={!hasCountedItems || completeCounting.isPending}>
+                    {t('finish_counting')}
+                  </Button>
+                }
+              />
+            </ActionGuard>
           </div>
         </PageHeader>
 

@@ -168,7 +168,6 @@ export function DataTable<T>({
     >
       <table 
         className="w-full text-start border-collapse min-w-[800px]"
-        data-webmcp-collection={collectionName || 'generic_table'}
       >
         <thead className="bg-surface-container-low/30 text-muted-foreground sticky top-0 z-10">
           {table.getHeaderGroups().map(headerGroup => (
@@ -206,7 +205,6 @@ export function DataTable<T>({
                     className={`transition-all duration-[140ms] ease-out ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
                     style={{ height: `${virtualRowHeight}px` }}
                     onClick={() => onRowClick && onRowClick(row.original)}
-                    data-webmcp-row={row.id}
                   >
                     {row.getVisibleCells().map((cell, idx) => {
                       const isNumeric = cell.column.columnDef.meta?.numeric === true;
@@ -217,7 +215,6 @@ export function DataTable<T>({
                           key={cell.id} 
                           className={`px-4 text-body-md font-medium border-none ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                           dir={isNumeric ? 'ltr' : undefined}
-                          data-webmcp-field={cell.column.id}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
@@ -239,7 +236,6 @@ export function DataTable<T>({
                 className={`transition-all duration-[140ms] ease-out ${i % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low/60'} hover:bg-primary/[0.04] ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row.original) : ""}`} 
                 style={{ height: `${virtualRowHeight}px` }}
                 onClick={() => onRowClick && onRowClick(row.original)}
-                data-webmcp-row={row.id}
               >
                 {row.getVisibleCells().map((cell, idx) => {
                   const isNumeric = cell.column.columnDef.meta?.numeric === true;
@@ -250,7 +246,6 @@ export function DataTable<T>({
                       key={cell.id} 
                       className={`px-4 text-body-md font-medium border-none ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                       dir={isNumeric ? 'ltr' : undefined}
-                      data-webmcp-field={cell.column.id}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

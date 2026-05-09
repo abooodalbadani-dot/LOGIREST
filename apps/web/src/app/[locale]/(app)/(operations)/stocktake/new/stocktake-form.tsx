@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from '@/i18n/navigation';
+import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { 
@@ -53,24 +53,25 @@ const buildFormSchema = (t: (k: string) => string) => z.object({
 type StocktakeFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
- const t = useTranslations("operations.stocktake");
- const tc = useTranslations("common");
- const router = useRouter();
- const { data: warehouses, isLoading: warehousesLoading } = useWarehouses();
- const createStocktake = useCreateStocktake();
+  const t = useTranslations("operations.stocktake");
+  const tc = useTranslations("common");
+  const { data: warehouses, isLoading: warehousesLoading } = useWarehouses();
+  const createStocktake = useCreateStocktake();
 
- const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
- const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
+  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
- const form = useForm<StocktakeFormValues>({
- resolver: zodResolver(formSchema),
- defaultValues: {
- warehouseId: "",
- sessionName: "",
- description: "",
- },
- });
+  const form = useForm<StocktakeFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      warehouseId: "",
+      sessionName: "",
+      description: "",
+    },
+  });
+
+  const { router } = useUnsavedChangesGuard(form.formState.isDirty);
 
  const watchedWarehouse = useWatch({
  control: form.control,
@@ -86,7 +87,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
       description: data.description,
     }, {
       onSuccess: (session) => {
-        router.push(`/stocktake/${session.id}`);
+        router.push(`/stocktake/${session.id}`, { skipGuard: true });
       },
       onError: (error) => {
         console.error("Failed to create stocktake session", error);

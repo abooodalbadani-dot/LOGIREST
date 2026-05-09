@@ -10,25 +10,14 @@ import { TRANSFER_STATUS } from '@/contracts/statuses';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
+
 export function TransferDetailClient({ id }: { id: string }) {
   const t = useTranslations('operations.transfer');
   const { data: transfer, isLoading } = useTransfer(id);
   const conflict = useConflictHandler('transfer', id);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative w-24 h-24 flex items-center justify-center">
-          <div className="absolute inset-0 border-4 border-cyan-500/10 rounded-full" />
-          <div className="absolute inset-0 border-4 border-t-cyan-500 rounded-full animate-spin" />
-          <span className="text-headline-lg font-semibold text-cyan-500">TRN</span>
-        </div>
-        <div className="text-label-xs font-semibold uppercase text-cyan-500 animate-pulse">
-          {t('retrieving_manifest')}
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <PageSkeleton variant="detail" />;
 
   const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
   const isDocLocked = isDocumentLocked("TRANSFER", transferStatus as DocumentStatus);

@@ -1,14 +1,106 @@
 <!-- 
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0
+- Version change: 1.1.0 → 2.0.0
 - List of modified principles:
-  - High Performance → Operational Speed & FEFO
-  - Transparency → Auditability & Safety
-  - Scalability → Waste Reduction
-- Added sections: UX/UI Principles, Architecture Principles, Data/Workflow Principles, Security & Compliance, Code Standards, Testing & Quality Gates, Change Management.
-- Templates requiring updates: ✅ status (v1.1.0)
+  - Added new mandatory phase override (Frontend Stabilization & Recovery).
+- Added sections: Active Phase: Frontend Stabilization & Recovery (covering Objectives, Strict Exclusions, Mandatory Execution Order, Definition of Done, and Phase Rules).
+- Removed sections: N/A
+- Templates requiring updates: ✅ None required (the phase instructions act as runtime governance for all agents).
+- Follow-up TODOs: N/A
 -->
 # LogiRest Constitution
+
+## Active Phase: Frontend Stabilization & Recovery
+*Ratified for immediate execution.*
+
+### 1. Current Phase — What Are We Doing Now?
+We are in: **Recovery & Stabilization Execution Phase**
+We are NOT in: Feature development, UI enhancement, Backend integration, Large-scale refactoring, or Architecture redesign. This phase is strictly about stability and integrity.
+
+### 2. Objective of This Phase
+The goal is to eliminate all frontend instability before moving to backend development.
+- Zero broken pages
+- Zero missing translation keys
+- Zero unsafe redirects
+- Zero unstructured mutations
+- Zero orphan routes
+- Zero console errors
+- Zero broken workflows
+The frontend must be operationally clean and production-safe.
+
+### 3. What We Will NOT Do in This Phase
+- No Phase C refactors
+- No UI redesign
+- No performance optimizations unrelated to bugs
+- No architectural experimentation
+- No backend work
+- No new features
+Anything outside stabilization is out of scope.
+
+### 4. Mandatory Execution Order
+The work must proceed in the following strict order:
+
+**Step 1 — Route & Navigation Integrity**
+- No orphan routes
+- No unreachable pages
+- Every route must have a valid entry point
+- Every page must have a Back navigation
+- Every page must have a logical CTA (Create/Edit/etc.)
+- All routes must respect layout authentication
+
+**Step 2 — Mutation & Redirect Compliance**
+- No `router.push` outside `onSuccess`
+- No mutation without `version` (where applicable)
+- No improper mixing of `mutate` and `mutateAsync`
+- No silent `try/catch`
+- No eager navigation before server confirmation
+- No bypass of Conflict Layer
+
+**Step 3 — Guard Integrity**
+- All forms using `useForm` must implement `UnsavedChangesGuard`
+- AutoSave screens must explicitly opt out of guard
+- Dirty state must reset correctly after successful save
+- No false-positive dirty state traps
+
+**Step 4 — i18n Parity & Hardening**
+- `en.json` and `ar.json` must have 1:1 structural parity
+- No raw UI text in JSX
+- No placeholder translation values
+- No namespace drift
+- No missing keys
+
+**Step 5 — UX Completeness & Workflow Closure**
+- Every List page has a Create button
+- Every Detail page has Edit and Back buttons
+- Every destructive action requires confirmation
+- Every locked document displays a Lock Banner
+- No dead-end workflow states
+
+**Step 6 — Runtime Cleanliness**
+- Zero React key warnings
+- Zero hydration mismatch warnings
+- Zero unhandled promise rejections
+- Conflict Layer verified through concurrency simulation
+- No console errors during critical flows
+
+### 5. Definition of “Done”
+This phase is considered complete only when:
+- Production Readiness Score ≥ 95
+- 0 Critical issues
+- 0 High issues
+- All workflows tested manually
+- All recovery phases closed formally
+
+### 6. What Happens After This Phase?
+Only after stabilization is complete: We begin Backend Foundation work. Not before.
+
+### 7. Phase Rule
+If new issues are discovered: Do not apply random patches. Classify them under the correct recovery step. Fix them systematically. No uncontrolled changes.
+
+### 8. Leadership Principle
+We do not move fast. We move correctly. And we do not exit this phase until it is fully closed.
+
+---
 
 ## Core Principles
 
@@ -77,7 +169,7 @@ LogiRest is an Arabic-first professional tool:
 
 ## Governance
 - The Constitution is the "Source of Truth" for all architectural and product decisions.
-- Amendments require a MINOR version bump and update to the Sync Impact Report.
+- Amendments require a MAJOR/MINOR version bump and update to the Sync Impact Report.
 - Use `CODEBASE.md` for runtime implementation details and dependency maps.
 
 ### How to verify compliance:
@@ -86,5 +178,6 @@ LogiRest is an Arabic-first professional tool:
 - [ ] Is every string translated?
 - [ ] Is the document POST state handled correctly?
 - [ ] Are numeric values LTR?
+- [ ] Does the change strictly align with the current Stabilization Phase?
 
-**Version**: 1.1.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-19
+**Version**: 2.0.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-05-09

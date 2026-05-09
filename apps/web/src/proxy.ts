@@ -17,7 +17,8 @@ export function proxy(request: NextRequest) {
     pathname.includes('/api/') ||
     pathname.includes('/static') ||
     pathname.includes('/favicon.svg') ||
-    pathname.includes('.') // Skip files with extensions
+    pathname.includes('/icon.svg') ||
+    pathname.includes('.')
   ) {
     return NextResponse.next();
   }
@@ -38,11 +39,16 @@ export function proxy(request: NextRequest) {
     ? '/' + segments.slice(2).join('/')
     : pathname;
 
-  const isPublicPage = publicPaths.includes(purePathname === '/' ? '' : (purePathname.startsWith('/') ? purePathname : '/' + purePathname));
-  const isRoot = purePathname === '/' || purePathname === '';
+  // Ensure purePathname is clean
+  const normalizedPath = purePathname === '/' ? '/' : (purePathname.startsWith('/') ? purePathname : '/' + purePathname);
+  const isPublicPage = publicPaths.includes(normalizedPath);
+  const isRoot = normalizedPath === '/';
 
-  // Case A: Unauthenticated user accessing private page
-  if (!token && !isPublicPage && !isRoot) {
+  // Debug log (will show in server console)
+  console.log(`[Proxy] Path: ${pathname} | Pure: ${normalizedPath} | Locale: ${locale} | Auth: ${!!token} | Public: ${isPublicPage}`);
+
+  // Case A: Unauthenticated user accessing private page (including root)
+  if (!token && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/login`;
     return NextResponse.redirect(url);
@@ -55,12 +61,20 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Case C: Root access or missing locale prefix
-  if (!hasLocalePrefix) {
+  // Case C: Authenticated user accessing root -> redirect to dashboard
+  if (token && isRoot) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}${purePathname === '/' ? '' : purePathname}`;
+    url.pathname = `/${locale}/dashboard`;
     return NextResponse.redirect(url);
   }
+
+  // Case D: Missing locale prefix
+  if (!hasLocalePrefix) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}${normalizedPath === '/' ? '' : normalizedPath}`;
+    return NextResponse.redirect(url);
+  }
+
 
   // 4. Final Locale Handling via next-intl
   return intlMiddleware(request);
@@ -69,8 +83,9 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths except internal Next.js and static files
-    '/((?!api|_next/static|_next/image|favicon.ico|static).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|static|icon.svg|favicon.svg).*)',
   ],
 };
 
 export default proxy;
+

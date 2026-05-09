@@ -1,0 +1,67 @@
+
+--- Match 1 at byte 4063 ---
+لمشغلين",
+    "procurement": "المشتريات",
+    "inventory": "المخزون",
+    "operations": "العمليات",
+    "master_data": "البيانات الأساسية",
+    "select_supplier": "اختر المورد...",
+    "select_warehouse": "اختر المستودع...",
+    "select_item": "اختر الصنف...",
+    "lot_number": "رقم الدفعة",
+    "sku": "رمز الصنف",
+    "order_currency": "عملة الطلب",
+    "base_currency": "العملة الأساسية",
+    "ref_document": "مستند المرجع",
+    "manifest_state": "حال
+
+--- Match 2 at byte 6374 ---
+�ة القيادة",
+      "dashboard": "نظرة عامة على لوحة القيادة",
+      "operations": "العمليات",
+      "group_inventory": "إدارة المخزون",
+      "grn": "استلام البضائع",
+      "issue": "صرف البضائع",
+      "transfer": "التحويلات",
+      "pr": "طلبات الشراء",
+      "po": "أوامر الشراء",
+      "stocktake": "الجرد",
+      "adjustment": "التسويات",
+      "balance": "أرصدة المخزون",
+      "group_procurement": "سلسلة التوريد",
+      "group_communicati
+
+--- Match 3 at byte 26885 ---
+� التزام مالي ملزم نيابة عن الشركة."
+        }
+      }
+    }
+  },
+  "operations": {
+    "issue": {
+      "title": "سندات الصرف",
+      "issues": "سندات الصرف",
+      "home": "الرئيسية",
+      "create_new": "إنشاء سند صرف",
+      "description": "استهلاك المخزون الداخلي وصرفيات الأقسام.",
+      "new_description": "بدء تسلسل استهلاك المخزون الداخلي",
+      "doc_number": "رقم السند",
+      "destination": "الجهة الطالبة",
+      "request
+
+--- Match 4 at byte 116248 ---
+اري المزامنة...",
+      "confirm_import": "تفويض الاعتماد"
+    }
+  },
+  "operations": {
+    "stocktake": {
+      "title": "جلسات الجرد",
+      "description": "التحقق من المخزون الفعلي وتدقيق الفروقات",
+      "create_new": "جرد جديد",
+      "session_number": "رقم الجلسة",
+      "total_sessions": "إجمالي الجلسات",
+      "in_progress": "قيد التنفيذ",
+      "posted": "تم الترحيل",
+      "search_placeholder": "البحث في الجلسات...",
+      "no_records": "ل�

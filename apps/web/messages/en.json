@@ -1,5 +1,8 @@
 {
   "common": {
+    "success": "Success",
+    "or": "or",
+    "check_fields": "Please check required fields",
     "code": "Code",
     "name_en": "Name (English)",
     "name_ar": "Name (Arabic)",
@@ -17,6 +20,10 @@
     "posted_read_only": "Posted - Read Only",
     "confirm_rate": "Confirm Rate",
     "locked": "Locked",
+    "document_locked": "Document Locked",
+    "document_status": "Document Status",
+    "read_only_mode": "Read-Only Mode",
+    "back_to_list": "Back to List",
     "filters": "Filters",
     "filters_button": "Refine Stream",
     "reset": "Reset",
@@ -64,15 +71,26 @@
     "pending": "Pending",
     "completed": "Completed",
     "error": "Something went wrong",
-    "errors": {
-      "title": "Error Encountered",
-      "generic": "An unexpected error occurred. Please try again or contact support."
-    },
-    "conflict": {
-      "title": "Version Conflict Detected",
-      "description": "This document was modified by another user. Please reload the latest version to avoid overwriting their changes.",
-      "reload": "Reload Latest Version"
-    },
+      "errors": {
+        "title": "Error Encountered",
+        "generic": "An unexpected error occurred. Please try again or contact support.",
+        "check_fields": "Please check required fields",
+        "conflict": {
+          "title": "Version Conflict Detected",
+          "description": "This document was modified by another user while you were editing it.",
+          "updated_by": "Updated by",
+          "updated_at": "Last updated at",
+          "your_version": "Your version",
+          "server_version": "Server version",
+          "retry_hint": "You can try to auto-update and re-save, or reload the page.",
+          "force_reload_hint": "A retry has already been attempted. Please reload the page to see the latest changes.",
+          "actions": {
+            "cancel": "Cancel",
+            "reload": "Reload Data",
+            "retry": "Retry Save"
+          }
+        }
+      },
     "select_date": "Select date",
     "system": "System",
     "posted_at": "Posted At",
@@ -201,6 +219,12 @@
       "admins": "Admins",
       "operators": "Operators",
       "search": "Search"
+    },
+    "unsavedChanges": {
+      "title": "Unsaved Changes",
+      "description": "You have unsaved changes. Are you sure you want to leave this page?",
+      "leave": "Leave Page",
+      "stay": "Stay Here"
     }
   },
   "profile": {
@@ -365,11 +389,36 @@
       "submit_success": "PR Submitted Successfully",
       "approve_success": "PR Approved Successfully",
       "reject_success": "PR Rejected Successfully",
-      "rejection_reason": "Rejection Reason",
-      "rejection_reason_placeholder": "Describe why this request is being rejected...",
-      "confirm_rejection": "Confirm Rejection",
       "edit_not_allowed": "Modification Locked",
-      "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited."
+      "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited.",
+      "approval": {
+        "title": "Purchase Request Approval",
+        "description": "Review items and confirm or reject the request",
+        "workflow": "Approval Workflow",
+        "summary_title": "Request Summary",
+        "summary_subtitle": "Core details and commitment overview",
+        "invalid_state": "Invalid Request State",
+        "sync_context": "Syncing Request Data...",
+        "rejection_reason_label": "Rejection Reason",
+        "rejection_reason_placeholder": "Explain why this request is being rejected...",
+        "rejection_reason_min_chars": "Reason must be at least 15 characters",
+        "approve_success": "PR Approved Successfully",
+        "reject_success": "PR Rejected Successfully",
+        "approve_pr": "Approve Request",
+        "reject_pr": "Reject Request",
+        "confirm_rejection": "Confirm Rejection",
+        "department": "Department",
+        "expected_date": "Expected Date",
+        "approve_confirm_title": "Confirm Approval",
+        "approve_confirm_desc": "You are about to authorize this purchase request.",
+        "reject_confirm_title": "Confirm Rejection",
+        "reject_confirm_desc": "Are you sure you want to reject this request? This action is irreversible.",
+        "irreversible": "This action cannot be undone.",
+        "legal_notice": {
+          "title": "Legal Notice",
+          "text": "By approving this Purchase Request, you are authorizing the procurement process for the requested items. This action indicates that the items are necessary for operations and fall within the allocated budget."
+        }
+      }
     },
     "po": {
       "title": "Purchase Orders",
@@ -406,13 +455,6 @@
         "post": "Post Order",
         "cancel": "Cancel Order"
       },
-      "approve_confirm_title": "Confirm Approval",
-      "approve_confirm_desc": "You are about to authorize this purchase order.",
-      "reject_confirm_title": "Confirm Rejection",
-      "reject_confirm_desc": "Are you sure you want to reject this order? This action is irreversible.",
-      "post_po": "Post PO",
-      "post_confirm_title": "Confirm PO Posting",
-      "post_confirm_desc": "After posting, the PO cannot be edited.",
       "posted_success": "Action performed successfully.",
       "submit_success": "PO Submitted Successfully",
       "edit_success": "Purchase order updated successfully.",
@@ -432,11 +474,8 @@
       "select_warehouse": "Select Warehouse...",
       "select_supplier": "Select Supplier",
       "linked_pr": "Linked PR (Optional)",
-      "rejection_reason_label": "Rejection Reason",
-      "rejection_reason_placeholder": "Describe why this order is being rejected...",
       "return_to_list": "Return to PO List",
       "edit_po": "Edit Order",
-      "approval_title": "Purchase Order Approval",
       "validation": {
         "supplier_required": "Supplier is required",
         "currency_required": "Currency is required",
@@ -457,19 +496,36 @@
         "pending": "Pending Approval",
         "approved": "Active Orders"
       },
-      "go_to_approval": "Go to Approval",
-      "approval_workflow": "Approval Workflow",
-      "approval_desc": "Review order details and confirm procurement commitment",
-      "reject_po": "Reject Order",
-      "rejection_hint": "Provide a clear reason for the supplier or team.",
-      "irreversible": "This action cannot be undone.",
-      "edit_not_allowed": "Modification Locked",
       "edit_not_allowed_desc": "This document has already been submitted or processed and cannot be edited.",
-      "approve_success": "PO Approved Successfully",
-      "reject_success": "PO Rejected Successfully",
-      "rejection_reason": "Rejection Reason",
-      "rejection_reason_min_chars": "Reason must be at least 15 characters",
-      "confirm_rejection": "Confirm Rejection"
+      "approval": {
+        "title": "Purchase Order Approval",
+        "description": "Review order details and confirm procurement commitment",
+        "workflow": "Approval Workflow",
+        "summary_title": "Order Summary",
+        "summary_subtitle": "Core details and commitment overview",
+        "invalid_state": "Invalid Order State",
+        "sync_context": "Syncing Order Data...",
+        "rejection_reason_label": "Rejection Reason",
+        "rejection_reason_placeholder": "Describe why this order is being rejected...",
+        "rejection_reason_min_chars": "Reason must be at least 15 characters",
+        "approve_success": "PO Approved Successfully",
+        "reject_success": "PO Rejected Successfully",
+        "order_total": "Order Total",
+        "target_warehouse": "Target Warehouse",
+        "expected_delivery_date": "Expected Delivery Date",
+        "approve_po": "Approve Order",
+        "reject_po": "Reject Order",
+        "confirm_rejection": "Confirm Rejection",
+        "approve_confirm_title": "Confirm Approval",
+        "approve_confirm_desc": "You are about to authorize this purchase order.",
+        "reject_confirm_title": "Confirm Rejection",
+        "reject_confirm_desc": "Are you sure you want to reject this order? This action is irreversible.",
+        "irreversible": "This action cannot be undone.",
+        "legal_notice": {
+          "title": "Legal Notice",
+          "text": "By approving this Purchase Order, you are authorizing the procurement of goods/services from the selected supplier. This action may create a binding financial commitment on behalf of the company."
+        }
+      }
     }
   },
   "operations": {
@@ -1647,6 +1703,12 @@
         "critical": "CRITICAL",
         "low": "LOW STOCK",
         "healthy": "HEALTHY"
+      },
+      "tabs": {
+        "balance": "Stock Balance",
+        "lots": "Lot Control",
+        "movements": "Movement Ledger",
+        "scan": "Scan Protocol"
       }
     },
     "po": {
@@ -1928,6 +1990,12 @@
       "empty": {
         "title": "No Suppliers Found",
         "description": "Add procurement partners to manage your vendor relationships and supply chain."
+      },
+      "validation": {
+        "code_required": "Supplier code is required",
+        "name_en_required": "English name is required",
+        "name_ar_required": "Arabic name is required",
+        "currency_required": "Preferred currency is required"
       }
     },
     "items": {
@@ -2231,10 +2299,28 @@
       "posted_at": "Posted At"
     },
     "adjustment": {
-      "title": "Stock Adjustments",
+      "title": "Inventory Adjustments",
+      "subtitle": "Inventory Calibration Protocol",
       "description": "Manual stock level corrections",
       "create_new": "New Adjustment",
+      "save_draft": "Save Draft",
+      "details_section": "Document Details",
       "reason": "Reason",
+      "reasons": {
+        "damage": "Damage",
+        "expiry": "Expiry",
+        "theft": "Theft",
+        "counting_error": "Counting Error",
+        "correction": "Correction",
+        "other": "Other"
+      },
+      "notes_placeholder": "Provide detailed context for this adjustment...",
+      "lines_section": "Adjustment Lines",
+      "direction": "Direction",
+      "direction_increase": "Increase",
+      "direction_decrease": "Decrease",
+      "qty_adjusted": "Qty Adjusted",
+      "lot_placeholder": "Enter lot number if applicable...",
       "type": "Type",
       "qty_before": "Qty Before",
       "qty_after": "Qty After",

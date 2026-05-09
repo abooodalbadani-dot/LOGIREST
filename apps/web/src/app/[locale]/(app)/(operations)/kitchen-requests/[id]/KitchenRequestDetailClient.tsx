@@ -3,14 +3,9 @@
 import { useTranslations } from 'next-intl';
 import { useKitchenRequest } from '@/features/operations/hooks/useKitchenRequests';
 import { AlertCircle } from 'lucide-react';
-import { KitchenRequestViewer } from './KitchenRequestViewer';
 import { KitchenRequestForm } from './KitchenRequestForm';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
-import { 
-  isDocumentLocked, 
-  DocumentStatus 
-} from '@/core/workflow/document-engine';
 
 export function KitchenRequestDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.kitchen_request');
@@ -31,13 +26,6 @@ export function KitchenRequestDetailClient({ id, locale }: { id: string; locale:
       <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('not_found')}</p>
     </div>
   );
-
-  const status = request.status as DocumentStatus;
-  const isDocLocked = isDocumentLocked('KITCHEN_REQUEST', status);
-
-  if (isDocLocked) {
-    return <KitchenRequestViewer request={request} locale={locale} />;
-  }
 
   return (
     <>

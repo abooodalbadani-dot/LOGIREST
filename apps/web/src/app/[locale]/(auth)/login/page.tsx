@@ -20,6 +20,9 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
  const t = useTranslations('auth');
  const router = useRouter();
+
+ console.log(`[LoginPage] hero_title: ${t('login.hero_title')}`);
+
  const { login, user, isLoading: authLoading } = useAuth();
  const [error, setError] = useState<string | null>(null);
  const [isSubmitting, setIsSubmitting] = useState(false);

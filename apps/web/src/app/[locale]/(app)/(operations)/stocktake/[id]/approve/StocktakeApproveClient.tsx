@@ -84,29 +84,39 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  }, 0);
  const netImpact = totalPositiveVariance - totalNegativeVariance;
 
- const handleApprove = async () => {
- try {
- await approveStocktake.mutateAsync({ id });
- toast.success(t('approved_success'));
- router.push(`/stocktake/${id}`);
- } catch {
- toast.error(common('error'));
- }
+ const handleApprove = () => {
+  approveStocktake.mutate(
+   { id },
+   {
+    onSuccess: () => {
+     toast.success(t('approved_success'));
+     router.push(`/stocktake/${id}`);
+    },
+    onError: () => {
+     toast.error(common('error'));
+    }
+   }
+  );
  };
 
- const handleReject = async () => {
- if (rejectionReason.trim().length < 15) {
- toast.error(t('validation.rejection_reason_min'));
- return;
- }
- try {
- await rejectStocktake.mutateAsync({ id, comment: rejectionReason });
- toast.success(t('rejected_success'));
- setIsRejectDialogOpen(false);
- router.push(`/stocktake/${id}`);
- } catch {
- toast.error(common('error'));
- }
+ const handleReject = () => {
+  if (rejectionReason.trim().length < 15) {
+   toast.error(t('validation.rejection_reason_min'));
+   return;
+  }
+  rejectStocktake.mutate(
+   { id, comment: rejectionReason },
+   {
+    onSuccess: () => {
+     toast.success(t('rejected_success'));
+     setIsRejectDialogOpen(false);
+     router.push(`/stocktake/${id}`);
+    },
+    onError: () => {
+     toast.error(common('error'));
+    }
+   }
+  );
  };
 
  return (

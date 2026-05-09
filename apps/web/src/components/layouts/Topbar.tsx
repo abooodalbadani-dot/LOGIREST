@@ -5,9 +5,9 @@ import { useContextScope } from '@/hooks/useContextScope';
 import LocaleSwitcher from '../shared/LocaleSwitcher';
 import { ContextSelector } from '../shared/ContextSelector';
 import { ThemeToggle } from '../shared/ThemeToggle';
-import { WebMCPBadge } from '@/components/shared/WebMCPBadge';
+
 import { useTranslations } from 'next-intl';
-import { useWebMCP } from '@/providers/WebMCPProvider';
+
 import { Globe, ChevronDown, LogOut, Loader2, Menu, Search } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
@@ -19,7 +19,7 @@ interface TopbarProps {
 export function Topbar({ locale, onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const { branchName, warehouseName, isLoading } = useContextScope();
-  const { isAvailable, registeredTools } = useWebMCP();
+
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const t = useTranslations('context');
   const tc = useTranslations('common');
@@ -78,9 +78,7 @@ export function Topbar({ locale, onMenuClick }: TopbarProps) {
         >
           <Search className="w-4 h-4" />
         </Link>
-        <div className="hidden sm:block">
-          <WebMCPBadge />
-        </div>
+
         {user && <ThemeToggle />}
         <LocaleSwitcher />
       </div>

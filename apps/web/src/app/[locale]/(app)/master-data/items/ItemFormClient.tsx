@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { Package, Plus, Trash2, ShieldCheck, Scale, Boxes, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 
 interface Props { 
@@ -42,8 +44,6 @@ interface Props {
 export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('master_data.common');
   const ti = useTranslations('master_data.items');
-  const tv = useTranslations(); // For validation messages if they are nested
-  const router = useRouter();
 
   const { data, isLoading, isError, isFetched, refetch } = useItem(id);
   const { data: categories, isLoading: isLoadingCats, isError: isErrorCats } = useCategories();
@@ -63,6 +63,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         version: undefined,
       },
     });
+  
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({ control, name: 'uom_conversions' });
 
@@ -82,14 +84,21 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) await update.mutateAsync({ id, values });
-      else await create.mutateAsync(values);
-      router.push('/master-data/items');
-    } catch (error) {
-      // Error handled by mutation toast
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/items', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/items', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -107,7 +116,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     return (
       <ErrorState 
         type="not_found" 
-        onRetry={() => router.push('/master-data/items')} 
+        onRetry={() => router.push('/master-data/items', { skipGuard: true })} 
       />
     );
   }
@@ -127,6 +136,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       <MasterDataFormLayout 
         title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)} 
         backHref='/master-data/items' 
+        onCancel={() => guardedRouter.push('/master-data/items')}
         isSaving={isSaving} 
         onSubmit={onSubmit}
         hideSave={isReadOnly}

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +19,7 @@ import {
   useUpdateUoM,
 } from '@/features/uoms/hooks/useUoMs';
 import { UoMFormSchema, type UoMFormValues } from '@/types/master-data';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 interface Props {
   id: string | null;
@@ -33,7 +33,6 @@ interface Props {
 export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tu = useTranslations('master_data.uom');
-  const router = useRouter();
 
   const { data, isLoading, isError, isFetched, refetch } = useUoM(id);
   const create = useCreateUoM();
@@ -44,6 +43,8 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
     defaultValues: { code: '', name_ar: '', name_en: '', is_active: true },
     disabled: isReadOnly,
   });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
 
@@ -67,7 +68,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
     return (
       <ErrorState 
         type="not_found"
-        onBack={() => router.push('/master-data/units-of-measure')}
+        onBack={() => guardedRouter.push('/master-data/units-of-measure', { skipGuard: true })}
       />
     );
   }
@@ -83,17 +84,21 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/units-of-measure');
-    } catch (error) {
-      // Handled in hook
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -110,6 +115,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
       backHref='/master-data/units-of-measure'
       isSaving={isSaving}
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/units-of-measure')}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}

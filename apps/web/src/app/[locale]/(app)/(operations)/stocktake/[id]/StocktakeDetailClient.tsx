@@ -15,11 +15,10 @@ import { type DocumentStatus } from "@/core/workflow/document-engine";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { Button } from "@/components/ui/button";
 import { PermissionGate } from "@/components/shared/PermissionGate";
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { isLocked as isDomainLocked } from "@/domain/status-guards";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
-import { StocktakeViewer } from "./StocktakeViewer";
 import { StocktakeForm } from "./StocktakeForm";
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
@@ -33,7 +32,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
   const { data: rawSession, isLoading, error } = useStocktake(id);
   const session = rawSession ? mapToSessionVM(rawSession) : null;
 
-  if (isLoading) return <LoadingSkeleton />
+  if (isLoading) return <PageSkeleton variant="detail" />
   if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
 
   const status = session.status as DocumentStatus;
@@ -94,16 +93,13 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
     </div>
   );
 
-  if (isLocked) {
-    return <StocktakeViewer session={session} locale={locale} actions={headerActions} />;
-  }
-
   return (
     <>
       <StocktakeForm 
         session={session} 
         locale={locale} 
         actions={headerActions} 
+        isLocked={isLocked}
         onConflict={conflict.triggerConflict}
       />
       <ConflictDialog 

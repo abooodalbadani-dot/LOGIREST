@@ -3,289 +3,310 @@
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { 
- CheckCircle, 
- XCircle, 
- ArrowLeft, 
- ShieldCheck, 
- AlertCircle,
- FileText,
- Calendar,
- Building2,
- MessageSquare
-} from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Button } from '@/components/ui/button';
-import { 
- Form, 
- FormControl, 
- FormField, 
- FormItem, 
- FormLabel, 
- FormMessage 
-} from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
-import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { usePR } from '@/features/purchasing/hooks/usePR';
 import { useApprovePR } from '@/features/purchasing/hooks/useApprovePR';
 import { useRejectPR } from '@/features/purchasing/hooks/useRejectPR';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 import { 
- Dialog, 
- DialogContent, 
- DialogHeader, 
- DialogTitle, 
- DialogDescription,
- DialogFooter
-} from '@/components/ui/dialog';
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle, 
+  FileText, 
+  ClipboardCheck, 
+  MessageSquare,
+  ArrowLeft,
+  ShieldCheck,
+  Building2,
+  Calendar
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
-const rejectionSchema = z.object({
- reason: z.string().min(15, { message: 'Rejection reason must be at least 15 characters' }),
-});
+interface Props {
+  id: string;
+}
 
-type RejectionFormValues = z.infer<typeof rejectionSchema>;
+export function PRApprovalClient({ id }: Props) {
+  const t = useTranslations('procurement.pr');
+  const tc = useTranslations('common');
+  const locale = useLocale() as 'ar' | 'en';
+  const router = useRouter();
+  const { user } = useAuth();
+  
+  const { data: pr, isLoading } = usePR(id);
+  const queryClient = useQueryClient();
+  const approveMutation = useApprovePR();
+  const rejectMutation = useRejectPR();
+  
+  const [comment, setComment] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
+  const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
 
-export function PRApprovalClient({ id }: { id: string }) {
- const t = useTranslations('procurement.pr');
- const tc = useTranslations('common');
- const locale = useLocale() as 'ar' | 'en';
- const router = useRouter();
- const { user } = useAuth();
+  const canApprove = pr ? canPerformActionV2('PR', pr.status as DocumentStatus, 'APPROVE', user?.role) : false;
+  const canReject = pr ? canPerformActionV2('PR', pr.status as DocumentStatus, 'REJECT', user?.role) : false;
 
- const { data: pr, isLoading } = usePR(id);
- const approveMutation = useApprovePR();
- const rejectMutation = useRejectPR();
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
 
- const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
- const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  if (!pr) {
+    return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['purchase-request', id] })} />;
+  }
 
- const rejectionForm = useForm<RejectionFormValues>({
- resolver: zodResolver(rejectionSchema),
- defaultValues: { reason: '' },
- });
+  const handleApprove = async () => {
+    try {
+      await approveMutation.mutateAsync({ id, version: pr.version || 1 });
+      toast.success(t('approval.approve_success'));
+      router.push('/purchase-requests');
+    } catch (e) {
+      console.error(e);
+      toast.error(tc('error'));
+    }
+  };
 
- const handleApprove = async () => {
- try {
- await approveMutation.mutateAsync({ id, version: pr?.version ?? 0 });
- toast.success(t('approve_success'));
- router.push(`/purchase-requests`);
- } catch (e) {
- console.error(e);
- toast.error(tc('error'));
- }
- };
+  const handleReject = async () => {
+    if (!comment || comment.length < 15) {
+      toast.error(t('approval.rejection_reason_min_chars'));
+      return;
+    }
+    
+    try {
+      await rejectMutation.mutateAsync({ id, reason: comment, version: pr.version || 1 });
+      toast.success(t('approval.reject_success'));
+      router.push('/purchase-requests');
+    } catch (e) {
+      console.error(e);
+      toast.error(tc('error'));
+    }
+  };
 
- const onRejectSubmit = async (values: RejectionFormValues) => {
- try {
- await rejectMutation.mutateAsync({ id, reason: values.reason, version: pr?.version ?? 0 });
- toast.success(t('reject_success'));
- setRejectModalOpen(false);
- router.push(`/purchase-requests`);
- } catch (e) {
- console.error(e);
- toast.error(tc('error'));
- }
- };
+  return (
+    <div className="flex flex-col gap-8 pb-20 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center gap-4 mb-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => router.back()}
+          className="rounded-full hover:bg-surface-container-high text-muted-foreground"
+        >
+          <ArrowLeft className="w-4 h-4 me-2" />
+          {tc('back')}
+        </Button>
+      </div>
 
- if (isLoading) {
- return (
- <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl animate-pulse">
- <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
- <p className="mt-6 text-label-xs font-semibold uppercase text-primary/60">{t('sync_context')}</p>
- </div>
- );
- }
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 text-label-xs font-semibold uppercase text-operational-cyan/60">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>{t('approval.workflow')}</span>
+        </div>
+        <PageHeader
+          title={t('approval.title')}
+          description={`${t('approval.description')} #${pr.document_number}`}
+        />
+      </div>
 
- if (!pr || !canPerformActionV2('PR', pr.status as DocumentStatus, 'APPROVE', user?.role)) {
- return (
- <div className="flex flex-col h-[60vh] items-center justify-center bg-surface-container-low shadow-xl rounded-2xl">
- <AlertCircle className="w-16 h-16 text-status-error mb-4 opacity-20" />
- <h2 className="text-title-lg font-semibold uppercase text-muted-foreground">{t('invalid_state')}</h2>
- <Button onClick={() => router.back()} variant="ghost" className="mt-6">
- <ArrowLeft className="w-4 h-4 me-2" />
- {tc('back')}
- </Button>
- </div>
- );
- }
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          {/* Summary Card */}
+          <Card className="bg-surface-container-low border-none rounded-3xl shadow-sm overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-4 pb-6 border-b border-white/5">
+                <div className="w-12 h-12 rounded-2xl bg-operational-cyan/10 flex items-center justify-center">
+                  <ClipboardCheck className="w-6 h-6 text-operational-cyan" />
+                </div>
+                <div>
+                  <h3 className="text-body-md font-semibold uppercase text-foreground">
+                    {t('approval.summary_title')}
+                  </h3>
+                  <p className="text-label-xs font-bold text-muted-foreground/60 uppercase mt-1">
+                    {t('approval.summary_subtitle')}
+                  </p>
+                </div>
+              </div>
 
- return (
- <div className="flex flex-col gap-10 relative pb-20 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
- <div className="flex flex-col gap-4">
- <div className="flex items-center gap-2 text-label-xs font-semibold uppercase text-operational-cyan/60">
- <ShieldCheck className="w-3.5 h-3.5" />
- <span>{t('approval_workflow')}</span>
- </div>
- <PageHeader
- title={<span dir="ltr" className="font-mono">{pr.document_number}</span>}
- description={t('approval_desc')}
- status={pr.status as BadgeStatus}
- actions={
- <div className="flex items-center gap-4">
- <Button
- variant="ghost"
- onClick={() => router.back()}
- className="h-12 px-6 text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high transition-all"
- >
- <ArrowLeft className="w-4 h-4 me-2" />
- {tc('cancel')}
- </Button>
- <Button
- variant="destructive"
- onClick={() => setRejectModalOpen(true)}
- className="h-12 px-8 text-label-xs font-semibold uppercase rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all"
- >
- <XCircle className="w-4 h-4 me-2" />
- {t('reject_pr')}
- </Button>
- <Button
- onClick={() => setApproveConfirmOpen(true)}
- className="h-12 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-semibold uppercase rounded-xl shadow-xl shadow-emerald-900/20 active:scale-95 transition-all"
- >
- <CheckCircle className="w-4 h-4 me-2" />
- {t('approve_pr')}
- </Button>
- </div>
- }
- />
- </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Building2 className="w-3.5 h-3.5 text-muted-foreground/40" />
+                    <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.department')}</p>
+                  </div>
+                  <p className="font-bold text-title-sm">{pr.department_id}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground/40" />
+                    <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.expected_date')}</p>
+                  </div>
+                  <p dir="ltr" className="font-mono font-bold text-title-sm">{pr.expected_date || '—'}</p>
+                </div>
+                <div className="md:col-span-2 space-y-1.5">
+                  <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('notes')}</p>
+                  <p className="text-body-md font-medium opacity-60 italic">{pr.notes || tc('no_notes')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
- {/* PR Header Info */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <div className="bg-surface-container-low p-6 rounded-3xl border border-surface-variant/10 shadow-sm flex flex-col gap-2 group transition-all hover:bg-surface-container">
- <div className="flex items-center gap-2 mb-2">
- <Building2 className="w-4 h-4 text-operational-cyan/40 group-hover:text-operational-cyan transition-colors" />
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('department')}</span>
- </div>
- <span className="font-bold text-title-sm">{pr.department_id}</span>
- </div>
+          {/* Items Section */}
+          <div className="relative">
+            <DocumentReadOnlyOverlay isPosted={true}>
+              <div className="bg-surface-container-lowest p-8 rounded-[2rem] border border-surface-variant/5 shadow-inner shadow-black/10">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2.5 rounded-xl bg-operational-cyan/10 text-operational-cyan">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-body-md font-semibold uppercase text-operational-cyan">{tc('items')}</h3>
+                </div>
+                
+                <DocumentLineItemTable
+                  lines={pr.lines.map(l => ({
+                    id: l.id,
+                    item: {
+                      id: l.item.id,
+                      code: l.item.code,
+                      name_en: l.item.name_en,
+                      name_ar: l.item.name_ar,
+                      primary_uom: {
+                        code: l.item.primary_uom.code
+                      }
+                    },
+                    qty: l.req_qty,
+                    uom_id: l.uom_id
+                  })) as LineItem[]}
+                  locale={locale}
+                  isReadOnly={true}
+                />
+              </div>
+            </DocumentReadOnlyOverlay>
+          </div>
 
- <div className="bg-surface-container-low p-6 rounded-3xl border border-surface-variant/10 shadow-sm flex flex-col gap-2 group transition-all hover:bg-surface-container">
- <div className="flex items-center gap-2 mb-2">
- <Calendar className="w-4 h-4 text-operational-cyan/40 group-hover:text-operational-cyan transition-colors" />
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('expected_date')}</span>
- </div>
- <span className="font-mono font-bold text-title-sm" dir="ltr">{pr.expected_date}</span>
- </div>
+          {/* Comment Area */}
+          <Card className="bg-surface-container-low border-none rounded-3xl shadow-sm overflow-hidden">
+            <CardContent className="p-8 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-tertiary-container/10 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-tertiary" />
+                </div>
+                <Label className="text-label-xs font-semibold uppercase text-foreground">
+                  {t('approval.rejection_reason_label')}
+                </Label>
+              </div>
+              
+              <Textarea 
+                placeholder={t('approval.rejection_reason_placeholder')}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-[120px] bg-surface-container-high/40 border-none rounded-2xl p-4 text-body-md font-medium focus:ring-1 focus:ring-operational-cyan/30 resize-none transition-all"
+              />
+              
+              {isRejecting && (!comment || comment.length < 15) && (
+                <div className="flex items-center gap-2 text-rose-400 p-4 bg-rose-400/5 rounded-2xl border border-rose-400/10">
+                  <AlertCircle className="w-4 h-4" />
+                  <p className="text-label-xs font-semibold uppercase">{t('approval.rejection_reason_min_chars')}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
- <div className="bg-surface-container-low p-6 rounded-3xl border border-surface-variant/10 shadow-sm flex flex-col gap-2 group transition-all hover:bg-surface-container">
- <div className="flex items-center gap-2 mb-2">
- <FileText className="w-4 h-4 text-operational-cyan/40 group-hover:text-operational-cyan transition-colors" />
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('notes')}</span>
- </div>
- <span className="text-body-md font-medium opacity-60 italic">{pr.notes || tc('no_notes')}</span>
- </div>
- </div>
+        {/* Action Panel */}
+        <div className="space-y-8">
+          <Card className="bg-surface-container-low border-none rounded-3xl shadow-sm overflow-hidden sticky top-24">
+            <CardContent className="p-8 space-y-8">
+              <div className="space-y-6">
+                <Button
+                  onClick={() => setApproveConfirmOpen(true)}
+                  disabled={approveMutation.isPending || rejectMutation.isPending || isRejecting || !canApprove}
+                  className="w-full bg-operational-cyan text-primary-foreground hover:brightness-110 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs shadow-[0_8px_20px_rgba(var(--operational-cyan-rgb),0.2)]"
+                >
+                  <CheckCircle2 className="w-5 h-5 me-3" />
+                  {t('approval.approve_pr')}
+                </Button>
 
- {/* Read Only Items with Overlay */}
- <div className="relative">
- <DocumentReadOnlyOverlay isPosted={true}>
- <div className="bg-surface-container-lowest p-8 rounded-[2rem] border border-surface-variant/5 shadow-inner shadow-black/10">
- <div className="flex items-center gap-3 mb-8">
- <div className="p-2.5 rounded-xl bg-operational-cyan/10 text-operational-cyan">
- <FileText className="w-5 h-5" />
- </div>
- <h3 className="text-body-md font-semibold uppercase text-operational-cyan">{tc('items')}</h3>
- </div>
- 
- <DocumentLineItemTable
- lines={pr.lines.map(l => ({
- id: l.id,
- item: {
- id: l.item.id,
- code: l.item.code,
- name_en: l.item.name_en,
- name_ar: l.item.name_ar,
- primary_uom: {
- code: l.item.primary_uom.code
- }
- },
- qty: l.req_qty,
- uom_id: l.uom_id
- })) as LineItem[]}
-  locale={locale}
- isReadOnly={true}
- />
- </div>
- </DocumentReadOnlyOverlay>
- </div>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-white/5" />
+                  </div>
+                  <div className="relative flex justify-center text-label-xs uppercase font-semibold text-muted-foreground/30">
+                    <span className="bg-surface-container-low px-4">{tc('or')}</span>
+                  </div>
+                </div>
 
- {/* Rejection Modal */}
- <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
- <DialogContent className="bg-surface-container-highest border border-surface-variant/10 rounded-[2rem] p-0 overflow-hidden shadow-2xl max-w-lg">
- <DialogHeader className="p-8 pb-4 bg-surface-container-low/50">
- <DialogTitle className="text-title-lg font-semibold uppercase text-status-error flex items-center gap-3">
- <XCircle className="w-6 h-6" />
- {t('reject_pr')}
- </DialogTitle>
- <DialogDescription className="text-label-xs font-bold uppercase text-muted-foreground/60 mt-2">
- {t('reject_confirm_desc')}
- </DialogDescription>
- </DialogHeader>
- 
- <div className="p-8 pt-4">
- <Form {...rejectionForm}>
- <form onSubmit={rejectionForm.handleSubmit(onRejectSubmit)} className="space-y-6">
- <FormField
- control={rejectionForm.control}
- name="reason"
- render={({ field }) => (
- <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2">
- <MessageSquare className="w-3 h-3" />
- {t('rejection_reason')}
- </FormLabel>
- <FormControl>
- <Textarea 
- placeholder={t('rejection_reason_placeholder')} className="min-h-[120px] bg-surface-container-low border-surface-variant/10 focus:ring- operational-cyan rounded-2xl text-body-md font-medium resize-none shadow-inner"
- {...field} 
- />
- </FormControl>
- <FormMessage className="text-label-xs font-semibold uppercase mt-2 text-status-error" />
- </FormItem>
- )}
- />
- <DialogFooter className="gap-4 pt-4">
- <Button
- type="button"
- variant="ghost"
- onClick={() => setRejectModalOpen(false)}
- className="h-12 px-6 text-label-xs font-semibold uppercase rounded-xl"
- >
- {tc('cancel')}
- </Button>
- <Button
- type="submit"
- variant="destructive"
- className="h-12 px-8 bg-status-error hover:bg-status-error/90 text-white text-label-xs font-semibold uppercase rounded-xl shadow-lg"
- >
- {t('confirm_rejection')}
- </Button>
- </DialogFooter>
- </form>
- </Form>
- </div>
- </DialogContent>
- </Dialog>
+                {!isRejecting ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsRejecting(true)}
+                    disabled={!canReject}
+                    className="w-full border-white/5 hover:bg-rose-400/10 hover:text-rose-400 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs disabled:opacity-50"
+                  >
+                    <XCircle className="w-5 h-5 me-3" />
+                    {t('approval.reject_pr')}
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <Button
+                      onClick={() => setRejectConfirmOpen(true)}
+                      disabled={!comment || comment.length < 15 || rejectMutation.isPending}
+                      className="w-full bg-rose-500 text-white hover:bg-rose-600 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs"
+                    >
+                      {t('approval.confirm_rejection')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setIsRejecting(false)}
+                      className="w-full text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
+                    >
+                      {tc('cancel')}
+                    </Button>
+                  </div>
+                )}
+              </div>
 
- {/* Approval Confirmation */}
- <PostConfirmDialog
- open={approveConfirmOpen}
- onOpenChange={setApproveConfirmOpen}
- onConfirm={handleApprove}
- title={t('approve_confirm_title')}
- description={t('approve_confirm_desc')}
- warningText={t('irreversible')}
- />
- </div>
- );
+              <div className="p-6 bg-surface-container-high/40 rounded-2xl space-y-4">
+                <div className="flex items-center gap-2 opacity-40">
+                  <AlertCircle className="w-4 h-4" />
+                  <p className="text-label-xs font-semibold uppercase">{t('approval.legal_notice.title')}</p>
+                </div>
+                <p className="text-label-xs text-muted-foreground leading-relaxed font-medium">
+                  {t('approval.legal_notice.text')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <PostConfirmDialog
+        open={approveConfirmOpen}
+        onOpenChange={setApproveConfirmOpen}
+        onConfirm={handleApprove}
+        title={t('approval.approve_confirm_title')}
+        description={t('approval.approve_confirm_desc')}
+        confirmText={t('approval.approve_pr')}
+        variant="default"
+      />
+
+      <PostConfirmDialog
+        open={rejectConfirmOpen}
+        onOpenChange={setRejectConfirmOpen}
+        onConfirm={handleReject}
+        title={t('approval.reject_confirm_title')}
+        description={t('approval.reject_confirm_desc')}
+        confirmText={t('approval.reject_pr')}
+        variant="destructive"
+      />
+    </div>
+  );
 }

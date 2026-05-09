@@ -169,8 +169,12 @@ export const ItemFormSchema = z.object({
 });
 
 export const SupplierFormSchema = z.object({
- code: z.string().min(1), name_ar: z.string().min(1), name_en: z.string().min(1),
- currency_id: z.string().min(1), payment_terms: z.string(), is_active: z.boolean()
+  code: z.string().min(1, 'master_data.suppliers.validation.code_required'),
+  name_ar: z.string().min(1, 'master_data.suppliers.validation.name_ar_required'),
+  name_en: z.string().min(1, 'master_data.suppliers.validation.name_en_required'),
+  currency_id: z.string().min(1, 'master_data.suppliers.validation.currency_required'),
+  payment_terms: z.string(),
+  is_active: z.boolean()
 });
 
 export const CurrencyFormSchema = z.object({

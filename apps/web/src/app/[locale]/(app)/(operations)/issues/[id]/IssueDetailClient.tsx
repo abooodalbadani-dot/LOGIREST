@@ -5,7 +5,6 @@ import { Package } from 'lucide-react';
 import { useIssue } from '@/features/operations/hooks/useIssue';
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { IssueForm } from '@/features/operations/components/issue-form';
-import { IssueViewer } from '@/features/operations/components/issue-viewer';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
@@ -33,13 +32,6 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
         </div>
       </div>
     );
-  }
-
-  const status = (issue?.status || 'DRAFT') as DocumentStatus;
-  const isDocLocked = isDocumentLocked("ISSUE", status);
-
-  if (isDocLocked && issue) {
-    return <IssueViewer issue={issue} />;
   }
 
   return (

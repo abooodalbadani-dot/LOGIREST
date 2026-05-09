@@ -16,6 +16,8 @@ import { Landmark, Type, Coins, Activity, ShieldCheck } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+
 interface Props {
   id: string | null;
   createTitle: string;
@@ -34,8 +36,6 @@ export function CurrencyFormClient({
   locale 
 }: Props) {
   const t = useTranslations('master_data.currencies');
-  const router = useRouter();
-
   const { data: currency, isLoading, isError, isFetched, refetch } = useCurrency(id);
   const create = useCreateCurrency();
   const update = useUpdateCurrency();
@@ -53,6 +53,8 @@ export function CurrencyFormClient({
         is_active: true
       },
     });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   useWatch({ control, name: 'code' });
 
@@ -76,7 +78,7 @@ export function CurrencyFormClient({
     return (
       <ErrorState 
         type="not_found"
-        onBack={() => router.push('/master-data/currencies')}
+        onBack={() => guardedRouter.push('/master-data/currencies', { skipGuard: true })}
       />
     );
   }
@@ -94,17 +96,21 @@ export function CurrencyFormClient({
     }
   }, [currency, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/currencies');
-    } catch {
-      // Error handled by mutation toast
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/currencies', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/currencies', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -116,6 +122,7 @@ export function CurrencyFormClient({
       backHref='/master-data/currencies'
       isSaving={create.isPending || update.isPending} 
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/currencies')}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}

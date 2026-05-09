@@ -5,7 +5,7 @@ import { useStocktake, usePostStocktake } from "@/features/operations/api/useSto
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useTranslations } from "next-intl";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
-import { useRouter } from "@/i18n/navigation";
+import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { 
  BarChart3, 
  CheckCircle2, 
@@ -31,7 +31,7 @@ import { ErrorState } from "@/components/shared/ErrorState";
 export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
- const router = useRouter()
+ const { router, setDirty } = useUnsavedChangesGuard()
  const { user } = useAuth();
  
  const { data: rawSession, isLoading, error } = useStocktake(id);
@@ -41,6 +41,12 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
 
  const [confirmValue, setConfirmValue] = React.useState("");
  const confirmKeyword = t('confirm_keyword');
+
+ // Unsaved changes guard
+ React.useEffect(() => {
+   setDirty(confirmValue !== "");
+   return () => setDirty(false);
+ }, [confirmValue, setDirty]);
 
  if (isLoading) return <LoadingSkeleton />
  if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
@@ -54,17 +60,19 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
- const handlePost = async () => {
- if (confirmValue !== confirmKeyword) return;
- 
- try {
- await postStocktake.mutateAsync(id);
- toast.success(t('posted_success_variance'));
- router.push(`/stocktake/${id}`);
- } catch {
- toast.error(common('error'));
- }
- };
+  const handlePost = () => {
+    if (confirmValue !== confirmKeyword) return;
+    
+    postStocktake.mutate(id, {
+      onSuccess: () => {
+        toast.success(t('posted_success_variance'));
+        router.push(`/stocktake/${id}`, { skipGuard: true });
+      },
+      onError: () => {
+        toast.error(common('error'));
+      }
+    });
+  };
 
  const netImpact = session.items.reduce((acc, item) => {
  return acc + ((item.variance || 0) * item.unitCost);

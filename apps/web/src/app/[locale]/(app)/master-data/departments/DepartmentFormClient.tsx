@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Briefcase, ShieldCheck, Landmark, Activity, Warehouse } from 'lucide-react';
@@ -42,17 +43,7 @@ interface Props {
 export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const td = useTranslations('master_data.departments');
-  const router = useRouter();
-
-  const { data, isLoading, isError, refetch } = useDepartment(id);
-  const { data: branchesData, isLoading: branchesLoading, isError: branchesError, refetch: refetchBranches } = useBranches();
-  const branches = branchesData?.data || [];
-  const { data: warehousesQuery, isLoading: warehousesLoading, isError: warehousesError, refetch: refetchWarehouses } = useWarehouses();
-  const warehouses = warehousesQuery?.data || [];
- 
- const create = useCreateDepartment();
- const update = useUpdateDepartment();
-
+  
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
@@ -67,6 +58,17 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
     },
     disabled: isReadOnly,
   });
+
+  const { data, isLoading, isError, refetch } = useDepartment(id);
+  const { data: branchesData, isLoading: branchesLoading, isError: branchesError, refetch: refetchBranches } = useBranches();
+  const branches = branchesData?.data || [];
+  const { data: warehousesQuery, isLoading: warehousesLoading, isError: warehousesError, refetch: refetchWarehouses } = useWarehouses();
+  const warehouses = warehousesQuery?.data || [];
+ 
+  const create = useCreateDepartment();
+  const update = useUpdateDepartment();
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
  const isActive = useWatch({ control, name: 'is_active' });
  const selectedBranchId = useWatch({ control, name: 'branch_id' });
@@ -89,17 +91,21 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
  }
  }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/departments');
-    } catch (error) {
-      // Error handled by mutation hook
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/departments', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/departments', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -137,6 +143,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
       backHref='/master-data/departments'
       isSaving={isSaving}
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/departments')}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}

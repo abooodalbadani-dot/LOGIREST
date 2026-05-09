@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, ShieldCheck, Globe2, Hash } from 'lucide-react';
@@ -33,7 +34,19 @@ interface Props {
 export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tb = useTranslations('master_data.branches');
-  const router = useRouter();
+  
+  const { 
+    register, 
+    handleSubmit, 
+    reset, 
+    setValue, 
+    control, 
+    formState: { errors, isDirty, isValid } 
+  } = useForm<BranchFormValues>({
+    resolver: zodResolver(BranchFormSchema),
+    disabled: isReadOnly,
+    defaultValues: { code: '', name_ar: '', name_en: '', is_active: true },
+  });
 
   const { 
     data, 
@@ -45,11 +58,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const create = useCreateBranch();
   const update = useUpdateBranch();
 
-  const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<BranchFormValues>({
-    resolver: zodResolver(BranchFormSchema),
-    disabled: isReadOnly,
-    defaultValues: { code: '', name_ar: '', name_en: '', is_active: true },
-  });
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
 
@@ -59,17 +68,21 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync(values);
-      }
-      router.push('/master-data/branches');
-    } catch (error) {
-      // Error handled by mutation hook via toast
+    
+    if (id) {
+      update.mutate({ id, values }, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/branches', { skipGuard: true });
+        }
+      });
+    } else {
+      create.mutate(values, {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/branches', { skipGuard: true });
+        }
+      });
     }
   });
 
@@ -81,7 +94,11 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   // Standardized Error State (Server Error)
   if (id && isError) {
     return (
-      <MasterDataFormLayout title={editTitle} backHref="/master-data/branches">
+      <MasterDataFormLayout 
+        title={editTitle} 
+        backHref="/master-data/branches"
+        onCancel={() => guardedRouter.push('/master-data/branches')}
+      >
         <div className="h-[400px] flex items-center justify-center">
           <ErrorState 
             type="server_error"
@@ -95,7 +112,11 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   // Standardized Not Found State
   if (id && !data && !isLoading) {
     return (
-      <MasterDataFormLayout title={editTitle} backHref="/master-data/branches">
+      <MasterDataFormLayout 
+        title={editTitle} 
+        backHref="/master-data/branches"
+        onCancel={() => guardedRouter.push('/master-data/branches')}
+      >
         <div className="h-[400px] flex items-center justify-center">
           <ErrorState 
             type="not_found"
@@ -120,6 +141,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       backHref='/master-data/branches'
       isSaving={isSaving}
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/branches')}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}

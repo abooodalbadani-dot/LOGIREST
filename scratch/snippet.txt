@@ -1,0 +1,12 @@
+ن",
+      "search_placeholder": "استعلام عن الأصناف أو SKU...",
+      "add_item": "صنف جديد",
+      "export": "تصدير �  }
+}
+      "suppliers": "الموردون",
+        "suppliers_desc": "تفاصيل الموردين وجهات الاتصال والأداء"
+      },
+      "sections": {
+        "products": "المنتجات",
+        "suppliers": "الموردون",
+        "wareho

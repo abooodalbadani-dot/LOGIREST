@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,12 +44,6 @@ type KitchenRequestFormValues = CreateKitchenRequestDTO;
 export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.kitchen_request');
  const tCommon = useTranslations('common');
- const router = useRouter();
- 
- const { data: warehouses } = useWarehouses();
- const { data: departments } = useDepartments();
- const { data: items } = useItems();
- const createRequest = useCreateKitchenRequest();
  
  const form = useForm<KitchenRequestFormValues>({
  resolver: zodResolver(KitchenRequestSchema),
@@ -58,6 +52,13 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  }
  });
 
+  const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
+ 
+ const { data: warehouses } = useWarehouses();
+ const { data: departments } = useDepartments();
+ const { data: items } = useItems();
+ const createRequest = useCreateKitchenRequest();
+ 
  const { fields, append, remove } = useFieldArray({
  control: form.control,
  name: "items"
@@ -68,13 +69,12 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  name: "items",
  });
 
-  const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
-    try {
-      await createRequest.mutateAsync({ ...values, isDraft });
-      router.push('/kitchen-requests');
-    } catch (error) {
-      console.error('Failed to create kitchen request', error);
-    }
+  const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
+    createRequest.mutate({ ...values, isDraft }, {
+      onSuccess: () => {
+        guardedRouter.push('/kitchen-requests', { skipGuard: true });
+      }
+    });
   };
 
   return (
