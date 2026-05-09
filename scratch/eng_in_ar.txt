@@ -1,0 +1,61 @@
+common.confirm_word_prompt: اكتب "{keyword}" للتأكيد:
+common.sku: كود الصنف (SKU)
+common.locales.en: English
+procurement.grn.receipt_total: إجمالي الإيصال ({currency})
+procurement.grn.base_value: القيمة الأساسية ({currency})
+procurement.grn.fefo_allocation: تخصيص الحصة حسب FEFO
+procurement.grn.confirm_keyword_placeholder: اكتب '{keyword}' للتأكيد...
+operations.stocktake.confirm_keyword_placeholder: اكتب '{keyword}' للتأكيد...
+operations.stocktake.warehouse_locked_banner: المستودع مقفل بجلسة جرد نشطة: {sessionNumber}
+operations.transfer.fefo_drawer_title: تخصيص الدفعات (FEFO)
+operations.issue.fefo_drawer_title: تخصيص الدفعات (FEFO)
+operations.issue.expired_status: ⛔ Expired
+operations.issue.item_label: وصف الصنف / SKU
+operations.issue.sync_fefo: مزامنة FEFO
+operations.issue.validation.item_required: رمز SKU للصنف مطلوب
+operations.adjustment.min_chars_required: مطلوب {count} أحرف إضافية
+inventory.movements.sku_master_entity: كيان SKU الأساسي
+auth.email_sent_desc: تم إرسال رابط استعادة الوصول إلى {email}. يرجى التحقق من صندوق الوارد الخاص بك.
+dashboard.audit.updated_sku: تم تحديث SKU
+reports.export.excel: ملف إكسل (XLSX)
+reports.table.total_base: القيمة (SAR)
+admin.restaurant_profile.fields.logo: الشعار (PNG/JPG)
+admin.restaurant_profile.fields.tax_number: الرقم الضريبي (VAT)
+admin.restaurant_profile.logo_hint: موصى به: مربع 512x512 PNG بخلفية شفافة.
+operational.inventory.search_placeholder: استعلام عن الأصناف أو SKU...
+operational.inventory.total_sku: إجمالي عمق SKU
+operational.inventory.pagination_info: عرض {start}-{end} من {total}
+operational.po.pagination_info: عرض {start}-{end} من {total} أوامر شراء
+operational.lots.expiry_label: الانتهاء: {date}
+operational.search.identified_matches: تم العثور على {count} مطابقة لـ "{query}"
+operational.search.no_matches_desc: لم يتم العثور على أي مطابقة تشغيلية لـ "{query}" في المصفوفة الرئيسية.
+operational.search.tips.sku: تتبع SKU
+operational.search.tips.sku_desc: العثور على البيانات الأساسية عبر SKU أو أسماء الأصناف
+operational.item_form.glance.sku: كود SKU
+operational.item_form.fields.sku: رقم SKU
+master_data.suppliers.tax_number: الرقم الضريبي (VAT)
+master_data.items.fields.sku: كود الصنف (SKU)
+master_data.items.fields.barcode: باركود / GTIN
+master_data.items.barcode: باركود / GTIN
+master_data.barcodes.fields.code: الباركود / GTIN
+master_data.barcodes.tips.gtin_standard_title: معايير GTIN
+master_data.barcodes.tips.gtin_standard_desc: استخدم باركود GS1 القياسي GTIN-13 أو GTIN-8 للتكامل السلس مع الموردين ودقة الكتالوج.
+master_data.barcodes.sku_link_verified: تم التحقق من رابط SKU
+master_data.barcodes.mapping_description: ربط SKU التشغيلي والكميات الافتراضية
+master_data.barcodes.empty.description: اربط الأصناف بالباركود و GTINs لأتمتة مسح المخزون وتسويته.
+master_data.currencies.tips.iso_standard_title: معايير ISO
+master_data.currencies.tips.iso_standard_desc: استخدم دائماً أكواد ISO المكونة من 3 أحرف كبيرة للتوافق العالمي.
+master_data.fx_rates.errors.cannot_deactivate_rate_in_use: لا يمكن إلغاء تنشيط سعر مستخدم حالياً في مستندات استلام بضائع (GRN) مرحلة.
+master_data.import.barcodes_desc: ربط رموز GTIN والباركود الداخلي بالأصناف ووحدات محددة.
+master_data.import.note_description: تأكد من مطابقة ملفات XLSX للنماذج الرسمية لتجنب فشل التحقق.
+master_data.import.upload_description: قم برفع بيان البيانات الأساسية بتنسيق XLSX. سيقوم النظام بإجراء تدقيق هيكلي قبل الاعتماد.
+master_data.import.invalid_file_type: تنسيق غير صالح. يتم قبول ملفات .xlsx فقط.
+master_data.import.errors_found_title: تم اكتشاف {count} فوارق
+master_data.import.showing_first_n_errors: عرض أول {count} من أصل {total} فوارق
+master_data.import.success_description: تم مزامنة {count} سجل بنجاح مع مركز البيانات الأساسية.
+master_data.import.validation_success: نجح التحقق. {count} سجل جاهز.
+master_data.import.validation_error: فشل التحقق. تم العثور على {count} أخطاء.
+master_data.import.import_success: تم استيراد {count} سجل بنجاح.
+master_data.common.sku_definition_protocol: بروتوكول تعريف SKU
+master_data.common.placeholder_sku: SKU-000-000
+master_data.common.validation.code_format: يجب أن يكون الرمز 3 أحرف كبيرة (ISO 4217)
