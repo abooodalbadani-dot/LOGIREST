@@ -32,6 +32,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 
 interface Props {
   id: string;
+  locale: 'ar' | 'en';
 }
 
 export function POApproveClient({ id }: Props) {

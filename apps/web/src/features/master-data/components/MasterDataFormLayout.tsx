@@ -29,7 +29,7 @@ export function MasterDataFormLayout({
   children, 
   isSaving = false, 
   onSubmit = () => {},
-  onCancel,
+  onCancel = () => {},
   resource = 'master_data',
   saveAction = 'create',
   hideSave = false,

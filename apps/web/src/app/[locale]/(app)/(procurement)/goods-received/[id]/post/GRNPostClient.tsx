@@ -47,7 +47,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   });
 
   const fxRate = form.watch('fx_rate');
-  const { guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
+  const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
   const postMutation = usePostGRN(id);
 
   const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';

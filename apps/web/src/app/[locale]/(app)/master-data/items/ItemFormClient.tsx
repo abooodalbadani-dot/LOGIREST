@@ -44,6 +44,7 @@ interface Props {
 export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('master_data.common');
   const ti = useTranslations('master_data.items');
+  const tv = useTranslations('master_data.validation');
 
   const { data, isLoading, isError, isFetched, refetch } = useItem(id);
   const { data: categories, isLoading: isLoadingCats, isError: isErrorCats } = useCategories();
@@ -116,7 +117,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     return (
       <ErrorState 
         type="not_found" 
-        onRetry={() => router.push('/master-data/items', { skipGuard: true })} 
+        onRetry={() => guardedRouter.push('/master-data/items', { skipGuard: true })} 
       />
     );
   }
