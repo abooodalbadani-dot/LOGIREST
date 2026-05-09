@@ -52,7 +52,7 @@ As a developer, I want to ensure that all dynamic routes (e.g., `[id]`, `[locale
 
 ### Edge Cases
 
-- **Dynamic Path Construction**: How does the system handle routes where the path is constructed dynamically (e.g., `router.push('/' + path)`)?
+- **Dynamic Path Construction**: The tool will flag dynamic navigation patterns (e.g., `router.push('/' + path)`) as "Review Required" in the audit report for manual verification.
 - **Localized Routes**: How does the system distinguish between a missing route and a localized route (e.g., `/ar/dashboard` vs `/dashboard`)?
 - **Middleware Interception**: How do we detect routes that are redirected by middleware before reaching the component?
 
@@ -88,3 +88,11 @@ As a developer, I want to ensure that all dynamic routes (e.g., `[id]`, `[locale
 - Localized routing is handled via a `[locale]` dynamic segment as seen in the file structure.
 - Authentication status is verifiable through static analysis of layouts or common guard components.
 - Programmatic navigation mostly uses the standard `next/navigation` `useRouter` hook.
+
+## Clarifications
+
+### Session 2026-05-09
+- Q: Audit Tool Output Format → A: Markdown file in `specs/003-route-integrity-audit/audit-report.md`
+- Q: Handling of Dynamic Path Construction → A: Flag as "Review Required" (Option B)
+- Q: Authentication Guard Detection → A: Middleware Configuration Audit (Option A)
+
