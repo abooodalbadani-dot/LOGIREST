@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-=======
 import { toast } from 'sonner';
-
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -28,10 +24,7 @@ import {
   CheckCircle, 
   Trash2, 
   Package, 
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-=======
   Send,
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
   XCircle, 
   History,
   Info,
@@ -59,17 +52,11 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-import { type DocumentStatus } from '@/core/workflow/document-engine';
-import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operations/hooks/useAdjustment';
-import { ActionGuard } from '@/core/workflow/ActionGuard';
-=======
 import { ADJUSTMENT_STATUS, type DocumentStatus } from '@/contracts/statuses';
 import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operations/hooks/useAdjustment';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
 
 const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'] as const;
 
@@ -93,11 +80,7 @@ export function AdjustmentForm({
   const { user } = useAuth();
   
   const isNew = id === 'new';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-  const adjustmentStatus = (document?.status as DocumentStatus) ?? 'DRAFT';
-=======
   const adjustmentStatus = (document?.status as DocumentStatus) ?? ADJUSTMENT_STATUS.DRAFT;
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
 
   const createAdjustment = useCreateAdjustment();
   const submitAdjustment = useSubmitAdjustment(id, { onConflict });
@@ -185,16 +168,8 @@ export function AdjustmentForm({
 
       if (isNew) {
         await createAdjustment.mutateAsync(payload);
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-        router.push(`/${locale}/adjustments`);
-      } else {
-        await updateAdjustment.mutateAsync({ id, payload });
-      }
-    } catch (e) {
-      console.error(e);
-=======
         toast.success(t('create_success'));
-        router.push(`/${locale}/adjustments`);
+        router.push(`/adjustments`);
       } else {
         await updateAdjustment.mutateAsync({ id, payload });
         toast.success(t('update_success'));
@@ -202,24 +177,17 @@ export function AdjustmentForm({
     } catch (e) {
       console.error(e);
       toast.error(tc('error_occurred'));
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
     }
   };
 
   const handleSubmit = async () => {
     try {
       await submitAdjustment.mutateAsync(document?.version || 0);
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-      setSubmitDialogOpen(false);
-    } catch (e) {
-      console.error(e);
-=======
       toast.success(t('submit_success'));
       setSubmitDialogOpen(false);
     } catch (e) {
       console.error(e);
       toast.error(tc('error_occurred'));
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
     }
   };
 
@@ -227,17 +195,11 @@ export function AdjustmentForm({
     if (!!lockState?.isLocked) return;
     try {
       await approveAdjustment.mutateAsync(document?.version || 0);
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-      setApproveDialogOpen(false);
-    } catch (e) {
-      console.error(e);
-=======
       toast.success(t('approve_success'));
       setApproveDialogOpen(false);
     } catch (e) {
       console.error(e);
       toast.error(tc('error_occurred'));
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
     }
   };
 
@@ -246,18 +208,11 @@ export function AdjustmentForm({
     if (trimmedComment.length < 15) return;
     try {
       await rejectAdjustment.mutateAsync({ version: document?.version || 0, reject: trimmedComment });
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-      setRejectDialogOpen(false);
-      setRejectionComment('');
-    } catch (e) {
-      console.error(e);
-=======
       toast.success(t('reject_success'));
       setRejectDialogOpen(false);
     } catch (e) {
       console.error(e);
       toast.error(tc('error_occurred'));
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
     }
   };
 
@@ -266,7 +221,7 @@ export function AdjustmentForm({
     try {
       await postAdjustment.mutateAsync({ id, version: document?.version || 0 });
       setPostDialogOpen(false);
-      router.push(`/${locale}/adjustments`);
+      router.push(`/adjustments`);
     } catch (e) {
       console.error(e);
     }
@@ -359,24 +314,6 @@ export function AdjustmentForm({
       by: e.by
     }));
   }, [document]);
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-
-  return (
-    <div className="min-h-screen bg-surface-container-low">
-      {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-40 w-full glass-header h-16 border-b border-outline-variant/10 px-6 lg:px-10 flex items-center justify-between gap-6 transition-all">
-        <div className="flex items-center gap-4 overflow-hidden">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => router.back()} 
-            className="rounded-lg shrink-0 hover:bg-surface-container-high"
-          >
-            <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
-          </Button>
-          <div className="flex flex-col min-w-0">
-            <h1 className="text-title-lg font-semibold uppercase italic truncate">
-=======
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
@@ -384,7 +321,6 @@ export function AdjustmentForm({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex flex-col">
             <h1 className="font-semibold text-title-sm">
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
               {isNew ? t('create_new') : (document?.document_number || '...')}
             </h1>
             {!isNew && (
@@ -396,92 +332,6 @@ export function AdjustmentForm({
               </div>
             )}
           </div>
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          {isNew && (
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveDraft} 
-                disabled={createAdjustment.isPending || !!lockState?.isLocked || notes.trim().length < 10 || lines.length === 0}
-                variant="ghost"
-                className="rounded-lg h-10 px-4 text-label-xs font-semibold uppercase transition-all"
-              >
-                {t('save_draft')}
-              </Button>
-              <Button 
-                onClick={() => setSubmitDialogOpen(true)}
-                disabled={createAdjustment.isPending || !!lockState?.isLocked || notes.trim().length < 10 || lines.length === 0}
-                className="bg-primary hover:bg-primary-hover text-white rounded-lg h-10 px-6 text-label-xs font-semibold uppercase shadow-lg shadow-primary/20"
-              >
-                <CheckCircle className="w-4 h-4 me-2" />
-                {t('submit_for_approval')}
-              </Button>
-            </div>
-          )}
-
-          {!isNew && (
-            <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || 'WH_KEEPER'}>
-              <Button 
-                onClick={handleSaveDraft} 
-                className="rounded-lg h-10 px-4 text-label-xs font-semibold uppercase transition-all"
-                variant="ghost"
-              >
-                {tc('save_changes')}
-              </Button>
-              <Button 
-                onClick={() => setSubmitDialogOpen(true)}
-                className="bg-primary hover:bg-primary-hover text-white rounded-lg h-10 px-6 text-label-xs font-semibold uppercase shadow-lg shadow-primary/20"
-              >
-                <CheckCircle className="w-4 h-4 me-2" />
-                {t('submit_for_approval')}
-              </Button>
-            </ActionGuard>
-          )}
-
-          <div className="flex gap-2">
-            <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role || 'WH_KEEPER'}>
-              <Button 
-                variant="outline" 
-                onClick={() => setRejectDialogOpen(true)}
-                className="rounded-lg border-red-500/30 text-red-500 hover:bg-red-500/5 h-10 px-4 text-label-xs font-semibold uppercase"
-              >
-                <XCircle className="w-4 h-4 me-2" />
-                {t('reject')}
-              </Button>
-            </ActionGuard>
-            
-            <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
-              <Button 
-                onClick={() => setApproveDialogOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg h-10 px-6 text-label-xs font-semibold uppercase shadow-lg shadow-emerald-900/20"
-              >
-                <CheckCircle className="w-4 h-4 me-2" />
-                {t('approve')}
-              </Button>
-            </ActionGuard>
-          </div>
-
-          <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || 'WH_KEEPER'}>
-            <Button 
-              onClick={() => setPostDialogOpen(true)}
-              className="primary-gradient text-white rounded-lg h-10 px-8 text-label-xs font-semibold uppercase shadow-xl shadow-primary/20"
-            >
-              <CheckCircle className="w-4 h-4 me-2" />
-              {t('post_adjustment')}
-            </Button>
-          </ActionGuard>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column */}
-          <div className="lg:col-span-8 space-y-8">
-=======
-          
           {/* Workflow specific actions moved to FormFooter */}
         </div>
       </div>
@@ -500,7 +350,6 @@ export function AdjustmentForm({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column */}
             <div className="lg:col-span-8 space-y-8">
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
               <div className="space-y-4">
                 <div className="space-y-1.5">
@@ -552,11 +401,7 @@ export function AdjustmentForm({
             </div>
 
             {/* Item Scanning / Adding */}
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-            {canEdit && adjustmentStatus !== 'POSTED' && (
-=======
             {canEdit && adjustmentStatus !== ADJUSTMENT_STATUS.POSTED && (
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
               <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
                 <div className="flex items-center gap-3">
                   <Package className="w-5 h-5 text-primary" />
@@ -580,10 +425,6 @@ export function AdjustmentForm({
                   <h3 className="text-label-sm font-semibold uppercase">{tc('items')}</h3>
                 </div>
               </div>
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-              <DocumentReadOnlyOverlay isPosted={isLocked}>
-=======
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -678,10 +519,6 @@ export function AdjustmentForm({
                     </tbody>
                   </table>
                 </div>
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-              </DocumentReadOnlyOverlay>
-=======
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
             </div>
           </div>
 
@@ -740,16 +577,12 @@ export function AdjustmentForm({
               </div>
             )}
           </div>
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
-        </div>
-      </div>
-=======
             </div>
           </div>
         </DocumentLockWrapper>
 
         <FormFooter 
-          onCancel={() => router.push(`/${locale}/adjustments`)}
+          onCancel={() => router.push(`/adjustments`)}
           onSubmit={handleSaveDraft}
           isSaving={createAdjustment.isPending || updateAdjustment.isPending}
           isLocked={isLocked}
@@ -804,7 +637,6 @@ export function AdjustmentForm({
           }
         />
       </form>
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx
 
       {/* Confirmation Dialogs */}
       <PostConfirmDialog

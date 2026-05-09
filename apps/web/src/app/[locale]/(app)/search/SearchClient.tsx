@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { 
  Search as SearchIcon, 
@@ -69,7 +70,7 @@ export default function SearchClient() {
  subtitle: 'SKU: BR-001',
  status: 'ACTIVE',
  metadata: { [isRtl ? 'المخزون' : 'Stock']: '1,200 KG', [isRtl ? 'الموقع' : 'Location']: 'WH-01' },
- link: `/${locale}/inventory/balance`,
+ link: `/inventory/balance`,
  },
  {
  id: '2',
@@ -78,7 +79,7 @@ export default function SearchClient() {
  subtitle: isRtl ? 'مورد: بهارات العالم' : 'Vendor: Global Spice',
  status: 'PENDING',
  metadata: { [isRtl ? 'التاريخ' : 'Date']: '2024-04-20', [isRtl ? 'الإجمالي' : 'Total']: '4,250 SAR' },
- link: `/${locale}/purchase-orders/PO-2024-0042`,
+ link: `/purchase-orders/PO-2024-0042`,
  },
  {
  id: '3',
@@ -86,7 +87,7 @@ export default function SearchClient() {
  title: 'LOT-9942-A',
  subtitle: isRtl ? 'زيت زيتون بكر' : 'Extra Virgin Olive Oil',
  metadata: { [isRtl ? 'الانتهاء' : 'Expiry']: '2025-12-31', [isRtl ? 'الكمية' : 'Qty']: '45' },
- link: `/${locale}/inventory/lots/LOT-9942-A`,
+ link: `/inventory/lots/LOT-9942-A`,
  },
  {
  id: '4',
@@ -95,7 +96,7 @@ export default function SearchClient() {
  subtitle: 'SUP-882',
  status: 'ACTIVE',
  metadata: { [isRtl ? 'التقييم' : 'Rating']: '4.8/5' },
- link: `/${locale}/master-data/suppliers/SUP-882`,
+ link: `/master-data/suppliers/SUP-882`,
  },
  ]);
  setIsLoading(false);
@@ -257,7 +258,7 @@ export default function SearchClient() {
 
  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
  {sectionResults.map(result => (
- <a key={result.id} href={result.link} className="group flex flex-col p-8 rounded-3xl bg-surface-container-low/60 border border-surface-variant/10 hover:bg-surface-container-low hover:scale-[0.98] active:scale-95 transition-all duration-500 relative overflow-hidden">
+ <Link key={result.id} href={result.link} className="group flex flex-col p-8 rounded-3xl bg-surface-container-low/60 border border-surface-variant/10 hover:bg-surface-container-low hover:scale-[0.98] active:scale-95 transition-all duration-500 relative overflow-hidden">
  <div className="flex items-start justify-between mb-8">
  <div className="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center border border-surface-variant/10">
  {result.type === 'item' ? <Package className="w-7 h-7 text-operational-cyan/40" /> : <Database className="w-7 h-7 text-status-success/40" />}
@@ -284,7 +285,7 @@ export default function SearchClient() {
  ))}
  </div>
  )}
- </a>
+ </Link>
  ))}
  </div>
  </div>

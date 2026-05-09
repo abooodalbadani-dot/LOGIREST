@@ -24,12 +24,40 @@ python apps/web/scripts/audit-routes.py
 The script will generate the following file:
 - `specs/003-route-integrity-audit/audit-report.md`
 
+## Latest Audit Results (2026-05-09)
+
+| Metric | Count |
+|--------|-------|
+| Total Routes | 120 |
+| Active | 94 |
+| Entry Points | 1 (`/dashboard`) |
+| Orphan Routes | 25 |
+| Review Required | 0 |
+| Broken References | 2 |
+| Public Routes | 3 |
+| Protected Routes | 117 |
+
+### Key Findings
+
+**Orphan Routes (25)**: Routes with no incoming navigation references. These include:
+- Admin: `/admin/audit-logs`, `/admin/restaurant-profile`, `/admin/settings`
+- Inventory: `/inventory`, `/inventory/balance`, `/inventory/expired-override`, `/inventory/lots`, `/inventory/movements`
+- Master Data: `/master-data`, `/master-data/import/*`, various `:id/edit` routes
+- Reports: All `/reports/*` sub-routes
+- Operations: `/transfers`, `/context-selector`, `/test-virtual`
+
+**Dynamic Route Resolved**: All dynamic `[:id]` routes are successfully matched against template literal navigation patterns. Transfers, stocktake, and other dynamic routes now show `Active` status with verified references.
+
+**Broken References (2)**: Both in `PendingDocumentsWidget.tsx` referencing `/:id/:id` - likely a fully dynamic path construction that needs manual verification.
+
 ## Interpreting the Report
 
 ### Handling Orphans
 If a route is marked as `Orphan`:
-1. Check if it should be linked from an existing page (e.g., a missing button).
-2. If it is legacy or unused code, mark it for deletion in the `tasks.md` of the next phase.
+1. Check if it should be linked from an existing page (e.g., a missing button or sidebar link).
+2. If it is navigated via tabs or conditional UI within a parent page, note this in the report.
+3. If it is legacy or unused code, mark it for deletion in follow-up tasks.
+4. Some "orphans" are genuinely navigated via patterns not detectable by static analysis (e.g., `usePathname()` redirects, programmatic navigation with computed URLs, or tab-based navigation within a page).
 
 ### Reviewing Dynamic Paths
 If a route is marked as `Review`:
@@ -40,4 +68,5 @@ If a route is marked as `Review`:
 ### Fixing Broken References
 If the script identifies broken references:
 1. Navigate to the source file indicated in the report.
-2. Correct the `href` to point to a valid route.
+2. Determine if the reference uses a dynamic template (e.g., `` `/${doc.path}/${doc.id}` ``) and verify it produces valid paths at runtime.
+3. Correct the `href` if it genuinely points to a non-existent route.

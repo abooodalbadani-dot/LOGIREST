@@ -22,7 +22,7 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  const isSuccess = wizard.step === 'SUCCESS';
 
  const handleFinish = () => {
- router.push(`/${locale}/master-data/${wizard.entity}`);
+ router.push(`/master-data/${wizard.entity}`);
  };
 
  if (isSuccess) {

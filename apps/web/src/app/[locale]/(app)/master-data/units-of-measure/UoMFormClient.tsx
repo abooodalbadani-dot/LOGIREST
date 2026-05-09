@@ -1,78 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/units-of-measure/UoMFormClient.tsx
-import { useRouter } from 'next/navigation';
-=======
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/units-of-measure/UoMFormClient.tsx
-import { useTranslations } from 'next-intl';
-import { useForm, Controller, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Ruler, Activity, ShieldCheck } from 'lucide-react';
-
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent } from '@/components/ui/card';
-import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import { PageSkeleton } from '@/components/shared/PageSkeleton';
-import { ErrorState } from '@/components/shared/ErrorState';
-import {
- useUoM,
- useCreateUoM,
- useUpdateUoM,
-} from '@/features/uoms/hooks/useUoMs';
-import { UoMFormSchema, type UoMFormValues } from '@/types/master-data';
-import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-
 interface Props {
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/units-of-measure/UoMFormClient.tsx
- id: string | null;
- createTitle: string;
- editTitle: string;
- locale: string;
-}
-
-export function UoMFormClient({ id, createTitle, editTitle, locale }: Props) {
- const t = useTranslations('common');
- const tu = useTranslations('master_data.uoms');
- const router = useRouter();
-
- const { data, isLoading } = useUoM(id);
- const create = useCreateUoM();
- const update = useUpdateUoM();
-
- const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm<UoMFormValues>({
- resolver: zodResolver(UoMFormSchema),
- defaultValues: { code: '', name_ar: '', name_en: '', is_active: true },
- });
-
- const isActive = useWatch({ control, name: 'is_active' });
-
- useEffect(() => {
- if (data) {
- reset({ 
- code: data.code, 
- name_ar: data.name_ar, 
- name_en: data.name_en,
- is_active: data.is_active
- });
- }
- }, [data, reset]);
-
- const onSubmit = handleSubmit(async (values) => {
- try {
- if (id) {
- await update.mutateAsync({ id, values });
- } else {
- await create.mutateAsync(values);
- }
- router.push(`/${locale}/master-data/units-of-measure`);
- } catch (error) {
- // Handled in hook
- }
- });
-=======
   id: string | null;
   createTitle: string;
   editTitle: string;
@@ -152,84 +81,9 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
       });
     }
   });
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/units-of-measure/UoMFormClient.tsx
 
- const isSaving = create.isPending || update.isPending;
+  const isSaving = create.isPending || update.isPending;
 
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/units-of-measure/UoMFormClient.tsx
- if (id && isLoading) return null;
-
- return (
- <MasterDataFormLayout
- title={id ? editTitle : createTitle}
- backHref={`/${locale}/master-data/units-of-measure`}
- isSaving={isSaving}
- onSubmit={onSubmit}
- >
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
- <div className="lg:col-span-2 space-y-8">
- <Card className="bg-surface-container-low border-none overflow-hidden">
- <CardContent className="p-8 space-y-8">
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
- <Ruler className="w-5 h-5 text-tertiary" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{t('basic_info')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tu('description')}</p>
- </div>
- </div>
-
- <div className="space-y-6">
- <div className="space-y-2 max-w-sm">
- <Label htmlFor="uom-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
- <Controller
- name="code"
- control={control}
- render={({ field }) => (
- <Input 
- {...field}
- id="uom-code" 
- dir="ltr" 
- onChange={(e) => field.onChange(e.target.value.toUpperCase())}
- className="font-mono font-semibold uppercase text-status-active" 
- placeholder="UNIT" 
- />
- )}
- />
- {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.code.message}</p>}
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- <div className="space-y-2">
- <Label htmlFor="uom-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name_en')}</Label>
- <Input 
- id="uom-name-en" 
- dir="ltr" 
- {...register('name_en')} 
- className="font-semibold" 
- placeholder="Unit Name" 
- />
- {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.name_en.message}</p>}
- </div>
-
- <div className="space-y-2">
- <Label htmlFor="uom-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name_ar')}</Label>
- <Input 
- id="uom-name-ar" 
- dir="rtl" 
- {...register('name_ar')} 
- className="font-semibold text-end" 
- placeholder="اسم الوحدة" 
- />
- {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.name_ar.message}</p>}
- </div>
- </div>
- </div>
- </CardContent>
- </Card>
- </div>
-=======
   // Determine the display title
   const displayTitle = id 
     ? (isReadOnly ? (viewTitle || tu('view_title')) : editTitle)
@@ -312,7 +166,6 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
             </CardContent>
           </Card>
         </div>
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/units-of-measure/UoMFormClient.tsx
 
  <div className="space-y-8">
  <Card className="bg-surface-container-low border-none overflow-hidden">

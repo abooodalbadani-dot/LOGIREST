@@ -27,10 +27,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 
 import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/kitchen-requests/KitchenRequestsListClient.tsx
-=======
 import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/kitchen-requests/KitchenRequestsListClient.tsx
 
 export function KitchenRequestsListClient({
  initialStatus,
@@ -113,13 +110,8 @@ export function KitchenRequestsListClient({
  const submittedCount = data?.data?.filter(doc => isPendingStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
  const approvedCount = data?.data?.filter(r => isApprovedStatus('KITCHEN_REQUEST', r.status)).length || 0;
  const completedCount = data?.data?.filter(doc => isCompletedStatus('KITCHEN_REQUEST', doc.status as DocumentStatus)).length || 0;
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/kitchen-requests/KitchenRequestsListClient.tsx
- const rejectedCount = data?.data?.filter(r => r.status === 'CANCELLED').length || 0;
- const fulfilledCount = data?.data?.filter(r => r.status === 'FULFILLED').length || 0;
-=======
  const rejectedCount = data?.data?.filter(r => r.status === KITCHEN_REQUEST_STATUS.CANCELLED).length || 0;
  const fulfilledCount = data?.data?.filter(r => r.status === KITCHEN_REQUEST_STATUS.FULFILLED).length || 0;
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/kitchen-requests/KitchenRequestsListClient.tsx
 
  return (
  <div className="flex flex-col gap-6 p-6">

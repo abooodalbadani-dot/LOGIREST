@@ -69,22 +69,12 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  name: "items",
  });
 
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/kitchen-requests/new/KitchenRequestFormClient.tsx
-  const onSubmit = async (values: KitchenRequestFormValues, isDraft: boolean) => {
-    try {
-      await createRequest.mutateAsync({ ...values, isDraft });
-      router.push('/kitchen-requests');
-    } catch (error) {
-      console.error('Failed to create kitchen request', error);
-    }
-=======
   const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
     createRequest.mutate({ ...values, isDraft }, {
       onSuccess: () => {
         guardedRouter.push('/kitchen-requests', { skipGuard: true });
       }
     });
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/kitchen-requests/new/KitchenRequestFormClient.tsx
   };
 
   return (

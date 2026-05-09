@@ -108,6 +108,10 @@ export const ALL_STATUSES = [
   'OPEN',
   'REVIEW',
   'CLOSED',
+  'VARIANCE_SUBMITTED',
+  'COUNTING_COMPLETED',
+  'ACTIVE',
+  'INACTIVE',
 ] as const;
 
 export type DocumentStatus = typeof ALL_STATUSES[number];

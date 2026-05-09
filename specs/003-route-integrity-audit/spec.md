@@ -48,7 +48,22 @@ As a developer, I want to ensure that all dynamic routes (e.g., `[id]`, `[locale
 
 1. **Given** a dynamic route like `issues/[id]`, **When** the audit tool runs, **Then** it must find at least one `Link` or `router.push` call that constructs a valid path to this route.
 
+
 ---
+
+### User Story 4 - Internal Tooling Management (Priority: P2)
+
+As a DevOps engineer, I want to classify internal/debug routes separately so that they are visible for development but strictly blocked in production environments to prevent accidental leakage of debug information.
+
+**Why this priority**: Security through isolation. Internal tools are necessary for development but dangerous in production.
+
+**Independent Test**: Verify that all routes flagged as `Internal` are included in the middleware's production blocklist.
+
+**Acceptance Scenarios**:
+
+1. **Given** a route in `/debug` or `/test`, **When** the audit tool runs, **Then** it must be flagged as `Internal Tooling`.
+2. **Given** an `Internal Tooling` route, **When** accessed in `NODE_ENV=production`, **Then** the system must return a 404.
+
 
 ### Edge Cases
 
@@ -72,6 +87,13 @@ As a developer, I want to ensure that all dynamic routes (e.g., `[id]`, `[locale
 - **Route Map**: A structured representation of the relationship between physical files on disk and their logical URL paths.
 - **Navigation Graph**: A mapping of how users transition between different routes via UI elements.
 - **Authentication Guard**: A logical boundary (Middleware or Higher-Order Component) that validates user sessions before rendering a route.
+- **Route Classification Matrix**: A formal categorization of routes based on their lifecycle and accessibility:
+    - **Active**: Linked in UI, protected by Auth.
+    - **External**: Not linked in UI, used for callbacks/emails.
+    - **Internal**: Debug/Dev tools, blocked in Prod.
+    - **Feature-Gated**: Code exists but hidden behind a flag.
+    - **Orphan**: Unlinked code that should be removed or linked.
+
 
 ## Success Criteria *(mandatory)*
 

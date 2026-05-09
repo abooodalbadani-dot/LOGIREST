@@ -47,6 +47,12 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   
   // Transfer Specific
   IN_TRANSIT: { variant: 'warning', labelKey: 'status.in_transit' },
+
+  // Specialized / Missing
+  VARIANCE_SUBMITTED: { variant: 'warning', labelKey: 'status.variance_submitted' },
+  COUNTING_COMPLETED: { variant: 'info', labelKey: 'status.counting_completed' },
+  ACTIVE: { variant: 'success', labelKey: 'status.active' },
+  INACTIVE: { variant: 'error', labelKey: 'status.inactive' },
 };
 
 /**

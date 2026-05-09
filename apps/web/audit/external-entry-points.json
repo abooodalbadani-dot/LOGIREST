@@ -1,0 +1,6 @@
+{
+  "external_entry_points": [
+    "/issues/new/scan-mode",
+    "/issues/:id/scan-mode"
+  ]
+}

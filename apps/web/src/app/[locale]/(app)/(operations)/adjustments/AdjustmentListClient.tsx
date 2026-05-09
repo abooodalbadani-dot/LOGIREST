@@ -17,13 +17,9 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx
-import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
-=======
 import { isAdjustmentPending, isAdjustmentPosted } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx
  
 // Reason → Semantic visual styling (Hardened for Culinary Architect)
 const REASON_CHIP: Record<string, string> = {
@@ -128,19 +124,11 @@ export function AdjustmentListClient() {
  },
  ], [t, tCommon, router]);
  
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx
- const totalAdjustments = data?.meta?.total || 0;
- const inProgressCount = data?.data?.filter(i => isPendingStatus('ADJUSTMENT', i.status as DocumentStatus)).length || 0;
- const postedCount = data?.data?.filter(i => isPostedStatus('ADJUSTMENT', i.status as DocumentStatus)).length || 0;
- const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
- const pendingApprovalsCount = inProgressCount;
-=======
   const totalAdjustments = data?.meta?.total || 0;
   const inProgressCount = data?.data?.filter(i => isAdjustmentPending(i.status)).length || 0;
   const postedCount = data?.data?.filter(i => isAdjustmentPosted(i.status)).length || 0;
   const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
   const pendingApprovalsCount = inProgressCount;
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx
  
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">

@@ -2,11 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-<<<<<<< HEAD:src/app/[locale]/(app)/inventory/lots/LotBalanceClient.tsx
-import { useRouter } from '@/i18n/navigation';
-=======
 import { useRouter, Link } from '@/i18n/navigation';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/inventory/lots/LotBalanceClient.tsx
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { 

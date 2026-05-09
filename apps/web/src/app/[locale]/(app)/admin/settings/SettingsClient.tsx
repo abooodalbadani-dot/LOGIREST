@@ -9,73 +9,69 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PostConfirmDialog } from '@/components/ui/post-confirm-dialog';
+import { Link } from '@/i18n/navigation';
 import { useAdminSettings, useUpdateSettings, SettingsSchema, type SystemSettings } from '@/features/admin/hooks/useAdminSettings';
-import Link from 'next/link';
 
 export function SettingsClient({ locale }: { locale: string }) {
- const t = useTranslations('admin.settings');
- const tCommon = useTranslations('common');
- const { data: currentSettings, isLoading } = useAdminSettings();
- const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
- 
- const [isConfirmOpen, setIsConfirmOpen] = useState(false);
- const [pendingData, setPendingData] = useState<SystemSettings | null>(null);
+  const t = useTranslations('admin.settings');
+  const tCommon = useTranslations('common');
+  const { data: currentSettings, isLoading } = useAdminSettings();
+  const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
+  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingData, setPendingData] = useState<SystemSettings | null>(null);
 
- const { register, handleSubmit, formState: { errors }, control, setValue, reset } = useForm<SystemSettings>({
- resolver: zodResolver(SettingsSchema),
- });
+  const { register, handleSubmit, formState: { errors }, control, setValue, reset } = useForm<SystemSettings>({
+  resolver: zodResolver(SettingsSchema),
+  });
 
- const watchedBaseCurrency = useWatch({ control, name: 'base_currency' });
- const watchedLanguage = useWatch({ control, name: 'default_language' });
- const [initialBaseCurrency, setInitialBaseCurrency] = useState<string | null>(null);
+  const watchedBaseCurrency = useWatch({ control, name: 'base_currency' });
+  const watchedLanguage = useWatch({ control, name: 'default_language' });
+  const [initialBaseCurrency, setInitialBaseCurrency] = useState<string | null>(null);
 
- useEffect(() => {
- if (currentSettings) {
- reset(currentSettings);
- setInitialBaseCurrency(currentSettings.base_currency);
- }
- }, [currentSettings, reset]);
+  useEffect(() => {
+  if (currentSettings) {
+  reset(currentSettings);
+  setInitialBaseCurrency(currentSettings.base_currency);
+  }
+  }, [currentSettings, reset]);
 
- const showCurrencyWarning = watchedBaseCurrency && initialBaseCurrency && watchedBaseCurrency !== initialBaseCurrency;
+  const showCurrencyWarning = watchedBaseCurrency && initialBaseCurrency && watchedBaseCurrency !== initialBaseCurrency;
 
- const onSubmit = (data: SystemSettings) => {
- if (data.base_currency !== initialBaseCurrency) {
- setPendingData(data);
- setIsConfirmOpen(true);
- } else {
- updateSettings(data);
- }
- };
+  const onSubmit = (data: SystemSettings) => {
+  if (data.base_currency !== initialBaseCurrency) {
+  setPendingData(data);
+  setIsConfirmOpen(true);
+  } else {
+  updateSettings(data);
+  }
+  };
 
- const handleConfirm = () => {
- if (pendingData) {
- updateSettings(pendingData);
- setIsConfirmOpen(false);
- setPendingData(null);
- }
- };
+  const handleConfirm = () => {
+  if (pendingData) {
+  updateSettings(pendingData);
+  setIsConfirmOpen(false);
+  setPendingData(null);
+  }
+  };
 
- if (isLoading) {
- return (
- <div className="p-8 space-y-8 animate-pulse">
- <div className="h-8 w-64 bg-surface-container-highest rounded-sm" />
- <div className="space-y-4">
- <div className="h-32 w-full bg-surface-container-highest rounded-sm" />
- <div className="h-32 w-full bg-surface-container-highest rounded-sm" />
- </div>
- </div>
- );
- }
+  if (isLoading) {
+  return (
+  <div className="p-8 space-y-8 animate-pulse">
+  <div className="h-8 w-64 bg-surface-container-highest rounded-sm" />
+  <div className="space-y-4">
+  <div className="h-32 w-full bg-surface-container-highest rounded-sm" />
+  <div className="h-32 w-full bg-surface-container-highest rounded-sm" />
+  </div>
+  </div>
+  );
+  }
 
- return (
- <div className="max-w-4xl mx-auto p-8 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
- <div className="flex flex-col gap-4 border-b border-outline-low pb-8">
- <Link 
-<<<<<<< HEAD:src/app/[locale]/(app)/admin/settings/SettingsClient.tsx
- href={`/${locale}/admin`}
-=======
- href="/admin"
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/admin/settings/SettingsClient.tsx
+  return (
+  <div className="max-w-4xl mx-auto p-8 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <div className="flex flex-col gap-4 border-b border-outline-low pb-8">
+  <Link 
+        href="/admin"
  className="inline-flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground hover:text-operational-cyan transition-colors"
  >
  <ArrowLeft className="w-3 h-3 rtl:rotate-180" />

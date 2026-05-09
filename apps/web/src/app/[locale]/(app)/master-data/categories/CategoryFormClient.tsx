@@ -14,10 +14,12 @@ import {
 } from '@/features/categories/hooks/useCategories';
 import { CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
-import { Layers } from 'lucide-react';
+import { Layers, Edit3 } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { Button } from '@/components/ui/button';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 
 interface Props { 
   id: string | null; 
@@ -103,6 +105,19 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     saveAction={id ? 'edit' : 'create'}
     isDirty={isDirty}
     isValid={isValid}
+    headerActions={
+      isReadOnly && id && (
+        <PermissionGate action="edit" resource="master_data">
+          <Button 
+            onClick={() => guardedRouter.push(`/master-data/categories/${id}/edit`)}
+            className="bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2"
+          >
+            <Edit3 className="w-4 h-4" />
+            {t('edit')}
+          </Button>
+        </PermissionGate>
+      )
+    }
   >
  <div className="space-y-8">
  <Card className="bg-surface-container-low border-none overflow-hidden">

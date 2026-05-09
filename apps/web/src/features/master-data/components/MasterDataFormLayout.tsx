@@ -21,6 +21,7 @@ interface Props {
   saveDisabled?: boolean;
   isDirty?: boolean;
   isValid?: boolean;
+  headerActions?: ReactNode;
 }
 
 export function MasterDataFormLayout({ 
@@ -35,7 +36,8 @@ export function MasterDataFormLayout({
   hideSave = false,
   saveDisabled = false,
   isDirty = true,
-  isValid = true
+  isValid = true,
+  headerActions
 }: Props) {
   return (
     <div className="p-8 max-w-[1000px] mx-auto pb-32 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -55,7 +57,9 @@ export function MasterDataFormLayout({
           </div>
         </div>
 
-        {/* Top buttons removed for FormFooter standardization */}
+        <div className="flex items-center gap-4">
+          {headerActions}
+        </div>
       </div>
 
       <div className="bg-surface-container-lowest rounded-[2rem] p-10 relative overflow-hidden">

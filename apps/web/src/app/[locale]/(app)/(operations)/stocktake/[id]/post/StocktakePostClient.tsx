@@ -31,11 +31,7 @@ import { ErrorState } from "@/components/shared/ErrorState";
 export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
  const common = useTranslations('common')
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/stocktake/[id]/post/StocktakePostClient.tsx
- const router = useRouter()
-=======
- const { router, setDirty } = useUnsavedChangesGuard()
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/post/StocktakePostClient.tsx
+  const { router, setDirty } = useUnsavedChangesGuard()
  const { user } = useAuth();
  
  const { data: rawSession, isLoading, error } = useStocktake(id);

@@ -4,11 +4,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { TableSkeleton } from './TableSkeleton';
 
-<<<<<<< HEAD:src/components/shared/PageSkeleton.tsx
-export function PageSkeleton() {
-  return (
-    <div className="space-y-10 animate-in fade-in duration-500">
-=======
 interface PageSkeletonProps {
   variant?: 'list' | 'detail';
 }
@@ -82,7 +77,6 @@ export function PageSkeleton({ variant = 'list' }: PageSkeletonProps) {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 p-8">
->>>>>>> 002-frontend-baseline:apps/web/src/components/shared/PageSkeleton.tsx
       {/* Header Skeleton */}
       <div className="space-y-4">
         <Skeleton className="h-4 w-48" />
@@ -131,7 +125,3 @@ export function PageSkeleton({ variant = 'list' }: PageSkeletonProps) {
     </div>
   );
 }
-<<<<<<< HEAD:src/components/shared/PageSkeleton.tsx
-=======
-
->>>>>>> 002-frontend-baseline:apps/web/src/components/shared/PageSkeleton.tsx

@@ -68,11 +68,14 @@ export function Sidebar({ onClose }: SidebarProps) {
       titleKey: 'group_inventory',
       items: [
         { key: 'balance', href: '/inventory/balance', resource: 'inventory', labelKey: 'balance', icon: Layers },
+        { key: 'lots', href: '/inventory/lots', resource: 'inventory_lots', labelKey: 'lots', icon: Package },
+        { key: 'movements', href: '/inventory/movements', resource: 'inventory_movements', labelKey: 'movements', icon: History },
         { key: 'grn', href: '/goods-received', resource: 'grn', labelKey: 'grn', icon: Truck },
         { key: 'issue', href: '/issues', resource: 'issue', labelKey: 'issue', icon: ClipboardList },
         { key: 'transfer', href: '/transfers', resource: 'transfer', labelKey: 'transfer', icon: ArrowRightLeft },
         { key: 'stocktake', href: '/stocktake', resource: 'stocktake', labelKey: 'stocktake', icon: ClipboardCheck },
         { key: 'adjustment', href: '/adjustments', resource: 'adjustment', labelKey: 'adjustment', icon: Sliders },
+        { key: 'kitchen_requests', href: '/kitchen-requests', resource: 'kitchen_requests', labelKey: 'kitchen_requests', icon: Store },
       ]
     },
     {
@@ -88,6 +91,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       titleKey: 'group_communications',
       items: [
         { key: 'notifications', href: '/communications/notifications', resource: 'inventory', labelKey: 'notifications', icon: Bell },
+        { key: 'templates', href: '/communications/notifications/templates', resource: 'admin', labelKey: 'templates', icon: FileText },
         { key: 'email_outbox', href: '/communications/email-outbox', resource: 'inventory', labelKey: 'email_outbox', icon: Mail },
       ]
     },
@@ -96,12 +100,16 @@ export function Sidebar({ onClose }: SidebarProps) {
       titleKey: 'group_master_data',
       items: [
         { key: 'items', href: '/master-data/items', resource: 'master_data', labelKey: 'items', icon: Package },
+        { key: 'categories', href: '/master-data/categories', resource: 'master_data_categories', labelKey: 'categories', icon: Layers },
         { key: 'warehouses', href: '/master-data/warehouses', resource: 'master_data', labelKey: 'warehouses', icon: Warehouse },
         { key: 'uom', href: '/master-data/units-of-measure', resource: 'master_data', labelKey: 'uom', icon: Ruler },
+        { key: 'suppliers', href: '/master-data/suppliers', resource: 'master_data_suppliers', labelKey: 'suppliers', icon: Building2 },
+        { key: 'departments', href: '/master-data/departments', resource: 'master_data_departments', labelKey: 'departments', icon: Building2 },
         { key: 'barcodes', href: '/master-data/barcodes', resource: 'master_data', labelKey: 'barcodes', icon: Barcode },
         { key: 'currencies', href: '/master-data/currencies', resource: 'master_data', labelKey: 'currencies', icon: Coins },
         { key: 'fx_rates', href: '/master-data/fx-rates', resource: 'master_data', labelKey: 'fx_rates', icon: TrendingUp },
         { key: 'branches', href: '/master-data/branches', resource: 'master_data', labelKey: 'branches', icon: Building2 },
+        { key: 'import', href: '/master-data/import', resource: 'master_data', labelKey: 'import', icon: Database },
       ]
     },
     {
@@ -117,6 +125,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { key: 'users', href: '/admin/users', resource: 'admin', labelKey: 'users', icon: ShieldCheck },
         { key: 'roles', href: '/admin/roles', resource: 'admin', labelKey: 'roles', icon: Shield },
+        { key: 'settings', href: '/admin/settings', resource: 'admin', labelKey: 'settings', icon: Sliders },
         { key: 'audit', href: '/admin/audit-logs', resource: 'admin', labelKey: 'audit_log', icon: History },
         { key: 'restaurant_profile', href: '/admin/restaurant-profile', resource: 'admin', labelKey: 'restaurant_profile', icon: Store },
       ]

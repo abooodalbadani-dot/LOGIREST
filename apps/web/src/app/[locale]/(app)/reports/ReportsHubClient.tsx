@@ -42,7 +42,7 @@ function ReportCard({ title, description, icon, href }: ReportCardProps) {
  ))}
  </div>
  <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 group-hover:text-operational-cyan transition-colors">
- View Report
+ {t('view_report')}
  </span>
  </div>
  </Link>

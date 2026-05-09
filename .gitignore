@@ -79,11 +79,16 @@ commit_diffs.txt
 # Agent Config
 .agent/mcp_config.json
 
-<<<<<<< HEAD
-=======
+# Temps
+*.tmp
+*.swp
+Thumbs.db
+
+# Logs
+*.log
+
 # Baseline temp files
 .tmp_eslint_output.json
 
->>>>>>> 002-frontend-baseline
 # Claude AI workdir
 .claude/

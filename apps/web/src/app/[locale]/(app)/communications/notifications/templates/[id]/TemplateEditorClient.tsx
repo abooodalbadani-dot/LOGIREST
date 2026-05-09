@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNotificationTemplate } from '@/features/notifications/hooks/useNotificationTemplates';
@@ -16,61 +16,61 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 
 const TemplateUpdateSchema = z.object({
- id: z.string(),
- code: z.string(),
- subject_ar: z.string(),
- subject_en: z.string(),
- body_ar: z.string(),
- body_en: z.string(),
- trigger_event: z.string(),
- is_active: z.boolean(),
+  id: z.string(),
+  code: z.string(),
+  subject_ar: z.string(),
+  subject_en: z.string(),
+  body_ar: z.string(),
+  body_en: z.string(),
+  trigger_event: z.string(),
+  is_active: z.boolean(),
 });
 
 interface Props {
- id: string;
- title: string;
- locale: string;
+  id: string;
+  title: string;
+  locale: string;
 }
 
 export function TemplateEditorClient({ id, title, locale }: Props) {
- const t = useTranslations('notifications');
- const router = useRouter();
- const qc = useQueryClient();
- const { data, isLoading } = useNotificationTemplate(id);
- const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
+  const t = useTranslations('notifications');
+  const router = useRouter();
+  const qc = useQueryClient();
+  const { data, isLoading } = useNotificationTemplate(id);
+  const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
 
- const { register, handleSubmit, reset, control } = useForm({
- defaultValues: {
- subject_ar: '',
- subject_en: '',
- body_ar: '',
- body_en: '',
- },
- });
+  const { register, handleSubmit, reset, control } = useForm({
+    defaultValues: {
+      subject_ar: '',
+      subject_en: '',
+      body_ar: '',
+      body_en: '',
+    },
+  });
 
- const [subjectAr, subjectEn, bodyAr, bodyEn] = useWatch({
- control,
- name: ['subject_ar', 'subject_en', 'body_ar', 'body_en']
- });
+  const [subjectAr, subjectEn, bodyAr, bodyEn] = useWatch({
+    control,
+    name: ['subject_ar', 'subject_en', 'body_ar', 'body_en']
+  });
 
- useEffect(() => {
- if (data) {
- reset({
- subject_ar: data.subject_ar,
- subject_en: data.subject_en,
- body_ar: data.body_ar,
- body_en: data.body_en,
- });
- }
- }, [data, reset]);
+  useEffect(() => {
+    if (data) {
+      reset({
+        subject_ar: data.subject_ar,
+        subject_en: data.subject_en,
+        body_ar: data.body_ar,
+        body_en: data.body_en,
+      });
+    }
+  }, [data, reset]);
 
- const updateMutation = useMutation({
- mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
- onSuccess: () => {
- qc.invalidateQueries({ queryKey: ['notifications/templates'] });
- router.push(`/${locale}/communications/notifications/templates`);
- },
- });
+  const updateMutation = useMutation({
+    mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications/templates'] });
+      router.push('/communications/notifications/templates');
+    },
+  });
 
  const onSubmit = handleSubmit((values) => {
  updateMutation.mutate({ ...data, ...values });
@@ -157,14 +157,14 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
  {updateMutation.isPending ? '...' : t('subject_ar').includes('عربي') ? 'حفظ التغييرات' : 'Save Changes'}
  </Button>
  </PermissionGate>
- <Button
- type="button"
- variant="ghost"
- onClick={() => router.push(`/${locale}/communications/notifications/templates`)}
- className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high h-11 px-6 font-bold uppercase text-label-xs"
- >
- {t('retry') === 'إعادة المحاولة' ? 'إلغاء' : 'Cancel'}
- </Button>
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={() => router.push('/communications/notifications/templates')}
+      className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high h-11 px-6 font-bold uppercase text-label-xs"
+    >
+      {t('retry') === 'إعادة المحاولة' ? 'إلغاء' : 'Cancel'}
+    </Button>
  </div>
 
  <div className="flex items-center gap-3 text-label-xs font-bold uppercase text-muted-foreground/60">

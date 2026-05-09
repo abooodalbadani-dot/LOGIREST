@@ -130,11 +130,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  }
  };
 
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/issues/[id]/scan-mode/page.tsx
- const isPosted = issue?.status === 'POSTED';
-=======
- const isPosted = isIssuePosted(issue?.status);
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/issues/[id]/scan-mode/page.tsx
+  const isPosted = isIssuePosted(issue?.status);
  const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
 
  if (isLoading) return <div className="p-8 text-center">Loading...</div>;

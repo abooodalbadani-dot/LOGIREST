@@ -10,10 +10,7 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/transfers/[id]/TransferViewer.tsx
-=======
 import { TRANSFER_STATUS } from '@/contracts/statuses';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/transfers/[id]/TransferViewer.tsx
 
 interface TransferViewerProps {
   transfer: any;
@@ -25,11 +22,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
   const tCommon = useTranslations('common');
   const router = useRouter();
 
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/transfers/[id]/TransferViewer.tsx
-  const transferStatus = transfer?.transfer_status ?? 'DRAFT';
-=======
   const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/transfers/[id]/TransferViewer.tsx
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch, Controller } from 'react-hook-form';
@@ -91,20 +91,6 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
  }
  }, [data, reset]);
 
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/departments/DepartmentFormClient.tsx
- const onSubmit = handleSubmit(async (values) => {
- try {
- if (id) {
- await update.mutateAsync({ id, values });
- } else {
- await create.mutateAsync(values);
- }
- router.push(`/${locale}/master-data/departments`);
- } catch (error) {
- // Error handled by mutation hook
- }
- });
-=======
   const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
     
@@ -122,7 +108,6 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
       });
     }
   });
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/departments/DepartmentFormClient.tsx
 
   const isSaving = create.isPending || update.isPending;
 
@@ -153,14 +138,6 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
     : createTitle;
 
  return (
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/departments/DepartmentFormClient.tsx
- <MasterDataFormLayout
- title={id ? editTitle : createTitle}
- backHref={`/${locale}/master-data/departments`}
- isSaving={isSaving}
- onSubmit={onSubmit}
- >
-=======
     <MasterDataFormLayout
       title={displayTitle}
       backHref='/master-data/departments'
@@ -171,7 +148,6 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
       isDirty={isDirty}
       isValid={isValid}
     >
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/departments/DepartmentFormClient.tsx
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  {/* Main Content */}
  <div className="lg:col-span-2 space-y-8">

@@ -44,36 +44,39 @@ export function proxy(request: NextRequest) {
   const isPublicPage = publicPaths.includes(normalizedPath);
   const isRoot = normalizedPath === '/';
 
+  // 4. Internal Tooling Guard (Production Block)
+  const internalPaths = ['/debug', '/test-bed'];
+  const isInternalPath = internalPaths.some(p => normalizedPath.startsWith(p));
+  
+  if (isInternalPath && process.env.NODE_ENV === 'production') {
+    return new NextResponse(null, { status: 404 });
+  }
+
   // Debug log (will show in server console)
   console.log(`[Proxy] Path: ${pathname} | Pure: ${normalizedPath} | Locale: ${locale} | Auth: ${!!token} | Public: ${isPublicPage}`);
 
   // Case A: Unauthenticated user accessing private page (including root)
   if (!token && !isPublicPage) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/login`;
+    url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
   // Case B: Authenticated user accessing public page (like login)
   if (token && isPublicPage) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/dashboard`;
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
   // Case C: Authenticated user accessing root -> redirect to dashboard
   if (token && isRoot) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/dashboard`;
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
-  // Case D: Missing locale prefix
-  if (!hasLocalePrefix) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${locale}${normalizedPath === '/' ? '' : normalizedPath}`;
-    return NextResponse.redirect(url);
-  }
+
 
 
   // 4. Final Locale Handling via next-intl

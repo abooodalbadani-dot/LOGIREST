@@ -4,13 +4,8 @@ import * as React from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/issues/new/issue-form.tsx
-import { useRouter } from "@/i18n/navigation";
-import { useState } from "react";
-=======
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { useState, useEffect } from "react";
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/issues/new/issue-form.tsx
 import { useTranslations } from "next-intl";
 import { 
  Plus, 
@@ -59,17 +54,10 @@ type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 const LOCKED_WAREHOUSES = new Set(["wh-locked-01"]);
 
 export function IssueForm() {
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/issues/new/issue-form.tsx
- const t = useTranslations("operations.issue");
- const tc = useTranslations("common");
- const router = useRouter();
- const createIssue = useCreateIssue();
-=======
   const t = useTranslations("operations.issue");
   const tc = useTranslations("common");
   const { router, registerDirty } = useUnsavedChangesGuard();
   const createIssue = useCreateIssue();
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/issues/new/issue-form.tsx
 
  const [allocatorOpen, setAllocatorOpen] = useState(false);
  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
@@ -127,11 +115,7 @@ export function IssueForm() {
  if (!allLinesAllocated) return;
  createIssue.mutate(data, {
  onSuccess: (issue) => {
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/issues/new/issue-form.tsx
- router.push(`/issues/${issue.id}`);
-=======
- router.push(`/issues/${issue.id}`, { skipGuard: true });
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/issues/new/issue-form.tsx
+  router.push(`/issues/${issue.id}`, { skipGuard: true });
  },
  onError: () => console.error("Failed to create issue"),
  });

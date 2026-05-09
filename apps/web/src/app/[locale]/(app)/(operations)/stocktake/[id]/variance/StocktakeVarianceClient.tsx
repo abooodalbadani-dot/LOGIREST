@@ -60,41 +60,6 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
 
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/stocktake/[id]/variance/StocktakeVarianceClient.tsx
- // Status check: Must be VARIANCE_SUBMITTED
- if (!['VARIANCE_SUBMITTED'].includes(session.status)) {
- router.replace(`/stocktake/${id}`);
- return null;
- }
-
-  const handleReasonChange = (lineId: string, value: string) => {
-    setReasons(prev => ({ ...prev, [lineId]: value }))
-  }
-
-  const isReasonValid = (lineId: string, variance: number) => {
-    if (variance === 0) return true
-    const reason = reasons[lineId] || ""
-    return reason.trim().length >= 10
-  }
-
-  const canSubmit = session.items.every(item => {
-    const variance = (item.countedQty || 0) - (item.snapshotQty ?? 0)
-    return isReasonValid(item.id, variance)
-  })
-
-  const handleSubmit = async () => {
-    try {
-      const updates = session.items.map(item => ({
-        lineId: item.id,
-        varianceReason: reasons[item.id] || ""
-      }))
-      await submitVariance.mutateAsync({ id, items: updates })
-      toast.success(t('posted_success_variance'))
-      router.push(`/stocktake/${id}`)
-    } catch {
-      toast.error(common('error'))
-    }
-=======
  const isDirty = React.useMemo(() => {
    return session.items.some(item => {
      const currentReason = reasons[item.id] || "";
@@ -144,7 +109,6 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
         }
       }
     )
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/variance/StocktakeVarianceClient.tsx
   }
 
  return (

@@ -29,7 +29,4 @@ export function useWarehouseLock(warehouseId: string | null) {
  };
 }
 
-<<<<<<< HEAD:src/hooks/useWarehouseLock.ts
-=======
 
->>>>>>> 002-frontend-baseline:apps/web/src/hooks/useWarehouseLock.ts

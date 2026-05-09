@@ -1,0 +1,5 @@
+{
+  "feature_gated_routes": [
+    "/master-data/currencies/:id/fx-rates"
+  ]
+}

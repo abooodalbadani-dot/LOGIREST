@@ -203,11 +203,7 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.setQueryData([...QUERY_KEY, data.id], data);
-<<<<<<< HEAD:src/features/items/hooks/useItems.ts
-      toast.success(t('created_success'));
-=======
       toast.success(t('updated_success'));
->>>>>>> 002-frontend-baseline:apps/web/src/features/items/hooks/useItems.ts
     },
     onError: (error) => {
       if (error.message === 'GUARD_STOCK_EXISTS') {

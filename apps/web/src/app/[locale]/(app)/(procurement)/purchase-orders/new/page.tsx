@@ -8,8 +8,8 @@ export default function NewPurchaseOrderPage() {
  <Breadcrumb 
  items={[
  { label: "Dashboard", href: "/" },
- { label: "Purchasing", href: "/purchasing/po" },
- { label: "Purchase Orders", href: "/purchasing/po" },
+ { label: "Purchasing", href: "/purchase-orders" },
+ { label: "Purchase Orders", href: "/purchase-orders" },
  { label: "New PO" },
  ]} 
  />

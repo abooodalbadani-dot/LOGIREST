@@ -19,8 +19,8 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Initialize audit script file in `apps/web/scripts/audit-routes.py`
-- [ ] T002 [P] Configure Python environment and regex patterns for Next.js routing in `apps/web/scripts/audit-routes.py`
+- [X] T001 Initialize audit script file in `apps/web/scripts/audit-routes.py`
+- [X] T002 [P] Configure Python environment and regex patterns for Next.js routing in `apps/web/scripts/audit-routes.py`
 
 ---
 
@@ -30,9 +30,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Implement filesystem traversal to find all `page.tsx` files in `apps/web/src/app`
-- [ ] T004 Implement route normalization logic (remove route groups, handle locales) in `apps/web/scripts/audit-routes.py`
-- [ ] T005 [P] Implement base Route Map data structure per `specs/003-route-integrity-audit/data-model.md`
+- [X] T003 Implement filesystem traversal to find all `page.tsx` files in `apps/web/src/app`
+- [X] T004 Implement route normalization logic (remove route groups, handle locales) in `apps/web/scripts/audit-routes.py`
+- [X] T005 [P] Implement base Route Map data structure per `specs/003-route-integrity-audit/data-model.md`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -46,10 +46,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Implement regex logic to extract `href` from `Link` and `<a>` tags in `apps/web/src`
-- [ ] T007 [P] [US1] Implement regex logic to extract targets from `router.push` and `router.replace` in `apps/web/src`
-- [ ] T008 [US1] Cross-reference extracted disk routes with found UI references in `apps/web/scripts/audit-routes.py`
-- [ ] T009 [US1] Flag pages with no references as `Orphan` in the Route Map
+- [X] T006 [P] [US1] Implement regex logic to extract `href` from `Link` and `<a>` tags in `apps/web/src`
+- [X] T007 [P] [US1] Implement regex logic to extract targets from `router.push` and `router.replace` in `apps/web/src`
+- [X] T008 [US1] Cross-reference extracted disk routes with found UI references in `apps/web/scripts/audit-routes.py`
+- [X] T009 [US1] Flag pages with no references as `Orphan` in the Route Map
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -63,9 +63,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Implement logic to parse `publicPaths` from `apps/web/src/proxy.ts`
-- [ ] T011 [US2] Assign `Protected` or `Public` status to each route based on `proxy.ts` configuration
-- [ ] T012 [US2] Verify that the middleware `matcher` includes all non-public internal routes
+- [X] T010 [US2] Implement logic to parse `publicPaths` from `apps/web/src/proxy.ts`
+- [X] T011 [US2] Assign `Protected` or `Public` status to each route based on `proxy.ts` configuration
+- [X] T012 [US2] Verify that the middleware `matcher` includes all non-public internal routes
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -79,8 +79,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Implement detection for dynamic path construction (variables/template literals) in `apps/web/scripts/audit-routes.py`
-- [ ] T014 [US3] Map dynamic routes (e.g., `[id]`) to corresponding UI references or flag as `Review` in the Route Map
+- [X] T013 [US3] Implement detection for dynamic path construction (variables/template literals) in `apps/web/scripts/audit-routes.py`
+- [X] T014 [US3] Map dynamic routes (e.g., `[id]`) to corresponding UI references or flag as `Review` in the Route Map
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -90,10 +90,21 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T015 Generate the final `audit-report.md` in `specs/003-route-integrity-audit/`
-- [ ] T016 [P] Update `specs/003-route-integrity-audit/quickstart.md` with final script usage instructions
-- [ ] T017 Conduct a manual review of all routes flagged as `Review` or `Orphan`
-- [ ] T018 Validate the final audit report against success criteria (SC-001 to SC-004)
+- [X] T015 Generate the final `audit-report.md` in `specs/003-route-integrity-audit/`
+- [X] T016 [P] Update `specs/003-route-integrity-audit/quickstart.md` with final script usage instructions
+- [X] T017 Conduct a manual review of all routes flagged as `Review` or `Orphan`
+- [X] T018 Validate the final audit report against success criteria (SC-001 to SC-004)
+
+---
+
+## Phase 7: User Story 4 - Internal Tooling Management (Priority: P2)
+
+**Goal**: Classify and secure internal/debug routes.
+
+- [X] T019 [US4] Update `spec.md` and `plan.md` with Internal Tooling classification rules
+- [X] T020 [US4] Create `apps/web/audit/internal-tooling.json` for exemption list
+- [X] T021 [US4] Update `audit-routes.py` to handle `Internal Tooling` status
+- [X] T022 [US4] Implement production block in `apps/web/src/proxy.ts` for internal paths
 
 ---
 

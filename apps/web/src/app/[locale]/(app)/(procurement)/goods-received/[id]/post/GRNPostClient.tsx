@@ -2,11 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-<<<<<<< HEAD:src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
-import { useRouter } from 'next/navigation';
-=======
 import { useRouter } from '@/i18n/navigation';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -88,27 +84,16 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  if (grn && !isLoadingGRN) {
  // If already posted, redirect
  if (isDocumentLocked('GRN', grn.status as DocumentStatus)) {
-<<<<<<< HEAD:src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
- router.replace(`/${locale}/goods-received/${id}`);
-=======
- router.replace(`/goods-received/${id}`);
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
+      router.replace(`/goods-received/${id}`);
  return;
  }
  
  // Strict enforcement: only documents allowed by the engine can be posted
  if (!canPerformActionV2('GRN', grn.status as DocumentStatus, 'POST', user?.role)) {
-<<<<<<< HEAD:src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
- router.replace(`/${locale}/goods-received/${id}`);
- }
- }
- }, [grn, isLoadingGRN, id, locale, router, canPost]);
-=======
- router.replace(`/goods-received/${id}`);
- }
- }
- }, [grn, isLoadingGRN, id, router, canPost, user]);
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
+      router.replace(`/goods-received/${id}`);
+    }
+  }
+}, [grn, isLoadingGRN, id, router, canPost, user]);
 
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
@@ -130,29 +115,9 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
     return <PageSkeleton />;
   }
 
-<<<<<<< HEAD:src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
- toast.success(t('posted_success'));
- setIsPostDialogOpen(false);
- router.push(`/${locale}/goods-received/${id}`);
- } catch {
- toast.error(tc('error'));
- } finally {
- setIsPosting(false);
- }
- };
-
- if (isLoadingGRN || !grn) {
- return (
- <div className="flex flex-col h-[60vh] items-center justify-center animate-pulse">
- <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
- </div>
- );
- }
-=======
   if (!grn) {
     return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['grn', id] })} />;
   }
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx
 
  if (!canPost) {
  return (

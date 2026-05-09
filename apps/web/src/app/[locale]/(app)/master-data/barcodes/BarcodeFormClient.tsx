@@ -1,14 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/barcodes/BarcodeFormClient.tsx
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-=======
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/barcodes/BarcodeFormClient.tsx
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
@@ -79,28 +74,6 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  }
  }, [barcode, reset]);
 
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/barcodes/BarcodeFormClient.tsx
- const onSubmit = handleSubmit(async (values) => {
- try {
- if (id) {
- await update.mutateAsync({ id, values });
- } else {
- await create.mutateAsync(values);
- }
- router.push(`/${locale}/master-data/barcodes`);
- } catch (error) {
- // Error handled by mutation toast
- }
- });
-
- return (
- <MasterDataFormLayout 
- title={id ? editTitle : createTitle} 
- backHref={`/${locale}/master-data/barcodes`}
- isSaving={create.isPending || update.isPending} 
- onSubmit={onSubmit}
- >
-=======
   const onSubmit = handleSubmit((values) => {
     if (isReadOnly) return;
     
@@ -130,7 +103,6 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
       isDirty={isDirty}
       isValid={isValid}
     >
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/barcodes/BarcodeFormClient.tsx
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-8">
  <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">

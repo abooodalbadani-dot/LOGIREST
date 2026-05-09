@@ -52,9 +52,41 @@ apps/web/
 │   └── components/      # Navigation components
 └── scripts/
     └── audit-routes.py  # Audit Script
+55: ├── audit/               # Audit data
+56: │   ├── external-entry-points.json
+57: │   └── feature-gated-routes.json
 ```
 
 **Structure Decision**: The audit will be performed as a separate utility script within `apps/web/scripts` to avoid polluting the production bundle, generating a report in the feature specification directory.
+
+## Route Classification Rules
+
+### 1. External Entry Points
+Routes used in emails, deep links, or callbacks that are not directly linked in the UI must be manually whitelisted.
+- **Source of Truth**: `apps/web/audit/external-entry-points.json`
+- **Criteria**: Any route not appearing in Sidebar/Link/router.push but used externally.
+
+### 2. Feature-Gated Routes
+Routes that are live in the filesystem but hidden behind feature flags.
+- **Requirement**: Must have `// @feature-flag: <name>` comment at the top of the page file.
+- **Source of Truth**: `apps/web/audit/feature-gated-routes.json`
+- **Status**: Classified as `Planned / Hidden (Feature-Gated)`, not Orphan.
+
+### 3. Internal / Debug Routes
+Routes intended for developer use only.
+- **Source of Truth**: `apps/web/audit/internal-tooling.json`
+- **Requirement**: Must be blocked in `proxy.ts` when `NODE_ENV === 'production'`.
+- **Status**: Classified as `Internal Tooling`.
+
+## Route Classification Matrix (Final)
+
+| Category | Condition | Resulting Status |
+| :--- | :--- | :--- |
+| **Standard** | Found on disk AND referenced in UI | `Active` |
+| **External** | Found on disk AND in `external-entry-points.json` | `External Entry Point` |
+| **Internal** | Found on disk AND in `internal-tooling.json` | `Internal Tooling` |
+| **Feature** | Found on disk AND in `feature-gated-routes.json` | `Feature-Gated` |
+| **Orphan** | Found on disk AND NOT referenced OR whitelisted | `Orphan` |
 
 ## Complexity Tracking
 

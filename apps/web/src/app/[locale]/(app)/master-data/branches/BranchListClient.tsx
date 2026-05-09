@@ -1,14 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-=======
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
 import { Plus, Building2, CheckCircle2, Search, Shield } from 'lucide-react';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
@@ -33,11 +27,7 @@ export function BranchListClient({ locale }: { locale: string }) {
  const [page, setPage] = useState(1);
  const [search, setSearch] = useState('');
 
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
- const { data, isLoading } = useBranches({ search });
-=======
   const { data, isLoading, isError, refetch } = useBranches({ search });
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
 
  const stats = useMemo(() => {
  const branches = data?.data || [];
@@ -47,88 +37,6 @@ export function BranchListClient({ locale }: { locale: string }) {
  };
  }, [data]);
 
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
- const columns = useMemo<ColumnDef<Branch, unknown>[]>(() => [
- {
- accessorKey: 'code',
- header: t('fields.code'),
- cell: ({ row }) => (
- <span dir="ltr" className="font-mono text-label-xs font-semibold text-cyan-500 uppercase px-2 py-0.5 bg-cyan-500/5 rounded-sm">
- {row.original.code}
- </span>
- ),
- },
- {
- accessorKey: 'name',
- header: tc('name'),
- cell: ({ row }) => (
- <div className="flex flex-col gap-0.5">
- <span className="font-bold text-label-sm">{row.original.name_en}</span>
- <span className="text-label-xs text-muted-foreground/60" dir="rtl">{row.original.name_ar}</span>
- </div>
- ),
- },
- {
- accessorKey: 'is_active',
- header: t('fields.is_active'),
- cell: ({ row }) => (
- <StatusBadge 
- status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
- />
- ),
- },
- {
- accessorKey: 'created_at',
- header: tc('created_at'),
- cell: ({ row }) => <span dir="ltr" className="text-label-xs text-muted-foreground/60 font-medium">{format(new Date(row.original.created_at), 'MMM dd, yyyy')}</span>,
- },
- {
- id: 'actions',
- header: '',
- cell: ({ row }) => (
- <div className="flex justify-end">
- <PermissionGate action="view" resource="master_data">
- <Button
- variant="ghost"
- size="sm"
- className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
- onClick={(e) => {
- e.stopPropagation();
- router.push(`/${locale}/master-data/branches/${row.original.id}`);
- }}
- >
- {tc('view')}
- </Button>
- </PermissionGate>
- </div>
- ),
- },
- ], [tc, t, locale, router]);
-
- return (
- <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
- <div className="space-y-4">
- <Breadcrumb items={[
- { label: tc('home'), href: `/${locale}/dashboard` },
- { label: tc('master_data'), href: `/${locale}/master-data` },
- { label: t('title') }
- ]} />
- <PageHeader
- title={t('title')}
- description={t('description')}
- actions={
- <PermissionGate action="create" resource="master_data">
- <Link href={`/${locale}/master-data/branches/new`}>
- <Button className="h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
- <Plus className="w-3.5 h-3.5 me-2" />
- {tc('create')}
- </Button>
- </Link>
- </PermissionGate>
- }
- />
- </div>
-=======
   const columns = useMemo<ColumnDef<Branch, unknown>[]>(() => [
     {
       accessorKey: 'code',
@@ -226,7 +134,6 @@ export function BranchListClient({ locale }: { locale: string }) {
           }
         />
       </div>
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
 
  {/* KPI Section */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -255,40 +162,6 @@ export function BranchListClient({ locale }: { locale: string }) {
  />
  </div>
 
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
- <DataTable
- columns={columns}
- data={data?.data ?? []}
- isLoading={isLoading}
- collectionName="master_data_branches"
- onRowClick={(r: Branch) => router.push(`/${locale}/master-data/branches/${r.id}`)}
- pagination={data?.meta ? {
- page: data.meta.page,
- pageSize: data.meta.page_size,
- total: data.meta.total,
- totalPages: data.meta.total_pages,
- onPageChange: setPage
- } : undefined}
- filters={
- <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30 rounded-sm">
- <div className="flex flex-col gap-2 min-w-[300px] flex-1">
- <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{tc('search')}</label>
- <div className="relative">
- <Input
- placeholder={tc('search')}
- value={search}
- onChange={(e) => { setSearch(e.target.value); setPage(1); }}
- className="w-full bg-surface-container-highest/30 border-none h-12 px-12 text-label-sm font-bold rounded-sm shadow-inner shadow-black/20"
- />
- <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
- </div>
- </div>
- </div>
- }
- />
- </div>
- );
-=======
       <DataTable
         columns={columns}
         data={data?.data ?? []}
@@ -335,7 +208,4 @@ export function BranchListClient({ locale }: { locale: string }) {
           </div>
         }
       />
-    </div>
-  );
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/branches/BranchListClient.tsx
 }

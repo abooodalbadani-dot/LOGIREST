@@ -56,13 +56,8 @@ export function UoMDetailClient({ id, locale }: Props) {
  return (
  <MasterDataDetailLayout
  title={data.name_en}
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/units-of-measure/UoMDetailClient.tsx
- backHref={`/${locale}/master-data/units-of-measure`}
- editHref={`/${locale}/master-data/units-of-measure/${id}/edit`}
-=======
  backHref={`/master-data/units-of-measure`}
  editHref={`/master-data/units-of-measure/${id}/edit`}
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/units-of-measure/UoMDetailClient.tsx
  >
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-8">

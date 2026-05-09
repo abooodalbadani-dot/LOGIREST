@@ -5,7 +5,7 @@ import { EmptyState } from './EmptyState'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, RefreshCcw, ArrowLeft, FileQuestion } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 
 interface ErrorStateProps {

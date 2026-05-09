@@ -16,11 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx
-
-=======
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
 
 interface AdjustmentViewerProps {
@@ -37,11 +33,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   const locale = useLocale();
   const router = useRouter();
 
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx
-  const adjustmentStatus = document?.status ?? 'DRAFT';
-=======
   const adjustmentStatus = document?.status ?? ADJUSTMENT_STATUS.DRAFT;
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx
   
   const timelineEntries = document?.timeline?.map((e: { status: string; at: string; by: string }) => ({
     status: e.status.toLowerCase() as Status,

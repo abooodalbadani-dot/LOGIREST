@@ -133,11 +133,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  {session.session_name}
  </span>
  <div className="flex items-center gap-2 mt-1 text-muted-foreground">
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/stocktake/[id]/approve/StocktakeApproveClient.tsx
- <StatusBadge status="VARIANCE_SUBMITTED" />
-=======
   <StatusBadge status={session.status} configMap={STOCKTAKE_STATUS_UI} />
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/approve/StocktakeApproveClient.tsx
  <span className="text-label-xs font-semibold opacity-20 uppercase leading-none">|</span>
  <span className="text-label-xs uppercase font-semibold opacity-40">{warehouseName}</span>
  </div>
@@ -224,13 +220,8 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </TableHeader>
  <TableBody>
  {session.items.map((item) => {
-<<<<<<< HEAD:src/app/[locale]/(app)/(operations)/stocktake/[id]/approve/StocktakeApproveClient.tsx
- const variance = (item.countedQty || 0) - (item.snapshotQty ?? 0);
- const varianceValue = variance * item.unitCost;
-=======
- const variance = (item.counted_qty || 0) - (item.snapshot_qty ?? 0);
- const varianceValue = variance * item.unit_cost;
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/approve/StocktakeApproveClient.tsx
+  const variance = (item.counted_qty || 0) - (item.snapshot_qty ?? 0);
+  const varianceValue = variance * item.unit_cost;
  
  return (
  <TableRow key={item.id} className="hover:bg-white/[0.01] transition-colors border-none group">

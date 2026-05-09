@@ -18,10 +18,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { isDocumentLocked, canPerformActionV2, DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
-<<<<<<< HEAD:src/app/[locale]/(app)/(procurement)/purchase-requests/PRListClient.tsx
-=======
 import { PR_STATUS } from '@/contracts/statuses';
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/(procurement)/purchase-requests/PRListClient.tsx
 
 export function PRListClient() {
  const locale = useLocale();

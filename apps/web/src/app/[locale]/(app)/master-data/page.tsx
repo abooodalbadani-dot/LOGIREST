@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { PageHeader } from '@/components/shared/PageHeader';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { 
  Building2, 
  Warehouse, 
@@ -33,31 +33,17 @@ export default async function MasterDataHubPage(props: { params: Promise<{ local
  const commonT = await getTranslations('common');
 
  const modules = [
-<<<<<<< HEAD:src/app/[locale]/(app)/master-data/page.tsx
- { name: t('branches.title'), href: `/${locale}/master-data/branches`, icon: Building2, resource: 'branches' },
- { name: t('warehouses.title'), href: `/${locale}/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
- { name: t('departments.title'), href: `/${locale}/master-data/departments`, icon: Users2, resource: 'departments' },
- { name: t('suppliers.title'), href: `/${locale}/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
- { name: t('categories.title'), href: `/${locale}/master-data/categories`, icon: Tags, resource: 'categories' },
- { name: t('items.title'), href: `/${locale}/master-data/items`, icon: Package, resource: 'items' },
- { name: t('uom.title'), href: `/${locale}/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
- { name: t('barcodes.title'), href: `/${locale}/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
- { name: t('currencies.title'), href: `/${locale}/master-data/currencies`, icon: Coins, resource: 'currencies' },
- { name: t('currencies.fx_rates_title'), href: `/${locale}/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
- { name: t('import.title'), href: `/${locale}/master-data/import`, icon: Upload, resource: 'import' },
-=======
- { name: t('branches.title'), href: `/master-data/branches`, icon: Building2, resource: 'branches' },
- { name: t('warehouses.title'), href: `/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
- { name: t('departments.title'), href: `/master-data/departments`, icon: Users2, resource: 'departments' },
- { name: t('suppliers.title'), href: `/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
- { name: t('categories.title'), href: `/master-data/categories`, icon: Tags, resource: 'categories' },
- { name: t('items.title'), href: `/master-data/items`, icon: Package, resource: 'items' },
- { name: t('uom.title'), href: `/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
- { name: t('barcodes.title'), href: `/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
- { name: t('currencies.title'), href: `/master-data/currencies`, icon: Coins, resource: 'currencies' },
- { name: t('currencies.fx_rates_title'), href: `/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
- { name: t('import.title'), href: `/master-data/import`, icon: Upload, resource: 'import' },
->>>>>>> 002-frontend-baseline:apps/web/src/app/[locale]/(app)/master-data/page.tsx
+  { name: t('branches.title'), href: `/master-data/branches`, icon: Building2, resource: 'branches' },
+  { name: t('warehouses.title'), href: `/master-data/warehouses`, icon: Warehouse, resource: 'warehouses' },
+  { name: t('departments.title'), href: `/master-data/departments`, icon: Users2, resource: 'departments' },
+  { name: t('suppliers.title'), href: `/master-data/suppliers`, icon: Truck, resource: 'suppliers' },
+  { name: t('categories.title'), href: `/master-data/categories`, icon: Tags, resource: 'categories' },
+  { name: t('items.title'), href: `/master-data/items`, icon: Package, resource: 'items' },
+  { name: t('uom.title'), href: `/master-data/units-of-measure`, icon: Scale, resource: 'uom' },
+  { name: t('barcodes.title'), href: `/master-data/barcodes`, icon: Barcode, resource: 'barcodes' },
+  { name: t('currencies.title'), href: `/master-data/currencies`, icon: Coins, resource: 'currencies' },
+  { name: t('currencies.fx_rates_title'), href: `/master-data/currencies`, icon: TrendingUp, resource: 'currencies' },
+  { name: t('import.title'), href: `/master-data/import`, icon: Upload, resource: 'import' },
  ];
 
  return (
