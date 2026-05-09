@@ -1,0 +1,14 @@
+apps/web/src/app/[locale]/(app)/(procurement)/goods-received/[id]/post/GRNPostClient.tsx(50,11): error TS2339: Property 'guardedRouter' does not exist on type '{ isDirty: boolean; setDirty: (dirty: boolean) => void; registerDirty: (dirty: boolean) => void; router: { push: (href: string, options?: GuardedRouterOptions | undefined) => void; ... 5 more ...; experimental_gesturePush?(href: string, options?: NavigateOptions | undefined): void; }; }'.
+apps/web/src/app/[locale]/(app)/(procurement)/purchase-orders/[id]/approve/page.tsx(25,27): error TS2322: Type '{ id: string; locale: "ar" | "en"; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'locale' does not exist on type 'IntrinsicAttributes & Props'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(119,24): error TS2304: Cannot find name 'router'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(174,109): error TS2304: Cannot find name 'tv'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(194,112): error TS2304: Cannot find name 'tv'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(202,112): error TS2304: Cannot find name 'tv'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(207,112): error TS2304: Cannot find name 'tv'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(248,116): error TS2304: Cannot find name 'tv'.
+apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx(272,119): error TS2304: Cannot find name 'tv'.
+apps/web/src/app/[locale]/page.tsx(10,13): error TS2345: Argument of type 'string' is not assignable to parameter of type '{ href: string | { pathname: string; query?: QueryParams | undefined; }; locale: string; forcePrefix?: boolean | undefined; }'.
+apps/web/src/app/[locale]/page.tsx(13,13): error TS2345: Argument of type 'string' is not assignable to parameter of type '{ href: string | { pathname: string; query?: QueryParams | undefined; }; locale: string; forcePrefix?: boolean | undefined; }'.
+apps/web/src/features/master-data/components/MasterDataFormLayout.tsx(83,13): error TS2322: Type '(() => void) | undefined' is not assignable to type '() => void'.
+  Type 'undefined' is not assignable to type '() => void'.
