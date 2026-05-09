@@ -24,7 +24,7 @@ description: "Task list for 002-frontend-baseline implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create `scripts/baseline` directory
+- [x] T001 Create `scripts/baseline` directory
 
 ---
 
@@ -34,8 +34,8 @@ description: "Task list for 002-frontend-baseline implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Scaffold `scripts/baseline/generate.sh` with `git status` check and cache clearing
-- [ ] T003 Scaffold `scripts/baseline/enforce-ci.js` skeleton
+- [x] T002 Scaffold `scripts/baseline/generate.sh` with `git status` check and cache clearing
+- [x] T003 Scaffold `scripts/baseline/enforce-ci.js` skeleton
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -49,7 +49,7 @@ description: "Task list for 002-frontend-baseline implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Create git branch `recovery/frontend-stabilization`
+- [x] T004 [US1] Create git branch `recovery/frontend-stabilization`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -63,9 +63,9 @@ description: "Task list for 002-frontend-baseline implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T005 [P] [US2] Add TypeScript `tsc --noEmit` logic to `scripts/baseline/generate.sh` to output to `apps/web/baseline_ts_errors.log`
-- [ ] T006 [P] [US2] Implement TypeScript parsing and count comparison in `scripts/baseline/enforce-ci.js`
-- [ ] T007 [US2] Update `.github/workflows/frontend-ci.yml` (or equivalent CI file) to execute `node scripts/baseline/enforce-ci.js` for TS
+- [x] T005 [P] [US2] Add TypeScript `tsc --noEmit` logic to `scripts/baseline/generate.sh` to output to `apps/web/baseline_ts_errors.log`
+- [x] T006 [P] [US2] Implement TypeScript parsing and count comparison in `scripts/baseline/enforce-ci.js`
+- [x] T007 [US2] Update `.github/workflows/frontend-ci.yml` (or equivalent CI file) to execute `node scripts/baseline/enforce-ci.js` for TS
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -79,9 +79,9 @@ description: "Task list for 002-frontend-baseline implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T008 [P] [US3] Add `eslint --format json` logic to `scripts/baseline/generate.sh` to output to `apps/web/baseline_eslint.json`
-- [ ] T009 [P] [US3] Implement ESLint JSON parsing and count comparison in `scripts/baseline/enforce-ci.js`
-- [ ] T010 [US3] Update `.github/workflows/frontend-ci.yml` to ensure ESLint enforcement is active in the pipeline
+- [x] T008 [P] [US3] Add `eslint --format json` logic to `scripts/baseline/generate.sh` to output to `apps/web/baseline_eslint.json`
+- [x] T009 [P] [US3] Implement ESLint JSON parsing and count comparison in `scripts/baseline/enforce-ci.js`
+- [x] T010 [US3] Update `.github/workflows/frontend-ci.yml` to ensure ESLint enforcement is active in the pipeline
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -91,8 +91,8 @@ description: "Task list for 002-frontend-baseline implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T011 [P] Make `scripts/baseline/generate.sh` executable (`chmod +x`)
-- [ ] T012 Run `quickstart.md` validation by generating the baselines locally
+- [x] T011 [P] Make `scripts/baseline/generate.sh` executable (`chmod +x`)
+- [x] T012 Run `quickstart.md` validation by generating the baselines locally
 - [ ] T013 Commit the generated `apps/web/baseline_ts_errors.log` and `apps/web/baseline_eslint.json` to the repo
 
 ---

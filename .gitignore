@@ -79,5 +79,8 @@ commit_diffs.txt
 # Agent Config
 .agent/mcp_config.json
 
+# Baseline temp files
+.tmp_eslint_output.json
+
 # Claude AI workdir
 .claude/
