@@ -93,7 +93,7 @@ description: "Task list for 002-frontend-baseline implementation"
 
 - [x] T011 [P] Make `scripts/baseline/generate.sh` executable (`chmod +x`)
 - [x] T012 Run `quickstart.md` validation by generating the baselines locally
-- [ ] T013 Commit the generated `apps/web/baseline_ts_errors.log` and `apps/web/baseline_eslint.json` to the repo
+- [x] T013 Commit the generated `apps/web/baseline_ts_errors.log` and `apps/web/baseline_eslint.json` to the repo
 
 ---
 
