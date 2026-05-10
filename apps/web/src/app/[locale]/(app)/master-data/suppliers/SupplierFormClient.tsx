@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Truck, CreditCard, ShieldCheck, Hash, Globe2, Coins, ScrollText } from 'lucide-react';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,13 +45,14 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
   const { data, isLoading, isError, refetch } = useSupplier(id);
   const { data: currencies, isLoading: isCurrenciesLoading } = useCurrencies();
   const create = useCreateSupplier();
-  const update = useUpdateSupplier();
+  const conflict = useConflictHandler('supplier', id ?? '');
+  const update = useUpdateSupplier({ onConflict: conflict.triggerConflict });
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<SupplierFormValues>({
       resolver: zodResolver(SupplierFormSchema),
       disabled: isReadOnly,
-      defaultValues: { code: '', name_ar: '', name_en: '', currency_id: '', payment_terms: '', is_active: true },
+      defaultValues: { code: '', name_ar: '', name_en: '', currency_id: '', payment_terms: '', is_active: true, version: undefined },
     });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
@@ -65,25 +68,23 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
         currency_id: data.currency_id,
         payment_terms: data.payment_terms || '',
         is_active: data.is_active,
+        version: data.version,
       });
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/suppliers', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/suppliers', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
@@ -96,10 +97,12 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
   if (isCurrenciesLoading && !id) return <PageSkeleton variant="detail" />;
 
   return (
+    <>
     <MasterDataFormLayout
       title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
       backHref='/master-data/suppliers'
       isSaving={isSaving}
+      saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/suppliers')}
       hideSave={isReadOnly}
@@ -251,5 +254,12 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
         </div>
       </div>
     </MasterDataFormLayout>
+
+      <ConflictDialog
+        open={conflict.open}
+        onReload={conflict.handleReload}
+        onClose={conflict.handleClose}
+      />
+    </>
   );
 }

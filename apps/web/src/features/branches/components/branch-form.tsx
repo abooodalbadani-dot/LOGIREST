@@ -94,8 +94,8 @@ export function BranchForm() {
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-low border-none backdrop-blur-md">
- <SelectItem value="ACTIVE">{t('status.active')}</SelectItem>
- <SelectItem value="INACTIVE">{t('status.inactive')}</SelectItem>
+          <SelectItem value="ACTIVE">{t('statuses.active')}</SelectItem>
+          <SelectItem value="INACTIVE">{t('statuses.inactive')}</SelectItem>
  </SelectContent>
  </Select>
  <FormMessage className="text-label-xs font-medium" />

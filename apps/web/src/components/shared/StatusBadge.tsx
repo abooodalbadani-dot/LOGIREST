@@ -48,7 +48,7 @@ export interface StatusBadgeProps
 }
 
 export function StatusBadge({ className, variant, status, configMap, children, ...props }: StatusBadgeProps) {
-  const t = useTranslations('common.status');
+  const t = useTranslations('common.statuses');
   
   const config = React.useMemo(() => {
     if (!status) return null;

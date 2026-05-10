@@ -91,7 +91,8 @@ export function MasterDataFormLayout({
             onSubmit={onSubmit}
             isSaving={isSaving}
             isDirty={isDirty}
-            isValid={isValid && !saveDisabled}
+            isValid={isValid}
+            canSubmit={!saveDisabled}
           />
         </PermissionGate>
       )}

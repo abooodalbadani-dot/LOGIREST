@@ -85,21 +85,18 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/items', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/items', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/items', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
@@ -138,7 +135,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)} 
         backHref='/master-data/items' 
         onCancel={() => guardedRouter.push('/master-data/items')}
-        isSaving={isSaving} 
+        isSaving={isSaving} saveDisabled={conflict.saveDisabled} 
         onSubmit={onSubmit}
         hideSave={isReadOnly}
         resource="master_data"

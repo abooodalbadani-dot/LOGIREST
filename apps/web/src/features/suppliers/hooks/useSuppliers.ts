@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Supplier, type SupplierFormValues } from '@/types/master-data';
@@ -118,48 +119,57 @@ export function useCreateSupplier() {
  });
 }
 
-export function useUpdateSupplier() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.suppliers');
+export function useUpdateSupplier(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.suppliers');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: SupplierFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    meta: { suppressGlobalConflict: true },
+    mutationFn: async ({ id, values }: { id: string; values: SupplierFormValues }) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
 
- const data = queryClient.getQueryData<Supplier[]>(QUERY_KEY) || INITIAL_SUPPLIERS;
- const supplier = data.find(s => s.id === id);
- if (!supplier) throw new Error('Supplier not found');
+      const data = queryClient.getQueryData<Supplier[]>(QUERY_KEY) || INITIAL_SUPPLIERS;
+      const supplier = data.find(s => s.id === id);
+      if (!supplier) throw new Error('Supplier not found');
 
- // OPERATIONAL GUARD: Prevent deactivation if linked to active POs
- // MOCK: SUP-001 has active POs
- if (id === 'SUP-001' && values.is_active === false && supplier.is_active === true) {
- throw new Error('GUARD_ACTIVE_POS');
- }
+      if (values.version !== undefined && values.version < (supplier.version ?? 0)) {
+        const error = new Error('CONFLICT') as any;
+        error.response = { status: 409 };
+        throw error;
+      }
 
- const updatedSupplier = { 
- ...supplier, 
- ...values, 
- code: values.code.toUpperCase() 
- };
+      // OPERATIONAL GUARD: Prevent deactivation if linked to active POs
+      // MOCK: SUP-001 has active POs
+      if (id === 'SUP-001' && values.is_active === false && supplier.is_active === true) {
+        throw new Error('GUARD_ACTIVE_POS');
+      }
 
- queryClient.setQueryData<Supplier[]>(QUERY_KEY, (old = INITIAL_SUPPLIERS) => 
- old.map(s => s.id === id ? updatedSupplier : s)
- );
+      const updatedSupplier = { 
+        ...supplier, 
+        ...values, 
+        code: values.code.toUpperCase(),
+        version: (supplier.version ?? 0) + 1
+      };
 
- return updatedSupplier;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- if (error.message === 'GUARD_ACTIVE_POS') {
- toast.error(t('errors.deactivate_linked_pos'));
- } else {
- toast.error(t('errors.update_failed'));
- }
- }
- });
+      queryClient.setQueryData<Supplier[]>(QUERY_KEY, (old = INITIAL_SUPPLIERS) => 
+        old.map(s => s.id === id ? updatedSupplier : s)
+      );
+
+      return updatedSupplier;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'GUARD_ACTIVE_POS') {
+        toast.error(t('errors.deactivate_linked_pos'));
+      } else {
+        toast.error(t('errors.update_failed'));
+      }
+    }
+  });
 }
 

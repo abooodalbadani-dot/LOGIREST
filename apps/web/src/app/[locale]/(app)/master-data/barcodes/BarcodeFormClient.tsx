@@ -24,6 +24,8 @@ import { useUoMs } from '@/features/uoms/hooks/useUoMs';
 import { BarcodeFormSchema, type BarcodeFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Cpu, Link as LinkIcon, Hash, Barcode as BarcodeIcon, Settings2 } from 'lucide-react';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 interface Props { 
   id: string | null; 
@@ -43,7 +45,8 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const { data: uoms } = useUoMs();
   
   const create = useCreateBarcode();
-  const update = useUpdateBarcode();
+  const conflict = useConflictHandler('barcode', id ?? '');
+  const update = useUpdateBarcode({ onConflict: conflict.triggerConflict });
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<BarcodeFormValues>({
@@ -53,7 +56,8 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
         uom_id: '', 
         code: '', 
         default_qty: 1,
-        is_active: true
+        is_active: true,
+        version: undefined
       },
       disabled: isReadOnly,
     });
@@ -69,31 +73,30 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  uom_id: barcode.uom_id,
  code: barcode.code, 
  default_qty: barcode.default_qty,
- is_active: barcode.is_active
+ is_active: barcode.is_active,
+ version: barcode.version
  });
  }
  }, [barcode, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/barcodes', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/barcodes', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/barcodes', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
- return (
-    <MasterDataFormLayout 
+  return (
+    <>
+    <MasterDataFormLayout
       title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)} 
       backHref='/master-data/barcodes'
       isSaving={create.isPending || update.isPending} 
@@ -295,7 +298,9 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </div>
  </div>
  </div>
- </MasterDataFormLayout>
- );
+  </MasterDataFormLayout>
+      <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+    </>
+  );
 }
 

@@ -7,6 +7,8 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Briefcase, ShieldCheck, Landmark, Activity, Warehouse } from 'lucide-react';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,7 +56,8 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
       name_en: '',
       is_active: true,
       manager: '',
-      cost_center: ''
+      cost_center: '',
+      version: undefined
     },
     disabled: isReadOnly,
   });
@@ -66,7 +69,8 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
   const warehouses = warehousesQuery?.data || [];
  
   const create = useCreateDepartment();
-  const update = useUpdateDepartment();
+  const conflict = useConflictHandler('department', id ?? '');
+  const update = useUpdateDepartment({ onConflict: conflict.triggerConflict });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
@@ -78,34 +82,32 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
 
  useEffect(() => {
  if (data) {
- reset({
- branch_id: data.branch_id,
- warehouse_id: data.warehouse_id,
- code: data.code,
- name_ar: data.name_ar,
- name_en: data.name_en,
- is_active: data.is_active,
- manager: data.manager || '',
- cost_center: data.cost_center || ''
- });
+reset({
+  branch_id: data.branch_id,
+  warehouse_id: data.warehouse_id,
+  code: data.code,
+  name_ar: data.name_ar,
+  name_en: data.name_en,
+  is_active: data.is_active,
+  manager: data.manager || '',
+  cost_center: data.cost_center || '',
+  version: data.version
+});
  }
  }, [data, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/departments', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/departments', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/departments', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
@@ -138,10 +140,11 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
     : createTitle;
 
  return (
+    <>
     <MasterDataFormLayout
       title={displayTitle}
       backHref='/master-data/departments'
-      isSaving={isSaving}
+      isSaving={isSaving} saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/departments')}
       hideSave={isReadOnly}
@@ -344,6 +347,13 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
  </Card>
  </div>
  </div>
- </MasterDataFormLayout>
- );
+</MasterDataFormLayout>
+
+      <ConflictDialog
+        open={conflict.open}
+        onReload={conflict.handleReload}
+        onClose={conflict.handleClose}
+      />
+    </>
+  );
 }

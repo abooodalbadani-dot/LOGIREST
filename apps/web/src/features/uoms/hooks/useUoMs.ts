@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type UoM, type UoMFormValues } from '@/types/master-data';
@@ -96,47 +97,56 @@ export function useCreateUoM() {
  });
 }
 
-export function useUpdateUoM() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.uoms');
+export function useUpdateUoM(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.uoms');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: UoMFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 600));
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    meta: { suppressGlobalConflict: true },
+    mutationFn: async ({ id, values }: { id: string; values: UoMFormValues }) => {
+      await new Promise(resolve => setTimeout(resolve, 600));
 
- const data = queryClient.getQueryData<UoM[]>(QUERY_KEY) || INITIAL_UOMS;
- const uom = data.find(u => u.id === id);
- if (!uom) throw new Error('UoM not found');
+      const data = queryClient.getQueryData<UoM[]>(QUERY_KEY) || INITIAL_UOMS;
+      const uom = data.find(u => u.id === id);
+      if (!uom) throw new Error('UoM not found');
 
- // OPERATIONAL GUARD: Prevent deactivation if linked to items
- // MOCK: UOM-001 is linked to items
- if (id === 'UOM-001' && values.is_active === false && uom.is_active === true) {
- throw new Error('GUARD_LINKED_ITEMS');
- }
+      if (values.version !== undefined && values.version < (uom.version ?? 0)) {
+        const error = new Error('CONFLICT') as any;
+        error.response = { status: 409 };
+        throw error;
+      }
 
- const updatedUoM = { 
- ...uom, 
- ...values,
- code: values.code.toUpperCase()
- };
+      // OPERATIONAL GUARD: Prevent deactivation if linked to items
+      // MOCK: UOM-001 is linked to items
+      if (id === 'UOM-001' && values.is_active === false && uom.is_active === true) {
+        throw new Error('GUARD_LINKED_ITEMS');
+      }
 
- queryClient.setQueryData<UoM[]>(QUERY_KEY, (old = INITIAL_UOMS) => 
- old.map(u => u.id === id ? updatedUoM : u)
- );
+      const updatedUoM = { 
+        ...uom, 
+        ...values,
+        code: values.code.toUpperCase(),
+        version: (uom.version ?? 0) + 1
+      };
 
- return updatedUoM;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- if (error.message === 'GUARD_LINKED_ITEMS') {
- toast.error(t('errors.cannot_deactivate_uom_in_use'));
- } else {
- toast.error(t('errors.update_failed'));
- }
- }
- });
+      queryClient.setQueryData<UoM[]>(QUERY_KEY, (old = INITIAL_UOMS) => 
+        old.map(u => u.id === id ? updatedUoM : u)
+      );
+
+      return updatedUoM;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'GUARD_LINKED_ITEMS') {
+        toast.error(t('errors.cannot_deactivate_uom_in_use'));
+      } else {
+        toast.error(t('errors.update_failed'));
+      }
+    }
+  });
 }

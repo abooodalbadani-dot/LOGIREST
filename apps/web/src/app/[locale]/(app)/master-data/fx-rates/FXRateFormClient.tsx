@@ -19,6 +19,8 @@ import { ArrowRightLeft, Calendar, TrendingUp, History, Info, ShieldCheck, Activ
 import { cn } from '@/lib/utils';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 interface Props { 
   id: string | null; 
@@ -44,7 +46,8 @@ export function FXRateFormClient({
   const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError, refetch: refetchCurrencies } = useCurrencies();
   
   const create = useCreateFXRate();
-  const update = useUpdateFXRate();
+  const conflict = useConflictHandler('fx-rate', id ?? '');
+  const update = useUpdateFXRate({ onConflict: conflict.triggerConflict });
 
   const { register, handleSubmit, reset, control, formState: { errors, isDirty, isValid } } =
     useForm<FXRateFormValues>({
@@ -55,7 +58,8 @@ export function FXRateFormClient({
         to_currency_id: '',
         rate: 1,
         effective_date: new Date().toISOString().split('T')[0],
-        is_active: true
+        is_active: true,
+        version: undefined
       },
     });
     
@@ -68,7 +72,8 @@ export function FXRateFormClient({
         to_currency_id: fxRate.to_currency_id,
         rate: fxRate.rate,
         effective_date: fxRate.effective_date.split('T')[0],
-        is_active: fxRate.is_active
+        is_active: fxRate.is_active,
+        version: fxRate.version
       });
     }
   }, [fxRate, reset]);
@@ -98,21 +103,18 @@ export function FXRateFormClient({
     );
   }
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnlyProp) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
@@ -120,6 +122,7 @@ export function FXRateFormClient({
   const displayTitle = isReadOnlyProp ? viewTitle : (id ? editTitle : createTitle);
 
   return (
+    <>
     <MasterDataFormLayout 
       title={displayTitle} 
       backHref='/master-data/fx-rates'
@@ -331,6 +334,8 @@ export function FXRateFormClient({
         </div>
       </div>
     </MasterDataFormLayout>
+      <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+    </>
   );
 }
 

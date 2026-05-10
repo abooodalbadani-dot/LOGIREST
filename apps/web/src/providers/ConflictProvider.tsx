@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { conflictBus, ConflictEventPayload } from '@/lib/api/conflict-bus';
-import { ConflictDialog } from '@/components/shared/ConflictDialog';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useUnsavedChanges } from '@/lib/unsaved-changes/UnsavedChangesProvider';
 
 export function ConflictProvider({ children }: { children: React.ReactNode }) {

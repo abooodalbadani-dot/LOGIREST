@@ -21,6 +21,8 @@ import {
  useUpdateBranch,
 } from '@/features/branches/hooks/useBranches';
 import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 interface Props {
   id: string | null;
@@ -45,7 +47,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   } = useForm<BranchFormValues>({
     resolver: zodResolver(BranchFormSchema),
     disabled: isReadOnly,
-    defaultValues: { code: '', name_ar: '', name_en: '', is_active: true },
+    defaultValues: { code: '', name_ar: '', name_en: '', is_active: true, version: undefined },
   });
 
   const { 
@@ -56,7 +58,8 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     fetchStatus 
   } = useBranch(id);
   const create = useCreateBranch();
-  const update = useUpdateBranch();
+  const conflict = useConflictHandler('branch', id ?? '');
+  const update = useUpdateBranch({ onConflict: conflict.triggerConflict });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
@@ -64,25 +67,22 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
 
   useEffect(() => {
     if (data) {
-      reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en, is_active: data.is_active });
+      reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en, is_active: data.is_active, version: data.version });
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/branches', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/branches', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/branches', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
@@ -136,10 +136,11 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     : createTitle;
 
   return (
+    <>
     <MasterDataFormLayout
       title={displayTitle}
       backHref='/master-data/branches'
-      isSaving={isSaving}
+      isSaving={isSaving} saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/branches')}
       hideSave={isReadOnly}
@@ -217,7 +218,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('status')}</h3>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('status_label')}</h3>
                   <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('operational_status')}</p>
                 </div>
               </div>
@@ -225,7 +226,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
                   <Label htmlFor="branch-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
-                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
+                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('statuses.active') : t('statuses.inactive')}</p>
                 </div>
                 <Switch
                   id="branch-is-active"
@@ -240,5 +241,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
         </div>
       </div>
     </MasterDataFormLayout>
+      <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+    </>
   );
 }

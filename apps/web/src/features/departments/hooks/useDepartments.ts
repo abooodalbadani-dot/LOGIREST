@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Department, type DepartmentFormValues } from '@/types/master-data';
@@ -114,46 +115,55 @@ export function useCreateDepartment() {
  });
 }
 
-export function useUpdateDepartment() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.departments');
+export function useUpdateDepartment(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.departments');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: DepartmentFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- 
- const data = queryClient.getQueryData<Department[]>(QUERY_KEY) || INITIAL_DEPARTMENTS;
- const department = data.find(d => d.id === id);
- if (!department) throw new Error('Department not found');
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    meta: { suppressGlobalConflict: true },
+    mutationFn: async ({ id, values }: { id: string; values: DepartmentFormValues }) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+    
+      const data = queryClient.getQueryData<Department[]>(QUERY_KEY) || INITIAL_DEPARTMENTS;
+      const department = data.find(d => d.id === id);
+      if (!department) throw new Error('Department not found');
 
- // GUARD: Before deactivation - check for linked operations
- if (values.is_active === false && department.is_active === true) {
- // Mock check for linked kitchen requests or stocktake sessions
- // Mocking D-001 as linked
- if (id === 'D-001') {
- throw new Error('cannot_deactivate_department_in_use');
- }
- }
+      if (values.version !== undefined && values.version < (department.version ?? 0)) {
+        const error = new Error('CONFLICT') as any;
+        error.response = { status: 409 };
+        throw error;
+      }
 
- const updatedDepartment = { 
- ...department, 
- ...values, 
- code: values.code.toUpperCase() 
- };
+      // GUARD: Before deactivation - check for linked operations
+      if (values.is_active === false && department.is_active === true) {
+        // Mock check for linked kitchen requests or stocktake sessions
+        // Mocking D-001 as linked
+        if (id === 'D-001') {
+          throw new Error('cannot_deactivate_department_in_use');
+        }
+      }
 
- queryClient.setQueryData<Department[]>(QUERY_KEY, (old = INITIAL_DEPARTMENTS) => 
- old.map(d => d.id === id ? updatedDepartment : d)
- );
+      const updatedDepartment = { 
+        ...department, 
+        ...values, 
+        code: values.code.toUpperCase(),
+        version: (department.version ?? 0) + 1
+      };
 
- return updatedDepartment;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
- }
- });
+      queryClient.setQueryData<Department[]>(QUERY_KEY, (old = INITIAL_DEPARTMENTS) => 
+        old.map(d => d.id === id ? updatedDepartment : d)
+      );
+
+      return updatedDepartment;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: Error) => {
+      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    }
+  });
 }

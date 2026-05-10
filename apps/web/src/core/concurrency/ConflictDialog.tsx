@@ -12,17 +12,36 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+import { ConflictError } from '@/lib/api/ConflictError';
 
-interface ConflictDialogProps {
+export interface ConflictDialogProps {
   open: boolean;
+  error: ConflictError | null;
+  onRetry: () => Promise<void>;
   onReload: () => void;
   onClose: () => void;
+  isRetrying?: boolean;
+  retryCount?: number;
 }
 
 /**
  * ConflictDialog - UI for handling optimistic locking conflicts.
+ *
+ * "Stay & Disable" behavior (FR-007):
+ * - Closing the dialog without reloading marks the form as "save disabled".
+ * - The parent component uses `useConflictHandler().saveDisabled` to keep
+ *   the Save button disabled until the user chooses "Reload".
+ * - Reloading re-fetches fresh data and clears the save-disabled flag.
  */
-export function ConflictDialog({ open, onReload, onClose }: ConflictDialogProps) {
+export function ConflictDialog({ 
+  open, 
+  error,
+  onRetry,
+  onReload, 
+  onClose, 
+  isRetrying,
+  retryCount = 0 
+}: ConflictDialogProps) {
   const tc = useTranslations('common');
 
   return (
@@ -37,21 +56,47 @@ export function ConflictDialog({ open, onReload, onClose }: ConflictDialogProps)
               {tc('conflict.title')}
             </DialogTitle>
             <DialogDescription className="text-body-md text-muted-foreground">
-              {tc('conflict.description')}
+              {tc('conflict.description')} {
+                error?.updatedBy && (
+                  <span className="block mt-2 font-medium text-foreground">
+                    {tc('conflict.updated_by')}: {error.updatedBy}
+                  </span>
+                )
+              }
             </DialogDescription>
           </div>
+          <p className="text-label-xs text-muted-foreground/60 text-center italic">
+            {retryCount >= 1 
+              ? tc('conflict.force_reload_hint')
+              : tc('conflict.retry_hint')
+            }
+          </p>
         </DialogHeader>
         <DialogFooter className="mt-8 flex flex-col sm:flex-row gap-3">
           <Button
             variant="outline"
             onClick={onClose}
+            disabled={isRetrying}
             className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs border-surface-variant/20 hover:bg-surface-container-high transition-all"
           >
             <X className="w-4 h-4 me-2" />
-            {tc('cancel')}
+            {tc('conflict.stay')}
           </Button>
+          
+          {retryCount < 1 && (
+            <Button
+              onClick={onRetry}
+              disabled={isRetrying}
+              className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80 transition-all active:scale-95"
+            >
+              <RefreshCcw className={`w-4 h-4 me-2 ${isRetrying ? 'animate-spin' : ''}`} />
+              {tc('conflict.retry')}
+            </Button>
+          )}
+
           <Button
             onClick={onReload}
+            disabled={isRetrying}
             className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs bg-status-warning hover:bg-status-warning/90 text-white shadow-lg shadow-status-warning/20 transition-all active:scale-95"
           >
             <RefreshCcw className="w-4 h-4 me-2" />

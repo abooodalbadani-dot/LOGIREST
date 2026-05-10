@@ -208,4 +208,6 @@ export function BranchListClient({ locale }: { locale: string }) {
           </div>
         }
       />
+    </div>
+  );
 }

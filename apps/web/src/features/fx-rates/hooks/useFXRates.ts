@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type FXRate, type FXRateFormValues, type Currency } from '@/types/master-data';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 
 const QUERY_KEY = ['fx_rates'];
 const CURRENCIES_QUERY_KEY = ['currencies'];
@@ -129,69 +130,76 @@ export function useCreateFXRate() {
 }
 
 
-export function useUpdateFXRate() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.fx_rates');
+export function useUpdateFXRate(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.fx_rates');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: FXRateFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- 
- const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
- const rate = data.find(f => f.id === id);
- if (!rate) throw new Error('Rate not found');
+  return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: async ({ id, values }: { id: string; values: FXRateFormValues }) => {
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
+  const rate = data.find(f => f.id === id);
+  if (!rate) throw new Error('Rate not found');
 
- // DEACTIVATION / EDIT GUARD: Check GRN cache (Simulated usage)
- // Rule: If rate used in POSTED document, block deactivation or key field changes
- const isUsedInPostedDoc = id === 'FX-001'; // Mocking FX-001 as used in a posted GRN
+  if (values.version !== undefined && values.version < (rate.version ?? 0)) {
+  const error = new Error('CONFLICT') as any;
+  error.response = { status: 409 };
+  throw error;
+  }
 
- if (isUsedInPostedDoc) {
- if (values.is_active === false && rate.is_active === true) {
- throw new Error('cannot_deactivate_rate_in_use');
- }
- 
- // If key fields changed while used in posted doc
- if (
- values.from_currency_id !== rate.from_currency_id || 
- values.to_currency_id !== rate.to_currency_id || 
- normalizeDate(values.effective_date) !== normalizeDate(rate.effective_date) ||
- values.rate !== rate.rate
- ) {
- throw new Error('cannot_edit_rate_in_use');
- }
- }
+  // DEACTIVATION / EDIT GUARD: Check GRN cache (Simulated usage)
+  // Rule: If rate used in POSTED document, block deactivation or key field changes
+  const isUsedInPostedDoc = id === 'FX-001'; // Mocking FX-001 as used in a posted GRN
 
- // UNIQUE CONSTRAINT if key fields changed and not used in posted doc
- if (
- values.from_currency_id !== rate.from_currency_id || 
- values.to_currency_id !== rate.to_currency_id || 
- normalizeDate(values.effective_date) !== normalizeDate(rate.effective_date)
- ) {
- const exists = data.some(f => 
- f.id !== id &&
- f.from_currency_id === values.from_currency_id && 
- f.to_currency_id === values.to_currency_id && 
- normalizeDate(f.effective_date) === normalizeDate(values.effective_date)
- );
- if (exists) throw new Error('cannot_duplicate_rate');
- }
+  if (isUsedInPostedDoc) {
+  if (values.is_active === false && rate.is_active === true) {
+  throw new Error('cannot_deactivate_rate_in_use');
+  }
+  
+  // If key fields changed while used in posted doc
+  if (
+  values.from_currency_id !== rate.from_currency_id || 
+  values.to_currency_id !== rate.to_currency_id || 
+  normalizeDate(values.effective_date) !== normalizeDate(rate.effective_date) ||
+  values.rate !== rate.rate
+  ) {
+  throw new Error('cannot_edit_rate_in_use');
+  }
+  }
 
- const updatedRate: FXRate = { ...rate, ...values };
+  // UNIQUE CONSTRAINT if key fields changed and not used in posted doc
+  if (
+  values.from_currency_id !== rate.from_currency_id || 
+  values.to_currency_id !== rate.to_currency_id || 
+  normalizeDate(values.effective_date) !== normalizeDate(rate.effective_date)
+  ) {
+  const exists = data.some(f => 
+  f.id !== id &&
+  f.from_currency_id === values.from_currency_id && 
+  f.to_currency_id === values.to_currency_id && 
+  normalizeDate(f.effective_date) === normalizeDate(values.effective_date)
+  );
+  if (exists) throw new Error('cannot_duplicate_rate');
+  }
 
- queryClient.setQueryData<FXRate[]>(QUERY_KEY, (old = INITIAL_FX_RATES) => 
- old.map(f => f.id === id ? updatedRate : f)
- );
+  const updatedRate: FXRate = { ...rate, ...values, version: (rate.version ?? 0) + 1 };
 
- return updatedRate;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('update_success'));
- },
- onError: (error: Error) => {
- const msg = error.message;
- toast.error(t(msg) || t('errors.update_failed'));
- }
- });
+  queryClient.setQueryData<FXRate[]>(QUERY_KEY, (old = INITIAL_FX_RATES) => 
+  old.map(f => f.id === id ? updatedRate : f)
+  );
+
+  return updatedRate;
+  },
+  onSuccess: (data) => {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  queryClient.setQueryData([...QUERY_KEY, data.id], data);
+  toast.success(t('update_success'));
+  },
+  onError: (error: Error) => {
+  const msg = error.message;
+  toast.error(t(msg) || t('errors.update_failed'));
+  }
+  });
 }

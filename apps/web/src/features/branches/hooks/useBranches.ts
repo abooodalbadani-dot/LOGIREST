@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Branch, type BranchFormValues } from '@/types/master-data';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 
 /**
  * LOGIREST ENTERPRISE STANDARDS: MASTER DATA
@@ -104,38 +105,49 @@ export function useCreateBranch() {
  });
 }
 
-export function useUpdateBranch() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.branches');
+export function useUpdateBranch(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.branches');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: BranchFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
+  return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: async ({ id, values }: { id: string; values: BranchFormValues }) => {
+  await new Promise(resolve => setTimeout(resolve, 800));
 
- // OPERATIONAL GUARD: Prevent deactivation if linked to active warehouses
- // MOCK: BR-001 is linked to active warehouses in our simulation
- if (id === 'BR-001' && values.is_active === false) {
- throw new Error('GUARD_ACTIVE_WAREHOUSES');
- }
+  const data = queryClient.getQueryData<Branch[]>(['branches']) || MOCK_BRANCHES;
+  const branch = data.find(b => b.id === id);
+  if (!branch) throw new Error('Branch not found');
 
- const finalValues = {
- ...values,
- code: values.code.toUpperCase()
- };
+  if (values.version !== undefined && values.version < (branch.version ?? 0)) {
+  const error = new Error('CONFLICT') as any;
+  error.response = { status: 409 };
+  throw error;
+  }
 
- return { ...finalValues, id };
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: ['branches'] });
- queryClient.setQueryData(['branches', data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- if (error.message === 'GUARD_ACTIVE_WAREHOUSES') {
- toast.error(t('errors.deactivate_linked_warehouses'));
- } else {
- toast.error(t('errors.update_failed'));
- }
- }
- });
+  // OPERATIONAL GUARD: Prevent deactivation if linked to active warehouses
+  // MOCK: BR-001 is linked to active warehouses in our simulation
+  if (id === 'BR-001' && values.is_active === false) {
+  throw new Error('GUARD_ACTIVE_WAREHOUSES');
+  }
+
+  const finalValues = {
+  ...values,
+  code: values.code.toUpperCase()
+  };
+
+  return { ...finalValues, id, version: (branch.version ?? 0) + 1 };
+  },
+  onSuccess: (data) => {
+  queryClient.invalidateQueries({ queryKey: ['branches'] });
+  queryClient.setQueryData(['branches', data.id], data);
+  toast.success(t('updated_success'));
+  },
+  onError: (error: Error) => {
+  if (error.message === 'GUARD_ACTIVE_WAREHOUSES') {
+  toast.error(t('errors.deactivate_linked_warehouses'));
+  } else {
+  toast.error(t('errors.update_failed'));
+  }
+  }
+  });
 }

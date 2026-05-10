@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Warehouse, type WarehouseFormValues, type Department } from '@/types/master-data';
@@ -112,60 +113,69 @@ export function useCreateWarehouse() {
  });
 }
 
-export function useUpdateWarehouse() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.warehouses');
+export function useUpdateWarehouse(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.warehouses');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: WarehouseFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- 
- const data = queryClient.getQueryData<Warehouse[]>(QUERY_KEY) || INITIAL_WAREHOUSES;
- const warehouse = data.find(w => w.id === id);
- if (!warehouse) throw new Error('Warehouse not found');
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    meta: { suppressGlobalConflict: true },
+    mutationFn: async ({ id, values }: { id: string; values: WarehouseFormValues }) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const data = queryClient.getQueryData<Warehouse[]>(QUERY_KEY) || INITIAL_WAREHOUSES;
+      const warehouse = data.find(w => w.id === id);
+      if (!warehouse) throw new Error('Warehouse not found');
 
- // GUARD 1: Before deactivation - check children
- if (values.is_active === false && warehouse.is_active === true) {
- const departments = queryClient.getQueryData<Department[]>(['departments']) || [];
- const hasDepartments = departments.some(d => d.warehouse_id === id && d.is_active);
- if (hasDepartments) {
- throw new Error('cannot_deactivate_warehouse_in_use');
- }
- 
- // Mock inventory check: W-001 has stock
- if (id === 'W-001') {
- throw new Error('cannot_deactivate_warehouse_in_use');
- }
- }
+      if (values.version !== undefined && values.version < (warehouse.version ?? 0)) {
+        const error = new Error('CONFLICT') as any;
+        error.response = { status: 409 };
+        throw error;
+      }
 
- // GUARD 2: Before changing branch - check children
- if (values.branch_id !== warehouse.branch_id) {
- const departments = queryClient.getQueryData<Department[]>(['departments']) || [];
- const hasDepartments = departments.some(d => d.warehouse_id === id);
- if (hasDepartments) {
- throw new Error('cannot_change_branch_with_departments');
- }
- }
+      // GUARD 1: Before deactivation - check children
+      if (values.is_active === false && warehouse.is_active === true) {
+        const departments = queryClient.getQueryData<Department[]>(['departments']) || [];
+        const hasDepartments = departments.some(d => d.warehouse_id === id && d.is_active);
+        if (hasDepartments) {
+          throw new Error('cannot_deactivate_warehouse_in_use');
+        }
+      
+        // Mock inventory check: W-001 has stock
+        if (id === 'W-001') {
+          throw new Error('cannot_deactivate_warehouse_in_use');
+        }
+      }
 
- const updatedWarehouse = { 
- ...warehouse, 
- ...values, 
- code: values.code.toUpperCase() 
- };
+      // GUARD 2: Before changing branch - check children
+      if (values.branch_id !== warehouse.branch_id) {
+        const departments = queryClient.getQueryData<Department[]>(['departments']) || [];
+        const hasDepartments = departments.some(d => d.warehouse_id === id);
+        if (hasDepartments) {
+          throw new Error('cannot_change_branch_with_departments');
+        }
+      }
 
- queryClient.setQueryData<Warehouse[]>(QUERY_KEY, (old = INITIAL_WAREHOUSES) => 
- old.map(w => w.id === id ? updatedWarehouse : w)
- );
+      const updatedWarehouse = { 
+        ...warehouse, 
+        ...values, 
+        code: values.code.toUpperCase(),
+        version: (warehouse.version ?? 0) + 1
+      };
 
- return updatedWarehouse;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
- }
- });
+      queryClient.setQueryData<Warehouse[]>(QUERY_KEY, (old = INITIAL_WAREHOUSES) => 
+        old.map(w => w.id === id ? updatedWarehouse : w)
+      );
+
+      return updatedWarehouse;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: Error) => {
+      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    }
+  });
 }

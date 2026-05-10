@@ -20,6 +20,8 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 interface Props { 
   id: string | null; 
@@ -36,11 +38,12 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
 
   const { data, isLoading, isError, isFetched, refetch } = useCategory(id);
   const create = useCreateCategory();
-  const update = useUpdateCategory();
+  const conflict = useConflictHandler('category', id ?? '');
+  const update = useUpdateCategory({ onConflict: conflict.triggerConflict });
 
   const { register, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
-    defaultValues: { name_ar: '', name_en: '' },
+    defaultValues: { name_ar: '', name_en: '', version: undefined },
     disabled: isReadOnly,
   });
   
@@ -72,28 +75,26 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
   }
 
   useEffect(() => {
-    if (data) reset({ name_ar: data.name_ar, name_en: data.name_en });
+    if (data) reset({ name_ar: data.name_ar, name_en: data.name_en, version: data.version });
   }, [data, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/categories', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/categories', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/categories', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
  return (
+  <>
   <MasterDataFormLayout
     title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
     backHref='/master-data/categories'
@@ -179,6 +180,8 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
  </CardContent>
  </Card>
  </div>
- </MasterDataFormLayout>
+  </MasterDataFormLayout>
+  <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+  </>
  );
 }

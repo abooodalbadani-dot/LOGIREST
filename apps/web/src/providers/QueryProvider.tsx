@@ -9,6 +9,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
     mutationCache: new MutationCache({
       onError: (error, variables, _context, mutation) => {
         if (error instanceof ConflictError) {
+          // If the mutation is marked to suppress global conflict dialogs (e.g. handled locally)
+          if (mutation.options.meta?.suppressGlobalConflict) {
+            return;
+          }
+
           // Attach original version from variables for UX comparison
           if (variables && typeof variables === 'object' && 'version' in variables) {
             (error as any).originalVersion = (variables as any).version;

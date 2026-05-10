@@ -161,6 +161,7 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
     onConflict: options?.onConflict,
+    meta: { suppressGlobalConflict: true },
     mutationFn: async ({ id, values }: { id: string; values: ItemFormValues & { version?: number } }) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 

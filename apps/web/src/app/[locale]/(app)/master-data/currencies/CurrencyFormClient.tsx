@@ -17,6 +17,8 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 interface Props {
   id: string | null;
@@ -38,7 +40,8 @@ export function CurrencyFormClient({
   const t = useTranslations('master_data.currencies');
   const { data: currency, isLoading, isError, isFetched, refetch } = useCurrency(id);
   const create = useCreateCurrency();
-  const update = useUpdateCurrency();
+  const conflict = useConflictHandler('currency', id ?? '');
+  const update = useUpdateCurrency({ onConflict: conflict.triggerConflict });
 
   const { register, handleSubmit, reset, control, formState: { errors, isDirty, isValid } } =
     useForm<CurrencyFormValues>({
@@ -50,7 +53,8 @@ export function CurrencyFormClient({
         name_en: '', 
         symbol: '',
         is_base_currency: false,
-        is_active: true
+        is_active: true,
+        version: undefined
       },
     });
 
@@ -91,32 +95,31 @@ export function CurrencyFormClient({
         name_en: currency.name_en, 
         symbol: currency.symbol || '',
         is_base_currency: currency.is_base_currency,
-        is_active: currency.is_active
+        is_active: currency.is_active,
+        version: currency.version
       });
     }
   }, [currency, reset]);
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/currencies', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/currencies', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/currencies', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
   const displayTitle = isReadOnly ? viewTitle : (id ? editTitle : createTitle);
 
   return (
+    <>
     <MasterDataFormLayout 
       title={displayTitle} 
       backHref='/master-data/currencies'
@@ -311,6 +314,8 @@ export function CurrencyFormClient({
         </div>
       </div>
     </MasterDataFormLayout>
+      <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+    </>
   );
 }
 

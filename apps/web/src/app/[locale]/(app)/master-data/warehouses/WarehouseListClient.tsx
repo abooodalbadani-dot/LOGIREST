@@ -158,7 +158,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
         />
 
         <MetricCard
-          label={t('status.active')}
+          label={tc('statuses.active')}
           value={stats.active}
           icon={CheckCircle2}
           color="emerald"

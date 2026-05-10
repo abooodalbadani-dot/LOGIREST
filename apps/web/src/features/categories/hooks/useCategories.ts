@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Category, type CategoryFormValues } from '@/types/master-data';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 
 const QUERY_KEY = ['categories'];
 
@@ -92,35 +93,42 @@ export function useCreateCategory() {
  });
 }
 
-export function useUpdateCategory() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.categories');
+export function useUpdateCategory(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.categories');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: CategoryFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 600));
+  return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: async ({ id, values }: { id: string; values: CategoryFormValues }) => {
+  await new Promise(resolve => setTimeout(resolve, 600));
 
- const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
- const category = data.find(c => c.id === id);
- if (!category) throw new Error('Category not found');
+  const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
+  const category = data.find(c => c.id === id);
+  if (!category) throw new Error('Category not found');
 
- const updatedCategory = { ...category, ...values };
+  if (values.version !== undefined && values.version < (category.version ?? 0)) {
+  const error = new Error('CONFLICT') as any;
+  error.response = { status: 409 };
+  throw error;
+  }
 
- queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 
- old.map(c => c.id === id ? updatedCategory : c)
- );
+  const updatedCategory = { ...category, ...values, version: (category.version ?? 0) + 1 };
 
- return updatedCategory;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: () => {
- toast.error(t('errors.update_failed'));
- }
- });
+  queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 
+  old.map(c => c.id === id ? updatedCategory : c)
+  );
+
+  return updatedCategory;
+  },
+  onSuccess: (data) => {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  queryClient.setQueryData([...QUERY_KEY, data.id], data);
+  toast.success(t('updated_success'));
+  },
+  onError: () => {
+  toast.error(t('errors.update_failed'));
+  }
+  });
 }
 
 export function useDeleteCategory() {

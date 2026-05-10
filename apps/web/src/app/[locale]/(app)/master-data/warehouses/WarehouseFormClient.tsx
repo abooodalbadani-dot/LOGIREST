@@ -5,6 +5,8 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -49,13 +51,14 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
   const { data: branchesData, isLoading: isLoadingBranches, isError: isErrorBranches } = useBranches();
   const branches = branchesData?.data || [];
   const create = useCreateWarehouse();
-  const update = useUpdateWarehouse();
+  const conflict = useConflictHandler('warehouse', id ?? '');
+  const update = useUpdateWarehouse({ onConflict: conflict.triggerConflict });
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<WarehouseFormValues>({
       resolver: zodResolver(WarehouseFormSchema),
       disabled: isReadOnly,
-      defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'MAIN', is_active: true },
+      defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'MAIN', is_active: true, version: undefined },
     });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
@@ -64,7 +67,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
 
   useEffect(() => {
     if (data) {
-      reset({ branch_id: data.branch_id, code: data.code, name_ar: data.name_ar, name_en: data.name_en, type: data.type, is_active: data.is_active });
+      reset({ branch_id: data.branch_id, code: data.code, name_ar: data.name_ar, name_en: data.name_en, type: data.type, is_active: data.is_active, version: data.version });
     }
   }, [data, reset]);
 
@@ -93,21 +96,18 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
     );
   }
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
-    if (id) {
-      update.mutate({ id, values }, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/warehouses', { skipGuard: true });
-        }
-      });
-    } else {
-      create.mutate(values, {
-        onSuccess: () => {
-          guardedRouter.push('/master-data/warehouses', { skipGuard: true });
-        }
-      });
+    try {
+      if (id) {
+        await update.mutateAsync({ id, values });
+      } else {
+        await create.mutateAsync(values);
+      }
+      guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hooks or conflict handler
     }
   });
 
@@ -119,10 +119,12 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
     : createTitle;
 
   return (
+    <>
     <MasterDataFormLayout 
       title={displayTitle} 
       backHref='/master-data/warehouses' 
       isSaving={isSaving} 
+      saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/warehouses')}
       hideSave={isReadOnly}
@@ -302,5 +304,12 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
         </div>
       </div>
     </MasterDataFormLayout>
+
+      <ConflictDialog
+        open={conflict.open}
+        onReload={conflict.handleReload}
+        onClose={conflict.handleClose}
+      />
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Barcode, type BarcodeFormValues } from '@/types/master-data';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 
 const QUERY_KEY = ['barcodes'];
 
@@ -114,52 +115,60 @@ export function useCreateBarcode() {
  });
 }
 
-export function useUpdateBarcode() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.barcodes');
+export function useUpdateBarcode(options?: { onConflict?: () => void }) {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.barcodes');
 
- return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: BarcodeFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- 
- const data = queryClient.getQueryData<Barcode[]>(QUERY_KEY) || INITIAL_BARCODES;
- const barcode = data.find(b => b.id === id);
- if (!barcode) throw new Error('Barcode not found');
+  return useSafeMutation({
+  onConflict: options?.onConflict,
+  mutationFn: async ({ id, values }: { id: string; values: BarcodeFormValues }) => {
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  const data = queryClient.getQueryData<Barcode[]>(QUERY_KEY) || INITIAL_BARCODES;
+  const barcode = data.find(b => b.id === id);
+  if (!barcode) throw new Error('Barcode not found');
 
- // GUARD: Uniqueness if code changed
- if (values.code.toLowerCase() !== barcode.code.toLowerCase()) {
- const exists = data.some(b => b.id !== id && b.code.toLowerCase() === values.code.toLowerCase());
- if (exists) {
- throw new Error('code_exists');
- }
- }
+  if (values.version !== undefined && values.version < (barcode.version ?? 0)) {
+  const error = new Error('CONFLICT') as any;
+  error.response = { status: 409 };
+  throw error;
+  }
 
- // GUARD: Deactivation
- if (values.is_active === false && barcode.is_active === true) {
- // Mock transaction check: BAR-001 is used in transactions
- if (id === 'BAR-001') {
- throw new Error('cannot_deactivate_in_use');
- }
- }
+  // GUARD: Uniqueness if code changed
+  if (values.code.toLowerCase() !== barcode.code.toLowerCase()) {
+  const exists = data.some(b => b.id !== id && b.code.toLowerCase() === values.code.toLowerCase());
+  if (exists) {
+  throw new Error('code_exists');
+  }
+  }
 
- const updatedBarcode = { 
- ...barcode, 
- ...values
- };
+  // GUARD: Deactivation
+  if (values.is_active === false && barcode.is_active === true) {
+  // Mock transaction check: BAR-001 is used in transactions
+  if (id === 'BAR-001') {
+  throw new Error('cannot_deactivate_in_use');
+  }
+  }
 
- queryClient.setQueryData<Barcode[]>(QUERY_KEY, (old = INITIAL_BARCODES) => 
- old.map(b => b.id === id ? updatedBarcode : b)
- );
+  const updatedBarcode = { 
+  ...barcode, 
+  ...values,
+  version: (barcode.version ?? 0) + 1
+  };
 
- return updatedBarcode;
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- queryClient.setQueryData([...QUERY_KEY, data.id], data);
- toast.success(t('updated_success'));
- },
- onError: (error: Error) => {
- toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
- }
- });
+  queryClient.setQueryData<Barcode[]>(QUERY_KEY, (old = INITIAL_BARCODES) => 
+  old.map(b => b.id === id ? updatedBarcode : b)
+  );
+
+  return updatedBarcode;
+  },
+  onSuccess: (data) => {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  queryClient.setQueryData([...QUERY_KEY, data.id], data);
+  toast.success(t('updated_success'));
+  },
+  onError: (error: Error) => {
+  toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+  }
+  });
 }

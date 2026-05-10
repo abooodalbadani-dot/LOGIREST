@@ -5,6 +5,7 @@ export interface ConflictEventPayload {
   error: ConflictError;
   mutation: Mutation<any, any, any, any>;
   variables: any;
+  retryCount?: number;
 }
 
 type ConflictListener = (payload: ConflictEventPayload) => void;

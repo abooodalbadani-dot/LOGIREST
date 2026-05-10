@@ -23,36 +23,36 @@ interface StatusConfig {
  */
 export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   // Generic / Common
-  DRAFT: { variant: 'outline', labelKey: 'status.draft' },
-  POSTED: { variant: 'success', labelKey: 'status.posted' },
-  CANCELLED: { variant: 'error', labelKey: 'status.cancelled' },
-  SUBMITTED: { variant: 'info', labelKey: 'status.submitted' },
-  APPROVED: { variant: 'success', labelKey: 'status.approved' },
-  REJECTED: { variant: 'error', labelKey: 'status.rejected' },
-  PENDING: { variant: 'warning', labelKey: 'status.pending' },
-  COMPLETED: { variant: 'success', labelKey: 'status.completed' },
+  DRAFT: { variant: 'outline', labelKey: 'statuses.draft' },
+  POSTED: { variant: 'success', labelKey: 'statuses.posted' },
+  CANCELLED: { variant: 'error', labelKey: 'statuses.cancelled' },
+  SUBMITTED: { variant: 'info', labelKey: 'statuses.submitted' },
+  APPROVED: { variant: 'success', labelKey: 'statuses.approved' },
+  REJECTED: { variant: 'error', labelKey: 'statuses.rejected' },
+  PENDING: { variant: 'warning', labelKey: 'statuses.pending' },
+  COMPLETED: { variant: 'success', labelKey: 'statuses.completed' },
   
   // PR/PO Specific
-  CLOSED: { variant: 'default', labelKey: 'status.closed' },
-  PARTIAL: { variant: 'info', labelKey: 'status.partial' },
-  FULFILLED: { variant: 'success', labelKey: 'status.fulfilled' },
+  CLOSED: { variant: 'default', labelKey: 'statuses.closed' },
+  PARTIAL: { variant: 'info', labelKey: 'statuses.partial' },
+  FULFILLED: { variant: 'success', labelKey: 'statuses.fulfilled' },
 
   // GRN Specific
-  RECEIVED: { variant: 'success', labelKey: 'status.received' },
+  RECEIVED: { variant: 'success', labelKey: 'statuses.received' },
 
   // Stocktake Specific
-  STARTED: { variant: 'brand', labelKey: 'status.started' },
-  COUNTING: { variant: 'info', labelKey: 'status.counting' },
-  REVIEW: { variant: 'warning', labelKey: 'status.review' },
+  STARTED: { variant: 'brand', labelKey: 'statuses.started' },
+  COUNTING: { variant: 'info', labelKey: 'statuses.counting' },
+  REVIEW: { variant: 'warning', labelKey: 'statuses.review' },
   
   // Transfer Specific
-  IN_TRANSIT: { variant: 'warning', labelKey: 'status.in_transit' },
+  IN_TRANSIT: { variant: 'warning', labelKey: 'statuses.in_transit' },
 
   // Specialized / Missing
-  VARIANCE_SUBMITTED: { variant: 'warning', labelKey: 'status.variance_submitted' },
-  COUNTING_COMPLETED: { variant: 'info', labelKey: 'status.counting_completed' },
-  ACTIVE: { variant: 'success', labelKey: 'status.active' },
-  INACTIVE: { variant: 'error', labelKey: 'status.inactive' },
+  VARIANCE_SUBMITTED: { variant: 'warning', labelKey: 'statuses.variance_submitted' },
+  COUNTING_COMPLETED: { variant: 'info', labelKey: 'statuses.counting_completed' },
+  ACTIVE: { variant: 'success', labelKey: 'statuses.active' },
+  INACTIVE: { variant: 'error', labelKey: 'statuses.inactive' },
 };
 
 /**
@@ -60,22 +60,22 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
  */
 export const ISSUE_STATUS_UI: Record<string, StatusConfig> = {
   ...STATUS_UI_CONFIG,
-  [ISSUE_STATUS.SUBMITTED]: { variant: 'warning', labelKey: 'status.pending_review' },
+  [ISSUE_STATUS.SUBMITTED]: { variant: 'warning', labelKey: 'statuses.pending_review' },
 };
 
 export const ADJUSTMENT_STATUS_UI: Record<string, StatusConfig> = {
   ...STATUS_UI_CONFIG,
-  [ADJUSTMENT_STATUS.SUBMITTED]: { variant: 'warning', labelKey: 'status.pending_approval' },
+  [ADJUSTMENT_STATUS.SUBMITTED]: { variant: 'warning', labelKey: 'statuses.pending_approval' },
 };
 
 export const STOCKTAKE_STATUS_UI: Record<string, StatusConfig> = {
   ...STATUS_UI_CONFIG,
-  [STOCKTAKE_STATUS.REVIEW]: { variant: 'warning', labelKey: 'status.variance_review' },
+  [STOCKTAKE_STATUS.REVIEW]: { variant: 'warning', labelKey: 'statuses.variance_review' },
 };
 
 export const TRANSFER_STATUS_UI: Record<string, StatusConfig> = {
   ...STATUS_UI_CONFIG,
-  [TRANSFER_STATUS.IN_TRANSIT]: { variant: 'warning', labelKey: 'status.in_transit' },
+  [TRANSFER_STATUS.IN_TRANSIT]: { variant: 'warning', labelKey: 'statuses.in_transit' },
 };
 
 /**
@@ -83,5 +83,5 @@ export const TRANSFER_STATUS_UI: Record<string, StatusConfig> = {
  */
 export const getStatusConfig = (status: string, customMap?: Record<string, StatusConfig>): StatusConfig => {
   const map = customMap || STATUS_UI_CONFIG;
-  return map[status] || STATUS_UI_CONFIG[status] || { variant: 'default', labelKey: 'status.unknown' };
+  return map[status] || STATUS_UI_CONFIG[status] || { variant: 'default', labelKey: 'statuses.unknown' };
 };
