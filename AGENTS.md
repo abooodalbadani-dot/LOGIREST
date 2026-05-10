@@ -7,5 +7,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\004-i18n-parity-hardening\plan.md
+E:\Kitchen‑Store Inventory System\specs\005-mutation-compliance-audit\plan.md
 <!-- SPECKIT END -->
