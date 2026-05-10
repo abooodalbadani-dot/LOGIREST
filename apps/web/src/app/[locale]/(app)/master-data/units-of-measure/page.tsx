@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'master_data.uom' });
  return {
  title: `${t('title')} | LogiRest`,
- description: 'Unit of measure and conversion factor management',
+ description: t('description'),
  };
 }
 
@@ -22,7 +22,7 @@ export default async function UnitsOfMeasurePage(props: { params: Promise<{ loca
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description="Unit of measure and conversion factor management"
+ description={t('description')}
  />
  <UoMListClient locale={params.locale} />
  </div>

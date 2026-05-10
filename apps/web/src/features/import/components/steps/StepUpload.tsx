@@ -100,7 +100,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  </div>
  <div className="text-center">
  <p className="font-bold uppercase text-body-md mb-1">{t('click_to_upload')}</p>
- <p className="text-label-sm text-muted-foreground font-medium uppercase opacity-60">XLSX ONLY • MAX 20MB</p>
+ <p className="text-label-sm text-muted-foreground font-medium uppercase opacity-60">{t('upload_hint')}</p>
  </div>
  <input 
  type="file" 

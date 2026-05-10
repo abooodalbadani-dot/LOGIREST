@@ -19,6 +19,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 
 import { cn } from "@/lib/utils";
+import { formatCurrency, formatNumber } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -70,7 +71,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
 
  const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouse_name || session.warehouse_id);
- const currency = common('currencies.sar');
+ const currencyCode = 'SAR'; // Base currency
 
  // Calculations
  const itemsWithVariance = session.items.filter(item => (item.variance || 0) !== 0);
@@ -168,33 +169,33 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
 
  {/* Metrics Grid */}
  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
- <MetricCard 
+  <MetricCard 
  label={t('metrics.total_items')} 
- value={session.items.length.toString()} 
+ value={formatNumber(session.items.length, locale)} 
  icon={Calculator}
  color="indigo"
  />
  <MetricCard 
  label={t('metrics.items_with_variance')} 
- value={itemsWithVariance.length.toString()} 
+ value={formatNumber(itemsWithVariance.length, locale)} 
  icon={AlertTriangle}
  color="amber"
  />
  <MetricCard 
  label={t('metrics.positive_variance')} 
- value={`${totalPositiveVariance.toFixed(2)} ${currency}`} 
+ value={formatCurrency(totalPositiveVariance, currencyCode, locale)} 
  icon={ArrowUpRight}
  color="emerald"
  />
  <MetricCard 
  label={t('metrics.negative_variance')} 
- value={`${totalNegativeVariance.toFixed(2)} ${currency}`} 
+ value={formatCurrency(totalNegativeVariance, currencyCode, locale)} 
  icon={ArrowDownRight}
  color="rose"
  />
  <MetricCard 
  label={t('metrics.net_impact')} 
- value={`${netImpact.toFixed(2)} ${currency}`} 
+ value={formatCurrency(netImpact, currencyCode, locale)} 
  icon={BarChart3}
  color={netImpact >= 0 ? "emerald" : "rose"} />
  </div>
@@ -232,10 +233,10 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </div>
  </TableCell>
  <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
- {item.snapshot_qty} {item.uom}
+ {formatNumber(item.snapshot_qty, locale, 3)} {item.uom}
  </TableCell>
  <TableCell className="text-center font-mono text-label-sm font-semibold text-foreground" dir="ltr">
- {item.counted_qty} {item.uom}
+ {formatNumber(item.counted_qty, locale, 3)} {item.uom}
  </TableCell>
  <TableCell className="text-center">
  <div className={cn(
@@ -243,12 +244,12 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  variance === 0 ? "bg-status-success/10 text-status-success" : 
  variance > 0 ? "bg-status-info/10 text-status-info" : "bg-status-error/10 text-status-error"
  )} dir="ltr">
- {variance > 0 ? '+' : ''}{variance}
+ {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)}
  </div>
  </TableCell>
  <TableCell className="text-center font-mono text-label-sm font-semibold" dir="ltr">
  <span className={cn(varianceValue > 0 ? "text-status-info" : varianceValue < 0 ? "text-status-error" : "text-muted-foreground/40")}>
- {varianceValue.toFixed(2)}
+ {formatCurrency(varianceValue, currencyCode, locale)}
  </span>
  </TableCell>
  <TableCell className="px-8">

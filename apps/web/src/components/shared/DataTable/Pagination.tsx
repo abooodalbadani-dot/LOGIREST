@@ -8,6 +8,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+ const t = useTranslations('common.table');
  const isFirst = page <= 1;
  const isLast = page >= totalPages;
 
@@ -17,7 +18,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
  onClick={() => onPageChange(page - 1)}
  disabled={isFirst}
  className="p-2 bg-surface-container-low hover:bg-surface-container text-foreground disabled:opacity-30 disabled:pointer-events-none rounded-2xl transition-all border-none group hover:scale-[0.98] active:scale-95"
- aria-label="Previous Page"
+ aria-label={t('previous')}
  >
  <ChevronLeft className="w-4 h-4 rtl:rotate-180 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 transition-transform" />
  </button>
@@ -32,7 +33,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
  onClick={() => onPageChange(page + 1)}
  disabled={isLast}
  className="p-2 bg-surface-container-low hover:bg-surface-container text-foreground disabled:opacity-30 disabled:pointer-events-none rounded-2xl transition-all border-none group hover:scale-[0.98] active:scale-95"
- aria-label="Next Page"
+ aria-label={t('next')}
  >
  <ChevronRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
  </button>

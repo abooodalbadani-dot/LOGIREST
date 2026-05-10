@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface DiffEntry {
  field: string;
  old_value: unknown;
@@ -7,7 +9,8 @@ interface DiffEntry {
 }
 
 export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
- if (!changes || changes.length === 0) return null;
+  const t = useTranslations('common.audit.diff');
+  if (!changes || changes.length === 0) return null;
 
  const renderValue = (val: unknown) => {
  if (val === null || val === undefined) return '—';
@@ -25,9 +28,9 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
  <table className="w-full text-start border-collapse">
  <thead className="bg-surface-container-high/50 text-muted-foreground">
  <tr>
- <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap">Field</th>
- <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap">Old Value</th>
- <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap">New Value</th>
+ <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap">{t('field')}</th>
+ <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap">{t('old_value')}</th>
+ <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap">{t('new_value')}</th>
  </tr>
  </thead>
  <tbody>

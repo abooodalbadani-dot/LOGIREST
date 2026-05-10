@@ -147,7 +147,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
                   {...register('name_en')}
                   disabled={isReadOnly}
                   className="font-semibold"
-                  placeholder="e.g. Raw Materials"
+                  placeholder={tc('placeholders.name_en')}
                 />
  {errors.name_en && (
  <p className="text-label-xs font-semibold text-status-error uppercase">
@@ -167,7 +167,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
                   {...register('name_ar')}
                   disabled={isReadOnly}
                   className="font-semibold text-end"
-                  placeholder="مثال: مواد خام"
+                  placeholder={tc('placeholders.name_ar')}
                 />
  {errors.name_ar && (
  <p className="text-label-xs font-semibold text-status-error uppercase">

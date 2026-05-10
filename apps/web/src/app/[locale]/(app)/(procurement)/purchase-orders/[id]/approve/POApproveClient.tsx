@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { formatCurrency } from '@/utils/currency';
 
 interface Props {
   id: string;
@@ -142,7 +143,7 @@ export function POApproveClient({ id }: Props) {
                 <div className="space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.order_total')}</p>
                   <p className="font-mono font-semibold text-title-lg text-operational-cyan">
-                    {po.total?.toLocaleString()} <span className="text-label-xs opacity-60 ms-1">{po.currency_id}</span>
+                    {formatCurrency(po.total || 0, po.currency_id, locale as 'ar' | 'en')}
                   </p>
                 </div>
                 <div className="space-y-1.5">

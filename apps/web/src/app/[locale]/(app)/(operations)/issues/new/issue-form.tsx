@@ -163,8 +163,8 @@ export function IssueForm() {
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
- <SelectItem value="wh-01" className="text-label-xs font-bold">Main Distribution Hub</SelectItem>
- <SelectItem value="wh-locked-01" className="text-label-xs font-bold">Cold Storage (LOCKED)</SelectItem>
+ <SelectItem value="wh-01" className="text-label-xs font-bold">{tc('warehouses.main_hub')}</SelectItem>
+ <SelectItem value="wh-locked-01" className="text-label-xs font-bold">{tc('warehouses.cold_storage_locked')}</SelectItem>
  </SelectContent>
  </Select>
  <FormMessage className="text-label-xxs font-semibold uppercase" />
@@ -188,8 +188,8 @@ export function IssueForm() {
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
- <SelectItem value="dep-kitchen" className="text-label-xs font-bold">Main Culinary Lab</SelectItem>
- <SelectItem value="dep-pastry" className="text-label-xs font-bold">Pastry & Desserts</SelectItem>
+ <SelectItem value="dep-kitchen" className="text-label-xs font-bold">{tc('departments.culinary_lab')}</SelectItem>
+ <SelectItem value="dep-pastry" className="text-label-xs font-bold">{tc('departments.pastry_desserts')}</SelectItem>
  </SelectContent>
  </Select>
  <FormMessage className="text-label-xxs font-semibold uppercase" />

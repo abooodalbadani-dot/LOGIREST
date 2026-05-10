@@ -10,6 +10,7 @@ import { generateExcel } from '@/utils/export';
 import { InventoryMovement } from '@/types/inventory';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatQuantity } from '@/lib/utils';
+import { formatNumber, formatDate } from '@/utils/currency';
 import { Activity, ArrowUpRight, ArrowDownRight, Search, Filter, Download, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -58,12 +59,9 @@ export default function MovementsClient() {
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5">
  <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60">
- {new Date(row.original.posted_at).toLocaleString(currentLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US', {
- dateStyle: 'medium',
- timeStyle: 'short'
- })}
+ {formatDate(row.original.posted_at, currentLocale as 'ar' | 'en')}
  </span>
- <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">Temporal Mark</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('temporal_mark')}</span>
  </div>
  ),
  },
@@ -78,7 +76,7 @@ export default function MovementsClient() {
  >
  <span dir="ltr">{row.original.document_number}</span>
  </Link>
- <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">Source Reference</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('source_reference')}</span>
  </div>
  ),
  },
@@ -87,7 +85,7 @@ export default function MovementsClient() {
  header: t('document_type'),
  cell: ({ row }) => (
  <Badge variant="secondary" className={`${getTypeStyle(row.original.document_type)}text-label-xxs font-semibold uppercase px-3 h-6 rounded-xl`}>
- {row.original.document_type}
+ {t(`types.${row.original.document_type.toLowerCase()}` as any)}
  </Badge>
  ),
  },
@@ -99,7 +97,7 @@ export default function MovementsClient() {
  <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase">
  {row.original.item_code}
  </span>
- <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">System ID</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('system_id')}</span>
  </div>
  ),
  },
@@ -112,7 +110,7 @@ export default function MovementsClient() {
  {currentLocale === 'ar' ? row.original.item_name_ar : row.original.item_name_en}
  </span>
  <span className="text-label-xxs font-bold text-muted-foreground/60 truncate uppercase">
- SKU Master Entity
+ {t('sku_master_entity')}
  </span>
  </div>
  ),
@@ -140,7 +138,7 @@ export default function MovementsClient() {
  <span dir="ltr" className={`font-mono text-label-sm font-semibold px-3 py-1 rounded-xl ${ row.original.direction === 'IN' ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20' }`}>
  {formatQuantity(row.original.qty, currentLocale as 'ar' | 'en')}
  </span>
- <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">Movement Delta</span>
+ <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('movement_delta')}</span>
  </div>
  ),
  },
@@ -161,7 +159,7 @@ export default function MovementsClient() {
 
  const rows = data.data.map(item => ({
  ...item,
- posted_at: new Date(item.posted_at).toLocaleString(),
+ posted_at: formatDate(item.posted_at, currentLocale as 'ar' | 'en'),
  item_name: currentLocale === 'ar' ? item.item_name_ar : item.item_name_en,
  }));
 
@@ -183,12 +181,12 @@ export default function MovementsClient() {
  <Activity className="w-20 h-20 text-operational-cyan" />
  </div>
  <div className="relative z-10 space-y-4">
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/60">Ledger Pulse</span>
+ <span className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('ledger_pulse')}</span>
  <div className="flex items-baseline gap-3">
  <h2 className="text-headline-lg font-semibold text-foreground font-mono">
- {stats.total.toLocaleString(currentLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}
+ {formatNumber(stats.total, currentLocale as 'ar' | 'en')}
  </h2>
- <span className="text-label-xs font-semibold text-operational-cyan/30 uppercase">Events</span>
+ <span className="text-label-xs font-semibold text-operational-cyan/30 uppercase">{t('events')}</span>
  </div>
  </div>
  <div className="absolute bottom-0 start-0 h-1 w-full bg-surface-container-highest/50">
@@ -201,12 +199,12 @@ export default function MovementsClient() {
  <ArrowUpRight className="w-20 h-20 text-status-success" />
  </div>
  <div className="relative z-10 space-y-4">
- <span className="text-label-xs font-semibold uppercase text-status-success/40">Inbound Stream</span>
+ <span className="text-label-xs font-semibold uppercase text-status-success/40">{t('inbound_stream')}</span>
  <div className="flex items-baseline gap-3">
  <h2 className="text-headline-lg font-semibold text-status-success drop-shadow-[0_0_15px_rgba(var(--status-success-rgb),0.3)] font-mono">
- {stats.inbound.toLocaleString(currentLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}
+ {formatNumber(stats.inbound, currentLocale as 'ar' | 'en')}
  </h2>
- <span className="text-label-xs font-semibold text-status-success/30 uppercase">Nodes</span>
+ <span className="text-label-xs font-semibold text-status-success/30 uppercase">{t('nodes')}</span>
  </div>
  </div>
  <div className="absolute bottom-0 start-0 h-1 w-full bg-surface-container-highest/50">
@@ -222,12 +220,12 @@ export default function MovementsClient() {
  <ArrowDownRight className="w-20 h-20 text-status-error" />
  </div>
  <div className="relative z-10 space-y-4">
- <span className="text-label-xs font-semibold uppercase text-status-error/40">Outbound Flow</span>
+ <span className="text-label-xs font-semibold uppercase text-status-error/40">{t('outbound_flow')}</span>
  <div className="flex items-baseline gap-3">
  <h2 className="text-headline-lg font-semibold text-status-error drop-shadow-[0_0_15px_rgba(var(--status-error-rgb),0.3)] font-mono">
- {stats.outbound.toLocaleString(currentLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}
+ {formatNumber(stats.outbound, currentLocale as 'ar' | 'en')}
  </h2>
- <span className="text-label-xs font-semibold text-status-error/30 uppercase">Dissipation</span>
+ <span className="text-label-xs font-semibold text-status-error/30 uppercase">{t('dissipation')}</span>
  </div>
  </div>
  <div className="absolute bottom-0 start-0 h-1 w-full bg-surface-container-highest/50">
@@ -244,7 +242,7 @@ export default function MovementsClient() {
  <div className="flex flex-wrap items-center gap-8 flex-1">
  <div className="flex flex-col gap-2 flex-1 min-w-[300px]">
  <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase ps-1">
- Ledger Query
+ {t('ledger_query')}
  </span>
  <div className="relative group">
  <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-cyan-500 transition-colors" />
@@ -260,7 +258,7 @@ export default function MovementsClient() {
 
  <div className="flex flex-col gap-2 min-w-[200px]">
  <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase ps-1">
- Document Class
+ {t('document_class')}
  </span>
  <Select
  value={typeFilter}
@@ -271,10 +269,10 @@ export default function MovementsClient() {
  </SelectTrigger>
  <SelectContent className="bg-surface-container-low border border-border-muted/50 shadow-2xl rounded-2xl">
  <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('status.all')}</SelectItem>
- <SelectItem value="GRN" className="text-label-xs font-semibold uppercase text-status-success">GRN</SelectItem>
- <SelectItem value="ISSUE" className="text-label-xs font-semibold uppercase text-status-warning">ISSUE</SelectItem>
- <SelectItem value="TRANSFER" className="text-label-xs font-semibold uppercase text-operational-cyan">TRANSFER</SelectItem>
- <SelectItem value="ADJUSTMENT" className="text-label-xs font-semibold uppercase text-indigo-400">ADJUSTMENT</SelectItem>
+ <SelectItem value="GRN" className="text-label-xs font-semibold uppercase text-status-success">{t('types.grn')}</SelectItem>
+ <SelectItem value="ISSUE" className="text-label-xs font-semibold uppercase text-status-warning">{t('types.issue')}</SelectItem>
+ <SelectItem value="TRANSFER" className="text-label-xs font-semibold uppercase text-operational-cyan">{t('types.transfer')}</SelectItem>
+ <SelectItem value="ADJUSTMENT" className="text-label-xs font-semibold uppercase text-indigo-400">{t('types.adjustment')}</SelectItem>
  </SelectContent>
  </Select>
  </div>
@@ -286,7 +284,7 @@ export default function MovementsClient() {
  className="h-12 px-8 bg-surface-container-high/50 hover:bg-surface-container-high text-foreground text-label-xs font-semibold uppercase rounded-xl transition-all border-none shadow-md group"
  >
  <Download className="w-3.5 h-3.5 me-3 text-operational-cyan transition-transform group-hover:-translate-y-0.5" />
- Export Manifest
+ {t('export_manifest')}
  </Button>
  </div>
 
@@ -306,7 +304,7 @@ export default function MovementsClient() {
  emptyState={
  <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-20">
  <History className="w-16 h-16 text-muted-foreground/60" />
- <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">Zero Movement Detected</div>
+ <div className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('zero_movement')}</div>
  </div>
  }
  />

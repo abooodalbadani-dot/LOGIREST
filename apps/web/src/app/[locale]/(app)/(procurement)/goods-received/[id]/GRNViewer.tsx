@@ -21,6 +21,9 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { formatCurrency } from '@/utils/currency';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 interface GRNViewerProps {
   document: any;
@@ -37,9 +40,11 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   const tc = useTranslations('common');
   const router = useRouter();
 
+  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
+  const baseCurrency = settings?.base_currency || 'SAR';
+
   const totalForeign = document?.lines?.reduce((acc: number, line: any) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
   const currentFxRate = document?.fx_rate || 1;
-  const baseCurrency = 'SAR';
 
   const timelineEntries = document?.audit_log?.map((e: any) => ({
     status: e.status.toLowerCase() as Status,
@@ -48,6 +53,10 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   })) || [
     { status: (document?.status || 'DRAFT').toLowerCase() as Status, at: document?.created_at || new Date().toISOString(), by: 'System' }
   ];
+
+  if (loadingSettings) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-10 w-full bg-surface-container-low min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
@@ -181,13 +190,13 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="space-y-6 relative z-10">
               <div className="flex justify-between items-baseline gap-10">
                 <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currency_id })}</p>
-                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{totalForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currency_id, locale)}</p>
               </div>
               <div className="h-px bg-surface-container-high/20 w-full" />
               <div className="flex justify-between items-center gap-10">
                 <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency })}</p>
                 <p dir="ltr" className="text-title-lg font-mono font-semibold text-primary/60">
-                  {(totalForeign * currentFxRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {formatCurrency(totalForeign * currentFxRate, baseCurrency, locale)}
                 </p>
               </div>
             </div>

@@ -1,0 +1,374 @@
+﻿
+> web@0.1.0 i18n-audit
+> node scripts/i18n-audit.js
+
+≡اأ Starting i18n Audit...
+≡ا¤ Checking Structural Parity...
+node.exe : [IDENTICAL_VALUE] messages - Key "admin.restaurant_profile.placeholders.email" has identical values in AR 
+and EN: "contact@restaurant.com"
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([IDENTICAL_VALU...restaurant.com":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[IDENTICAL_VALUE] messages - Key "auth.login.version" has identical values in AR and EN: "v3.1.04"
+[IDENTICAL_VALUE] messages - Key "common.locales.en" has identical values in AR and EN: "English"
+[IDENTICAL_VALUE] messages - Key "common.system.name" has identical values in AR and EN: "LogiRest"
+[IDENTICAL_VALUE] messages - Key "master_data.common.placeholder_sku" has identical values in AR and EN: "SKU-000-000"
+[IDENTICAL_VALUE] messages - Key "master_data.suppliers.name_ar_placeholder" has identical values in AR and EN: 
+"╪د┘┘à┘ê╪▓╪╣┘ê┘ ╪د┘╪╣╪د┘┘à┘è┘ê┘"
+[IDENTICAL_VALUE] messages - Key "master_data.suppliers.phone_placeholder" has identical values in AR and EN: "+966 50 
+000 0000"
+[IDENTICAL_VALUE] messages - Key "master_data.suppliers.email_placeholder" has identical values in AR and EN: 
+"vendor@example.com"
+[IDENTICAL_VALUE] messages - Key "master_data.warehouses.name_ar_placeholder" has identical values in AR and EN: 
+"╪د┘┘à╪│╪ز┘ê╪»╪╣ ╪د┘╪▒╪خ┘è╪│┘è"
+[IDENTICAL_VALUE] messages - Key "master_data.warehouses.name_en_placeholder" has identical values in AR and EN: "Main 
+Warehouse"
+[IDENTICAL_VALUE] messages - Key "operations.stocktake.last_item_reached" has identical values in AR and EN: "╪ز┘à 
+╪د┘┘ê╪╡┘ê┘ ╪ح┘┘ë ╪ت╪«╪▒ ╪╡┘┘ ┘┘è ╪د┘┘é╪د╪خ┘à╪ر."
+[IDENTICAL_VALUE] messages - Key "operations.stocktake.variance_submitted_status" has identical values in AR and EN: 
+"╪د┘╪ز╪╕╪د╪▒ ╪د┘╪د╪╣╪ز┘à╪د╪»"
+[IDENTICAL_VALUE] messages - Key "procurement.po.linked_pr_placeholder" has identical values in AR and EN: 
+"PR-2026-001"
+[IDENTICAL_VALUE] messages - Key "procurement.po.sku_placeholder" has identical values in AR and EN: "IT-1"
+≡ا¤ Scanning Source Files for Hardcoded Strings...
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\adjustments\[id]\AdjustmentForm.tsx:666 - Found raw text in JSX: "0 
+&& rejectionComment.trim().length"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\issue-form.tsx:66 - Found raw text in JSX: "t(k as 
+Parameters"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\scan-mode\issue-scan-client.tsx:143 - Found raw text in 
+JSX: "┘ê╪╢╪╣ ╪د┘┘à╪│╪ص ╪د┘╪╢┘ê╪خ┘è"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\scan-mode\issue-scan-client.tsx:144 - Found raw text in 
+JSX: "╪د┘à╪│╪ص ╪د┘╪ذ╪د╪▒┘â┘ê╪» ┘╪ح╪╢╪د┘╪ر ╪د┘┘à┘╪ز╪ش╪د╪ز ╪ذ╪│╪▒╪╣╪ر."
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\scan-mode\issue-scan-client.tsx:150 - Found raw text in 
+JSX: "┘à╪│╪ص ╪د┘╪ذ╪د╪▒┘â┘ê╪»"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\scan-mode\issue-scan-client.tsx:157 - Found raw text in 
+prop: "┘ê╪ش┘┘ّ┘ç ╪د┘┘à╪د╪│╪ص ┘ç┘╪د ╪ث┘ê ╪د┘â╪ز╪ذ ╪د┘╪ذ╪د╪▒┘â┘ê╪» ┘ê╪د╪╢╪║╪╖ Enter..."
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:136 - Found raw text in JSX: 
+"Loading..."
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:149 - Found raw text in JSX: 
+"Immersive Scan Mode"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:155 - Found raw text in JSX: "Exit 
+Scan Mode"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:167 - Found raw text in prop: "READY 
+FOR BARCODE..."
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:188 - Found raw text in JSX: "Quantity"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:205 - Found raw text in JSX: "≡اôخ"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:206 - Found raw text in JSX: "Awaiting 
+First Scan"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx:63 - Found raw text in JSX: "t(k as 
+Parameters"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\stocktake\[id]\approve\StocktakeApproveClient.tsx:250 - Found raw 
+text in JSX: "0 ? "text-status-info" : varianceValue"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\transfers\page.tsx:25 - Found raw text in prop: "Internal warehouse 
+transfers and movement tracking"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\GRNForm.tsx:239 - Found raw text in JSX: "Supply 
+Co"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\GRNForm.tsx:240 - Found raw text in JSX: "Other 
+Co"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\GRNForm.tsx:298 - Found raw text in JSX: "Main 
+Warehouse"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\GRNForm.tsx:299 - Found raw text in JSX: 
+"Kitchen Store"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\post\GRNPostClient.tsx:262 - Found raw text in 
+JSX: "Market Rate"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\post\GRNPostClient.tsx:266 - Found raw text in 
+JSX: "Rate Variance"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\post\GRNPostClient.tsx:269 - Found raw text in 
+JSX: "0 ? "text-emerald-400" : rateVariance"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\scan-mode\LotEntryModal.tsx:124 - Found raw text 
+in prop: "e.g. LOT-2024-001"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-orders\new\page.tsx:17 - Found raw text in JSX: "Create 
+Purchase Order"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-orders\[id]\POForm.tsx:160 - Found raw text in JSX: 
+"PO_ENGINE_V2"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-orders\[id]\POForm.tsx:197 - Found raw text in prop: 
+"PR-2026-001"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-orders\[id]\POForm.tsx:254 - Found raw text in prop: 
+"Currency"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-orders\[id]\POForm.tsx:336 - Found raw text in prop: "IT-1"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-orders\[id]\POForm.tsx:371 - Found raw text in prop: "PCS"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\purchase-requests\new\page.tsx:9 - Found raw text in JSX: "Create 
+Purchase Request"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\restaurant-profile\ProfileFormClient.tsx:113 - Found raw text in prop: "Logo 
+Preview"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\restaurant-profile\ProfileFormClient.tsx:182 - Found raw text in prop: 
+"Restaurant Name"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\page.tsx:27 - Found raw text in prop: "User access control and 
+permission management"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\RolesViewerClient.tsx:29 - Found raw text in prop: "Registered Roles"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\RolesViewerClient.tsx:35 - Found raw text in prop: "Defined Resources"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\RolesViewerClient.tsx:42 - Found raw text in prop: "RBAC Enforcement"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\RolesViewerClient.tsx:62 - Found raw text in JSX: "Resource"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx:119 - Found raw text in JSX: "Administrative 
+policies are immutable for system integrity"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx:130 - Found raw text in JSX: "Read-Only Mode"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx:131 - Found raw text in JSX: "You are 
+currently viewing this role in read-only mode"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\settings\SettingsClient.tsx:134 - Found raw text in prop: "Select Language"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\settings\SettingsClient.tsx:152 - Found raw text in prop: "Select Currency"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\UserListClient.tsx:100 - Found raw text in JSX: "ظ¤ No Scope ظ¤"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\UserListClient.tsx:192 - Found raw text in prop: "Search identities by 
+name or email..."
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:141 - Found raw text in JSX: "Syncing Identity 
+Stream..."
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:167 - Found raw text in JSX: "Profile 
+credentials and metadata"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:216 - Found raw text in JSX: "English"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:217 - Found raw text in JSX: "╪د┘╪╣╪▒╪ذ┘è╪ر"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:232 - Found raw text in JSX: "Organizational 
+unit boundaries"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:268 - Found raw text in JSX: "Select at least 
+one branch to view warehouses"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:285 - Found raw text in JSX: "System role & 
+Permissions"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:292 - Found raw text in JSX: "Live Permissions 
+Policy"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:338 - Found raw text in JSX: "Critical 
+Lockdown"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:348 - Found raw text in JSX: "Self-Protection 
+Active"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx:405 - Found raw text in JSX: "No units 
+available for current selection"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:35 - Found raw text in JSX: 
+"Verified Recipient"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:91 - Found raw text in prop: 
+"Email Outbox"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:92 - Found raw text in prop: 
+"Communication audit trail and outgoing message pipeline"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:96 - Found raw text in JSX: 
+"Filter by Status"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:99 - Found raw text in prop: 
+"All Statuses"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:102 - Found raw text in JSX: 
+"All Statuses"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:103 - Found raw text in JSX: 
+"Pending"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:104 - Found raw text in JSX: 
+"Sent"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\EmailOutboxClient.tsx:105 - Found raw text in JSX: 
+"Failed"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\page.tsx:25 - Found raw text in prop: "Track sent 
+emails and notification history"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\page.tsx:25 - Found raw text in prop: "System alerts, 
+low-stock warnings, and operational events"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:183 - Found 
+raw text in JSX: "Live View"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:209 - Found 
+raw text in JSX: "Subject Header"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:214 - Found 
+raw text in JSX: "Message Body"
+[HARDCODED_TEXT] app\[locale]\(app)\context-selector\ContextSelectorClient.tsx:54 - Found raw text in JSX: "System 
+Environment"
+[HARDCODED_TEXT] app\[locale]\(app)\context-selector\ContextSelectorClient.tsx:69 - Found raw text in JSX: "Select 
+Branch"
+[HARDCODED_TEXT] app\[locale]\(app)\context-selector\ContextSelectorClient.tsx:122 - Found raw text in JSX: "Select 
+Warehouse"
+[HARDCODED_TEXT] app\[locale]\(app)\context-selector\ContextSelectorClient.tsx:172 - Found raw text in JSX: "No 
+warehouses found for this branch"
+[HARDCODED_TEXT] app\[locale]\(app)\dashboard\DashboardClient.tsx:133 - Found raw text in JSX: "98.4%"
+[HARDCODED_TEXT] app\[locale]\(app)\dashboard\DashboardClient.tsx:175 - Found raw text in JSX: "Movement Analytics 
+(Phase 12)"
+[HARDCODED_TEXT] app\[locale]\(app)\dashboard\DashboardClient.tsx:179 - Found raw text in JSX: "Audit Logs"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:89 - Found raw text in JSX: 
+"LOT NUMBER"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:94 - Found raw text in JSX: 
+"EXPIRED ON"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:104 - Found raw text in JSX: 
+"Override Reason"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:129 - Found raw text in JSX: 
+"Source Document"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:136 - Found raw text in JSX: 
+"Impacted Qty"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:155 - Found raw text in JSX: 
+"No overrides detected in the ledger"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\lots\LotBalanceClient.tsx:129 - Found raw text in JSX: "LOT-2024-0012"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:66 - Found raw text in JSX: "Temporal Mark"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:81 - Found raw text in JSX: "Source 
+Reference"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:102 - Found raw text in JSX: "System ID"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:143 - Found raw text in JSX: "Movement 
+Delta"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:186 - Found raw text in JSX: "Ledger Pulse"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:191 - Found raw text in JSX: "Events"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:204 - Found raw text in JSX: "Inbound 
+Stream"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:209 - Found raw text in JSX: "Nodes"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:225 - Found raw text in JSX: "Outbound 
+Flow"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:230 - Found raw text in JSX: "Dissipation"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:274 - Found raw text in JSX: "GRN"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:275 - Found raw text in JSX: "ISSUE"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:276 - Found raw text in JSX: "TRANSFER"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:277 - Found raw text in JSX: "ADJUSTMENT"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\movements\MovementsClient.tsx:309 - Found raw text in JSX: "Zero 
+Movement Detected"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:38 - Found raw text in JSX: "Scanner Active"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:41 - Found raw text in JSX: "Identify assets 
+via optical matrix scan"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:63 - Found raw text in JSX: "Align Code 
+within frame"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:74 - Found raw text in JSX: "Identified 
+Record:"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:101 - Found raw text in JSX: "Scanner 
+Protocol v4.2"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:105 - Found raw text in JSX: "Battery Level"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:106 - Found raw text in JSX: "94%"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:109 - Found raw text in JSX: "AI Confidence"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:110 - Found raw text in JSX: "99.8%"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:201 - Found raw text in JSX: "Physical 
+identifier mapping"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:225 - Found raw text in JSX: 
+"Registered Identity"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:245 - Found raw text in JSX: 
+"Configuration"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:246 - Found raw text in JSX: 
+"Operational Status"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:252 - Found raw text in JSX: "Active 
+Status"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:253 - Found raw text in JSX: "Allow use 
+in transactions"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:286 - Found raw text in JSX: "Multiple 
+barcodes can exist for the same item if UoMs differ."
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx:290 - Found raw text in JSX: "Barcodes 
+must be unique across the entire system."
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\barcodes\page.tsx:25 - Found raw text in prop: "Item barcode and label 
+management"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\branches\BranchFormClient.tsx:173 - Found raw text in prop: "BR-001"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\branches\BranchFormClient.tsx:188 - Found raw text in prop: "Branch 
+Name"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\branches\BranchFormClient.tsx:202 - Found raw text in prop: "╪د╪│┘à 
+╪د┘┘╪▒╪╣"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\branches\page.tsx:25 - Found raw text in prop: "Branch and retail 
+location management"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\categories\CategoryFormClient.tsx:150 - Found raw text in prop: "e.g. 
+Raw Materials"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\categories\CategoryFormClient.tsx:170 - Found raw text in prop: 
+"┘à╪س╪د┘: ┘à┘ê╪د╪» ╪«╪د┘à"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\categories\page.tsx:25 - Found raw text in prop: "Item category and 
+classification management"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:155 - Found raw text in prop: "e.g. 
+SAR"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:179 - Found raw text in prop: "e.g. 
+SR"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:239 - Found raw text in JSX: 
+"Configuration"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:240 - Found raw text in JSX: 
+"Financial Controls"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:248 - Found raw text in JSX: "System 
+valuation anchor"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:268 - Found raw text in JSX: 
+"Operationally available"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:294 - Found raw text in JSX: 
+"Standards"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx:295 - Found raw text in JSX: 
+"Regulatory compliance"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\[id]\fx-rates\FXRatesClient.tsx:121 - Found raw text in 
+JSX: "Audit log of valuation changes"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\[id]\fx-rates\FXRatesClient.tsx:146 - Found raw text in 
+JSX: "Register new currency parity"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\currencies\[id]\fx-rates\FXRatesClient.tsx:209 - Found raw text in 
+JSX: "Auto-Update Policy: OFF"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\departments\DepartmentFormClient.tsx:238 - Found raw text in prop: 
+"DEPT-01"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\departments\DepartmentFormClient.tsx:308 - Found raw text in prop: 
+"CC-001"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\fx-rates\FXRateFormClient.tsx:279 - Found raw text in JSX: 
+"Configuration"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\fx-rates\FXRateFormClient.tsx:280 - Found raw text in JSX: "Control 
+Panel"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\fx-rates\FXRateFormClient.tsx:288 - Found raw text in JSX: 
+"Operationally available"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\fx-rates\FXRateFormClient.tsx:314 - Found raw text in JSX: "Financial 
+Rules"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\fx-rates\FXRateFormClient.tsx:315 - Found raw text in JSX: "Audit 
+Standard"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\import\components\Step2Validate.tsx:63 - Found raw text in JSX: "0 ?"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\units-of-measure\page.tsx:25 - Found raw text in prop: "Unit of 
+measure and conversion factor management"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\units-of-measure\UoMFormClient.tsx:131 - Found raw text in prop: "UNIT"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\units-of-measure\UoMFormClient.tsx:147 - Found raw text in prop: "Unit 
+Name"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\units-of-measure\UoMFormClient.tsx:160 - Found raw text in prop: 
+"╪د╪│┘à ╪د┘┘ê╪ص╪»╪ر"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\warehouses\WarehouseFormClient.tsx:188 - Found raw text in prop: "e.g. 
+WH-001"
+[HARDCODED_TEXT] app\[locale]\(app)\profile\ChangePasswordClient.tsx:74 - Found raw text in JSX: "Your security 
+credentials are now hardened and synced."
+[HARDCODED_TEXT] app\[locale]\(app)\profile\page.tsx:30 - Found raw text in JSX: "Language Preference"
+[HARDCODED_TEXT] app\[locale]\(app)\profile\page.tsx:53 - Found raw text in JSX: "Verified Identity"
+[HARDCODED_TEXT] app\[locale]\(app)\profile\page.tsx:102 - Found raw text in JSX: "No specific operational scopes 
+assigned (Global Access)"
+[HARDCODED_TEXT] app\[locale]\(app)\profile\page.tsx:128 - Found raw text in JSX: "2FA Authentication"
+[HARDCODED_TEXT] app\[locale]\(app)\profile\page.tsx:129 - Found raw text in JSX: "Phase 12 Requirement"
+[HARDCODED_TEXT] app\[locale]\(auth)\forgot-password\page.tsx:104 - Found raw text in prop: "name@example.com"
+[HARDCODED_TEXT] components\layouts\Sidebar.tsx:138 - Found raw text in JSX: "LogiRest"
+[HARDCODED_TEXT] components\shared\DataTable\Pagination.tsx:20 - Found raw text in prop: "Previous Page"
+[HARDCODED_TEXT] components\shared\DataTable\Pagination.tsx:35 - Found raw text in prop: "Next Page"
+[HARDCODED_TEXT] components\shared\DocumentLineItemTable\DocumentLineItemTable.tsx:139 - Found raw text in prop: 
+"Remove line"
+[HARDCODED_TEXT] components\shared\FEFOLotAllocator\ExpiredOverrideInline.tsx:15 - Found raw text in prop: "╪│╪ذ╪ذ 
+╪د┘╪د╪│╪ز╪«╪»╪د┘à / Override reason"
+[HARDCODED_TEXT] components\shared\PostConfirmDialog.test.tsx:104 - Found raw text in JSX: "Custom Content"
+[HARDCODED_TEXT] components\shared\PostConfirmDialog.tsx:28 - Found raw text in JSX: "void | Promise"
+[HARDCODED_TEXT] components\shared\ReportHeader.tsx:35 - Found raw text in prop: "Restaurant Logo"
+[HARDCODED_TEXT] components\shared\ScanInput\ScanInput.tsx:8 - Found raw text in JSX: "void | Promise"
+[HARDCODED_TEXT] components\shared\SessionTimeoutModal.tsx:24 - Found raw text in JSX: "╪د┘╪ز┘ç╪ز ╪╡┘╪د╪ص┘è╪ر 
+╪د┘╪ش┘╪│╪ر"
+[HARDCODED_TEXT] components\shared\ThemeToggle.tsx:20 - Found raw text in prop: "Toggle Theme"
+[HARDCODED_TEXT] components\ui\badge.tsx:33 - Found raw text in JSX: "& VariantProps"
+[HARDCODED_TEXT] components\ui\form.tsx:22 - Found raw text in JSX: "= FieldPath"
+[HARDCODED_TEXT] components\ui\form.tsx:33 - Found raw text in JSX: "= FieldPath"
+[HARDCODED_TEXT] components\ui\scan-input.tsx:9 - Found raw text in JSX: "Promise"
+[HARDCODED_TEXT] components\ui\scan-input.tsx:59 - Found raw text in prop: "Scan barcode..."
+[HARDCODED_TEXT] features\branches\components\branch-form.tsx:74 - Found raw text in prop: "e.g. BR-001"
+[HARDCODED_TEXT] features\branches\components\branch-form.tsx:92 - Found raw text in prop: "Select a status"
+[HARDCODED_TEXT] features\branches\components\branch-form.tsx:96 - Found raw text in JSX: "Active"
+[HARDCODED_TEXT] features\branches\components\branch-form.tsx:97 - Found raw text in JSX: "Inactive"
+[HARDCODED_TEXT] features\branches\components\branch-form.tsx:113 - Found raw text in prop: "Main Riyadh Branch"
+[HARDCODED_TEXT] features\branches\components\branch-form.tsx:130 - Found raw text in prop: "┘╪▒╪╣ ╪د┘╪▒┘è╪د╪╢ 
+╪د┘╪▒╪خ┘è╪│┘è"
+[HARDCODED_TEXT] features\import\components\steps\StepUpload.tsx:103 - Found raw text in JSX: "XLSX ONLY ظت MAX 20MB"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:121 - Found raw text in prop: "Item"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:186 - Found raw text in JSX: "s.id ?"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:216 - Found raw text in prop: "E.G. ITEM-9902"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:234 - Found raw text in prop: "Select Category"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:260 - Found raw text in prop: "╪ث╪▒╪▓ ╪ذ╪│┘à╪ز┘è 5 ┘â╪ش┘à"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:276 - Found raw text in prop: "Basmati Rice 5kg"
+[HARDCODED_TEXT] features\items\components\item-form.tsx:300 - Found raw text in prop: "Select UoM"
+[HARDCODED_TEXT] features\master-data\components\MasterDataDetailLayout.tsx:35 - Found raw text in JSX: "Read-Only 
+Asset Intelligence"
+[HARDCODED_TEXT] features\master-data\components\MasterDataDetailLayout.tsx:75 - Found raw text in JSX: "Operational 
+Snapshot"
+[HARDCODED_TEXT] features\master-data\components\MasterDataDetailLayout.tsx:79 - Found raw text in JSX: "Verified 
+Static Data"
+[HARDCODED_TEXT] features\master-data\components\MasterDataFormLayout.tsx:56 - Found raw text in JSX: "Asset 
+Configuration & Metadata"
+[HARDCODED_TEXT] features\master-data\components\MasterDataFormLayout.tsx:75 - Found raw text in JSX: "Confidential 
+Operational Data"
+[HARDCODED_TEXT] features\master-data\components\MasterDataFormLayout.tsx:79 - Found raw text in JSX: "Secure 
+Connection"
+[HARDCODED_TEXT] providers\AuthProvider.tsx:15 - Found raw text in JSX: "Promise"
+≡ا¤ Checking for Blacklisted Placeholders...
+≡ا¤ Enforcing snake_case naming convention...
+[INVALID_KEY_NAME] ar.json - Key "common.table.noResults" must be in snake_case
+[INVALID_KEY_NAME] en.json - Key "common.table.noResults" must be in snake_case
+
+--- Audit Report ---
+Total Keys: 2088
+Missing Keys: 0
+Hardcoded Strings: 192
+Placeholder Violations: 0
+Invalid Key Names: 2
+
+Status: ظإî FAIL
+Total Issues: 208
+npm error Lifecycle script `i18n-audit` failed with error:
+npm error code 1
+npm error path E:\KitchenظّStore Inventory System\apps\web
+npm error workspace web@0.1.0
+npm error location E:\KitchenظّStore Inventory System\apps\web
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c node scripts/i18n-audit.js

@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'master_data.departments' });
  return {
  title: `${t('title')} | LogiRest`,
- description: 'Organizational department and cost center management',
+ description: t('description'),
  };
 }
 

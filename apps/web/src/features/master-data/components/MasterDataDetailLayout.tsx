@@ -32,7 +32,7 @@ export function MasterDataDetailLayout({ title, backHref, editHref, children }: 
  </Link>
  <div className="space-y-1">
  <h1 className="text-headline-lg font-semibold text-foreground uppercase">{title}</h1>
- <p className="text-label-xs text-muted-foreground/40 uppercase font-medium">Read-Only Asset Intelligence</p>
+ <p className="text-label-xs text-muted-foreground/40 uppercase font-medium">{t('read_only_intel')}</p>
  </div>
  </div>
 
@@ -72,11 +72,11 @@ export function MasterDataDetailLayout({ title, backHref, editHref, children }: 
  </div>
 
  <div className="flex items-center justify-between pt-6 px-8 py-6 bg-surface-container-low/30 rounded-lg">
- <span className="text-label-xs text-muted-foreground/40 uppercase font-medium">Operational Snapshot</span>
+ <span className="text-label-xs text-muted-foreground/40 uppercase font-medium">{t('operational_snapshot')}</span>
  <div className="flex gap-4 items-center">
  <div className="flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-full bg-status-active" />
- <span className="text-label-xxs text-status-active/60 font-semibold uppercase">Verified Static Data</span>
+ <span className="text-label-xxs text-status-active/60 font-semibold uppercase">{t('verified_static_data')}</span>
  </div>
  </div>
  </div>

@@ -86,7 +86,7 @@ export function DataTable<TData, TValue>({
  <div className="relative max-w-sm w-full">
  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
  <Input
- placeholder={searchPlaceholder || t("search") || "Search..."} value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""} onChange={(event) =>
+  placeholder={searchPlaceholder || t("table.search")} value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""} onChange={(event) =>
  table.getColumn(searchKey)?.setFilterValue(event.target.value)
  }
  className="max-w-sm ps-10"
@@ -96,7 +96,7 @@ export function DataTable<TData, TValue>({
  {enableExport && (
  <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high border-border-surface">
  <Download className="me-2 h-4 w-4" />
- {t("export") || "Export"}
+ {t("table.export")}
  </Button>
  )}
  </div>
@@ -137,7 +137,7 @@ export function DataTable<TData, TValue>({
  ) : (
  <TableRow>
  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
- {t("noResults") || "No results."}
+ {t("table.no_results")}
  </TableCell>
  </TableRow>
  )}
@@ -147,7 +147,11 @@ export function DataTable<TData, TValue>({
  
  <div className="flex items-center justify-end gap-2 py-4">
  <div className="flex-1 text-body-md text-muted-foreground">
- Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length)} of {table.getFilteredRowModel().rows.length} entries
+ {t("table.pagination", {
+  start: table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1,
+  end: Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length),
+  total: table.getFilteredRowModel().rows.length
+ })}
  </div>
  <div className="flex items-center gap-2">
  <Button
@@ -158,7 +162,7 @@ export function DataTable<TData, TValue>({
  className="bg-surface-container-low"
  >
  <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
- <span className="sr-only">Previous</span>
+ <span className="sr-only">{t("table.previous")}</span>
  </Button>
  <Button
  variant="outline"
@@ -168,7 +172,7 @@ export function DataTable<TData, TValue>({
  className="bg-surface-container-low"
  >
  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
- <span className="sr-only">Next</span>
+ <span className="sr-only">{t("table.next")}</span>
  </Button>
  </div>
  </div>

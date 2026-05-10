@@ -11,6 +11,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { useFXRates } from '@/features/fx-rates/hooks/useFXRates';
 import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { type FXRate, type Currency } from '@/types/master-data';
+import { formatRate, formatQuantity } from '@/utils/currency';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -61,10 +62,10 @@ export function FXRateListClient({ locale }: { locale: string }) {
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span className="font-mono text-label-sm font-bold text-emerald-500 tabular-nums">
-            {row.original.rate.toFixed(4)}
+            {formatRate(row.original.rate, locale as 'ar' | 'en', 4)}
           </span>
           <span className="text-label-xxs text-muted-foreground/60 font-medium">
-            1 {getCurrencyCode(row.original.from_currency_id)} = {row.original.rate.toFixed(4)} {getCurrencyCode(row.original.to_currency_id)}
+            1 {getCurrencyCode(row.original.from_currency_id)} = {formatRate(row.original.rate, locale as 'ar' | 'en', 4)} {getCurrencyCode(row.original.to_currency_id)}
           </span>
         </div>
       )
@@ -107,7 +108,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
       </div>
       )
     }
-  ], [t, tfx, router, currencies]);
+  ], [t, tfx, router, currencies, locale]);
 
   const breadcrumbs = [
     { label: t('home'), href: `/dashboard` },

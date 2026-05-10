@@ -12,6 +12,7 @@ import { type POLine } from '@/features/purchasing/hooks/usePO';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
+import { formatCurrency } from '@/utils/currency';
 
 interface POViewerProps {
   document: any;
@@ -129,7 +130,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
                         </td>
                         <td className="px-6 py-4 text-end">
                           <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
-                            {((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0)).toLocaleString()}
+                            {formatCurrency((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0), document?.currency_id, locale)}
                           </span>
                         </td>
                       </tr>
@@ -143,8 +144,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
                   <div className="flex flex-col items-end">
                     <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('order_total')}</p>
                     <p dir="ltr" className="text-headline-lg font-semibold text-primary">
-                      {document?.total?.toLocaleString() || '0'}
-                      <span className="text-body-md ms-2 text-muted-foreground/40">{document?.currency_id}</span>
+                      {formatCurrency(document?.total || 0, document?.currency_id, locale)}
                     </p>
                   </div>
                 </div>

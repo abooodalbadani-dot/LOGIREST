@@ -12,7 +12,9 @@ import { useGRN, type GRNDetail } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
+import { formatCurrency, formatRate, formatNumber } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, TrendingUp, ShieldCheck, Wallet, ArrowRightLeft } from 'lucide-react';
@@ -50,8 +52,9 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
   const postMutation = usePostGRN(id);
 
-  const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
-  const supplierCurrency = grn?.currency_id || 'SAR';
+  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
+  const baseCurrency = settings?.base_currency;
+  const supplierCurrency = grn?.currency_id;
 
   // Live FX conversion logic for display
   const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
@@ -111,7 +114,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
     });
   };
 
-  if (isLoadingGRN) {
+  if (isLoadingGRN || loadingSettings) {
     return <PageSkeleton />;
   }
 
@@ -152,7 +155,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
             confirmKeyword={t('confirm_keyword')}
           >
             <Button 
-              disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0}
+              disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}
               className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase shadow-lg shadow-primary/20 rounded-2xl"
             >
               {t('post_grn')}
@@ -242,7 +245,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="flex items-center justify-between">
  <div className="space-y-2">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('supplier')}</p>
- <h2 className="text-title-lg font-bold">{grn.supplier?.name || 'Supply Co'}</h2>
+ <h2 className="text-title-lg font-bold">{grn.supplier?.name || t('mock_supplier_1')}</h2>
  </div>
  <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
  <Wallet className="w-6 h-6 text-muted-foreground/40" />
@@ -254,21 +257,21 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="space-y-6">
  <div className="flex justify-between items-center">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('total')} ({supplierCurrency})</p>
- <p dir="ltr" className="font-mono font-semibold text-title-sm">{totalSupplier.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+ <p dir="ltr" className="font-mono font-semibold text-title-sm">{formatCurrency(totalSupplier, supplierCurrency || 'USD', locale)}</p>
  </div>
  
  <div className="space-y-3 bg-surface-container-highest/50 p-6 rounded-2xl border border-white/5">
  <div className="flex justify-between items-center opacity-60">
- <p className="text-label-xxs font-bold uppercase">Market Rate</p>
- <p dir="ltr" className="font-mono text-label-sm">{expectedRate.toFixed(4)}</p>
+ <p className="text-label-xxs font-bold uppercase">{t('market_rate')}</p>
+ <p dir="ltr" className="font-mono text-label-sm">{formatRate(expectedRate, locale, 4)}</p>
  </div>
  <div className="flex justify-between items-center">
- <p className="text-label-xxs font-bold uppercase">Rate Variance</p>
+ <p className="text-label-xxs font-bold uppercase">{t('rate_variance')}</p>
  <p dir="ltr" className={cn(
  "font-mono text-label-sm font-semibold",
  rateVariance > 0 ? "text-emerald-400" : rateVariance < 0 ? "text-destructive" : "text-muted-foreground"
  )}>
- {rateVariance > 0 ? '+' : ''}{rateVariance.toFixed(2)}%
+ {rateVariance > 0 ? '+' : ''}{formatNumber(rateVariance, locale, 2)}%
  </p>
  </div>
  </div>
@@ -277,7 +280,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
  <div className="relative z-10 flex flex-col gap-1">
  <p className="text-label-xs font-semibold uppercase text-primary/60">{tc('base_currency')}</p>
- <p dir="ltr" className="font-mono font-semibold text-headline-lg text-primary">{totalBase.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+ <p dir="ltr" className="font-mono font-semibold text-headline-lg text-primary">{formatCurrency(totalBase, baseCurrency || 'SAR', locale)}</p>
  </div>
  </div>
  </div>

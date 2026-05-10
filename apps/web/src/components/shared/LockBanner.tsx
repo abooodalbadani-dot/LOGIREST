@@ -1,15 +1,17 @@
 'use client';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { WarehouseLockState } from '@/types/stocktake';
 import { Lock, AlertCircle } from 'lucide-react';
+import { formatDate } from '@/utils/currency';
 
 export function LockBanner({ lockState }: { lockState: WarehouseLockState | undefined }) {
- const t = useTranslations('operations.stocktake');
- const tc = useTranslations('common');
- 
- if (!lockState?.isLocked) return null;
- 
- const startTime = lockState.lockStartedAt ? new Date(lockState.lockStartedAt).toLocaleString() : '';
+  const t = useTranslations('operations.stocktake');
+  const tc = useTranslations('common');
+  const locale = useLocale() as 'ar' | 'en';
+  
+  if (!lockState?.isLocked) return null;
+  
+  const startTime = formatDate(lockState.lockStartedAt, locale);
 
  return (
  <div className="w-full bg-status-warning/10 sm:rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-700 relative overflow-hidden group backdrop-blur-md">

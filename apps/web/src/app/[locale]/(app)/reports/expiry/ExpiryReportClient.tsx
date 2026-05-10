@@ -8,6 +8,7 @@ import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from '@/lib/utils';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { formatNumber } from '@/utils/currency';
 
 export default function ExpiryReportClient() {
  const t = useTranslations('reports');
@@ -49,7 +50,7 @@ export default function ExpiryReportClient() {
  const days = row.getValue('days_remaining') as number;
  return (
  <span dir="ltr" className="font-mono font-bold">
- {days.toLocaleString(locale === 'ar' ? 'ar-u-nu-latn' : 'en-US')}
+ {formatNumber(days, locale as 'ar' | 'en')}
  </span>
  );
  }

@@ -8,6 +8,7 @@ import { ExpiredOverrideModal } from "@/components/operations/expired-override-m
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { ScanLine, RotateCcw, AlertTriangle, CheckCircle2, ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 interface ScannedLine {
  id: string;
@@ -28,6 +29,7 @@ const BARCODE_DB: Record<string, { itemId: string; lotNumber: string; expiryDate
 };
 
 export function IssueScanClient() {
+ const t = useTranslations("operations.issue.scan_mode");
  const router = useRouter();
  const inputRef = useRef<HTMLInputElement>(null);
  const [barcodeInput, setBarcodeInput] = useState("");
@@ -131,41 +133,41 @@ export function IssueScanClient() {
  <ArrowRight className="h-5 w-5 hidden rtl:block" />
  </Button>
  <Breadcrumb items={[
- { label: "العمليات", href: "#" },
- { label: "صرف المخزون", href: "/issues" },
- { label: "وضع المسح", href: "#" },
+ { label: t("breadcrumb_operations"), href: "#" },
+ { label: t("breadcrumb_issues"), href: "/issues" },
+ { label: t("breadcrumb_scan"), href: "#" },
  ]} />
  </div>
 
  <div className="flex items-center gap-3">
  <ScanLine className="w-8 h-8 text-brand-primary" />
  <div>
- <h2 className="text-headline-lg font-bold text-foreground">وضع المسح الضوئي</h2>
- <p className="text-muted-foreground text-body-md">امسح الباركود لإضافة المنتجات بسرعة.</p>
+ <h2 className="text-headline-lg font-bold text-foreground">{t("title")}</h2>
+ <p className="text-muted-foreground text-body-md">{t("subtitle")}</p>
  </div>
  </div>
 
  {/* Scan Input */}
  <div className={`relative border-2 rounded-xl p-5 transition-all duration-200 ${borderClass}`}>
- <label className="text-body-md font-medium text-text-secondary mb-2 block">مسح الباركود</label>
+ <label className="text-body-md font-medium text-text-secondary mb-2 block">{t("input_label")}</label>
  <Input
  ref={inputRef}
  autoFocus
  value={barcodeInput}
  onChange={(e) => setBarcodeInput(e.target.value)}
  onKeyDown={handleKeyDown}
- placeholder="وجِّه الماسح هنا أو اكتب الباركود واضغط Enter..."
+ placeholder={t("input_placeholder")}
  className="text-title-sm font-mono h-14 bg-surface-2 border-0 focus-visible:ring-1"
  dir="ltr"
  />
  {lastFeedback === "success" && (
  <div className="absolute start-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-brand-primary text-body-md font-bold animate-pulse">
- <CheckCircle2 className="w-4 h-4" /> تمت الإضافة
+ <CheckCircle2 className="w-4 h-4" /> {t("added_feedback")}
  </div>
  )}
  {lastFeedback === "error" && (
  <div className="absolute start-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-red-500 text-body-md font-bold animate-pulse">
- <AlertTriangle className="w-4 h-4" /> باركود غير معروف
+ <AlertTriangle className="w-4 h-4" /> {t("unknown_feedback")}
  </div>
  )}
  </div>
@@ -174,10 +176,10 @@ export function IssueScanClient() {
  <Card>
  <CardHeader>
  <div className="flex items-center justify-between">
- <CardTitle className="text-title-sm">الأصناف الممسوحة ({lines.length})</CardTitle>
+ <CardTitle className="text-title-sm">{t("scanned_items_count", { count: lines.length })}</CardTitle>
  <Button variant="ghost" size="sm" onClick={handleUndoLast} disabled={lines.length === 0}>
  <RotateCcw className="me-1 w-4 h-4" />
- تراجع
+ {t("undo")}
  </Button>
  </div>
  </CardHeader>
@@ -185,7 +187,7 @@ export function IssueScanClient() {
  {lines.length === 0 ? (
  <div className="py-10 text-center text-muted-foreground text-body-md">
  <ScanLine className="w-10 h-10 mx-auto opacity-20 mb-2" />
- لم يُمسح أي صنف بعد.
+ {t("empty_state")}
  </div>
  ) : (
  <div className="space-y-2">
@@ -199,12 +201,12 @@ export function IssueScanClient() {
  <span className="font-medium text-text-primary">{line.itemId}</span>
  {line.isExpired && (
  <span className="text-label-sm text-red-500 font-bold flex items-center gap-1">
- <AlertTriangle className="w-3 h-3" /> منتهي — تجاوز مسموح
+ <AlertTriangle className="w-3 h-3" /> {t("expired_warning")}
  </span>
  )}
  </div>
  <p className="text-label-sm text-text-tertiary font-mono" dir="ltr">
- {line.lotNumber} | Exp: {line.expiryDate}
+ {line.lotNumber} | {t("expiry_label", { date: line.expiryDate })}
  </p>
  </div>
  <span className="text-title-lg font-bold text-brand-primary" dir="ltr">×{line.quantity}</span>

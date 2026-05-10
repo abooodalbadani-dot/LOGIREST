@@ -19,6 +19,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import type { Status } from '@/components/shared/StatusTimeline';
+import { formatDate } from '@/utils/currency';
 
 interface KitchenRequestViewerProps {
   request: any;
@@ -69,7 +70,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                   <StatusBadge status={request.status} />
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
-                    {new Date(request.created_at).toLocaleString()}
+                    {formatDate(request.created_at, locale)}
                   </span>
                 </div>
               </div>

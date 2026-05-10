@@ -131,7 +131,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                     {...register('code')} 
                     disabled={isReadOnly}
                     className="font-mono font-semibold uppercase text-status-active" 
-                    placeholder="e.g. SUP-001" 
+                    placeholder={ts('code_placeholder')} 
                   />
                   {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
                 </div>
@@ -145,7 +145,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       {...register('name_en')} 
                       disabled={isReadOnly}
                       className="font-semibold" 
-                      placeholder="Supplier Name" 
+                      placeholder={ts('name_en_placeholder')} 
                     />
                     {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as any)}</p>}
                   </div>
@@ -158,7 +158,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       {...register('name_ar')} 
                       disabled={isReadOnly}
                       className="font-semibold text-end" 
-                      placeholder="اسم المورد" 
+                      placeholder={ts('name_ar_placeholder')} 
                     />
                     {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as any)}</p>}
                   </div>

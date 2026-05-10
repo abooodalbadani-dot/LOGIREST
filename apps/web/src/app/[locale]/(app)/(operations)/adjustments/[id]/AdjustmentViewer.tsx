@@ -15,6 +15,7 @@ import {
   Clock 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatQuantity } from '@/utils/currency';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
@@ -81,7 +82,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('warehouse')}</label>
-                  <p className="font-bold text-body-md bg-surface-container-low p-3 rounded-lg uppercase italic">{document.warehouse_id === 'wh-1' ? 'Main Store' : 'Kitchen Warehouse'}</p>
+                  <p className="font-bold text-body-md bg-surface-container-low p-3 rounded-lg uppercase italic">{document.warehouse_id === 'wh-1' ? tc('warehouses.main') : tc('warehouses.kitchen')}</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -138,14 +139,14 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                           </td>
                           <td className="px-6 py-6 text-center tabular-nums">
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-body-md font-bold text-muted-foreground/40">{line.qty_before.toFixed(3)}</span>
+                              <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>
                           </td>
                           <td className="px-6 py-6 text-center tabular-nums">
                             <div className="flex flex-col items-center gap-0.5">
                               <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
-                                {line.direction === 'INCREASE' ? '+' : '−'}{line.qty_adjusted.toFixed(3)}
+                                {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qty_adjusted, locale as 'ar' | 'en')}
                               </span>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>
@@ -156,7 +157,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                                 "text-body-md font-bold",
                                 (line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted) < 0 ? "text-red-500" : "text-foreground"
                               )}>
-                                {(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted).toFixed(3)}
+                                {formatQuantity(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted, locale as 'ar' | 'en')}
                               </span>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>

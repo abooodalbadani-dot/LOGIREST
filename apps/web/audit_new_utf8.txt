@@ -1,0 +1,19 @@
+﻿
+> web@0.1.0 i18n-audit
+> node scripts/i18n-audit.js
+
+≡اأ Starting i18n Audit...
+≡ا¤ Checking Structural Parity...
+≡ا¤ Scanning Source Files for Hardcoded Strings...
+≡ا¤ Checking for Blacklisted Placeholders...
+≡ا¤ Enforcing snake_case naming convention...
+
+--- Audit Report ---
+Total Keys: 2088
+Missing Keys: 0
+Hardcoded Strings: 192
+Placeholder Violations: 0
+Invalid Key Names: 2
+
+Status: ظإî FAIL
+Total Issues: 208

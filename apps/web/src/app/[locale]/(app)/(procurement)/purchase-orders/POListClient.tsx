@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 
 import { canPerformActionV2, type DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
 import { PO_STATUS } from '@/contracts/statuses';
+import { formatCurrency } from '@/utils/currency';
 
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
@@ -76,10 +77,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       cell: ({ row }) => (
         <div className="flex flex-col text-end">
           <span dir="ltr" className="text-body-md font-mono font-semibold text-foreground/90">
-            {new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(row.original.supplier_total_amount)} {row.original.currency_code}
+            {formatCurrency(row.original.supplier_total_amount, row.original.currency_code, locale)}
           </span>
           <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('total_amount')}</span>
         </div>

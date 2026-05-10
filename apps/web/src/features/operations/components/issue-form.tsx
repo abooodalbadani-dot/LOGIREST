@@ -14,6 +14,7 @@ import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
+import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
@@ -59,6 +60,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   // FEFO Allocator State
   const [fefoOpen, setFefoOpen] = useState(false);
   const [activeLine, setActiveLine] = useState<LineItem | null>(null);
+
+  const { data: deptData } = useDepartments();
+  const departments = deptData?.data || [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,8 +340,11 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         <SelectValue placeholder={t('select_department')} />
                       </SelectTrigger>
                       <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                        <SelectItem value="dep-1" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">Kitchen 1</SelectItem>
-                        <SelectItem value="dep-2" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">Pastry</SelectItem>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
+                            {locale === 'ar' ? dept.name_ar : dept.name_en}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -345,7 +352,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   <div className="space-y-3 group">
                     <div className="flex items-center gap-2">
                       <User className="w-3 h-3 text-cyan-500/50" />
-                      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by') || 'Requested By'}</label>
+                      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by')}</label>
                     </div>
                     <Input 
                       type="text"

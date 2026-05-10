@@ -160,7 +160,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
                         disabled={isReadOnly}
                       >
                         <SelectTrigger id="wh-branch">
-                          <SelectValue placeholder="—" />
+                          <SelectValue placeholder={t('null_select')} />
                         </SelectTrigger>
                         <SelectContent>
                           {branches.map((b) => (
@@ -185,7 +185,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
                     {...register('code')} 
                     disabled={isReadOnly}
                     className="font-mono font-semibold uppercase text-status-active"
-                    placeholder="e.g. WH-001"
+                    placeholder={tw('code_placeholder')}
                   />
                   {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.code.message}`)}</p>}
                 </div>

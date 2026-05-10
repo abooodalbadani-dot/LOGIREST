@@ -234,7 +234,7 @@ export function FXRateFormClient({
                       id="fx-rate" 
                       type="number"
                       step="0.000001"
-                      placeholder="0.000000"
+                      placeholder={t('placeholders.rate')}
                       dir="ltr" 
                       disabled={isReadOnly}
                       {...register('rate', { valueAsNumber: true })} 
@@ -276,8 +276,8 @@ export function FXRateFormClient({
                   <Activity className="w-5 h-5 text-status-active" />
                 </div>
                 <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">Configuration</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Control Panel</p>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('config_title')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('config_subtitle')}</p>
                 </div>
               </div>
               
@@ -285,7 +285,7 @@ export function FXRateFormClient({
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-md border border-surface-variant/5">
                 <div className="space-y-0.5">
                   <Label className="text-label-xs font-bold uppercase text-foreground/80">{t('fields.is_active')}</Label>
-                  <p className="text-label-xxs text-muted-foreground uppercase font-medium">Operationally available</p>
+                  <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('active_desc')}</p>
                 </div>
                 <Controller
                   name="is_active"
@@ -311,8 +311,8 @@ export function FXRateFormClient({
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">Financial Rules</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Audit Standard</p>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('rules_title')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('rules_subtitle')}</p>
                 </div>
               </div>
               

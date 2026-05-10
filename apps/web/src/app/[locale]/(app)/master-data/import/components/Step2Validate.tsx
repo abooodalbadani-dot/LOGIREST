@@ -38,7 +38,7 @@ export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
  {t('validating')}
  </h3>
  <p className="text-label-xs text-muted-foreground font-semibold uppercase opacity-60">
- Processing {wizard.data.length} entries for data integrity
+ {t('processing_entries', { count: wizard.data.length })}
  </p>
  </div>
  </div>
@@ -76,17 +76,17 @@ export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
 
  <div className="grid grid-cols-3 gap-4 w-full">
  <div className="bg-background/40 backdrop-blur-sm p-5 rounded-[1.5rem] flex flex-col items-center border border-foreground/5">
- <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">Total Rows</span>
+ <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">{t('total_records')}</span>
  <span className="text-headline-lg font-display font-bold">{wizard.data.length}</span>
  </div>
  <div className="bg-background/40 backdrop-blur-sm p-5 rounded-[1.5rem] flex flex-col items-center border border-foreground/5">
- <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">Errors</span>
+ <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">{t('errors')}</span>
  <span className={cn("text-headline-lg font-display font-bold", errorCount > 0 ? "text-red-500" : "text-emerald-500/40")}>
  {errorCount}
  </span>
  </div>
  <div className="bg-background/40 backdrop-blur-sm p-5 rounded-[1.5rem] flex flex-col items-center border border-foreground/5">
- <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">Warnings</span>
+ <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">{t('warnings')}</span>
  <span className={cn("text-headline-lg font-display font-bold", warningCount > 0 ? "text-amber-500" : "text-muted-foreground/20")}>
  {warningCount}
  </span>

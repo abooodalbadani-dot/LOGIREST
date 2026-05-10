@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -33,6 +33,8 @@ import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
 import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
+import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
+import { formatCurrency } from "@/utils/currency";
 
 
 const lineItemSchema = z.object({
@@ -64,6 +66,7 @@ interface PurchaseOrderFormProps {
 
 export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: PurchaseOrderFormProps) {
  const router = useRouter();
+ const locale = useLocale();
  const t = useTranslations("procurement.po");
  const tc = useTranslations("common");
  
@@ -75,7 +78,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  defaultValues: {
  supplier_id: initialData?.supplier_id || "",
  pr_id: initialData?.pr_id || "",
- currency_code: initialData?.currency_code || "SAR",
+ currency_code: initialData?.currency_code || "",
  exchange_rate: initialData?.exchange_rate || 1,
  expected_date: initialData?.expected_date || "",
  target_warehouse_id: initialData?.target_warehouse_id || "",
@@ -117,7 +120,11 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  await updateMutation.mutateAsync({ ...values, version: initialData.version || 1 });
  toast.success(t("edit_success"));
  } else {
- const result = await createMutation.mutateAsync(values);
+  if (!currencies || currencies.length === 0) {
+    toast.error(t('errors.no_currencies_available'));
+    return;
+  }
+  const result = await createMutation.mutateAsync(values);
  toast.success(t("submit_success"));
   router.push(`/purchase-orders/${result.id}`);
  }
@@ -133,7 +140,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
  const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
 
- const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
+ const { data: settings, isLoading: loadingSettings } = useAdminSettings();
+ const baseCurrency = settings?.base_currency;
  const { data: fxRates } = useFXRates(currency, baseCurrency);
  
  React.useEffect(() => {
@@ -142,7 +150,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  }
  }, [fxRates, form, initialData]);
 
- if (loadingSuppliers || loadingCurrencies || loadingWarehouses) {
+ if (loadingSuppliers || loadingCurrencies || loadingWarehouses || loadingSettings) {
  return (
  <div className="space-y-6 animate-pulse">
  <div className="h-64 bg-surface-container-low rounded-3xl" />
@@ -157,7 +165,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <div className="flex items-center justify-between border-b border-surface-container-high/50 pb-6 mb-6">
  <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">{mode === "edit" ? t('specification') : t('new_intent')}</h3>
  <div className="flex gap-2">
- <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">PO_ENGINE_V2</span>
+ <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">{/* i18n-ignore */}PO_ENGINE_V2</span>
  </div>
  </div>
 
@@ -194,7 +202,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <FormItem>
  <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
  <FormControl>
- <Input placeholder="PR-2026-001" className="bg-surface-container-low uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
+ <Input placeholder={t('linked_pr_placeholder')} className="bg-surface-container-low uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -251,13 +259,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger className="bg-surface-container-low border-none font-mono h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
- <SelectValue placeholder="Currency" />
+ <SelectValue placeholder={t('currency_placeholder')} />
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-low border-none rounded-xl">
  {currencies?.map(c => (
  <SelectItem key={c.id} value={c.code}>
- {c.code} — {c.name}
+ {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
  </SelectItem>
  ))}
  </SelectContent>
@@ -333,7 +341,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <FormItem>
  <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{t('item_sku')}</FormLabel>
  <FormControl>
- <Input placeholder="IT-1" className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+ <Input placeholder={t('item_sku_placeholder')} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -368,7 +376,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <FormItem>
  <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{tc('uom')}</FormLabel>
  <FormControl>
- <Input placeholder="PCS" className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+ <Input placeholder={t('pcs_placeholder')} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -429,14 +437,14 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <div className="bg-surface-container-high/20 px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px]">
  <span className="text-label-xs uppercase font-semibold text-muted-foreground/40">{t('supplier_total')}</span>
  <span className="text-title-lg font-mono font-semibold text-foreground" dir="ltr">
- {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(supplierTotalAmount)}
+ {formatCurrency(supplierTotalAmount, currency, locale as 'ar' | 'en')}
  </span>
  </div>
  <div className="bg-operational-cyan/[0.03] px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px] backdrop-blur-sm relative overflow-hidden">
  <div className="absolute top-0 start-0 w-1 h-full bg-operational-cyan/20" />
  <span className="text-label-xs uppercase font-semibold text-operational-cyan/60">{t('base_total')}</span>
  <span className="text-headline-lg font-mono font-semibold text-operational-cyan" dir="ltr">
- {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(baseTotalAmount)}
+ {formatCurrency(baseTotalAmount, baseCurrency || 'SAR', locale as 'ar' | 'en')}
  </span>
  </div>
  </div>
@@ -454,7 +462,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  </Button>
  <Button
  type="submit"
- disabled={isSubmitting}
+ disabled={isSubmitting || !baseCurrency}
  className="bg-operational-cyan text-primary-foreground hover:brightness-110 px-10 h-12 rounded-xl transition-all hover:scale-[0.98] active:scale-95 font-semibold uppercase text-label-xs"
  >
  {isSubmitting ? t('actions.submitting') : (mode === "edit" ? tc('save') : t('actions.submit'))}

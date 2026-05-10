@@ -170,7 +170,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       {...register('code')} 
                       disabled={isReadOnly}
                       className="font-mono font-semibold uppercase text-status-active" 
-                      placeholder="E.g. SKU-100-RED" 
+                      placeholder={ti('fields.sku_placeholder')} 
                     />
                     {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
                   </div>
@@ -233,10 +233,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                           <SelectTrigger id="item-category">
-                            <SelectValue placeholder="—" />
+                            <SelectValue placeholder={t('select_none')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">—</SelectItem>
+                            <SelectItem value="">{t('select_none')}</SelectItem>
                             {categories?.data?.map((c: any) => (
                               <SelectItem key={c.id} value={c.id} className="uppercase font-semibold text-label-sm">
                                 {locale === 'ar' ? c.name_ar : c.name_en}
@@ -257,10 +257,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                           <SelectTrigger id="primary-uom">
-                            <SelectValue placeholder="—" />
+                            <SelectValue placeholder={t('select_none')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">—</SelectItem>
+                            <SelectItem value="">{t('select_none')}</SelectItem>
                             {uoms?.data?.map((u) => (
                               <SelectItem key={u.id} value={u.id} className="uppercase font-semibold text-label-sm">
                                 {u.code} — {u.name_en}
@@ -316,10 +316,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                               render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                                   <SelectTrigger id={`uom-from-${idx}`}>
-                                    <SelectValue placeholder="—" />
+                                    <SelectValue placeholder={t('select_none')} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">—</SelectItem>
+                                    <SelectItem value="">{t('select_none')}</SelectItem>
                                     {uoms?.data?.map((u) => (
                                       <SelectItem key={u.id} value={u.id} className="font-semibold uppercase text-label-sm">
                                         {u.code}
@@ -338,10 +338,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                               render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                                   <SelectTrigger id={`uom-to-${idx}`}>
-                                    <SelectValue placeholder="—" />
+                                    <SelectValue placeholder={t('select_none')} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">—</SelectItem>
+                                    <SelectItem value="">{t('select_none')}</SelectItem>
                                     {uoms?.data?.map((u) => (
                                       <SelectItem key={u.id} value={u.id} className="font-semibold uppercase text-label-sm">
                                         {u.code}

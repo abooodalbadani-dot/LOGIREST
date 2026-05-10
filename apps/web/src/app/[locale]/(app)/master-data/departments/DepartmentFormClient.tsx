@@ -181,7 +181,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
                   disabled={isReadOnly}
                 >
  <SelectTrigger id="dept-branch">
- <SelectValue placeholder="—" />
+  <SelectValue placeholder={t('null_select')} />
  </SelectTrigger>
  <SelectContent>
  {branches.map((b) => (
@@ -209,7 +209,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
                       disabled={isReadOnly || !selectedBranchId}
                     >
  <SelectTrigger id="dept-warehouse">
- <SelectValue placeholder="—" />
+  <SelectValue placeholder={t('null_select')} />
  </SelectTrigger>
  <SelectContent>
  {filteredWarehouses.map((w) => (
@@ -235,7 +235,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
                   {...register('code')} 
                   disabled={isReadOnly}
                   className="font-mono font-semibold uppercase text-status-active" 
-                  placeholder="DEPT-01" 
+                  placeholder={td('placeholders.code')} 
                 />
  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.code.message}`)}</p>}
  </div>
@@ -305,7 +305,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
                   {...register('cost_center')} 
                   disabled={isReadOnly}
                   className="font-mono font-semibold uppercase text-tertiary" 
-                  placeholder="CC-001" 
+                  placeholder={td('placeholders.cost_center')} 
                 />
  </div>
  </div>

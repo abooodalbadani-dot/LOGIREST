@@ -5,25 +5,25 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
  const { locale } = await params;
- await getTranslations({ locale, namespace: 'admin' });
+ const t = await getTranslations({ locale, namespace: 'admin' });
  return {
- title: `Audit Logs | LogiRest`,
- description: 'System-wide audit trail and security event logging',
+ title: `${t('audit_logs.title')} | LogiRest`,
+ description: t('audit_logs.description'),
  };
 }
 
 export default async function AuditLogsPage(props: { params: Promise<{ locale: string }> }) {
  const { locale } = await props.params;
  setRequestLocale(locale);
- await getTranslations('admin');
+ const t = await getTranslations('admin');
 
  return (
  <ProtectedRoute requiredAction="view" requiredResource="audit_log">
  <div className="flex flex-col gap-6">
- <PageHeader 
- title="Audit Logs" 
- description="System-wide audit trail and security event logging"
- />
+  <PageHeader 
+  title={t('audit_logs.title')} 
+  description={t('audit_logs.description')}
+  />
  <AuditLogsClient />
  </div>
  </ProtectedRoute>

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 
 import { cn } from "@/lib/utils";
+import { formatQuantity, formatCurrency } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,18 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+ const currencyCode = 'SAR';
+
+ const itemsWithVariance = session.items.filter(i => (i.countedQty || 0) - (i.snapshotQty ?? 0) !== 0);
+ const totalPositiveVariance = session.items.reduce((acc, i) => {
+   const diff = (i.countedQty || 0) - (i.snapshotQty ?? 0);
+   return diff > 0 ? acc + (diff * i.unitCost) : acc;
+ }, 0);
+ const totalNegativeVariance = session.items.reduce((acc, i) => {
+   const diff = (i.countedQty || 0) - (i.snapshotQty ?? 0);
+   return diff < 0 ? acc + (Math.abs(diff) * i.unitCost) : acc;
+ }, 0);
+ const netImpact = totalPositiveVariance - totalNegativeVariance;
 
  const isDirty = React.useMemo(() => {
    return session.items.some(item => {
@@ -138,6 +151,38 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  </div>
  </PageHeader>
 
+ <div className="grid grid-cols-5 gap-4">
+ <MetricCard 
+ label={t('metrics.total_items')} 
+ value={formatNumber(session.items.length, locale)} 
+ icon={Calculator}
+ color="indigo"
+ />
+ <MetricCard 
+ label={t('metrics.items_with_variance')} 
+ value={formatNumber(itemsWithVariance.length, locale)} 
+ icon={AlertTriangle}
+ color="amber"
+ />
+ <MetricCard 
+ label={t('metrics.positive_variance')} 
+ value={formatCurrency(totalPositiveVariance, currencyCode, locale)} 
+ icon={ArrowUpRight}
+ color="emerald"
+ />
+ <MetricCard 
+ label={t('metrics.negative_variance')} 
+ value={formatCurrency(totalNegativeVariance, currencyCode, locale)} 
+ icon={ArrowDownRight}
+ color="rose"
+ />
+ <MetricCard 
+ label={t('metrics.net_impact')} 
+ value={formatCurrency(netImpact, currencyCode, locale)} 
+ icon={BarChart3}
+ color={netImpact >= 0 ? "emerald" : "rose"} />
+ </div>
+
  <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
  <div className="rounded-3xl bg-white/[0.01] overflow-hidden">
  <Table>
@@ -155,6 +200,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  {session.items.map((item) => {
  const counted = item.countedQty || 0
  const variance = counted - (item.snapshotQty ?? 0)
+ const varianceValue = variance * item.unitCost
  const hasVariance = variance !== 0
   const reasonError = hasVariance && !isReasonValid(item.id, variance)
 
@@ -166,11 +212,11 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  <span className="text-label-xs font-semibold text-muted-foreground/40 font-mono" dir="ltr">{item.barcode}</span>
  </div>
  </TableCell>
- <TableCell className="text-center font-mono font-bold text-muted-foreground/60" dir="ltr">
- {item.snapshotQty} {item.uom}
+  <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
+ {formatQuantity(item.snapshotQty, locale)} {item.uom}
  </TableCell>
- <TableCell className="text-center font-mono font-semibold text-foreground" dir="ltr">
- {counted} {item.uom}
+ <TableCell className="text-center font-mono text-label-sm font-semibold text-foreground" dir="ltr">
+ {formatQuantity(counted, locale)} {item.uom}
  </TableCell>
  <TableCell className="text-center">
  <div className={cn(
@@ -180,16 +226,16 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  "bg-red-500/10 text-red-500"
  )} dir="ltr">
  {variance === 0 ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
- {variance > 0 ? '+' : ''}{variance}
+ {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
  </div>
  </TableCell>
  <TableCell className="text-center">
  <div className={cn(
  "font-mono text-label-sm font-semibold",
- variance === 0 ? "text-muted-foreground/40" : 
- variance > 0 ? "text-blue-500" : "text-red-500"
+ varianceValue === 0 ? "text-muted-foreground/40" : 
+ varianceValue > 0 ? "text-blue-500" : "text-red-500"
  )} dir="ltr">
- {(variance * item.unitCost).toFixed(2)} {common('currencies.sar')}
+ {formatCurrency(varianceValue, currencyCode, locale)}
  </div>
  </TableCell>
  <TableCell>

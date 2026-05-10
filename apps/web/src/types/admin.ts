@@ -1,0 +1,17 @@
+import { z } from 'zod';
+
+export const AdminSettingsSchema = z.object({
+  id: z.string(),
+  system_name: z.string().min(1, 'System name is required'),
+  base_currency: z.string().min(1, 'Base currency is required'),
+  branch_id: z.string().min(1, 'Branch context is required'),
+  timezone: z.string().min(1, 'Timezone is required'),
+  locale_default: z.enum(['en', 'ar']),
+  sender_name: z.string().min(1, 'Sender name is required'),
+  reply_to_email: z.string().email('Invalid email address'),
+  version: z.number(),
+  updated_at: z.string(),
+  updated_by: z.string().optional(),
+});
+
+export type AdminSettings = z.infer<typeof AdminSettingsSchema>;

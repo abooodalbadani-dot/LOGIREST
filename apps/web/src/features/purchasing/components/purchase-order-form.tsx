@@ -34,6 +34,8 @@ import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
 import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
+import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
+import { formatCurrency } from "@/utils/currency";
 
 
 import { DocumentLockBanner, DocumentLockWrapper } from "@/components/shared/DocumentLockBanner";
@@ -75,7 +77,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     defaultValues: {
       supplier_id: initialData?.supplier_id || "",
       pr_id: initialData?.pr_id || "",
-      currency_code: initialData?.currency_code || "SAR",
+      currency_code: initialData?.currency_code || "",
       exchange_rate: initialData?.exchange_rate || 1,
       expected_date: initialData?.expected_date || "",
       target_warehouse_id: initialData?.target_warehouse_id || "",
@@ -131,6 +133,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         await updateMutation.mutateAsync({ ...values, version: initialData.version ?? 0 });
         toast.success(t("edit_success"));
       } else {
+        if (!currencies || currencies.length === 0) {
+          toast.error(t('errors.no_currencies_available'));
+          return;
+        }
         const result = await createMutation.mutateAsync(values);
         toast.success(t("submit_success"));
         router.push(`/purchase-orders/${result.id}`, { skipGuard: true });
@@ -148,8 +154,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
   const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
 
-  const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
-  const { data: fxRates } = useFXRates(currency, baseCurrency);
+  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
+  const baseCurrency = settings?.base_currency;
+  const { data: fxRates } = useFXRates(currency, baseCurrency || 'SAR');
   
   React.useEffect(() => {
     if (fxRates?.[0]?.rate && !initialData) {
@@ -157,7 +164,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     }
   }, [fxRates, form, initialData]);
 
-  if (loadingSuppliers || loadingCurrencies || loadingWarehouses) {
+  if (loadingSuppliers || loadingCurrencies || loadingWarehouses || loadingSettings) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-64 bg-surface-container-low rounded-3xl" />
@@ -178,7 +185,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
               <div className="flex gap-2">
-                <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">PO_ENGINE_V2</span>
+                <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">{/* i18n-ignore */}PO_ENGINE_V2</span>
                 {initialData?.document_number && (
                   <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight">
                     {initialData.document_number}
@@ -204,7 +211,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         <SelectContent className="bg-surface-container-low border-none rounded-xl">
                           {suppliers?.map(s => (
                             <SelectItem key={s.id} value={s.id}>
-                              {s.name_en} ({s.code})
+                              {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -221,7 +228,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="PR-2026-001" disabled={isLocked} className="bg-surface-container-low uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
+                        <Input placeholder={t('linked_pr_placeholder')} disabled={isLocked} className="bg-surface-container-low uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -257,7 +264,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         <SelectContent className="bg-surface-container-low border-none rounded-xl">
                           {warehouses?.map(w => (
                             <SelectItem key={w.id} value={w.id}>
-                              {w.nameEn}
+                              {locale === 'ar' ? w.nameAr : w.nameEn}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -278,13 +285,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                       <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
                         <FormControl>
                           <SelectTrigger className="bg-surface-container-low border-none font-mono h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
-                            <SelectValue placeholder="Currency" />
+                            <SelectValue placeholder={t('currency_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-surface-container-low border-none rounded-xl">
                           {currencies?.map(c => (
                             <SelectItem key={c.id} value={c.code}>
-                              {c.code} — {c.name}
+                              {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -363,7 +370,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           <FormItem>
                             <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{t('item_sku')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="IT-1" disabled={isLocked} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+                              <Input placeholder={t('sku_placeholder')} disabled={isLocked} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -399,7 +406,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           <FormItem>
                             <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{tc('uom')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="PCS" disabled={isLocked} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+                              <Input placeholder={t('uom_placeholder')} disabled={isLocked} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -463,14 +470,14 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   <div className="bg-surface-container-high/20 px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px]">
                     <span className="text-label-xs uppercase font-semibold text-muted-foreground/40">{t('supplier_total')}</span>
                     <span className="text-title-lg font-mono font-semibold text-foreground" dir="ltr">
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(supplierTotalAmount)}
+                      {formatCurrency(supplierTotalAmount, currency, locale as 'ar' | 'en')}
                     </span>
                   </div>
                   <div className="bg-operational-cyan/[0.03] px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px] backdrop-blur-sm relative overflow-hidden">
                     <div className="absolute top-0 start-0 w-1 h-full bg-operational-cyan/20" />
                     <span className="text-label-xs uppercase font-semibold text-operational-cyan/60">{t('base_total')}</span>
                     <span className="text-headline-lg font-mono font-semibold text-operational-cyan" dir="ltr">
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(baseTotalAmount)}
+                      {formatCurrency(baseTotalAmount, baseCurrency || 'SAR', locale as 'ar' | 'en')}
                     </span>
                   </div>
                 </div>

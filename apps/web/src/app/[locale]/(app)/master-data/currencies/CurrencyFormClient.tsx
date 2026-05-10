@@ -152,7 +152,7 @@ export function CurrencyFormClient({
                     <Coins className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-500 transition-colors" />
                     <Input 
                       id="curr-code" 
-                      placeholder="e.g. SAR"
+                      placeholder={t('placeholders.code')}
                       dir="ltr" 
                       maxLength={3}
                       {...register('code')} 
@@ -176,7 +176,7 @@ export function CurrencyFormClient({
                     <Type className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-amber-500 transition-colors" />
                     <Input 
                       id="curr-symbol" 
-                      placeholder="e.g. SR"
+                      placeholder={t('placeholders.symbol')}
                       {...register('symbol')} 
                       disabled={isReadOnly}
                       className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-amber-500 disabled:opacity-70"
@@ -236,8 +236,8 @@ export function CurrencyFormClient({
                   <Activity className="w-5 h-5 text-status-active" />
                 </div>
                 <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">Configuration</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Financial Controls</p>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('config_title')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('config_subtitle')}</p>
                 </div>
               </div>
               
@@ -245,7 +245,7 @@ export function CurrencyFormClient({
               <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-md border border-amber-500/10">
                 <div className="space-y-0.5">
                   <Label className="text-label-xs font-bold uppercase text-foreground/80">{t('fields.is_base')}</Label>
-                  <p className="text-label-xxs text-muted-foreground uppercase font-medium">System valuation anchor</p>
+                  <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('placeholders.base_desc')}</p>
                 </div>
                 <Controller
                   name="is_base_currency"
@@ -265,7 +265,7 @@ export function CurrencyFormClient({
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-md border border-surface-variant/5">
                 <div className="space-y-0.5">
                   <Label className="text-label-xs font-bold uppercase text-foreground/80">{t('fields.is_active')}</Label>
-                  <p className="text-label-xxs text-muted-foreground uppercase font-medium">Operationally available</p>
+                  <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('placeholders.active_desc')}</p>
                 </div>
                 <Controller
                   name="is_active"
@@ -291,8 +291,8 @@ export function CurrencyFormClient({
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">Standards</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Regulatory compliance</p>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('standards_title')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('standards_subtitle')}</p>
                 </div>
               </div>
               

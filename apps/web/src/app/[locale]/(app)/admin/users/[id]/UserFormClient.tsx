@@ -138,7 +138,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-label-xs font-semibold uppercase text-muted-foreground animate-pulse">Syncing Identity Stream...</span>
+        <span className="text-label-xs font-semibold uppercase text-muted-foreground animate-pulse">{t('syncing_identity')}</span>
       </div>
     );
   }
@@ -164,7 +164,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
               </div>
               <div>
                 <h2 className="text-title-sm font-semibold uppercase">{t('user_identity')}</h2>
-                <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">Profile credentials and metadata</p>
+                <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">{t('profile_metadata')}</p>
               </div>
             </div>
 
@@ -213,8 +213,8 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                     disabled={isAuditor}
                     className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-label-sm font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50"
                   >
-                    <option value="en">English</option>
-                    <option value="ar">العربية</option>
+                    <option value="en">{t('lang_en')}</option>
+                    <option value="ar">{t('lang_ar')}</option>
                   </select>
                 </div>
               </CardContent>
@@ -229,7 +229,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
               </div>
               <div>
                 <h2 className="text-title-sm font-semibold uppercase">{t('access_scopes')}</h2>
-                <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">Organizational unit boundaries</p>
+                <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">{t('organizational_units')}</p>
               </div>
             </div>
 
@@ -265,7 +265,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                 {(!selectedBranches.length) && (
                   <div className="p-4 rounded-sm bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <span className="text-label-xs font-bold text-amber-500 uppercase">Select at least one branch to view warehouses</span>
+                    <span className="text-label-xs font-bold text-amber-500 uppercase">{t('branch_selection_hint')}</span>
                   </div>
                 )}
               </CardContent>
@@ -282,14 +282,14 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
               </div>
               <div>
                 <h2 className="text-title-sm font-semibold uppercase">{t('governance')}</h2>
-                <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">System role & Permissions</p>
+                <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">{t('role_permissions')}</p>
               </div>
             </div>
 
             <Card className="bg-surface-container-highest/10 border-outline-low rounded-sm shadow-none overflow-hidden">
               <div className="p-1.5 bg-cyan-500/10 border-b border-outline-low flex items-center justify-center gap-2">
                 <CheckCircle2 className="w-3 h-3 text-cyan-500" />
-                <span className="text-label-xxs font-semibold uppercase text-cyan-500">Live Permissions Policy</span>
+                <span className="text-label-xxs font-semibold uppercase text-cyan-500">{t('live_policy')}</span>
               </div>
               <CardContent className="p-6 space-y-8">
                 <div className="space-y-2">
@@ -335,7 +335,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   <div className="p-4 rounded-sm bg-amber-500/5 border border-amber-500/20 space-y-2">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-3 h-3 text-amber-500" />
-                      <span className="text-label-xxs font-semibold uppercase text-amber-500">Critical Lockdown</span>
+                      <span className="text-label-xxs font-semibold uppercase text-amber-500">{t('critical_lockdown')}</span>
                     </div>
                     <p className="text-label-xs text-amber-500/70 leading-tight">
                       {t('cannot_deactivate_last_admin')}
@@ -345,7 +345,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
 
                 {isSelf && (
                   <div className="p-4 rounded-sm bg-rose-500/5 border border-rose-500/20 space-y-1">
-                    <span className="text-label-xxs font-semibold uppercase text-rose-500">Self-Protection Active</span>
+                    <span className="text-label-xxs font-semibold uppercase text-rose-500">{t('self_protection')}</span>
                     <p className="text-label-xs text-rose-500/70 leading-tight">
                       {t('cannot_modify_self')}
                     </p>
@@ -358,10 +358,10 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
           <div className="p-6 rounded-sm bg-surface-container-low border border-outline-low border-l-4 border-l-cyan-500 shadow-lg shadow-black/20">
             <h3 className="text-label-sm font-semibold uppercase text-foreground mb-2 flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-cyan-500" />
-              Security Protocol
+              {t('security_protocol')}
             </h3>
             <p className="text-label-xs text-muted-foreground/60 leading-relaxed font-medium">
-              Access scopes define the data visibility boundaries for this user. At least one branch must be assigned for operational roles.
+              {t('security_protocol_desc')}
             </p>
           </div>
         </div>
@@ -402,7 +402,7 @@ function MultiSelect({ label, icon, options, selected, onChange, disabled }: {
           </button>
         ))}
         {options.length === 0 && (
-          <span className="text-label-xs italic opacity-20 py-2">No units available for current selection</span>
+          <span className="text-label-xs italic opacity-20 py-2">{t('no_units_available')}</span>
         )}
       </div>
     </div>

@@ -170,7 +170,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                   {...register('code')} 
                   disabled={isReadOnly}
                   className="font-mono font-semibold uppercase text-status-active" 
-                  placeholder="BR-001" 
+                  placeholder={tb('placeholders.code')} 
                 />
                 {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.code.message as string)}</p>}
               </div>
@@ -185,7 +185,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                     {...register('name_en')} 
                     disabled={isReadOnly}
                     className="font-semibold" 
-                    placeholder="Branch Name" 
+                    placeholder={tb('placeholders.name_en')} 
                   />
                   {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name_en.message as string)}</p>}
                 </div>
@@ -199,7 +199,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                     {...register('name_ar')} 
                     disabled={isReadOnly}
                     className="font-semibold text-end" 
-                    placeholder="اسم الفرع" 
+                    placeholder={tb('placeholders.name_ar')} 
                   />
                   {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name_ar.message as string)}</p>}
                 </div>

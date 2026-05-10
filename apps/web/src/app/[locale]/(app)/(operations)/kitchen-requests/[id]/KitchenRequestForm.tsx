@@ -47,6 +47,7 @@ import {
 } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
+import { formatDate } from '@/utils/currency';
 
 interface KitchenRequestFormProps {
   request: any;
@@ -187,7 +188,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   <StatusBadge status={request.status} />
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
-                    {new Date(request.created_at).toLocaleString()}
+                    {formatDate(request.created_at, locale)}
                   </span>
                 </div>
               </div>

@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: 'admin' });
   return {
     title: `${t('roles')} | LogiRest`,
-    description: 'User access control and permission management',
+    description: t('roles.roles_page_description'),
   };
 }
 
@@ -24,11 +24,11 @@ export default async function RolesPage(props: { params: Promise<{ locale: strin
       <div className="flex flex-col gap-10 p-8 max-w-[1600px] mx-auto">
         <PageHeader 
           title={t('roles')} 
-          description="User access control and permission management"
+          description={t('roles.roles_page_description')}
           actions={
             <Link href="/admin/roles/matrix">
               <Button className="h-11 px-8 bg-surface-container-high hover:bg-surface-container-highest text-cyan-500 text-label-xs font-semibold uppercase rounded-sm transition-all border border-cyan-500/30">
-                View Permission Matrix
+                {t('roles.view_matrix')}
               </Button>
             </Link>
           }

@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'operations.transfer' });
  return {
  title: `${t('title')} | LogiRest`,
- description: 'Internal warehouse transfers and movement tracking',
+ description: t('description'),
  };
 }
 
@@ -22,7 +22,7 @@ export default async function TransfersPage(props: { params: Promise<{ locale: s
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description="Internal warehouse transfers and movement tracking"
+ description={t('description')}
  />
  <TransferListClient />
  </div>

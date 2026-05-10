@@ -11,12 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PostConfirmDialog } from '@/components/ui/post-confirm-dialog';
 import { Link } from '@/i18n/navigation';
 import { useAdminSettings, useUpdateSettings, SettingsSchema, type SystemSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
+import { type Currency } from '@/types/master-data';
 
 export function SettingsClient({ locale }: { locale: string }) {
   const t = useTranslations('admin.settings');
   const tCommon = useTranslations('common');
   const { data: currentSettings, isLoading } = useAdminSettings();
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
+  const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<SystemSettings | null>(null);
@@ -131,7 +134,7 @@ export function SettingsClient({ locale }: { locale: string }) {
  defaultValue={watchedLanguage}
  >
  <SelectTrigger className="bg-surface-container-low border-outline-low rounded-sm h-12 font-bold focus:ring-1 focus:ring-operational-cyan">
- <SelectValue placeholder="Select Language" />
+ <SelectValue placeholder={t('select_language')} />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-low border-outline-low rounded-sm">
  <SelectItem value="en">{tCommon('locales.en')}</SelectItem>
@@ -149,11 +152,18 @@ export function SettingsClient({ locale }: { locale: string }) {
  defaultValue={watchedBaseCurrency}
  >
  <SelectTrigger className="bg-surface-container-low border-outline-low rounded-sm h-12 font-bold focus:ring-1 focus:ring-operational-cyan">
- <SelectValue placeholder="Select Currency" />
+ <SelectValue placeholder={t('select_currency')} />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-low border-outline-low rounded-sm">
- <SelectItem value="SAR">{tCommon('currencies.sar_full')}</SelectItem>
- <SelectItem value="USD">{tCommon('currencies.usd_full')}</SelectItem>
+    {loadingCurrencies ? (
+      <div className="p-2 text-label-xs animate-pulse uppercase text-muted-foreground">Loading...</div>
+    ) : (
+      currencies?.map((c: Currency) => (
+        <SelectItem key={c.id} value={c.code}>
+          {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
+        </SelectItem>
+      ))
+    )}
  </SelectContent>
  </Select>
  </div>
@@ -166,7 +176,7 @@ export function SettingsClient({ locale }: { locale: string }) {
  </div>
  <div className="space-y-1">
  <h3 className="text-label-sm font-semibold uppercase text-status-warning">
- Critical Impact Warning
+ {t('impact_warning_title')}
  </h3>
  <p className="text-label-xs text-status-warning/80 font-bold uppercase leading-relaxed">
  {t('base_currency_warning')}

@@ -40,16 +40,16 @@ export function KitchenDashboard() {
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <div className="space-y-1">
  <Badge className="bg-status-warning/10 text-status-warning border-status-warning/20 text-label-xs font-semibold uppercase mb-2">
- Kitchen Operations
+ {t('kitchen.operations')}
  </Badge>
  <h2 className="text-headline-lg font-semibold uppercase italic text-foreground">
- Department <span className="text-status-warning">Overview</span>
+ Department <span className="text-status-warning">{t('kitchen.overview')}</span>
  </h2>
  </div>
  <PermissionGate action="create" resource="operations_issues">
  <Link href="/issues/new" className="contents">
  <Button className="primary-gradient text-white font-semibold uppercase px-8 rounded-xl h-12">
- <Plus className="w-5 h-5 me-2" /> New Request
+ <Plus className="w-5 h-5 me-2" /> {t('kitchen.new_request')}
  </Button>
  </Link>
  </PermissionGate>
@@ -58,33 +58,33 @@ export function KitchenDashboard() {
  {/* KPI Grid */}
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
  <KPICard
- title="Active Requests"
+ title={t('kitchen.active_requests')}
  value={formatNumber(stats.pendingRequests, locale as 'ar' | 'en')}
  icon={ClipboardList}
  accent="amber"
- description="Awaiting fulfillment"
+ description={t('kitchen.awaiting_fulfillment')}
  />
  <KPICard
- title="Critical Shortage"
+ title={t('kitchen.critical_shortage')}
  value={formatNumber(stats.itemsShortage, locale as 'ar' | 'en')}
  icon={AlertTriangle}
  accent="red"
- description="Immediate action required"
+ description={t('kitchen.immediate_action')}
  />
  <KPICard
- title="Today's Consumption"
+ title={t('kitchen.today_consumption')}
  value={formatNumber(stats.todayConsumption, locale as 'ar' | 'en')}
  icon={Utensils}
  accent="cyan"
  trend={{ value: '8%', isPositive: true }}
- description="Total items used today"
+ description={t('kitchen.total_items_used')}
  />
  <KPICard
- title="Kitchen Stock Health"
+ title={t('kitchen.stock_health')}
  value={`${stats.stockHealth}%`}
  icon={CheckCircle2}
  accent="cyan"
- description="Overall availability"
+ description={t('kitchen.overall_availability')}
  />
  </div>
 
@@ -94,12 +94,12 @@ export function KitchenDashboard() {
  <div className="absolute top-0 end-0 w-64 h-64 bg-status-warning/5 blur-[100px] rounded-full -me-32 -mt-32" />
  <CardHeader className="flex flex-row items-center justify-between">
  <div>
- <CardTitle className="text-title-lg font-semibold uppercase italic">Supply Requests</CardTitle>
- <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">Tracking departmental flow</CardDescription>
+ <CardTitle className="text-title-lg font-semibold uppercase italic">{t('kitchen.supply_requests')}</CardTitle>
+ <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('kitchen.tracking_flow')}</CardDescription>
  </div>
  <PermissionGate action="view" resource="operations_issues">
  <Link href="/issues">
- <Button variant="link" className="text-status-warning font-semibold uppercase text-label-xs">View History</Button>
+ <Button variant="link" className="text-status-warning font-semibold uppercase text-label-xs">{t('kitchen.view_history')}</Button>
  </Link>
  </PermissionGate>
  </CardHeader>
@@ -143,14 +143,14 @@ export function KitchenDashboard() {
  </CardContent>
  </Card>
 
- {/* Consumption Log Widget */}
+ {/* {t('kitchen.consumption_log')} Widget */}
  <Card className="bg-surface-container-lowest border-none rounded-3xl">
  <CardHeader>
  <span className="text-label-xs font-semibold uppercase text-operational-cyan mb-1 flex items-center gap-2">
  <History className="w-3 h-3" /> 
- Daily Activity
+ {t('kitchen.daily_activity')}
  </span>
- <CardTitle className="text-title-sm font-semibold uppercase">Consumption Log</CardTitle>
+ <CardTitle className="text-title-sm font-semibold uppercase">{t('kitchen.consumption_log')}</CardTitle>
  </CardHeader>
  <CardContent className="space-y-6">
  {[
@@ -162,7 +162,7 @@ export function KitchenDashboard() {
  <div key={i} className="flex items-center justify-between group">
  <div className="flex flex-col">
  <span className="text-label-xs font-bold text-foreground group-hover:text-cyan-500 transition-colors">{log.item}</span>
- <span className="text-label-xxs font-medium text-muted-foreground/40">{log.qty} recorded</span>
+ <span className="text-label-xxs font-medium text-muted-foreground/40">{log.qty} {t('kitchen.recorded')}</span>
  </div>
  <span className="text-label-xs font-semibold text-muted-foreground/30 font-mono">{log.time}</span>
  </div>
@@ -170,7 +170,7 @@ export function KitchenDashboard() {
  <PermissionGate action="create" resource="operations_issues">
  <Link href="/issues/new" className="w-full">
  <Button variant="outline" className="w-full bg-surface-container-low border-none text-label-xs font-semibold uppercase h-10 hover:bg-operational-cyan/20 hover:text-operational-cyan transition-all">
- Quick Record Usage <ArrowUpRight className="w-3 h-3 ms-2" />
+ {t('kitchen.quick_record')} <ArrowUpRight className="w-3 h-3 ms-2" />
  </Button>
  </Link>
  </PermissionGate>

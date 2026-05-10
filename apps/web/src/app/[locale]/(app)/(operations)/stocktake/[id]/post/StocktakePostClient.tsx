@@ -19,6 +19,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -126,7 +127,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  <div className="p-5 bg-white/[0.02] rounded-2xl space-y-1">
  <span className="text-label-xs font-semibold uppercase text-muted-foreground/30">{t('net_financial_value')}</span>
  <p className={cn("text-title-sm font-semibold", netImpact >= 0 ? "text-status-success" : "text-status-error")} dir="ltr">
- {netImpact.toFixed(2)} {common('currencies.sar')}
+ {formatCurrency(netImpact, 'SAR', locale)}
  </p>
  </div>
  </div>

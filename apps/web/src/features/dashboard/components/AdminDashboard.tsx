@@ -17,6 +17,8 @@ import {
 import { KPICard } from './KPICard';
 import { NearExpiryWidget } from './NearExpiryWidget';
 import { PendingDocumentsWidget } from './PendingDocumentsWidget';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { formatCurrency, formatNumber } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -26,6 +28,7 @@ import { Link } from '@/i18n/navigation';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 
 export function AdminDashboard() {
+  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
  const t = useTranslations('dashboard');
  const tc = useTranslations('common');
  const { locale } = useLocale();
@@ -33,7 +36,7 @@ export function AdminDashboard() {
  // Mock data for Admin
  const stats = {
  totalStockValue: 1245300.50,
- baseCurrency: 'SAR',
+ baseCurrency: settings?.base_currency || 'SAR',
  pendingPRs: 7,
  activeStocktakes: 2,
  lowStockItems: 14,
@@ -42,6 +45,10 @@ export function AdminDashboard() {
  lastBackup: '2h ago',
  nearExpiryCount: 12,
  };
+
+ if (loadingSettings) {
+   return <PageSkeleton />;
+ }
 
  return (
  <div className="space-y-10">

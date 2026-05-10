@@ -116,7 +116,7 @@ export function RoleDetailClient({ locale, id, isReadOnly = false }: Props) {
             </div>
             <div>
               <h3 className="text-label-sm font-semibold uppercase text-rose-500">{t('admin_role_locked')}</h3>
-              <p className="text-label-xs text-rose-500/60 font-bold uppercase">Administrative policies are immutable for system integrity</p>
+              <p className="text-label-xs text-rose-500/60 font-bold uppercase">{t('admin_policy_note')}</p>
             </div>
           </div>
         )}
@@ -127,8 +127,8 @@ export function RoleDetailClient({ locale, id, isReadOnly = false }: Props) {
                <ShieldCheck className="w-5 h-5 text-cyan-500" />
              </div>
              <div>
-               <h3 className="text-label-sm font-semibold uppercase text-cyan-500">Read-Only Mode</h3>
-               <p className="text-label-xs text-cyan-500/60 font-bold uppercase">You are currently viewing this role in read-only mode</p>
+               <h3 className="text-label-sm font-semibold uppercase text-cyan-500">{t('read_only_mode')}</h3>
+               <p className="text-label-xs text-cyan-500/60 font-bold uppercase">{t('read_only_desc')}</p>
              </div>
            </div>
         )}
@@ -164,7 +164,7 @@ export function RoleDetailClient({ locale, id, isReadOnly = false }: Props) {
                           {perm.module}
                         </span>
                         <span className="text-label-xxs text-muted-foreground/30 font-bold uppercase">
-                          Namespace: system.{perm.module.toLowerCase()}
+                          {t('namespace_label')}: system.{perm.module.toLowerCase()}
                         </span>
                       </div>
                     </td>

@@ -4,10 +4,11 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
 export const CurrencySchema = z.object({
- id: z.string(),
- code: z.string(),
- is_base: z.boolean(),
- name: z.string(),
+  id: z.string(),
+  code: z.string(),
+  is_base: z.boolean(),
+  name_ar: z.string(),
+  name_en: z.string(),
 });
 
 export type Currency = z.infer<typeof CurrencySchema>;

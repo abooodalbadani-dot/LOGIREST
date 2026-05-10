@@ -25,6 +25,7 @@ type PasswordValues = z.infer<typeof passwordSchema>;
 
 export default function ChangePasswordClient() {
  const t = useTranslations('profile');
+ const tc = useTranslations('common');
  
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [isSuccess, setIsSuccess] = useState(false);
@@ -44,7 +45,7 @@ export default function ChangePasswordClient() {
  reset();
  setTimeout(() => setIsSuccess(false), 5000);
  } catch (error) {
- toast.error('Failed to update password');
+ toast.error(t('errors.update_failed'));
  } finally {
  setIsSubmitting(false);
  }
@@ -71,10 +72,10 @@ export default function ChangePasswordClient() {
  </div>
  <div className="space-y-2">
  <p className="text-foreground font-semibold text-title-lg uppercase">{t('password_updated')}</p>
- <p className="text-body-md text-muted-foreground/60 font-medium">Your security credentials are now hardened and synced.</p>
+ <p className="text-body-md text-muted-foreground/60 font-medium">{t('security_hardened')}</p>
  </div>
  <Button variant="outline" onClick={() => setIsSuccess(false)} className="mt-2 border-border-muted/30 hover:bg-surface-container-high px-8 rounded-xl font-bold uppercase text-label-xs">
- Done
+ {tc('actions.done')}
  </Button>
  </div>
  ) : (

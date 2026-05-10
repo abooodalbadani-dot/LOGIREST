@@ -35,10 +35,10 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
   
   // Adapt timeline entries
   const timelineEntries = [
-    { status: 'draft' as Status, at: issue.created_at ?? '', by: issue.created_by ?? 'System' }
+    { status: 'draft' as Status, at: issue.created_at ?? '', by: issue.created_by ?? tCommon('system_user') }
   ];
   if (issue.posted_at) {
-    timelineEntries.push({ status: 'posted' as Status, at: issue.posted_at, by: issue.posted_by ?? 'System' });
+    timelineEntries.push({ status: 'posted' as Status, at: issue.posted_at, by: issue.posted_by ?? tCommon('system_user') });
   }
 
   const lines = (issue.lines || []) as unknown as LineItem[];
@@ -83,8 +83,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                     <span className="text-label-xs font-semibold uppercase">{t('destination')}</span>
                   </div>
                   <p className="font-bold text-body-md">
-                    {issue.destination_dept_id === 'dep-1' ? 'Kitchen 1' : 
-                     issue.destination_dept_id === 'dep-2' ? 'Pastry' : 
+                    {issue.destination_dept_id === 'dep-1' ? tCommon('departments.kitchen_1') : 
+                     issue.destination_dept_id === 'dep-2' ? tCommon('departments.pastry') : 
                      issue.destination_dept_id || '—'}
                   </p>
                </div>
@@ -100,7 +100,10 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                     <Clock className="w-4 h-4" />
                     <span className="text-label-xs font-semibold uppercase">{tCommon('warehouse')}</span>
                   </div>
-                  <p className="font-bold text-body-md">{issue.warehouse_id || 'Main Store'}</p>
+                  <p className="font-bold text-body-md">
+                    {issue.warehouse_id === 'wh-1' ? tCommon('warehouses.main') :
+                     issue.warehouse_id || tCommon('dash')}
+                  </p>
                </div>
             </div>
 
@@ -200,7 +203,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_by')}</span>
-                  <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.created_by || 'System'}</span>
+                  <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.created_by || tCommon('system_user')}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_at')}</span>
@@ -212,7 +215,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                   <>
                     <div className="flex justify-between items-center py-2 pt-4 border-t border-outline-variant/5">
                       <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_by')}</span>
-                      <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.posted_by || 'System'}</span>
+                      <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.posted_by || tCommon('system_user')}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_at')}</span>

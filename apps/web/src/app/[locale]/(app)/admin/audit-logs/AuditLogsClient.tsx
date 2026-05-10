@@ -25,6 +25,7 @@ const actionColors: Record<string, string> = {
 
 export function AuditLogsClient() {
  const t = useTranslations('admin');
+ const tc = useTranslations('common');
  const [page, setPage] = useState(1);
  const [expandedId, setExpandedId] = useState<string | null>(null);
  const { data, isLoading } = useAuditLogs({ page });
@@ -33,9 +34,9 @@ export function AuditLogsClient() {
  return {
  total: data?.meta?.total || 0,
  securityEvents: data?.data?.filter(e => ['DELETE', 'APPROVE'].includes(e.action)).length || 0,
- systemActivity: 'Nominal'
+ systemActivity: t('audit_logs.nominal')
  };
- }, [data]);
+ }, [data, t]);
 
  const handleExport = () => {
  if (!data?.data) return;
@@ -54,7 +55,7 @@ export function AuditLogsClient() {
  user: entry.user_name,
  date: format(new Date(entry.created_at), 'yyyy-MM-dd HH:mm'),
  })),
- 'Audit_Log'
+ tc('actions.audit_log_filename')
  );
  };
 
@@ -124,7 +125,7 @@ export function AuditLogsClient() {
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
  <PageHeader 
- title={t('audit_log')} description="Cryptographic evidence of all administrative and operational state changes"
+ title={t('audit_logs.title')} description={t('audit_logs.client_description')}
  actions={
  <PermissionGate action="export" resource="admin_audit_logs">
  <Button 
@@ -140,19 +141,19 @@ export function AuditLogsClient() {
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
  <MetricCard
- label="Total Ledger Entries"
+ label={t('audit_logs.total_ledger_entries')}
  value={stats.total}
  icon={Database}
  color="cyan"
  />
  <MetricCard
- label="Security Events (Page)"
+ label={t('audit_logs.security_events')}
  value={stats.securityEvents}
  icon={ShieldAlert}
  color="rose"
  />
  <MetricCard
- label="Integrity Status"
+ label={t('audit_logs.integrity_status')}
  value={stats.systemActivity}
  icon={Activity}
  color="emerald"
@@ -166,8 +167,8 @@ export function AuditLogsClient() {
  collectionName="admin_audit_logs"
  emptyState={
  <EmptyState
- title="No Ledger Entries Found"
- description="The system audit trail is currently empty for the selected filters."
+ title={t('audit_logs.no_ledger_entries')}
+ description={t('audit_logs.no_ledger_entries_desc')}
  icon={History}
  />
  }

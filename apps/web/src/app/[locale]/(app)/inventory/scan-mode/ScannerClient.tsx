@@ -35,10 +35,10 @@ export default function ScannerClient() {
  <div className="text-center space-y-2">
  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-operational-cyan/10 border border-operational-cyan/20 mb-2">
  <Scan className="w-4 h-4 text-operational-cyan" />
- <span className="text-label-xs font-semibold uppercase text-operational-cyan">Scanner Active</span>
+ <span className="text-label-xs font-semibold uppercase text-operational-cyan">{t('scanner.active')}</span>
  </div>
  <h1 className="text-headline-lg font-semibold" dir="auto" style={{ unicodeBidi: 'isolate' }}>{t('barcode_scanner')}</h1>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identify assets via optical matrix scan</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>{t('scanner.description')}</p>
  </div>
 
  {/* Scanner Viewport */}
@@ -60,7 +60,7 @@ export default function ScannerClient() {
 
  <div className="relative z-10 flex flex-col items-center gap-4 text-operational-cyan/40">
  <Camera className="w-16 h-16 animate-pulse" />
- <p className="text-label-xs font-semibold uppercase">Align Code within frame</p>
+ <p className="text-label-xs font-semibold uppercase">{t('scanner.align_tip')}</p>
  </div>
  </>
  )}
@@ -71,7 +71,7 @@ export default function ScannerClient() {
  <CheckCircle2 className="w-12 h-12 text-status-success" />
  </div>
  <div className="text-center space-y-1">
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>Identified Record:</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}>{t('scanner.identified_record')}</p>
  <p className="text-headline-lg font-semibold text-status-success uppercase" dir="auto" style={{ unicodeBidi: 'isolate' }}><span dir="ltr" className="font-mono">{result}</span></p>
  </div>
  <div className="flex flex-col gap-3 w-64">
@@ -79,7 +79,7 @@ export default function ScannerClient() {
  onClick={() => window.location.href = `/${t('lots.route') || 'inventory/lots'}`}
  className="w-full h-12 bg-status-success hover:bg-status-success/90 text-white rounded-2xl font-semibold uppercase text-label-xs"
  >
- Load Operational Data
+ {t('scanner.load_operational_data')}
  </Button>
  <Button 
  variant="ghost" 
@@ -87,7 +87,7 @@ export default function ScannerClient() {
  className="w-full h-10 text-muted-foreground/60/40 hover:text-foreground font-semibold uppercase text-label-xs gap-2"
  >
  <RefreshCw className="w-3 h-3" />
- Rescan matrix
+ {t('scanner.rescan_matrix')}
  </Button>
  </div>
  </div>
@@ -98,15 +98,15 @@ export default function ScannerClient() {
  <div className="bg-surface-container-low/30 p-6 rounded-[2rem] border border-surface-variant/10 space-y-4">
  <div className="flex items-center gap-3">
  <div className="w-1.5 h-6 bg-operational-cyan rounded-full" />
- <h3 className="text-label-sm font-semibold uppercase">Scanner Protocol v4.2</h3>
+ <h3 className="text-label-sm font-semibold uppercase">{t('scanner.protocol_version')}</h3>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="p-3 bg-surface-container-low/50 rounded-xl border border-surface-variant/10">
- <p className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase mb-1">Battery Level</p>
+ <p className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase mb-1">{t('scanner.battery_level')}</p>
  <p className="text-body-md font-semibold">94%</p>
  </div>
  <div className="p-3 bg-surface-container-low/50 rounded-xl border border-surface-variant/10">
- <p className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase mb-1">AI Confidence</p>
+ <p className="text-label-xxs font-semibold text-muted-foreground/60/40 uppercase mb-1">{t('scanner.ai_confidence')}</p>
  <p className="text-body-md font-semibold text-operational-cyan">99.8%</p>
  </div>
  </div>

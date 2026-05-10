@@ -130,7 +130,7 @@ export default function DashboardClient() {
  <div className="h-1.5 w-32 bg-surface-container-high rounded-full overflow-hidden">
  <div className="h-full bg-operational-cyan w-[98%] shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
  </div>
- <span className="text-label-xs font-bold text-foreground">98.4%</span>
+ <span className="text-label-xs font-bold text-foreground">{stats.systemHealth}%</span>
  </div>
  </div>
  
@@ -138,7 +138,7 @@ export default function DashboardClient() {
  <div className="flex items-center gap-2">
  <Badge variant="outline" className="bg-status-success/10 text-status-success border-status-success/20 text-label-xxs font-semibold h-5 px-1.5 uppercase">
  <ShieldCheck className="w-2.5 h-2.5 me-1" />
- Secure
+ {t('secure')}
  </Badge>
  <span className="text-label-xxs font-bold text-muted-foreground/40 uppercase">
  {tc('system_stats.last_sync')}: {formatTime(new Date(), locale as 'ar' | 'en')}
@@ -151,7 +151,7 @@ export default function DashboardClient() {
  </div>
  <div className="flex items-center gap-1.5">
  <Users className="w-3 h-3 text-muted-foreground/60" />
- <span className="text-label-xs font-bold text-muted-foreground/60">{stats.activeUsers} Users Online</span>
+ <span className="text-label-xs font-bold text-muted-foreground/60">{t('users_online', { count: stats.activeUsers })}</span>
  </div>
  </div>
  </div>
@@ -172,11 +172,11 @@ export default function DashboardClient() {
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 opacity-30 grayscale pointer-events-none filter blur-[0.5px] transition-all hover:opacity-100 hover:grayscale-0 hover:blur-0">
  <div className="lg:col-span-2 h-56 rounded-2xl bg-surface-container-low border border-dashed border-surface-container-high flex flex-col items-center justify-center gap-4">
  <Activity className="w-8 h-8 text-muted-foreground/40" />
- <span className="text-muted-foreground/60 italic text-label-xs font-semibold uppercase">Movement Analytics (Phase 12)</span>
+ <span className="text-muted-foreground/60 italic text-label-xs font-semibold uppercase">{t('movement_analytics_placeholder')}</span>
  </div>
  <div className="h-56 rounded-2xl bg-surface-container-low border border-dashed border-surface-container-high flex flex-col items-center justify-center gap-4">
  <Activity className="w-8 h-8 text-muted-foreground/40" />
- <span className="text-muted-foreground/60 italic text-label-xs font-semibold uppercase">Audit Logs</span>
+ <span className="text-muted-foreground/60 italic text-label-xs font-semibold uppercase">{t('audit_logs_placeholder')}</span>
  </div>
  </div>
  </div>

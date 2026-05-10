@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'master_data.barcodes' });
  return {
  title: `${t('title')} | LogiRest`,
- description: 'Item barcode and label management',
+ description: t('description'),
  };
 }
 
@@ -22,7 +22,7 @@ export default async function BarcodesPage(props: { params: Promise<{ locale: st
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description="Item barcode and label management"
+ description={t('description')}
  />
  <BarcodeListClient locale={params.locale} />
  </div>

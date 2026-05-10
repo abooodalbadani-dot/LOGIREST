@@ -22,6 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import { formatNumber } from '@/utils/currency';
 
 interface LotMovement {
  id: string;
@@ -79,7 +80,7 @@ export default function LotBalanceClient() {
  header: t('table.qty'),
  cell: ({ row }) => (
  <span dir="ltr" className={`font-mono text-label-sm font-semibold ${row.original.type === 'IN' ? 'text-status-success' : 'text-status-warning'}`}>
- {row.original.type === 'IN' ? '+' : '-'}{row.original.qty.toLocaleString()}
+ {row.original.type === 'IN' ? '+' : '-'}{formatNumber(row.original.qty, locale)}
  </span>
  ),
  },
@@ -88,7 +89,7 @@ export default function LotBalanceClient() {
  header: t('table.balance'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono text-label-sm font-semibold text-foreground">
- {row.original.balance.toLocaleString()}
+ {formatNumber(row.original.balance, locale)}
  </span>
  ),
  },

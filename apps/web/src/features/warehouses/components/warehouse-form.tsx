@@ -78,7 +78,7 @@ export function WarehouseForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('code')}</FormLabel>
  <FormControl>
- <Input placeholder="e.g. WH-001" {...field} />
+ <Input placeholder={t('code_placeholder')} {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -115,7 +115,7 @@ export function WarehouseForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('name_en')}</FormLabel>
  <FormControl>
- <Input placeholder="Main Warehouse" {...field} />
+ <Input placeholder={t('name_en_placeholder')} {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -129,7 +129,7 @@ export function WarehouseForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('name_ar')}</FormLabel>
  <FormControl>
- <Input placeholder="المستودع الرئيسي" className="text-end" dir="rtl" {...field} />
+ <Input placeholder={t('name_ar_placeholder')} className="text-end" dir="rtl" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -150,7 +150,7 @@ export function WarehouseForm() {
  </FormControl>
  <SelectContent className="bg-surface-container-low border-none">
  <SelectItem value="MAIN">{t('type_main')}</SelectItem>
- <SelectItem value="TRANSIT">Transit Hub</SelectItem>
+ <SelectItem value="TRANSIT">{t('type_transit')}</SelectItem>
  <SelectItem value="VIRTUAL">{t('type_virtual')}</SelectItem>
  </SelectContent>
  </Select>

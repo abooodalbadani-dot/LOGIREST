@@ -128,11 +128,11 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
                           disabled={isReadOnly}
                           onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                           className="font-mono font-semibold uppercase text-status-active" 
-                          placeholder="UNIT" 
+                          placeholder={tu('placeholders.code')} 
                         />
                     )}
                   />
-                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.code.message}</p>}
+                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.code.message}`)}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -144,9 +144,9 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
                       {...register('name_en')} 
                       disabled={isReadOnly}
                       className="font-semibold" 
-                      placeholder="Unit Name" 
+                      placeholder={tu('placeholders.name_en')} 
                     />
-                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.name_en.message}</p>}
+                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.name_en.message}`)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -157,9 +157,9 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
                       {...register('name_ar')} 
                       disabled={isReadOnly}
                       className="font-semibold text-end" 
-                      placeholder="اسم الوحدة" 
+                      placeholder={tu('placeholders.name_ar')} 
                     />
-                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{errors.name_ar.message}</p>}
+                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.name_ar.message}`)}</p>}
                   </div>
                 </div>
               </div>

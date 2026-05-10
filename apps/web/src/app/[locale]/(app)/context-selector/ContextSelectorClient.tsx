@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 export function ContextSelectorClient({ locale }: { locale: string }) {
- const t = useTranslations('common');
+ const t = useTranslations('context_selector');
  const router = useRouter();
  const { user, activeScope, setActiveScope } = useAuth();
  
@@ -51,13 +51,13 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  <div className="text-center space-y-4">
  <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-operational-cyan/10 rounded-full border border-operational-cyan/20">
  <Globe className="w-3.5 h-3.5 text-operational-cyan" />
- <span className="text-label-xs font-semibold uppercase text-operational-cyan">System Environment</span>
+ <span className="text-label-xs font-semibold uppercase text-operational-cyan">{t('environment')}</span>
  </div>
  <h1 className="text-headline-lg font-semibold uppercase italic bg-gradient-to-e from-foreground to-foreground/40 bg-clip-text text-transparent">
- Context Selector
+ {t('title')}
  </h1>
  <p className="text-muted-foreground/60 text-body-md font-medium uppercase max-w-md mx-auto leading-relaxed">
- Switch your operational branch and warehouse environment
+ {t('description')}
  </p>
  </div>
 
@@ -66,7 +66,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  <div className="space-y-6">
  <div className="flex items-center gap-3 ps-4">
  <Building2 className="w-5 h-5 text-operational-cyan/40" />
- <h3 className="text-label-xs font-semibold uppercase text-muted-foreground">Select Branch</h3>
+ <h3 className="text-label-xs font-semibold uppercase text-muted-foreground">{t('select_branch')}</h3>
  </div>
  
  <div className="grid gap-4">
@@ -119,7 +119,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  <div className="space-y-6">
  <div className="flex items-center gap-3 ps-4">
  <Warehouse className="w-5 h-5 text-operational-cyan/40" />
- <h3 className="text-label-xs font-semibold uppercase text-muted-foreground">Select Warehouse</h3>
+ <h3 className="text-label-xs font-semibold uppercase text-muted-foreground">{t('select_warehouse')}</h3>
  </div>
  
  <div className="grid gap-4">
@@ -129,7 +129,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  <Settings2 className="w-6 h-6 text-muted-foreground/20" />
  </div>
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/30 text-center px-12">
- Select a branch first to see available warehouses
+ {t('branch_hint')}
  </p>
  </div>
  ) : filteredWarehouses.length > 0 ? (
@@ -140,7 +140,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  className={cn(
  "relative p-6 rounded-[2rem] text-start transition-all duration-500 group overflow-hidden border border-white/5",
  selectedWarehouseId === wh.id 
- ? "bg- operational-cyan shadow-[0_20px_40px_rgba(var(--operational-cyan-rgb),0.2)]" 
+ ? "bg-operational-cyan shadow-[0_20px_40px_rgba(var(--operational-cyan-rgb),0.2)]" 
  : "bg-surface-container-low hover:bg-surface-container-high"
  )}
  >
@@ -169,7 +169,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  ))
  ) : (
  <div className="h-[200px] flex flex-col items-center justify-center rounded-[2rem] bg-surface-container-low/30 border border-dashed border-white/5 space-y-4">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/30">No warehouses found for this branch</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/30">{t('no_warehouses')}</p>
  </div>
  )}
  </div>
@@ -177,14 +177,14 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  </div>
 
  {/* Action Button */}
- <div className="flex justify-center pt-8">
+ <div className="center-content pt-8">
  <Button
  size="lg"
  disabled={!selectedBranchId || !selectedWarehouseId}
  onClick={handleConfirm}
  className="h-20 px-16 bg-foreground text-background hover:scale-105 transition-all duration-500 rounded-[2.5rem] font-semibold uppercase text-label-sm group shadow-2xl"
  >
- Switch Context
+ {t('switch_cta')}
  <ChevronRight className="w-5 h-5 ms-4 group-hover:translate-x-2 transition-transform duration-500" />
  </Button>
  </div>

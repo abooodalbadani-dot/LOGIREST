@@ -14,6 +14,7 @@ interface Step1UploadProps {
 
 export function Step1Upload({ wizard, locale }: Step1UploadProps) {
  const t = useTranslations('master_data.import');
+ const tc = useTranslations('common');
  
  const handleFile = (file: File) => {
  if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
@@ -83,7 +84,7 @@ export function Step1Upload({ wizard, locale }: Step1UploadProps) {
  <div className="flex flex-col gap-4">
  <div className="flex items-center gap-4">
  <div className="h-px flex-1 bg-muted-foreground/10" />
- <span className="text-label-xs font-semibold uppercase text-muted-foreground/30">OR</span>
+ <span className="text-label-xs font-semibold uppercase text-muted-foreground/30">{tc('or')}</span>
  <div className="h-px flex-1 bg-muted-foreground/10" />
  </div>
 

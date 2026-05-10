@@ -40,12 +40,12 @@ export function NetworkStatusBanner() {
         {isOffline ? (
           <>
             <WifiOff className="w-3.5 h-3.5" />
-            <span>You are currently offline. Operations may be limited.</span>
+            <span>{t('network.offline_message')}</span>
           </>
         ) : (
           <>
             <Wifi className="w-3.5 h-3.5" />
-            <span>Connection restored. System is back online.</span>
+            <span>{t('network.online_message')}</span>
           </>
         )}
       </div>

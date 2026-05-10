@@ -76,7 +76,7 @@ export function SupplierForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('code')}</FormLabel>
  <FormControl>
- <Input placeholder="e.g. V-001" className="font-mono uppercase" {...field} />
+ <Input placeholder={t('code_placeholder')} className="font-mono uppercase" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -112,7 +112,7 @@ export function SupplierForm() {
  <FormItem className="text-start">
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('name_en')}</FormLabel>
  <FormControl>
- <Input placeholder="Global Distributors" {...field} />
+ <Input placeholder={t('name_en_placeholder')} {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -126,7 +126,7 @@ export function SupplierForm() {
  <FormItem className="text-end" dir="rtl">
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('name_ar')}</FormLabel>
  <FormControl>
- <Input placeholder="الموزعون العالميون" className="text-end" dir="rtl" {...field} />
+ <Input placeholder={t('name_ar_placeholder')} className="text-end" dir="rtl" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -145,7 +145,7 @@ export function SupplierForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('contact_person')}</FormLabel>
  <FormControl>
- <Input placeholder="John Doe" {...field} />
+ <Input placeholder={t('contact_person_placeholder')} {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -159,7 +159,7 @@ export function SupplierForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('phone')}</FormLabel>
  <FormControl>
- <Input placeholder="+966 50 000 0000" dir="ltr" {...field} />
+ <Input placeholder={t('phone_placeholder')} dir="ltr" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -173,7 +173,7 @@ export function SupplierForm() {
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('email')}</FormLabel>
  <FormControl>
- <Input type="email" placeholder="vendor@example.com" dir="ltr" {...field} />
+ <Input type="email" placeholder={t('email_placeholder')} dir="ltr" {...field} />
  </FormControl>
  <FormMessage />
  </FormItem>

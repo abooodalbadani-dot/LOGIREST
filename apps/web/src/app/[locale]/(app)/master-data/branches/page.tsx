@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'master_data.branches' });
  return {
  title: `${t('title')} | LogiRest`,
- description: 'Branch and retail location management',
+ description: t('description'),
  };
 }
 
@@ -22,7 +22,7 @@ export default async function BranchesPage(props: { params: Promise<{ locale: st
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description="Branch and retail location management"
+ description={t('description')}
  />
  <BranchListClient locale={params.locale} />
  </div>

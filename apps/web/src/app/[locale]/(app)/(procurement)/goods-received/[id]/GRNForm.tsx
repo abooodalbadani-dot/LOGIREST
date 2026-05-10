@@ -33,10 +33,12 @@ import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { FEFOLotAllocator } from '@/components/shared/FEFOLotAllocator/FEFOLotAllocator';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { apiClient } from '@/lib/api/client';
-import { useAuth } from '@/providers/AuthProvider';
+import { useSuppliers } from '@/features/purchasing/hooks/useSuppliers';
+import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
 import { type GRNDetail, LineItemSchema } from '@/features/purchasing/hooks/useGRN';
 import { type Lot } from '@/types/master-data';
 
@@ -64,8 +66,11 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
   const { user } = useAuth();
   
   const isNew = id === 'new';
-  const { data: currencies } = useCurrencies();
-  const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
+  const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError } = useCurrencies();
+  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
+  const { data: suppliers } = useSuppliers();
+  const { data: warehouses } = useWarehouses();
+  const baseCurrency = settings?.base_currency;
   
   const [lines, setLines] = useState<LineItem[]>([]);
   const [scanError, setScanError] = useState('');
@@ -79,8 +84,8 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
     resolver: zodResolver(grnHeaderSchema),
     defaultValues: {
       supplier_id: document?.supplier_id || '',
-      currency_id: document?.currency_id || 'SAR',
-      warehouse_id: document?.warehouse_id || 'wh-1',
+      currency_id: document?.currency_id || '',
+      warehouse_id: document?.warehouse_id || '',
       notes: document?.notes || '',
     }
   });
@@ -100,8 +105,8 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
     if (document) {
       reset({
         supplier_id: document.supplier_id || '',
-        currency_id: document.currency_id || 'SAR',
-        warehouse_id: document.warehouse_id || 'wh-1',
+        currency_id: document.currency_id || '',
+        warehouse_id: document.warehouse_id || '',
         notes: document.notes || '',
       });
       setLines(document.lines || []);
@@ -200,6 +205,7 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
             {!isLocked && (
               <Button 
                 variant="ghost" 
+                disabled={!baseCurrency || lines.length === 0}
                 className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg transition-all"
               >
                 <Save className="w-4 h-4 me-2 opacity-60" />
@@ -236,8 +242,15 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
                     <SelectValue placeholder={tc('select_supplier')} />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                    <SelectItem value="sup-1" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">Supply Co</SelectItem>
-                    <SelectItem value="sup-2" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">Other Co</SelectItem>
+                    {!suppliers ? (
+                      <div className="p-2 text-label-xs animate-pulse uppercase text-primary/40">Loading...</div>
+                    ) : (
+                      suppliers.map(s => (
+                        <SelectItem key={s.id} value={s.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
+                          {locale === 'ar' ? s.name_ar : s.name_en}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               )}
@@ -259,8 +272,15 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                    <SelectItem value="SAR" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">{tc('currencies.sar_full')}</SelectItem>
-                    <SelectItem value="USD" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">{tc('currencies.usd_full')}</SelectItem>
+                    {!currencies ? (
+                      <div className="p-2 text-label-xs animate-pulse uppercase text-primary/40">Loading...</div>
+                    ) : (
+                      currencies.map(c => (
+                        <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
+                          {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               )}
@@ -295,8 +315,15 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                    <SelectItem value="wh-1" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">Main Warehouse</SelectItem>
-                    <SelectItem value="wh-2" className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">Kitchen Store</SelectItem>
+                    {!warehouses ? (
+                      <div className="p-2 text-label-xs animate-pulse uppercase text-primary/40">Loading...</div>
+                    ) : (
+                      warehouses.map(wh => (
+                        <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
+                          {locale === 'ar' ? wh.name_ar : wh.name_en}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               )}
@@ -387,16 +414,16 @@ export function GRNForm({ document, id, locale, isLocked }: GRNFormProps) {
             
             <div className="space-y-6 relative z-10">
               <div className="flex justify-between items-baseline gap-10">
-                <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId })}</p>
-                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{totalForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId || 'USD' })}</p>
+                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, currencyId || 'USD', locale)}</p>
               </div>
               
               <div className="h-px bg-surface-container-high/20 w-full" />
               
               <div className="flex justify-between items-center gap-10">
-                <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency })}</p>
+                <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency || 'SAR' })}</p>
                 <p dir="ltr" className="text-title-lg font-mono font-semibold text-primary/60">
-                  {(totalForeign * currentFxRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {formatCurrency(totalForeign * currentFxRate, baseCurrency || 'SAR', locale)}
                 </p>
               </div>
             </div>

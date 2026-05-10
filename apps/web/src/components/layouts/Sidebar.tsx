@@ -54,6 +54,7 @@ interface SidebarProps {
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('common.sidebar');
+  const tCommon = useTranslations('common');
 
   const groups: NavGroup[] = [
     {
@@ -135,7 +136,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <aside className="w-full bg-surface-container-low flex flex-col h-full">
       <div className="p-4 flex items-center justify-between md:hidden mb-2">
-        <span className="font-bold text-operational-cyan">LogiRest</span>
+        <span className="font-bold text-operational-cyan">{tCommon('system.name')}</span>
         <button onClick={onClose} className="p-1 hover:bg-surface-container-high rounded-lg transition-colors">
           <X className="w-5 h-5 text-muted-foreground/60" />
         </button>

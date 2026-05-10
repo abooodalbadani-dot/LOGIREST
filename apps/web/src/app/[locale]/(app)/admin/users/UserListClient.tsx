@@ -97,7 +97,7 @@ export function UserListClient({ locale }: { locale: string }) {
               <span key={idx} dir="ltr" className="text-label-xs font-mono opacity-60 bg-white/5 px-1.5 py-0.5 rounded-sm">
                 {sl}
               </span>
-            )) : <span className="opacity-20 text-label-xs italic">— No Scope —</span>}
+            )) : <span className="opacity-20 text-label-xs italic">— {t('no_scope')} —</span>}
           </div>
         );
       },
@@ -151,19 +151,19 @@ export function UserListClient({ locale }: { locale: string }) {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
         <MetricCard
-          label={tCommon('total_users') || 'Total Identities'}
+          label={tCommon('total_users') || t('total_identities')}
           value={stats.total}
           icon={Users}
           color="cyan"
         />
         <MetricCard
-          label={tCommon('admins') || 'Elevated Access'}
+          label={tCommon('admins') || t('elevated_access')}
           value={stats.admins}
           icon={ShieldCheck}
           color="rose"
         />
         <MetricCard
-          label={tCommon('operators') || 'Standard Ops'}
+          label={tCommon('operators') || t('standard_ops')}
           value={stats.ops}
           icon={Shield}
           color="cyan"
@@ -189,7 +189,7 @@ export function UserListClient({ locale }: { locale: string }) {
               <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('search')}</label>
               <div className="relative">
                 <Input
-                  placeholder="Search identities by name or email..."
+                  placeholder={t('search_placeholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="w-full bg-surface-container-highest/30 border-none h-11 px-10 text-label-sm font-bold"

@@ -2,8 +2,9 @@
  * Convert an amount from foreign currency to base currency.
  * @example convertToBase(100, 3.75) → 375
  */
-export function convertToBase(foreignAmount: number, fxRate: number): number {
- return Math.round(foreignAmount * fxRate * 100) / 100;
+export function convertToBase(foreignAmount: number | null | undefined, fxRate: number | null | undefined): number {
+  if (foreignAmount == null || fxRate == null || isNaN(foreignAmount) || isNaN(fxRate)) return 0;
+  return Math.round(foreignAmount * fxRate * 100) / 100;
 }
 
 /**
@@ -11,41 +12,89 @@ export function convertToBase(foreignAmount: number, fxRate: number): number {
  * Always uses the user's locale for decimal/grouping separators.
  * The calling component wraps the output in <span dir="ltr"> in RTL context.
  */
-export function formatCurrency(amount: number, currencyCode: string, locale: 'ar' | 'en'): string {
- // Use 'ar-u-nu-latn' to force Western Arabic numerals (1, 2, 3...) in Arabic locale
- const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
- return new Intl.NumberFormat(formatterLocale, {
- style: 'currency',
- currency: currencyCode,
- minimumFractionDigits: 2,
- }).format(amount);
+export function formatCurrency(
+  amount: number | null | undefined, 
+  currencyCode: string | undefined, 
+  locale: 'ar' | 'en' = 'en'
+): string {
+  const safeAmount = amount == null || isNaN(amount) ? 0 : amount;
+  const safeCurrency = currencyCode || 'USD'; 
+  const safeLocale = locale || 'en';
+  
+  // Use 'ar-u-nu-latn' to force Western Arabic numerals (1, 2, 3...) in Arabic locale
+  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  
+  try {
+    return new Intl.NumberFormat(formatterLocale, {
+      style: 'currency',
+      currency: safeCurrency,
+      minimumFractionDigits: 2,
+    }).format(safeAmount);
+  } catch (e) {
+    console.error(`[formatCurrency] Error with currency: ${safeCurrency}`, e);
+    // Fallback display if formatting fails - ensure fixed decimals for safety
+    return `${safeCurrency} ${safeAmount.toFixed(2)}`;
+  }
 }
 
 /**
- * Format a plain number (qty) with locale separators.
- * Calling component wraps output in <span dir="ltr"> in RTL context.
+ * Format a plain number with locale separators.
  */
-export function formatNumber(value: number, locale: 'ar' | 'en'): string {
- const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
- return new Intl.NumberFormat(formatterLocale).format(value);
+export function formatNumber(
+  value: number | null | undefined, 
+  locale: 'ar' | 'en' = 'en', 
+  precision?: number
+): string {
+  const safeValue = value == null || isNaN(value) ? 0 : value;
+  const safeLocale = locale || 'en';
+  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  
+  return new Intl.NumberFormat(formatterLocale, {
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision,
+  }).format(safeValue);
 }
 
 /**
  * Format a quantity with ERP standard 3-decimal precision.
- * Calling component should wrap output in <span dir="ltr"> in RTL context.
  */
-export function formatQuantity(value: number, locale: 'ar' | 'en'): string {
-  const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
-  return new Intl.NumberFormat(formatterLocale, {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3,
-  }).format(value);
+export function formatQuantity(value: number | null | undefined, locale: 'ar' | 'en' = 'en'): string {
+  return formatNumber(value, locale, 3);
+}
+
+/**
+ * Format an exchange rate with high precision (default 4 decimals).
+ */
+export function formatRate(value: number | null | undefined, locale: 'ar' | 'en' = 'en', precision: number = 4): string {
+  return formatNumber(value, locale, precision);
+}
+
+/**
+ * Format a date string with standardized locale.
+ */
+export function formatDate(date: Date | string | null | undefined, locale: 'ar' | 'en' = 'en'): string {
+  if (!date) return '—';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  
+  const safeLocale = locale || 'en';
+  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  
+  return d.toLocaleString(formatterLocale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
 /**
  * Format a time string with standardized numerals.
  */
-export function formatTime(date: Date, locale: 'ar' | 'en'): string {
- const formatterLocale = locale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
- return date.toLocaleTimeString(formatterLocale);
+export function formatTime(date: Date | null | undefined, locale: 'ar' | 'en' = 'en'): string {
+  if (!date) return '--:--';
+  const safeLocale = locale || 'en';
+  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  return date.toLocaleTimeString(formatterLocale);
 }

@@ -21,7 +21,7 @@ export function Step3Errors({ wizard, locale }: Step3ErrorsProps) {
  const columns = useMemo<ColumnDef<any>[]>(() => [
  {
  accessorKey: 'row',
- header: 'Row',
+ header: t('row'),
  cell: ({ row }) => <span className="font-mono text-muted-foreground font-bold">#{row.original.row}</span>,
  },
  {
@@ -31,24 +31,24 @@ export function Step3Errors({ wizard, locale }: Step3ErrorsProps) {
  },
  {
  accessorKey: 'severity',
- header: 'Level',
+ header: t('status'),
  cell: ({ row }) => (
  <span className={cn(
  "text-label-xxs font-semibold uppercase tracking-normal px-2 py-0.5 rounded-sm",
  row.original.severity === 'error' ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"
  )}>
- {row.original.severity}
+ {t(row.original.severity)}
  </span>
  ),
  },
  {
  accessorKey: 'message',
- header: 'Description',
+ header: t('error_message'),
  cell: ({ row }) => <span className="font-medium text-label-sm">{row.original.message}</span>,
  },
  {
  accessorKey: 'value',
- header: 'Current Value',
+ header: t('value'),
  cell: ({ row }) => <code className="text-label-xs bg-muted px-1.5 py-0.5 rounded-sm font-mono opacity-60">{String(row.original.value || 'NULL')}</code>,
  },
  ], []);
@@ -71,7 +71,7 @@ export function Step3Errors({ wizard, locale }: Step3ErrorsProps) {
  </div>
  <div>
  <h3 className="text-title-lg font-semibold">{t('error_step')}</h3>
- <p className="text-label-sm text-muted-foreground font-medium uppercase opacity-60">Review issues and correct your file</p>
+ <p className="text-label-sm text-muted-foreground font-medium uppercase opacity-60">{t('errors_found_description')}</p>
  </div>
  </div>
 
@@ -81,7 +81,7 @@ export function Step3Errors({ wizard, locale }: Step3ErrorsProps) {
  onClick={downloadErrorReport}
  >
  <Download className="w-4 h-4 mr-2" />
- {t('download_error_report')}
+ {t('export_error_report')}
  </Button>
  </div>
 
@@ -99,7 +99,7 @@ export function Step3Errors({ wizard, locale }: Step3ErrorsProps) {
  onClick={wizard.prevStep}
  >
  <ArrowLeft className={cn("w-4 h-4", locale === 'ar' ? "ml-2" : "mr-2")} />
- Back to Validation
+ {t('back_to_validation')}
  </Button>
 
  <div className="flex gap-4">

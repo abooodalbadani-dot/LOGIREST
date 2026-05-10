@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "i18n-audit": "node scripts/i18n-audit.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

@@ -11,6 +11,7 @@ import LocaleSwitcher from '@/components/shared/LocaleSwitcher';
 
 export default function ProfilePage() {
  const t = useTranslations('profile');
+ const tc = useTranslations('common');
  const { user } = useAuth();
 
  if (!user) return null;
@@ -27,7 +28,7 @@ export default function ProfilePage() {
  <Globe className="w-4 h-4" />
  </div>
  <div className="flex flex-col pe-4 border-e border-border-muted/50">
- <span className="text-label-xs font-semibold text-muted-foreground uppercase leading-none mb-1">Language Preference</span>
+ <span className="text-label-xs font-semibold text-muted-foreground uppercase leading-none mb-1">{t('language_preference')}</span>
  <LocaleSwitcher />
  </div>
  </div>
@@ -50,7 +51,7 @@ export default function ProfilePage() {
  </div>
  <div className="px-3 py-1 bg-surface-container-low border border-border-muted/50 rounded-full flex items-center gap-1.5">
  <BadgeCheck className="w-3.5 h-3.5 text-operational-cyan" />
- <span className="text-label-xs font-semibold text-foreground uppercase">Verified Identity</span>
+ <span className="text-label-xs font-semibold text-foreground uppercase">{t('verified_identity')}</span>
  </div>
  </div>
  </CardHeader>
@@ -88,10 +89,10 @@ export default function ProfilePage() {
  <div className="w-2 h-2 rounded-full bg-operational-cyan group-hover:shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.6)] transition-all" />
  <div className="flex flex-col">
  <span className="text-label-sm font-bold text-foreground">
- {scope.branch_id || 'All Branches'}
+ {scope.branch_id || tc('actions.all_branches')}
  </span>
  <span className="text-label-xs text-muted-foreground font-medium">
- {scope.warehouse_id ? `Warehouse: ${scope.warehouse_id}` : 'Global Warehouse Access'}
+ {scope.warehouse_id ? `${tc('warehouses.warehouses')}: ${scope.warehouse_id}` : t('global_access')}
  {scope.department_id && ` • Dept: ${scope.department_id}`}
  </span>
  </div>
@@ -99,7 +100,7 @@ export default function ProfilePage() {
  ))}
  {user.scopes.length === 0 && (
  <div className="col-span-full py-8 text-center border-2 border-dashed border-border-muted/50 rounded-2xl">
- <p className="text-body-md text-muted-foreground italic">No specific operational scopes assigned (Global Access)</p>
+ <p className="text-body-md text-muted-foreground italic">{t('global_access')}</p>
  </div>
  )}
  </div>
@@ -116,7 +117,7 @@ export default function ProfilePage() {
  <CardHeader className="pb-3">
  <CardTitle className="text-body-md font-semibold flex items-center gap-2 text-muted-foreground uppercase">
  <Shield className="w-4 h-4 group-hover:text-operational-cyan transition-colors" />
- Enterprise Security
+ {t('enterprise_security')}
  </CardTitle>
  </CardHeader>
  <CardContent className="space-y-4">
@@ -125,12 +126,12 @@ export default function ProfilePage() {
  <div className="w-4 h-4 border-2 border-muted-foreground rounded-sm" />
  </div>
  <div className="flex flex-col">
- <span className="text-label-sm font-bold">2FA Authentication</span>
- <span className="text-label-xs">Phase 12 Requirement</span>
+ <span className="text-label-sm font-bold">{t('two_fa')}</span>
+ <span className="text-label-xs">{t('phase_requirement', { phase: 12 })}</span>
  </div>
  </div>
  <p className="text-label-xs text-muted-foreground leading-relaxed">
- Security audits and multi-factor authentication are scheduled for the next deployment cycle.
+ {tc('security_standard_desc')}
  </p>
  </CardContent>
  </Card>

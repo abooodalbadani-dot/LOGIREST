@@ -26,21 +26,21 @@ export function RolesViewerClient() {
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MetricCard
-            label="Registered Roles"
+            label={t('matrix.registered_roles')}
             value={ROLES.length}
             icon={Key}
             trend="active"
           />
           <MetricCard
-            label="Defined Resources"
+            label={t('matrix.defined_resources')}
             value={RESOURCES.length}
             icon={Lock}
             trend="active"
             color="amber"
           />
           <MetricCard
-            label="RBAC Enforcement"
-            value="Strict"
+            label={t('matrix.rbac_enforcement')}
+            value={t('matrix.strict')}
             icon={Shield}
             trend="active"
             color="emerald"
@@ -51,7 +51,7 @@ export function RolesViewerClient() {
           <div className="p-8 bg-surface-container-low/50">
             <div className="flex items-center gap-3 text-cyan-500 font-bold text-label-xs uppercase">
               <Fingerprint className="w-4 h-4" />
-              Authorization Matrix
+              {t('matrix.auth_matrix')}
             </div>
           </div>
           
@@ -59,7 +59,7 @@ export function RolesViewerClient() {
             <table className="w-full text-start border-collapse">
               <thead>
                 <tr className="bg-surface-container-low">
-                  <th className="sticky start-0 z-20 bg-surface-container-low h-14 px-8 text-label-xs font-bold uppercase text-muted-foreground/60">Resource</th>
+                  <th className="sticky start-0 z-20 bg-surface-container-low h-14 px-8 text-label-xs font-bold uppercase text-muted-foreground/60">{t('matrix.resource')}</th>
                   {ROLES.map((role) => (
                     <th key={role} className="p-0 border-none" colSpan={ACTIONS.length}>
                       <div className="flex flex-col">
@@ -113,7 +113,7 @@ export function RolesViewerClient() {
         
         <div className="flex items-center justify-center p-8 bg-surface-container-low/30 rounded-[2.5rem]">
           <p className="text-label-xs font-bold text-muted-foreground/40 uppercase text-center leading-relaxed max-w-2xl">
-            The permission matrix is immutable in the current runtime environment. Changes require security clearance and deployment of a new RBAC manifest.
+            {t('matrix.immutable_note')}
           </p>
         </div>
       </div>

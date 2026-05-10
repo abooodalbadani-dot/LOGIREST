@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const t = await getTranslations({ locale, namespace: 'master_data.categories' });
  return {
  title: `${t('title')} | LogiRest`,
- description: 'Item category and classification management',
+ description: t('description'),
  };
 }
 
@@ -22,7 +22,7 @@ export default async function CategoriesPage(props: { params: Promise<{ locale: 
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('title')} 
- description="Item category and classification management"
+ description={t('description')}
  />
  <CategoryListClient locale={params.locale} />
  </div>

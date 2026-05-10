@@ -14,6 +14,7 @@ import {
  ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/utils/currency';
 
 // Mock data for expired overrides
 const MOCK_OVERRIDES = [
@@ -117,7 +118,7 @@ export function ExpiredOverrideClient({ locale }: { locale: string }) {
  <div className="flex items-center gap-2">
  <Calendar className="w-3.5 h-3.5 text-muted-foreground/40" />
  <span className="text-label-xs font-mono text-muted-foreground/60" dir="ltr">
- {new Date(ov.overridden_at).toLocaleString()}
+ {formatDate(ov.overridden_at, locale as 'ar' | 'en')}
  </span>
  </div>
  </div>

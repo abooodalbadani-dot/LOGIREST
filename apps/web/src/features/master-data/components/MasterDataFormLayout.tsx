@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -39,6 +40,8 @@ export function MasterDataFormLayout({
   isValid = true,
   headerActions
 }: Props) {
+  const t = useTranslations('master_data.common');
+
   return (
     <div className="p-8 max-w-[1000px] mx-auto pb-32 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12">
@@ -53,7 +56,7 @@ export function MasterDataFormLayout({
           </Button>
           <div className="space-y-1">
             <h1 className="text-headline-lg font-semibold text-foreground uppercase">{title}</h1>
-            <p className="text-label-xs text-muted-foreground/40 uppercase font-semibold">Asset Configuration & Metadata</p>
+            <p className="text-label-xs text-muted-foreground/40 uppercase font-semibold">{t('asset_metadata')}</p>
           </div>
         </div>
 
@@ -72,11 +75,11 @@ export function MasterDataFormLayout({
       </div>
 
       <div className="flex items-center justify-between px-10 py-6 bg-surface-container-low/40 rounded-[2rem]">
-        <span className="text-label-xs text-muted-foreground/40 uppercase font-semibold">Confidential Operational Data</span>
+        <span className="text-label-xs text-muted-foreground/40 uppercase font-semibold">{t('confidential_data')}</span>
         <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan animate-pulse" />
-            <span className="text-label-xxs text-operational-cyan/60 font-semibold uppercase">Secure Connection</span>
+            <span className="text-label-xxs text-operational-cyan/60 font-semibold uppercase">{t('secure_connection')}</span>
           </div>
         </div>
       </div>

@@ -32,7 +32,7 @@ export default function LoginPage() {
  useEffect(() => {
  if (!authLoading && user && !redirected.current) {
  redirected.current = true;
- router.replace('dashboard');
+ router.replace('/dashboard');
  }
  }, [user, authLoading, router]);
 
@@ -132,7 +132,7 @@ export default function LoginPage() {
  <label className="text-label-xs font-medium text-muted-foreground/60">
  {t('login.access_protocol')}
  </label>
- <button type="button" onClick={() => router.push('forgot-password')} className="text-label-xs text-operational-cyan hover:text-operational-cyan/80 font-medium">
+ <button type="button" onClick={() => router.push('/forgot-password')} className="text-label-xs text-operational-cyan hover:text-operational-cyan/80 font-medium">
  {t('login.recover_access')}
  </button>
  </div>
@@ -206,7 +206,7 @@ export default function LoginPage() {
  <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan" />
  <span className="text-label-xs text-muted-foreground/60 font-medium">{t('login.system_online')}</span>
  </div>
- <span className="text-label-xs text-muted-foreground/40 font-mono">v3.1.04</span>
+ <span className="text-label-xs text-muted-foreground/40 font-mono">{t('login.version')}</span>
  </div>
  </div>
  </div>

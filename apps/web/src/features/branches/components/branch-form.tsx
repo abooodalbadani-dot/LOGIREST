@@ -31,6 +31,7 @@ export function BranchForm() {
  const router = useRouter()
  const [isSubmitting, setIsSubmitting] = React.useState(false)
  const t = useTranslations("common");
+ const tb = useTranslations("master_data.branches");
 
  const form = useForm<z.infer<typeof formSchema>>({
  resolver: zodResolver(formSchema),
@@ -71,7 +72,7 @@ export function BranchForm() {
  <FormLabel className="text-label-xs font-bold uppercase text-muted-foreground/60">{t("code")}</FormLabel>
  <FormControl>
  <Input 
- placeholder="e.g. BR-001" 
+ placeholder={tb('placeholders.code')} 
  {...field} 
  />
  </FormControl>
@@ -89,12 +90,12 @@ export function BranchForm() {
  <Select onValueChange={field.onChange} defaultValue={field.value}>
  <FormControl>
  <SelectTrigger>
- <SelectValue placeholder="Select a status" />
+ <SelectValue placeholder={tb('placeholders.status')} />
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-low border-none backdrop-blur-md">
- <SelectItem value="ACTIVE">Active</SelectItem>
- <SelectItem value="INACTIVE">Inactive</SelectItem>
+ <SelectItem value="ACTIVE">{t('status.active')}</SelectItem>
+ <SelectItem value="INACTIVE">{t('status.inactive')}</SelectItem>
  </SelectContent>
  </Select>
  <FormMessage className="text-label-xs font-medium" />
@@ -110,7 +111,7 @@ export function BranchForm() {
  <FormLabel className="text-label-xs font-bold uppercase text-muted-foreground/60">{t('name_en')}</FormLabel>
  <FormControl>
  <Input 
- placeholder="Main Riyadh Branch" 
+ placeholder={tb('placeholders.main_riyadh_en')} 
  {...field} 
  />
  </FormControl>
@@ -127,7 +128,7 @@ export function BranchForm() {
  <FormLabel className="text-label-xs font-bold uppercase text-muted-foreground/60">{t('name_ar')}</FormLabel>
  <FormControl>
  <Input 
- placeholder="فرع الرياض الرئيسي" 
+ placeholder={tb('placeholders.main_riyadh_ar')} 
  className="text-end" 
  dir="rtl" 
  {...field} 

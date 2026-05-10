@@ -37,6 +37,8 @@ import { useSuppliers } from '@/features/purchasing/hooks/useSuppliers';
 import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
 import { useCreateGRN } from '@/features/purchasing/hooks/useCreateGRN';
 import { useUpdateGRN } from '@/features/purchasing/hooks/useUpdateGRN';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { formatCurrency } from '@/utils/currency';
 
 const grnFormSchema = z.object({
   supplier_id: z.string().min(1, 'Required'),
@@ -81,7 +83,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     resolver: zodResolver(grnFormSchema),
     defaultValues: {
       supplier_id: initialData?.supplier_id || '',
-      currency_id: initialData?.currency_id || 'SAR',
+      currency_id: initialData?.currency_id || '',
       warehouse_id: initialData?.warehouse_id || 'wh-1',
       notes: initialData?.notes || '',
       lines: initialData?.lines || []
@@ -98,7 +100,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const currencyId = useWatch({ control, name: 'currency_id' });
   const watchedLines = useWatch({ control, name: 'lines' });
 
-  const baseCurrency = currencies?.find(c => c.is_base)?.code || 'SAR';
+  const { data: settings } = useAdminSettings();
+  const baseCurrency = settings?.base_currency;
   const { data: fxRates } = useFXRates(currencyId, baseCurrency);
   const currentFxRate = fxRates?.[0]?.rate || 1;
 
@@ -111,7 +114,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       lastResetId.current = initialData.id;
       reset({
         supplier_id: initialData.supplier_id || '',
-        currency_id: initialData.currency_id || 'SAR',
+        currency_id: initialData.currency_id || '',
         warehouse_id: initialData.warehouse_id || 'wh-1',
         notes: initialData.notes || '',
         lines: initialData.lines || []
@@ -190,6 +193,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = async (values: GRNFormValues) => {
+    if (!currencies || currencies.length === 0) {
+      toast.error(t('errors.no_currencies_available'));
+      return;
+    }
     try {
       const payload = {
         ...values,
@@ -282,7 +289,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
                     {currencies?.map(c => (
                       <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
-                        {c.code} — {c.name}
+                        {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -421,7 +428,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               <div className="space-y-6 relative z-10">
                 <div className="flex justify-between items-baseline gap-10">
                   <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId })}</p>
-                  <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{totalForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                  <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">
+                    {formatCurrency(totalForeign, currencyId, locale as 'ar' | 'en')}
+                  </p>
                 </div>
                 
                 <div className="h-px bg-surface-container-high/20 w-full" />
@@ -429,7 +438,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 <div className="flex justify-between items-center gap-10">
                   <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency })}</p>
                   <p dir="ltr" className="text-title-lg font-mono font-semibold text-primary/60">
-                    {(totalForeign * currentFxRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {formatCurrency(totalForeign * currentFxRate, baseCurrency, locale as 'ar' | 'en')}
                   </p>
                 </div>
               </div>

@@ -1,4 +1,42 @@
+let mockSettings = {
+  id: 'settings-1',
+  system_name: 'LogiRest Enterprise',
+  base_currency: 'SAR',
+  branch_id: 'br-1',
+  timezone: 'Asia/Riyadh',
+  locale_default: 'ar' as const,
+  sender_name: 'LogiRest System',
+  reply_to_email: 'no-reply@logirest.com',
+  version: 1,
+  updated_at: '2026-05-10T00:00:00Z',
+};
+
 export const adminMocks: Record<string, unknown> = {
+  'GET /admin/settings': () => mockSettings,
+  
+  'PUT /admin/settings': (body: any) => {
+    // Conflict detection simulation
+    if (body.version !== mockSettings.version) {
+      return {
+        error: {
+          status: 409,
+          code: 'VERSION_CONFLICT',
+          message: 'Settings were updated by another user',
+          current_version: mockSettings.version,
+          updated_by: 'Another Admin',
+          updated_at: new Date().toISOString()
+        }
+      };
+    }
+
+    mockSettings = {
+      ...mockSettings,
+      ...body,
+      version: mockSettings.version + 1,
+      updated_at: new Date().toISOString()
+    };
+    return mockSettings;
+  },
  'GET /admin/users': {
  data: [
  {

@@ -57,6 +57,7 @@ import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operation
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
+import { formatQuantity } from '@/utils/currency';
 
 const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'] as const;
 
@@ -363,8 +364,8 @@ export function AdjustmentForm({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                      <SelectItem value="wh-1" className="font-bold text-body-md">Main Store</SelectItem>
-                      <SelectItem value="wh-2" className="font-bold text-body-md">Kitchen Warehouse</SelectItem>
+                      <SelectItem value="wh-1" className="font-bold text-body-md">{tc('warehouses.main')}</SelectItem>
+                      <SelectItem value="wh-2" className="font-bold text-body-md">{tc('warehouses.kitchen')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -473,7 +474,7 @@ export function AdjustmentForm({
                           </td>
                           <td className="px-6 py-6 text-center tabular-nums">
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-body-md font-bold text-muted-foreground/40">{line.qty_before.toFixed(3)}</span>
+                              <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>
                           </td>
@@ -497,7 +498,7 @@ export function AdjustmentForm({
                                 "text-body-md font-bold",
                                 (line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted) < 0 ? "text-red-500" : "text-foreground"
                               )}>
-                                {(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted).toFixed(3)}
+                                {formatQuantity(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted, locale as 'ar' | 'en')}
                               </span>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>

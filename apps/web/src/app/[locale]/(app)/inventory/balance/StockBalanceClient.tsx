@@ -11,6 +11,7 @@ import { WarehouseSchema } from '@/types/master-data';
 import { generateExcel } from '@/utils/export';
 import type { StockBalanceItem } from '@/types/inventory';
 import { cn } from '@/lib/utils';
+import { formatNumber, formatCurrency } from '@/utils/currency';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -97,7 +98,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  header: tc('table_headers.available'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono text-label-sm font-semibold text-foreground">
- {row.original.qty_available.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+ {formatNumber(row.original.qty_available, currentLocale as 'ar' | 'en', 2)}
  </span>
  ),
  },
@@ -146,7 +147,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  </div>
  ),
  },
- ], [t, tc, isRtl]);
+ ], [t, tc, isRtl, currentLocale]);
 
  const handleExport = () => {
  if (!data?.data) return;
@@ -223,7 +224,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
  <MetricCard
  label={t('total_value')}
- value={totalValue.toLocaleString()}
+ value={formatCurrency(totalValue, 'SAR', currentLocale as 'ar' | 'en')}
  icon={Wallet}
  color="emerald"
  trend={tc('currencies.sar_full')}
@@ -242,7 +243,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  />
  <MetricCard
  label={t('total_sku')}
- value={totalItems.toLocaleString()}
+ value={formatNumber(totalItems, currentLocale as 'ar' | 'en')}
  icon={Package}
  />
  </div>
@@ -287,7 +288,7 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  {t('pagination_info', { 
  start: ((page - 1) * 15) + 1, 
  end: Math.min(page * 15, totalItems), 
- total: totalItems.toLocaleString() 
+ total: formatNumber(totalItems, currentLocale as 'ar' | 'en') 
  })}
  </div>
  <Button 

@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { AlertTriangle, RefreshCw, Save, X } from 'lucide-react';
+import { formatDate } from '@/utils/currency';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,7 +65,7 @@ export function ConflictDialog({
             {error.updatedAt && (
               <div className="text-label-sm font-medium flex justify-between">
                 <span>{t('updated_at')}:</span>
-                <span className="font-bold">{new Date(error.updatedAt).toLocaleString()}</span>
+                <span className="font-bold">{formatDate(error.updatedAt, useLocale() as 'ar' | 'en')}</span>
               </div>
             )}
             <div className="text-label-sm font-medium flex justify-between">

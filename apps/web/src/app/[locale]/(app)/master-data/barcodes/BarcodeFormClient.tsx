@@ -198,7 +198,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </div>
  <div>
  <h3 className="text-body-md font-semibold text-foreground uppercase">{tb('fields.code')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Physical identifier mapping</p>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tb('physical_mapping')}</p>
  </div>
  </div>
 
@@ -209,7 +209,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </Label>
                 <ScanInput
                   onScan={(val) => setValue('code', val, { shouldValidate: true })}
-                  placeholder={isReadOnly ? "" : "Scan or type barcode..."}
+                  placeholder={isReadOnly ? "" : tb('scan_or_type')}
                   disabled={isReadOnly}
                   className="h-11 font-mono font-bold text-label-sm text-status-secondary"
                 />
@@ -222,7 +222,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  <div className="flex items-center gap-3">
  <BarcodeIcon className="w-5 h-5 text-status-secondary/50" />
  <div>
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/60">Registered Identity</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/60">{tb('registered_identity')}</p>
  <p dir="ltr" className="font-mono text-body-md font-bold text-status-secondary uppercase">{currentCode}</p>
  </div>
  </div>
@@ -242,15 +242,15 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  <Settings2 className="w-5 h-5 text-status-active" />
  </div>
  <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">Configuration</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">Operational Status</p>
+ <h3 className="text-body-md font-semibold text-foreground uppercase">{tb('configuration')}</h3>
+ <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tb('operational_status')}</p>
  </div>
  </div>
  
  <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-md border border-surface-variant/5">
  <div className="space-y-0.5">
- <Label className="text-label-xs font-bold uppercase text-foreground/80">Active Status</Label>
- <p className="text-label-xxs text-muted-foreground uppercase font-medium">Allow use in transactions</p>
+ <Label className="text-label-xs font-bold uppercase text-foreground/80">{tb('active_status_label')}</Label>
+ <p className="text-label-xxs text-muted-foreground uppercase font-medium">{tb('active_status_desc')}</p>
  </div>
  <Controller
  name="is_active"
@@ -274,7 +274,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
  <Cpu className="w-5 h-5 text-tertiary" />
  </div>
- <div>
+ <div className="flex flex-col">
  <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('quick_tips')}</h3>
  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tc('hardware_usage')}</p>
  </div>
@@ -283,15 +283,16 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  <ul className="space-y-4">
  <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
  <span className="text-status-active/60 font-semibold">/</span>
- <span>Multiple barcodes can exist for the same item if UoMs differ.</span>
+ <span>{tb('tips.multi_unit_desc')}</span>
  </li>
  <li className="text-label-xs text-muted-foreground/80 leading-relaxed font-medium flex gap-3">
  <span className="text-status-active/60 font-semibold">/</span>
- <span>Barcodes must be unique across the entire system.</span>
+ <span>{tb('tips.uniqueness_desc')}</span>
  </li>
  </ul>
  </CardContent>
  </Card>
+ </div>
  </div>
  </div>
  </MasterDataFormLayout>

@@ -110,7 +110,7 @@ export function ProfileFormClient({ locale }: { locale: string }) {
  <div className="relative group aspect-square rounded-[var(--radius)] border-2 border-dashed border-outline-low hover:border-operational-cyan transition-all overflow-hidden flex flex-col items-center justify-center bg-surface-container-lowest">
  {logoPreview ? (
  <>
- <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain p-4" />
+ <img src={logoPreview} alt={t('placeholders.logo_alt')} className="w-full h-full object-contain p-4" />
  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
  <Button
  type="button"
@@ -179,7 +179,7 @@ export function ProfileFormClient({ locale }: { locale: string }) {
  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
  <Input 
  {...register('name')}
- placeholder="Restaurant Name"
+ placeholder={t('placeholders.name')}
  className="pl-10 font-bold placeholder:text-muted-foreground/20"
  />
  </div>

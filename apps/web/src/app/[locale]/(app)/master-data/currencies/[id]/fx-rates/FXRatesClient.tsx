@@ -11,6 +11,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { useMasterDataList, useMasterDataCreate, useMasterDataItem } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { FXRateSchema, FXRateFormSchema, CurrencySchema, type FXRate, type FXRateFormValues } from '@/types/master-data';
 import { format } from 'date-fns';
+import { formatRate } from '@/utils/currency';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -72,7 +73,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  <div className="flex items-center gap-2">
  <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
  <span dir="ltr" className="font-mono font-semibold text-body-md text-foreground tabular-nums">
- {row.original.rate.toFixed(4)}
+ {formatRate(row.original.rate, locale, 4)}
  </span>
  </div>
  ),
@@ -118,7 +119,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  </div>
  <div>
  <h2 className="text-title-sm font-semibold uppercase">{t('historical_rates')}</h2>
- <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">Audit log of valuation changes</p>
+ <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">{t('fx_rates_subtitle')}</p>
  </div>
  </div>
 
@@ -143,7 +144,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  </div>
  <div>
  <h2 className="text-title-sm font-semibold uppercase">{t('add_rate')}</h2>
- <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">Register new currency parity</p>
+ <p className="text-label-xs text-muted-foreground/60 uppercase font-bold">{t('add_rate_subtitle')}</p>
  </div>
  </div>
 
@@ -206,7 +207,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  </Card>
 
  <div className="p-4 rounded-sm bg-surface-container-low border border-outline-low flex items-center justify-between">
- <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60">Auto-Update Policy: OFF</span>
+ <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60">{t('auto_update_policy')}</span>
  <div className="w-2 h-2 rounded-full bg-outline-low" />
  </div>
  </div>

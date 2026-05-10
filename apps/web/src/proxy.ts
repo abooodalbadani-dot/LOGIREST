@@ -30,50 +30,51 @@ export function proxy(request: NextRequest) {
   const hasLocalePrefix = supportedLocales.includes(firstSegment);
   const locale = hasLocalePrefix ? firstSegment : (routing.defaultLocale as string);
 
-  // 3. Authentication Check
-  const token = request.cookies.get('logirest_token')?.value;
+  // 3. Helpers & Normalization
   const publicPaths = ['/login', '/forgot-password', '/reset-password'];
-
-  // Normalize pathname for check (remove locale if present)
-  const purePathname = hasLocalePrefix
-    ? '/' + segments.slice(2).join('/')
-    : pathname;
-
-  // Ensure purePathname is clean
+  const internalPaths = ['/debug', '/test-bed', '/style-guide'];
+  
+  // Extract pure path (no locale)
+  const purePathname = hasLocalePrefix ? '/' + segments.slice(2).join('/') : pathname;
   const normalizedPath = purePathname === '/' ? '/' : (purePathname.startsWith('/') ? purePathname : '/' + purePathname);
+  
   const isPublicPage = publicPaths.includes(normalizedPath);
+  const isInternalPath = internalPaths.some(p => normalizedPath.startsWith(p));
   const isRoot = normalizedPath === '/';
 
-  // 4. Internal Tooling Guard (Production Block)
-  const internalPaths = ['/debug', '/test-bed'];
-  const isInternalPath = internalPaths.some(p => normalizedPath.startsWith(p));
-  
+  // Helper to construct locale-aware URLs safely
+  const constructUrl = (targetPath: string) => {
+    const url = request.nextUrl.clone();
+    // Ensure targetPath doesn't already have the locale
+    const cleanTarget = targetPath.startsWith(`/${locale}`) 
+      ? targetPath.replace(`/${locale}`, '') 
+      : targetPath;
+    
+    url.pathname = `/${locale}${cleanTarget.startsWith('/') ? '' : '/'}${cleanTarget}`;
+    return url;
+  };
+
+  // 4. Security Enforcement (SSR Level)
+  const token = request.cookies.get('logirest_token')?.value;
+
+  // Debug log (Internal only)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[Proxy] Path: ${pathname} | Normalized: ${normalizedPath} | Locale: ${locale} | Auth: ${!!token}`);
+  }
+
+  // A. Internal Tooling Guard (Production)
   if (isInternalPath && process.env.NODE_ENV === 'production') {
-    return new NextResponse(null, { status: 404 });
+    return NextResponse.rewrite(new URL(`/${locale}/404`, request.url));
   }
 
-  // Debug log (will show in server console)
-  console.log(`[Proxy] Path: ${pathname} | Pure: ${normalizedPath} | Locale: ${locale} | Auth: ${!!token} | Public: ${isPublicPage}`);
-
-  // Case A: Unauthenticated user accessing private page (including root)
+  // B. Unauthenticated -> Login (Locale-Safe)
   if (!token && !isPublicPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(constructUrl('/login'));
   }
 
-  // Case B: Authenticated user accessing public page (like login)
-  if (token && isPublicPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
-  }
-
-  // Case C: Authenticated user accessing root -> redirect to dashboard
-  if (token && isRoot) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+  // C. Authenticated on Public Page -> Dashboard
+  if (token && (isPublicPage || isRoot)) {
+    return NextResponse.redirect(constructUrl('/dashboard'));
   }
 
 

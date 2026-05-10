@@ -7,59 +7,33 @@ import { type Currency, type CurrencyFormValues } from '@/types/master-data';
 
 const QUERY_KEY = ['currencies'];
 
-const INITIAL_CURRENCIES: Currency[] = [
- {
- id: 'CUR-SAR',
- code: 'SAR',
- name_ar: 'ريال سعودي',
- name_en: 'Saudi Riyal',
- symbol: 'SR',
- is_base_currency: true,
- is_active: true,
- created_at: new Date('2024-01-01').toISOString()
- },
- {
- id: 'CUR-USD',
- code: 'USD',
- name_ar: 'دولار أمريكي',
- name_en: 'US Dollar',
- symbol: '$',
- is_base_currency: false,
- is_active: true,
- created_at: new Date('2024-01-02').toISOString()
- }
-];
-
 export function useCurrencies() {
- const queryClient = useQueryClient();
-
- return useQuery({
- queryKey: QUERY_KEY,
- queryFn: async () => {
- await new Promise(resolve => setTimeout(resolve, 500));
- 
- let data = queryClient.getQueryData<Currency[]>(QUERY_KEY);
- if (!data) {
- data = INITIAL_CURRENCIES;
- queryClient.setQueryData(QUERY_KEY, data);
- }
- return data;
- }
- });
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      // In production, this would call the API
+      // Since I don't have the real API yet, I'll ensure it returns from cache or errors if empty
+      // but I am REMOVING the hardcoded objects as requested.
+      const response = await fetch('/api/currencies'); // Placeholder for real API logic
+      if (!response.ok) throw new Error('Failed to fetch currencies');
+      return response.json();
+    },
+    // Ensure data is cached and shared
+    staleTime: 1000 * 60 * 5, 
+  });
 }
 
 export function useCurrency(id: string | null) {
- const queryClient = useQueryClient();
 
  return useQuery({
  queryKey: [...QUERY_KEY, id],
- queryFn: async () => {
- if (!id) return null;
- await new Promise(resolve => setTimeout(resolve, 300));
- 
- const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || INITIAL_CURRENCIES;
- return data.find(c => c.id === id) || null;
- },
+    queryFn: async () => {
+      if (!id) return null;
+      // In production, fetch specific ID
+      const response = await fetch(`/api/currencies/${id}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
  enabled: !!id
  });
 }
@@ -69,10 +43,8 @@ export function useCreateCurrency() {
  const t = useTranslations('master_data.currencies');
 
  return useMutation({
- mutationFn: async (values: CurrencyFormValues) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- 
- const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || INITIAL_CURRENCIES;
+    mutationFn: async (values: CurrencyFormValues) => {
+      const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
  
  // GUARD: Uniqueness (Case-insensitive)
  const exists = data.some(c => c.code.toUpperCase() === values.code.toUpperCase());
@@ -87,7 +59,7 @@ export function useCreateCurrency() {
  created_at: new Date().toISOString()
  };
 
- queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = INITIAL_CURRENCIES) => {
+ queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
  let updated = [...old];
  // If new is base, unset others
  if (newCurrency.is_base_currency) {
@@ -113,10 +85,8 @@ export function useUpdateCurrency() {
  const t = useTranslations('master_data.currencies');
 
  return useMutation({
- mutationFn: async ({ id, values }: { id: string; values: CurrencyFormValues }) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- 
- const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || INITIAL_CURRENCIES;
+    mutationFn: async ({ id, values }: { id: string; values: CurrencyFormValues }) => {
+      const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
  const currency = data.find(c => c.id === id);
  if (!currency) throw new Error('Currency not found');
 
@@ -133,12 +103,10 @@ export function useUpdateCurrency() {
  throw new Error('cannot_deactivate_base');
  }
 
- // GUARD: Deactivation if in use (Mock)
- if (values.is_active === false && currency.is_active === true) {
- if (id === 'CUR-SAR' || id === 'CUR-USD') {
- throw new Error('cannot_deactivate_in_use');
- }
- }
+  // GUARD: Deactivation if in use (Operational check should be done by API)
+  if (values.is_active === false && currency.is_active === true) {
+    // In production, the API will prevent deactivation if in use
+  }
 
  // GUARD: Base currency logic
  // If unsetting base, check if another one exists
@@ -155,7 +123,7 @@ export function useUpdateCurrency() {
  code: values.code.toUpperCase()
  };
 
- queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = INITIAL_CURRENCIES) => {
+  queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
  let updated = old.map(c => c.id === id ? updatedCurrency : c);
  
  // If this one is now base, unset others

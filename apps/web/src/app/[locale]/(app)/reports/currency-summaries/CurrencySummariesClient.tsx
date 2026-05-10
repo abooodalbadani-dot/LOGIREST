@@ -6,38 +6,38 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { useCurrencySummaryReport, CurrencySummaryReport } from '@/features/reports/hooks/useReports';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatRate } from '@/utils/currency';
 
 export default function CurrencySummariesClient() {
- const t = useTranslations('reports');
- const locale = useLocale();
- const { data, isLoading } = useCurrencySummaryReport();
+  const t = useTranslations('reports');
+  const locale = useLocale();
+  const { data, isLoading } = useCurrencySummaryReport();
 
- const columns: ColumnDef<CurrencySummaryReport>[] = [
- {
- accessorKey: 'currency',
- header: t('table.currency'),
- meta: { numeric: true },
- },
- {
- accessorKey: 'total',
- header: t('table.total'),
- meta: { numeric: true },
- cell: ({ row }) => formatCurrency(row.getValue('total'), row.original.currency, locale as 'ar' | 'en'),
- },
- {
- accessorKey: 'total_base',
- header: t('table.total_base'),
- meta: { numeric: true },
- cell: ({ row }) => formatCurrency(row.getValue('total_base'), 'SAR', locale as 'ar' | 'en'),
- },
- {
- accessorKey: 'last_rate',
- header: t('table.last_rate'),
- meta: { numeric: true },
- cell: ({ row }) => (row.getValue('last_rate') as number).toFixed(6),
- },
- ];
+  const columns: ColumnDef<CurrencySummaryReport>[] = [
+  {
+  accessorKey: 'currency',
+  header: t('table.currency'),
+  meta: { numeric: true },
+  },
+  {
+  accessorKey: 'total',
+  header: t('table.total'),
+  meta: { numeric: true },
+  cell: ({ row }) => formatCurrency(row.getValue('total'), row.original.currency, locale as 'ar' | 'en'),
+  },
+  {
+  accessorKey: 'total_base',
+  header: t('table.total_base'),
+  meta: { numeric: true },
+  cell: ({ row }) => formatCurrency(row.getValue('total_base'), 'SAR', locale as 'ar' | 'en'),
+  },
+  {
+  accessorKey: 'last_rate',
+  header: t('table.last_rate'),
+  meta: { numeric: true },
+  cell: ({ row }) => formatRate(row.getValue('last_rate'), locale as 'ar' | 'en', 6),
+  },
+  ];
 
  const exportColumns = [
  { header: t('table.currency'), key: 'currency_code', width: 15 },

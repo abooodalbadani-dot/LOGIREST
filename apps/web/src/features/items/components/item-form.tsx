@@ -118,7 +118,7 @@ export function ItemForm() {
  <div className="relative group/img">
  <div className="w-56 h-56 rounded-[2.5rem] bg-surface-container-highest flex items-center justify-center border-2 border-dashed border-operational-cyan/20 group-hover:border-operational-cyan/40 transition-all overflow-hidden">
  {uploadedImage ? (
- <img src={uploadedImage} alt="Item" className="w-full h-full object-cover animate-in zoom-in-95 duration-500" />
+ <img src={uploadedImage} alt={tc('item')} className="w-full h-full object-cover animate-in zoom-in-95 duration-500" />
  ) : (
  <div className="flex flex-col items-center gap-3">
  <Camera className="w-10 h-10 text-operational-cyan/40 group-hover/img:scale-110 transition-transform" />
@@ -137,17 +137,17 @@ export function ItemForm() {
  </button>
  )}
  </div>
- <div className="space-y-2">
+  <div className="space-y-2">
  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase">
  {t('image.resolution')}
  </p>
  <p className="text-label-xs font-semibold text-muted-foreground/20 uppercase">
- PNG, JPG or WEBP max 2MB
+ {t('image.upload_constraints')}
  </p>
  </div>
  </div>
  </div>
-
+ 
  <div className="p-8 rounded-[2rem] bg-surface-container-low transition-all duration-500">
  <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-6 pb-4">
  {t('glance.title')}
@@ -155,7 +155,7 @@ export function ItemForm() {
  <div className="space-y-4">
  <div className="flex justify-between items-center">
  <span className="text-label-xs font-semibold text-muted-foreground/60">{t('glance.sku')}</span>
- <span className="font-mono text-label-sm font-semibold text-foreground uppercase">{watchedSku || '—'}</span>
+ <span className="font-mono text-label-sm font-semibold text-foreground uppercase">{watchedSku || tc('null_select')}</span>
  </div>
  <div className="flex justify-between items-center">
  <span className="text-label-xs font-semibold text-muted-foreground/60">{t('glance.category')}</span>
@@ -213,7 +213,7 @@ export function ItemForm() {
  {t('fields.sku')}
  </FormLabel>
  <FormControl>
- <Input placeholder="E.G. ITEM-9902" {...field} />
+ <Input placeholder={t('placeholders.sku')} {...field} />
  </FormControl>
  <FormMessage className="text-label-xs font-bold" />
  </FormItem>
@@ -231,7 +231,7 @@ export function ItemForm() {
  <Select onValueChange={field.onChange} defaultValue={field.value}>
  <FormControl>
  <SelectTrigger className="text-label-xs font-semibold uppercase">
- <SelectValue placeholder="Select Category" />
+ <SelectValue placeholder={t('placeholders.select_category')} />
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-low border-none rounded-2xl">
@@ -257,7 +257,7 @@ export function ItemForm() {
  {t('fields.name_ar')}
  </FormLabel>
  <FormControl>
- <Input placeholder="أرز بسمتي 5 كجم" className="text-end font-bold" dir="rtl" {...field} />
+ <Input placeholder={t('placeholders.name_ar')} className="text-end font-bold" dir="rtl" {...field} />
  </FormControl>
  <FormMessage className="text-label-xs font-bold" />
  </FormItem>
@@ -273,7 +273,7 @@ export function ItemForm() {
  {t('fields.name_en')}
  </FormLabel>
  <FormControl>
- <Input placeholder="Basmati Rice 5kg" className="font-bold" {...field} />
+ <Input placeholder={t('placeholders.name_en')} className="font-bold" {...field} />
  </FormControl>
  <FormMessage className="text-label-xs font-bold" />
  </FormItem>
@@ -297,7 +297,7 @@ export function ItemForm() {
  <Select onValueChange={field.onChange} defaultValue={field.value}>
  <FormControl>
  <SelectTrigger className="text-label-xs font-semibold uppercase">
- <SelectValue placeholder="Select UoM" />
+ <SelectValue placeholder={t('placeholders.select_uom')} />
  </SelectTrigger>
  </FormControl>
  <SelectContent className="bg-surface-container-low border-none rounded-2xl">
