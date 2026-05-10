@@ -17,7 +17,7 @@ import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { formatCurrency, formatRate, formatNumber } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, TrendingUp, ShieldCheck, Wallet, ArrowRightLeft } from 'lucide-react';
+import { AlertCircle, TrendingUp, ShieldCheck, Wallet, ArrowRightLeft, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -156,8 +156,9 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
           >
             <Button 
               disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}
-              className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase shadow-lg shadow-primary/20 rounded-2xl"
+              className="h-14 px-12 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/30 rounded-2xl transition-all border-none"
             >
+              <Send className="w-5 h-5 me-3" />
               {t('post_grn')}
             </Button>
           </PostConfirmDialog>

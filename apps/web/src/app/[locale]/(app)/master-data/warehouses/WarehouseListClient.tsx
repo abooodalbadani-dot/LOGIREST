@@ -46,7 +46,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       accessorKey: 'code',
       header: tc('code'),
       cell: ({ row }) => (
-        <span className="font-mono text-label-xs font-semibold text-status-active uppercase px-2 py-0.5 bg-status-active/5 rounded-sm border border-status-active/10" dir="ltr">
+        <span className="font-mono text-label-xs font-bold text-operational-cyan uppercase px-2.5 py-1 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5" dir="ltr">
           {row.original.code}
         </span>
       )
@@ -67,7 +67,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       cell: ({ row }) => {
         const style = WAREHOUSE_TYPE_STYLES[row.original.type] || { label: row.original.type, color: 'text-muted-foreground', shadow: '' };
         return (
-          <div className={`flex items-center gap-2 ${style.color} font-semibold text-label-xxs uppercase`}>
+          <div className={`flex items-center gap-2 ${style.color} font-bold text-label-xxs uppercase bg-current/5 px-2.5 py-1 rounded-lg border border-current/10 w-fit`}>
             <div className={`w-1.5 h-1.5 rounded-full bg-current ${style.shadow}`} />
             {style.label}
           </div>
@@ -79,7 +79,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       header: tc('fields.is_active'),
       cell: ({ row }) => (
         <StatusBadge 
-          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
+          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5"
         />
       )
     },
@@ -87,12 +87,12 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3">
           <PermissionGate action="view" resource="master_data">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/warehouses/${row.original.id}`);
@@ -105,7 +105,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-status-warning hover:bg-status-warning/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/warehouses/${row.original.id}/edit`);
@@ -138,7 +138,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
           actions={
             <PermissionGate action="create" resource="master_data">
               <Link href={`/master-data/warehouses/new`}>
-                <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+                <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {tc('create_new')}
                 </Button>
@@ -187,7 +187,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
             action={
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/master-data/warehouses/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
+                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                     <Plus className="w-3.5 h-3.5 me-2" />
                     {tc('create_new')}
                   </Button>

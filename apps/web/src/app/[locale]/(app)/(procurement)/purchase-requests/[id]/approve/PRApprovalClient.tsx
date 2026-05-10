@@ -15,7 +15,7 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
-import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { canPerformActionV2, type DocumentStatus, isDocumentLocked } from '@/core/workflow/document-engine';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
+import { DocumentLock } from '@/components/shared/DocumentLock';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
 interface Props {
@@ -159,9 +159,8 @@ export function PRApprovalClient({ id }: Props) {
             </CardContent>
           </Card>
 
-          {/* Items Section */}
           <div className="relative">
-            <DocumentReadOnlyOverlay isPosted={true}>
+            <DocumentLock isLocked={isDocumentLocked('PR', pr.status)}>
               <div className="bg-surface-container-lowest p-8 rounded-[2rem] border border-surface-variant/5 shadow-inner shadow-black/10">
                 <div className="flex items-center gap-3 mb-8">
                   <div className="p-2.5 rounded-xl bg-operational-cyan/10 text-operational-cyan">
@@ -189,7 +188,7 @@ export function PRApprovalClient({ id }: Props) {
                   isReadOnly={true}
                 />
               </div>
-            </DocumentReadOnlyOverlay>
+            </DocumentLock>
           </div>
 
           {/* Comment Area */}
@@ -229,7 +228,7 @@ export function PRApprovalClient({ id }: Props) {
                 <Button
                   onClick={() => setApproveConfirmOpen(true)}
                   disabled={approveMutation.isPending || rejectMutation.isPending || isRejecting || !canApprove}
-                  className="w-full bg-operational-cyan text-primary-foreground hover:brightness-110 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs shadow-[0_8px_20px_rgba(var(--operational-cyan-rgb),0.2)]"
+                  className="w-full bg-operational-cyan text-primary-foreground hover:brightness-110 h-14 rounded-2xl transition-all font-black uppercase text-label-xs tracking-widest shadow-[0_8px_20px_rgba(var(--operational-cyan-rgb),0.2)]"
                 >
                   <CheckCircle2 className="w-5 h-5 me-3" />
                   {t('approval.approve_pr')}
@@ -249,7 +248,7 @@ export function PRApprovalClient({ id }: Props) {
                     variant="outline"
                     onClick={() => setIsRejecting(true)}
                     disabled={!canReject}
-                    className="w-full border-white/5 hover:bg-rose-400/10 hover:text-rose-400 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs disabled:opacity-50"
+                    className="w-full border-red-500/20 text-red-400 hover:bg-red-500/5 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all"
                   >
                     <XCircle className="w-5 h-5 me-3" />
                     {t('approval.reject_pr')}
@@ -259,14 +258,18 @@ export function PRApprovalClient({ id }: Props) {
                     <Button
                       onClick={() => setRejectConfirmOpen(true)}
                       disabled={!comment || comment.length < 15 || rejectMutation.isPending}
-                      className="w-full bg-rose-500 text-white hover:bg-rose-600 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs"
+                      className="w-full bg-red-500 text-white hover:bg-red-600 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all shadow-[0_8px_20px_rgba(239,68,68,0.2)]"
                     >
+                      <XCircle className="w-5 h-5 me-3" />
                       {t('approval.confirm_rejection')}
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => setIsRejecting(false)}
-                      className="w-full text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setIsRejecting(false);
+                        setComment("");
+                      }}
+                      className="w-full text-muted-foreground/60 hover:text-foreground h-12 rounded-xl font-black uppercase text-label-xs tracking-widest transition-all"
                     >
                       {tc('cancel')}
                     </Button>
@@ -296,6 +299,7 @@ export function PRApprovalClient({ id }: Props) {
         description={t('approval.approve_confirm_desc')}
         confirmText={t('approval.approve_pr')}
         variant="default"
+        icon="info"
       />
 
       <PostConfirmDialog
@@ -306,6 +310,8 @@ export function PRApprovalClient({ id }: Props) {
         description={t('approval.reject_confirm_desc')}
         confirmText={t('approval.reject_pr')}
         variant="destructive"
+        icon="reject"
+        disabled={comment.length < 15}
       />
     </div>
   );

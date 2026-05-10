@@ -46,6 +46,7 @@ import {
   DocumentStatus 
 } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
 import { formatDate } from '@/utils/currency';
 
@@ -98,9 +99,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   };
 
   const handleReject = async () => {
-    if (!rejectionReason.trim()) return;
+    const trimmedReason = rejectionReason.trim();
+    if (trimmedReason.length < 15) return;
     try {
-      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED as any, reason: rejectionReason, version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED as any, reason: trimmedReason, version: request.version ?? 0 });
       setRejectDialogOpen(false);
     } catch (error) {
       console.error('Failed to reject request', error);
@@ -136,30 +138,30 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         <Button 
           variant="outline" 
           disabled={isPending}
-          className="rounded-lg border-red-500/30 text-red-500 hover:bg-red-500/5 h-12 px-6 text-label-xs font-semibold uppercase"
+          className="rounded-2xl border-red-500/30 text-red-500 hover:bg-red-500/5 h-14 px-8 text-label-xs font-black uppercase tracking-widest transition-all"
           onClick={() => setRejectDialogOpen(true)}
         >
-          <XCircle className="w-4 h-4 me-2" />
+          <XCircle className="w-5 h-5 me-3" />
           {t('reject')}
         </Button>
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
         <Button 
           disabled={isPending}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg h-12 px-8 text-label-xs font-semibold uppercase shadow-lg shadow-emerald-900/20"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-10 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none"
           onClick={handleApprove}
         >
-          <CheckCircle2 className="w-4 h-4 me-2" />
+          <CheckCircle2 className="w-5 h-5 me-3" />
           {t('approve')}
         </Button>
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role || 'WH_KEEPER'}>
         <Button 
           disabled={isPending}
-          className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg h-12 px-10 text-label-xs font-semibold uppercase shadow-xl shadow-cyan-900/20"
+          className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
           onClick={openFulfillDialog}
         >
-          <PackageCheck className="w-4 h-4 me-2" />
+          <PackageCheck className="w-5 h-5 me-3" />
           {t('fulfill')}
         </Button>
       </ActionGuard>
@@ -339,83 +341,77 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </div>
 
       {/* Dialogs */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-md">
-          <div className="p-8 space-y-6">
-            <DialogHeader>
-              <DialogTitle className="text-title-lg font-semibold uppercase italic text-red-500">{t('reject')}</DialogTitle>
-              <DialogDescription className="text-label-sm font-medium text-muted-foreground">
-                {t('rejection_reason_description') || "Please provide a reason for rejecting this request."}
-              </DialogDescription>
-            </DialogHeader>
-            <Textarea 
-              placeholder={t('rejection_reason_placeholder')}
-              className="bg-surface-container-highest border-none rounded-lg p-5 text-body-md min-h-[120px] transition-all"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-          </div>
-          <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
-            <Button variant="ghost" onClick={() => setRejectDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">{t('cancel')}</Button>
-            <Button 
-              className="bg-red-600 hover:bg-red-500 text-white rounded-lg h-12 px-8 text-label-xs font-semibold uppercase"
-              onClick={handleReject}
-              disabled={!rejectionReason.trim()}
-            >
-              {t('confirm_rejection')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
-        <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-2xl">
-          <div className="p-8 space-y-6">
-            <DialogHeader>
-              <DialogTitle className="text-title-lg font-semibold uppercase italic text-cyan-500">{t('fulfill')}</DialogTitle>
-              <DialogDescription className="text-label-sm font-medium text-muted-foreground">
-                {t('fulfillment_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-              {request.items.map((item: any) => (
-                <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-lg border border-surface-container-high/50">
-                  <div className="space-y-1">
-                    <p className="text-label-sm font-bold">{item.item_name}</p>
-                    <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-1 block">{t('fulfilling')}</span>
-                    <Input 
-                      type="number"
-                      step="0.01"
-                      dir="ltr"
-                      className="bg-surface-container-highest border-none h-10 text-center font-semibold text-body-md rounded-lg transition-all"
-                      value={fulfillmentData.find(f => f.itemId === item.item_id)?.fulfilledQuantity || 0}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setFulfillmentData(prev => prev.map(f => f.itemId === item.item_id ? { ...f, fulfilledQuantity: val } : f));
-                      }}
-                    />
-                  </div>
-                  <div className="text-center pt-4">
-                    <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
-                  </div>
-                </div>
-              ))}
+      <PostConfirmDialog
+        open={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        title={t('reject')}
+        description={t('rejection_reason_description') || "Please provide a reason for rejecting this request."}
+        onConfirm={handleReject}
+        variant="destructive"
+        icon="reject"
+        confirmText={t('confirm_rejection')}
+        disabled={rejectionReason.trim().length < 15}
+      >
+        <div className="space-y-4">
+          <label className="text-label-xs font-bold text-muted-foreground/40 uppercase ms-1">
+            {t('rejection_reason_label')}
+          </label>
+          <Textarea 
+            placeholder={t('rejection_reason_placeholder')}
+            className="bg-surface-container-high/40 border-none rounded-2xl p-5 text-body-md font-medium min-h-[120px] focus:ring-1 focus:ring-operational-cyan/30 resize-none transition-all"
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+          />
+          {rejectionReason.trim().length > 0 && rejectionReason.trim().length < 15 && (
+            <div className="flex items-center gap-2 text-status-error p-3 bg-status-error/5 rounded-xl border border-status-error/10">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <p className="text-label-xxs font-bold uppercase">
+                {tCommon('min_chars_required', { count: 15 - rejectionReason.trim().length })}
+              </p>
             </div>
-          </div>
-          <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
-            <Button variant="ghost" onClick={() => setFulfillDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">{t('cancel')}</Button>
-            <Button 
-              className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg h-12 px-10 text-label-xs font-semibold uppercase shadow-lg shadow-cyan-900/20"
-              onClick={handleFulfill}
-            >
-              {t('post_fulfillment')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </div>
+      </PostConfirmDialog>
+
+      <PostConfirmDialog
+        open={fulfillDialogOpen}
+        onOpenChange={setFulfillDialogOpen}
+        title={t('fulfill')}
+        description={t('fulfillment_desc')}
+        onConfirm={handleFulfill}
+        variant="default"
+        icon="info"
+        confirmText={t('post_fulfillment')}
+        className="max-w-2xl"
+      >
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+          {request.items.map((item: any) => (
+            <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-2xl border border-surface-container-high/50">
+              <div className="space-y-1">
+                <p className="text-label-sm font-bold">{item.item_name}</p>
+                <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
+              </div>
+              <div className="text-center">
+                <span className="text-label-xxs font-semibold text-muted-foreground/60 uppercase mb-2 block">{t('fulfilling')}</span>
+                <Input 
+                  type="number"
+                  step="0.01"
+                  dir="ltr"
+                  className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30"
+                  value={fulfillmentData.find(f => f.itemId === item.item_id)?.fulfilledQuantity || 0}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setFulfillmentData(prev => prev.map(f => f.itemId === item.item_id ? { ...f, fulfilledQuantity: val } : f));
+                  }}
+                />
+              </div>
+              <div className="text-center pt-5">
+                <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </PostConfirmDialog>
     </div>
   );
 }

@@ -151,3 +151,29 @@ export function useUpdateBranch(options?: { onConflict?: () => void }) {
   }
   });
 }
+
+export function useDeleteBranch() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.branches');
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // OPERATIONAL GUARD: Prevent deletion if branch has linked warehouses
+      // Mock: BR-001 has linked warehouses
+      if (id === 'BR-001') {
+        throw new Error('cannot_delete_branch_in_use');
+      }
+
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+    }
+  });
+}

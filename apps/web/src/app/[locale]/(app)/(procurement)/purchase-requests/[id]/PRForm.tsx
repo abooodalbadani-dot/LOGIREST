@@ -375,40 +375,40 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  {/* Footer Actions */}
  <div className="flex flex-col md:flex-row items-center justify-end gap-6 pt-12 mt-12 border-none">
- <Button
- variant="ghost"
- type="button"
- onClick={() => router.back()}
- disabled={isSubmitting}
- className="text-label-xs font-semibold uppercase text-muted-foreground/40 hover:text-foreground hover:bg-surface-container-high/50 h-12 px-8 rounded-xl transition-all"
- >
- <ArrowLeft className="w-3.5 h-3.5 me-2" />
- {tc('cancel')}
- </Button>
+  <Button
+    variant="ghost"
+    type="button"
+    onClick={() => router.back()}
+    disabled={isSubmitting}
+    className="text-label-xs font-black uppercase tracking-widest text-muted-foreground/40 hover:text-foreground hover:bg-surface-container-high/50 h-14 px-10 rounded-2xl transition-all"
+  >
+    <ArrowLeft className="w-5 h-5 me-3" />
+    {tc('cancel')}
+  </Button>
  
  <div className="flex items-center gap-4 w-full md:w-auto">
- <Button
- type="submit"
- disabled={isSubmitting}
- variant="outline"
- className="flex-1 md:flex-none h-12 px-8 border-none bg-surface-container-low text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
- >
- <Save className="w-3.5 h-3.5 me-2" />
- {tc('save')}
- </Button>
- <Button
- type="button"
- disabled={isSubmitting}
- onClick={form.handleSubmit(handleSubmitClick)}
- className="flex-1 md:flex-none h-12 px-10 bg-operational-cyan hover:brightness-110 text-primary-foreground text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
- >
- {isSubmitting ? tc('saving') : (
- <>
- <Send className="w-3.5 h-3.5 me-2" />
- {t('submit')}
- </>
- )}
- </Button>
+  <Button
+    type="submit"
+    disabled={isSubmitting}
+    variant="outline"
+    className="flex-1 md:flex-none h-14 px-10 border-none bg-surface-container-low text-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
+  >
+    <Save className="w-5 h-5 me-3" />
+    {tc('save')}
+  </Button>
+  <Button
+    type="button"
+    disabled={isSubmitting}
+    onClick={form.handleSubmit(handleSubmitClick)}
+    className="flex-1 md:flex-none h-14 px-12 bg-operational-cyan hover:brightness-110 text-primary-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-2xl shadow-operational-cyan/30"
+  >
+    {isSubmitting ? tc('saving') : (
+      <>
+        <Send className="w-5 h-5 me-3" />
+        {t('submit')}
+      </>
+    )}
+  </Button>
  </div>
  </div>
  </form>

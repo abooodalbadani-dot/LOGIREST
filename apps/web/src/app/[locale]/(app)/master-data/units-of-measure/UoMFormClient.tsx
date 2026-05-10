@@ -10,10 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
-import { useUoM, useCreateUoM, useUpdateUoM } from '@/features/uoms/hooks/useUoMs';
+import { useUoM, useCreateUoM, useUpdateUoM, useDeleteUoM } from '@/features/uoms/hooks/useUoMs';
 import { UoMFormSchema, type UoMFormValues } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
@@ -36,6 +41,9 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
   const create = useCreateUoM();
   const conflict = useConflictHandler('uom', id ?? '');
   const update = useUpdateUoM({ onConflict: conflict.triggerConflict });
+  const deleteUoM = useDeleteUoM();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isDirty, isValid } } = useForm<UoMFormValues>({
     resolver: zodResolver(UoMFormSchema),
@@ -100,7 +108,17 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
     }
   });
 
-  const isSaving = create.isPending || update.isPending;
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteUoM.mutateAsync(id);
+      guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
+    } catch {
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const isSaving = create.isPending || update.isPending || deleteUoM.isPending;
 
   // Determine the display title
   const displayTitle = id 
@@ -118,6 +136,22 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
         hideSave={isReadOnly}
         isDirty={isDirty}
         isValid={isValid}
+        headerActions={
+          id && !isReadOnly && (
+            <PermissionGate permission="master-data.uoms.delete">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSaving}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </PermissionGate>
+          )
+        }
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
@@ -231,6 +265,16 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
         open={conflict.open}
         onReload={conflict.handleReload}
         onClose={conflict.handleClose}
+      />
+
+      <PostConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDelete}
+        title={tu('delete_confirm_title')}
+        description={tu('delete_confirm_desc')}
+        isLoading={deleteUoM.isPending}
+        variant="destructive"
       />
     </>
   );

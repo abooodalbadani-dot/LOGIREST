@@ -179,3 +179,40 @@ export function useUpdateWarehouse(options?: { onConflict?: () => void }) {
     }
   });
 }
+
+export function useDeleteWarehouse() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.warehouses');
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const data = queryClient.getQueryData<Warehouse[]>(QUERY_KEY) || INITIAL_WAREHOUSES;
+      
+      // OPERATIONAL GUARD: Prevent deletion if warehouse has stock (Mock: W-001 has stock)
+      if (id === 'W-001') {
+        throw new Error('cannot_delete_warehouse_in_use');
+      }
+
+      // Check for active departments
+      const departments = queryClient.getQueryData<Department[]>(['departments']) || [];
+      if (departments.some(d => d.warehouse_id === id)) {
+        throw new Error('cannot_delete_warehouse_in_use');
+      }
+
+      queryClient.setQueryData<Warehouse[]>(QUERY_KEY, (old = INITIAL_WAREHOUSES) => 
+        old.filter(w => w.id !== id)
+      );
+      
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+    }
+  });
+}

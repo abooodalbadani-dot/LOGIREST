@@ -150,3 +150,33 @@ export function useUpdateUoM(options?: { onConflict?: () => void }) {
     }
   });
 }
+
+export function useDeleteUoM() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.uoms');
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // OPERATIONAL GUARD: Prevent deletion if UoM is in use
+      // Mock: UOM-001 is in use
+      if (id === 'UOM-001') {
+        throw new Error('cannot_delete_uom_in_use');
+      }
+
+      queryClient.setQueryData<UoM[]>(QUERY_KEY, (old = INITIAL_UOMS) => 
+        old.filter(u => u.id !== id)
+      );
+      
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+    }
+  });
+}

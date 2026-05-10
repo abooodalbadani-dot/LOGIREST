@@ -118,7 +118,7 @@ export function DepartmentListClient({ locale }: { locale: string }) {
           actions={
             <PermissionGate action="create" resource="master_data">
               <Link href={`/master-data/departments/new`}>
-                <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+                <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {tc('create')}
                 </Button>
@@ -167,7 +167,7 @@ export function DepartmentListClient({ locale }: { locale: string }) {
             action={
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/master-data/departments/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
+                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                     <Plus className="w-3.5 h-3.5 me-2" />
                     {tc('create')}
                   </Button>

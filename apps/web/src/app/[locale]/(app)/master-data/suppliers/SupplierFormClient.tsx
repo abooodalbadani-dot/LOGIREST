@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Truck, CreditCard, ShieldCheck, Hash, Globe2, Coins, ScrollText } from 'lucide-react';
+import { Truck, CreditCard, ShieldCheck, Edit3, Trash2 } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
@@ -12,21 +12,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
- Select,
- SelectContent,
- SelectItem,
- SelectTrigger,
- SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
-import { useSupplier, useCreateSupplier, useUpdateSupplier } from '@/features/suppliers/hooks/useSuppliers';
+import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '@/features/suppliers/hooks/useSuppliers';
 import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { Button } from '@/components/ui/button';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 
 interface Props {
   id: string | null;
@@ -38,7 +41,8 @@ interface Props {
 }
 
 export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
-  const tc = useTranslations('common');
+  const t = useTranslations('common');
+  const tm = useTranslations('master_data.common');
   const ts = useTranslations('master_data.suppliers');
   const tv = useTranslations();
 
@@ -47,6 +51,9 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
   const create = useCreateSupplier();
   const conflict = useConflictHandler('supplier', id ?? '');
   const update = useUpdateSupplier({ onConflict: conflict.triggerConflict });
+  const deleteMutation = useDeleteSupplier();
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<SupplierFormValues>({
@@ -89,6 +96,16 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
     }
   });
 
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hook
+    }
+  };
+
   const isSaving = create.isPending || update.isPending;
 
   if (id && isLoading) return <PageSkeleton variant="detail" />;
@@ -111,6 +128,34 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       saveAction={id ? 'edit' : 'create'}
       isDirty={isDirty}
       isValid={isValid}
+      headerActions={
+        id && (
+          <div className="flex gap-4">
+            <PermissionGate action="delete" resource="master_data">
+              <Button 
+                variant="ghost"
+                onClick={() => setDeleteConfirmOpen(true)}
+                className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
+                title={t('actions.delete')}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </PermissionGate>
+
+            {isReadOnly && (
+              <PermissionGate action="edit" resource="master_data">
+                <Button 
+                  onClick={() => guardedRouter.push(`/master-data/suppliers/${id}/edit`)}
+                  className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-operational-cyan/20"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  {t('actions.edit')}
+                </Button>
+              </PermissionGate>
+            )}
+          </div>
+        )
+      }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
@@ -128,7 +173,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
 
               <div className="space-y-6">
                 <div className="space-y-2 max-w-sm">
-                  <Label htmlFor="sup-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tc('code')}</Label>
+                  <Label htmlFor="sup-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('code')}</Label>
                   <Input 
                     id="sup-code" 
                     dir="ltr" 
@@ -142,7 +187,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <Label htmlFor="sup-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tc('name_en')}</Label>
+                    <Label htmlFor="sup-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('name_en')}</Label>
                     <Input 
                       id="sup-name-en" 
                       dir="ltr" 
@@ -155,7 +200,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sup-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tc('name_ar')}</Label>
+                    <Label htmlFor="sup-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('name_ar')}</Label>
                     <Input 
                       id="sup-name-ar" 
                       dir="rtl" 
@@ -232,15 +277,15 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                   <ShieldCheck className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('status_label')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tc('operational_availability')}</p>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{tm('status_label')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tm('operational_availability')}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
-                  <Label htmlFor="sup-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tc('is_active')}</Label>
-                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tc('active') : tc('inactive')}</p>
+                  <Label htmlFor="sup-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('is_active')}</Label>
+                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
                 </div>
                 <Switch
                   id="sup-active"
@@ -256,11 +301,23 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       </div>
     </MasterDataFormLayout>
 
-      <ConflictDialog
-        open={conflict.open}
-        onReload={conflict.handleReload}
-        onClose={conflict.handleClose}
-      />
+    <ConflictDialog
+      open={conflict.open}
+      onReload={conflict.handleReload}
+      onClose={conflict.handleClose}
+    />
+
+    <PostConfirmDialog
+      open={deleteConfirmOpen}
+      onOpenChange={setDeleteConfirmOpen}
+      onConfirm={handleDelete}
+      isLoading={deleteMutation.isPending}
+      title={ts('delete_confirm_title')}
+      description={ts('delete_confirm_desc')}
+      confirmText={t('actions.delete')}
+      variant="destructive"
+      icon="delete"
+    />
     </>
   );
 }

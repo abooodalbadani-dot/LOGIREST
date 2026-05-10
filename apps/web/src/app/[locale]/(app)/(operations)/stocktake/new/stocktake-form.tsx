@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LockBanner } from "@/components/ui/lock-banner";
-import { PostConfirmDialog } from "@/components/ui/post-confirm-dialog";
+import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -257,17 +257,18 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  </Card>
  </form>
 
- <PostConfirmDialog
- isOpen={confirmOpen}
- onOpenChange={setConfirmOpen}
- onConfirm={() => {
- setConfirmOpen(false);
- form.handleSubmit(onSubmit)();
- }}
- title={t('create_confirm_title')}
- description={t('create_confirm_desc')}
- confirmText={tc('confirm')}
- />
+  <PostConfirmDialog
+    open={confirmOpen}
+    onOpenChange={setConfirmOpen}
+    onConfirm={() => {
+      setConfirmOpen(false);
+      form.handleSubmit(onSubmit)();
+    }}
+    title={t('create_confirm_title')}
+    description={t('create_confirm_desc')}
+    confirmText={tc('confirm')}
+    icon="info"
+  />
  </Form>
  </PermissionGate>
  );

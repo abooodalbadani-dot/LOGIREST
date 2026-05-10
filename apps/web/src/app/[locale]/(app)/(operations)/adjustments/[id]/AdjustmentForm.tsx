@@ -649,42 +649,37 @@ export function AdjustmentForm({
         isLoading={submitAdjustment.isPending}
       />
 
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden max-w-md">
-          <div className="p-8 space-y-6">
-            <DialogHeader>
-              <DialogTitle className="text-title-lg font-semibold uppercase italic text-red-500">{t('reject_title')}</DialogTitle>
-              <DialogDescription className="text-label-sm font-medium text-muted-foreground">
-                {t('reject_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <Textarea
-              value={rejectionComment}
-              onChange={e => setRejectionComment(e.target.value)}
-              placeholder={t('rejection_comment_placeholder')}
-              className="bg-surface-container-highest border-none rounded-lg min-h-[120px] p-4 text-body-md resize-none"
-            />
-            {rejectionComment.trim().length > 0 && rejectionComment.trim().length < 15 && (
-              <p className="text-label-xs font-semibold uppercase text-red-500 flex items-center gap-2">
-                <AlertCircle className="w-3 h-3" />
+      <PostConfirmDialog
+        open={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        title={t('reject_title')}
+        description={t('reject_desc')}
+        onConfirm={handleReject}
+        variant="destructive"
+        icon="reject"
+        confirmText={t('confirm_rejection')}
+        disabled={rejectionComment.trim().length < 15}
+      >
+        <div className="space-y-4">
+          <label className="text-label-xs font-bold text-muted-foreground/40 uppercase ms-1">
+            {t('rejection_reason_label')}
+          </label>
+          <Textarea
+            value={rejectionComment}
+            onChange={e => setRejectionComment(e.target.value)}
+            placeholder={t('rejection_comment_placeholder')}
+            className="bg-surface-container-high/40 border-none rounded-2xl min-h-[120px] p-4 text-body-md font-medium focus:ring-1 focus:ring-operational-cyan/30 resize-none transition-all"
+          />
+          {rejectionComment.trim().length > 0 && rejectionComment.trim().length < 15 && (
+            <div className="flex items-center gap-2 text-status-error p-3 bg-status-error/5 rounded-xl border border-status-error/10">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <p className="text-label-xxs font-bold uppercase">
                 {t('min_chars_required', { count: 15 - rejectionComment.trim().length })}
               </p>
-            )}
-          </div>
-          <DialogFooter className="p-8 bg-surface-container-low flex items-center justify-end gap-3">
-            <Button variant="ghost" onClick={() => setRejectDialogOpen(false)} className="rounded-lg text-label-xs font-semibold uppercase">
-              {tc('cancel')}
-            </Button>
-            <Button 
-              onClick={handleReject}
-              disabled={rejectionComment.trim().length < 15 || rejectAdjustment.isPending}
-              className="bg-red-600 hover:bg-red-500 text-white rounded-lg h-12 px-8 text-label-xs font-semibold uppercase"
-            >
-              {t('confirm_rejection')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </div>
+      </PostConfirmDialog>
 
       <PostConfirmDialog
         open={approveDialogOpen}

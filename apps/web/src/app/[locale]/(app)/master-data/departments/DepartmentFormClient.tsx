@@ -9,6 +9,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Briefcase, ShieldCheck, Landmark, Activity, Warehouse } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { useState } from 'react';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +33,7 @@ import {
  useDepartment,
  useCreateDepartment,
  useUpdateDepartment,
+ useDeleteDepartment,
 } from '@/features/departments/hooks/useDepartments';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
@@ -71,6 +77,9 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
   const create = useCreateDepartment();
   const conflict = useConflictHandler('department', id ?? '');
   const update = useUpdateDepartment({ onConflict: conflict.triggerConflict });
+  const deleteDept = useDeleteDepartment();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
@@ -112,7 +121,17 @@ reset({
     }
   });
 
-  const isSaving = create.isPending || update.isPending;
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteDept.mutateAsync(id);
+      guardedRouter.push('/master-data/departments', { skipGuard: true });
+    } catch {
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const isSaving = create.isPending || update.isPending || deleteDept.isPending;
 
   if ((id && isLoading && !data) || branchesLoading || warehousesLoading) {
     return <PageSkeleton variant="detail" />;
@@ -151,6 +170,22 @@ reset({
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
+      headerActions={
+        id && !isReadOnly && (
+          <PermissionGate permission="master-data.departments.delete">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isSaving}
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
+          </PermissionGate>
+        )
+      }
     >
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  {/* Main Content */}
@@ -354,6 +389,16 @@ reset({
         open={conflict.open}
         onReload={conflict.handleReload}
         onClose={conflict.handleClose}
+      />
+
+      <PostConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDelete}
+        title={td('delete_confirm_title')}
+        description={td('delete_confirm_desc')}
+        isLoading={deleteDept.isPending}
+        variant="destructive"
       />
     </>
   );

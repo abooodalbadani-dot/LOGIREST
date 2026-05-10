@@ -328,6 +328,10 @@
         "old_value": "Old Value",
         "new_value": "New Value"
       }
+    },
+    "workflow": {
+      "document_locked": "Document Locked",
+      "locked_description": "This document is approved or closed and cannot be modified."
     }
   },
   "admin": {
@@ -925,8 +929,12 @@
       },
       "errors": {
         "deactivate_linked_warehouses": "Cannot deactivate branch with active warehouses.",
+        "cannot_delete_branch_in_use": "Cannot delete branch with linked warehouses or active departments.",
+        "delete_failed": "Failed to delete branch record",
         "update_failed": "Failed to update branch identity"
       },
+      "delete_confirm_title": "Delete Branch",
+      "delete_confirm_desc": "Are you sure you want to delete this branch? This will remove the branch identity and all associated physical configurations. Historic transactions will be preserved.",
       "fields": {
         "code": "Branch Code",
         "is_active": "Status",
@@ -959,6 +967,8 @@
         "description": "Define product categories to organize your inventory taxonomy.",
         "title": "No Categories Found"
       },
+      "delete_confirm_title": "Delete Category",
+      "delete_confirm_desc": "Are you sure you want to delete this category? This action will remove the classification from the system and cannot be undone.",
       "errors": {
         "delete_failed": "Failed to remove classification",
         "delete_linked_items": "Cannot remove classification with active inventory items."
@@ -1153,8 +1163,13 @@
       },
       "errors": {
         "cannot_deactivate_department_in_use": "Cannot deactivate department linked to active kitchen requests or stocktakes.",
+        "cannot_delete_department_in_use": "Cannot delete department with active kitchen requests or linked stock sessions.",
+        "delete_failed": "Failed to delete department record",
         "update_failed": "Failed to update department profile"
       },
+      "delete_confirm_title": "Delete Department",
+      "delete_confirm_desc": "Are you sure you want to delete this department? This will remove the organizational entity and all linked operational settings. Historic requests and stock data will be preserved.",
+      "deleted_success": "Department removed from registry",
       "fields": {
         "branch": "Operating Branch",
         "code": "Department Code",
@@ -1329,6 +1344,9 @@
         "description": "Register items and products to begin managing your inventory catalog.",
         "title": "No Items Found"
       },
+      "delete_confirm_title": "Delete Item",
+      "delete_confirm_desc": "Are you sure you want to delete this item? All associated stock history and configuration will be permanently removed.",
+      "deleted_success": "Item removed from registry",
       "errors": {
         "cannot_deactivate_with_stock": "Cannot deactivate item with remaining stock.",
         "sku_exists": "An item with this SKU already exists.",
@@ -1399,6 +1417,8 @@
         "description": "Add procurement partners to manage your vendor relationships and supply chain.",
         "title": "No Suppliers Found"
       },
+      "delete_confirm_title": "Delete Supplier",
+      "delete_confirm_desc": "Are you sure you want to delete this supplier? This will remove all associated contact and financial configuration. Historic transactions will be preserved but the record will be hidden.",
       "errors": {
         "deactivate_linked_pos": "Cannot deactivate supplier with active purchase orders.",
         "update_failed": "Failed to update supplier profile"
@@ -1471,8 +1491,13 @@
       },
       "errors": {
         "cannot_deactivate_uom_in_use": "Cannot deactivate unit currently assigned to active items.",
+        "cannot_delete_uom_in_use": "Cannot delete measurement unit associated with existing items or conversion rules.",
+        "delete_failed": "Failed to delete measurement unit",
         "update_failed": "Failed to update unit specifications"
       },
+      "delete_confirm_title": "Delete Measurement Unit",
+      "delete_confirm_desc": "Are you sure you want to delete this measurement unit? This will remove the unit definition from the registry. Historic transactions will remain intact for audit purposes.",
+      "deleted_success": "Measurement unit removed from registry",
       "fields": {
         "code": "Unit Code",
         "created_at": "Created At",
@@ -1511,9 +1536,13 @@
         "description": "Create physical or virtual warehouses to manage your storage locations.",
         "title": "No Warehouses Found"
       },
+      "delete_confirm_title": "Delete Warehouse",
+      "delete_confirm_desc": "Are you sure you want to delete this warehouse? This will remove all storage location configuration. Historic transactions will be preserved but the record will be hidden.",
       "errors": {
         "cannot_change_branch_with_departments": "Cannot change branch for a warehouse that has linked departments.",
         "cannot_deactivate_warehouse_in_use": "Cannot deactivate warehouse with active departments or inventory.",
+        "cannot_delete_warehouse_in_use": "Cannot delete warehouse while it contains stock or linked departments.",
+        "delete_failed": "Failed to delete warehouse record",
         "update_failed": "Failed to update warehouse details"
       },
       "fields": {

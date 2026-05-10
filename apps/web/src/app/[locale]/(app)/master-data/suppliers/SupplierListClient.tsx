@@ -40,7 +40,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
       accessorKey: 'code',
       header: t('code'),
       cell: ({ row }) => (
-        <span className="font-mono text-label-xs font-semibold text-status-active uppercase px-2 py-0.5 bg-status-active/5 rounded-sm border border-status-active/10" dir="ltr">
+        <span className="font-mono text-label-xs font-bold text-operational-cyan uppercase px-2.5 py-1 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5" dir="ltr">
           {row.original.code}
         </span>
       ),
@@ -60,7 +60,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
       header: tc('fields.payment_terms'),
       cell: ({ row }) => row.original.payment_terms
         ? (
-          <div className="flex items-center gap-1.5 text-warning font-bold text-label-xs uppercase">
+          <div className="flex items-center gap-1.5 text-status-warning font-bold text-label-xs uppercase">
             <CreditCard className="w-3 h-3 opacity-60" />
             {row.original.payment_terms}
           </div>
@@ -71,19 +71,19 @@ export function SupplierListClient({ locale }: { locale: string }) {
       accessorKey: 'is_active',
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} />
+        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       ),
     },
     {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3">
           <PermissionGate action="view" resource="master_data">
             <Button
               variant="ghost"
               size="sm"
-              className="text-label-xs font-semibold uppercase text-primary hover:text-primary-foreground hover:bg-primary h-7"
+              className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/suppliers/${row.original.id}`);
@@ -96,7 +96,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-status-warning hover:bg-status-warning/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/suppliers/${row.original.id}/edit`);
@@ -129,7 +129,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
         actions={
           <PermissionGate action="create" resource="master_data">
             <Link href={`/master-data/suppliers/new`}>
-              <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+              <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                 <Plus className="w-3.5 h-3.5 me-2" />
                 {t('create_new')}
               </Button>
@@ -176,12 +176,12 @@ export function SupplierListClient({ locale }: { locale: string }) {
             description={tc('empty.description')}
             action={
               <PermissionGate action="create" resource="master_data">
-                <Link href={`/master-data/suppliers/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
-                    <Plus className="w-3.5 h-3.5 me-2" />
-                    {t('create_new')}
-                  </Button>
-                </Link>
+                  <Link href={`/master-data/suppliers/new`}>
+                    <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
+                      <Plus className="w-3.5 h-3.5 me-2" />
+                      {t('create_new')}
+                    </Button>
+                  </Link>
               </PermissionGate>
             }
           />

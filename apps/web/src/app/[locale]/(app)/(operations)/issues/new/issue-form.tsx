@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LockBanner } from "@/components/ui/lock-banner";
 import { FEFOLotAllocator } from "@/components/ui/fefo-lot-allocator";
-import { PostConfirmDialog } from "@/components/ui/post-confirm-dialog";
+import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { useCreateIssue } from "@/features/operations/api/useIssues";
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
@@ -377,7 +377,7 @@ export function IssueForm() {
 
  {/* Posting Confirmation Sequence */}
  <PostConfirmDialog
- isOpen={confirmOpen}
+ open={confirmOpen}
  onOpenChange={setConfirmOpen}
  onConfirm={() => {
  setConfirmOpen(false);
@@ -386,6 +386,7 @@ export function IssueForm() {
  title={t('post_confirm_title')}
  description={t('post_confirm_desc')}
  confirmText={tc('confirm')}
+ icon="info"
  />
  </Form>
  );

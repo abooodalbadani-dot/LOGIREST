@@ -42,42 +42,42 @@ export function CategoryListClient({ locale }: { locale: string }) {
   }
 
  const columns = useMemo<ColumnDef<Category, unknown>[]>(() => [
- {
- accessorKey: 'name_en',
- header: t('name'),
- cell: ({ row }) => (
- <div className="flex items-center gap-2.5">
- <div className="w-7 h-7 rounded-sm bg-cyan-500/10 flex items-center justify-center shrink-0">
- <Layers className="w-3.5 h-3.5 text-cyan-500" />
- </div>
- <div className="flex flex-col gap-0.5">
- <span className="font-bold text-label-sm">{row.original.name_en}</span>
- <span className="text-label-xs text-muted-foreground/50" dir="rtl">{row.original.name_ar}</span>
- </div>
- </div>
- ),
- },
- {
- id: 'actions',
- header: '',
- cell: ({ row }) => (
- <div className="flex justify-end">
- <PermissionGate action="view" resource="master_data">
- <Button
- variant="ghost"
- size="sm"
- className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
- onClick={(e) => {
- e.stopPropagation();
- router.push(`/master-data/categories/${row.original.id}`);
- }}
- >
- {t('view')}
- </Button>
- </PermissionGate>
- </div>
- ),
- },
+  {
+    accessorKey: 'name_en',
+    header: t('name'),
+    cell: ({ row }) => (
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-operational-cyan/10 flex items-center justify-center shrink-0">
+          <Layers className="w-4 h-4 text-operational-cyan" />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="font-bold text-label-sm">{row.original.name_en}</span>
+          <span className="text-label-xs text-muted-foreground/50" dir="rtl">{row.original.name_ar}</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'actions',
+    header: '',
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <PermissionGate action="view" resource="master_data">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/master-data/categories/${row.original.id}`);
+            }}
+          >
+            {t('view')}
+          </Button>
+        </PermissionGate>
+      </div>
+    ),
+  },
  ], [t, router, locale]);
 
  const breadcrumbs = [
@@ -93,16 +93,16 @@ export function CategoryListClient({ locale }: { locale: string }) {
  <PageHeader 
  title={tc('title')} 
  description={tc('description')}
- actions={
- <PermissionGate action="create" resource="master_data">
-        <Link href={`/master-data/categories/new`}>
-          <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- }
+  actions={
+    <PermissionGate action="create" resource="master_data">
+      <Link href={`/master-data/categories/new`}>
+        <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
+          <Plus className="w-3.5 h-3.5 me-2" />
+          {t('create_new')}
+        </Button>
+      </Link>
+    </PermissionGate>
+  }
  />
  </div>
 
@@ -134,22 +134,22 @@ export function CategoryListClient({ locale }: { locale: string }) {
  data={data?.data ?? []} 
  isLoading={isLoading}
  collectionName="master_data_categories"
- emptyState={
- <EmptyState 
- title={tc('empty.title')}
- description={tc('empty.description')}
- action={
- <PermissionGate action="create" resource="master_data">
-              <Link href={`/master-data/categories/new`}>
-                <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
- <Plus className="w-3.5 h-3.5 me-2" />
- {t('create_new')}
- </Button>
- </Link>
- </PermissionGate>
- }
- />
- }
+  emptyState={
+    <EmptyState 
+      title={tc('empty.title')}
+      description={tc('empty.description')}
+      action={
+        <PermissionGate action="create" resource="master_data">
+          <Link href={`/master-data/categories/new`}>
+            <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
+              <Plus className="w-3.5 h-3.5 me-2" />
+              {t('create_new')}
+            </Button>
+          </Link>
+        </PermissionGate>
+      }
+    />
+  }
  onRowClick={(r: Category) => router.push(`/master-data/categories/${r.id}`)}
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-4 px-6 bg-surface-container-low/50 border border-surface-variant/10 rounded-sm">

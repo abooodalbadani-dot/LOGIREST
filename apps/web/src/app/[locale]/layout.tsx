@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/providers/ThemeProvider';
 import { cookies } from 'next/headers';
 import { UnsavedChangesProvider } from '@/lib/unsaved-changes/UnsavedChangesProvider';
 import { ConflictProvider } from '@/providers/ConflictProvider';
+import { ConfirmationProvider } from '@/providers/ConfirmationProvider';
 
 
 import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono, yaModernPro } from '@/lib/fonts';
@@ -65,6 +66,7 @@ export default async function LocaleLayout({
  <QueryProvider>
  <UnsavedChangesProvider>
  <ConflictProvider>
+ <ConfirmationProvider>
  <AuthProvider>
  <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
  <WarehouseScopeProvider>
@@ -79,6 +81,7 @@ export default async function LocaleLayout({
  </WarehouseScopeProvider>
  </ThemeProvider>
  </AuthProvider>
+ </ConfirmationProvider>
  </ConflictProvider>
  </UnsavedChangesProvider>
  </QueryProvider>

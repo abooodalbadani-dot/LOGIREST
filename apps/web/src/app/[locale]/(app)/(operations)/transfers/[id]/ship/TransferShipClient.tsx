@@ -245,9 +245,9 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
               <Button
                 disabled={isEitherLocked || shipTransfer.isPending}
                 onClick={() => setConfirmDialogOpen(true)}
-                className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-14 px-10 text-label-xs font-semibold uppercase transition-all shadow-xl shadow-cyan-900/40"
+                className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
               >
-                <Truck className="w-5 h-5 me-2" />
+                <Truck className="w-5 h-5 me-3" />
                 {t('confirm_shipment')}
               </Button>
             </PermissionGate>

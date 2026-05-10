@@ -6,11 +6,15 @@ import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, ShieldCheck, Globe2, Hash } from 'lucide-react';
+import { Building2, ShieldCheck, Globe2, Hash, Trash2 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useState } from 'react';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -19,6 +23,7 @@ import {
  useBranch,
  useCreateBranch,
  useUpdateBranch,
+ useDeleteBranch,
 } from '@/features/branches/hooks/useBranches';
 import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
@@ -60,6 +65,9 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const create = useCreateBranch();
   const conflict = useConflictHandler('branch', id ?? '');
   const update = useUpdateBranch({ onConflict: conflict.triggerConflict });
+  const deleteBranch = useDeleteBranch();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
@@ -86,6 +94,16 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       // Error handled by mutation hooks or conflict handler
     }
   });
+
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteBranch.mutateAsync(id);
+      guardedRouter.push('/master-data/branches', { skipGuard: true });
+    } catch {
+      setShowDeleteConfirm(false);
+    }
+  };
 
   // Standardized Loading State
   if (id && (isLoading || (fetchStatus === 'fetching' && !data))) {
@@ -129,7 +147,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     );
   }
 
-  const isSaving = create.isPending || update.isPending;
+  const isSaving = create.isPending || update.isPending || deleteBranch.isPending;
 
   // Determine the display title
   const displayTitle = id 
@@ -147,6 +165,22 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
+      headerActions={
+        id && !isReadOnly && (
+          <PermissionGate permission="master-data.branches.delete">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isSaving}
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
+          </PermissionGate>
+        )
+      }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
@@ -243,6 +277,16 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       </div>
     </MasterDataFormLayout>
       <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+
+      <PostConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDelete}
+        title={tb('delete_confirm_title')}
+        description={tb('delete_confirm_desc')}
+        isLoading={deleteBranch.isPending}
+        variant="destructive"
+      />
     </>
   );
 }

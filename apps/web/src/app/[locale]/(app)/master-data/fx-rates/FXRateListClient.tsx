@@ -42,17 +42,17 @@ export function FXRateListClient({ locale }: { locale: string }) {
     };
   }, [rates]);
 
-  const getCurrencyCode = (id: string) => (currencies || []).find(c => c.id === id)?.code || id;
+  const getCurrencyCode = (id: string) => (currencies || []).find((c: any) => c.id === id)?.code || id;
 
   const columns = useMemo<ColumnDef<FXRate, unknown>[]>(() => [
     {
       accessorKey: 'from_currency',
       header: tfx('fields.from_currency'),
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-cyan-500 font-mono uppercase">{getCurrencyCode(row.original.from_currency_id)}</span>
-          <ArrowRightLeft className="w-3 h-3 text-muted-foreground/40" />
-          <span className="font-bold text-label-sm uppercase">{getCurrencyCode(row.original.to_currency_id)}</span>
+        <div className="flex items-center gap-3">
+          <span className="font-bold text-operational-cyan font-mono uppercase px-2 py-0.5 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5">{getCurrencyCode(row.original.from_currency_id)}</span>
+          <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground/40" />
+          <span className="font-bold text-label-sm uppercase px-2 py-0.5 bg-surface-container rounded-lg border border-surface-variant/10">{getCurrencyCode(row.original.to_currency_id)}</span>
         </div>
       )
     },
@@ -61,7 +61,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
       header: tfx('fields.rate'),
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-mono text-label-sm font-bold text-emerald-500 tabular-nums">
+          <span className="font-mono text-label-sm font-bold text-status-active tabular-nums">
             {formatRate(row.original.rate, locale as 'ar' | 'en', 4)}
           </span>
           <span className="text-label-xxs text-muted-foreground/60 font-medium">
@@ -74,8 +74,8 @@ export function FXRateListClient({ locale }: { locale: string }) {
       accessorKey: 'effective_date',
       header: tfx('fields.effective_date'),
       cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-label-xs font-medium text-muted-foreground">
-          <Calendar className="w-3.5 h-3.5 opacity-40" />
+        <div className="flex items-center gap-2 text-label-xs font-bold text-muted-foreground bg-surface-container/50 px-2.5 py-1 rounded-lg w-fit">
+          <Calendar className="w-3.5 h-3.5 opacity-40 text-operational-cyan" />
           {format(new Date(row.original.effective_date), 'dd/MM/yyyy')}
         </div>
       )
@@ -84,19 +84,19 @@ export function FXRateListClient({ locale }: { locale: string }) {
       accessorKey: 'is_active',
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} />
+        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       )
     },
     {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end">
           <PermissionGate action="edit" resource="master_data">
           <Button
             variant="ghost"
             size="sm"
-            className="text-label-xs font-semibold uppercase text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-7"
+            className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/master-data/fx-rates/${row.original.id}/edit`);
@@ -126,7 +126,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
           actions={
             <PermissionGate action="create" resource="master_data">
               <Link href={`/master-data/fx-rates/new`}>
-                <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+                <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {t('create_new')}
                 </Button>
@@ -174,7 +174,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
             action={
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/master-data/fx-rates/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
+                  <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                     <Plus className="w-3.5 h-3.5 me-2" />
                     {t('create_new')}
                   </Button>

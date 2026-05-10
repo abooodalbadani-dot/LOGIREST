@@ -10,6 +10,10 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useState } from 'react';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { Button } from '@/components/ui/button';
 import {
  Select,
  SelectContent,
@@ -22,6 +26,7 @@ import {
  useWarehouse,
  useCreateWarehouse,
  useUpdateWarehouse,
+ useDeleteWarehouse,
 } from '@/features/warehouses/hooks/useWarehouses';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import {
@@ -30,7 +35,7 @@ import {
 } from '@/types/master-data';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Warehouse, MapPin, Activity } from 'lucide-react';
+import { Warehouse, MapPin, Activity, Trash2 } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
@@ -53,6 +58,9 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
   const create = useCreateWarehouse();
   const conflict = useConflictHandler('warehouse', id ?? '');
   const update = useUpdateWarehouse({ onConflict: conflict.triggerConflict });
+  const deleteWarehouse = useDeleteWarehouse();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<WarehouseFormValues>({
@@ -112,7 +120,17 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
     }
   });
 
-  const isSaving = create.isPending || update.isPending;
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteWarehouse.mutateAsync(id);
+      guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+    } catch {
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const isSaving = create.isPending || update.isPending || deleteWarehouse.isPending;
 
   // Determine the display title
   const displayTitle = id 
@@ -131,6 +149,22 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
+      headerActions={
+        id && !isReadOnly && (
+          <PermissionGate permission="master-data.warehouses.delete">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isSaving}
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
+          </PermissionGate>
+        )
+      }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
@@ -310,6 +344,16 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
         open={conflict.open}
         onReload={conflict.handleReload}
         onClose={conflict.handleClose}
+      />
+
+      <PostConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDelete}
+        title={tw('delete_confirm_title')}
+        description={tw('delete_confirm_desc')}
+        isLoading={deleteWarehouse.isPending}
+        variant="destructive"
       />
     </>
   );

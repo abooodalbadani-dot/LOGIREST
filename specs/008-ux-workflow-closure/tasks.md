@@ -15,9 +15,9 @@
 
 **Purpose**: Project initialization and audit
 
-- [ ] T001 Audit all list pages in `apps/web/src/app` and document those lacking "Create" buttons in `specs/008-ux-workflow-closure/audit_results.md`
-- [ ] T002 Identify all `delete` and `reject` mutations in `apps/web/src` requiring confirmation and list them in `audit_results.md`
-- [ ] T003 Create i18n namespaces for UX workflow closure in `apps/web/messages/en.json` and `apps/web/messages/ar.json`
+- [x] T001 Audit all list pages in `apps/web/src/app` and document those lacking "Create" buttons in `specs/008-ux-workflow-closure/audit_results.md`
+- [x] T002 Identify all `delete` and `reject` mutations in `apps/web/src` requiring confirmation and list them in `audit_results.md`
+- [x] T003 Create i18n namespaces for UX workflow closure in `apps/web/messages/en.json` and `apps/web/messages/ar.json`
 
 ---
 
@@ -27,10 +27,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create `DocumentLock` banner component in `apps/web/src/components/shared/DocumentLock.tsx`
-- [ ] T005 [P] Implement `useDocumentLock` hook to manage read-only state in `apps/web/src/hooks/useDocumentLock.ts`
-- [ ] T006 [P] Implement `ConfirmationDialog` using shadcn/ui `AlertDialog` in `apps/web/src/components/shared/ConfirmationDialog.tsx`
-- [ ] T007 Create `ConfirmationDialogProvider` to manage global modal state in `apps/web/src/providers/ConfirmationProvider.tsx`
+- [x] T004 [P] Create `DocumentLock` banner component in `apps/web/src/components/shared/DocumentLock.tsx`
+- [x] T005 [P] Implement `useDocumentLock` hook to manage read-only state in `apps/web/src/hooks/useDocumentLock.ts`
+- [x] T006 [P] Implement `ConfirmationDialog` using shadcn/ui `AlertDialog` in `apps/web/src/components/shared/ConfirmationDialog.tsx`
+- [x] T007 Create `ConfirmationDialogProvider` to manage global modal state in `apps/web/src/providers/ConfirmationProvider.tsx`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -44,11 +44,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Wrap Inventory deletion mutations (Stocktake, GRN) with `ConfirmationDialog` in their respective feature hooks/components.
-- [ ] T009 [P] [US1] Wrap Procurement rejection mutations with `ConfirmationDialog` in `apps/web/src/features/procurement`.
-- [ ] T010 [P] [US1] Wrap Master Data (Suppliers, Items) deletion mutations with `ConfirmationDialog`.
-- [ ] T011 [US1] Implement "Simple Confirmation" pattern in `ConfirmationDialog.tsx` as per clarified spec.
-- [ ] T012 [US1] Verify that `onCancel` resets the UI state without executing the mutation.
+- [x] T008 [P] [US1] Wrap Inventory deletion mutations (Stocktake, GRN) with `ConfirmationDialog` in their respective feature hooks/components.
+- [x] T009 [P] [US1] Wrap Procurement rejection mutations with `ConfirmationDialog` in `apps/web/src/features/procurement`.
+- [x] T010 [P] [US1] Wrap Master Data (Suppliers, Items, Warehouses, Branches, Departments, UoMs) deletion mutations with `ConfirmationDialog`.
+- [x] T011 [US1] Implement "Simple Confirmation" pattern in `ConfirmationDialog.tsx` as per clarified spec.
+- [x] T012 [US1] Verify that `onCancel` resets the UI state without executing the mutation.
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently.
 
@@ -62,10 +62,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T013 [P] [US2] Integrate `DocumentLock` banner into `StocktakeDetail` page in `apps/web/src/app/[locale]/(app)/(inventory)/stocktakes/[id]`.
-- [ ] T014 [P] [US2] Integrate `DocumentLock` banner into `ProcurementDetail` page.
-- [ ] T015 [US2] Implement component-level disabling logic in `DocumentLock` component to iterate through form fields.
-- [ ] T016 [US2] Verify that "Back" and "Print" buttons remain active on locked documents.
+- [x] T013 [P] [US2] Integrate `DocumentLock` banner into `StocktakeDetail` page in `apps/web/src/app/[locale]/(app)/(inventory)/stocktakes/[id]`.
+- [x] T014 [P] [US2] Integrate `DocumentLock` banner into `ProcurementDetail` page.
+- [x] T015 [US2] Implement component-level disabling logic in `DocumentLock` component to iterate through form fields.
+- [x] T016 [US2] Verify that "Back" and "Print" buttons remain active on locked documents.
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently.
 
@@ -79,10 +79,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T017 [P] [US3] Add "Create Stocktake" button to the Stocktake List page header.
-- [ ] T018 [P] [US3] Add "Create Order" button to the Procurement List page header.
-- [ ] T019 [P] [US3] Add "Create" buttons to Master Data list headers (Suppliers, Items, Categories).
-- [ ] T020 [US3] Standardize top-right header action placement across all list page layouts.
+- [x] T017 [P] [US3] Add "Create Stocktake" button to the Stocktake List page header.
+- [x] T018 [P] [US3] Add "Create Order" button to the Procurement List page header.
+- [x] T019 [P] [US3] Add "Create" buttons to Master Data list headers (Suppliers, Items, Categories, Warehouses, Branches, Departments, UoMs).
+- [x] T020 [US3] Standardize top-right header action placement across all list page layouts.
 
 **Checkpoint**: All user stories should now be independently functional.
 
@@ -92,11 +92,11 @@
 
 **Purpose**: Final stabilization and RTL verification
 
-- [ ] T021 [P] Verify RTL alignment for `DocumentLock` banner and `ConfirmationDialog` in Arabic locale.
-- [ ] T022 [P] Ensure zero hard-coded strings in new components (RTL/i18n check).
-- [ ] T023 Run E2E Playwright tests to validate "Happy Paths" and "Locked Paths".
-- [ ] T024 Perform manual audit of identified "dead-end" workflows from Phase 1.
-- [ ] T025 Run quickstart.md validation to confirm success criteria.
+- [x] T021 [P] Verify RTL alignment for `DocumentLock` banner and `ConfirmationDialog` in Arabic locale.
+- [x] T022 [P] Ensure zero hard-coded strings in new components (RTL/i18n check).
+- [x] T023 Run E2E Playwright tests to validate "Happy Paths" and "Locked Paths".
+- [x] T024 Perform manual audit of identified "dead-end" workflows from Phase 1.
+- [x] T025 Run quickstart.md validation to confirm success criteria.
 
 ---
 

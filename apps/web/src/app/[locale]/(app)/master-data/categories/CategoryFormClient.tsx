@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
- useCategory,
- useCreateCategory,
- useUpdateCategory,
+  useCategory,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
 } from '@/features/categories/hooks/useCategories';
 import { CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
-import { Layers, Edit3 } from 'lucide-react';
+import { Layers, Edit3, Trash2 } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -22,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { useState } from 'react';
 
 interface Props { 
   id: string | null; 
@@ -40,6 +43,9 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
   const create = useCreateCategory();
   const conflict = useConflictHandler('category', id ?? '');
   const update = useUpdateCategory({ onConflict: conflict.triggerConflict });
+  const deleteMutation = useDeleteCategory();
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
@@ -94,55 +100,80 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     }
   });
 
- return (
-  <>
-  <MasterDataFormLayout
-    title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
-    backHref='/master-data/categories'
-    isSaving={create.isPending || update.isPending}
-    onSubmit={onSubmit}
-    onCancel={() => guardedRouter.push('/master-data/categories')}
-    hideSave={isReadOnly}
-    resource="master_data"
-    saveAction={id ? 'edit' : 'create'}
-    isDirty={isDirty}
-    isValid={isValid}
-    headerActions={
-      isReadOnly && id && (
-        <PermissionGate action="edit" resource="master_data">
-          <Button 
-            onClick={() => guardedRouter.push(`/master-data/categories/${id}/edit`)}
-            className="bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2"
-          >
-            <Edit3 className="w-4 h-4" />
-            {t('edit')}
-          </Button>
-        </PermissionGate>
-      )
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      guardedRouter.push('/master-data/categories', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hook
     }
-  >
- <div className="space-y-8">
- <Card className="bg-surface-container-low border-none overflow-hidden">
- <CardContent className="p-8 space-y-8">
- {/* Section Header */}
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
- <Layers className="w-5 h-5 text-tertiary" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('title')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">
- {tc('description')}
- </p>
- </div>
- </div>
+  };
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- {/* Name EN */}
- <div className="space-y-2">
- <Label htmlFor="cat-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
- {tc('fields.name_en')}
- </Label>
+  return (
+    <>
+    <MasterDataFormLayout
+      title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)}
+      backHref='/master-data/categories'
+      isSaving={create.isPending || update.isPending}
+      onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/master-data/categories')}
+      hideSave={isReadOnly}
+      resource="master_data"
+      saveAction={id ? 'edit' : 'create'}
+      isDirty={isDirty}
+      isValid={isValid}
+      headerActions={
+        id && (
+          <div className="flex gap-4">
+            <PermissionGate action="delete" resource="master_data">
+              <Button 
+                variant="ghost"
+                onClick={() => setDeleteConfirmOpen(true)}
+                className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
+                title={t('actions.delete')}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </PermissionGate>
+
+            {isReadOnly && (
+              <PermissionGate action="edit" resource="master_data">
+                <Button 
+                  onClick={() => guardedRouter.push(`/master-data/categories/${id}/edit`)}
+                  className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-operational-cyan/20"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  {t('edit')}
+                </Button>
+              </PermissionGate>
+            )}
+          </div>
+        )
+      }
+    >
+      <div className="space-y-8">
+        <Card className="bg-surface-container-low border-none overflow-hidden">
+          <CardContent className="p-8 space-y-8">
+            {/* Section Header */}
+            <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+              <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                <Layers className="w-5 h-5 text-tertiary" />
+              </div>
+              <div>
+                <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('title')}</h3>
+                <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">
+                  {tc('description')}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Name EN */}
+              <div className="space-y-2">
+                <Label htmlFor="cat-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+                  {tc('fields.name_en')}
+                </Label>
                 <Input
                   id="cat-name-en"
                   dir="ltr"
@@ -151,18 +182,18 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
                   className="font-semibold"
                   placeholder={tc('placeholders.name_en')}
                 />
- {errors.name_en && (
- <p className="text-label-xs font-semibold text-status-error uppercase">
- {errors.name_en.message}
- </p>
- )}
- </div>
+                {errors.name_en && (
+                  <p className="text-label-xs font-semibold text-status-error uppercase">
+                    {errors.name_en.message}
+                  </p>
+                )}
+              </div>
 
- {/* Name AR */}
- <div className="space-y-2">
- <Label htmlFor="cat-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
- {tc('fields.name_ar')}
- </Label>
+              {/* Name AR */}
+              <div className="space-y-2">
+                <Label htmlFor="cat-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+                  {tc('fields.name_ar')}
+                </Label>
                 <Input
                   id="cat-name-ar"
                   dir="rtl"
@@ -171,18 +202,30 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
                   className="font-semibold text-end"
                   placeholder={tc('placeholders.name_ar')}
                 />
- {errors.name_ar && (
- <p className="text-label-xs font-semibold text-status-error uppercase">
- {errors.name_ar.message}
- </p>
- )}
- </div>
- </div>
- </CardContent>
- </Card>
- </div>
-  </MasterDataFormLayout>
-  <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
-  </>
- );
+                {errors.name_ar && (
+                  <p className="text-label-xs font-semibold text-status-error uppercase">
+                    {errors.name_ar.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </MasterDataFormLayout>
+    <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
+    
+    <PostConfirmDialog
+      open={deleteConfirmOpen}
+      onOpenChange={setDeleteConfirmOpen}
+      onConfirm={handleDelete}
+      isLoading={deleteMutation.isPending}
+      title={tc('delete_confirm_title')}
+      description={tc('delete_confirm_desc')}
+      confirmText={t('actions.delete')}
+      variant="destructive"
+      icon="delete"
+    />
+    </>
+  );
 }

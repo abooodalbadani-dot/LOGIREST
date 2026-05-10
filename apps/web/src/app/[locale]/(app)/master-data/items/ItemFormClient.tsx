@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { Package, Plus, Trash2, ShieldCheck, Scale, Boxes, Settings2 } from 'lucide-react';
+import { Package, Plus, Trash2, ShieldCheck, Scale, Boxes, Settings2, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { useItem, useCreateItem, useUpdateItem } from '@/features/items/hooks/useItems';
+import { useItem, useCreateItem, useUpdateItem, useDeleteItem } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ItemFormSchema, type ItemFormValues, UoMSchema } from '@/types/master-data';
@@ -30,7 +28,8 @@ import { MasterDataFormLayout } from '@/features/master-data/components/MasterDa
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 
 interface Props { 
   id: string | null; 
@@ -42,7 +41,8 @@ interface Props {
 }
 
 export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
-  const t = useTranslations('master_data.common');
+  const t = useTranslations('common');
+  const tm = useTranslations('master_data.common');
   const ti = useTranslations('master_data.items');
   const tv = useTranslations('master_data.validation');
 
@@ -53,6 +53,9 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const create = useCreateItem();
   const conflict = useConflictHandler('item', id ?? '');
   const update = useUpdateItem({ onConflict: conflict.triggerConflict });
+  const deleteMutation = useDeleteItem();
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<ItemFormValues>({
@@ -101,6 +104,16 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
   });
 
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      guardedRouter.push('/master-data/items', { skipGuard: true });
+    } catch {
+      // Error handled by mutation hook
+    }
+  };
+
   const isSaving = create.isPending || update.isPending;
   const trackLots = useWatch({ control, name: 'track_lots' });
   const isActive = useWatch({ control, name: 'is_active' });
@@ -143,6 +156,34 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         saveAction={id ? 'edit' : 'create'}
         isDirty={isDirty}
         isValid={isValid}
+        headerActions={
+          id && (
+            <div className="flex gap-4">
+              <PermissionGate action="delete" resource="master_data">
+                <Button 
+                  variant="ghost"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
+                  title={t('actions.delete')}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </PermissionGate>
+  
+              {isReadOnly && (
+                <PermissionGate action="edit" resource="master_data">
+                  <Button 
+                    onClick={() => guardedRouter.push(`/master-data/items/${id}/edit`)}
+                    className="h-12 px-6 bg-operational-cyan text-white hover:bg-operational-cyan/90 font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-operational-cyan/20"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    {t('actions.edit')}
+                  </Button>
+                </PermissionGate>
+              )}
+            </div>
+          )
+        }
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
@@ -161,7 +202,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <Label htmlFor="item-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
+                    <Label htmlFor="item-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('code')}</Label>
                     <Input 
                       id="item-code" 
                       dir="ltr" 
@@ -231,10 +272,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                           <SelectTrigger id="item-category">
-                            <SelectValue placeholder={t('select_none')} />
+                            <SelectValue placeholder={tm('select_none')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">{t('select_none')}</SelectItem>
+                            <SelectItem value="">{tm('select_none')}</SelectItem>
                             {categories?.data?.map((c: any) => (
                               <SelectItem key={c.id} value={c.id} className="uppercase font-semibold text-label-sm">
                                 {locale === 'ar' ? c.name_ar : c.name_en}
@@ -255,10 +296,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                           <SelectTrigger id="primary-uom">
-                            <SelectValue placeholder={t('select_none')} />
+                            <SelectValue placeholder={tm('select_none')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">{t('select_none')}</SelectItem>
+                            <SelectItem value="">{tm('select_none')}</SelectItem>
                             {uoms?.data?.map((u) => (
                               <SelectItem key={u.id} value={u.id} className="uppercase font-semibold text-label-sm">
                                 {u.code} — {u.name_en}
@@ -284,7 +325,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     </div>
                     <div>
                       <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('uom_conversions')}</h3>
-                      <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('relational_unit_transformation')}</p>
+                      <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tm('relational_unit_transformation')}</p>
                     </div>
                   </div>
                   {!isReadOnly && (
@@ -314,10 +355,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                               render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                                   <SelectTrigger id={`uom-from-${idx}`}>
-                                    <SelectValue placeholder={t('select_none')} />
+                                    <SelectValue placeholder={tm('select_none')} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">{t('select_none')}</SelectItem>
+                                    <SelectItem value="">{tm('select_none')}</SelectItem>
                                     {uoms?.data?.map((u) => (
                                       <SelectItem key={u.id} value={u.id} className="font-semibold uppercase text-label-sm">
                                         {u.code}
@@ -336,10 +377,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                               render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
                                   <SelectTrigger id={`uom-to-${idx}`}>
-                                    <SelectValue placeholder={t('select_none')} />
+                                    <SelectValue placeholder={tm('select_none')} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">{t('select_none')}</SelectItem>
+                                    <SelectItem value="">{tm('select_none')}</SelectItem>
                                     {uoms?.data?.map((u) => (
                                       <SelectItem key={u.id} value={u.id} className="font-semibold uppercase text-label-sm">
                                         {u.code}
@@ -381,15 +422,15 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   </div>
                   <div>
                     <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('fields.is_active')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('operational_availability')}</p>
+                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tm('operational_availability')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                     <div className="space-y-1">
-                      <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
-                      <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
+                      <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('is_active')}</Label>
+                      <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
                     </div>
                     <Switch 
                       checked={isActive} 
@@ -402,7 +443,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                     <div className="space-y-1">
                       <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{ti('track_lots')}</Label>
-                      <p className={`text-label-sm font-semibold uppercase ${trackLots ? 'text-status-active' : 'text-muted-foreground/40'}`}>{trackLots ? t('yes') : t('no')}</p>
+                      <p className={`text-label-sm font-semibold uppercase ${trackLots ? 'text-status-active' : 'text-muted-foreground/40'}`}>{trackLots ? tm('yes') : tm('no')}</p>
                     </div>
                     <Switch 
                       checked={trackLots} 
@@ -453,6 +494,18 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
         open={conflict.open}
         onReload={conflict.handleReload}
         onClose={conflict.handleClose}
+      />
+
+      <PostConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
+        title={ti('delete_confirm_title')}
+        description={ti('delete_confirm_desc')}
+        confirmText={t('actions.delete')}
+        variant="destructive"
+        icon="delete"
       />
     </>
   );

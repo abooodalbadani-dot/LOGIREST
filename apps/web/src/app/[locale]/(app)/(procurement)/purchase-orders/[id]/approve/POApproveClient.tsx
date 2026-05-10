@@ -195,7 +195,7 @@ export function POApproveClient({ id }: Props) {
                 <Button
                   onClick={() => setApproveConfirmOpen(true)}
                   disabled={approveMutation.isPending || rejectMutation.isPending || isRejecting || !canApprove}
-                  className="w-full bg-operational-cyan text-primary-foreground hover:brightness-110 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs shadow-[0_8px_20px_rgba(var(--operational-cyan-rgb),0.2)]"
+                  className="w-full bg-operational-cyan text-primary-foreground hover:brightness-110 h-14 rounded-2xl transition-all font-black uppercase text-label-xs tracking-widest shadow-[0_8px_20px_rgba(var(--operational-cyan-rgb),0.2)]"
                 >
                   <CheckCircle2 className="w-5 h-5 me-3" />
                   {t('approval.approve_po')}
@@ -215,7 +215,7 @@ export function POApproveClient({ id }: Props) {
                     variant="outline"
                     onClick={() => setIsRejecting(true)}
                     disabled={!canReject}
-                    className="w-full border-white/5 hover:bg-rose-400/10 hover:text-rose-400 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs disabled:opacity-50"
+                    className="w-full border-red-500/20 text-red-400 hover:bg-red-500/5 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all"
                   >
                     <XCircle className="w-5 h-5 me-3" />
                     {t('approval.reject_po')}
@@ -225,14 +225,18 @@ export function POApproveClient({ id }: Props) {
                     <Button
                       onClick={() => setRejectConfirmOpen(true)}
                       disabled={!comment || comment.length < 15 || rejectMutation.isPending}
-                      className="w-full bg-rose-500 text-white hover:bg-rose-600 h-14 rounded-2xl transition-all font-semibold uppercase text-label-xs"
+                      className="w-full bg-red-500 text-white hover:bg-red-600 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all shadow-[0_8px_20px_rgba(239,68,68,0.2)]"
                     >
+                      <XCircle className="w-5 h-5 me-3" />
                       {t('approval.confirm_rejection')}
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => setIsRejecting(false)}
-                      className="w-full text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setIsRejecting(false);
+                        setComment("");
+                      }}
+                      className="w-full text-muted-foreground/60 hover:text-foreground h-12 rounded-xl font-black uppercase text-label-xs tracking-widest transition-all"
                     >
                       {tc('cancel')}
                     </Button>
@@ -272,6 +276,8 @@ export function POApproveClient({ id }: Props) {
         description={t('approval.reject_confirm_desc')}
         confirmText={t('approval.reject_po')}
         variant="destructive"
+        icon="reject"
+        disabled={comment.length < 15}
       />
     </div>
   );

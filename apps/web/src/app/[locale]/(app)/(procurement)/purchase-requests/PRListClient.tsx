@@ -121,10 +121,10 @@ export function PRListClient() {
  actions={
  <PermissionGate action="create" resource="pr">
   <Link href="/purchase-requests/new">
- <Button className="h-12 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-cyan-900/20">
- <Plus className="w-4 h-4 me-2" />
- {t('create_new')}
- </Button>
+              <Button className="h-14 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-operational-cyan/30 border-none">
+                <Plus className="w-5 h-5 me-3" />
+                {t('create_new')}
+              </Button>
  </Link>
  </PermissionGate>
  }
@@ -166,7 +166,7 @@ export function PRListClient() {
  action={
  <PermissionGate action="create" resource="pr">
   <Link href="/purchase-requests/new">
- <Button className="h-10 px-6 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
+ <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
  <Plus className="w-3.5 h-3.5 me-2" />
  {t('create_new')}
  </Button>

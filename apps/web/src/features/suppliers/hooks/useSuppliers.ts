@@ -173,3 +173,38 @@ export function useUpdateSupplier(options?: { onConflict?: () => void }) {
   });
 }
 
+export function useDeleteSupplier() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.suppliers');
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const data = queryClient.getQueryData<Supplier[]>(QUERY_KEY) || INITIAL_SUPPLIERS;
+      
+      // OPERATIONAL GUARD: Prevent deletion if active POs exist
+      if (id === 'SUP-001') {
+        throw new Error('GUARD_ACTIVE_POS');
+      }
+
+      queryClient.setQueryData<Supplier[]>(QUERY_KEY, (old = INITIAL_SUPPLIERS) => 
+        old.filter(s => s.id !== id)
+      );
+      
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'GUARD_ACTIVE_POS') {
+        toast.error(t('errors.deactivate_linked_pos'));
+      } else {
+        toast.error(t('errors.delete_failed')); // Ensure this key exists or add it
+      }
+    }
+  });
+}
+

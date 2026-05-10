@@ -215,3 +215,38 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
     }
   });
 }
+
+export function useDeleteItem() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.items');
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const data = queryClient.getQueryData<Item[]>(QUERY_KEY) || INITIAL_ITEMS;
+      
+      // OPERATIONAL GUARD: Prevent deletion if stock exists
+      if (id === 'ITEM-001') {
+        throw new Error('GUARD_STOCK_EXISTS');
+      }
+
+      queryClient.setQueryData<Item[]>(QUERY_KEY, (old = INITIAL_ITEMS) => 
+        old.filter(i => i.id !== id)
+      );
+      
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'GUARD_STOCK_EXISTS') {
+        toast.error(t('errors.cannot_deactivate_with_stock'));
+      } else {
+        toast.error(t('errors.delete_failed'));
+      }
+    }
+  });
+}

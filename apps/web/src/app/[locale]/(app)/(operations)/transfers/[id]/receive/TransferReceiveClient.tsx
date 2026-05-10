@@ -55,7 +55,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   }
 
   const hasVariance = lines.some(l => (l._receivedQty ?? 0) !== (l.shipped_qty ?? l.qty));
-  const isVarianceValid = !hasVariance || varianceReason.trim().length >= 10;
+  const isVarianceValid = !hasVariance || varianceReason.trim().length >= 15;
 
   const isDirty = useMemo(() => {
     if (!transfer) return false;
@@ -191,11 +191,11 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                 {hasVariance && (
                   <span className={cn(
                     "text-label-xxs font-bold px-2 py-0.5 rounded-full",
-                    varianceReason.trim().length >= 10 
+                    varianceReason.trim().length >= 15 
                       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                       : 'bg-status-error/10 text-status-error border border-status-error/20'
                   )}>
-                    {varianceReason.trim().length}/10
+                    {varianceReason.trim().length}/15
                   </span>
                 )}
               </div>
@@ -318,9 +318,9 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
             <Button
               type="submit"
               disabled={isEitherLocked || receiveTransfer.isPending || !isVarianceValid}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-12 px-10 text-label-xs font-semibold uppercase transition-all shadow-xl shadow-emerald-900/40 disabled:opacity-50 min-w-[200px]"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none min-w-[240px]"
             >
-              <PackageCheck className="w-4 h-4 me-2" />
+              <PackageCheck className="w-5 h-5 me-3" />
               {t('complete_receive')}
             </Button>
           </PermissionGate>

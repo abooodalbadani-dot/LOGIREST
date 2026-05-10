@@ -47,7 +47,7 @@ export function UoMListClient({ locale }: { locale: string }) {
       accessorKey: 'code', 
       header: t('code'), 
       cell: ({ row }) => (
-        <span className="font-mono text-label-xs font-semibold text-cyan-500 uppercase px-2 py-0.5 bg-cyan-500/5 rounded-sm border border-cyan-500/10" dir="ltr">
+        <span className="font-mono text-label-xs font-bold text-operational-cyan uppercase px-2.5 py-1 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5" dir="ltr">
           {row.original.code}
         </span>
       )
@@ -58,7 +58,7 @@ export function UoMListClient({ locale }: { locale: string }) {
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
           <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs text-muted-foreground/60" dir="rtl">{row.original.name_ar}</span>
+          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.name_ar}</span>
         </div>
       )
     },
@@ -66,19 +66,19 @@ export function UoMListClient({ locale }: { locale: string }) {
       accessorKey: 'is_active',
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} />
+        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       )
     },
     {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3">
           <PermissionGate action="view" resource="master_data">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/units-of-measure/${row.original.id}`);
@@ -91,7 +91,7 @@ export function UoMListClient({ locale }: { locale: string }) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-status-warning hover:bg-status-warning/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/units-of-measure/${row.original.id}/edit`);
@@ -121,7 +121,7 @@ export function UoMListClient({ locale }: { locale: string }) {
           actions={
             <PermissionGate action="create" resource="master_data">
               <Link href={`/master-data/units-of-measure/new`}>
-                <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+                <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {t('create_new')}
                 </Button>
@@ -170,7 +170,7 @@ export function UoMListClient({ locale }: { locale: string }) {
             action={
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/master-data/units-of-measure/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
+                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                     <Plus className="w-3.5 h-3.5 me-2" />
                     {t('create_new')}
                   </Button>

@@ -41,10 +41,10 @@ export function ItemListClient({ locale }: { locale: string }) {
       accessorKey: 'code', 
       header: t('code'), 
       cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-mono text-cyan-500 font-semibold uppercase" dir="ltr">{row.original.code}</span>
-          <span className="text-label-xxs text-muted-foreground/60 font-medium font-mono flex items-center gap-1" dir="ltr">
-            <Barcode className="w-2.5 h-2.5 opacity-40" />
+        <div className="flex flex-col gap-1">
+          <span className="font-mono text-operational-cyan font-bold uppercase text-label-xs bg-operational-cyan/10 px-2 py-0.5 rounded-lg border border-operational-cyan/5 w-fit" dir="ltr">{row.original.code}</span>
+          <span className="text-label-xxs text-muted-foreground/60 font-medium font-mono flex items-center gap-1.5 ps-1" dir="ltr">
+            <Barcode className="w-3 h-3 opacity-40" />
             {row.original.barcode || '—'}
           </span>
         </div>
@@ -56,7 +56,7 @@ export function ItemListClient({ locale }: { locale: string }) {
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
           <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs text-muted-foreground/60" dir="rtl">{row.original.name_ar}</span>
+          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.name_ar}</span>
         </div>
       )
     },
@@ -64,7 +64,7 @@ export function ItemListClient({ locale }: { locale: string }) {
       accessorKey: 'base_unit', 
       header: ti('fields.base_unit'), 
       cell: ({ row }) => (
-        <span className="text-label-xs font-semibold uppercase text-muted-foreground/80">
+        <span className="text-label-xs font-bold uppercase text-muted-foreground/80 px-2 py-0.5 bg-surface-container rounded-lg">
           {row.original.primary_uom.code}
         </span>
       )
@@ -73,11 +73,11 @@ export function ItemListClient({ locale }: { locale: string }) {
       accessorKey: 'track_lots', 
       header: ti('fields.track_lots'),
       cell: ({ row }) => row.original.track_lots
-        ? <div className="flex items-center gap-1.5 text-status-active font-bold text-label-xxs uppercase">
-            <div className="w-1.5 h-1.5 rounded-full bg-status-active shadow-[0_0_8px_currentColor]" />
+        ? <div className="flex items-center gap-1.5 text-operational-cyan font-bold text-label-xxs uppercase bg-operational-cyan/10 px-2.5 py-1 rounded-lg border border-operational-cyan/5 w-fit">
+            <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan shadow-[0_0_8px_currentColor]" />
             {t('yes')}
           </div>
-        : <div className="flex items-center gap-1.5 text-muted-foreground/30 font-bold text-label-xxs uppercase">
+        : <div className="flex items-center gap-1.5 text-muted-foreground/40 font-bold text-label-xxs uppercase bg-surface-container px-2.5 py-1 rounded-lg w-fit">
             <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/20" />
             {t('no')}
           </div>,
@@ -86,19 +86,19 @@ export function ItemListClient({ locale }: { locale: string }) {
       accessorKey: 'is_active', 
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} />
+        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       ),
     },
     {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3">
           <PermissionGate action="view" resource="master_data">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/items/${row.original.id}`);
@@ -111,7 +111,7 @@ export function ItemListClient({ locale }: { locale: string }) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-status-warning hover:bg-status-warning/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/master-data/items/${row.original.id}/edit`);
@@ -156,7 +156,7 @@ export function ItemListClient({ locale }: { locale: string }) {
           actions={
             <PermissionGate action="create" resource="master_data">
               <Link href={`/master-data/items/new`}>
-                <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+                <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {t('create_new')}
                 </Button>
@@ -201,7 +201,7 @@ export function ItemListClient({ locale }: { locale: string }) {
             action={
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/master-data/items/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
+                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
                     <Plus className="w-3.5 h-3.5 me-2" />
                     {t('create_new')}
                   </Button>

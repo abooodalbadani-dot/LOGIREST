@@ -167,3 +167,33 @@ export function useUpdateDepartment(options?: { onConflict?: () => void }) {
     }
   });
 }
+
+export function useDeleteDepartment() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.departments');
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // OPERATIONAL GUARD: Prevent deletion if department is in use
+      // Mock: D-001 is in use
+      if (id === 'D-001') {
+        throw new Error('cannot_delete_department_in_use');
+      }
+
+      queryClient.setQueryData<Department[]>(QUERY_KEY, (old = INITIAL_DEPARTMENTS) => 
+        old.filter(d => d.id !== id)
+      );
+      
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+    }
+  });
+}

@@ -115,31 +115,31 @@ export function UserListClient({ locale }: { locale: string }) {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3">
           <PermissionGate action="edit" resource="admin">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-500 hover:bg-cyan-500/10 h-7"
+              className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/admin/users/${row.original.id}/edit`);
               }}
             >
-              <Edit className="w-3 h-3 me-1.5" />
+              <Edit className="w-3.5 h-3.5 me-2" />
               {tCommon('edit')}
             </Button>
           </PermissionGate>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground hover:bg-surface-container-highest/20 h-7"
+            className="text-label-xs font-bold uppercase text-muted-foreground hover:text-foreground hover:bg-surface-container-highest/40 h-9 px-4 rounded-xl transition-all"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/admin/users/${row.original.id}`);
             }}
           >
-            <Eye className="w-3 h-3 me-1.5" />
+            <Eye className="w-3.5 h-3.5 me-2" />
             {tCommon('view')}
           </Button>
         </div>
