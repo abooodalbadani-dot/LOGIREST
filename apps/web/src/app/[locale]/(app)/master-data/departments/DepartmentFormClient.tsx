@@ -105,6 +105,7 @@ reset({
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/departments', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler

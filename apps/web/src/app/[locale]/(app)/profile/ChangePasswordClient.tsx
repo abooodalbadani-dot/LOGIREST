@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, CheckCircle2, ShieldCheck, Lock, KeyRound, AlertCircle } from 'lucide-react';
@@ -27,12 +28,15 @@ export default function ChangePasswordClient() {
  const t = useTranslations('profile');
  const tc = useTranslations('common');
  
- const [isSubmitting, setIsSubmitting] = useState(false);
- const [isSuccess, setIsSuccess] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
- const { register, handleSubmit, formState: { errors }, reset } = useForm<PasswordValues>({
- resolver: zodResolver(passwordSchema),
- });
+  const { register, handleSubmit, formState: { errors, isDirty }, reset } = useForm<PasswordValues>({
+    resolver: zodResolver(passwordSchema),
+  });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+
 
  const onSubmit = async (values: PasswordValues) => {
  setIsSubmitting(true);

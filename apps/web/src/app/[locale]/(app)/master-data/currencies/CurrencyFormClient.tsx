@@ -110,6 +110,7 @@ export function CurrencyFormClient({
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/currencies', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler

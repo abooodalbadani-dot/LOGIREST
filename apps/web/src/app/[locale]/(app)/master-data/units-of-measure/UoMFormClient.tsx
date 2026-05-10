@@ -93,6 +93,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler
@@ -113,7 +114,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
         backHref='/master-data/units-of-measure'
         isSaving={isSaving} saveDisabled={conflict.saveDisabled}
         onSubmit={onSubmit}
-        onCancel={() => guardedRouter.push('/master-data/units-of-measure')}
+        onCancel={() => guardedRouter.push('/master-data/units-of-measure', { skipGuard: true })}
         hideSave={isReadOnly}
         isDirty={isDirty}
         isValid={isValid}

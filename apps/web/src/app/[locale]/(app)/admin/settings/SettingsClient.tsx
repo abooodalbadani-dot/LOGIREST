@@ -13,6 +13,7 @@ import { Link } from '@/i18n/navigation';
 import { useAdminSettings, useUpdateSettings, SettingsSchema, type SystemSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { type Currency } from '@/types/master-data';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 export function SettingsClient({ locale }: { locale: string }) {
   const t = useTranslations('admin.settings');
@@ -24,9 +25,11 @@ export function SettingsClient({ locale }: { locale: string }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingData, setPendingData] = useState<SystemSettings | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, control, setValue, reset } = useForm<SystemSettings>({
+  const { register, handleSubmit, formState: { errors, isDirty }, control, setValue, reset } = useForm<SystemSettings>({
   resolver: zodResolver(SettingsSchema),
   });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const watchedBaseCurrency = useWatch({ control, name: 'base_currency' });
   const watchedLanguage = useWatch({ control, name: 'default_language' });
@@ -45,15 +48,17 @@ export function SettingsClient({ locale }: { locale: string }) {
   if (data.base_currency !== initialBaseCurrency) {
   setPendingData(data);
   setIsConfirmOpen(true);
-  } else {
-  updateSettings(data);
-  }
+} else {
+      updateSettings(data);
+      reset(data);
+    }
   };
 
-  const handleConfirm = () => {
-  if (pendingData) {
-  updateSettings(pendingData);
-  setIsConfirmOpen(false);
+const handleConfirm = () => {
+    if (pendingData) {
+      updateSettings(pendingData);
+      reset(pendingData);
+      setIsConfirmOpen(false);
   setPendingData(null);
   }
   };
@@ -73,9 +78,10 @@ export function SettingsClient({ locale }: { locale: string }) {
   return (
   <div className="max-w-4xl mx-auto p-8 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
   <div className="flex flex-col gap-4 border-b border-outline-low pb-8">
-  <Link 
+<Link 
         href="/admin"
- className="inline-flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground hover:text-operational-cyan transition-colors"
+        data-skip-guard="true"
+  className="inline-flex items-center gap-2 text-label-xs font-semibold uppercase text-muted-foreground hover:text-operational-cyan transition-colors"
  >
  <ArrowLeft className="w-3 h-3 rtl:rotate-180" />
  {t('return_to_admin')}

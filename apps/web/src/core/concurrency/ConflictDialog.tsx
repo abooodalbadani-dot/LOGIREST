@@ -16,8 +16,8 @@ import { ConflictError } from '@/lib/api/ConflictError';
 
 export interface ConflictDialogProps {
   open: boolean;
-  error: ConflictError | null;
-  onRetry: () => Promise<void>;
+  error?: ConflictError | null;
+  onRetry?: () => Promise<void>;
   onReload: () => void;
   onClose: () => void;
   isRetrying?: boolean;
@@ -83,7 +83,7 @@ export function ConflictDialog({
             {tc('conflict.stay')}
           </Button>
           
-          {retryCount < 1 && (
+          {retryCount < 1 && onRetry && (
             <Button
               onClick={onRetry}
               disabled={isRetrying}

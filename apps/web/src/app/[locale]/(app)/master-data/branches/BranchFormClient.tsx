@@ -80,6 +80,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/branches', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler

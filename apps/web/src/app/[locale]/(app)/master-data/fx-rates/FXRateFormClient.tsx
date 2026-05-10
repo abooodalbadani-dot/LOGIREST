@@ -112,6 +112,7 @@ export function FXRateFormClient({
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler

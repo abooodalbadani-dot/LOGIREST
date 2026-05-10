@@ -270,7 +270,7 @@ export function TransferNewClient() {
       </div>
 
       <FormFooter
-        onCancel={() => router.back()}
+        onCancel={() => router.push('/transfers', { skipGuard: true })}
         onSubmit={() => {}} // Form handles submit via onSubmit on <form>
         isSaving={createTransfer.isPending}
         isDirty={isDirty}

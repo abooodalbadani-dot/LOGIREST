@@ -234,7 +234,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
         </DocumentLockWrapper>
 
         <FormFooter 
-          onCancel={() => router.push(`/transfers/${id}`)}
+          onCancel={() => router.push(`/transfers/${id}`, { skipGuard: true })}
           onSubmit={handleShip}
           isSaving={shipTransfer.isPending}
           isLocked={false}

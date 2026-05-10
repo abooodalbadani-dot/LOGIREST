@@ -11,6 +11,7 @@ import { useAdminUser, useAdminUserMutations, UserFormSchema, type UserFormValue
 import { useAuth } from '@/providers/AuthProvider';
 import { type UserRole } from '@/types/rbac';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2, Globe, Power, AlertTriangle } from 'lucide-react';
@@ -54,7 +55,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   const isSelf = currentUser?.id === id;
   const isAuditor = currentUser?.role === 'AUDITOR' || isReadOnly;
 
-  const { register, handleSubmit, reset, setValue, control, formState: { isSubmitting, errors } } = useForm<UserFormValues>({
+  const { register, handleSubmit, reset, setValue, control, formState: { isSubmitting, isDirty, errors } } = useForm<UserFormValues>({
     resolver: zodResolver(UserFormSchema),
     defaultValues: {
       name: '',
@@ -67,6 +68,8 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
       department_ids: [],
     },
   });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const selectedBranches = useWatch({ control, name: 'branch_ids' });
   const selectedWarehouses = useWatch({ control, name: 'warehouse_ids' });
@@ -130,7 +133,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
     } else {
       await createUser.mutateAsync(values);
     }
-    router.push('/admin/users');
+    guardedRouter.push('/admin/users');
   });
 
 
@@ -149,6 +152,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
       backHref="/admin/users"
       isSaving={isSubmitting}
       onSubmit={onSubmit}
+      onCancel={() => guardedRouter.push('/admin/users', { skipGuard: true })}
       resource="admin"
       saveAction={id ? 'edit' : 'create'}
       hideSave={isReadOnly}

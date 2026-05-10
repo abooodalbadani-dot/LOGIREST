@@ -87,6 +87,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/categories', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler

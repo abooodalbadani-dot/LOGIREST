@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useNotificationTemplate } from '@/features/notifications/hooks/useNotificationTemplates';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
@@ -34,12 +34,8 @@ interface Props {
 
 export function TemplateEditorClient({ id, title, locale }: Props) {
   const t = useTranslations('notifications');
-  const router = useRouter();
   const qc = useQueryClient();
-  const { data, isLoading } = useNotificationTemplate(id);
-  const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
-
-  const { register, handleSubmit, reset, control } = useForm({
+  const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm({
     defaultValues: {
       subject_ar: '',
       subject_en: '',
@@ -47,6 +43,10 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
       body_en: '',
     },
   });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+  const { data, isLoading } = useNotificationTemplate(id);
+  const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
 
   const [subjectAr, subjectEn, bodyAr, bodyEn] = useWatch({
     control,
@@ -68,7 +68,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
     mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications/templates'] });
-      router.push('/communications/notifications/templates');
+      guardedRouter.push('/communications/notifications/templates', { skipGuard: true });
     },
   });
 
@@ -160,7 +160,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
     <Button
       type="button"
       variant="ghost"
-      onClick={() => router.push('/communications/notifications/templates')}
+      onClick={() => guardedRouter.push('/communications/notifications/templates', { skipGuard: true })}
       className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high h-11 px-6 font-bold uppercase text-label-xs"
     >
       {t('retry') === 'إعادة المحاولة' ? 'إلغاء' : 'Cancel'}

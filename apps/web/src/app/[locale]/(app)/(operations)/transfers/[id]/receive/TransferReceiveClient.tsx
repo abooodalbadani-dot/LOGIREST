@@ -312,7 +312,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       </DocumentLockWrapper>
 
       <FormFooter
-        onCancel={() => router.back()}
+        onCancel={() => router.push(`/transfers/${id}`, { skipGuard: true })}
         actions={
           <PermissionGate action="post" resource="transfer">
             <Button

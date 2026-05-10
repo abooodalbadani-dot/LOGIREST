@@ -105,6 +105,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/warehouses', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler
@@ -126,7 +127,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
       isSaving={isSaving} 
       saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/warehouses')}
+      onCancel={() => guardedRouter.push('/master-data/warehouses', { skipGuard: true })}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}

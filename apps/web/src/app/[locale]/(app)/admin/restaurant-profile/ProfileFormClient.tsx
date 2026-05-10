@@ -21,11 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
- useRestaurantProfile, 
- useUpdateRestaurantProfile, 
- RestaurantProfileSchema, 
- type RestaurantProfile 
+  useRestaurantProfile, 
+  useUpdateRestaurantProfile, 
+  RestaurantProfileSchema, 
+  type RestaurantProfile 
 } from '@/features/admin/hooks/useRestaurantProfile';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 export function ProfileFormClient({ locale }: { locale: string }) {
  const t = useTranslations('admin.restaurant_profile');
@@ -33,9 +34,11 @@ export function ProfileFormClient({ locale }: { locale: string }) {
  const { data: profile, isLoading } = useRestaurantProfile();
  const { mutateAsync: updateProfile, isPending } = useUpdateRestaurantProfile();
  
- const { register, handleSubmit, formState: { errors, isDirty }, reset, setValue, control } = useForm<RestaurantProfile>({
- resolver: zodResolver(RestaurantProfileSchema),
- });
+const { register, handleSubmit, formState: { errors, isDirty }, reset, setValue, control } = useForm<RestaurantProfile>({
+  resolver: zodResolver(RestaurantProfileSchema),
+  });
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
  const logoPreview = useWatch({ control, name: 'logo' });
 
@@ -61,9 +64,14 @@ export function ProfileFormClient({ locale }: { locale: string }) {
  setValue('logo', '', { shouldDirty: true });
  };
 
- const onSubmit = async (data: RestaurantProfile) => {
- await updateProfile(data);
- };
+const onSubmit = async (data: RestaurantProfile) => {
+    try {
+      await updateProfile(data);
+      reset(data);
+    } catch {
+      // Error handled by mutation hooks
+    }
+  };
 
  if (isLoading) {
  return (

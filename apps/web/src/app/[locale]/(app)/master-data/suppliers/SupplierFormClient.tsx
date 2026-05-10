@@ -82,6 +82,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/suppliers', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler
@@ -104,7 +105,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       isSaving={isSaving}
       saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/suppliers')}
+      onCancel={() => guardedRouter.push('/master-data/suppliers', { skipGuard: true })}
       hideSave={isReadOnly}
       resource="master_data"
       saveAction={id ? 'edit' : 'create'}

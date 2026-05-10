@@ -72,6 +72,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
     createRequest.mutate({ ...values, isDraft }, {
       onSuccess: () => {
+        form.reset(values);
         guardedRouter.push('/kitchen-requests', { skipGuard: true });
       }
     });

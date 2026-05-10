@@ -94,6 +94,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       } else {
         await create.mutateAsync(values);
       }
+      reset(values);
       guardedRouter.push('/master-data/items', { skipGuard: true });
     } catch {
       // Error handled by mutation hooks or conflict handler
@@ -134,7 +135,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       <MasterDataFormLayout 
         title={isReadOnly ? viewTitle : (id ? editTitle : createTitle)} 
         backHref='/master-data/items' 
-        onCancel={() => guardedRouter.push('/master-data/items')}
+        onCancel={() => guardedRouter.push('/master-data/items', { skipGuard: true })}
         isSaving={isSaving} saveDisabled={conflict.saveDisabled} 
         onSubmit={onSubmit}
         hideSave={isReadOnly}
