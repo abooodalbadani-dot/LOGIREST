@@ -24,7 +24,7 @@ export default async function CategoriesPage(props: { params: Promise<{ locale: 
  title={t('title')} 
  description={t('description')}
  />
- <CategoryListClient locale={params.locale} />
+ <CategoryListClient />
  </div>
  </ProtectedRoute>
  );

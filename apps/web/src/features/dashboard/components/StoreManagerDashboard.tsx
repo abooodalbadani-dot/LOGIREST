@@ -3,20 +3,17 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { 
- Truck, 
- AlertCircle, 
- BarChart3, 
- ArrowRightLeft, 
- Zap, 
- Layers,
- Search,
- MoveDown,
- Warehouse
+  Truck, 
+  AlertCircle, 
+  BarChart3, 
+  ArrowRightLeft, 
+  Zap, 
+  Layers,
+  Warehouse
 } from 'lucide-react';
 import { KPICard } from './KPICard';
 import { formatNumber, formatCurrency } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';

@@ -26,6 +26,10 @@ import {
   useFulfillKitchenRequest 
 } from '@/features/operations/hooks/useKitchenRequests';
 import { 
+  KitchenRequestDetail, 
+  KitchenRequestItem 
+} from '@/features/operations/types/kitchen-request';
+import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
@@ -47,11 +51,11 @@ import {
 } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
+import { KITCHEN_REQUEST_STATUS, KitchenRequestStatus } from '@/contracts/statuses';
 import { formatDate } from '@/utils/currency';
 
 interface KitchenRequestFormProps {
-  request: any;
+  request: KitchenRequestDetail;
   locale: 'ar' | 'en';
 }
 
@@ -92,7 +96,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   const handleApprove = async () => {
     try {
-      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.APPROVED as any, version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.APPROVED, version: request.version ?? 0 });
     } catch (error) {
       console.error('Failed to approve request', error);
     }
@@ -102,7 +106,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     const trimmedReason = rejectionReason.trim();
     if (trimmedReason.length < 15) return;
     try {
-      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED as any, reason: trimmedReason, version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED, reason: trimmedReason, version: request.version ?? 0 });
       setRejectDialogOpen(false);
     } catch (error) {
       console.error('Failed to reject request', error);
@@ -120,7 +124,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   const openFulfillDialog = () => {
     setFulfillmentData(
-      request.items.map((item: any) => ({
+      request.items.map((item: KitchenRequestItem) => ({
         itemId: item.item_id,
         fulfilledQuantity: item.quantity
       }))
@@ -129,6 +133,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   };
 
   const status = request.status as DocumentStatus;
+
   const isDocLocked = isDocumentLocked('KITCHEN_REQUEST', status);
   const isPending = updateStatus.isPending || fulfillRequest.isPending;
 
@@ -273,7 +278,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-container-high/30">
-                        {request.items.map((item: any) => (
+                        {request.items.map((item: KitchenRequestItem) => (
                           <tr key={item.id} className="group hover:bg-surface-container-medium/30 transition-all">
                             <td className="px-8 py-6">
                               <div className="flex flex-col">
@@ -385,7 +390,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         className="max-w-2xl"
       >
         <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-          {request.items.map((item: any) => (
+          {request.items.map((item: KitchenRequestItem) => (
             <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-2xl border border-surface-container-high/50">
               <div className="space-y-1">
                 <p className="text-label-sm font-bold">{item.item_name}</p>

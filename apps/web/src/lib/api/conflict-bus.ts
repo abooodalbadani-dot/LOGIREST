@@ -3,8 +3,8 @@ import { Mutation } from '@tanstack/react-query';
 
 export interface ConflictEventPayload {
   error: ConflictError;
-  mutation: Mutation<any, any, any, any>;
-  variables: any;
+  mutation: Mutation<unknown, unknown, unknown, unknown>;
+  variables: unknown;
   retryCount?: number;
 }
 

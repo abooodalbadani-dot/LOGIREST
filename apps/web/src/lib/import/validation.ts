@@ -2,10 +2,11 @@ import { z } from 'zod';
 import { ImportEntity } from './templates';
 
 export interface ValidationError {
- row: number;
- column: string;
- message: string;
- value?: unknown;
+  row: number;
+  column: string;
+  severity: 'error' | 'warning';
+  message: string;
+  value?: unknown;
 }
 
 export interface ValidationResult {
@@ -62,6 +63,7 @@ export const validateImportData = (entity: ImportEntity, data: Record<string, un
  errors.push({
  row: rowNum,
  column: issue.path[0]?.toString() || 'Unknown',
+ severity: 'error',
  message: issue.message,
  value: row[issue.path[0]?.toString() || ''],
  });

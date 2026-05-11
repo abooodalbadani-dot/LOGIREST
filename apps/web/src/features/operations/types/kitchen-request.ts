@@ -79,8 +79,8 @@ export const KitchenRequestDetailSchema = z.object({
  rejection_reason: z.string().optional(),
  fulfilled_by: z.string().optional(),
   fulfilled_at: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  created_at: z.string().default(() => new Date().toISOString()),
+  updated_at: z.string().default(() => new Date().toISOString()),
   version: z.number().default(1),
 });
 

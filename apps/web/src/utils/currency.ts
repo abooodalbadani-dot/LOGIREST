@@ -70,9 +70,31 @@ export function formatRate(value: number | null | undefined, locale: 'ar' | 'en'
 }
 
 /**
- * Format a date string with standardized locale.
+ * Format a date string with standardized locale (Date only: YYYY-MM-DD).
  */
 export function formatDate(date: Date | string | null | undefined, locale: 'ar' | 'en' = 'en'): string {
+  if (!date) return '—';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  
+  const safeLocale = locale || 'en';
+  const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
+  
+  return d.toLocaleDateString(formatterLocale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+/**
+ * Format a datetime string with standardized locale (YYYY-MM-DD HH:MM).
+ */
+export function formatDateTime(
+  date: Date | string | null | undefined, 
+  locale: 'ar' | 'en' = 'en',
+  includeSeconds: boolean = false
+): string {
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '—';
@@ -85,7 +107,8 @@ export function formatDate(date: Date | string | null | undefined, locale: 'ar' 
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    second: includeSeconds ? '2-digit' : undefined
   });
 }
 
@@ -96,5 +119,8 @@ export function formatTime(date: Date | null | undefined, locale: 'ar' | 'en' = 
   if (!date) return '--:--';
   const safeLocale = locale || 'en';
   const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
-  return date.toLocaleTimeString(formatterLocale);
+  return date.toLocaleTimeString(formatterLocale, {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }

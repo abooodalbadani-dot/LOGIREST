@@ -22,7 +22,6 @@ export default async function DepartmentDetailPage(props: { params: Promise<{ lo
         createTitle={t('create_title')}
         editTitle={t('edit_title')}
         viewTitle={t('view_title')}
-        locale={params.locale}
         isReadOnly={true}
       />
     </ProtectedRoute>

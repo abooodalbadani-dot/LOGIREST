@@ -10,7 +10,7 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import { type Branch } from '@/types/master-data';
 import { ColumnDef } from '@tanstack/react-table';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -24,7 +24,7 @@ export function BranchListClient({ locale }: { locale: string }) {
  const t = useTranslations('master_data.branches');
  const tc = useTranslations('common');
  const router = useRouter();
- const [page, setPage] = useState(1);
+ const [_page, setPage] = useState(1);
  const [search, setSearch] = useState('');
 
   const { data, isLoading, isError, refetch } = useBranches({ search });
@@ -69,7 +69,13 @@ export function BranchListClient({ locale }: { locale: string }) {
     {
       accessorKey: 'created_at',
       header: tc('created_at'),
-      cell: ({ row }) => <span dir="ltr" className="text-label-xs text-muted-foreground/60 font-medium">{format(new Date(row.original.created_at), 'MMM dd, yyyy')}</span>,
+      cell: ({ row }) => (
+        <ClientOnlyTime 
+          date={row.original.created_at} 
+          mode="date" 
+          className="text-label-xs text-muted-foreground/60 font-medium" 
+        />
+      ),
     },
     {
       id: 'actions',

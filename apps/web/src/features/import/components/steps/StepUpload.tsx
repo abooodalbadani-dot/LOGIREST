@@ -15,7 +15,7 @@ interface StepUploadProps {
  locale: string;
 }
 
-export function StepUpload({ wizard, locale }: StepUploadProps) {
+export function StepUpload({ wizard, locale: _locale }: StepUploadProps) {
  const t = useTranslations('master_data.import');
  const [file, setFile] = useState<File | null>(null);
  const [isParsing, setIsParsing] = useState(false);

@@ -25,9 +25,9 @@ export function usePOList(filters: { status?: string; supplier_id?: string; page
  if (filters.supplier_id) params.set('supplier_id', filters.supplier_id);
  params.set('page', String(filters.page ?? 1));
  
- return useQuery({
- queryKey: ['purchase-orders', filters],
- queryFn: () => apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(POSummarySchema)),
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['purchase-orders', filters],
+    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(POSummarySchema), signal),
+    staleTime: 60_000,
+  });
 }

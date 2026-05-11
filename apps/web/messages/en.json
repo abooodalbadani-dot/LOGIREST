@@ -20,6 +20,7 @@
     "audit_trail": "Audit Trail / History",
     "back": "Back",
     "back_to_list": "Back to List",
+    "barcode_scanner": "Barcode Scanner",
     "base_currency": "Base Currency",
     "cancel": "Cancel",
     "categories": {
@@ -27,6 +28,12 @@
       "food": "Food & Ingredients",
       "packaging": "Packaging",
       "supplies": "Supplies"
+    },
+    "currencies": {
+      "sar": "SAR",
+      "sar_full": "Saudi Riyal",
+      "usd": "USD",
+      "usd_full": "US Dollar"
     },
     "check_fields": "Please check required fields",
     "code": "Code",
@@ -37,6 +44,8 @@
     "create": "Create",
     "create_branch": "Create Branch",
     "created_at": "Created At",
+    "updated_at": "Updated At",
+    "updated_by": "Updated By",
     "dash": "—",
     "datatable": {
       "export_csv": "Export CSV",
@@ -53,6 +62,7 @@
     "document_locked": "Document Locked",
     "document_status": "Document Status",
     "error": "Something went wrong",
+    "warning": "Warning",
     "conflict": {
       "actions": {
         "cancel": "Cancel",
@@ -62,6 +72,7 @@
       "description": "This document was modified by another user while you were editing it.",
       "force_reload_hint": "A retry has already been attempted. Please reload the page to see the latest changes.",
       "retry_hint": "You can try to auto-update and re-save, or reload the page.",
+      "retry": "Retry Save",
       "stay": "Ignore & Close",
       "stay_disable_hint": "A conflict was detected. Closing this will lock the form to prevent data loss. Please Reload to continue.",
       "reload": "Reload Data",
@@ -76,7 +87,7 @@
       "generic": "An unexpected error occurred. Please try again or contact support.",
       "title": "Error Encountered"
     },
-    "unsavedChanges": {
+    "unsaved_changes": {
       "title": "Unsaved Changes",
       "description": "You have unsaved changes. Are you sure you want to leave?",
       "stay": "Stay on Page",
@@ -97,11 +108,31 @@
     "name": "Name",
     "home": "Home",
     "view": "View",
+    "create_new": "Create New",
     "active": "Active",
     "inactive": "Inactive",
     "is_active": "Active State",
     "operational_status": "Operational Status",
-    "status": "Status",
+    "status": {
+      "all": "All Statuses",
+      "draft": "Draft",
+      "posted": "Posted",
+      "active": "Active",
+      "submitted": "Submitted",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "last_sync": "Last Sync",
+      "live_updates": "Live Updates",
+      "completed": "Completed",
+      "in_transit": "In Transit",
+      "status": "Status",
+      "pending": "Pending",
+      "cancelled": "Cancelled",
+      "voided": "Voided",
+      "received": "Received",
+      "shipped": "Shipped",
+      "closed": "Closed"
+    },
     "status_label": "Status",
     "statuses": {
       "active": "Active",
@@ -157,6 +188,7 @@
     "not_found": "Not found",
     "not_logged_in": "Not Logged In",
     "notes": "Notes",
+    "notes_placeholder": "Add any additional internal remarks...",
     "operations": "Operations",
     "operators": "Operators",
     "or": "or",
@@ -332,6 +364,9 @@
     "workflow": {
       "document_locked": "Document Locked",
       "locked_description": "This document is approved or closed and cannot be modified."
+    },
+    "modules": {
+      "operations": "Operations"
     }
   },
   "admin": {
@@ -549,7 +584,7 @@
       "syncing_identity": "Syncing Identity Stream...",
       "profile_metadata": "Profile credentials and metadata",
       "lang_en": "English",
-      "lang_ar": "العربية",
+      "lang_ar": "Arabic",
       "organizational_units": "Organizational unit boundaries",
       "branch_selection_hint": "Select at least one branch to view warehouses",
       "role_permissions": "System role & Permissions",
@@ -944,11 +979,11 @@
       "operational_compliance": "Operational Compliance",
       "placeholders": {
         "code": "BR-001",
-        "name_ar": "اسم الفرع",
+        "name_ar": "Branch Name (AR)",
         "name_en": "Branch Name",
         "status": "Select a status",
         "main_riyadh_en": "Main Riyadh Branch",
-        "main_riyadh_ar": "فرع الرياض الرئيسي"
+        "main_riyadh_ar": "Main Riyadh Branch (AR)"
       },
       "search_placeholder": "Filter locations by name or code...",
       "title": "Branches",
@@ -1615,7 +1650,22 @@
     "templates": "Notification Templates",
     "title": "Notifications",
     "total_volume": "Total Volume",
-    "trigger_event": "Trigger Event"
+    "trigger_event": "Trigger Event",
+    "verified_recipient": "Verified Recipient",
+    "email_outbox_title": "Email Outbox",
+    "email_outbox_desc": "Communication audit trail and outgoing message pipeline",
+    "filter_by_status": "Filter by Status",
+    "all_statuses": "All Statuses",
+    "pending": "Pending",
+    "sent": "Sent",
+    "failed": "Failed",
+    "stats": {
+      "total_sent": "Total Sent",
+      "delivered": "Delivered",
+      "failed": "Failed"
+    },
+    "outbox_page_desc": "Track sent emails and notification history",
+    "notifications_page_desc": "System alerts, low-stock warnings, and operational events"
   },
   "operational": {
     "inventory": {
@@ -2006,7 +2056,12 @@
       "reason_placeholder": "Please provide a detailed reason for accepting this product...",
       "chars_remaining": "{count} more characters required",
       "cancel_scan": "Cancel Scan",
-      "override_and_add": "Override & Add"
+      "override_and_add": "Override & Add",
+      "lot_number_label": "LOT NUMBER",
+      "expired_on_label": "EXPIRED ON",
+      "source_document_label": "Source Document",
+      "impacted_qty_label": "Impacted Qty",
+      "no_overrides": "No overrides detected in the ledger"
     },
     "kitchen_request": {
       "approve": "Approve",
@@ -2116,7 +2171,7 @@
       "items_count": "Items Count",
       "items_counted": "Items Counted",
       "items_to_audit": "Items to Audit",
-      "last_item_reached": "تم الوصول إلى آخر صنف في القائمة.",
+      "last_item_reached": "Reached the last item in the list.",
       "last_sync": "Last Sync",
       "last_updated": "Last Updated",
       "live_updates": "Audit Pulse",
@@ -2211,7 +2266,7 @@
       "variance_review": "Variance Review",
       "variance_review_desc": "Analyze discrepancies between snapshot and physical counts",
       "variance_status": "Variance Review",
-      "variance_submitted_status": "انتظار الاعتماد",
+      "variance_submitted_status": "Awaiting Approval",
       "variance_value": "Variance Value",
       "warehouse_locked_banner": "Warehouse locked by active stocktake: {sessionNumber}",
       "warehouse_locked_warning": "This warehouse is currently under an active audit sequence.",
@@ -2373,7 +2428,10 @@
       "mock_warehouse_1": "Main Warehouse",
       "mock_warehouse_2": "Kitchen Store",
       "market_rate": "Market Rate",
-      "rate_variance": "Rate Variance"
+      "rate_variance": "Rate Variance",
+      "actions": {
+        "submit": "Submit"
+      }
     },
     "po": {
       "actions": {

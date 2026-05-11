@@ -1,108 +1,76 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { type Branch, type BranchFormValues } from '@/types/master-data';
-import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
+import { type BranchFormValues, BranchSchema } from '@/types/master-data';
+import { apiClient } from '@/lib/api/client';
+import { z } from 'zod';
 
 /**
  * LOGIREST ENTERPRISE STANDARDS: MASTER DATA
  * Query Key Discipline: ["branches"]
  */
 
-const MOCK_BRANCHES: Branch[] = [
- {
- id: 'BR-001',
- code: 'MAIN-HQ',
- name_en: 'Main Headquarters',
- name_ar: 'المركز الرئيسي',
- is_active: true,
- created_at: new Date('2024-01-01').toISOString(),
- },
- {
- id: 'BR-002',
- code: 'NORTH-HUB',
- name_en: 'North Logistics Hub',
- name_ar: 'مركز الشمال اللوجستي',
- is_active: true,
- created_at: new Date('2024-02-15').toISOString(),
- },
- {
- id: 'BR-003',
- code: 'WEST-DIST',
- name_en: 'West Distribution Center',
- name_ar: 'مركز توزيع الغرب',
- is_active: false,
- created_at: new Date('2024-03-10').toISOString(),
- }
-];
+const QUERY_KEY = ['branches'];
+
+const PaginatedBranchesSchema = z.object({
+  data: z.array(BranchSchema),
+  meta: z.object({
+    total: z.number(),
+    page: z.number(),
+    page_size: z.number(),
+    total_pages: z.number()
+  })
+});
 
 export function useBranches(filters?: { search?: string }) {
- return useQuery({
- queryKey: ['branches', filters],
- queryFn: async () => {
- await new Promise(resolve => setTimeout(resolve, 500));
- let data = [...MOCK_BRANCHES];
- 
- if (filters?.search) {
- const s = filters.search.toLowerCase();
- data = data.filter(b => 
- b.name_en.toLowerCase().includes(s) || 
- b.name_ar.includes(s) || 
- b.code.toLowerCase().includes(s)
- );
- }
-
- return {
- data,
- meta: {
- total: data.length,
- page: 1,
- page_size: 10,
- total_pages: 1
- }
- };
- },
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: [...QUERY_KEY, filters],
+    queryFn: ({ signal }) => {
+      const params = new URLSearchParams();
+      if (filters?.search) params.append('search', filters.search);
+      
+      const path = `/branches${params.toString() ? `?${params.toString()}` : ''}`;
+      return apiClient.get(path, PaginatedBranchesSchema, signal);
+    },
+    staleTime: 60_000,
+  });
 }
 
 export function useBranch(id: string | null) {
- return useQuery({
- queryKey: ['branches', id],
- queryFn: async () => {
- await new Promise(resolve => setTimeout(resolve, 300));
- const branch = MOCK_BRANCHES.find(b => b.id === id);
- if (!branch) throw new Error('Branch not found');
- return branch;
- },
- enabled: !!id,
- });
+  return useQuery({
+    queryKey: [...QUERY_KEY, id],
+    queryFn: ({ signal }) => {
+      if (!id) return null;
+      return apiClient.get(`/branches/${id}`, BranchSchema, signal);
+    },
+    enabled: !!id,
+  });
 }
 
 export function useCreateBranch() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.branches');
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.branches');
 
- return useMutation({
- mutationFn: async (values: BranchFormValues) => {
- await new Promise(resolve => setTimeout(resolve, 800));
- // Force uppercase code per enterprise rules
- const finalValues = {
- ...values,
- code: values.code.toUpperCase()
- };
- return { ...finalValues, id: `BR- ${Math.floor(Math.random() * 1000)}`, created_at: new Date().toISOString() };
- },
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: ['branches'] });
- toast.success(t('created_success'));
- },
- onError: () => {
- toast.error(t('errors.create_failed'));
- }
- });
+  return useMutation({
+    mutationFn: (variables: BranchFormValues & { signal?: AbortSignal }) => {
+      const { signal, ...values } = variables;
+      return apiClient.post('/branches', BranchSchema, {
+        ...values,
+        code: values.code.toUpperCase()
+      }, signal);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('created_success'));
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      toast.error(t('errors.create_failed'));
+    }
+  });
 }
 
 export function useUpdateBranch(options?: { onConflict?: () => void }) {
@@ -110,45 +78,27 @@ export function useUpdateBranch(options?: { onConflict?: () => void }) {
   const t = useTranslations('master_data.branches');
 
   return useSafeMutation({
-  onConflict: options?.onConflict,
-  mutationFn: async ({ id, values }: { id: string; values: BranchFormValues }) => {
-  await new Promise(resolve => setTimeout(resolve, 800));
-
-  const data = queryClient.getQueryData<Branch[]>(['branches']) || MOCK_BRANCHES;
-  const branch = data.find(b => b.id === id);
-  if (!branch) throw new Error('Branch not found');
-
-  if (values.version !== undefined && values.version < (branch.version ?? 0)) {
-  const error = new Error('CONFLICT') as any;
-  error.response = { status: 409 };
-  throw error;
-  }
-
-  // OPERATIONAL GUARD: Prevent deactivation if linked to active warehouses
-  // MOCK: BR-001 is linked to active warehouses in our simulation
-  if (id === 'BR-001' && values.is_active === false) {
-  throw new Error('GUARD_ACTIVE_WAREHOUSES');
-  }
-
-  const finalValues = {
-  ...values,
-  code: values.code.toUpperCase()
-  };
-
-  return { ...finalValues, id, version: (branch.version ?? 0) + 1 };
-  },
-  onSuccess: (data) => {
-  queryClient.invalidateQueries({ queryKey: ['branches'] });
-  queryClient.setQueryData(['branches', data.id], data);
-  toast.success(t('updated_success'));
-  },
-  onError: (error: Error) => {
-  if (error.message === 'GUARD_ACTIVE_WAREHOUSES') {
-  toast.error(t('errors.deactivate_linked_warehouses'));
-  } else {
-  toast.error(t('errors.update_failed'));
-  }
-  }
+    onConflict: options?.onConflict,
+    meta: { suppressGlobalConflict: true },
+    mutationFn: ({ id, values, signal }: { id: string; values: BranchFormValues; signal?: AbortSignal }) => {
+      return apiClient.put(`/branches/${id}`, BranchSchema, {
+        ...values,
+        code: values.code.toUpperCase()
+      }, signal);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: unknown) => {
+      const err = error as { name?: string; code?: string; message?: string };
+      if (err.name === 'AbortError') return;
+      
+      // Handle specific error codes if returned by API/Mock
+      const errorCode = err.code || err.message;
+      toast.error(t(`errors.${errorCode}`) || t('errors.update_failed'));
+    }
   });
 }
 
@@ -157,23 +107,18 @@ export function useDeleteBranch() {
   const t = useTranslations('master_data.branches');
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // OPERATIONAL GUARD: Prevent deletion if branch has linked warehouses
-      // Mock: BR-001 has linked warehouses
-      if (id === 'BR-001') {
-        throw new Error('cannot_delete_branch_in_use');
-      }
-
-      return id;
+    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
+      return apiClient.del(`/branches/${id}`, z.unknown(), signal);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success(t('deleted_success'));
     },
-    onError: (error: Error) => {
-      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      const errorCode = (error as { code?: string })?.code || (error as Error)?.message;
+      toast.error(t(`errors.${errorCode}`) || t('errors.delete_failed'));
     }
   });
 }
+

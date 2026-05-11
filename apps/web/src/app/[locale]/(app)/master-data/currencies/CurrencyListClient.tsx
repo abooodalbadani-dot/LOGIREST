@@ -27,21 +27,10 @@ export function CurrencyListClient({ locale }: { locale: string }) {
 
  const { data: currencies = [], isLoading, isError, refetch } = useCurrencies();
 
- if (isError) {
-  return (
-   <div className="p-8">
-    <ErrorState 
-     type="server_error"
-     onRetry={() => refetch()}
-    />
-   </div>
-  );
- }
-
  const filteredCurrencies = useMemo(() => {
  if (!search) return currencies;
  const s = search.toLowerCase();
- return currencies.filter(c => 
+ return currencies.filter((c: Currency) => 
  c.code.toLowerCase().includes(s) || 
  c.name_en.toLowerCase().includes(s) || 
  c.name_ar.includes(s)
@@ -49,10 +38,10 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  }, [currencies, search]);
 
  const stats = useMemo(() => {
- const base = currencies.find(c => c.is_base_currency);
+ const base = currencies.find((c: Currency) => c.is_base_currency);
  return {
  total: currencies.length,
- active: currencies.filter(c => c.is_active).length,
+ active: currencies.filter((c: Currency) => c.is_active).length,
  baseCurrency: base ? (locale === 'ar' ? base.name_ar : base.name_en) : '---'
  };
  }, [currencies, locale]);
@@ -144,6 +133,17 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  ),
  },
  ], [tc, t, locale, router]);
+
+ if (isError) {
+  return (
+   <div className="p-8">
+    <ErrorState 
+     type="server_error"
+     onRetry={() => refetch()}
+    />
+   </div>
+  );
+ }
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">

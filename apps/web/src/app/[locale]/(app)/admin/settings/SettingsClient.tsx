@@ -1,16 +1,16 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Shield, Settings, Mail, Globe, Coins, AlertTriangle, Save, ArrowLeft } from 'lucide-react';
+import { Settings, Mail, Globe, AlertTriangle, Save, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PostConfirmDialog } from '@/components/ui/post-confirm-dialog';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { Link } from '@/i18n/navigation';
-import { useAdminSettings, useUpdateSettings, SettingsSchema, type SystemSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useAdminSettings, useUpdateSettings, AdminSettingsSchema, type AdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { type Currency } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -23,28 +23,22 @@ export function SettingsClient({ locale }: { locale: string }) {
   const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [pendingData, setPendingData] = useState<SystemSettings | null>(null);
+  const [pendingData, setPendingData] = useState<AdminSettings | null>(null);
 
-  const { register, handleSubmit, formState: { errors, isDirty }, control, setValue, reset } = useForm<SystemSettings>({
-  resolver: zodResolver(SettingsSchema),
+  const { register, handleSubmit, formState: { errors, isDirty }, control, setValue, reset } = useForm<AdminSettings>({
+    resolver: zodResolver(AdminSettingsSchema),
+    values: currentSettings,
   });
 
-  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+  const { router: _guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const watchedBaseCurrency = useWatch({ control, name: 'base_currency' });
-  const watchedLanguage = useWatch({ control, name: 'default_language' });
-  const [initialBaseCurrency, setInitialBaseCurrency] = useState<string | null>(null);
-
-  useEffect(() => {
-  if (currentSettings) {
-  reset(currentSettings);
-  setInitialBaseCurrency(currentSettings.base_currency);
-  }
-  }, [currentSettings, reset]);
+  const watchedLanguage = useWatch({ control, name: 'locale_default' });
+  const initialBaseCurrency = currentSettings?.base_currency || null;
 
   const showCurrencyWarning = watchedBaseCurrency && initialBaseCurrency && watchedBaseCurrency !== initialBaseCurrency;
 
-  const onSubmit = (data: SystemSettings) => {
+  const onSubmit = (data: AdminSettings) => {
   if (data.base_currency !== initialBaseCurrency) {
   setPendingData(data);
   setIsConfirmOpen(true);
@@ -136,8 +130,8 @@ const handleConfirm = () => {
  {t('default_language')}
  </Label>
  <Select 
- onValueChange={(val) => setValue('default_language', val as 'en' | 'ar')}
- defaultValue={watchedLanguage}
+ onValueChange={(val) => setValue('locale_default', val as 'en' | 'ar')}
+ value={watchedLanguage}
  >
  <SelectTrigger className="bg-surface-container-low border-outline-low rounded-sm h-12 font-bold focus:ring-1 focus:ring-operational-cyan">
  <SelectValue placeholder={t('select_language')} />
@@ -155,7 +149,7 @@ const handleConfirm = () => {
  </Label>
  <Select 
  onValueChange={(val) => setValue('base_currency', val as string)}
- defaultValue={watchedBaseCurrency}
+ value={watchedBaseCurrency}
  >
  <SelectTrigger className="bg-surface-container-low border-outline-low rounded-sm h-12 font-bold focus:ring-1 focus:ring-operational-cyan">
  <SelectValue placeholder={t('select_currency')} />
@@ -233,13 +227,13 @@ const handleConfirm = () => {
  </form>
 
  <PostConfirmDialog
- isOpen={isConfirmOpen}
+ open={isConfirmOpen}
  onOpenChange={setIsConfirmOpen}
  onConfirm={handleConfirm}
  title={t('confirm_base_currency_title')}
  description={t('confirm_base_currency_warning')}
  confirmText={tCommon('save')}
- isDestructive={true}
+ variant="destructive"
  />
  </div>
  );

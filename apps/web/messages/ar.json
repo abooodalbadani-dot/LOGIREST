@@ -20,6 +20,7 @@
     "audit_trail": "سجل المراجعة / التاريخ",
     "back": "رجوع",
     "back_to_list": "العودة للقائمة",
+    "barcode_scanner": "ماسح الباركود",
     "base_currency": "العملة الأساسية",
     "cancel": "إلغاء",
     "categories": {
@@ -27,6 +28,12 @@
       "food": "الأغذية والمكونات",
       "packaging": "التغليف",
       "supplies": "المستلزمات"
+    },
+    "currencies": {
+      "sar": "ر.س",
+      "sar_full": "ريال سعودي",
+      "usd": "دولار",
+      "usd_full": "دولار أمريكي"
     },
     "check_fields": "يرجى التحقق من الحقول المطلوبة",
     "code": "الكود",
@@ -37,6 +44,8 @@
     "create": "إنشاء",
     "create_branch": "إنشاء فرع",
     "created_at": "تاريخ الإنشاء",
+    "updated_at": "تاريخ التحديث",
+    "updated_by": "تعديل بواسطة",
     "dash": "—",
     "datatable": {
       "export_csv": "تصدير CSV",
@@ -53,6 +62,7 @@
     "document_locked": "المستند مقفل",
     "document_status": "حالة المستند",
     "error": "حدث خطأ ما",
+    "warning": "تحذير",
     "conflict": {
       "actions": {
         "cancel": "إلغاء",
@@ -77,7 +87,7 @@
       "generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.",
       "title": "فشل الإجراء"
     },
-    "unsavedChanges": {
+    "unsaved_changes": {
       "title": "تغييرات غير محفوظة",
       "description": "لديك تغييرات غير محفوظة. هل أنت متأكد من مغادرة هذه الصفحة؟",
       "stay": "البقاء في الصفحة",
@@ -93,16 +103,36 @@
     "items": "الأصناف",
     "locales": {
       "ar": "العربية",
-      "en": "English"
+      "en": "الإنجليزية"
     },
     "name": "الاسم",
     "home": "الرئيسية",
     "view": "عرض",
+    "create_new": "إنشاء جديد",
     "active": "نشط",
     "inactive": "غير نشط",
     "is_active": "الحالة النشطة",
     "operational_status": "الحالة التشغيلية",
-    "status": "الحالة",
+    "status": {
+      "all": "الكل",
+      "draft": "مسودة",
+      "posted": "تم الترحيل",
+      "active": "نشط",
+      "submitted": "مقدم",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "last_sync": "آخر مزامنة",
+      "live_updates": "تحديثات مباشرة",
+      "completed": "مكتمل",
+      "in_transit": "في الطريق",
+      "status": "الحالة",
+      "pending": "قيد الانتظار",
+      "cancelled": "ملغي",
+      "voided": "ملغي/باطل",
+      "received": "مستلم",
+      "shipped": "تم الشحن",
+      "closed": "مغلق"
+    },
     "status_label": "الحالة",
     "statuses": {
       "active": "نشط",
@@ -158,6 +188,7 @@
     "not_found": "غير موجود",
     "not_logged_in": "غير مسجل دخول",
     "notes": "ملاحظات",
+    "notes_placeholder": "أدخل أي ملاحظات داخلية إضافية هنا...",
     "operations": "العمليات",
     "operators": "المشغلين",
     "or": "أو",
@@ -245,11 +276,11 @@
     },
     "table_headers": {
       "available": "متاح",
-      "code": "رمز العملة",
+      "code": "كود الصنف",
       "expiry": "انتهاء صلاحية",
       "lot": "الدفعة",
-      "lot_allocation": "تخصيص الحصة",
-      "name": "اسم المطعم",
+      "lot_allocation": "تخصيص الدفعة",
+      "name": "الاسم",
       "qty": "الكمية",
       "received_qty": "الكمية المستلمة",
       "uom": "وحدة القياس"
@@ -308,7 +339,7 @@
       "online_message": "تم استعادة الاتصال. النظام عاد للعمل."
     },
     "system": {
-      "name": "LogiRest",
+      "name": "لوجي ريست (LogiRest)",
       "toggle_theme": "تبديل المظهر",
       "restaurant_logo": "شعار المطعم"
     },
@@ -333,6 +364,9 @@
     "workflow": {
       "document_locked": "المستند مقفل",
       "locked_description": "هذا المستند معتمد أو مغلق ولا يمكن تعديله."
+    },
+    "modules": {
+      "operations": "العمليات"
     }
   },
   "admin": {
@@ -621,7 +655,7 @@
       "system_online": "النظام متصل",
       "title": "مطلوب تصريح دخول",
       "v3_enabled": "تم تفعيل العمود الفقري الآمن V3",
-      "version": "v3.1.04"
+      "version": "الإصدار v3.1.04"
     },
     "new_password": "كلمة المرور الجديدة",
     "password": "كلمة المرور",
@@ -946,9 +980,9 @@
       "placeholders": {
         "code": "BR-001",
         "name_ar": "اسم الفرع",
-        "name_en": "Branch Name",
+        "name_en": "اسم الفرع (EN)",
         "status": "اختر حالة",
-        "main_riyadh_en": "Main Riyadh Branch",
+        "main_riyadh_en": "فرع الرياض الرئيسي (EN)",
         "main_riyadh_ar": "فرع الرياض الرئيسي"
       },
       "search_placeholder": "تصفية المواقع حسب الاسم أو الكود...",
@@ -982,7 +1016,7 @@
       "layers": "الطبقات",
       "mapping_status": "حالة الربط",
       "placeholders": {
-        "name_ar": "مثال: مواد خام",
+        "name_ar": "مثال: مواد خام (AR)",
         "name_en": "مثلاً Raw Materials"
       },
       "search_placeholder": "تصفية الفئات حسب الاسم أو الكود...",
@@ -1247,7 +1281,7 @@
       "rules_subtitle": "معايير التدقيق",
       "active_desc": "متاح للعمليات",
       "placeholders": {
-        "rate": "0.000000"
+        "rate": "0.000000 (AR)"
       },
       "validation": {
         "currencies_must_differ": "يجب أن تكون عملة المصدر والهدف مختلفتين",
@@ -1445,7 +1479,7 @@
       "phone": "رقم الهاتف",
       "code_placeholder": "مثال: V-001",
       "name_en_placeholder": "الموزعون العالميون (EN)",
-      "name_ar_placeholder": "الموزعون العالميون",
+      "name_ar_placeholder": "الموزعون العالميون (AR)",
       "contact_person_placeholder": "فلان الفلاني",
       "phone_placeholder": "+966 50 000 0000",
       "email_placeholder": "vendor@example.com",
@@ -1471,8 +1505,8 @@
       "precision_description": "المقاييس القياسية لدقة المخزون ودقة التحويل عبر جميع عقد سلسلة التوريد.",
       "placeholders": {
         "code": "UNIT",
-        "name_ar": "اسم الوحدة",
-        "name_en": "Unit Name"
+        "name_ar": "اسم الوحدة (AR)",
+        "name_en": "اسم الوحدة (EN)"
       },
       "registry_sync": "مزامنة السجل",
       "search_placeholder": "تصفية الوحدات حسب الاسم أو الكود...",
@@ -1555,9 +1589,9 @@
         "type": "نوع التخزين"
       },
       "name_ar": "الاسم (AR)",
-      "name_ar_placeholder": "المستودع الرئيسي",
+      "name_ar_placeholder": "المستودع الرئيسي (AR)",
       "name_en": "الاسم (EN)",
-      "name_en_placeholder": "Main Warehouse",
+      "name_en_placeholder": "Main Warehouse (EN)",
       "operational_status": "الحالة التشغيلية",
       "parent_branch": "الفرع الأم",
       "physical_location_settings": "الموقع المادي والإعدادات",
@@ -1616,7 +1650,22 @@
     "templates": "قوالب الإشعارات",
     "title": "التنبيهات",
     "total_volume": "إجمالي الحجم",
-    "trigger_event": "حدث المشغل"
+    "trigger_event": "حدث المشغل",
+    "verified_recipient": "مستلم معتمد",
+    "email_outbox_title": "صادر البريد الإلكتروني",
+    "email_outbox_desc": "سجل تدقيق الاتصالات وخط أنابيب الرسائل الصادرة",
+    "filter_by_status": "تصفية حسب الحالة",
+    "all_statuses": "جميع الحالات",
+    "pending": "قيد الانتظار",
+    "sent": "تم الإرسال",
+    "failed": "فشل",
+    "stats": {
+      "total_sent": "إجمالي المرسل",
+      "delivered": "تم التسليم",
+      "failed": "فشل"
+    },
+    "outbox_page_desc": "تتبع رسائل البريد الإلكتروني المرسلة وتاريخ التنبيهات",
+    "notifications_page_desc": "تنبيهات النظام، تحذيرات انخفاض المخزون، والأحداث التشغيلية"
   },
   "operational": {
     "inventory": {
@@ -1700,8 +1749,8 @@
       },
       "placeholders": {
         "sku": "مثلاً ITEM-9902",
-        "name_ar": "أرز بسمتي 5 كجم",
-        "name_en": "Basmati Rice 5kg",
+        "name_ar": "أرز بسمتي 5 كجم (AR)",
+        "name_en": "Basmati Rice 5kg (EN)",
         "select_category": "اختر الفئة",
         "select_uom": "اختر وحدة القياس"
       },
@@ -2007,7 +2056,12 @@
       "reason_placeholder": "الرجاء تذكر السبب التفصيلي لقبول هذا المنتج...",
       "chars_remaining": "{count} حرف إضافي مطلوب",
       "cancel_scan": "إلغاء المسح",
-      "override_and_add": "تجاوز وإضافة"
+      "override_and_add": "تجاوز وإضافة",
+      "lot_number_label": "رقم الدفعة",
+      "expired_on_label": "تاريخ الانتهاء",
+      "source_document_label": "المستند المصدر",
+      "impacted_qty_label": "الكمية المتأثرة",
+      "no_overrides": "لم يتم اكتشاف أي تجاوزات في السجل"
     },
     "kitchen_request": {
       "approve": "اعتماد",
@@ -2374,7 +2428,10 @@
       "mock_warehouse_1": "المستودع الرئيسي",
       "mock_warehouse_2": "مخزن المطبخ",
       "market_rate": "سعر السوق",
-      "rate_variance": "تباين السعر"
+      "rate_variance": "تباين السعر",
+      "actions": {
+        "submit": "تقديم السند"
+      }
     },
     "po": {
       "actions": {

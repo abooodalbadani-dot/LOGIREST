@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Trash2, Plus, Calendar, Package, Calculator, ArrowLeft, Send, Save, Building2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter, Link } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
 import {
@@ -184,7 +184,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  <Package className="w-3 h-3" />
  {t('department')}
  </FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger className="bg-surface-container-lowest border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
  <SelectValue placeholder={tc('select_warehouse')} />

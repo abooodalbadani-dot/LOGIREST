@@ -47,16 +47,19 @@ export const GRNDetailSchema = z.object({
  fx_rate_captured_at: z.string().nullable().optional(),
  version: z.number(),
  notes: z.string().nullable(),
+ created_at: z.string().optional(),
+ created_by: z.string().optional(),
+ updated_at: z.string().optional(),
  lines: z.array(LineItemSchema)
 });
 
 export type GRNDetail = z.infer<typeof GRNDetailSchema>;
 
 export function useGRN(id: string | null) {
- return useQuery({
- queryKey: ['grn', id],
- queryFn: () => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema })).then(res => res.data),
- enabled: !!id && id !== 'new',
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['grn', id],
+    queryFn: ({ signal }) => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), signal).then(res => res.data),
+    enabled: !!id && id !== 'new',
+    staleTime: 60_000,
+  });
 }

@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Loader2, AlertTriangle, Trash2, XCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -42,6 +41,27 @@ interface PostConfirmDialogProps {
  * Standardized Confirmation Dialog for destructive mutations and workflow state changes.
  * Refactored to meet LogiRest Phase 5 premium aesthetics and safety standards.
  */
+const VARIANT_STYLES = {
+  destructive: "bg-status-error/10 text-status-error shadow-status-error/20",
+  warning: "bg-status-warning/10 text-status-warning shadow-status-warning/20",
+  info: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
+  default: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
+};
+
+const BUTTON_STYLES = {
+  destructive: "bg-status-error hover:bg-status-error/90 text-white shadow-status-error/20",
+  warning: "bg-status-warning hover:bg-status-warning/90 text-white shadow-status-warning/20",
+  info: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
+  default: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
+};
+
+const ICON_MAP = {
+  delete: Trash2,
+  reject: XCircle,
+  warning: AlertTriangle,
+  info: Info,
+};
+
 export function PostConfirmDialog({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
@@ -62,13 +82,25 @@ export function PostConfirmDialog({
   className,
 }: PostConfirmDialogProps) {
   const t = useTranslations('common');
+  const locale = useLocale();
   const [internalOpen, setInternalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
   
   const open = controlledOpen ?? internalOpen;
-  const onOpenChange = controlledOnOpenChange ?? setInternalOpen;
+  const rawOnOpenChange = controlledOnOpenChange ?? setInternalOpen;
 
-  const isRtl = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : true;
+  const handleOpenChange = (newOpen: boolean, event?: { cancel?: () => void }) => {
+    // Prevent closing via Escape key or backdrop click if loading
+    if (!newOpen && isLoading) {
+      if (event?.cancel) {
+        event.cancel();
+      }
+      return;
+    }
+    rawOnOpenChange(newOpen);
+  };
+
+  const isRtl = locale === 'ar';
   const defaultKeyword = isRtl ? 'تأكيد' : 'CONFIRM';
   const requiredWord = confirmKeyword || defaultKeyword;
   const isConfirmDisabled = isLoading || disabled || (requiresTextConfirmation && confirmInput !== requiredWord);
@@ -76,41 +108,20 @@ export function PostConfirmDialog({
   const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault();
     await onConfirm();
-    onOpenChange(false);
+    handleOpenChange(false);
     setConfirmInput('');
   };
 
-  const getIcon = () => {
-    if (icon === 'delete') return Trash2;
-    if (icon === 'reject') return XCircle;
-    if (icon === 'info' || variant === 'info') return Info;
-    return AlertTriangle;
-  };
-
-  const Icon = getIcon();
-
-  const variantStyles = {
-    destructive: "bg-status-error/10 text-status-error shadow-status-error/20",
-    warning: "bg-status-warning/10 text-status-warning shadow-status-warning/20",
-    info: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
-    default: "bg-operational-cyan/10 text-operational-cyan shadow-operational-cyan/20",
-  };
-
-  const buttonStyles = {
-    destructive: "bg-status-error hover:bg-status-error/90 text-white shadow-status-error/20",
-    warning: "bg-status-warning hover:bg-status-warning/90 text-white shadow-status-warning/20",
-    info: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
-    default: "bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-operational-cyan/20",
-  };
+  const Icon = (icon && ICON_MAP[icon]) || (variant === 'info' ? Info : AlertTriangle);
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <AlertDialogTrigger render={trigger} />}
       <AlertDialogContent className={cn("max-w-md border-none ambient-shadow p-8 bg-surface-container-lowest rounded-[2rem] animate-in fade-in zoom-in-95 duration-300", className)}>
         <AlertDialogHeader className="space-y-4">
           <div className={cn(
             "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-500 hover:scale-110",
-            variantStyles[variant]
+            VARIANT_STYLES[variant]
           )}>
             <Icon className="w-6 h-6" />
           </div>
@@ -122,6 +133,15 @@ export function PostConfirmDialog({
               {description}
             </AlertDialogDescription>
           </div>
+          {!isLoading && (
+            <button 
+              onClick={() => handleOpenChange(false)}
+              className="absolute right-8 top-8 w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all text-muted-foreground/60 hover:text-foreground"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          )}
         </AlertDialogHeader>
 
         <div className="my-6 space-y-6">
@@ -161,19 +181,23 @@ export function PostConfirmDialog({
         </div>
 
         <AlertDialogFooter className="gap-4 mt-2">
-          <AlertDialogCancel
-            variant="ghost"
-            className="flex-1 h-12 rounded-xl border-none bg-surface-container-high hover:bg-surface-container-highest text-label-xs font-bold uppercase transition-all"
-            disabled={isLoading}
-          >
-            {customCancelText || t('actions.cancel')}
-          </AlertDialogCancel>
+          {!isLoading && (
+            <AlertDialogCancel
+              variant="ghost"
+              className="flex-1 h-12 rounded-xl border-none bg-surface-container-high hover:bg-surface-container-highest text-label-xs font-bold uppercase transition-all"
+              disabled={isLoading}
+            >
+              {customCancelText || t('actions.cancel')}
+            </AlertDialogCancel>
+          )}
           <Button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
+            aria-label={isLoading ? t('loading') : (customConfirmText || t('actions.confirm'))}
+            aria-busy={isLoading}
             className={cn(
               "flex-1 h-12 rounded-xl text-label-xs font-bold uppercase transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:grayscale",
-              buttonStyles[variant]
+              BUTTON_STYLES[variant]
             )}
           >
             {isLoading ? (

@@ -72,7 +72,7 @@ export function useCreateCategory() {
  const t = useTranslations('master_data.categories');
 
  return useMutation({
- mutationFn: async (values: CategoryFormValues) => {
+ mutationFn: async (values: CategoryFormValues & { signal?: AbortSignal }) => {
  await new Promise(resolve => setTimeout(resolve, 600));
  
  const newCategory: Category = {
@@ -99,18 +99,18 @@ export function useUpdateCategory(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
   onConflict: options?.onConflict,
-  mutationFn: async ({ id, values }: { id: string; values: CategoryFormValues }) => {
+  mutationFn: async ({ id, values, signal: _signal }: { id: string; values: CategoryFormValues; signal?: AbortSignal }) => {
   await new Promise(resolve => setTimeout(resolve, 600));
 
   const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
   const category = data.find(c => c.id === id);
   if (!category) throw new Error('Category not found');
 
-  if (values.version !== undefined && values.version < (category.version ?? 0)) {
-  const error = new Error('CONFLICT') as any;
-  error.response = { status: 409 };
-  throw error;
-  }
+    if (values.version !== undefined && values.version < (category.version ?? 0)) {
+      const error = new Error('CONFLICT');
+      Object.assign(error, { response: { status: 409 } });
+      throw error;
+    }
 
   const updatedCategory = { ...category, ...values, version: (category.version ?? 0) + 1 };
 
@@ -136,10 +136,10 @@ export function useDeleteCategory() {
  const t = useTranslations('master_data.categories');
 
  return useMutation({
- mutationFn: async (id: string) => {
- await new Promise(resolve => setTimeout(resolve, 600));
- 
- const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
+mutationFn: async ({ id, signal: _signal }: { id: string; signal?: AbortSignal }) => {
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  const _data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
  
  // OPERATIONAL GUARD: Prevent deletion if linked to items
  // MOCK: CAT-001 has linked items

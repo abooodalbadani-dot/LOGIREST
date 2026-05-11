@@ -7,12 +7,12 @@ import { InventoryLotSchema } from '@/types/inventory';
 export function useInventoryLots(filters: { include_expired?: boolean; page?: number } = {}) {
  return useQuery({
  queryKey: ['inventory/lots', filters],
- queryFn: async () => {
+  queryFn: async ({ signal }) => {
  const qs = new URLSearchParams();
  if (filters.include_expired) qs.append('include_expired', 'true');
  if (filters.page) qs.append('page', filters.page.toString());
- const path = `/inventory/lots ${qs.toString() ? `?${qs.toString()}` : ''}`;
- return apiClient.get(path, paginatedSchema(InventoryLotSchema));
+ const path = `/inventory/lots${qs.toString() ? `?${qs.toString()}` : ''}`;
+  return apiClient.get(path, paginatedSchema(InventoryLotSchema), signal);
  },
  staleTime: 60_000,
  });

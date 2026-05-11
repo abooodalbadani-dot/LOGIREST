@@ -143,7 +143,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       <div className="space-y-4">
         <DocumentLockBanner 
           isLocked={true}
-          status={transfer.transfer_status as any}
+          status={transfer.transfer_status as DocumentStatus}
         />
         
         {hasVariance && (

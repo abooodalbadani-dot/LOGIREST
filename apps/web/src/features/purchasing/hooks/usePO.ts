@@ -64,10 +64,10 @@ export type POLine = z.infer<typeof POLineSchema>;
 export type AuditLog = z.infer<typeof AuditLogSchema>;
 
 export function usePO(id: string) {
- return useQuery({
- queryKey: ['purchase-order', id],
- queryFn: () => apiClient.get(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema })).then(res => res.data),
- enabled: !!id,
- staleTime: 30_000,
- });
+  return useQuery({
+    queryKey: ['purchase-order', id],
+    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), signal).then(res => res.data),
+    enabled: !!id,
+    staleTime: 30_000,
+  });
 }

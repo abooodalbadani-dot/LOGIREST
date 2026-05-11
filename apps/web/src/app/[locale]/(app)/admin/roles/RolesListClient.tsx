@@ -3,13 +3,13 @@ import { useTranslations } from 'next-intl';
 import { useAdminRoles } from '@/features/admin/hooks/useAdminRoles';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Shield, Users } from 'lucide-react';
+import { Eye, Users } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Edit2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export function RolesListClient({ locale }: { locale: string }) {
+export function RolesListClient({ locale: _locale }: { locale: string }) {
   const t = useTranslations('admin.roles');
   const tCommon = useTranslations('common');
   const { data: roles, isLoading } = useAdminRoles();

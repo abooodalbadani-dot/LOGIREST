@@ -14,7 +14,7 @@ let mockSettings = {
 export const adminMocks: Record<string, unknown> = {
   'GET /admin/settings': () => mockSettings,
   
-  'PUT /admin/settings': (body: any) => {
+  'PUT /admin/settings': (body: Partial<typeof mockSettings>) => {
     // Conflict detection simulation
     if (body.version !== mockSettings.version) {
       return {

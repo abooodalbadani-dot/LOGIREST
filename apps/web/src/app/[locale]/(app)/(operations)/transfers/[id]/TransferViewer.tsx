@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
-import { TransferLine } from '@/features/operations/hooks/useTransfer';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
+import { TransferLine, type TransferDetail } from '@/features/operations/hooks/useTransfer';
 import { TRANSFER_STATUS } from '@/contracts/statuses';
 
 interface TransferViewerProps {
-  transfer: any;
+  transfer: TransferDetail;
   locale: 'ar' | 'en';
 }
 
@@ -89,9 +89,11 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
             <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
-              <span dir="ltr" className="font-mono text-body-md font-bold text-cyan-500/80">
-                {format(new Date(transfer.shipped_at), 'MMM dd, yyyy HH:mm')}
-              </span>
+              <ClientOnlyTime 
+                date={transfer.shipped_at} 
+                mode="datetime" 
+                className="font-mono text-body-md font-bold text-cyan-500/80"
+              />
               <Truck className="w-4 h-4 text-cyan-500/40" />
             </div>
           </div>
@@ -101,9 +103,11 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
             <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
-              <span dir="ltr" className="font-mono text-body-md font-bold text-emerald-500/80">
-                {format(new Date(transfer.received_at), 'MMM dd, yyyy HH:mm')}
-              </span>
+              <ClientOnlyTime 
+                date={transfer.received_at} 
+                mode="datetime" 
+                className="font-mono text-body-md font-bold text-emerald-500/80"
+              />
               <PackageCheck className="w-4 h-4 text-emerald-500/40" />
             </div>
           </div>

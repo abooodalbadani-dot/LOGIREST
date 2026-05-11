@@ -10,7 +10,7 @@ import { useNotificationTemplates, type NotificationTemplateRow } from '@/featur
 
 import { ColumnDef } from '@tanstack/react-table';
 
-export function TemplateListClient({ locale }: { locale: string }) {
+export function TemplateListClient({ locale: _locale }: { locale: string }) {
   const t = useTranslations('notifications');
   const router = useRouter();
   const [page, setPage] = useState(1);

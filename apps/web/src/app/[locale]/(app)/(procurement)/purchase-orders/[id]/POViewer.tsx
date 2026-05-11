@@ -5,17 +5,17 @@ import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
-import { Badge } from '@/components/ui/badge';
+
 import { User, Wallet, Warehouse, Clock, FileText, ArrowLeft, History, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { type POLine } from '@/features/purchasing/hooks/usePO';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { formatCurrency } from '@/utils/currency';
+import { type PODetail, type POLine, type AuditLog } from '@/features/purchasing/hooks/usePO';
 
 interface POViewerProps {
-  document: any;
+  document: PODetail;
   locale: 'ar' | 'en';
   actions?: React.ReactNode;
 }
@@ -29,7 +29,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
   const tCommon = useTranslations('common');
   const router = useRouter();
 
-  const timeline = document?.audit_log?.map((log: any) => ({
+  const timeline = document?.audit_log?.map((log: AuditLog) => ({
     status: log.status.toLowerCase() as Status,
     at: log.created_at,
     by: log.user_name || tCommon('system')

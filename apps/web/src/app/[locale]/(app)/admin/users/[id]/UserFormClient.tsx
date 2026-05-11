@@ -10,12 +10,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useAdminUser, useAdminUserMutations, UserFormSchema, type UserFormValues } from '@/features/admin/hooks/useAdminUsers';
 import { useAuth } from '@/providers/AuthProvider';
 import { type UserRole } from '@/types/rbac';
-import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2, Globe, Power, AlertTriangle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'INV_MGR', 'APPROVER', 'WH_KEEPER', 'PROC_OFFICER', 'AUDITOR', 'VIEWER'];
 
@@ -46,8 +44,7 @@ interface Props {
 
 export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly = false }: Props) {
   const t = useTranslations('admin.users');
-  const tCommon = useTranslations('common');
-  const router = useRouter();
+  const _router = useRouter();
   const { data, isLoading } = useAdminUser(id);
   const { user: currentUser } = useAuth();
   const { createUser, updateUser, isLastActiveAdmin } = useAdminUserMutations();
@@ -246,6 +243,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   selected={selectedBranches}
                   onChange={(v) => setValue('branch_ids', v)}
                   disabled={isAuditor || isSelf}
+                  t={t}
                 />
 
                 <MultiSelect
@@ -255,6 +253,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   selected={selectedWarehouses}
                   onChange={(v) => setValue('warehouse_ids', v)}
                   disabled={isAuditor || isSelf || !selectedBranches.length}
+                  t={t}
                 />
 
                 <MultiSelect
@@ -264,6 +263,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   selected={selectedDepartments}
                   onChange={(v) => setValue('department_ids', v)}
                   disabled={isAuditor || isSelf || !selectedWarehouses.length}
+                  t={t}
                 />
 
                 {(!selectedBranches.length) && (
@@ -374,13 +374,14 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   );
 }
 
-function MultiSelect({ label, icon, options, selected, onChange, disabled }: {
+function MultiSelect({ label, icon, options, selected, onChange, disabled, t }: {
   label: string;
   icon?: React.ReactNode;
   options: { id: string; label: string }[];
   selected: string[];
   onChange: (v: string[]) => void;
   disabled?: boolean;
+  t: (key: string) => string;
 }) {
   const toggle = (id: string) => {
     if (disabled) return;

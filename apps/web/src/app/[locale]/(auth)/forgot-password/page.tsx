@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { KeyRound, ArrowLeft, Mail, CheckCircle2, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, Mail, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,7 +23,7 @@ import { ForgotPasswordSchema, ForgotPasswordInput, AuthSuccessResponseSchema } 
 export default function ForgotPasswordPage() {
  const t = useTranslations('auth');
  const params = useParams();
- const locale = params.locale as string;
+ const _locale = params.locale as string;
 
  const [isSubmitted, setIsSubmitted] = useState(false);
  const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
  setError(null);
  await apiClient.post('/auth/forgot-password', AuthSuccessResponseSchema, data);
  setIsSubmitted(true);
- } catch (err) {
+ } catch (_err) {
  setError(t('invalid_credentials')); // Fallback error
  }
  };

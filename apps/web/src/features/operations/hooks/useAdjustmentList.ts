@@ -27,9 +27,9 @@ export function useAdjustmentList(filters: { status?: string; warehouse_id?: str
  if (filters.warehouse_id) params.set('warehouse_id', filters.warehouse_id);
  params.set('page', String(filters.page ?? 1));
 
- return useQuery({
- queryKey: ['adjustments', filters],
- queryFn: () => apiClient.get(`/operations/adjustments?${params.toString()}`, paginatedSchema(AdjustmentSummarySchema)),
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['adjustments', filters],
+    queryFn: ({ signal }) => apiClient.get(`/operations/adjustments?${params.toString()}`, paginatedSchema(AdjustmentSummarySchema), signal),
+    staleTime: 60_000,
+  });
 }

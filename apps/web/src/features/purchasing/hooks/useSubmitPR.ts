@@ -12,8 +12,8 @@ export function useSubmitPR(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: async ({ id, version }: { id: string; version: number }) => {
-      const response = await apiClient.post(`/procurement/purchase-requests/${id}/submit`, successSchema, { version });
+    mutationFn: async ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) => {
+      const response = await apiClient.post(`/procurement/purchase-requests/${id}/submit`, successSchema, { version }, signal);
       return response;
     },
     onSuccess: (_, { id }) => {

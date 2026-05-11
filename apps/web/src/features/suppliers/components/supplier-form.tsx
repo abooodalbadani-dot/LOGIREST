@@ -89,7 +89,7 @@ export function SupplierForm() {
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('status')}</FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger>
  <SelectValue placeholder={t('status')} />

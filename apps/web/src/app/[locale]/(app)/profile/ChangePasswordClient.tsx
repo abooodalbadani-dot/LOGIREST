@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, CheckCircle2, ShieldCheck, Lock, KeyRound, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, ShieldCheck, KeyRound, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,10 +35,10 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     resolver: zodResolver(passwordSchema),
   });
 
-  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+  const { router: _guardedRouter } = useUnsavedChangesGuard(isDirty);
 
 
- const onSubmit = async (values: PasswordValues) => {
+ const onSubmit = async (_values: PasswordValues) => {
  setIsSubmitting(true);
  try {
  // Simulate API call
@@ -48,7 +48,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
  toast.success(t('password_updated'));
  reset();
  setTimeout(() => setIsSuccess(false), 5000);
- } catch (error) {
+ } catch (_error) {
  toast.error(t('errors.update_failed'));
  } finally {
  setIsSubmitting(false);

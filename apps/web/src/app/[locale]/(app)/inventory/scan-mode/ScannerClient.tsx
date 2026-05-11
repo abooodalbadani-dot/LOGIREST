@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Scan, Camera, X, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Scan, Camera, X, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ScannerClient() {
  const t = useTranslations('operational.inventory');
- const [isScanning, setIsScanning] = useState(true);
+ const [_isScanning, _setIsScanning] = useState(true);
  const [result, setResult] = useState<string | null>(null);
  const [status, setStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('scanning');
 

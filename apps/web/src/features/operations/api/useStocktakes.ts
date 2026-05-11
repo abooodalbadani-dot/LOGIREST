@@ -3,7 +3,6 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { 
-  StocktakeSession, 
   StocktakeSessionSchema, 
   CreateStocktakeDTO, 
   SubmitCountDTO,
@@ -23,14 +22,14 @@ const StocktakeListSchema = z.object({
 export function useStocktakes() {
   return useQuery({
     queryKey: ['stocktakes'],
-    queryFn: () => apiClient.get('/stocktake/sessions', StocktakeListSchema),
+    queryFn: ({ signal }) => apiClient.get('/stocktake/sessions', StocktakeListSchema, signal),
   });
 }
 
 export function useStocktake(id: string) {
   return useQuery({
     queryKey: ['stocktakes', id],
-    queryFn: () => apiClient.get(`/stocktake/sessions/${id}`, StocktakeSessionSchema),
+    queryFn: ({ signal }) => apiClient.get(`/stocktake/sessions/${id}`, StocktakeSessionSchema, signal),
     enabled: !!id,
   });
 }
@@ -101,7 +100,7 @@ export function useUpdateItemCount(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ stocktakeId, itemId, lineId, countedQty, varianceReason }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string }) => 
+    mutationFn: ({ stocktakeId, itemId: _itemId, lineId, countedQty, varianceReason }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string }) => 
       apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { 
         counted_qty: countedQty, 
         variance_reason: varianceReason 

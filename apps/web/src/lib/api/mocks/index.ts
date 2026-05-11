@@ -14,7 +14,7 @@ const db: MockDb = {
   ...reportsMocks
 };
 
-export async function getMockResponse(method: string, path: string, body?: any): Promise<unknown> {
+export async function getMockResponse(method: string, path: string, body?: unknown): Promise<unknown> {
   // 1. Try new Repository-based Mock Adapter first
   const adapterResponse = await getAdapterResponse(method, path, body);
   if (adapterResponse !== undefined) return adapterResponse;

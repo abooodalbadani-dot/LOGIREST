@@ -35,7 +35,10 @@ export async function seedDatabase() {
   console.log('✅ Database seeded successfully!');
 }
 
-async function seedIfEmpty<T extends { id: string | number }>(repo: any, data: T[]) {
+async function seedIfEmpty<T extends { id: string | number }>(
+  repo: { findAll: () => Promise<T[]>; saveAll: (data: T[]) => Promise<T[]> }, 
+  data: T[]
+) {
   const existing = await repo.findAll();
   if (existing.length === 0) {
     await repo.saveAll(data);

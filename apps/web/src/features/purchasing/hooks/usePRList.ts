@@ -20,14 +20,14 @@ const PRSummarySchema = z.object({
 export type PRSummary = z.infer<typeof PRSummarySchema>;
 
 export function usePRList(filters: { status?: string; department_id?: string; page?: number } = {}) {
- const params = new URLSearchParams();
- if (filters.status) params.set('status', filters.status);
- if (filters.department_id) params.set('department_id', filters.department_id);
- params.set('page', String(filters.page ?? 1));
- 
- return useQuery({
- queryKey: ['purchase-requests', filters],
- queryFn: () => apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema)),
- staleTime: 60_000,
- });
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.department_id) params.set('department_id', filters.department_id);
+  params.set('page', String(filters.page ?? 1));
+
+  return useQuery({
+    queryKey: ['purchase-requests', filters],
+    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema), signal),
+    staleTime: 60_000,
+  });
 }

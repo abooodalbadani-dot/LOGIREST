@@ -33,6 +33,7 @@ import {
   BarcodeSchema, Barcode
 } from '@/types/master-data';
 import { KitchenRequestDetailSchema, KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
+import { InventoryMovementSchema, InventoryMovement } from '@/types/inventory';
 
 const isBrowser = typeof window !== 'undefined';
 const driver = isBrowser ? new LocalStorageDriver() : new MemoryStorageDriver();
@@ -61,6 +62,7 @@ export const kitchenRequestRepo = new GenericMockRepository<KitchenRequestDetail
 export const prRepo = new GenericMockRepository<PurchaseRequest>(driver, 'mock_purchase_requests', PurchaseRequestSchema);
 export const poRepo = new GenericMockRepository<PurchaseOrder>(driver, 'mock_purchase_orders', PurchaseOrderSchema);
 export const grnRepo = new GenericMockRepository<GRN>(driver, 'mock_grns', GRNSchema);
+export const movementRepo = new GenericMockRepository<InventoryMovement>(driver, 'mock_inventory_movements', InventoryMovementSchema);
 
 export const db = {
   branches: branchRepo,
@@ -82,6 +84,7 @@ export const db = {
   pr: prRepo,
   po: poRepo,
   grn: grnRepo,
+  movements: movementRepo,
 };
 
 // Auto-seed on import if in browser

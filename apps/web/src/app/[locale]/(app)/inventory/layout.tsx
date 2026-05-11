@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, Link } from '@/i18n/navigation';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Layers, Database, History, Scan } from 'lucide-react';
 

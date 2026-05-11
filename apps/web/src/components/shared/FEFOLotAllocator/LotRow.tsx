@@ -1,4 +1,5 @@
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { formatDate } from '@/utils/currency';
 import type { Lot } from '@/types/master-data';
 import type { UserRole } from '@/providers/AuthProvider';
 import { ExpiredOverrideInline } from './ExpiredOverrideInline';
@@ -22,7 +23,8 @@ export function LotRow({
 }) {
  const t = useTranslations('common.table_headers');
  const tc = useTranslations('operations.issue');
- const bgClass = isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
+  const locale = useLocale();
+  const bgClass = isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
  
  const canOverride = ['ADMIN', 'INV_MGR'].includes(userRole);
  const inputDisabled = isExpired && !canOverride;
@@ -37,7 +39,7 @@ export function LotRow({
  </div>
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('expiry')}</span>
- <span dir="ltr" className="font-mono text-body-md text-foreground">{lot.expiry_date ? new Date(lot.expiry_date).toLocaleDateString() : tc('not_available')}</span>
+  <span dir="ltr" className="font-mono text-body-md text-foreground">{formatDate(lot.expiry_date, locale as 'ar' | 'en')}</span>
  </div>
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('available')}</span>

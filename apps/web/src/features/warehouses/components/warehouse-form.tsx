@@ -91,7 +91,7 @@ export function WarehouseForm() {
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('parent_branch')}</FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value} disabled={branchesLoading}>
+ <Select onValueChange={field.onChange} value={field.value} disabled={branchesLoading}>
  <FormControl>
  <SelectTrigger>
  {branchesLoading ? <Skeleton className="h-4 w-20" /> : <SelectValue placeholder={t('select_branch')} />}
@@ -142,7 +142,7 @@ export function WarehouseForm() {
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('warehouse_type')}</FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger>
  <SelectValue placeholder={t('select_type')} />
@@ -165,7 +165,7 @@ export function WarehouseForm() {
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-muted-foreground/60 text-label-xs uppercase font-bold">{t('status')}</FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger>
  <SelectValue placeholder={t('select_status')} />

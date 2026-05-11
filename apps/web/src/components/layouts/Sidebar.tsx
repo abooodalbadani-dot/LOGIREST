@@ -144,7 +144,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       <nav className="flex-1 py-4 flex flex-col gap-6 px-3 overflow-y-auto custom-scrollbar">
         {groups.map((group) => {
-          const visibleItems = group.items.filter(item => {
+          const visibleItems = group.items.filter(_item => {
             return true; 
           });
 

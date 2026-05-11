@@ -26,6 +26,8 @@ export function TransferDetailClient({ id }: { id: string }) {
     return <TransferViewer transfer={transfer} />;
   }
 
+  if (!transfer) return null;
+
   return (
     <>
       <TransferForm 

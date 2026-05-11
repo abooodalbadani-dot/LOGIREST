@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +29,7 @@ import {
 } from '@/features/admin/hooks/useRestaurantProfile';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
-export function ProfileFormClient({ locale }: { locale: string }) {
+export function ProfileFormClient({ locale: _locale }: { locale: string }) {
  const t = useTranslations('admin.restaurant_profile');
  const tCommon = useTranslations('common');
  const { data: profile, isLoading } = useRestaurantProfile();
@@ -38,7 +39,7 @@ const { register, handleSubmit, formState: { errors, isDirty }, reset, setValue,
   resolver: zodResolver(RestaurantProfileSchema),
   });
 
-  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+  const { router: _guardedRouter } = useUnsavedChangesGuard(isDirty);
 
  const logoPreview = useWatch({ control, name: 'logo' });
 
@@ -118,7 +119,7 @@ const onSubmit = async (data: RestaurantProfile) => {
  <div className="relative group aspect-square rounded-[var(--radius)] border-2 border-dashed border-outline-low hover:border-operational-cyan transition-all overflow-hidden flex flex-col items-center justify-center bg-surface-container-lowest">
  {logoPreview ? (
  <>
- <img src={logoPreview} alt={t('placeholders.logo_alt')} className="w-full h-full object-contain p-4" />
+ <Image src={logoPreview} alt={t('placeholders.logo_alt')} className="w-full h-full object-contain p-4" fill />
  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
  <Button
  type="button"

@@ -2,12 +2,7 @@ import {
   ISSUE_STATUS, 
   STOCKTAKE_STATUS, 
   TRANSFER_STATUS, 
-  PR_STATUS,
-  PO_STATUS,
-  GRN_STATUS,
   ADJUSTMENT_STATUS,
-  KITCHEN_REQUEST_STATUS,
-  DocumentStatus 
 } from '@/contracts/statuses';
 
 export type BadgeVariant = 'default' | 'brand' | 'warning' | 'error' | 'success' | 'outline' | 'info';

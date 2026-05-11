@@ -17,7 +17,7 @@ import { useUnsavedChanges } from './UnsavedChangesProvider';
 interface UnsavedChangesDialogProps {
   open: boolean;
   onClose: () => void;
-  pendingNavigation: { href: string; options?: any } | null;
+  pendingNavigation: { href: string; options?: unknown } | null;
 }
 
 export const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
@@ -25,7 +25,7 @@ export const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
   onClose,
   pendingNavigation,
 }) => {
-  const t = useTranslations('common.unsavedChanges');
+  const t = useTranslations('common.unsaved_changes');
   const { confirmNavigation } = useUnsavedChanges();
   const router = useRouter();
 
@@ -40,7 +40,7 @@ export const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
       window.history.back();
     } else {
       confirmNavigation();
-      router.push(pendingNavigation.href, pendingNavigation.options);
+      router.push(pendingNavigation.href, pendingNavigation.options as Parameters<typeof router.push>[1]);
     }
   };
 

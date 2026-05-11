@@ -6,7 +6,7 @@ interface SheetProps {
  onOpenChange?: (open: boolean) => void
 }
 
-export const Sheet = ({ children, open, onOpenChange }: SheetProps) => <>{open ? children : null}</>;
+export const Sheet = ({ children, open, onOpenChange: _onOpenChange }: SheetProps) => <>{open ? children : null}</>;
 
 interface SheetContentProps {
  children: React.ReactNode

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
+
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -297,9 +297,8 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </CardContent>
  </Card>
  </div>
- </div>
- </div>
-  </MasterDataFormLayout>
+      </div>
+    </MasterDataFormLayout>
       <ConflictDialog open={conflict.open} onReload={conflict.handleReload} onClose={conflict.handleClose} />
     </>
   );

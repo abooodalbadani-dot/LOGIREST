@@ -7,10 +7,10 @@ import {
  DropdownMenuItem,
  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { generateCSV, generateExcel } from '@/utils/export';
 import { generatePDF } from '@/lib/export/pdfExport';
-import { Download, FileText, Table as TableIcon, FileSpreadsheet } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ExportColumn {
@@ -28,7 +28,7 @@ interface ReportExportMenuProps {
 
 export function ReportExportMenu({ columns, data, filename, title }: ReportExportMenuProps) {
  const t = useTranslations('reports.export');
- const locale = useLocale();
+ 
 
  const handleExportCSV = () => {
  const headers = columns.map(c => c.header);

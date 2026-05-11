@@ -1,16 +1,8 @@
-
 const fs = require('fs');
-const path = require('path');
-
+const pathAr = 'e:/Kitchen‑Store Inventory System/apps/web/messages/ar.json';
 try {
-  const en = JSON.parse(fs.readFileSync('e:/Kitchen‑Store Inventory System/messages/en.json', 'utf8'));
-  console.log('en.json is valid');
-  console.log('operations.kitchen_request:', !!en.operations?.kitchen_request);
-  
-  const ar = JSON.parse(fs.readFileSync('e:/Kitchen‑Store Inventory System/messages/ar.json', 'utf8'));
-  console.log('ar.json is valid');
-  console.log('operations.kitchen_request:', !!ar.operations?.kitchen_request);
+  const json = JSON.parse(fs.readFileSync(pathAr, 'utf8'));
+  console.log('AR common keys:', Object.keys(json.common).sort());
 } catch (e) {
-  console.error('JSON Error:', e.message);
-  // Try to find where it fails
+  console.error('Error AR:', e.message);
 }

@@ -89,26 +89,28 @@ const mockIssues: Issue[] = [
 let nextId = 4;
 
 export function useIssues() {
- return useQuery({
- queryKey: ['issues'],
- queryFn: async () => {
- await new Promise((r) => setTimeout(r, 700));
- return [...mockIssues];
- },
- });
+  return useQuery({
+    queryKey: ['issues'],
+    queryFn: async ({ signal }) => {
+      await new Promise((r) => setTimeout(r, 700));
+      if (signal?.aborted) throw new Error('Aborted');
+      return [...mockIssues];
+    },
+  });
 }
 
 export function useIssue(id: string) {
- return useQuery({
- queryKey: ['issues', id],
- queryFn: async () => {
- await new Promise((r) => setTimeout(r, 400));
- const issue = mockIssues.find((i) => i.id === id);
- if (!issue) throw new Error('Issue not found');
- return { ...issue };
- },
- enabled: !!id,
- });
+  return useQuery({
+    queryKey: ['issues', id],
+    queryFn: async ({ signal }) => {
+      await new Promise((r) => setTimeout(r, 400));
+      if (signal?.aborted) throw new Error('Aborted');
+      const issue = mockIssues.find((i) => i.id === id);
+      if (!issue) throw new Error('Issue not found');
+      return { ...issue };
+    },
+    enabled: !!id,
+  });
 }
 
 export function useCreateIssue(options?: { onConflict?: () => void }) {

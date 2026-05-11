@@ -20,9 +20,10 @@ import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/St
 import { cn } from '@/lib/utils';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { formatDate } from '@/utils/currency';
+import { type KitchenRequestDetail, type KitchenRequestItem } from '@/features/operations/types/kitchen-request';
 
 interface KitchenRequestViewerProps {
-  request: any;
+  request: KitchenRequestDetail;
   locale: 'ar' | 'en';
   actions?: React.ReactNode;
 }
@@ -146,7 +147,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-container-high/30">
-                    {request.items.map((item: any) => (
+                    {request.items.map((item: KitchenRequestItem) => (
                       <tr key={item.id} className="group hover:bg-surface-container-medium/30 transition-all">
                         <td className="px-8 py-6">
                           <div className="flex flex-col">

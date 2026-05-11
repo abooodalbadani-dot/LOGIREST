@@ -4,15 +4,14 @@ import * as React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  Trash2, 
-  Plus, 
-  Calendar, 
-  Package, 
-  Calculator, 
-  ArrowLeft, 
-  Send, 
-  Save, 
+import {
+  Trash2,
+  Plus,
+  Calendar,
+  Package,
+  Calculator,
+  Send,
+  Save,
   Building2,
   ShieldCheck,
   Edit3,
@@ -43,7 +42,7 @@ import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRU
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
-import { PR_STATUS } from '@/contracts/statuses';
+
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
@@ -298,7 +297,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                         <Package className="w-3 h-3" />
                         {t('department')}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="bg-surface-container-lowest border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
                             <SelectValue placeholder={tc('select_warehouse')} />

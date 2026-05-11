@@ -2,16 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
-import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Plus, CheckCircle2, Search, ArrowRightLeft, Calendar, TrendingUp, ShieldCheck, History } from 'lucide-react';
+import { Plus, Search, ArrowRightLeft, Calendar, ShieldCheck, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useFXRates } from '@/features/fx-rates/hooks/useFXRates';
 import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { type FXRate, type Currency } from '@/types/master-data';
-import { formatRate, formatQuantity } from '@/utils/currency';
+import { formatRate } from '@/utils/currency';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -19,7 +18,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 export function FXRateListClient({ locale }: { locale: string }) {
   const t = useTranslations('common');
@@ -37,12 +36,12 @@ export function FXRateListClient({ locale }: { locale: string }) {
       total: rates.length,
       active: rates.filter(r => r.is_active).length,
       lastUpdate: rates.length > 0 
-        ? format(new Date(Math.max(...rates.map(r => new Date(r.effective_date).getTime()))), 'dd/MM/yyyy')
-        : '—'
+        ? Math.max(...rates.map(r => new Date(r.effective_date).getTime()))
+        : null
     };
   }, [rates]);
 
-  const getCurrencyCode = (id: string) => (currencies || []).find((c: any) => c.id === id)?.code || id;
+  const getCurrencyCode = (id: string) => (currencies || []).find((c: Currency) => c.id === id)?.code || id;
 
   const columns = useMemo<ColumnDef<FXRate, unknown>[]>(() => [
     {
@@ -76,7 +75,12 @@ export function FXRateListClient({ locale }: { locale: string }) {
       cell: ({ row }) => (
         <div className="flex items-center gap-2 text-label-xs font-bold text-muted-foreground bg-surface-container/50 px-2.5 py-1 rounded-lg w-fit">
           <Calendar className="w-3.5 h-3.5 opacity-40 text-operational-cyan" />
-          {format(new Date(row.original.effective_date), 'dd/MM/yyyy')}
+          <ClientOnlyTime 
+            date={row.original.effective_date} 
+            mode="date" 
+            locale={locale as 'ar' | 'en'} 
+            fallback="--/--/----" 
+          />
         </div>
       )
     },
@@ -155,7 +159,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
 
         <MetricCard
           label={tfx('metrics.last_update')}
-          value={stats.lastUpdate}
+          value={stats.lastUpdate ? <ClientOnlyTime date={new Date(stats.lastUpdate)} mode="date" locale={locale as 'ar' | 'en'} /> : '—'}
           icon={History}
           color="amber"
           dir="ltr"

@@ -20,17 +20,17 @@ export type NotificationTemplateRow = z.infer<typeof NotificationTemplateSchema>
 export function useNotificationTemplates(filters: { page?: number } = {}) {
  const params = new URLSearchParams();
  params.set('page', String(filters.page ?? 1));
- return useQuery({
- queryKey: ['notifications/templates', filters],
- queryFn: () => apiClient.get(`/notifications/templates?${params.toString()}`, paginatedSchema(NotificationTemplateSchema)),
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['notifications/templates', filters],
+    queryFn: ({ signal }) => apiClient.get(`/notifications/templates?${params.toString()}`, paginatedSchema(NotificationTemplateSchema), signal),
+    staleTime: 60_000,
+  });
 }
 
 export function useNotificationTemplate(id: string | null) {
- return useQuery({
- queryKey: ['notifications/templates', id],
- queryFn: () => apiClient.get(`/notifications/templates/${id}`, NotificationTemplateSchema),
- enabled: !!id,
- });
+  return useQuery({
+    queryKey: ['notifications/templates', id],
+    queryFn: ({ signal }) => apiClient.get(`/notifications/templates/${id}`, NotificationTemplateSchema, signal),
+    enabled: !!id,
+  });
 }

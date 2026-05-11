@@ -1,8 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { useAdjustment } from '@/features/operations/hooks/useAdjustment';
-import { useAuth } from '@/providers/AuthProvider';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
@@ -12,8 +10,6 @@ import { AdjustmentForm } from './AdjustmentForm';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export function AdjustmentDetailClient({ id }: { id: string }) {
-  const tCommon = useTranslations('common');
-  const { user } = useAuth();
   const conflict = useConflictHandler('adjustment', id);
   
   const isNew = id === 'new';

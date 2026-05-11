@@ -86,8 +86,15 @@ export function useCreateBarcode() {
  const t = useTranslations('master_data.barcodes');
 
  return useMutation({
- mutationFn: async (values: BarcodeFormValues) => {
- await new Promise(resolve => setTimeout(resolve, 800));
+ mutationFn: async (variables: BarcodeFormValues & { signal?: AbortSignal }) => {
+  const { signal, ...values } = variables;
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(resolve, 800);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timeout);
+      reject(new Error('Aborted'));
+    });
+  });
  
  const data = queryClient.getQueryData<Barcode[]>(QUERY_KEY) || INITIAL_BARCODES;
  
@@ -121,18 +128,24 @@ export function useUpdateBarcode(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
   onConflict: options?.onConflict,
-  mutationFn: async ({ id, values }: { id: string; values: BarcodeFormValues }) => {
-  await new Promise(resolve => setTimeout(resolve, 800));
+  mutationFn: async ({ id, values, signal }: { id: string; values: BarcodeFormValues; signal?: AbortSignal }) => {
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(resolve, 800);
+      signal?.addEventListener('abort', () => {
+        clearTimeout(timeout);
+        reject(new Error('Aborted'));
+      });
+    });
   
   const data = queryClient.getQueryData<Barcode[]>(QUERY_KEY) || INITIAL_BARCODES;
   const barcode = data.find(b => b.id === id);
   if (!barcode) throw new Error('Barcode not found');
 
-  if (values.version !== undefined && values.version < (barcode.version ?? 0)) {
-  const error = new Error('CONFLICT') as any;
-  error.response = { status: 409 };
-  throw error;
-  }
+    if (values.version !== undefined && values.version < (barcode.version ?? 0)) {
+      const error = new Error('CONFLICT');
+      Object.assign(error, { response: { status: 409 } });
+      throw error;
+    }
 
   // GUARD: Uniqueness if code changed
   if (values.code.toLowerCase() !== barcode.code.toLowerCase()) {
@@ -168,7 +181,8 @@ export function useUpdateBarcode(options?: { onConflict?: () => void }) {
   toast.success(t('updated_success'));
   },
   onError: (error: Error) => {
-  toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    if (error.message === 'Aborted') return;
+    toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
   }
   });
 }

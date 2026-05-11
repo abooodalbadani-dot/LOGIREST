@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { PermissionGate } from '@/components/auth/PermissionGate';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import {
  Select,
@@ -39,18 +39,20 @@ import { Warehouse, MapPin, Activity, Trash2 } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
+import { useAbortController } from '@/hooks/useAbortController';
+
 interface Props {
   id: string | null;
   createTitle: string;
   editTitle: string;
   viewTitle?: string;
-  locale: string;
   isReadOnly?: boolean;
 }
 
-export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
+export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tw = useTranslations('master_data.warehouses');
+  const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useWarehouse(id);
   const { data: branchesData, isLoading: isLoadingBranches, isError: isErrorBranches } = useBranches();
@@ -109,9 +111,9 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/warehouses', { skipGuard: true });
@@ -123,7 +125,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteWarehouse.mutateAsync(id);
+      await deleteWarehouse.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/warehouses', { skipGuard: true });
     } catch {
       setShowDeleteConfirm(false);
@@ -151,7 +153,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
       isValid={isValid}
       headerActions={
         id && !isReadOnly && (
-          <PermissionGate permission="master-data.warehouses.delete">
+          <PermissionGate action="delete" resource="master_data_warehouses">
             <Button
               type="button"
               variant="ghost"
@@ -292,7 +294,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, loc
                       <SelectContent>
                         {(['MAIN','DRY','COLD','VIRTUAL'] as const).map((ty) => (
                           <SelectItem key={ty} value={ty} className="font-semibold text-label-sm uppercase">
-                            {tw(`types.${ty.toLowerCase()}` as any)}
+                            {tw(`types.${ty.toLowerCase()}` as 'types.main' | 'types.dry' | 'types.cold' | 'types.virtual')}
                           </SelectItem>
                         ))}
                       </SelectContent>

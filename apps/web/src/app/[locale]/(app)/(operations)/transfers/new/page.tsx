@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewTransferPage(props: { params: Promise<{ locale: string }> }) {
- const { locale } = await props.params;
+ await props.params;
  
  return (
  <ProtectedRoute requiredAction="create" requiredResource="transfer">

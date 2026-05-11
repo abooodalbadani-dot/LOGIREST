@@ -9,7 +9,7 @@ import { LotSchema, type Lot } from '@/types/master-data';
 export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; warehouse_id?: string }) {
  return useQuery({
  queryKey: ['lots-available', { item_id, warehouse_id }],
- queryFn: async () => {
+ queryFn: async ({ signal }) => {
  const qs = new URLSearchParams();
  if (item_id) qs.append('item_id', item_id);
  if (warehouse_id) qs.append('warehouse_id', warehouse_id);
@@ -25,7 +25,7 @@ export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; war
  is_expired: z.boolean().optional(),
  is_near_expiry: z.boolean().optional(),
  }))
- }));
+ }), signal);
 
  return res.data.map((item) => {
  const lot: Lot = {

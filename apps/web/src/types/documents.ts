@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { ALL_DOCUMENT_STATUSES, DocumentStatus } from './DocumentStatus';
+import { ALL_STATUSES as ALL_DOCUMENT_STATUSES, DocumentStatus, ALL_TRANSFER_STATUSES, TransferStatus } from '../contracts/statuses';
 
-export type { DocumentStatus };
+export type { DocumentStatus, TransferStatus };
 export type DocumentType = 'GRN'|'ISSUE'|'TRANSFER'|'ADJUSTMENT'|'PR'|'PO'|'STOCKTAKE'|'KITCHEN_REQUEST';
 
 export const BaseDocumentSchema = z.object({
@@ -13,7 +13,8 @@ export const BaseDocumentSchema = z.object({
   branch_id: z.string(),
   notes: z.string().nullable(),
   created_by: z.string(),
-  created_at: z.string(),
+  created_at: z.string().default(() => new Date().toISOString()),
+  updated_at: z.string().default(() => new Date().toISOString()),
   posted_at: z.string().nullable(),
   posted_by: z.string().nullable(),
   version: z.number().default(1),
@@ -155,15 +156,19 @@ export const TransferLineItemSchema = z.object({
   unit_cost: z.null(),
   shipped_qty: z.number(),
   received_qty: z.number().nullable(),
+  lot_allocations: z.array(LotAllocationSchema).default([]),
 });
 
 export const TransferSchema = BaseDocumentSchema.extend({
   type: z.literal('TRANSFER'),
   from_warehouse_id: z.string(),
+  from_warehouse_name: z.string().optional(),
   to_warehouse_id: z.string(),
-  transfer_status: z.enum(ALL_DOCUMENT_STATUSES),
+  to_warehouse_name: z.string().optional(),
+  transfer_status: z.enum(ALL_TRANSFER_STATUSES),
   shipped_at: z.string().nullable(),
   received_at: z.string().nullable(),
+  variance_reason: z.string().nullable().optional(),
   lines: z.array(TransferLineItemSchema),
 });
 
@@ -190,7 +195,7 @@ export const AdjustmentSchema = BaseDocumentSchema.extend({
   lines: z.array(AdjustmentLineItemSchema),
 });
 
-export interface BaseDocument { id: string; document_number: string; type: DocumentType; status: DocumentStatus; warehouse_id: string; branch_id: string; notes: string | null; created_by: string; created_at: string; posted_at: string | null; posted_by: string | null; version: number; }
+export interface BaseDocument { id: string; document_number: string; type: DocumentType; status: DocumentStatus; warehouse_id: string; branch_id: string; notes: string | null; created_by: string; created_at: string; updated_at: string; posted_at: string | null; posted_by: string | null; version: number; }
 export interface LotAllocation { lot_id: string; lot_number: string; expiry_date?: string | null; allocated_qty: number; override_reason?: string | null; }
 export interface GRN extends BaseDocument { type: 'GRN'; po_id: string | null; supplier_id: string; currency_id: string; fx_rate: number | null; fx_rate_captured_at: string | null; lines: GRNLineItem[]; }
 export interface GRNLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; po_qty: number | null; received_qty: number; unit_cost_foreign: number; unit_cost_base: number; }
@@ -200,9 +205,8 @@ export interface PurchaseOrder extends BaseDocument { type: 'PO'; pr_id: string 
 export interface POLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: number | null; ordered_qty: number; unit_price: number; total_price: number; }
 export interface StockIssue extends BaseDocument { type: 'ISSUE'; destination_dept_id: string; requested_by: string; lines: IssueLineItem[]; }
 export interface IssueLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; requested_qty: number; issued_qty: number; lot_allocations: LotAllocation[]; }
-import { TransferStatus } from '../contracts/statuses';
-export interface Transfer extends BaseDocument { type: 'TRANSFER'; from_warehouse_id: string; to_warehouse_id: string; transfer_status: TransferStatus; shipped_at: string | null; received_at: string | null; lines: TransferLineItem[]; }
-export interface TransferLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; shipped_qty: number; received_qty: number | null; }
+export interface Transfer extends BaseDocument { type: 'TRANSFER'; from_warehouse_id: string; from_warehouse_name?: string; to_warehouse_id: string; to_warehouse_name?: string; transfer_status: TransferStatus; shipped_at: string | null; received_at: string | null; variance_reason?: string | null; lines: TransferLineItem[]; }
+export interface TransferLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; shipped_qty: number; received_qty: number | null; lot_allocations: LotAllocation[]; }
 export type AdjustmentReason = 'DAMAGE'|'EXPIRY'|'THEFT'|'COUNTING_ERROR'|'OTHER';
 export interface Adjustment extends BaseDocument { type: 'ADJUSTMENT'; reason: AdjustmentReason; approved_by: string | null; lines: AdjustmentLineItem[]; }
 export interface AdjustmentLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; direction: 'INCREASE'|'DECREASE'; qty_before: number; qty_adjusted: number; reason_notes: string; }

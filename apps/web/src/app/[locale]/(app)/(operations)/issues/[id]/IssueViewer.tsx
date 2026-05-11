@@ -5,10 +5,9 @@ import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, Status } from '@/components/shared/StatusTimeline';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { 
   ArrowLeft, 
-  Package, 
   History, 
   Info, 
   Clock,
@@ -19,10 +18,10 @@ import {
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import type { LotAllocation } from '@/types/documents';
+import type { LotAllocation, StockIssue } from '@/types/documents';
 
 interface IssueViewerProps {
-  issue: any;
+  issue: StockIssue;
   locale: 'ar' | 'en';
 }
 
@@ -53,6 +52,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
             size="icon" 
             onClick={() => router.back()} 
             className="rounded-lg shrink-0 hover:bg-surface-container-high"
+            aria-label={tCommon('back')}
           >
             <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
           </Button>
@@ -62,9 +62,11 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
               <StatusBadge status={issueStatus} />
-              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0">
-                {format(new Date(issue?.created_at || new Date()), 'yyyy-MM-dd')}
-              </span>
+              <ClientOnlyTime 
+                date={issue?.created_at || new Date()} 
+                mode="date"
+                className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
+              />
             </div>
           </div>
         </div>
@@ -139,8 +141,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                         const lineAllocations = line.lot_allocations || [];
                         return (
                           <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-                            {lineAllocations.map((alloc, idx) => (
-                              <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-lg flex items-center gap-1.5">
+                            {lineAllocations.map((alloc: LotAllocation) => (
+                              <div key={alloc.lot_id} className="px-2.5 py-1 bg-emerald-500/10 rounded-lg flex items-center gap-1.5">
                                 <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lot_number}</span>
                                 <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
                                 <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocated_qty}</span>
@@ -207,9 +209,11 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_at')}</span>
-                  <span className="text-label-xs font-mono font-bold text-foreground/60">
-                    {issue.created_at ? format(new Date(issue.created_at), 'yyyy-MM-dd HH:mm') : '—'}
-                  </span>
+                  <ClientOnlyTime 
+                    date={issue.created_at || new Date()} 
+                    mode="datetime"
+                    className="text-label-xs font-mono font-bold text-foreground/60"
+                  />
                 </div>
                 {issue.posted_at && (
                   <>
@@ -219,9 +223,11 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_at')}</span>
-                      <span className="text-label-xs font-mono font-bold text-foreground/60">
-                        {format(new Date(issue.posted_at), 'yyyy-MM-dd HH:mm')}
-                      </span>
+                      <ClientOnlyTime 
+                        date={issue.posted_at} 
+                        mode="datetime"
+                        className="text-label-xs font-mono font-bold text-foreground/60"
+                      />
                     </div>
                   </>
                 )}
@@ -233,3 +239,4 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
     </div>
   );
 }
+

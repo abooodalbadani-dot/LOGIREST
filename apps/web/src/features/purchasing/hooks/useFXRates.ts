@@ -15,10 +15,10 @@ export type FXRate = z.infer<typeof FXRateSchema>;
 export function useFXRates(fromCurr?: string, toCurr?: string) {
  return useQuery({
  queryKey: ['fx-rates', fromCurr, toCurr],
- queryFn: () => {
- const qs = `?from=${encodeURIComponent(fromCurr!)}&to=${encodeURIComponent(toCurr!)}`;
- return apiClient.get(`/currencies/fx-rates${qs}`, z.object({ data: z.array(FXRateSchema) })).then(res => res.data);
- },
+    queryFn: ({ signal }) => {
+      const qs = `?from=${encodeURIComponent(fromCurr!)}&to=${encodeURIComponent(toCurr!)}`;
+      return apiClient.get(`/currencies/fx-rates${qs}`, z.object({ data: z.array(FXRateSchema) }), signal).then(res => res.data);
+    },
  enabled: !!fromCurr && !!toCurr,
  staleTime: 60_000,
  });

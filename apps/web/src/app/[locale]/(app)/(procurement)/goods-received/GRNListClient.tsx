@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
 import { GRN_STATUS } from '@/contracts/statuses';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
@@ -80,11 +80,13 @@ export function GRNListClient({
  header: tc('posted_at'),
  cell: ({ row }) =>
  row.original.posted_at ? (
- <div className="flex items-center gap-2">
- <span dir="ltr" className="text-label-xs opacity-60 font-mono font-medium">
- {format(new Date(row.original.posted_at), 'dd/MM/yyyy')}
- </span>
- </div>
+  <div className="flex items-center gap-2">
+     <ClientOnlyTime 
+       date={row.original.posted_at} 
+       mode="date" 
+       className="text-label-xs opacity-60 font-mono font-medium" 
+     />
+  </div>
  ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
  },
  {
@@ -208,10 +210,10 @@ export function GRNListClient({
                     onValueChange={(val) => { setStatus(val === 'ALL' ? undefined : (val ?? undefined)); setPage(1); }}
                   >
                     <SelectTrigger className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 px-4 text-label-xs font-semibold uppercase focus:ring-cyan-500/10 rounded-md">
-                      <SelectValue placeholder={tc('status.all')} />
+                      <SelectValue placeholder={tc('statuses.all')} />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-container-high border-surface-variant/5 rounded-md">
-                      <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('status.all')}</SelectItem>
+                      <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('statuses.all')}</SelectItem>
                       <SelectItem value={GRN_STATUS.DRAFT} className="text-label-xs font-semibold uppercase">{tc('status.draft')}</SelectItem>
                       <SelectItem value={GRN_STATUS.POSTED} className="text-label-xs font-semibold uppercase">{tc('status.posted')}</SelectItem>
                     </SelectContent>

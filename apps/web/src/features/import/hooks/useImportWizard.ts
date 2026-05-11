@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImportEntity } from '@/lib/import/templates';
 import { ValidationError } from '@/lib/import/validation';

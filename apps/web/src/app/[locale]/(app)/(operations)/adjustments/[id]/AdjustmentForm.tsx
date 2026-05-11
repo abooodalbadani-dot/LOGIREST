@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
-import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useCreateAdjustment } from '@/features/operations/hooks/useCreateAdjustment';
 import { useApproveAdjustment } from '@/features/operations/hooks/useApproveAdjustment';
@@ -16,11 +15,7 @@ import { useUpdateAdjustment } from '@/features/operations/hooks/useUpdateAdjust
 import { useAuth } from '@/providers/AuthProvider';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
-import { format } from 'date-fns';
 import { 
-  ArrowUp, 
-  ArrowDown, 
-  ArrowLeft,
   CheckCircle, 
   Trash2, 
   Package, 
@@ -31,6 +26,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import {
   Select,
   SelectContent,
@@ -43,14 +39,6 @@ import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { ADJUSTMENT_STATUS, type DocumentStatus } from '@/contracts/statuses';
 import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operations/hooks/useAdjustment';
@@ -119,6 +107,8 @@ export function AdjustmentForm({
 
   // Refresh stock levels when warehouse changes
   useEffect(() => {
+    const controller = new AbortController();
+
     if (canEdit && lines.length > 0) {
       const refreshStock = async () => {
         const BalanceSchema = z.object({
@@ -127,27 +117,36 @@ export function AdjustmentForm({
           }))
         });
         
-        const updatedLines = await Promise.all(lines.map(async (line) => {
-          try {
-            const balanceRes = await apiClient.get(
-              `/inventory/balance?warehouse_id=${warehouseId}&search=${line.item.code}`, 
-              BalanceSchema
-            );
-            const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
-            return { ...line, qty_before: currentQty };
-          } catch {
-            return line;
+        try {
+          const updatedLines = await Promise.all(lines.map(async (line) => {
+            try {
+              const balanceRes = await apiClient.get(
+                `/inventory/balance?warehouse_id=${warehouseId}&search=${line.item.code}`, 
+                BalanceSchema,
+                controller.signal
+              );
+              const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
+              return { ...line, qty_before: currentQty };
+            } catch (err) {
+              if (err instanceof Error && err.name === 'AbortError') throw err;
+              return line;
+            }
+          }));
+          
+          const hasChanged = updatedLines.some((l, i) => l.qty_before !== lines[i].qty_before);
+          if (hasChanged && !controller.signal.aborted) {
+            setLines(updatedLines);
           }
-        }));
-        
-        const hasChanged = updatedLines.some((l, i) => l.qty_before !== lines[i].qty_before);
-        if (hasChanged) {
-          setLines(updatedLines);
+        } catch (err) {
+          if (err instanceof Error && err.name === 'AbortError') return;
+          console.error('Failed to refresh stock:', err);
         }
       };
       
       refreshStock();
     }
+
+    return () => controller.abort();
   }, [warehouseId, canEdit]);
 
   const handleSaveDraft = async () => {
@@ -183,7 +182,7 @@ export function AdjustmentForm({
 
   const handleSubmit = async () => {
     try {
-      await submitAdjustment.mutateAsync(document?.version || 0);
+      await submitAdjustment.mutateAsync({ version: document?.version || 0 });
       toast.success(t('submit_success'));
       setSubmitDialogOpen(false);
     } catch (e) {
@@ -195,7 +194,7 @@ export function AdjustmentForm({
   const handleApprove = async () => {
     if (!!lockState?.isLocked) return;
     try {
-      await approveAdjustment.mutateAsync(document?.version || 0);
+      await approveAdjustment.mutateAsync({ version: document?.version || 0 });
       toast.success(t('approve_success'));
       setApproveDialogOpen(false);
     } catch (e) {
@@ -327,9 +326,12 @@ export function AdjustmentForm({
             {!isNew && (
               <div className="flex items-center gap-2 mt-0.5">
                 <StatusBadge status={adjustmentStatus as BadgeStatus} />
-                <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0">
-                  {format(new Date(document?.created_at || new Date()), 'yyyy-MM-dd')}
-                </span>
+                <ClientOnlyTime 
+                  date={document?.created_at} 
+                  mode="date" 
+                  locale={locale as 'ar' | 'en'}
+                  className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
+                />
               </div>
             )}
           </div>
@@ -563,9 +565,12 @@ export function AdjustmentForm({
                   {document?.posted_at && (
                     <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
                       <span className="text-label-sm text-muted-foreground">{t('posted_at')}</span>
-                      <span className="text-label-xs font-bold" dir="ltr">
-                        {format(new Date(document.posted_at), 'yyyy-MM-dd HH:mm')}
-                      </span>
+                      <ClientOnlyTime 
+                        date={document.posted_at} 
+                        mode="datetime" 
+                        locale={locale as 'ar' | 'en'}
+                        className="text-label-xs font-bold"
+                      />
                     </div>
                   )}
                   {document?.approved_by && (

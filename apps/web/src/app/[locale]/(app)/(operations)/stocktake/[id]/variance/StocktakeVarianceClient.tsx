@@ -8,17 +8,22 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { 
  AlertTriangle, 
- CheckCircle2 
+ CheckCircle2,
+ Calculator,
+ BarChart3,
+ ArrowUpRight,
+ ArrowDownRight
 } from "lucide-react";
 import { STOCKTAKE_STATUS } from "@/contracts/statuses";
 import { isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { MetricCard } from "@/components/ui/metric-card";
 import { toast } from "sonner";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 
 import { cn } from "@/lib/utils";
-import { formatQuantity, formatCurrency } from "@/utils/currency";
+import { formatQuantity, formatCurrency, formatNumber } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,8 +60,18 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
     }
   }, [session?.items])
 
- if (isLoading) return <PageSkeleton variant="list" />;
- if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
+  const isDirty = React.useMemo(() => {
+    return session?.items?.some(item => {
+      const currentReason = reasons[item.id] || "";
+      const originalReason = item.varianceReason || "";
+      return currentReason !== originalReason;
+    }) ?? false;
+  }, [reasons, session?.items]);
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+
+  if (isLoading) return <PageSkeleton variant="list" />;
+  if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
@@ -73,21 +88,11 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  }, 0);
  const netImpact = totalPositiveVariance - totalNegativeVariance;
 
- const isDirty = React.useMemo(() => {
-   return session.items.some(item => {
-     const currentReason = reasons[item.id] || "";
-     const originalReason = item.varianceReason || "";
-     return currentReason !== originalReason;
-   });
- }, [reasons, session.items]);
-
   // Status check: Must be in REVIEW
   if (!isStocktakeInReview(session.status)) {
     baseRouter.replace(`/stocktake/${id}`);
     return null;
   }
-
-  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const handleReasonChange = (lineId: string, value: string) => {
     setReasons(prev => ({ ...prev, [lineId]: value }))

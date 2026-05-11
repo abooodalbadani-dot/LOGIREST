@@ -13,7 +13,7 @@ import {
   History, 
   Package 
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
@@ -25,8 +25,23 @@ import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { formatCurrency } from '@/utils/currency';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
+import type { GRN, GRNLineItem } from '@/types/documents';
+
+interface AuditLogEntry {
+  status: string;
+  created_at: string;
+  user_name?: string;
+}
+
+interface GRNViewerDocument extends Omit<GRN, 'lines'> {
+  supplier_name?: string;
+  po_number?: string | null;
+  audit_log?: AuditLogEntry[];
+  lines: GRNLineItem[];
+}
+
 interface GRNViewerProps {
-  document: any;
+  document: GRNViewerDocument;
   locale: 'ar' | 'en';
   actions?: React.ReactNode;
 }
@@ -43,10 +58,10 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
   const baseCurrency = settings?.base_currency || 'SAR';
 
-  const totalForeign = document?.lines?.reduce((acc: number, line: any) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
+  const totalForeign = document?.lines?.reduce((acc: number, line: GRNLineItem) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
   const currentFxRate = document?.fx_rate || 1;
 
-  const timelineEntries = document?.audit_log?.map((e: any) => ({
+  const timelineEntries = document?.audit_log?.map((e: AuditLogEntry) => ({
     status: e.status.toLowerCase() as Status,
     at: e.created_at,
     by: e.user_name || tc('system')
@@ -154,13 +169,13 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
               extraColumns={[
                 {
                   header: tc('table_headers.received_qty'),
-                  cell: (line: any) => (
+                  cell: (line: GRNLineItem) => (
                     <span dir="ltr" className="font-mono font-bold text-foreground/80">{line.received_qty}</span>
                   )
                 },
                 {
                   header: tc('table_headers.lot_allocation'),
-                  cell: (line: any) => (
+                  cell: (line: GRNLineItem) => (
                     <span dir="ltr" className="font-mono text-label-xs font-semibold uppercase text-operational-cyan">
                       {line.lot?.lot_number || 'N/A'}
                     </span>

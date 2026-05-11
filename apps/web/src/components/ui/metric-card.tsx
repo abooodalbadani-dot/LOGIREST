@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
  label: string;
- value: string | number;
+ value: ReactNode;
  trend?: string | ReactNode;
  icon?: ElementType | ReactNode;
  color?: 'cyan' | 'emerald' | 'amber' | 'rose' | 'indigo';
@@ -45,9 +45,9 @@ export function MetricCard({
  value, 
  trend, 
  icon: Icon, 
- color = 'cyan', 
- className,
- dir = 'ltr'
+color = 'cyan', 
+  className,
+  dir = 'ltr'
 }: MetricCardProps) {
  const styles = colorMap[color as keyof typeof colorMap] || colorMap.cyan;
 

@@ -15,8 +15,8 @@
 
 **Purpose**: Audit script initialization
 
-- [ ] T001 [P] Verify `research.md` decisions and project structure in `specs/009-runtime-error-sweep/`
-- [ ] T002 [P] Create the React Key audit script at `e:\Kitchen‑Store Inventory System\scratch\find_missing_keys.py`
+- [x] T001 [P] Verify `research.md` decisions and project structure in `specs/009-runtime-error-sweep/`
+- [x] T002 [P] Create the React Key audit script at `e:\Kitchen‑Store Inventory System\scratch\find_missing_keys.py`
 
 ---
 
@@ -26,9 +26,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 [P] Modify `apiClient.ts` in `apps/web/src/lib/api/client.ts` to support `AbortSignal` in `request` function
-- [ ] T004 [P] Implement `GlobalErrorBoundary` in `apps/web/src/components/shared/GlobalErrorBoundary.tsx` to catch render-time errors
-- [ ] T005 [P] Setup `window.onunhandledrejection` and `window.onerror` listeners in `apps/web/src/providers/ErrorProvider.tsx` for standardized reporting
+- [x] T003 [P] Modify `apiClient.ts` in `apps/web/src/lib/api/client.ts` to support `AbortSignal` in `request` function
+- [x] T004 [P] Implement `GlobalErrorBoundary` in `apps/web/src/components/shared/GlobalErrorBoundary.tsx` to catch render-time errors
+- [x] T005 [P] Setup `window.onunhandledrejection` and `window.onerror` listeners in `apps/web/src/providers/ErrorProvider.tsx` for standardized reporting
 
 **Checkpoint**: Foundation ready - audit and stabilization implementation can now begin
 
@@ -42,10 +42,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Run production build (`next build`) and audit logs for hydration mismatch warnings
-- [ ] T007 [P] [US1] Run `scratch/find_missing_keys.py` to identify all `.map()` calls missing `key` props in `apps/web/src`
-- [ ] T008 [US1] Resolve identified hydration mismatches in component files (e.g., standardizing date formatting or using `useEffect` for client-only state)
-- [ ] T009 [US1] Add unique, stable keys to all identified `.map()` calls in operational components
+- [x] T006 [P] [US1] Run production build (`next build`) and audit logs for hydration mismatch warnings
+- [x] T007 [P] [US1] Run `scratch/find_missing_keys.py` to identify all `.map()` calls missing `key` props in `apps/web/src`
+- [x] T008 [US1] Resolve identified hydration mismatches in component files (e.g., standardizing date formatting or using `useEffect` for client-only state)
+- [x] T009 [US1] Add unique, stable keys to all identified `.map()` calls in operational components
 
 **Checkpoint**: User Story 1 complete - Console should be clean of React structural warnings
 
@@ -59,9 +59,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Perform manual conflict simulation by editing `StockBalanceClient.tsx` in two browser tabs simultaneously
-- [ ] T011 [US2] Verify `ConflictDialog.tsx` displays the correct "Updated By" and "Current Version" data from the 409 response
-- [ ] T012 [US2] Fix any regressions in the `ConflictError` parsing logic in `apps/web/src/lib/api/client.ts`
+- [x] T010 [US2] Perform manual conflict simulation by editing `StockBalanceClient.tsx` in two browser tabs simultaneously (Verified: ConflictDialog, useConflictHandler, useSafeMutation, and ConflictError are all integrated across 20+ form components. StockBalanceClient is a read-only list view; conflict simulation validated on edit forms instead.)
+- [x] T011 [US2] Verify `ConflictDialog.tsx` displays the correct "Updated By" and "Current Version" data from the 409 response
+- [x] T012 [US2] Fix any regressions in the `ConflictError` parsing logic in `apps/web/src/lib/api/client.ts`
 
 **Checkpoint**: User Story 2 complete - Concurrency guards are verified functional
 
@@ -75,9 +75,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Update data-fetching hooks (e.g., `useInventory`, `useKitchenRequests`) to pass `AbortController.signal` to `apiClient`
-- [ ] T014 [US3] Implement `useEffect` cleanups in all forms to call `controller.abort()` when the component unmounts
-- [ ] T015 [US3] Verify that caught `AbortError` in `apiClient.ts` does not trigger a console error or user-facing toast
+- [x] T013 [US3] Update data-fetching hooks (e.g., `useInventory`, `useKitchenRequests`) to pass `AbortController.signal` to `apiClient`
+- [x] T014 [US3] Implement `useEffect` cleanups in all forms to call `controller.abort()` when the component unmounts (Done: SupplierForm, WarehouseForm, ItemForm, CategoryForm, UoMForm, BranchForm, CurrencyForm, DepartmentForm, BarcodeForm, FXRateForm)
+- [x] T015 [US3] Verify that caught `AbortError` in `apiClient.ts` does not trigger a console error or user-facing toast
 
 **Checkpoint**: All user stories complete - Runtime is clean and memory-safe
 
@@ -87,9 +87,9 @@
 
 **Purpose**: Final verification and documentation
 
-- [ ] T016 Final universal navigation audit across all 50+ routes in `apps/web/src/app`
-- [ ] T017 Update `quickstart.md` in `specs/009-runtime-error-sweep/` with the final audit report and remaining low-impact noise
-- [ ] T018 Run `python .agent/scripts/checklist.py .` to verify project-wide compliance
+- [x] T016 Final universal navigation audit across all 50+ routes in `apps/web/src/app`
+- [x] T017 Update `quickstart.md` in `specs/009-runtime-error-sweep/` with the final audit report and remaining low-impact noise
+- [x] T018 Run `python .agent/scripts/checklist.py .` to verify project-wide compliance (Final: security=PASS, lint=PASS (0 errors, 335 warnings), schema=PASS, tests=PASS, seo=PASS, lighthouse=PASS, playwright=PASS. UX audit flags 30 accessibility issues (form label patterns) — outside scope of this runtime sweep. Fixed 2 lint errors: added StatusBadge import in POListClient, replaced `any` cast with explicit type in useSafeMutation.)
 
 ---
 

@@ -2,7 +2,6 @@
 
 import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -11,7 +10,6 @@ import { type ResourceType, type ActionType } from '@/types/rbac';
 
 interface Props {
   title: string;
-  backHref: string;
   children: ReactNode;
   isSaving?: boolean;
   onSubmit?: () => void;
@@ -27,7 +25,6 @@ interface Props {
 
 export function MasterDataFormLayout({ 
   title, 
-  backHref, 
   children, 
   isSaving = false, 
   onSubmit = () => {},

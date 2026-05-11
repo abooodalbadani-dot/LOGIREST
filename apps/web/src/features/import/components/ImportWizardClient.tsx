@@ -5,7 +5,7 @@ import { useImportWizard } from '../hooks/useImportWizard';
 import { ImportEntity } from '@/lib/import/templates';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { ImportIcon, Upload, CheckCircle2, AlertCircle, Save, Database } from 'lucide-react';
+import { Upload, CheckCircle2, AlertCircle, Save, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StepUpload } from './steps/StepUpload';
 import { StepValidate } from './steps/StepValidate';

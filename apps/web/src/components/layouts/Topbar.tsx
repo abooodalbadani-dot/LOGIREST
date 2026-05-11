@@ -16,7 +16,7 @@ interface TopbarProps {
   onMenuClick?: () => void;
 }
 
-export function Topbar({ locale, onMenuClick }: TopbarProps) {
+export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const { branchName, warehouseName, isLoading } = useContextScope();
 

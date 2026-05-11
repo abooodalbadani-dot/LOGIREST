@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useTransferList, TransferSummary } from '@/features/operations/hooks/useTransferList';
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Filter, Repeat, Truck, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import { TRANSFER_STATUS } from '@/contracts/statuses';
 export function TransferListClient() {
  const t = useTranslations('operations.transfer');
  const tCommon = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const router = useRouter();
  
  const [page, setPage] = useState(1);
@@ -67,20 +69,26 @@ export function TransferListClient() {
  {
  accessorKey: 'shipped_at',
  header: t('shipped_at'),
- cell: ({ row }) =>
- row.original.shipped_at ? (
- <span dir="ltr" className="text-label-xs opacity-60 font-mono font-medium">{format(new Date(row.original.shipped_at), 'dd/MM/yyyy')}</span>
- ) : <span className="opacity-20">—</span>,
+ cell: ({ row }) => (
+ <ClientOnlyTime 
+ date={row.original.shipped_at} 
+ mode="date" 
+ locale={locale}
+ className="text-label-xs opacity-60 font-mono font-medium"
+ />
+ ),
  },
  {
  accessorKey: 'created_at',
  header: tCommon('created_at'),
- cell: ({ row }) =>
- row.original.created_at ? (
- <span dir="ltr" className="text-label-xs opacity-60 font-mono font-medium">
- {format(new Date(row.original.created_at), 'dd/MM/yyyy')}
- </span>
- ) : <span className="opacity-20">—</span>,
+ cell: ({ row }) => (
+ <ClientOnlyTime 
+ date={row.original.created_at} 
+ mode="date" 
+ locale={locale}
+ className="text-label-xs opacity-60 font-mono font-medium"
+ />
+ ),
  },
  {
  id: 'actions',
@@ -127,7 +135,7 @@ export function TransferListClient() {
                 {tCommon('status.live_updates')}
               </div>
               <div className="text-label-xxs font-semibold text-muted-foreground/40" dir="ltr">
-                {tCommon('status.last_sync')}: {new Date().toLocaleTimeString()}
+                {tCommon('status.last_sync')}: <ClientOnlyTime locale={locale} fallback="..." />
               </div>
             </div>
             <PermissionGate action="create" resource="transfer">
@@ -204,10 +212,10 @@ export function TransferListClient() {
                   value={status || 'ALL'} onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
                 >
                   <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-label-sm font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10">
-                    <SelectValue placeholder={tCommon('status.all')} />
+                    <SelectValue placeholder={tCommon('statuses.all')} />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border-outline-low/10 rounded-md">
-                    <SelectItem value="ALL">{tCommon('status.all')}</SelectItem>
+                    <SelectItem value="ALL">{tCommon('statuses.all')}</SelectItem>
                     {Object.entries(TRANSFER_STATUS).map(([key, value]) => (
                       <SelectItem key={value} value={value}>
                         {tCommon(getStatusConfig(value).labelKey)}

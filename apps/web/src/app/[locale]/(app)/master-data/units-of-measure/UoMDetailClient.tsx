@@ -2,27 +2,25 @@
 
 import { Ruler, Activity, Clock, Hash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { MasterDataDetailLayout } from '@/features/master-data/components/MasterDataDetailLayout';
 import { useUoM } from '@/features/uoms/hooks/useUoMs';
-import { cn } from '@/lib/utils';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useRouter } from '@/i18n/navigation';
 
 interface Props {
- id: string;
- locale: string;
+  id: string;
 }
 
-export function UoMDetailClient({ id, locale }: Props) {
+export function UoMDetailClient({ id }: Props) {
  const tc = useTranslations('master_data.common');
  const t = useTranslations('master_data.uoms');
  const router = useRouter();
- const { data, isLoading, isError, isFetched, refetch } = useUoM(id);
+ const { data, isLoading, isError, refetch } = useUoM(id);
 
  // 1. Loading State
  if (isLoading) {
@@ -105,7 +103,7 @@ export function UoMDetailClient({ id, locale }: Props) {
  <div className="flex justify-between items-center">
  <span className="text-label-xs font-medium text-muted-foreground/40 uppercase">{tc('created_at')}</span>
  <span className="text-label-xs font-mono font-bold text-muted-foreground/70 dir-ltr">
- {data.created_at ? format(new Date(data.created_at), 'yyyy-MM-dd HH:mm') : '-'}
+ {data.created_at ? <ClientOnlyTime date={data.created_at} mode="datetime" /> : '-'}
  </span>
  </div>
  <div className="flex justify-between items-center">

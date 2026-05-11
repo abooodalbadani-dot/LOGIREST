@@ -159,7 +159,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  <Warehouse className="w-3.5 h-3.5" />
  {tc('warehouse')}
  </FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
  <SelectValue placeholder={t('select_warehouse')} />

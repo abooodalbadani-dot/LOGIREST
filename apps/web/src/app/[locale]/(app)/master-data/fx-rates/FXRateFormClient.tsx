@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,12 +14,12 @@ import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { FXRateFormSchema, type FXRateFormValues, type Currency } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { ArrowRightLeft, Calendar, TrendingUp, History, Info, ShieldCheck, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowRightLeft, Calendar, TrendingUp, Info, ShieldCheck, Activity } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { useAbortController } from '@/hooks/useAbortController';
 
 interface Props { 
   id: string | null; 
@@ -39,8 +38,8 @@ export function FXRateFormClient({
   isReadOnly: isReadOnlyProp = false,
   locale 
 }: Props) {
-  const tc = useTranslations('common');
   const t = useTranslations('master_data.fx_rates');
+  const abortController = useAbortController();
   
   const { data: fxRate, isLoading: loadingRate, isError: rateError, refetch: refetchRate } = useFXRate(id);
   const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError, refetch: refetchCurrencies } = useCurrencies();
@@ -108,9 +107,9 @@ export function FXRateFormClient({
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
@@ -189,7 +188,7 @@ export function FXRateFormClient({
                       </Select>
                     )}
                   />
-                  {errors.from_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.from_currency_id.message as any)}</p>}
+                  {errors.from_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.from_currency_id.message as Parameters<typeof t>[0])}</p>}
                 </div>
 
                 {/* To Currency */}
@@ -222,7 +221,7 @@ export function FXRateFormClient({
                       </Select>
                     )}
                   />
-                  {errors.to_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.to_currency_id.message as any)}</p>}
+                  {errors.to_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.to_currency_id.message as Parameters<typeof t>[0])}</p>}
                 </div>
               </div>
 
@@ -245,7 +244,7 @@ export function FXRateFormClient({
                       className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm disabled:opacity-70"
                     />
                   </div>
-                  {errors.rate && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.rate.message as any)}</p>}
+                  {errors.rate && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.rate.message as Parameters<typeof t>[0])}</p>}
                 </div>
 
                 {/* Effective Date Field */}
@@ -264,7 +263,7 @@ export function FXRateFormClient({
                       className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm disabled:opacity-70"
                     />
                   </div>
-                  {errors.effective_date && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.effective_date.message as any)}</p>}
+                  {errors.effective_date && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.effective_date.message as Parameters<typeof t>[0])}</p>}
                 </div>
               </div>
             </CardContent>

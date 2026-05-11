@@ -1,0 +1,100 @@
+﻿
+E:\KitchenظّStore Inventory System\apps\web\playwright.config.d.ts
+  1:72  error  The `{}` ("empty object") type allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowObjectTypes' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+  1:76  error  The `{}` ("empty object") type allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowObjectTypes' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx
+  123:93  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\stocktake\[id]\StocktakeForm.tsx
+  204:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\[id]\receive\TransferReceiveClient.tsx
+  146:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\new\TransferNewClient.tsx
+  44:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx
+  38:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx:38:7
+  36 |   useEffect(() => {
+  37 |     if (role && !isInitialized) {
+> 38 |       setLocalPermissions(JSON.parse(JSON.stringify(role.permissions)));
+     |       ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  39 |       setIsInitialized(true);
+  40 |     }
+  41 |   }, [role, isInitialized]);  react-hooks/set-state-in-effect
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx
+  387:6  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\inventory\movements\MovementsClient.tsx
+  88:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\fx-rates\FXRateListClient.tsx
+  46:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\warehouses\WarehouseFormClient.tsx
+  298:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\warehouses\WarehouseListClient.tsx
+  44:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\shared\FEFOLotAllocator\LotRow.tsx
+  42:109  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\shared\TableSkeleton.tsx
+  7:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\core\concurrency\useSafeMutation.ts
+  61:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\admin\hooks\useAdminSettings.ts
+  29:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\barcodes\hooks\useBarcodes.ts
+  145:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\branches\hooks\useBranches.ts
+   94:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\categories\hooks\useCategories.ts
+  110:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\currencies\hooks\useCurrencies.ts
+  97:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\departments\hooks\useDepartments.ts
+   90:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\fx-rates\hooks\useFXRates.ts
+  163:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\items\hooks\useItems.ts
+   90:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\operations\types\stocktake.ts
+  45:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\purchasing\components\grn-form.tsx
+  180:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+ظ£û 28 problems (28 errors, 0 warnings)
+

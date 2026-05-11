@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from "next-intl";
-import { format } from "date-fns";
+import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
 import { 
  ArrowLeft, 
  Play, 
@@ -129,7 +129,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  {common('created_at')}
  </p>
  <p className="text-body-md font-semibold text-foreground" dir="ltr">
- {format(new Date(session.createdAt ?? session.snapshotAt), 'yyyy-MM-dd HH:mm')}
+ <ClientOnlyTime date={session.createdAt ?? session.snapshotAt} mode="datetime" />
  </p>
  </div>
  <div className="space-y-2">
@@ -226,7 +226,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  </div>
 
  <PostConfirmDialog
- isOpen={confirmOpen}
+ open={confirmOpen}
  onOpenChange={setConfirmOpen}
  onConfirm={() => {
  setConfirmOpen(false);

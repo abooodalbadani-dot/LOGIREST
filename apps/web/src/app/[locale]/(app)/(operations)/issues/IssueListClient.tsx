@@ -7,7 +7,7 @@ import { useRouter, usePathname, Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { isIssueDraft, isIssuePosted } from '@/domain/status-guards';
 import { ISSUE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
@@ -95,12 +96,16 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{tc('created_at')}</span>,
       cell: ({ row }) => (
         <div className="flex flex-col items-start gap-0.5">
-          <span dir="ltr" className="text-label-xs font-mono font-medium text-muted-foreground/60 tabular-nums">
-            {format(new Date(row.original.created_at), 'dd/MM/yyyy')}
-          </span>
-          <span className="text-label-xxs font-semibold text-muted-foreground/20 uppercase">
-            {format(new Date(row.original.created_at), 'HH:mm')}
-          </span>
+          <ClientOnlyTime
+            date={row.original.created_at}
+            mode="date"
+            className="text-label-xs font-mono font-medium text-muted-foreground/60 tabular-nums"
+          />
+          <ClientOnlyTime
+            date={row.original.created_at}
+            mode="time"
+            className="text-label-xxs font-semibold text-muted-foreground/20 uppercase"
+          />
         </div>
       ),
     },

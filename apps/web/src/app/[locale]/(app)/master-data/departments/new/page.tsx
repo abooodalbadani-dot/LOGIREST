@@ -19,7 +19,6 @@ export default async function NewDepartmentPage(props: { params: Promise<{ local
     <ProtectedRoute requiredAction="create" requiredResource="master_data_departments">
       <DepartmentFormClient
         id={null}
-        locale={params.locale}
         createTitle={t('create_title')}
         editTitle={t('edit_title')}
         viewTitle={t('view_title')}

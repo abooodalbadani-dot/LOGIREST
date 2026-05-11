@@ -28,7 +28,7 @@ export function useAdminUsers(filters: { page?: number } = {}) {
  params.set('page', String(filters.page ?? 1));
  return useQuery({
  queryKey: ['admin/users', filters],
- queryFn: () => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema)),
+  queryFn: ({ signal }) => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema), signal),
  staleTime: 60_000,
  });
 }
@@ -36,7 +36,7 @@ export function useAdminUsers(filters: { page?: number } = {}) {
 export function useAdminUser(id: string | null) {
  return useQuery({
  queryKey: ['admin/users', id],
- queryFn: () => apiClient.get(`/admin/users/${id}`, AuthUserSchema),
+  queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, signal),
  enabled: !!id,
  });
 }
@@ -90,8 +90,8 @@ export function useAdminUserMutations() {
  mutationFn: async ({ id, ...values }: UserFormValues & { id: string }) => {
  // Hard Guards (Mutation Level)
  if (currentUser?.id === id) {
- const originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]);
- if (values.role !== 'ADMIN' || values.status === 'INACTIVE') {
+const _originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]);
+    if (values.role !== 'ADMIN' || values.status === 'INACTIVE') {
  throw new Error(t('cannot_modify_self'));
  }
  }
@@ -122,7 +122,7 @@ export function useAdminUserMutations() {
  });
 
  const toggleStatus = useMutation({
- mutationFn: async ({ id, status, role }: { id: string; status: 'ACTIVE' | 'INACTIVE', role: string }) => {
+ mutationFn: async ({ id, status, role: _role }: { id: string; status: 'ACTIVE' | 'INACTIVE', role: string }) => {
  if (currentUser?.id === id && status === 'INACTIVE') {
  throw new Error(t('cannot_deactivate_self'));
  }

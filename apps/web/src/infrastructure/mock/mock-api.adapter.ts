@@ -1,35 +1,73 @@
 import { db } from './mock-database';
 import { MockFactory } from './mock-factory';
-import { getNextStatusV2, canPerformActionV2 } from '@/core/workflow/document-engine';
+import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus } from '@/types/documents';
+import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency, FXRate, Lot } from '@/types/master-data';
+import { StocktakeSession } from '@/features/operations/types/stocktake';
+import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
+import { InventoryMovement } from '@/types/inventory';
+import { getNextStatusV2, canPerformActionV2, DocumentAction } from '@/core/workflow/document-engine';
 import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+
+/**
+ * Helper to record inventory movements
+ */
+async function recordMovement(params: {
+  documentId: string;
+  documentNumber: string;
+  documentType: 'GRN' | 'ISSUE' | 'TRANSFER' | 'ADJUSTMENT';
+  itemId: string;
+  lotNumber: string | null;
+  direction: 'IN' | 'OUT';
+  qty: number;
+}) {
+  const item = await db.items.findById(params.itemId);
+  if (!item) return;
+
+  await db.movements.save({
+    id: `mov-${Math.random().toString(36).substring(2, 11)}`,
+    posted_at: new Date().toISOString(),
+    document_id: params.documentId,
+    document_number: params.documentNumber,
+    document_type: params.documentType,
+    item_id: params.itemId,
+    item_code: item.code,
+    item_name_ar: item.name_ar,
+    item_name_en: item.name_en,
+    lot_number: params.lotNumber,
+    direction: params.direction,
+    qty: params.qty,
+  });
+}
 
 /**
  * Mock API Adapter
  * Acts as a bridge between the application's API calls and the Mock Repositories.
  */
-export async function getMockResponse(method: string, path: string, body?: any): Promise<unknown> {
+export async function getMockResponse(method: string, path: string, body?: unknown): Promise<unknown> {
   const normalizedPath = path.split('?')[0];
   const searchParams = new URLSearchParams(path.split('?')[1] || '');
   
   // --- Master Data Routes ---
   if (normalizedPath === '/branches') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.branches.findAll());
-    if (method === 'POST') return db.branches.save(body);
+    if (method === 'POST') return db.branches.save(body as Branch);
   }
   if (normalizedPath.startsWith('/branches/')) {
     const id = normalizedPath.split('/').pop()!;
     if (method === 'GET') return db.branches.findById(id);
-    if (method === 'PUT') return db.branches.save({ ...body, id });
+    if (method === 'PUT') return db.branches.save({ ...(body as Branch), id });
+    if (method === 'DELETE') return db.branches.delete(id);
   }
 
   if (normalizedPath === '/warehouses') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.warehouses.findAll());
-    if (method === 'POST') return db.warehouses.save(body);
+    if (method === 'POST') return db.warehouses.save(body as Warehouse);
   }
   if (normalizedPath.startsWith('/warehouses/')) {
     const id = normalizedPath.split('/').pop()!;
     if (method === 'GET') return db.warehouses.findById(id);
-    if (method === 'PUT') return db.warehouses.save({ ...body, id });
+    if (method === 'PUT') return db.warehouses.save({ ...(body as Warehouse), id });
+    if (method === 'DELETE') return db.warehouses.delete(id);
   }
 
   if (normalizedPath === '/departments') {
@@ -39,12 +77,13 @@ export async function getMockResponse(method: string, path: string, body?: any):
       const filtered = branchId ? all.filter(d => d.branch_id === branchId) : all;
       return MockFactory.wrapPagination(filtered);
     }
-    if (method === 'POST') return db.departments.save(body);
+    if (method === 'POST') return db.departments.save(body as Department);
   }
   if (normalizedPath.startsWith('/departments/')) {
     const id = normalizedPath.split('/').pop()!;
     if (method === 'GET') return db.departments.findById(id);
-    if (method === 'PUT') return db.departments.save({ ...body, id });
+    if (method === 'PUT') return db.departments.save({ ...(body as Department), id });
+    if (method === 'DELETE') return db.departments.delete(id);
   }
 
   if (normalizedPath === '/items' || normalizedPath === '/master-data/items') {
@@ -52,33 +91,78 @@ export async function getMockResponse(method: string, path: string, body?: any):
     const all = await db.items.findAll();
     const filtered = barcode ? all.filter(i => i.barcode === barcode) : all;
     if (method === 'GET') return MockFactory.wrapPagination(filtered);
-    if (method === 'POST') return db.items.save(body);
+    if (method === 'POST') return db.items.save(body as Item);
+  }
+  if (normalizedPath.startsWith('/items/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.items.findById(id);
+    if (method === 'PUT') return db.items.save({ ...(body as Item), id });
+    if (method === 'DELETE') return db.items.delete(id);
   }
 
   if (normalizedPath === '/units-of-measure') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.uoms.findAll());
-    if (method === 'POST') return db.uoms.save(body);
+    if (method === 'POST') return db.uoms.save(body as UoM);
+  }
+  if (normalizedPath.startsWith('/units-of-measure/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.uoms.findById(id);
+    if (method === 'PUT') {
+      // Manual Conflict Simulation Trigger
+      if (id === 'uom-kg') {
+        return {
+          error: {
+            status: 409,
+            code: 'VERSION_CONFLICT',
+            message: 'Conflict detected: this record has been modified by another user.',
+            current_version: 2,
+            updated_by: 'Ahmed Ali',
+            updated_at: new Date().toISOString()
+          }
+        };
+      }
+      return db.uoms.save({ ...(body as UoM), id });
+    }
+    if (method === 'DELETE') return db.uoms.delete(id);
   }
 
   if (normalizedPath === '/categories') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.categories.findAll());
-    if (method === 'POST') return db.categories.save(body);
+    if (method === 'POST') return db.categories.save(body as Category);
+  }
+  if (normalizedPath.startsWith('/categories/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.categories.findById(id);
+    if (method === 'PUT') return db.categories.save({ ...(body as Category), id });
+    if (method === 'DELETE') return db.categories.delete(id);
   }
 
   if (normalizedPath === '/suppliers') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.suppliers.findAll());
-    if (method === 'POST') return db.suppliers.save(body);
+    if (method === 'POST') return db.suppliers.save(body as Supplier);
+  }
+  if (normalizedPath.startsWith('/suppliers/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.suppliers.findById(id);
+    if (method === 'PUT') return db.suppliers.save({ ...(body as Supplier), id });
+    if (method === 'DELETE') return db.suppliers.delete(id);
   }
 
   if (normalizedPath === '/currencies') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.currencies.findAll());
-    if (method === 'POST') return db.currencies.save(body);
+    if (method === 'POST') return db.currencies.save(body as Currency);
+  }
+  if (normalizedPath.startsWith('/currencies/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.currencies.findById(id);
+    if (method === 'PUT') return db.currencies.save({ ...(body as Currency), id });
+    if (method === 'DELETE') return db.currencies.delete(id);
   }
 
   // --- Issues Routes ---
   if (normalizedPath === '/operations/issues') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.issues.findAll());
-    if (method === 'POST') return db.issues.save(MockFactory.createIssue(body));
+    if (method === 'POST') return db.issues.save(MockFactory.createIssue(body as StockIssue));
   }
   if (normalizedPath.startsWith('/operations/issues/')) {
     const parts = normalizedPath.split('/');
@@ -87,13 +171,13 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.issues.save({ ...body, id });
+    if (method === 'PUT') return db.issues.save({ ...(body as StockIssue), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('ISSUE', doc.status, action as any);
+      const nextStatus = getNextStatusV2('ISSUE', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { ...doc, status: nextStatus as any, updated_at: new Date().toISOString() };
+        const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
         
         // Inventory Manifestation on POST
         if (action === 'POST') {
@@ -107,6 +191,17 @@ export async function getMockResponse(method: string, path: string, body?: any):
               if (lot) {
                 lot.qty_available = Math.max(0, lot.qty_available - allocation.allocated_qty);
                 await db.lots.save(lot);
+
+                // Record Movement
+                await recordMovement({
+                  documentId: doc.id,
+                  documentNumber: doc.document_number,
+                  documentType: 'ISSUE',
+                  itemId: line.item_id,
+                  lotNumber: lot.lot_number,
+                  direction: 'OUT',
+                  qty: allocation.allocated_qty,
+                });
               }
             }
           }
@@ -120,7 +215,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
   // --- Transfers Routes ---
   if (normalizedPath === '/operations/transfers') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.transfers.findAll());
-    if (method === 'POST') return db.transfers.save(MockFactory.createTransfer(body));
+    if (method === 'POST') return db.transfers.save(MockFactory.createTransfer(body as Transfer));
   }
   if (normalizedPath.startsWith('/operations/transfers/')) {
     const parts = normalizedPath.split('/');
@@ -129,17 +224,18 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.transfers.save({ ...body, id });
+    if (method === 'PUT') return db.transfers.save({ ...(body as Transfer), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('TRANSFER', doc.status, action as any);
+      const nextStatus = getNextStatusV2('TRANSFER', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { 
+        const updated: Transfer = { 
           ...doc, 
-          status: nextStatus as any, 
-          transfer_status: nextStatus as any,
-          updated_at: new Date().toISOString() 
+          status: nextStatus, 
+          transfer_status: nextStatus as TransferStatus,
+          updated_at: new Date().toISOString(),
+          version: (doc.version || 0) + 1
         };
 
         if (action === 'SHIP') updated.shipped_at = updated.updated_at;
@@ -148,7 +244,6 @@ export async function getMockResponse(method: string, path: string, body?: any):
           updated.posted_at = new Date().toISOString();
           updated.posted_by = 'user-1';
           
-          // Move items from Source to Destination
           for (const line of doc.lines) {
             const sourceLot = await db.lots.findById(line.lot_id || '');
             if (sourceLot) {
@@ -156,9 +251,20 @@ export async function getMockResponse(method: string, path: string, body?: any):
               sourceLot.qty_available = Math.max(0, sourceLot.qty_available - line.shipped_qty);
               await db.lots.save(sourceLot);
 
+              // Record OUT movement
+              await recordMovement({
+                documentId: doc.id,
+                documentNumber: doc.document_number,
+                documentType: 'TRANSFER',
+                itemId: line.item_id,
+                lotNumber: sourceLot.lot_number,
+                direction: 'OUT',
+                qty: line.shipped_qty,
+              });
+
               // 2. Increase in destination
               const allLots = await db.lots.findAll();
-              let destLot = allLots.find(l => 
+              const destLot = allLots.find(l => 
                 l.warehouse_id === doc.to_warehouse_id && 
                 l.item_id === line.item_id && 
                 l.lot_number === sourceLot.lot_number
@@ -167,18 +273,41 @@ export async function getMockResponse(method: string, path: string, body?: any):
               if (destLot) {
                 destLot.qty_available += (line.received_qty || line.shipped_qty);
                 await db.lots.save(destLot);
+
+                // Record IN movement
+                await recordMovement({
+                  documentId: doc.id,
+                  documentNumber: doc.document_number,
+                  documentType: 'TRANSFER',
+                  itemId: line.item_id,
+                  lotNumber: destLot.lot_number,
+                  direction: 'IN',
+                  qty: line.received_qty || line.shipped_qty,
+                });
               } else {
-                // Create new lot in destination warehouse
-                await db.lots.save({
-                  id: `lot-${Math.random().toString(36).substr(2, 9)}`,
+                const newLotId = `lot-${Math.random().toString(36).substring(2, 11)}`;
+                const newLot = {
+                  id: newLotId,
                   item_id: line.item_id,
                   warehouse_id: doc.to_warehouse_id,
                   lot_number: sourceLot.lot_number,
                   expiry_date: sourceLot.expiry_date,
                   qty_available: line.received_qty || line.shipped_qty,
-                  is_active: true,
-                  created_at: new Date().toISOString()
-                } as any);
+                  is_expired: false,
+                  is_near_expiry: false
+                } as Lot;
+                await db.lots.save(newLot);
+
+                // Record IN movement
+                await recordMovement({
+                  documentId: doc.id,
+                  documentNumber: doc.document_number,
+                  documentType: 'TRANSFER',
+                  itemId: line.item_id,
+                  lotNumber: newLot.lot_number,
+                  direction: 'IN',
+                  qty: line.received_qty || line.shipped_qty,
+                });
               }
             }
           }
@@ -208,7 +337,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (method === 'POST') {
       // Check for active session in the same warehouse
       const sessions = await db.stocktake.findAll();
-      const active = sessions.find(s => s.warehouse_id === body.warehouse_id && !['POSTED', 'CANCELLED'].includes(s.status));
+      const active = sessions.find(s => s.warehouse_id === (body as Record<string, unknown>).warehouse_id && !['POSTED', 'CANCELLED'].includes(s.status));
       if (active) {
         return {
           error: {
@@ -220,7 +349,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
 
       // Snapshot Freeze: Capture current inventory levels from db.lots
       const warehouseLots = await db.lots.findAll();
-      const warehouseItems = warehouseLots.filter(l => l.warehouse_id === body.warehouse_id);
+      const warehouseItems = warehouseLots.filter(l => l.warehouse_id === (body as Record<string, unknown>).warehouse_id);
       
       // Group by item to get total quantity if there are multiple lots
       const itemTotals = warehouseItems.reduce((acc, lot) => {
@@ -249,10 +378,10 @@ export async function getMockResponse(method: string, path: string, body?: any):
       });
 
       const newSession = MockFactory.createStocktakeSession({
-        ...body,
+        ...(body as Record<string, unknown>),
         items: stocktakeItems,
         snapshot_at: new Date().toISOString(),
-        status: STOCKTAKE_STATUS.DRAFT as any
+        status: STOCKTAKE_STATUS.DRAFT
       });
 
       return db.stocktake.save(newSession);
@@ -274,13 +403,13 @@ export async function getMockResponse(method: string, path: string, body?: any):
 
       session.items[itemIndex] = {
         ...session.items[itemIndex],
-        counted_qty: body.counted_qty,
-        variance_reason: body.variance_reason
+        counted_qty: (body as Record<string, unknown>).counted_qty as number | null,
+        variance_reason: (body as Record<string, unknown>).variance_reason as string | null
       };
 
       // Auto-transition to COUNTING if currently STARTED
       if (session.status === STOCKTAKE_STATUS.STARTED) {
-        session.status = STOCKTAKE_STATUS.COUNTING as any;
+        session.status = STOCKTAKE_STATUS.COUNTING;
       }
 
       await db.stocktake.save(session);
@@ -293,11 +422,11 @@ export async function getMockResponse(method: string, path: string, body?: any):
       const session = await db.stocktake.findById(id);
       if (!session) return undefined;
 
-      if (!canPerformActionV2('STOCKTAKE', session.status, action as any, 'ADMIN')) {
+      if (!canPerformActionV2('STOCKTAKE', session.status, action as DocumentAction, 'ADMIN')) {
         return { error: { code: 'INVALID_TRANSITION', message: `Cannot ${action} from ${session.status}` } };
       }
 
-      const nextStatus = getNextStatusV2('STOCKTAKE', session.status, action as any);
+      const nextStatus = getNextStatusV2('STOCKTAKE', session.status, action as DocumentAction);
       if (!nextStatus) return { error: { code: 'UNKNOWN_STATUS', message: 'Next status not found' } };
 
       // Business Logic for specific actions
@@ -323,7 +452,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
       const now = new Date().toISOString();
       const updated = {
         ...session,
-        status: nextStatus as any,
+        status: nextStatus,
         updated_at: now,
         version: (session.version || 0) + 1,
         posted_at: nextStatus === STOCKTAKE_STATUS.POSTED ? now : session.posted_at,
@@ -338,7 +467,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (method === 'GET') {
       if (!session) return undefined;
       // Ledger Guard: Hide snapshot during counting
-      const hideSnapshot = [STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING].includes(session.status as any);
+      const hideSnapshot = (([STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING] as unknown) as DocumentStatus[]).includes(session.status as DocumentStatus);
       return {
         ...session,
         items: session.items.map(i => ({
@@ -347,7 +476,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
         }))
       };
     }
-    if (method === 'PUT') return db.stocktake.save({ ...body, id });
+    if (method === 'PUT') return db.stocktake.save({ ...(body as StocktakeSession), id });
   }
 
   // --- Warehouse Lock Routes ---
@@ -363,6 +492,18 @@ export async function getMockResponse(method: string, path: string, body?: any):
     };
   }
 
+  // --- Inventory Movements ---
+  if (normalizedPath === '/inventory/movements') {
+    if (method === 'GET') {
+      const all = await db.movements.findAll();
+      const type = searchParams.get('document_type');
+      const filtered = type ? all.filter(m => m.document_type === type) : all;
+      // Sort by posted_at descending
+      filtered.sort((a, b) => new Date(b.posted_at).getTime() - new Date(a.posted_at).getTime());
+      return MockFactory.wrapPagination(filtered);
+    }
+  }
+
   // --- Lots Available ---
   if (normalizedPath === '/operations/lots-available') {
     return MockFactory.wrapPagination(await db.lots.findAll());
@@ -371,7 +512,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
   // --- Adjustments Routes ---
   if (normalizedPath === '/operations/adjustments') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.adjustments.findAll());
-    if (method === 'POST') return db.adjustments.save(MockFactory.createAdjustment(body));
+    if (method === 'POST') return db.adjustments.save(MockFactory.createAdjustment(body as Adjustment));
   }
   if (normalizedPath.startsWith('/operations/adjustments/')) {
     const parts = normalizedPath.split('/');
@@ -380,13 +521,13 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.adjustments.save({ ...body, id });
+    if (method === 'PUT') return db.adjustments.save({ ...(body as Adjustment), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('ADJUSTMENT', doc.status, action as any);
+      const nextStatus = getNextStatusV2('ADJUSTMENT', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { ...doc, status: nextStatus as any, updated_at: new Date().toISOString() };
+        const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
         
         // Inventory Manifestation on POST
         if (action === 'POST') {
@@ -399,6 +540,17 @@ export async function getMockResponse(method: string, path: string, body?: any):
               if (line.direction === 'INCREASE') lot.qty_available += line.qty_adjusted;
               else lot.qty_available = Math.max(0, lot.qty_available - line.qty_adjusted);
               await db.lots.save(lot);
+
+              // Record Movement
+              await recordMovement({
+                documentId: doc.id,
+                documentNumber: doc.document_number,
+                documentType: 'ADJUSTMENT',
+                itemId: line.item_id,
+                lotNumber: lot.lot_number,
+                direction: line.direction === 'INCREASE' ? 'IN' : 'OUT',
+                qty: line.qty_adjusted,
+              });
             }
           }
         }
@@ -412,7 +564,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
   // --- Procurement Routes ---
   if (normalizedPath === '/procurement/purchase-requests') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.pr.findAll());
-    if (method === 'POST') return db.pr.save(MockFactory.createPR(body));
+    if (method === 'POST') return db.pr.save(MockFactory.createPR(body as PurchaseRequest));
   }
   if (normalizedPath.startsWith('/procurement/purchase-requests/')) {
     const parts = normalizedPath.split('/');
@@ -421,20 +573,20 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.pr.save({ ...body, id });
+    if (method === 'PUT') return db.pr.save({ ...(body as PurchaseRequest), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('PR', doc.status, action as any);
+      const nextStatus = getNextStatusV2('PR', doc.status, action as DocumentAction);
       if (nextStatus) {
-        return db.pr.save({ ...doc, status: nextStatus as any });
+        return db.pr.save({ ...doc, status: nextStatus });
       }
     }
   }
 
   if (normalizedPath === '/procurement/purchase-orders') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.po.findAll());
-    if (method === 'POST') return db.po.save(MockFactory.createPO(body));
+    if (method === 'POST') return db.po.save(MockFactory.createPO(body as PurchaseOrder));
   }
   if (normalizedPath.startsWith('/procurement/purchase-orders/')) {
     const parts = normalizedPath.split('/');
@@ -443,20 +595,20 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.po.save({ ...body, id });
+    if (method === 'PUT') return db.po.save({ ...(body as PurchaseOrder), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('PO', doc.status, action as any);
+      const nextStatus = getNextStatusV2('PO', doc.status, action as DocumentAction);
       if (nextStatus) {
-        return db.po.save({ ...doc, status: nextStatus as any });
+        return db.po.save({ ...doc, status: nextStatus });
       }
     }
   }
 
   if (normalizedPath === '/procurement/grns') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.grn.findAll());
-    if (method === 'POST') return db.grn.save(MockFactory.createGRN(body));
+    if (method === 'POST') return db.grn.save(MockFactory.createGRN(body as GRN));
   }
   if (normalizedPath.startsWith('/procurement/grns/')) {
     const parts = normalizedPath.split('/');
@@ -465,13 +617,13 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.grn.save({ ...body, id });
+    if (method === 'PUT') return db.grn.save({ ...(body as GRN), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('GRN', doc.status, action as any);
+      const nextStatus = getNextStatusV2('GRN', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { ...doc, status: nextStatus as any, updated_at: new Date().toISOString() };
+        const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
         
         // Inventory Manifestation on POST
         if (action === 'POST') {
@@ -483,6 +635,17 @@ export async function getMockResponse(method: string, path: string, body?: any):
             if (lot) {
               lot.qty_available += line.received_qty;
               await db.lots.save(lot);
+
+              // Record Movement
+              await recordMovement({
+                documentId: doc.id,
+                documentNumber: doc.document_number,
+                documentType: 'GRN',
+                itemId: line.item_id,
+                lotNumber: lot.lot_number,
+                direction: 'IN',
+                qty: line.received_qty,
+              });
             } else if (line.lot) {
               // Create new lot if it doesn't exist
               await db.lots.save({
@@ -492,9 +655,20 @@ export async function getMockResponse(method: string, path: string, body?: any):
                 lot_number: line.lot.lot_number,
                 expiry_date: line.lot.expiry_date,
                 qty_available: line.received_qty,
-                is_active: true,
-                created_at: new Date().toISOString()
-              } as any);
+                is_expired: false,
+                is_near_expiry: false
+              });
+
+              // Record Movement
+              await recordMovement({
+                documentId: doc.id,
+                documentNumber: doc.document_number,
+                documentType: 'GRN',
+                itemId: line.item_id,
+                lotNumber: line.lot.lot_number,
+                direction: 'IN',
+                qty: line.received_qty,
+              });
             }
           }
         }
@@ -511,7 +685,7 @@ export async function getMockResponse(method: string, path: string, body?: any):
   // --- Kitchen Requests Routes ---
   if (normalizedPath === '/operations/kitchen-requests') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.kitchenRequests.findAll());
-    if (method === 'POST') return db.kitchenRequests.save(MockFactory.createKitchenRequest(body));
+    if (method === 'POST') return db.kitchenRequests.save(MockFactory.createKitchenRequest(body as KitchenRequestDetail));
   }
   if (normalizedPath.startsWith('/operations/kitchen-requests/')) {
     const parts = normalizedPath.split('/');
@@ -520,14 +694,26 @@ export async function getMockResponse(method: string, path: string, body?: any):
     if (!doc) return undefined;
 
     if (method === 'GET') return doc;
-    if (method === 'PUT') return db.kitchenRequests.save({ ...body, id });
+    if (method === 'PUT') return db.kitchenRequests.save({ ...(body as KitchenRequestDetail), id });
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
-      const nextStatus = getNextStatusV2('KITCHEN_REQUEST', doc.status, action as any);
+      const nextStatus = getNextStatusV2('KITCHEN_REQUEST', doc.status, action as DocumentAction);
       if (nextStatus) {
-        return db.kitchenRequests.save({ ...doc, status: nextStatus as any });
+        return db.kitchenRequests.save({ ...doc, status: nextStatus });
       }
+    }
+  }
+
+  if (normalizedPath === '/admin/settings') {
+    if (method === 'GET') {
+      return {
+        system_name: 'LogiRest Enterprise',
+        base_currency: 'SAR',
+        default_language: 'en',
+        sender_name: 'LogiRest System',
+        reply_to_email: 'no-reply@logirest.com'
+      };
     }
   }
 

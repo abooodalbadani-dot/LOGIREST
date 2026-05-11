@@ -13,7 +13,7 @@ import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { TRANSFER_STATUS } from '@/contracts/statuses';
 import { type DocumentStatus } from '@/core/workflow/document-engine';
@@ -21,15 +21,16 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Link } from '@/i18n/navigation';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
+import type { Transfer } from '@/types/documents';
 
 interface TransferFormProps {
-  transfer: any;
+  transfer: Transfer;
   id: string;
   onConflict: (type: string, id: string) => void;
 }
 
-export function TransferForm({ transfer, id, onConflict }: TransferFormProps) {
-  const locale = useLocale();
+export function TransferForm({ transfer, id, onConflict: _onConflict }: TransferFormProps) {
+  const _locale = useLocale();
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -128,9 +129,11 @@ export function TransferForm({ transfer, id, onConflict }: TransferFormProps) {
                 <div className="space-y-2">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
                   <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
-                    <span dir="ltr" className="font-mono text-body-md font-bold text-cyan-500/80">
-                      {format(new Date(transfer.shipped_at), 'MMM dd, yyyy HH:mm')}
-                    </span>
+                    <ClientOnlyTime 
+                      date={transfer.shipped_at} 
+                      mode="datetime" 
+                      className="font-mono text-body-md font-bold text-cyan-500/80"
+                    />
                     <Truck className="w-4 h-4 text-cyan-500/40" />
                   </div>
                 </div>
@@ -140,9 +143,11 @@ export function TransferForm({ transfer, id, onConflict }: TransferFormProps) {
                 <div className="space-y-2">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
                   <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
-                    <span dir="ltr" className="font-mono text-body-md font-bold text-emerald-500/80">
-                      {format(new Date(transfer.received_at), 'MMM dd, yyyy HH:mm')}
-                    </span>
+                    <ClientOnlyTime 
+                      date={transfer.received_at} 
+                      mode="datetime" 
+                      className="font-mono text-body-md font-bold text-emerald-500/80"
+                    />
                     <PackageCheck className="w-4 h-4 text-emerald-500/40" />
                   </div>
                 </div>

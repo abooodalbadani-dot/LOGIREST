@@ -4,34 +4,35 @@ import { useTranslations } from 'next-intl';
 import { Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 
+import { ImportWizardState } from '../types';
+
 interface Step1UploadProps {
- wizard: any;
+ wizard: ImportWizardState;
  locale: string;
 }
 
-export function Step1Upload({ wizard, locale }: Step1UploadProps) {
+export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
  const t = useTranslations('master_data.import');
  const tc = useTranslations('common');
  
  const handleFile = (file: File) => {
- if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
- const reader = new FileReader();
- reader.onload = (e) => {
- const data = new Uint8Array(e.target?.result as ArrayBuffer);
- const workbook = XLSX.read(data, { type: 'array' });
- const sheetName = workbook.SheetNames[0];
- const worksheet = workbook.Sheets[sheetName];
- const json = XLSX.utils.sheet_to_json(worksheet);
- wizard.setFile(file);
- wizard.setParsedData(json);
- wizard.nextStep();
+  if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+  const data = new Uint8Array(e.target?.result as ArrayBuffer);
+  const workbook = XLSX.read(data, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const json = XLSX.utils.sheet_to_json(worksheet);
+  
+  wizard.setFileData(file.name, file.size, json as Record<string, unknown>[]);
+  };
+  reader.readAsArrayBuffer(file);
+  }
  };
- reader.readAsArrayBuffer(file);
- }
- };
+
 
  const downloadTemplate = () => {
  let headers: string[] = [];

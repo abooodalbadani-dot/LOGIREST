@@ -19,7 +19,6 @@ export default async function NewWarehousePage(props: { params: Promise<{ locale
     <ProtectedRoute requiredAction="create" requiredResource="master_data_warehouses">
       <WarehouseFormClient 
         id={null} 
-        locale={params.locale} 
         createTitle={t('create_title')} 
         editTitle={t('edit_title')} 
         viewTitle={t('view_title')}

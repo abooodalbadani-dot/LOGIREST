@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
+import { validateImportData } from '@/lib/import/validation';
+import { ImportWizardState, ValidationError } from '../types';
+
 interface Step2ValidateProps {
- wizard: any;
+ wizard: ImportWizardState;
  locale: string;
 }
 
@@ -17,11 +20,16 @@ export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
  const tc = useTranslations('common');
 
  useEffect(() => {
- // Only trigger validation once
- if (wizard.data.length > 0 && !wizard.isValidating && wizard.errors.length === 0) {
- wizard.validate();
- }
+  // Trigger validation once
+  if (wizard.data.length > 0 && !wizard.isValidating && wizard.errors.length === 0) {
+   const results = validateImportData(wizard.importType, wizard.data);
+   // Wait a bit to show the animation (for UX)
+   setTimeout(() => {
+    wizard.setValidationResults(results.errors);
+   }, 1500);
+  }
  }, []);
+
 
  if (wizard.isValidating) {
  return (
@@ -45,8 +53,8 @@ export function Step2Validate({ wizard, locale }: Step2ValidateProps) {
  );
  }
 
- const errorCount = wizard.errors.filter((e: any) => e.severity === 'error').length;
- const warningCount = wizard.errors.filter((e: any) => e.severity === 'warning').length;
+ const errorCount = wizard.errors.filter((e: ValidationError) => e.severity === 'error').length;
+ const warningCount = wizard.errors.filter((e: ValidationError) => e.severity === 'warning').length;
 
  return (
  <div className="max-w-2xl mx-auto flex flex-col gap-6 py-12">

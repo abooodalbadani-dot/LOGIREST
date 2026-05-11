@@ -126,16 +126,29 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   }, [initialData, reset]);
 
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   const handleScan = async (barcode: string) => {
     try {
       setScanError('');
+      
+      // Abort any existing scan request
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
       const ItemSchema = z.object({
         data: z.array(z.object({
           id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
           primary_uom: z.object({ id: z.string(), code: z.string() })
         }))
       });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
+      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortControllerRef.current.signal);
       
       if (res.data && res.data.length > 0) {
         const item = res.data[0];
@@ -164,7 +177,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       } else {
         setScanError(t('no_item_found'));
       }
-    } catch {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       setScanError(t('no_item_found'));
     }
   };
@@ -224,7 +238,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       }
     } catch (error) {
       console.error('[GRNForm] Submit Error:', error);
-      if (!(error as { isConflict?: boolean }).isConflict) {
+      const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
+      if (!isConflict) {
         toast.error(tc('error_occurred'));
       }
     }
@@ -289,7 +304,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
                     {currencies?.map(c => (
                       <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
-                        {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
+                        {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -364,7 +379,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             
             <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm border border-surface-variant/5">
               <DocumentLineItemTable<LineItem> 
-                lines={fields as any} 
+                lines={fields as unknown as LineItem[]} 
                 isReadOnly={isLocked}
                 onRemoveLine={(id) => {
                   const idx = fields.findIndex(f => f.id === id);
@@ -373,7 +388,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 extraColumns={[
                   {
                     header: tc('table_headers.received_qty'),
-                    cell: (field: any) => {
+                    cell: (field: LineItem) => {
                       const index = fields.findIndex(f => f.id === field.id);
                       return (
                         <input type="number" 
@@ -382,7 +397,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                           {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
                           onChange={e => {
                             const val = Number(e.target.value);
-                            update(index, { ...fields[index] as any, received_qty: val, qty: val });
+                            update(index, { ...fields[index], received_qty: val, qty: val } as LineItem);
                           }}
                         />
                       );
@@ -390,7 +405,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   },
                   {
                     header: tc('table_headers.lot_allocation'),
-                    cell: (field: any) => (
+                    cell: (field: LineItem) => (
                       <button 
                         type="button" 
                         className="text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary text-label-xs font-semibold uppercase transition-all"
@@ -427,7 +442,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               
               <div className="space-y-6 relative z-10">
                 <div className="flex justify-between items-baseline gap-10">
-                  <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId })}</p>
+                  <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId || '' })}</p>
                   <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">
                     {formatCurrency(totalForeign, currencyId, locale as 'ar' | 'en')}
                   </p>
@@ -436,7 +451,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 <div className="h-px bg-surface-container-high/20 w-full" />
                 
                 <div className="flex justify-between items-center gap-10">
-                  <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency })}</p>
+                  <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency || '' })}</p>
                   <p dir="ltr" className="text-title-lg font-mono font-semibold text-primary/60">
                     {formatCurrency(totalForeign * currentFxRate, baseCurrency, locale as 'ar' | 'en')}
                   </p>

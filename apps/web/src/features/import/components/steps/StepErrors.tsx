@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { AlertCircle, Download, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertCircle, Download, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
@@ -16,7 +16,7 @@ interface StepErrorsProps {
 
 export function StepErrors({ wizard, locale }: StepErrorsProps) {
  const t = useTranslations('master_data.import');
- const tc = useTranslations('common');
+ const _tc = useTranslations('common');
  const isRtl = locale === 'ar';
 
  const handleExportErrors = () => {

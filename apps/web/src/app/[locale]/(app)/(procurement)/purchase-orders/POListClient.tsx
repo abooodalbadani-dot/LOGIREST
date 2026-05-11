@@ -10,8 +10,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck } from 'lucide-react';
 
-import { format } from 'date-fns';
-import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -19,9 +18,11 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 
-import { canPerformActionV2, type DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
+import { type DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
 import { PO_STATUS } from '@/contracts/statuses';
 import { formatCurrency } from '@/utils/currency';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import type { BadgeStatus } from '@/components/shared/StatusBadge';
 
 export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
@@ -30,7 +31,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
-  const [supplier_id, setSupplierId] = useState<string>('');
+  const [supplier_id] = useState<string>('');
 
   const { data, isLoading } = usePOList({ status, supplier_id, page });
 
@@ -64,9 +65,13 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       header: t('expected_date'),
       cell: ({ row }) => (
         <div className="flex flex-col text-start">
-          <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
-            {format(new Date(row.original.expected_date), 'dd/MM/yyyy')}
-          </span>
+          <ClientOnlyTime 
+            date={row.original.expected_date} 
+            mode="date" 
+            locale={locale} 
+            fallback="--/--/----"
+            className="text-label-xs font-mono font-semibold text-foreground/80"
+          />
           <span className="text-label-xxs uppercase opacity-30 font-semibold">{t('expected_date')}</span>
         </div>
       ),
@@ -199,11 +204,11 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  <SelectTrigger className="w-full bg-surface-variant/10 border-none h-11 px-5 text-label-xs font-bold rounded-sm shadow-inner shadow-black/5">
  <div className="flex items-center gap-2">
  <ListFilter className="w-3.5 h-3.5 text-muted-foreground/60" />
- <SelectValue placeholder={tc('status.all')} />
+ <SelectValue placeholder={tc('statuses.all')} />
  </div>
  </SelectTrigger>
               <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
-                <SelectItem value="ALL" className="text-label-xs font-bold">{tc('status.all')}</SelectItem>
+                <SelectItem value="ALL" className="text-label-xs font-bold">{tc('statuses.all')}</SelectItem>
                 <SelectItem value={PO_STATUS.DRAFT} className="text-label-xs font-bold">{tc('status.draft')}</SelectItem>
                 <SelectItem value={PO_STATUS.SUBMITTED} className="text-label-xs font-bold">{tc('status.submitted')}</SelectItem>
                 <SelectItem value={PO_STATUS.APPROVED} className="text-label-xs font-bold">{tc('status.approved')}</SelectItem>

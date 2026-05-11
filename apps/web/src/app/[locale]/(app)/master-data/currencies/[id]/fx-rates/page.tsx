@@ -14,6 +14,6 @@ export default async function FXRatesPage(props: { params: Promise<{ locale: str
  const params = await props.params;
  setRequestLocale(params.locale);
  return (
- <FXRatesClient currencyId={params.id} locale={params.locale} />
+  <FXRatesClient currencyId={params.id} locale={params.locale as 'ar' | 'en'} />
  );
 }

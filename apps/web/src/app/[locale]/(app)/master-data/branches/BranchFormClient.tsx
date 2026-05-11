@@ -1,19 +1,19 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
+
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, ShieldCheck, Globe2, Hash, Trash2 } from 'lucide-react';
+import { Building2, ShieldCheck, Trash2 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { PermissionGate } from '@/components/auth/PermissionGate';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
@@ -29,6 +29,8 @@ import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
+import { useAbortController } from '@/hooks/useAbortController';
+
 interface Props {
   id: string | null;
   createTitle: string;
@@ -38,9 +40,10 @@ interface Props {
   isReadOnly?: boolean;
 }
 
-export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
+export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale: _locale, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tb = useTranslations('master_data.branches');
+  const abortController = useAbortController();
   
   const { 
     register, 
@@ -84,9 +87,9 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/branches', { skipGuard: true });
@@ -98,7 +101,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteBranch.mutateAsync(id);
+      await deleteBranch.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/branches', { skipGuard: true });
     } catch {
       setShowDeleteConfirm(false);
@@ -167,7 +170,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       isValid={isValid}
       headerActions={
         id && !isReadOnly && (
-          <PermissionGate permission="master-data.branches.delete">
+          <PermissionGate action="delete" resource="master_data_branches">
             <Button
               type="button"
               variant="ghost"

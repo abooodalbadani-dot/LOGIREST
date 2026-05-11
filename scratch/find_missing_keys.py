@@ -1,47 +1,49 @@
-import json
 import os
+import re
 
-def find_issues(canonical, target, path=""):
-    issues = {"missing": [], "untranslated": [], "empty": []}
-    for key, value in canonical.items():
-        current_path = f"{path}.{key}" if path else key
-        if key not in target:
-            issues["missing"].append(current_path)
-        elif isinstance(value, dict):
-            if not isinstance(target[key], dict):
-                issues["missing"].append(current_path)
-            else:
-                sub_issues = find_issues(value, target[key], current_path)
-                for k in issues:
-                    issues[k].extend(sub_issues[k])
-        else:
-            target_val = target[key]
-            if not target_val:
-                issues["empty"].append(current_path)
-            elif target_val == value and len(value) > 1: # len > 1 to avoid short strings like "or"
-                issues["untranslated"].append(current_path)
-    return issues
+def find_missing_keys(directory):
+    map_pattern = re.compile(r'\.map\s*\(\s*\(.*?\)\s*=>\s*<([A-Z][a-zA-Z0-9]*|div|span|li|tr|td|p|h[1-6])')
+    key_pattern = re.compile(r'key=[\'"{]')
+    
+    results = []
+    
+    for root, dirs, files in os.walk(directory):
+        if 'node_modules' in dirs:
+            dirs.remove('node_modules')
+        if '.next' in dirs:
+            dirs.remove('.next')
+            
+        for file in files:
+            if file.endswith(('.tsx', '.jsx')):
+                path = os.path.join(root, file)
+                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+                    
+                    for i, line in enumerate(lines):
+                        if '.map(' in line:
+                            # Look ahead a few lines for the opening tag
+                            snippet = "\n".join(lines[i:i+5])
+                            match = map_pattern.search(snippet)
+                            if match:
+                                if not key_pattern.search(snippet):
+                                    results.append(f"{path}:{i+1} - Potential missing key in .map()")
+                                    
+    return results
 
-en_path = r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json"
-ar_path = r"e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json"
-
-with open(en_path, 'r', encoding='utf-8') as f:
-    en_data = json.load(f)
-
-with open(ar_path, 'r', encoding='utf-8') as f:
-    ar_data = json.load(f)
-
-issues = find_issues(en_data, ar_data)
-
-print(f"Found {len(issues['missing'])} missing keys")
-print(f"Found {len(issues['untranslated'])} untranslated values")
-print(f"Found {len(issues['empty'])} empty values")
-
-if issues['missing']:
-    print("\nMissing keys:")
-    for k in issues['missing']: print(k)
-
-if issues['untranslated']:
-    print("\nUntranslated values:")
-    for k in issues['untranslated']: print(k)
-
+if __name__ == "__main__":
+    # Ensure stdout handles unicode
+    import sys
+    import io
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        
+    src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'apps', 'web', 'src'))
+    # Use a safe print or just print to stderr
+    sys.stdout.write(f"Scanning {src_dir} for missing React keys...\n")
+    missing = find_missing_keys(src_dir)
+    if missing:
+        sys.stdout.write("\n".join(missing) + "\n")
+        sys.stdout.write(f"\nTotal potential issues: {len(missing)}\n")
+    else:
+        sys.stdout.write("No obvious missing keys found.\n")

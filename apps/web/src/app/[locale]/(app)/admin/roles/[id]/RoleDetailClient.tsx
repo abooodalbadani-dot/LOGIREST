@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAdminRole, useUpdateRolePermissions, type Permission, type RoleAction } from '@/features/admin/hooks/useAdminRoles';
@@ -17,9 +17,8 @@ interface Props {
   isReadOnly?: boolean;
 }
 
-export function RoleDetailClient({ locale, id, isReadOnly = false }: Props) {
+export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Props) {
   const t = useTranslations('admin.roles');
-  const tCommon = useTranslations('common');
   const router = useRouter();
   const { data: role, isLoading } = useAdminRole(id);
   const { mutateAsync: updatePermissions, isPending } = useUpdateRolePermissions();
@@ -30,12 +29,13 @@ export function RoleDetailClient({ locale, id, isReadOnly = false }: Props) {
   const isAdmin = id === 'ADMIN';
   const isAuditor = isReadOnly || isAdmin;
 
+  const [initializedRoleId, setInitializedRoleId] = useState<string | null>(null);
+
   // Initialize local state when data is loaded
-  useEffect(() => {
-    if (role) {
-      setLocalPermissions(JSON.parse(JSON.stringify(role.permissions)));
-    }
-  }, [role]);
+  if (role && role.id !== initializedRoleId) {
+    setLocalPermissions(JSON.parse(JSON.stringify(role.permissions)));
+    setInitializedRoleId(role.id);
+  }
 
   const handleToggle = (module: string, action: RoleAction, checked: boolean) => {
     if (isAuditor) return;

@@ -27,21 +27,6 @@ export function UoMListClient({ locale }: { locale: string }) {
 
   const { data, isLoading, isError, refetch } = useUoMs({ search });
 
-  if (isLoading && !data) {
-    return <PageSkeleton variant="list" />;
-  }
-
-  if (isError) {
-    return (
-      <div className="p-8">
-        <ErrorState 
-          type="server_error"
-          onRetry={() => refetch()}
-        />
-      </div>
-    );
-  }
-
   const columns = useMemo<ColumnDef<UoM, unknown>[]>(() => [
     { 
       accessorKey: 'code', 
@@ -104,6 +89,21 @@ export function UoMListClient({ locale }: { locale: string }) {
       ),
     },
   ], [t, router, locale]);
+
+  if (isLoading && !data) {
+    return <PageSkeleton variant="list" />;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8">
+        <ErrorState 
+          type="server_error"
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   const breadcrumbs = [
     { label: t('home'), href: `/dashboard` },

@@ -25,9 +25,9 @@ export function useGRNList(filters: { status?: string; warehouse_id?: string; se
  if (filters.search) params.set('search', filters.search);
  params.set('page', String(filters.page ?? 1));
  
- return useQuery({
- queryKey: ['grns', filters],
- queryFn: () => apiClient.get(`/procurement/grns?${params.toString()}`, paginatedSchema(GRNSummarySchema)),
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['grns', filters],
+    queryFn: ({ signal }) => apiClient.get(`/procurement/grns?${params.toString()}`, paginatedSchema(GRNSummarySchema), signal),
+    staleTime: 60_000,
+  });
 }

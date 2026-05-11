@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
-import { Plus, Briefcase, CheckCircle2, Search, Layers, ShieldCheck } from 'lucide-react';
+import { Plus, Briefcase, Search, Layers, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -23,7 +23,7 @@ export function DepartmentListClient({ locale }: { locale: string }) {
   const tc = useTranslations('common');
   const t = useTranslations('master_data.departments');
   const router = useRouter();
-  const [page, setPage] = useState(1);
+  const [_page, setPage] = useState(1);
   const [search, setSearch] = useState('');
 
   const { data: queryData, isLoading, isError, refetch } = useDepartments({ search });

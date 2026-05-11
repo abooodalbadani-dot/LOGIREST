@@ -8,6 +8,7 @@ import { useItems } from "@/features/items/api/useItems"
 import { PackageSearch } from "lucide-react"
 import { toast } from "sonner"
 import { isDocumentLocked, type DocumentStatus } from "@/core/workflow/document-engine"
+import { formatDate } from "@/utils/currency"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -217,7 +218,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
                         <div className="flex flex-col gap-0.5">
                           <span className="text-label-sm font-mono font-semibold text-muted-foreground/60" dir="ltr">{item.lotNumber}</span>
                           <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase" dir="ltr">
-                            {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString(locale) : '—'}
+                            {formatDate(item.expiryDate, locale)}
                           </span>
                         </div>
                       </TableCell>

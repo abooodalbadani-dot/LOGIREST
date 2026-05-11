@@ -4,7 +4,8 @@ import { FEFOLotAllocator } from './FEFOLotAllocator';
 import type { Lot } from '@/types/master-data';
 
 vi.mock('next-intl', () => ({
- useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
 }));
 
 // Mock system time to have stable tests
@@ -59,10 +60,10 @@ describe('FEFOLotAllocator', () => {
  }
  ];
 
- const assertAllocated = (current: number, total: number) => {
- const statusEl = screen.getByText(/Allocated:/i).parentElement;
- expect(statusEl?.textContent).toContain(`${current} /${total}`);
- };
+  const assertAllocated = (current: number, total: number) => {
+    const statusEl = screen.getByText(/Allocated:/i).parentElement;
+    expect(statusEl?.textContent).toContain(`${current} / ${total}`);
+  };
 
  it('allocates lots based on FEFO (earliest expiry first)', () => {
  const onAllocate = vi.fn();

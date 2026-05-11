@@ -6,14 +6,14 @@ import { locales } from '@/i18n/routing';
 
 interface PendingNavigation {
   href: string;
-  options?: any;
+  options?: unknown;
 }
 
 interface UnsavedChangesContextType {
   isDirty: boolean;
   registerDirty: (dirty: boolean) => void;
   confirmNavigation: () => void;
-  openDialog: (targetPath: string, options?: any) => void;
+  openDialog: (targetPath: string, options?: unknown) => void;
 }
 
 const UnsavedChangesContext = createContext<UnsavedChangesContextType | undefined>(undefined);
@@ -39,7 +39,7 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
     setIsDirty(dirty);
   }, []);
 
-  const openDialog = useCallback((targetPath: string, options?: any) => {
+  const openDialog = useCallback((targetPath: string, options?: unknown) => {
     setPendingNavigation({ href: targetPath, options });
     setOpen(true);
   }, []);
@@ -111,7 +111,7 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
             // Strip locale prefix if present to avoid double-locale in localized router
             let unlocalizedPath = targetPath;
             const segments = targetPath.split('/');
-            if (segments.length > 1 && locales.includes(segments[1] as any)) {
+            if (segments.length > 1 && (locales as readonly string[]).includes(segments[1])) {
               unlocalizedPath = '/' + segments.slice(2).join('/');
               // Preserve search and hash which were already part of targetPath
             }

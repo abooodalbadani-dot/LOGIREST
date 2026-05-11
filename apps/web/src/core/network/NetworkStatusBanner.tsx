@@ -1,33 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
+function subscribe(callback: () => void) {
+  window.addEventListener('online', callback);
+  window.addEventListener('offline', callback);
+  return () => {
+    window.removeEventListener('online', callback);
+    window.removeEventListener('offline', callback);
+  };
+}
+
+function getSnapshot() {
+  return navigator.onLine;
+}
+
+function getServerSnapshot() {
+  return true; // Assume online on server
+}
+
 export function NetworkStatusBanner() {
-  const [isOffline, setIsOffline] = useState(false);
+  const isOnline = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isOffline = !isOnline;
   const [showBackOnline, setShowBackOnline] = useState(false);
   const t = useTranslations('common');
+  const wasOfflineRef = useRef(false);
 
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOffline(false);
+    if (isOnline && wasOfflineRef.current) {
       setShowBackOnline(true);
-      setTimeout(() => setShowBackOnline(false), 3000);
-    };
-    const handleOffline = () => setIsOffline(true);
-
-    setIsOffline(!window.navigator.onLine);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+      const timer = setTimeout(() => setShowBackOnline(false), 3000);
+      wasOfflineRef.current = false;
+      return () => clearTimeout(timer);
+    } else if (!isOnline) {
+      wasOfflineRef.current = true;
+    }
+  }, [isOnline]);
 
   if (!isOffline && !showBackOnline) return null;
 

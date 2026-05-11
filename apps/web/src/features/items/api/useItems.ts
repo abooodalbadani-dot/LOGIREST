@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { Item } from '../types';
-import { apiClient } from '@/lib/api/client';
 
 export function useItems() {
  return useQuery({

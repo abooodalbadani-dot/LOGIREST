@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Currency, type CurrencyFormValues } from '@/types/master-data';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
+import { ConflictError } from '@/lib/api/ConflictError';
 
 const QUERY_KEY = ['currencies'];
 
@@ -44,7 +45,8 @@ export function useCreateCurrency() {
  const t = useTranslations('master_data.currencies');
 
  return useMutation({
-    mutationFn: async (values: CurrencyFormValues) => {
+    mutationFn: async (variables: CurrencyFormValues & { signal?: AbortSignal }) => {
+      const { signal: _signal, ...values } = variables;
       const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
  
  // GUARD: Uniqueness (Case-insensitive)
@@ -87,16 +89,18 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
   onConflict: options?.onConflict,
-  mutationFn: async ({ id, values }: { id: string; values: CurrencyFormValues }) => {
+  mutationFn: async ({ id, values, signal: _signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
        const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
   const currency = data.find(c => c.id === id);
   if (!currency) throw new Error('Currency not found');
 
-  if (values.version !== undefined && values.version < (currency.version ?? 0)) {
-  const error = new Error('CONFLICT') as any;
-  error.response = { status: 409 };
-  throw error;
-  }
+    if (values.version !== undefined && values.version < (currency.version ?? 0)) {
+      throw new ConflictError({
+        message: 'CONFLICT',
+        code: 'VERSION_CONFLICT',
+        currentVersion: currency.version
+      });
+    }
 
   // GUARD: Uniqueness if code changed
   if (values.code.toUpperCase() !== currency.code.toUpperCase()) {

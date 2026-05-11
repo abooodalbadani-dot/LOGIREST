@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 
 
-import { AdjustmentStatus, ALL_STATUSES } from '@/contracts/statuses';
+import { ALL_STATUSES } from '@/contracts/statuses';
 
 export const AdjustmentStatusSchema = z.enum(ALL_STATUSES);
 
@@ -40,7 +40,9 @@ export const AdjustmentDetailSchema = z.object({
  approved_by: z.string().nullable().optional(),
  posted_at: z.string().nullable().optional(),
  created_at: z.string().optional(),
+ updated_at: z.string().optional().default(''),
  version: z.number().optional(),
+
  lines: z.array(AdjustmentLineSchema),
  timeline: z.array(z.object({
  status: z.string(),
@@ -54,10 +56,10 @@ export type AdjustmentDetail = z.infer<typeof AdjustmentDetailSchema>;
 export type AdjustmentLine = z.infer<typeof AdjustmentLineSchema>;
 
 export function useAdjustment(id: string | null) {
- return useQuery({
- queryKey: ['adjustment', id],
- queryFn: () => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema),
- enabled: !!id,
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['adjustment', id],
+    queryFn: ({ signal }) => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema, signal),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
 }

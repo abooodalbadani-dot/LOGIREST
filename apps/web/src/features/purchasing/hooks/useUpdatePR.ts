@@ -24,8 +24,8 @@ export function useUpdatePR(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, payload }: { id: string; payload: UpdatePRPayload }) => 
-      apiClient.put(`/procurement/purchase-requests/${id}`, PRDetailSchema, UpdatePRPayloadSchema.parse(payload)),
+    mutationFn: ({ id, payload, signal }: { id: string; payload: UpdatePRPayload; signal?: AbortSignal }) => 
+      apiClient.put(`/procurement/purchase-requests/${id}`, PRDetailSchema, UpdatePRPayloadSchema.parse(payload), signal),
     onSuccess: (data) => {
       // Update individual PR cache with the returned data
       queryClient.setQueryData(['purchase-request', data.id], data);

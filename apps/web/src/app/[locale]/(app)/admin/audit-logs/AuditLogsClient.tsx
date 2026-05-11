@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAuditLogs, type AuditLogRow } from '@/features/admin/hooks/useAuditLogs';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/ui/metric-card';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 const actionColors: Record<string, string> = {
  CREATE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -26,6 +27,7 @@ const actionColors: Record<string, string> = {
 export function AuditLogsClient() {
  const t = useTranslations('admin');
  const tc = useTranslations('common');
+ const locale = useLocale() as 'ar' | 'en';
  const [page, setPage] = useState(1);
  const [expandedId, setExpandedId] = useState<string | null>(null);
  const { data, isLoading } = useAuditLogs({ page });
@@ -96,9 +98,13 @@ export function AuditLogsClient() {
  accessorKey: 'created_at',
  header: t('created_at'),
  cell: ({ row }) => (
- <span dir="ltr" className="text-label-xs font-medium text-muted-foreground/60">
- {format(new Date(row.original.created_at), 'yyyy-MM-dd HH:mm:ss')}
- </span>
+ <ClientOnlyTime 
+ date={row.original.created_at} 
+ mode="datetime" 
+ showSeconds={true}
+ locale={locale}
+ className="text-label-xs font-medium text-muted-foreground/60 tabular-nums"
+ />
  ),
  },
  {
@@ -106,17 +112,18 @@ export function AuditLogsClient() {
  header: '',
  cell: ({ row }) => (
  <div className="flex justify-end">
- <Button
- variant="ghost"
- size="sm"
- className={`h-7 px-2 transition-all ${expandedId === row.original.id ? 'bg-cyan-500/20 text-cyan-500' : 'text-muted-foreground/40 hover:text-cyan-500 hover:bg-cyan-500/10'}`}
- onClick={(e: React.MouseEvent) => { 
- e.stopPropagation(); 
- setExpandedId(expandedId === row.original.id ? null : row.original.id); 
- }}
- >
- <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-500 ${expandedId === row.original.id ? 'rotate-180' : ''}`} />
- </Button>
+<Button
+  variant="ghost"
+  size="sm"
+  aria-label={`${tc('view')} ${t('changes')}`}
+  className={`h-7 px-2 transition-all ${expandedId === row.original.id ? 'bg-cyan-500/20 text-cyan-500' : 'text-muted-foreground/40 hover:text-cyan-500 hover:bg-cyan-500/10'}`}
+  onClick={(e: React.MouseEvent) => { 
+  e.stopPropagation(); 
+  setExpandedId(expandedId === row.original.id ? null : row.original.id); 
+  }}
+  >
+  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-500 ${expandedId === row.original.id ? 'rotate-180' : ''}`} />
+  </Button>
  </div>
  ),
  },

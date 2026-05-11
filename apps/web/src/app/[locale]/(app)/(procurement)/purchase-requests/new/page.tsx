@@ -1,18 +1,20 @@
 import { PurchaseRequestForm } from "@/features/purchasing/components/purchase-request-form";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewPurchaseRequestPage(props: { params: Promise<{ locale: string }> }) {
- const { locale } = await props.params;
- return (
- <div className="max-w-5xl mx-auto space-y-6">
- <div>
- <h2 className="text-headline-lg font-bold text-foreground">Create Purchase Request</h2>
- <p className="text-muted-foreground mt-2">
- Submit a new request for items needed by your branch.
- </p>
- </div>
+  await props.params;
+  const t = await getTranslations('procurement.pr');
 
- <PurchaseRequestForm />
- </div>
- );
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-headline-lg font-bold text-foreground">{t('create_title')}</h2>
+        <p className="text-muted-foreground mt-2">
+          {t('create_description')}
+        </p>
+      </div>
+
+      <PurchaseRequestForm />
+    </div>
+  );
 }

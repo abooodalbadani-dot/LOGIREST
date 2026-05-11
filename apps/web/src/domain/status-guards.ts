@@ -6,8 +6,6 @@ import {
   PO_STATUS,
   GRN_STATUS,
   ADJUSTMENT_STATUS,
-  KITCHEN_REQUEST_STATUS,
-  DocumentStatus,
 } from '@/contracts/statuses';
 import { isDocumentLocked as engineIsDocumentLocked, DocumentType } from '@/core/workflow/document-engine';
 

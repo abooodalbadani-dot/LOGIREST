@@ -1,9 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { User, Shield, Info, MapPin, Globe, BadgeCheck, Fingerprint } from 'lucide-react';
+import { Shield, MapPin, Globe, BadgeCheck, Fingerprint } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/providers/AuthProvider';
 import ChangePasswordClient from './ChangePasswordClient';

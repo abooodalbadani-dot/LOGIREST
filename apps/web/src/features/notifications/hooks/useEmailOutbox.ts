@@ -20,9 +20,9 @@ export function useEmailOutbox(filters: { status?: string; page?: number } = {})
  const params = new URLSearchParams();
  if (filters.status) params.set('status', filters.status);
  params.set('page', String(filters.page ?? 1));
- return useQuery({
- queryKey: ['notifications/outbox', filters],
- queryFn: () => apiClient.get(`/notifications/outbox?${params.toString()}`, paginatedSchema(EmailOutboxEntrySchema)),
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['notifications/outbox', filters],
+    queryFn: ({ signal }) => apiClient.get(`/notifications/outbox?${params.toString()}`, paginatedSchema(EmailOutboxEntrySchema), signal),
+    staleTime: 60_000,
+  });
 }

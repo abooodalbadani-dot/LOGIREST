@@ -18,8 +18,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from '@/i18n/navigation'
-import { CreateBranchDTO } from "../types"
-
 const formSchema = z.object({
  code: z.string().min(2, "Code must be at least 2 characters").max(20),
  nameEn: z.string().min(2, "English name is required."),
@@ -87,7 +85,7 @@ export function BranchForm() {
  render={({ field }) => (
  <FormItem className="space-y-1.5">
  <FormLabel className="text-label-xs font-bold uppercase text-muted-foreground/60">{t("status_label")}</FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger>
  <SelectValue placeholder={tb('placeholders.status')} />

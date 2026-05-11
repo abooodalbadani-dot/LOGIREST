@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft, Save, Send } from 'lucide-react';
+import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -16,23 +15,26 @@ import { FormFooter } from '@/components/shared/FormFooter';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
+import { formatDate } from '@/utils/currency';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useAuth } from '@/providers/AuthProvider';
-import type { LotAllocation } from '@/types/documents';
-import { ActionGuard } from '@/core/workflow/ActionGuard';
+import type { LotAllocation, StockIssue } from '@/types/documents';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import { ISSUE_STATUS } from '@/contracts/statuses';
+import { useAbortController } from '@/hooks/useAbortController';
+
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 interface IssueFormProps {
-  issue: any;
+  issue?: StockIssue;
   id: string;
   isNew: boolean;
   onConflict?: () => void;
@@ -41,21 +43,39 @@ interface IssueFormProps {
 export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const t = useTranslations('operations.issue');
   const locale = useLocale();
-  const router = useRouter();
+  const _router = useRouter();
   const { user } = useAuth();
+  const abortController = useAbortController();
   
   const postIssue = usePostIssue(id, { onConflict });
   const isPostPending = postIssue.isPending;
-  
-  const [lines, setLines] = useState<LineItem[]>([]);
-  const [destinationId, setDestinationId] = useState('');
-  const [warehouseId, setWarehouseId] = useState('wh-1');
-  const [notes, setNotes] = useState('');
+
+  const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []) as unknown as LineItem[]);
+  const [destinationId, setDestinationId] = useState(() => issue?.destination_dept_id ?? '');
+  const [warehouseId, _setWarehouseId] = useState(() => issue?.warehouse_id || 'wh-1');
+  const [notes, setNotes] = useState(() => issue?.notes || '');
   const [scanError, setScanError] = useState('');
-  const [requestedBy, setRequestedBy] = useState('');
+  const [requestedBy, setRequestedBy] = useState(() => issue?.requested_by ?? '');
+
+  // Unsaved Changes Guard
+  const isDirty = useMemo(() => {
+    if (isNew) {
+      return lines.length > 0 || !!destinationId || !!notes || !!requestedBy;
+    }
+    
+    // Check if lines have changed
+    const linesChanged = JSON.stringify(lines) !== JSON.stringify(issue?.lines || []);
+    const destChanged = destinationId !== (issue?.destination_dept_id ?? '');
+    const notesChanged = notes !== (issue?.notes || '');
+    const reqByChanged = requestedBy !== (issue?.requested_by ?? '');
+    
+    return linesChanged || destChanged || notesChanged || reqByChanged;
+  }, [isNew, lines, destinationId, notes, requestedBy, issue]);
+
+  const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [isWarehouseLockedError, setIsWarehouseLockedError] = useState(false);
+  const [_isWarehouseLockedError, setIsWarehouseLockedError] = useState(false);
 
   // FEFO Allocator State
   const [fefoOpen, setFefoOpen] = useState(false);
@@ -83,19 +103,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   // Workflow Engine Integrations
   const status = (issue?.status || ISSUE_STATUS.DRAFT) as DocumentStatus;
   const isDocLocked = isDocumentLocked("ISSUE", status);
-  const isWarehouseLocked = !!lockState?.isLocked;
+  const _isWarehouseLocked = !!lockState?.isLocked;
   
-  const canEdit = !isDocLocked;
+  const _canEdit = !isDocLocked;
 
-  useEffect(() => {
-    if (issue) {
-      setLines((issue.lines || []) as unknown as LineItem[]);
-      setDestinationId(issue.destination_dept_id ?? issue.destination_department_id ?? '');
-      setRequestedBy(issue.requested_by ?? '');
-      setWarehouseId(issue.warehouse_id || 'wh-1');
-      setNotes(issue.notes || '');
-    }
-  }, [issue]);
 
   const handleScan = async (barcode: string) => {
     try {
@@ -106,7 +117,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           primary_uom: z.object({ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string() })
         }))
       });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
+      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortController.signal);
       if (res.data && res.data.length > 0) {
         const item = res.data[0];
         setLines(prev => {
@@ -125,7 +136,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       } else {
         setScanError(t('no_item_found'));
       }
-    } catch {
+    } catch (err: unknown) {
+      if ((err as Error)?.name === 'AbortError') return;
       setScanError(t('no_item_found'));
     }
   };
@@ -140,15 +152,18 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   };
 
   const handlePost = async () => {
+    if (!issue) return;
     try {
       await postIssue.mutateAsync({ 
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
-        version: issue.version
+        version: issue.version,
+        signal: abortController.signal
       });
       setIsPostDialogOpen(false);
-      router.push('/issues');
+      guardedRouter.push('/issues', { skipGuard: true });
     } catch (err: unknown) {
-      const apiErr = err as { code?: string };
+      const apiErr = err as { code?: string; name?: string };
+      if (apiErr?.name === 'AbortError') return;
       if (apiErr?.code === 'WAREHOUSE_LOCKED') {
         setIsWarehouseLockedError(true);
         setIsPostDialogOpen(false);
@@ -159,7 +174,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const history = useMemo((): StatusTimelineEntry[] => {
     if (!issue) return [];
     const h: StatusTimelineEntry[] = [
-      { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.created_at ?? '', by: issue.created_by != null ? issue.created_by : 'System' }
+      { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.created_at ?? '', by: issue.created_by ?? 'System' }
     ];
     if (issue.posted_at) {
       h.push({ status: ISSUE_STATUS.POSTED.toLowerCase() as Status, at: issue.posted_at, by: issue.posted_by != null ? issue.posted_by : 'System' });
@@ -174,7 +189,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => router.back()} 
+            onClick={() => guardedRouter.back()} 
             className="rounded-lg shrink-0 hover:bg-primary/5 transition-colors"
           >
             <ArrowLeft className={cn("w-5 h-5 text-primary", locale === 'ar' && "rotate-180")} />
@@ -405,7 +420,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
                     <div className="px-3 py-1 bg-surface-container-low rounded-lg transition-colors group-hover:bg-primary/5">
                       <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
-                        {issue?.created_at ? new Date(issue.created_at).toLocaleDateString() : '—'}
+                        {formatDate(issue?.created_at, locale as 'ar' | 'en')}
                       </span>
                     </div>
                   </div>
@@ -420,7 +435,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
         <FormFooter 
           isLocked={isDocLocked}
-          onCancel={() => router.push('/issues')}
+          onCancel={() => guardedRouter.push('/issues')}
           onSubmit={() => setIsPostDialogOpen(true)}
           isPending={isPostPending}
           submitLabel={t('post_issue')}

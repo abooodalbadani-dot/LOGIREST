@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQueryClient, QueryKey } from '@tanstack/react-query';
+import { ConflictError } from '@/lib/api/ConflictError';
 
 interface UseConflictHandlerProps {
   queryKey?: QueryKey;
@@ -22,11 +23,15 @@ interface UseConflictHandlerProps {
  */
 export function useConflictHandler(resource: string, id: string, options?: UseConflictHandlerProps) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<ConflictError | null>(null);
   const [saveDisabled, setSaveDisabled] = useState(false);
   const queryClient = useQueryClient();
-  const queryKey = options?.queryKey || [resource, id];
+  const queryKey = useMemo(() => options?.queryKey || [resource, id], [options?.queryKey, resource, id]);
 
-  const triggerConflict = useCallback(() => {
+  const triggerConflict = useCallback((err?: unknown) => {
+    if (err instanceof ConflictError) {
+      setError(err);
+    }
     setOpen(true);
   }, []);
 
@@ -39,11 +44,13 @@ export function useConflictHandler(resource: string, id: string, options?: UseCo
     await queryClient.invalidateQueries({ queryKey });
     await queryClient.refetchQueries({ queryKey });
     setOpen(false);
+    setError(null);
     setSaveDisabled(false);
   }, [queryClient, queryKey]);
 
   return {
     open,
+    error,
     saveDisabled,
     triggerConflict,
     handleReload,

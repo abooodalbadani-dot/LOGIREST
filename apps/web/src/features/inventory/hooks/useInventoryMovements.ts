@@ -11,14 +11,14 @@ export function useInventoryMovements(filters: {
 } = {}) {
  return useQuery({
  queryKey: ['inventory/movements', filters],
- queryFn: async () => {
+  queryFn: async ({ signal }) => {
  const qs = new URLSearchParams();
  if (filters.page) qs.append('page', filters.page.toString());
  if (filters.search) qs.append('search', filters.search);
  if (filters.document_type) qs.append('document_type', filters.document_type);
  
- const path = `/inventory/movements ${qs.toString() ? `?${qs.toString()}` : ''}`;
- return apiClient.get(path, paginatedSchema(InventoryMovementSchema));
+ const path = `/inventory/movements${qs.toString() ? `?${qs.toString()}` : ''}`;
+  return apiClient.get(path, paginatedSchema(InventoryMovementSchema), signal);
  },
  staleTime: 60_000,
  });

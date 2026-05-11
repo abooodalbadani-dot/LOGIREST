@@ -4,7 +4,6 @@ import * as React from "react";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { format } from "date-fns";
 import { 
   Clock, 
   Warehouse, 
@@ -21,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { StatusTimeline, Status } from "@/components/shared/StatusTimeline";
-
+import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
 import { Stocktake, StocktakeItem } from "@/features/operations/types/stocktake";
 
 interface StocktakeViewerProps {
@@ -36,8 +35,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   const router = useRouter()
   
   const { data: warehouses } = useWarehouses();
-  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+  const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
+  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouse_name || session.warehouse_id);
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
@@ -48,12 +47,12 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             <Breadcrumb
               items={[
                 { label: t('title'), href: `/stocktake` },
-                { label: session.sessionName },
+                { label: session.session_name },
               ]}
             />
             <div className="flex items-center gap-2">
               <h1 className="font-semibold text-title-sm">
-                {session.sessionName}
+                {session.session_name}
               </h1>
               <Badge variant="outline" className="h-6 px-2 text-label-xxs font-semibold uppercase bg-primary/5 text-primary border-none">
                 {t(`${session.status.toLowerCase()}_status`)}
@@ -90,9 +89,9 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
             { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
-            { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-emerald-500' },
+            { label: t('owner'), value: session.posted_by || common('system'), icon: User, color: 'text-emerald-500' },
             { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
-            { label: t('last_updated'), value: format(new Date(session.updatedAt ?? session.snapshotAt), 'HH:mm'), icon: Clock, color: 'text-amber-500' },
+            { label: t('last_updated'), value: <ClientOnlyTime date={session.updated_at ?? session.snapshot_at} mode="time" />, icon: Clock, color: 'text-amber-500' },
           ].map((item, idx) => (
             <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-lg relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
@@ -129,25 +128,25 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
               </TableHeader>
               <TableBody>
                 {session.items.map((item: StocktakeItem) => {
-                  const hasCounted = item.countedQty !== undefined
+                  const hasCounted = item.counted_qty !== null
                   const variance = item.variance ?? 0
                   
                   return (
                     <TableRow key={item.id} className="hover:bg-surface-container-low/50 transition-colors border-none group">
                       <TableCell className="px-6 py-4">
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-bold text-body-md text-foreground group-hover:text-primary transition-colors">{item.itemName}</span>
+                          <span className="font-bold text-body-md text-foreground group-hover:text-primary transition-colors">{item.item_name}</span>
                           <span className="text-label-xs font-medium text-muted-foreground/50 font-mono" dir="ltr">{item.barcode}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60">
-                        {item.snapshotQty !== null ? `${item.snapshotQty} ${item.uom}` : common('dash')}
+                        {item.snapshot_qty !== null ? `${item.snapshot_qty} ${item.uom}` : common('dash')}
                       </TableCell>
                       <TableCell className="text-center font-mono text-label-sm font-bold text-foreground">
-                        {hasCounted ? `${item.countedQty} ${item.uom}` : common('dash')}
+                        {hasCounted ? `${item.counted_qty} ${item.uom}` : common('dash')}
                       </TableCell>
                       <TableCell className="text-center">
-                        {hasCounted && item.snapshotQty !== null ? (
+                        {hasCounted && item.snapshot_qty !== null ? (
                           <div className={cn(
                             "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-label-xs font-bold",
                             variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
@@ -193,8 +192,8 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             entries={[
               { 
                 status: session.status.toLowerCase() as Status, 
-                at: session.updatedAt ?? session.snapshotAt, 
-                by: session.postedBy || common('system') 
+                at: session.updated_at ?? session.snapshot_at, 
+                by: session.posted_by || common('system') 
               }
             ]} 
           />

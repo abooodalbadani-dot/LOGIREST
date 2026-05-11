@@ -21,7 +21,6 @@ export default async function EditCurrencyPage(props: { params: Promise<{ locale
         editTitle={t('edit_title')}
         viewTitle={t('view_title')}
         isReadOnly={false}
-        locale={params.locale}
       />
     </ProtectedRoute>
   );

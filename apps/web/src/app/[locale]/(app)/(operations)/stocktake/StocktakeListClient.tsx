@@ -8,7 +8,6 @@ import { useSearchParams } from 'next/navigation';
 import { useStocktakeList, StocktakeSummary } from '@/features/operations/hooks/useStocktakeList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -23,6 +22,7 @@ import { isStocktakeInProgress, isStocktakePosted } from '@/domain/status-guards
 import { STOCKTAKE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { STOCKTAKE_STATUS } from '@/contracts/statuses';
 
 export function StocktakeListClient({
@@ -79,9 +79,12 @@ export function StocktakeListClient({
  </span>
  <div className="flex items-center gap-1.5 opacity-20 mt-1">
  <Calendar className="w-2.5 h-2.5" />
- <span dir="ltr" className="text-label-xxs font-semibold tabular-nums">
- {format(new Date(row.original.snapshot_at), 'MMM dd, HH:mm')}
- </span>
+ <ClientOnlyTime 
+ date={row.original.snapshot_at} 
+ mode="datetime" 
+ locale={locale as 'ar' | 'en'}
+ className="text-label-xxs font-semibold tabular-nums"
+ />
  </div>
  </div>
  ),
@@ -149,7 +152,7 @@ export function StocktakeListClient({
  </div>
  <div dir="ltr" className="text-label-xxs font-bold text-muted-foreground/30 flex items-center gap-1.5">
  <History className="w-2.5 h-2.5" />
- {tc('status.last_sync')}: {new Date().toLocaleTimeString()}
+ <ClientOnlyTime locale={locale as 'ar' | 'en'} className="text-label-xxs font-bold text-muted-foreground/30 flex items-center gap-1.5" fallback={`${tc('status.last_sync')}: ...`} />
  </div>
  </div>
  <PermissionGate action="create" resource="stocktake">
@@ -205,10 +208,10 @@ export function StocktakeListClient({
                 onValueChange={handleStatusChange}
               >
                 <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
-                  <SelectValue placeholder={tc('status.all')} />
+                  <SelectValue placeholder={tc('statuses.all')} />
                 </SelectTrigger>
                  <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
-                   <SelectItem value="ALL" className="text-label-sm font-bold uppercase">{tc('status.all')}</SelectItem>
+                   <SelectItem value="ALL" className="text-label-sm font-bold uppercase">{tc('statuses.all')}</SelectItem>
                    {Object.values(STOCKTAKE_STATUS).map((value) => {
                      const config = getStatusConfig(value, STOCKTAKE_STATUS_UI);
                      return (

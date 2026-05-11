@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +18,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { useAbortController } from '@/hooks/useAbortController';
 
 interface Props {
   id: string | null;
@@ -26,7 +26,6 @@ interface Props {
   editTitle: string;
   viewTitle?: string;
   isReadOnly?: boolean;
-  locale: string;
 }
 
 export function CurrencyFormClient({ 
@@ -35,9 +34,9 @@ export function CurrencyFormClient({
   editTitle, 
   viewTitle = '',
   isReadOnly = false,
-  locale 
 }: Props) {
   const t = useTranslations('master_data.currencies');
+  const abortController = useAbortController();
   const { data: currency, isLoading, isError, isFetched, refetch } = useCurrency(id);
   const create = useCreateCurrency();
   const conflict = useConflictHandler('currency', id ?? '');
@@ -61,6 +60,20 @@ export function CurrencyFormClient({
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   useWatch({ control, name: 'code' });
+
+  useEffect(() => {
+    if (currency) {
+      reset({ 
+        code: currency.code, 
+        name_ar: currency.name_ar,
+        name_en: currency.name_en, 
+        symbol: currency.symbol || '',
+        is_base_currency: currency.is_base_currency,
+        is_active: currency.is_active,
+        version: currency.version
+      });
+    }
+  }, [currency, reset]);
 
   // 1. Loading State
   if (id && isLoading) {
@@ -87,28 +100,14 @@ export function CurrencyFormClient({
     );
   }
 
-  useEffect(() => {
-    if (currency) {
-      reset({ 
-        code: currency.code, 
-        name_ar: currency.name_ar,
-        name_en: currency.name_en, 
-        symbol: currency.symbol || '',
-        is_base_currency: currency.is_base_currency,
-        is_active: currency.is_active,
-        version: currency.version
-      });
-    }
-  }, [currency, reset]);
-
   const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/currencies', { skipGuard: true });

@@ -31,7 +31,7 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
     registerDirty(false);
     
     // 2. Targeted Invalidation: Try to refresh only the affected resource domain
-    const mutationKey = payload?.mutation?.options?.mutationKey as any[];
+    const mutationKey = payload?.mutation?.options?.mutationKey as unknown[];
     if (Array.isArray(mutationKey) && mutationKey.length > 0) {
       queryClient.invalidateQueries({ queryKey: [mutationKey[0]] });
     } else {
@@ -47,7 +47,7 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
     setIsRetrying(true);
     try {
       // Step A: Sync local query state with server before retry
-      const mutationKey = payload.mutation?.options?.mutationKey as any[];
+      const mutationKey = payload.mutation?.options?.mutationKey as unknown[];
       if (Array.isArray(mutationKey) && mutationKey.length > 0) {
         await queryClient.refetchQueries({ queryKey: [mutationKey[0]] });
       }
@@ -63,7 +63,7 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Step C: Re-execute using the stable mutation function
-      const mutationFn = (payload.mutation.options as any).mutationFn;
+      const mutationFn = (payload.mutation.options as Record<string, unknown>).mutationFn;
       if (typeof mutationFn === 'function') {
         await mutationFn(updatedVariables);
         
@@ -75,7 +75,7 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
       } else {
         handleReload();
       }
-    } catch (err) {
+    } catch {
       // If it fails again (even if another 409), increment retryCount to force manual reload
       setRetryCount((prev) => prev + 1);
     } finally {

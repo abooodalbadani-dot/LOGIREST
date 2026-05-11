@@ -1,4 +1,4 @@
-import { useTranslations } from 'next-intl';
+
 import { getTranslations } from 'next-intl/server';
 import { BarcodeFormClient } from '../../BarcodeFormClient';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';

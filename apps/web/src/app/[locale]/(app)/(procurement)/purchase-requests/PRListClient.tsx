@@ -9,15 +9,17 @@ import { usePRList, PRSummary } from '@/features/purchasing/hooks/usePRList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search } from 'lucide-react';
-import { format } from 'date-fns';
+
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
+
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { isDocumentLocked, canPerformActionV2, DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
+import { DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
 import { PR_STATUS } from '@/contracts/statuses';
 
 export function PRListClient() {
@@ -62,7 +64,7 @@ export function PRListClient() {
  cell: ({ row }) => (
  <div className="flex flex-col">
  <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
- {format(new Date(row.original.created_at), 'dd/MM/yyyy HH:mm')}
+ <ClientOnlyTime date={row.original.created_at} mode="datetime" />
  </span>
  <span className="text-label-xxs uppercase opacity-30 font-semibold text-start">{tc('created_at')}</span>
  </div>
@@ -192,11 +194,11 @@ export function PRListClient() {
  <SelectTrigger className="w-full bg-surface-variant/10 border-none h-11 px-5 text-label-xs font-bold rounded-sm shadow-inner shadow-black/5">
  <div className="flex items-center gap-2">
  <ListFilter className="w-3.5 h-3.5 text-muted-foreground/60" />
- <SelectValue placeholder={tc('status.all')} />
+ <SelectValue placeholder={tc('statuses.all')} />
  </div>
  </SelectTrigger>
                 <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
-                  <SelectItem value="ALL" className="text-label-xs font-bold">{tc('status.all')}</SelectItem>
+                  <SelectItem value="ALL" className="text-label-xs font-bold">{tc('statuses.all')}</SelectItem>
                   <SelectItem value={PR_STATUS.DRAFT} className="text-label-xs font-bold">{tc('status.draft')}</SelectItem>
                   <SelectItem value={PR_STATUS.SUBMITTED} className="text-label-xs font-bold">{tc('status.submitted')}</SelectItem>
                   <SelectItem value={PR_STATUS.APPROVED} className="text-label-xs font-bold">{tc('status.approved')}</SelectItem>

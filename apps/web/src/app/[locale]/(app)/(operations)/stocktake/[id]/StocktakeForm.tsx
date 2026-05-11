@@ -5,7 +5,7 @@ import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { format } from "date-fns";
+import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
 import { 
   Clock, 
   Warehouse, 
@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { LockBanner } from "@/components/shared/LockBanner";
-import { StatusTimeline } from "@/components/shared/StatusTimeline";
+import { StatusTimeline, type Status } from "@/components/shared/StatusTimeline";
 import { DocumentStatus } from "@/types/DocumentStatus";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { STOCKTAKE_STATUS } from "@/contracts/statuses";
@@ -38,10 +38,10 @@ interface StocktakeFormProps {
   locale: 'ar' | 'en';
   actions: React.ReactNode;
   isLocked?: boolean;
-  onConflict?: (error: any) => void;
+  onConflict?: (error: unknown) => void;
 }
 
-export function StocktakeForm({ session, locale, actions, isLocked = false }: StocktakeFormProps) {
+export function StocktakeForm({ session, locale, actions, isLocked = false, onConflict }: StocktakeFormProps) {
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
   const router = useRouter();
@@ -101,7 +101,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false }: St
               { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
               { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-emerald-500' },
               { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
-              { label: t('last_updated'), value: session.updatedAt ? format(new Date(session.updatedAt), 'HH:mm') : common('dash'), icon: Clock, color: 'text-amber-500' },
+              { label: t('last_updated'), value: session.updatedAt ? <ClientOnlyTime date={session.updatedAt} mode="time" /> : common('dash'), icon: Clock, color: 'text-amber-500' },
             ].map((item, idx) => (
               <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-lg relative overflow-hidden">
                 <div className="flex items-center justify-between relative z-10">
@@ -137,8 +137,8 @@ export function StocktakeForm({ session, locale, actions, isLocked = false }: St
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {session.items.map((item: any) => {
-                    const hasCounted = item.countedQty !== undefined
+                  {session.items.map((item: StocktakeItemVM) => {
+                    const hasCounted = item.countedQty !== null && item.countedQty !== undefined
                     const variance = item.variance ?? 0
                     const showSnapshot = !isCounting // Hide snapshot during counting for integrity
                     
@@ -201,7 +201,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false }: St
             <StatusTimeline 
               entries={[
                 { 
-                  status: session.status.toLowerCase() as any, 
+                  status: session.status.toLowerCase() as Status, 
                   at: session.updatedAt || session.createdAt || new Date().toISOString(), 
                   by: session.postedBy || common('system') 
                 }
@@ -215,6 +215,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false }: St
         isLocked={isLocked}
         isDirty={false}
       />
+    </div>
     </div>
   )
 }

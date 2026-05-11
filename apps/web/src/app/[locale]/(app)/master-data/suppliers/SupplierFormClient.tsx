@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAbortController } from '@/hooks/useAbortController';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
   Select,
@@ -22,8 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '@/features/suppliers/hooks/useSuppliers';
-import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
+import { useCurrencies, type Currency } from '@/features/purchasing/hooks/useCurrencies';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -36,15 +37,15 @@ interface Props {
   createTitle: string;
   editTitle: string;
   viewTitle: string;
-  locale: string;
   isReadOnly?: boolean;
 }
 
-export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
+export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tm = useTranslations('master_data.common');
   const ts = useTranslations('master_data.suppliers');
-  const tv = useTranslations();
+  const tv = useTranslations('master_data.validation');
+  const abortController = useAbortController();
 
   const { data, isLoading, isError, refetch } = useSupplier(id);
   const { data: currencies, isLoading: isCurrenciesLoading } = useCurrencies();
@@ -85,9 +86,9 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/suppliers', { skipGuard: true });
@@ -99,7 +100,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/suppliers', { skipGuard: true });
     } catch {
       // Error handled by mutation hook
@@ -182,7 +183,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                     className="font-mono font-semibold uppercase text-status-active" 
                     placeholder={ts('code_placeholder')} 
                   />
-                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
+                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as Parameters<typeof tv>[0])}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -196,7 +197,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       className="font-semibold" 
                       placeholder={ts('name_en_placeholder')} 
                     />
-                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as any)}</p>}
+                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as Parameters<typeof tv>[0])}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -209,7 +210,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       className="font-semibold text-end" 
                       placeholder={ts('name_ar_placeholder')} 
                     />
-                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as any)}</p>}
+                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as Parameters<typeof tv>[0])}</p>}
                   </div>
                 </div>
               </div>
@@ -241,7 +242,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">—</SelectItem>
-                          {currencies?.map((c: any) => (
+                          {currencies?.map((c: Currency) => (
                             <SelectItem key={c.id} value={c.id} className="font-semibold text-label-sm uppercase">
                               {c.code} — {c.name_en}
                             </SelectItem>
@@ -250,7 +251,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
                       </Select>
                     )}
                   />
-                  {errors.currency_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as any)}</p>}
+                  {errors.currency_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as Parameters<typeof tv>[0])}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -305,6 +306,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, loca
       open={conflict.open}
       onReload={conflict.handleReload}
       onClose={conflict.handleClose}
+      error={conflict.error}
     />
 
     <PostConfirmDialog

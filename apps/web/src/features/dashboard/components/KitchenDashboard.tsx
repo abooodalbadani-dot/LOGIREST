@@ -23,7 +23,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 
 export function KitchenDashboard() {
  const t = useTranslations('dashboard');
- const tc = useTranslations('common');
+ const _tc = useTranslations('common');
  const { locale } = useLocale();
 
  // Mock data for Kitchen Chief

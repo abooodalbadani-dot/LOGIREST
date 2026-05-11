@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Briefcase, ShieldCheck, Landmark, Activity, Warehouse } from 'lucide-react';
+import { Briefcase, ShieldCheck, Landmark } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { useAbortController } from '@/hooks/useAbortController';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { PermissionGate } from '@/components/auth/PermissionGate';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
@@ -44,13 +44,13 @@ interface Props {
   createTitle: string;
   editTitle: string;
   viewTitle?: string;
-  locale: string;
   isReadOnly?: boolean;
 }
 
-export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
+export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const td = useTranslations('master_data.departments');
+  const abortController = useAbortController();
   
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
@@ -67,13 +67,14 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
     },
     disabled: isReadOnly,
   });
-
+ 
   const { data, isLoading, isError, refetch } = useDepartment(id);
   const { data: branchesData, isLoading: branchesLoading, isError: branchesError, refetch: refetchBranches } = useBranches();
+  const { data: warehousesData, isLoading: warehousesLoading, isError: warehousesError, refetch: refetchWarehouses } = useWarehouses();
+
   const branches = branchesData?.data || [];
-  const { data: warehousesQuery, isLoading: warehousesLoading, isError: warehousesError, refetch: refetchWarehouses } = useWarehouses();
-  const warehouses = warehousesQuery?.data || [];
- 
+  const warehouses = warehousesData?.data || [];
+
   const create = useCreateDepartment();
   const conflict = useConflictHandler('department', id ?? '');
   const update = useUpdateDepartment({ onConflict: conflict.triggerConflict });
@@ -83,36 +84,27 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, lo
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
+  // Sync form with data when it loads
+  useEffect(() => {
+    if (data) {
+      reset(data);
+    }
+  }, [data, reset]);
+
  const isActive = useWatch({ control, name: 'is_active' });
  const selectedBranchId = useWatch({ control, name: 'branch_id' });
 
  // Filter warehouses based on selected branch
  const filteredWarehouses = warehouses.filter(w => !selectedBranchId || w.branch_id === selectedBranchId);
 
- useEffect(() => {
- if (data) {
-reset({
-  branch_id: data.branch_id,
-  warehouse_id: data.warehouse_id,
-  code: data.code,
-  name_ar: data.name_ar,
-  name_en: data.name_en,
-  is_active: data.is_active,
-  manager: data.manager || '',
-  cost_center: data.cost_center || '',
-  version: data.version
-});
- }
- }, [data, reset]);
-
   const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/departments', { skipGuard: true });
@@ -124,7 +116,7 @@ reset({
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteDept.mutateAsync(id);
+      await deleteDept.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/departments', { skipGuard: true });
     } catch {
       setShowDeleteConfirm(false);
@@ -172,7 +164,7 @@ reset({
       isValid={isValid}
       headerActions={
         id && !isReadOnly && (
-          <PermissionGate permission="master-data.departments.delete">
+          <PermissionGate action="delete" resource="master_data_departments">
             <Button
               type="button"
               variant="ghost"

@@ -1,0 +1,111 @@
+﻿≡اأ Starting i18n Audit...
+≡ا¤ Checking Structural Parity...
+node : [IDENTICAL_VALUE] messages - Key "common.locales.en" has identical values in AR and EN: "English"
+At line:1 char:1
++ node scripts/i18n-audit.js > i18n-audit-latest.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([IDENTICAL_VALU...d EN: "English":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[IDENTICAL_VALUE] messages - Key "common.system.name" has identical values in AR and EN: "LogiRest"
+[IDENTICAL_VALUE] messages - Key "admin.users.lang_ar" has identical values in AR and EN: "╪د┘╪╣╪▒╪ذ┘è╪ر"
+[IDENTICAL_VALUE] messages - Key "auth.login.version" has identical values in AR and EN: "v3.1.04"
+[IDENTICAL_VALUE] messages - Key "master_data.branches.placeholders.name_ar" has identical values in AR and EN: 
+"╪د╪│┘à ╪د┘┘╪▒╪╣"
+[IDENTICAL_VALUE] messages - Key "master_data.branches.placeholders.name_en" has identical values in AR and EN: 
+"Branch Name"
+[IDENTICAL_VALUE] messages - Key "master_data.branches.placeholders.main_riyadh_en" has identical values in AR and EN: 
+"Main Riyadh Branch"
+[IDENTICAL_VALUE] messages - Key "master_data.branches.placeholders.main_riyadh_ar" has identical values in AR and EN: 
+"┘╪▒╪╣ ╪د┘╪▒┘è╪د╪╢ ╪د┘╪▒╪خ┘è╪│┘è"
+[IDENTICAL_VALUE] messages - Key "master_data.categories.placeholders.name_ar" has identical values in AR and EN: 
+"┘à╪س╪د┘: ┘à┘ê╪د╪» ╪«╪د┘à"
+[IDENTICAL_VALUE] messages - Key "master_data.fx_rates.placeholders.rate" has identical values in AR and EN: "0.000000"
+[IDENTICAL_VALUE] messages - Key "master_data.suppliers.name_ar_placeholder" has identical values in AR and EN: 
+"╪د┘┘à┘ê╪▓╪╣┘ê┘ ╪د┘╪╣╪د┘┘à┘è┘ê┘"
+[IDENTICAL_VALUE] messages - Key "master_data.uom.placeholders.name_ar" has identical values in AR and EN: "╪د╪│┘à 
+╪د┘┘ê╪ص╪»╪ر"
+[IDENTICAL_VALUE] messages - Key "master_data.uom.placeholders.name_en" has identical values in AR and EN: "Unit Name"
+[IDENTICAL_VALUE] messages - Key "master_data.warehouses.name_ar_placeholder" has identical values in AR and EN: 
+"╪د┘┘à╪│╪ز┘ê╪»╪╣ ╪د┘╪▒╪خ┘è╪│┘è"
+[IDENTICAL_VALUE] messages - Key "master_data.warehouses.name_en_placeholder" has identical values in AR and EN: "Main 
+Warehouse"
+[IDENTICAL_VALUE] messages - Key "operational.item_form.placeholders.name_ar" has identical values in AR and EN: 
+"╪ث╪▒╪▓ ╪ذ╪│┘à╪ز┘è 5 ┘â╪ش┘à"
+[IDENTICAL_VALUE] messages - Key "operational.item_form.placeholders.name_en" has identical values in AR and EN: 
+"Basmati Rice 5kg"
+≡ا¤ Scanning Source Files for Hardcoded Strings...
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\issue-form.tsx:66 - Found raw text in JSX: "t(k as 
+Parameters"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:139 - Found raw text in JSX: 
+"Loading..."
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:152 - Found raw text in JSX: 
+"Immersive Scan Mode"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:158 - Found raw text in JSX: "Exit 
+Scan Mode"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:170 - Found raw text in prop: "READY 
+FOR BARCODE..."
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:191 - Found raw text in JSX: "Quantity"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx:209 - Found raw text in JSX: "Awaiting 
+First Scan"
+[HARDCODED_TEXT] app\[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx:63 - Found raw text in JSX: "t(k as 
+Parameters"
+[HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\scan-mode\LotEntryModal.tsx:124 - Found raw text 
+in prop: "e.g. LOT-2024-001"
+[HARDCODED_TEXT] app\[locale]\(app)\admin\settings\SettingsClient.tsx:159 - Found raw text in JSX: "Loading..."
+[HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\page.tsx:25 - Found raw text in prop: "Track sent 
+emails and notification history"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\page.tsx:25 - Found raw text in prop: "System alerts, 
+low-stock warnings, and operational events"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:183 - Found 
+raw text in JSX: "Live View"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:209 - Found 
+raw text in JSX: "Subject Header"
+[HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:214 - Found 
+raw text in JSX: "Message Body"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:90 - Found raw text in JSX: 
+"LOT NUMBER"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:95 - Found raw text in JSX: 
+"EXPIRED ON"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:105 - Found raw text in JSX: 
+"Override Reason"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:130 - Found raw text in JSX: 
+"Source Document"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:137 - Found raw text in JSX: 
+"Impacted Qty"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx:156 - Found raw text in JSX: 
+"No overrides detected in the ledger"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:106 - Found raw text in JSX: "94%"
+[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:110 - Found raw text in JSX: "99.8%"
+[HARDCODED_TEXT] app\[locale]\(app)\master-data\import\components\Step2Validate.tsx:71 - Found raw text in JSX: "0 ?"
+[HARDCODED_TEXT] app\[locale]\(auth)\forgot-password\page.tsx:104 - Found raw text in prop: "name@example.com"
+[HARDCODED_TEXT] app\[locale]\not-found.tsx:39 - Found raw text in JSX: "Our Mission"
+[HARDCODED_TEXT] app\[locale]\not-found.tsx:46 - Found raw text in JSX: "Trusted By Industry Leaders"
+[HARDCODED_TEXT] app\[locale]\not-found.tsx:48 - Found raw text in JSX: "GLOBAL_KITCHEN"
+[HARDCODED_TEXT] app\[locale]\not-found.tsx:49 - Found raw text in JSX: "RESTO_PRO"
+[HARDCODED_TEXT] app\[locale]\not-found.tsx:50 - Found raw text in JSX: "FOOD_LOGISTICS"
+[HARDCODED_TEXT] components\shared\DocumentLineItemTable\DocumentLineItemTable.tsx:140 - Found raw text in prop: 
+"Remove line"
+[HARDCODED_TEXT] components\shared\FEFOLotAllocator\ExpiredOverrideInline.tsx:15 - Found raw text in prop: "╪│╪ذ╪ذ 
+╪د┘╪د╪│╪ز╪«╪»╪د┘à / Override reason"
+[HARDCODED_TEXT] components\shared\GlobalErrorBoundary.tsx:32 - Found raw text in JSX: "Something went wrong"
+[HARDCODED_TEXT] components\shared\GlobalErrorBoundary.tsx:33 - Found raw text in JSX: "The application encountered an 
+unexpected error."
+[HARDCODED_TEXT] components\shared\PostConfirmDialog.test.tsx:109 - Found raw text in JSX: "Custom Content"
+[HARDCODED_TEXT] components\shared\PostConfirmDialog.tsx:140 - Found raw text in prop: "Close"
+[HARDCODED_TEXT] components\shared\ReportHeader.tsx:35 - Found raw text in prop: "Restaurant Logo"
+[HARDCODED_TEXT] components\shared\ThemeToggle.tsx:20 - Found raw text in prop: "Toggle Theme"
+[HARDCODED_TEXT] components\ui\scan-input.tsx:59 - Found raw text in prop: "Scan barcode..."
+[HARDCODED_TEXT] features\items\components\item-form.tsx:186 - Found raw text in JSX: "s.id ?"
+≡ا¤ Checking for Blacklisted Placeholders...
+≡ا¤ Enforcing snake_case naming convention...
+
+--- Audit Report ---
+Total Keys: 2312
+Missing Keys: 0
+Hardcoded Strings: 40
+Placeholder Violations: 0
+Invalid Key Names: 0
+
+Status: ظإî FAIL
+Total Issues: 57

@@ -45,7 +45,7 @@ export default function LoginPage() {
  setIsSubmitting(true);
  try {
  await login(values.email, values.password);
- } catch (err: unknown) {
+ } catch (_err: unknown) {
  setError(t('invalid_credentials'));
  setIsSubmitting(false);
  }

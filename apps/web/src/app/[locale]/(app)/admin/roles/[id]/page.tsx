@@ -1,4 +1,4 @@
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { RoleDetailClient } from './RoleDetailClient';
 

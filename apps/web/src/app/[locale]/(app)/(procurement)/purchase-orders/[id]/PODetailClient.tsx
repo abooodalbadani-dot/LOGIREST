@@ -8,7 +8,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
 
 import { CheckCircle } from 'lucide-react';
-import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { type DocumentStatus } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { useAuth } from '@/providers/AuthProvider';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';

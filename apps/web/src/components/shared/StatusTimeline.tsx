@@ -1,6 +1,6 @@
 import { ElementType } from 'react';
-import { format } from 'date-fns';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { cn } from '@/lib/utils';
 import { 
  CheckCircle2, 
@@ -43,8 +43,8 @@ const STATUS_CONFIG: Record<Status, { icon: ElementType, color: string, glow: st
 };
 
 export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) {
- const tCommon = useTranslations('common');
- const locale = useTranslations('common')('locale') === 'ar' ? 'ar' : 'en';
+  const tCommon = useTranslations('common');
+  const locale = useLocale() as 'ar' | 'en';
 
  return (
  <div className="relative space-y-8 before:absolute before:inset-y-0 before:start-[19px] before:w-[2px] before:bg-surface-container-highest/50">
@@ -74,9 +74,13 @@ export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) 
  )}
  </div>
  <div className="flex items-center gap-2 text-muted-foreground/60">
- <span className="text-label-xs font-bold" dir="ltr">
- {format(new Date(entry.at), 'PPP pp')}
- </span>
+        <ClientOnlyTime 
+          date={entry.at} 
+          mode="datetime" 
+          showSeconds={true}
+          locale={locale}
+          className="text-label-xs font-bold" 
+        />
  <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
  <span className="text-label-xs font-semibold uppercase">
  {entry.by}

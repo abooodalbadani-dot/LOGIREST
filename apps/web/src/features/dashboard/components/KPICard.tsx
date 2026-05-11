@@ -1,7 +1,6 @@
 'use client';
 
 import { LucideIcon } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 
 interface KPICardProps {
  title: string;

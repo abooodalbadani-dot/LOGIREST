@@ -28,10 +28,8 @@ import {
  Info,
  CheckCircle2,
  Trash2,
- Image as ImageIcon
-} from 'lucide-react';
+ } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 
 
 
@@ -228,7 +226,7 @@ export function ItemForm() {
  <FormLabel className="text-label-xs font-semibold text-muted-foreground/60 uppercase ps-1">
  {t('fields.category')}
  </FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger className="text-label-xs font-semibold uppercase">
  <SelectValue placeholder={t('placeholders.select_category')} />
@@ -294,7 +292,7 @@ export function ItemForm() {
  <FormLabel className="text-label-xs font-semibold text-muted-foreground/60 uppercase ps-1">
  {t('fields.base_unit')}
  </FormLabel>
- <Select onValueChange={field.onChange} defaultValue={field.value}>
+ <Select onValueChange={field.onChange} value={field.value}>
  <FormControl>
  <SelectTrigger className="text-label-xs font-semibold uppercase">
  <SelectValue placeholder={t('placeholders.select_uom')} />

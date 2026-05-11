@@ -25,27 +25,24 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  useEffect(() => {
  if (defaultRate) return;
  
- let isMounted = true;
+ const controller = new AbortController();
  const fetchRate = async () => {
  try {
  const response = await apiClient.get(
  `/currencies/fx-rates?from=${fromCurrencyCode}&to=${toCurrencyCode}`,
- z.object({ data: FxRateSchema })
+ z.object({ data: FxRateSchema }),
+ controller.signal
  );
- if (isMounted) {
  setRate(response.data.rate);
  setIsLoading(false);
- }
- } catch (err) {
- if (isMounted) {
+ } catch (_err) {
  setIsLoading(false);
- }
  }
  };
  
  fetchRate();
  
- return () => { isMounted = false; };
+ return () => { controller.abort(); };
  }, [defaultRate, fromCurrencyCode, toCurrencyCode]);
 
  const numericRate = Number(rate);

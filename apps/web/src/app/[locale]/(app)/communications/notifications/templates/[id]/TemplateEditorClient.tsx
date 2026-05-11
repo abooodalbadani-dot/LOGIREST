@@ -32,7 +32,7 @@ interface Props {
   locale: string;
 }
 
-export function TemplateEditorClient({ id, title, locale }: Props) {
+export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
   const t = useTranslations('notifications');
   const qc = useQueryClient();
   const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm({

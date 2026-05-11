@@ -37,6 +37,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
   return (
     <>
       <IssueForm 
+        key={issue?.version || id}
         issue={issue} 
         id={id} 
         isNew={isNew} 

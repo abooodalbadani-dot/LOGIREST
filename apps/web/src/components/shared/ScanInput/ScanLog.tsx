@@ -1,4 +1,5 @@
 'use client';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 interface ScanLogEntry {
  barcode: string;
@@ -19,7 +20,7 @@ export function ScanLog({ entries }: { entries: ScanLogEntry[] }) {
  <span dir="ltr" className="text-label-sm opacity-80 font-mono">{entry.barcode}</span>
  </div>
  <span dir="ltr" className="font-mono opacity-80 text-label-sm">
- {entry.timestamp.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+ <ClientOnlyTime date={entry.timestamp} locale="en" fallback="..." />
  </span>
  </div>
  ))}

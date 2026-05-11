@@ -1,5 +1,5 @@
 'use client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
@@ -31,8 +31,8 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateAdjustmentPayload }) => 
-      apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload)),
+    mutationFn: ({ id, payload, signal }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal }) => 
+      apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), signal),
     onSuccess: (data) => {
       queryClient.setQueryData(['adjustment', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });

@@ -20,7 +20,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, UoMSchema } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -30,6 +30,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { useAbortController } from '@/hooks/useAbortController';
 
 interface Props { 
   id: string | null; 
@@ -45,6 +46,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const tm = useTranslations('master_data.common');
   const ti = useTranslations('master_data.items');
   const tv = useTranslations('master_data.validation');
+  const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useItem(id);
   const { data: categories, isLoading: isLoadingCats, isError: isErrorCats } = useCategories();
@@ -93,24 +95,24 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/items', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    } catch (_error) {
+      // Handled by mutation callbacks
     }
   });
 
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/items', { skipGuard: true });
     } catch {
-      // Error handled by mutation hook
+      // Handled by mutation callbacks
     }
   };
 
@@ -211,7 +213,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       className="font-mono font-semibold uppercase text-status-active" 
                       placeholder={ti('fields.sku_placeholder')} 
                     />
-                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
+                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as Parameters<typeof tv>[0])}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -231,7 +233,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         />
                       )}
                     />
-                    {errors.barcode && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as any)}</p>}
+                    {errors.barcode && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as Parameters<typeof tv>[0])}</p>}
                   </div>
                 </div>
 
@@ -239,12 +241,12 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <div className="space-y-2">
                     <Label htmlFor="item-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_en')}</Label>
                     <Input id="item-name-en" dir="ltr" {...register('name_en')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as any)}</p>}
+                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as Parameters<typeof tv>[0])}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="item-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_ar')}</Label>
                     <Input id="item-name-ar" dir="rtl" {...register('name_ar')} disabled={isReadOnly} className="font-semibold text-end" />
-                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as any)}</p>}
+                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as Parameters<typeof tv>[0])}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -276,7 +278,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="">{tm('select_none')}</SelectItem>
-                            {categories?.data?.map((c: any) => (
+                            {categories?.data?.map((c: Category) => (
                               <SelectItem key={c.id} value={c.id} className="uppercase font-semibold text-label-sm">
                                 {locale === 'ar' ? c.name_ar : c.name_en}
                               </SelectItem>
@@ -285,7 +287,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         </Select>
                       )}
                     />
-                    {errors.category_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.category_id.message as any)}</p>}
+                    {errors.category_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.category_id.message as Parameters<typeof tv>[0])}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -309,7 +311,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         </Select>
                       )}
                     />
-                    {errors.primary_uom_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primary_uom_id.message as any)}</p>}
+                    {errors.primary_uom_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primary_uom_id.message as Parameters<typeof tv>[0])}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -492,6 +494,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
       <ConflictDialog
         open={conflict.open}
+        error={conflict.error}
         onReload={conflict.handleReload}
         onClose={conflict.handleClose}
       />

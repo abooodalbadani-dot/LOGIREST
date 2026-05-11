@@ -20,9 +20,8 @@ export default async function NewUoMPage(props: { params: Promise<{ locale: stri
  <UoMFormClient
  id={null}
  createTitle={t('create_title')}
- editTitle={t('edit_title')}
- locale={params.locale}
- />
+editTitle={t('edit_title')}
+  />
  </ProtectedRoute>
  );
 }

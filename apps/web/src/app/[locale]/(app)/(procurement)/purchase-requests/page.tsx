@@ -13,9 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function PurchaseRequestsPage(props: { params: Promise<{ locale: string }> }) {
  const params = await props.params;
  setRequestLocale(params.locale);
- const t = await getTranslations('procurement.pr');
-
- return (
+return (
  <PRListClient />
  );
 }

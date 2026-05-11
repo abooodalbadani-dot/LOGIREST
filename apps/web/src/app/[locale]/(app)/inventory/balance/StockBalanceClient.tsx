@@ -6,11 +6,9 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBalance';
-import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { WarehouseSchema } from '@/types/master-data';
 import { generateExcel } from '@/utils/export';
 import type { StockBalanceItem } from '@/types/inventory';
-import { cn } from '@/lib/utils';
+
 import { formatNumber, formatCurrency } from '@/utils/currency';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -31,30 +29,25 @@ import {
  ChevronLeft,
  ChevronRight
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+
 import { Link, useRouter } from '@/i18n/navigation';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ReportHeader } from '@/components/shared/ReportHeader';
 
-interface StockBalanceClientProps {
- title: string;
-}
-
-export default function StockBalanceClient({ title }: StockBalanceClientProps) {
+export default function StockBalanceClient() {
  const t = useTranslations('operational.inventory');
  const tc = useTranslations('common');
  const currentLocale = useLocale();
  const router = useRouter();
  const isRtl = currentLocale === 'ar';
 
- const [warehouseFilter, setWarehouseFilter] = useState('');
- const [searchFilter, setSearchFilter] = useState('');
- const [page, setPage] = useState(1);
+const [warehouseFilter] = useState('');
+const [searchFilter, setSearchFilter] = useState('');
+const [page, setPage] = useState(1);
 
- const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
- const { data, isLoading } = useInventoryBalance({
+const { data, isLoading } = useInventoryBalance({
  warehouse_id: warehouseFilter && warehouseFilter !== 'all' ? warehouseFilter : undefined,
  search: searchFilter || undefined,
  page,
@@ -105,11 +98,11 @@ export default function StockBalanceClient({ title }: StockBalanceClientProps) {
  {
  id: 'unit',
  header: tc('table_headers.uom'),
- cell: ({ row }) => (
- <span className="text-label-xs font-semibold text-muted-foreground/60 uppercase">
- {tc('uoms.kg')}
- </span>
- ),
+cell: () => (
+    <span className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">
+      {tc('uoms.kg')}
+    </span>
+  ),
  },
  {
  id: 'status',

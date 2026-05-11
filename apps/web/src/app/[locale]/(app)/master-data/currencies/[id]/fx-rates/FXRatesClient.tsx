@@ -10,12 +10,12 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useMasterDataList, useMasterDataCreate, useMasterDataItem } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { FXRateSchema, FXRateFormSchema, CurrencySchema, type FXRate, type FXRateFormValues } from '@/types/master-data';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { formatRate } from '@/utils/currency';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Card, CardContent } from '@/components/ui/card';
 
-interface Props { currencyId: string; locale: string; }
+interface Props { currencyId: string; locale: 'ar' | 'en'; }
 
 export function FXRatesClient({ currencyId, locale }: Props) {
  const t = useTranslations('master_data.currencies');
@@ -78,18 +78,20 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  </div>
  ),
  },
- {
- accessorKey: 'effective_date',
- header: () => <span className="text-label-xs font-semibold uppercase">{t('effective_date')}</span>,
- cell: ({ row }) => (
- <div className="flex items-center gap-2 text-muted-foreground/60">
- <History className="w-3.5 h-3.5 opacity-40" />
- <span dir="ltr" className="text-label-sm font-bold uppercase">
- {format(new Date(row.original.effective_date), 'MMM dd, yyyy')}
- </span>
- </div>
- ),
- },
+  {
+    accessorKey: 'effective_date',
+    header: () => <span className="text-label-xs font-semibold uppercase">{t('effective_date')}</span>,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2 text-muted-foreground/60">
+        <History className="w-3.5 h-3.5 opacity-40" />
+        <ClientOnlyTime 
+          date={row.original.effective_date} 
+          mode="date" 
+          className="text-label-sm font-bold uppercase"
+        />
+      </div>
+    ),
+  },
  {
  id: 'lock',
  header: '',

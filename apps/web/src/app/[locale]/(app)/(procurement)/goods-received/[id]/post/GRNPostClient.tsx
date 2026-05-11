@@ -8,10 +8,10 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
-import { useGRN, type GRNDetail } from '@/features/purchasing/hooks/useGRN';
+import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
-import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
+
 import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { formatCurrency, formatRate, formatNumber } from '@/utils/currency';
@@ -19,11 +19,19 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, TrendingUp, ShieldCheck, Wallet, ArrowRightLeft, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { usePostGRN } from '@/features/purchasing/hooks/usePostGRN';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+
+const fxRateSchema = z.object({
+  fx_rate: z.number().min(0.0001, 'Invalid rate')
+});
+
+type FXRateFormValues = z.infer<typeof fxRateSchema>;
 
 interface GRNPostClientProps {
  id: string;
@@ -40,15 +48,16 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  const { toast } = useToast();
  
  const { data: grn, isLoading: isLoadingGRN } = useGRN(id);
- const { data: currencies } = useCurrencies();
  
-  const form = useForm({
+ 
+  const form = useForm<FXRateFormValues>({
+    resolver: zodResolver(fxRateSchema),
     defaultValues: {
       fx_rate: 1
     }
   });
 
-  const fxRate = form.watch('fx_rate');
+  const fxRate = useWatch({ control: form.control, name: 'fx_rate' });
   const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
   const postMutation = usePostGRN(id);
 

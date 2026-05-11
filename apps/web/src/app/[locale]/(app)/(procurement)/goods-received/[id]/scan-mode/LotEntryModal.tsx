@@ -34,7 +34,7 @@ import {
  PopoverTrigger,
 } from "@/components/ui/popover"
 
-const lotFormSchema = z.object({
+const _lotFormSchema = z.object({
  lotNumber: z.string().min(1, "lot_required"),
  expiryDate: z.date({
  message: "expiry_required",
@@ -42,7 +42,7 @@ const lotFormSchema = z.object({
  receivedQuantity: z.number().min(0.01, "qty_greater_than_zero"),
 })
 
-export type LotFormValues = z.infer<typeof lotFormSchema>
+export type LotFormValues = z.infer<typeof _lotFormSchema>
 
 interface LotEntryModalProps {
  isOpen: boolean

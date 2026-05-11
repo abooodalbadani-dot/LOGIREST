@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ColumnDef } from '@tanstack/react-table';
 
 interface TableSkeletonProps<T> {
-  columns?: ColumnDef<T, any>[];
+  columns?: ColumnDef<T, unknown>[];
   rows?: number;
 }
 

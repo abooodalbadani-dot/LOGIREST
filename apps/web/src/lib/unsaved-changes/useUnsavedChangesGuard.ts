@@ -6,7 +6,7 @@ import { useRouter as useNextIntlRouter } from '@/i18n/navigation';
 
 export interface GuardedRouterOptions {
   skipGuard?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -54,7 +54,7 @@ export const useUnsavedChangesGuard = (componentDirty?: boolean) => {
         if (options?.skipGuard) {
           registerDirty(false);
         }
-        baseRouter.push(href, options as any);
+        baseRouter.push(href, options as Parameters<typeof baseRouter.push>[1]);
       }
     },
     replace: (href: string, options?: GuardedRouterOptions) => {
@@ -64,7 +64,7 @@ export const useUnsavedChangesGuard = (componentDirty?: boolean) => {
         if (options?.skipGuard) {
           registerDirty(false);
         }
-        baseRouter.replace(href, options as any);
+        baseRouter.replace(href, options as Parameters<typeof baseRouter.replace>[1]);
       }
     },
     back: () => {

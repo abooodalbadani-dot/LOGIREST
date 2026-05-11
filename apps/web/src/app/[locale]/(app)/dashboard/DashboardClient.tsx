@@ -4,7 +4,8 @@ import { useTranslations } from 'next-intl';
 import { Package, FileText, ClipboardCheck, AlertTriangle, Activity, Database, Users, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KPICard } from '@/features/dashboard/components/KPICard';
-import { formatCurrency, formatNumber, formatTime } from '@/utils/currency';
+import { formatCurrency, formatNumber } from '@/utils/currency';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { useLocale } from '@/hooks/useLocale';
 import { useAuth } from '@/providers/AuthProvider';
 import { Badge } from '@/components/ui/badge';
@@ -18,8 +19,7 @@ export default function DashboardClient() {
  const t = useTranslations('dashboard');
  const tc = useTranslations('common');
  const { locale } = useLocale();
- const { user } = useAuth();
- const isRtl = locale === 'ar';
+  const { user } = useAuth();
 
  // Mock static data as per Phase 8 planning
  const stats = {
@@ -141,7 +141,7 @@ export default function DashboardClient() {
  {t('secure')}
  </Badge>
  <span className="text-label-xxs font-bold text-muted-foreground/40 uppercase">
- {tc('system_stats.last_sync')}: {formatTime(new Date(), locale as 'ar' | 'en')}
+ {tc('system_stats.last_sync')}: <ClientOnlyTime className="inline" locale={locale as 'ar' | 'en'} />
  </span>
  </div>
  <div className="flex items-center gap-3 mt-1">

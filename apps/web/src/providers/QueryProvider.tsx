@@ -15,8 +15,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           }
 
           // Attach original version from variables for UX comparison
-          if (variables && typeof variables === 'object' && 'version' in variables) {
-            (error as any).originalVersion = (variables as any).version;
+          const vars = variables as Record<string, unknown>;
+          if (vars && typeof vars === 'object' && 'version' in vars) {
+            (error as ConflictError & { originalVersion?: unknown }).originalVersion = vars.version;
           }
           conflictBus.emit({ error, mutation, variables });
         }

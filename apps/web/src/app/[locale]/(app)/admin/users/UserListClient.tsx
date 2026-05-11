@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { UserX, ShieldCheck, Search, Shield, Users, Edit, Eye } from 'lucide-react';
+import { ShieldCheck, Search, Shield, Users, Edit, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { MetricCard } from '@/components/ui/metric-card';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 const roleVariants: Record<string, string> = {
   ADMIN: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
@@ -25,7 +25,7 @@ const roleVariants: Record<string, string> = {
   VIEWER: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 };
 
-export function UserListClient({ locale }: { locale: string }) {
+export function UserListClient({ locale: _locale }: { locale: string }) {
   const t = useTranslations('admin.users');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -107,7 +107,7 @@ export function UserListClient({ locale }: { locale: string }) {
       header: tCommon('created_at'),
       cell: ({ row }) => (
         <span className="text-label-xs font-mono opacity-40" dir="ltr">
-          {row.original.created_at ? format(new Date(row.original.created_at), 'yyyy-MM-dd HH:mm') : '—'}
+          {row.original.created_at ? <ClientOnlyTime date={row.original.created_at} mode="datetime" /> : '—'}
         </span>
       ),
     },

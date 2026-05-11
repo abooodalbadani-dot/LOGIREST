@@ -41,7 +41,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
     physical: warehouses.filter(w => w.type === 'MAIN' || w.type === 'COLD').length,
   }), [data, warehouses]);
 
-  const columns = useMemo<ColumnDef<Warehouse, any>[]>(() => [
+  const columns = useMemo<ColumnDef<Warehouse, unknown>[]>(() => [
     {
       accessorKey: 'code',
       header: tc('code'),

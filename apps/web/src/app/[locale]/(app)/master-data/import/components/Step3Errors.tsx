@@ -1,66 +1,67 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { AlertCircle, Download, ArrowLeft, ArrowRight, Table } from 'lucide-react';
+import { AlertCircle, Download, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
+import { ImportWizardState, ValidationError } from '../types';
 
 interface Step3ErrorsProps {
- wizard: any;
- locale: string;
+  wizard: ImportWizardState;
+  locale: string;
 }
 
 export function Step3Errors({ wizard, locale }: Step3ErrorsProps) {
- const t = useTranslations('master_data.import');
- const tc = useTranslations('common');
+  const t = useTranslations('master_data.import');
+  const tc = useTranslations('common');
 
- const columns = useMemo<ColumnDef<any>[]>(() => [
- {
- accessorKey: 'row',
- header: t('row'),
- cell: ({ row }) => <span className="font-mono text-muted-foreground font-bold">#{row.original.row}</span>,
- },
- {
- accessorKey: 'column',
- header: 'Field',
- cell: ({ row }) => <span className="font-semibold uppercase text-label-xs text-cyan-500/70">{row.original.column}</span>,
- },
- {
- accessorKey: 'severity',
- header: t('status'),
- cell: ({ row }) => (
- <span className={cn(
- "text-label-xxs font-semibold uppercase tracking-normal px-2 py-0.5 rounded-sm",
- row.original.severity === 'error' ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"
- )}>
- {t(row.original.severity)}
- </span>
- ),
- },
- {
- accessorKey: 'message',
- header: t('error_message'),
- cell: ({ row }) => <span className="font-medium text-label-sm">{row.original.message}</span>,
- },
- {
- accessorKey: 'value',
- header: t('value'),
- cell: ({ row }) => <code className="text-label-xs bg-muted px-1.5 py-0.5 rounded-sm font-mono opacity-60">{String(row.original.value || 'NULL')}</code>,
- },
- ], []);
+  const columns = useMemo<ColumnDef<ValidationError>[]>(() => [
+    {
+      accessorKey: 'row',
+      header: t('row'),
+      cell: ({ row }) => <span className="font-mono text-muted-foreground font-bold">#{row.original.row}</span>,
+    },
+    {
+      accessorKey: 'column',
+      header: 'Field',
+      cell: ({ row }) => <span className="font-semibold uppercase text-label-xs text-cyan-500/70">{row.original.column}</span>,
+    },
+    {
+      accessorKey: 'severity',
+      header: t('status'),
+      cell: ({ row }) => (
+        <span className={cn(
+          "text-label-xxs font-semibold uppercase tracking-normal px-2 py-0.5 rounded-sm",
+          row.original.severity === 'error' ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"
+        )}>
+          {t(row.original.severity)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'message',
+      header: t('error_message'),
+      cell: ({ row }) => <span className="font-medium text-label-sm">{row.original.message}</span>,
+    },
+    {
+      accessorKey: 'value',
+      header: t('value'),
+      cell: ({ row }) => <code className="text-label-xs bg-muted px-1.5 py-0.5 rounded-sm font-mono opacity-60">{String(row.original.value ?? 'NULL')}</code>,
+    },
+  ], [t]);
 
- const downloadErrorReport = () => {
- const ws = XLSX.utils.json_to_sheet(wizard.errors);
- const wb = XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb, ws, 'Validation Errors');
- XLSX.writeFile(wb, `import_errors_${wizard.importType}.xlsx`);
- };
+  const downloadErrorReport = () => {
+    const ws = XLSX.utils.json_to_sheet(wizard.errors);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Validation Errors');
+    XLSX.writeFile(wb, `import_errors_${wizard.importType}.xlsx`);
+  };
 
- const hasCriticalErrors = wizard.errors.some((e: any) => e.severity === 'error');
+  const hasCriticalErrors = wizard.errors.some((e: ValidationError) => e.severity === 'error');
 
  return (
  <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">

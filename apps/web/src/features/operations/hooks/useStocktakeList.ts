@@ -23,9 +23,9 @@ export function useStocktakeList(filters: { status?: string; warehouse_id?: stri
  if (filters.status) params.set('status', filters.status);
  if (filters.warehouse_id) params.set('warehouse_id', filters.warehouse_id);
  params.set('page', String(filters.page ?? 1));
- return useQuery({
- queryKey: ['stocktake-sessions', filters],
- queryFn: () => apiClient.get(`/stocktake/sessions?${params}`, paginatedSchema(StocktakeSummarySchema)),
- staleTime: 30_000,
- });
+  return useQuery({
+    queryKey: ['stocktake-sessions', filters],
+    queryFn: ({ signal }) => apiClient.get(`/stocktake/sessions?${params}`, paginatedSchema(StocktakeSummarySchema), signal),
+    staleTime: 30_000,
+  });
 }

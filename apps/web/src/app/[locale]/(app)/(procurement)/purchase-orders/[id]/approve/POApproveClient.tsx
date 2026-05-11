@@ -20,14 +20,14 @@ import {
   CheckCircle2, 
   XCircle, 
   AlertCircle, 
-  FileText, 
+   
   ClipboardCheck, 
   MessageSquare,
   ArrowLeft,
   ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { formatCurrency } from '@/utils/currency';
 

@@ -10,7 +10,7 @@ export { AdminSettingsSchema, type AdminSettings };
 export function useAdminSettings() {
   return useQuery({
     queryKey: ['admin/settings'],
-    queryFn: () => apiClient.get('/admin/settings', AdminSettingsSchema),
+    queryFn: ({ signal }) => apiClient.get('/admin/settings', AdminSettingsSchema, signal),
     staleTime: 60_000,
   });
 }
@@ -26,10 +26,11 @@ export function useUpdateSettings() {
       queryClient.invalidateQueries({ queryKey: ['admin/settings'] });
       toast.success(t('settings_saved'));
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       // Conflict handling is managed by global apiClient/ConflictDialog
-      if (error.status !== 409) {
-        toast.error(error.message || 'Failed to update settings');
+      const err = error as { status?: number; message?: string };
+      if (err.status !== 409) {
+        toast.error(err.message || 'Failed to update settings');
       }
     }
   });

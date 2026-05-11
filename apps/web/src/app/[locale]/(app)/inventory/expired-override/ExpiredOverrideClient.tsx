@@ -5,15 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { 
- AlertTriangle, 
- History, 
- User, 
- Calendar, 
- Package, 
- ExternalLink,
- ShieldAlert
+  AlertTriangle, 
+  History, 
+  User, 
+  Calendar, 
+  Package, 
+  ShieldAlert
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { formatDate } from '@/utils/currency';
 
 // Mock data for expired overrides
@@ -50,7 +49,7 @@ const MOCK_OVERRIDES = [
 
 export function ExpiredOverrideClient({ locale }: { locale: string }) {
  const t = useTranslations('inventory.expired_override');
- const tCommon = useTranslations('common');
+ 
 
  return (
  <div className="flex flex-col gap-8 pb-20">
@@ -87,12 +86,12 @@ export function ExpiredOverrideClient({ locale }: { locale: string }) {
  
  <div className="flex items-center gap-4 pt-2">
  <div className="space-y-0.5">
- <p className="text-label-xxs font-semibold uppercase text-muted-foreground/40">LOT NUMBER</p>
+ <p className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{t('lot_number_label')}</p>
  <p className="font-mono text-label-sm font-bold">{ov.lot_number}</p>
  </div>
  <div className="w-px h-6 bg-white/5" />
  <div className="space-y-0.5">
- <p className="text-label-xxs font-semibold uppercase text-rose-500/40">EXPIRED ON</p>
+ <p className="text-label-xxs font-semibold uppercase text-rose-500/40">{t('expired_on_label')}</p>
  <p className="font-mono text-label-sm font-bold text-rose-500" dir="ltr">{ov.expiry_date}</p>
  </div>
  </div>
@@ -102,7 +101,7 @@ export function ExpiredOverrideClient({ locale }: { locale: string }) {
  <div className="lg:col-span-2 space-y-4">
  <div className="flex items-center gap-2">
  <AlertTriangle className="w-4 h-4 text-rose-400" />
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/60">Override Reason</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('reason_label')}</p>
  </div>
  <div className="bg-surface-container-high/40 rounded-2xl p-4 border border-rose-500/5">
  <p className="text-body-md font-medium leading-relaxed italic text-foreground/90">
@@ -127,14 +126,14 @@ export function ExpiredOverrideClient({ locale }: { locale: string }) {
  {/* Document & Actions */}
  <div className="lg:col-span-1 flex flex-col justify-between items-end border-s border-white/5 ps-8">
  <div className="text-end space-y-2">
- <p className="text-label-xxs font-semibold uppercase text-muted-foreground/40">Source Document</p>
+ <p className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{t('source_document_label')}</p>
  <Badge variant="outline" className="border-operational-cyan/20 bg-operational-cyan/5 text-operational-cyan text-label-xs font-semibold uppercase py-1 px-3">
  {ov.document_type}: {ov.document_number}
  </Badge>
  </div>
  
  <div className="text-end">
- <div className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">Impacted Qty</div>
+ <div className="text-label-xxs font-semibold uppercase text-muted-foreground/40 mb-1">{t('impacted_qty_label')}</div>
  <div className="flex items-center justify-end gap-2">
  <span className="text-headline-lg font-semibold font-mono">{ov.qty}</span>
  <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{ov.uom}</span>
@@ -153,7 +152,7 @@ export function ExpiredOverrideClient({ locale }: { locale: string }) {
  <div className="w-20 h-20 rounded-full bg-emerald-500/5 flex items-center justify-center mb-6">
  <History className="w-10 h-10 text-emerald-500/30" />
  </div>
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">No overrides detected in the ledger</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('no_overrides')}</p>
  </div>
  )}
  </div>

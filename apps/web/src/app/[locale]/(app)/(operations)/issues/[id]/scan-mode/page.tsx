@@ -76,7 +76,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  // Synchronize internal state with fetched issue data
  // eslint-disable-next-line react-hooks/set-state-in-effect
  setLines((issue.lines || []) as unknown as LineItem[]);
- // eslint-disable-next-line react-hooks/set-state-in-effect
+  
  setWarehouseId(issue.warehouse_id || 'wh-1');
  }
  }, [issue]);
@@ -118,17 +118,20 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  }
  };
 
- const handlePost = async () => {
- try {
- await postIssue.mutateAsync({ confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', version: (issue as any)?.version || 0 });
- setIsPostDialogOpen(false);
- router.push("/issues");
- } catch (err: unknown) {
- const apiErr = err as { code?: string };
- if (apiErr?.code === 'WAREHOUSE_LOCKED') setIsWarehouseLockedError(true);
- setIsPostDialogOpen(false);
- }
- };
+  const handlePost = async () => {
+    try {
+      await postIssue.mutateAsync({ 
+        confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', 
+        version: issue?.version || 0 
+      });
+      setIsPostDialogOpen(false);
+      router.push("/issues");
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string };
+      if (apiErr?.code === 'WAREHOUSE_LOCKED') setIsWarehouseLockedError(true);
+      setIsPostDialogOpen(false);
+    }
+  };
 
   const isPosted = isIssuePosted(issue?.status);
  const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;

@@ -26,18 +26,20 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useState } from 'react';
 
+import { useAbortController } from '@/hooks/useAbortController';
+
 interface Props { 
   id: string | null; 
   createTitle: string; 
   editTitle: string; 
   viewTitle: string;
-  locale: string; 
   isReadOnly?: boolean;
 }
 
-export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
+export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tc = useTranslations('master_data.categories');
+  const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useCategory(id);
   const create = useCreateCategory();
@@ -55,6 +57,10 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
+  useEffect(() => {
+    if (data) reset({ name_ar: data.name_ar, name_en: data.name_en, version: data.version });
+  }, [data, reset]);
+
   // 1. Loading State
   if (id && isLoading) {
     return <PageSkeleton variant="detail" />;
@@ -80,18 +86,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
     );
   }
 
-  useEffect(() => {
-    if (data) reset({ name_ar: data.name_ar, name_en: data.name_en, version: data.version });
-  }, [data, reset]);
-
   const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/categories', { skipGuard: true });
@@ -103,7 +105,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, loca
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/categories', { skipGuard: true });
     } catch {
       // Error handled by mutation hook

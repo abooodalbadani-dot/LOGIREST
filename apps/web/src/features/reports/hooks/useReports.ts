@@ -70,7 +70,7 @@ export type CurrencySummaryReport = z.infer<typeof CurrencySummaryReportSchema>;
 export function useAvailableInventoryReport() {
  return useQuery({
  queryKey: ['reports', 'available-inventory'],
- queryFn: () => apiClient.get('/reports/available-inventory', z.array(AvailableInventoryReportSchema)),
+ queryFn: ({ signal }) => apiClient.get('/reports/available-inventory', z.array(AvailableInventoryReportSchema), signal),
  staleTime: 5 * 60 * 1000,
  });
 }
@@ -78,7 +78,7 @@ export function useAvailableInventoryReport() {
 export function useStockMovementsReport() {
  return useQuery({
  queryKey: ['reports', 'movements'],
- queryFn: () => apiClient.get('/reports/movements', z.array(StockMovementsReportSchema)),
+ queryFn: ({ signal }) => apiClient.get('/reports/movements', z.array(StockMovementsReportSchema), signal),
  staleTime: 5 * 60 * 1000,
  });
 }
@@ -86,7 +86,7 @@ export function useStockMovementsReport() {
 export function useExpiryReport() {
  return useQuery({
  queryKey: ['reports', 'expiry'],
- queryFn: () => apiClient.get('/reports/expiry', z.array(ExpiryReportSchema)),
+ queryFn: ({ signal }) => apiClient.get('/reports/expiry', z.array(ExpiryReportSchema), signal),
  staleTime: 5 * 60 * 1000,
  });
 }
@@ -94,7 +94,7 @@ export function useExpiryReport() {
 export function useStocktakeVarianceReport() {
  return useQuery({
  queryKey: ['reports', 'stocktake-variance'],
- queryFn: () => apiClient.get('/reports/stocktake-variance', z.array(StocktakeVarianceReportSchema)),
+ queryFn: ({ signal }) => apiClient.get('/reports/stocktake-variance', z.array(StocktakeVarianceReportSchema), signal),
  staleTime: 5 * 60 * 1000,
  });
 }
@@ -102,7 +102,7 @@ export function useStocktakeVarianceReport() {
 export function useProcurementStatusReport() {
  return useQuery({
  queryKey: ['reports', 'procurement-status'],
- queryFn: () => apiClient.get('/reports/procurement-status', z.array(ProcurementStatusReportSchema)),
+ queryFn: ({ signal }) => apiClient.get('/reports/procurement-status', z.array(ProcurementStatusReportSchema), signal),
  staleTime: 5 * 60 * 1000,
  });
 }
@@ -110,7 +110,7 @@ export function useProcurementStatusReport() {
 export function useCurrencySummaryReport() {
  return useQuery({
  queryKey: ['reports', 'currency-summaries'],
- queryFn: () => apiClient.get('/reports/currency-summaries', z.array(CurrencySummaryReportSchema)),
+ queryFn: ({ signal }) => apiClient.get('/reports/currency-summaries', z.array(CurrencySummaryReportSchema), signal),
  staleTime: 5 * 60 * 1000,
  });
 }

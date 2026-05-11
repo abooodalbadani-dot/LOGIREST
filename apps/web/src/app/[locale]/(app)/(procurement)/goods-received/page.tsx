@@ -1,7 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
+
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { GRNListClient } from './GRNListClient';
 
@@ -20,9 +18,7 @@ export default async function GoodsReceivedPage(props: {
 }) {
  const { locale } = await props.params;
  const { status, page } = await props.searchParams;
- const t = await getTranslations('procurement.grn');
-
- return (
+return (
  <ProtectedRoute requiredAction="view" requiredResource="grn">
  <GRNListClient 
  initialStatus={status} 

@@ -5,14 +5,12 @@ import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
  Building2, 
  Warehouse, 
  CheckCircle2, 
  ChevronRight, 
- LayoutDashboard,
  Globe,
  Settings2
 } from 'lucide-react';
@@ -22,7 +20,7 @@ import { useState } from 'react';
 export function ContextSelectorClient({ locale }: { locale: string }) {
  const t = useTranslations('context_selector');
  const router = useRouter();
- const { user, activeScope, setActiveScope } = useAuth();
+  const { user: _user, activeScope, setActiveScope } = useAuth();
  
  const { data: branchesData } = useBranches();
  const { data: warehousesData } = useWarehouses();

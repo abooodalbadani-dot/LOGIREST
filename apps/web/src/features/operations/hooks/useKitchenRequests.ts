@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
@@ -25,24 +25,24 @@ const KitchenRequestSummarySchema = z.object({
 export type KitchenRequestSummary = z.infer<typeof KitchenRequestSummarySchema>;
 
 export function useKitchenRequestList(filters: { status?: string; department_id?: string; page?: number } = {}) {
- const params = new URLSearchParams();
- if (filters.status) params.set('status', filters.status);
- if (filters.department_id) params.set('department_id', filters.department_id);
- params.set('page', String(filters.page ?? 1));
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.department_id) params.set('department_id', filters.department_id);
+  params.set('page', String(filters.page ?? 1));
 
- return useQuery({
- queryKey: ['kitchen-requests', filters],
- queryFn: () => apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(KitchenRequestSummarySchema)),
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['kitchen-requests', filters],
+    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(KitchenRequestSummarySchema), signal),
+    staleTime: 60_000,
+  });
 }
 
 export function useKitchenRequest(id: string) {
- return useQuery({
- queryKey: ['kitchen-requests', id],
- queryFn: () => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema),
- enabled: !!id,
- });
+  return useQuery({
+    queryKey: ['kitchen-requests', id],
+    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema, signal),
+    enabled: !!id,
+  });
 }
 
 export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {

@@ -8,10 +8,10 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { useInventoryMovements } from '@/features/inventory/hooks/useInventoryMovements';
 import { generateExcel } from '@/utils/export';
 import { InventoryMovement } from '@/types/inventory';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { formatQuantity } from '@/lib/utils';
 import { formatNumber, formatDate } from '@/utils/currency';
-import { Activity, ArrowUpRight, ArrowDownRight, Search, Filter, Download, History } from 'lucide-react';
+import { Activity, ArrowUpRight, ArrowDownRight, Search, Download, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -84,8 +84,8 @@ export default function MovementsClient() {
  accessorKey: 'document_type',
  header: t('document_type'),
  cell: ({ row }) => (
- <Badge variant="secondary" className={`${getTypeStyle(row.original.document_type)}text-label-xxs font-semibold uppercase px-3 h-6 rounded-xl`}>
- {t(`types.${row.original.document_type.toLowerCase()}` as any)}
+ <Badge variant="secondary" className={`${getTypeStyle(row.original.document_type)} text-label-xxs font-semibold uppercase px-3 h-6 rounded-xl`}>
+ {t(`types.${row.original.document_type.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
  </Badge>
  ),
  },
@@ -265,10 +265,10 @@ export default function MovementsClient() {
  onValueChange={(val) => { if (val) { setTypeFilter(val === 'ALL' ? '' : val); setPage(1); } }}
  >
  <SelectTrigger className="h-12 bg-surface-container-highest/30 border-none rounded-xl text-label-xs font-semibold uppercase focus:ring-operational-cyan/30 transition-all px-6">
- <SelectValue placeholder={tc('status.all')} />
+ <SelectValue placeholder={tc('statuses.all')} />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-low border border-border-muted/50 shadow-2xl rounded-2xl">
- <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('status.all')}</SelectItem>
+ <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('statuses.all')}</SelectItem>
  <SelectItem value="GRN" className="text-label-xs font-semibold uppercase text-status-success">{t('types.grn')}</SelectItem>
  <SelectItem value="ISSUE" className="text-label-xs font-semibold uppercase text-status-warning">{t('types.issue')}</SelectItem>
  <SelectItem value="TRANSFER" className="text-label-xs font-semibold uppercase text-operational-cyan">{t('types.transfer')}</SelectItem>

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Plus, Tag, CheckCircle2, Package, Search, Barcode as BarcodeIcon } from 'lucide-react';
+import { Plus, CheckCircle2, Package, Search, Barcode as BarcodeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';

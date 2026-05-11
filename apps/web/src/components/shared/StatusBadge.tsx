@@ -40,11 +40,13 @@ const statusBadgeVariants = cva(
  }
 )
 
+export type BadgeVariant = "default" | "brand" | "warning" | "error" | "success" | "outline" | "info";
+
 export interface StatusBadgeProps
  extends React.HTMLAttributes<HTMLDivElement>,
  VariantProps<typeof statusBadgeVariants> {
  status?: BadgeStatus | string; 
- configMap?: Record<string, any>;
+ configMap?: Record<string, { variant: BadgeVariant; labelKey: string }>;
 }
 
 export function StatusBadge({ className, variant, status, configMap, children, ...props }: StatusBadgeProps) {
@@ -55,7 +57,7 @@ export function StatusBadge({ className, variant, status, configMap, children, .
     return getStatusConfig(status.toUpperCase(), configMap);
   }, [status, configMap]);
 
-  const mappedVariant = variant || (config?.variant as any) || "default";
+  const mappedVariant = (variant || config?.variant || "default") as BadgeVariant;
 
   // Handle translation if status is provided and no children
   const content = children || (status ? t(config?.labelKey.split('.').pop() || status.toLowerCase()) : null);

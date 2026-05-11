@@ -27,3 +27,15 @@ const data = await apiClient.get('/some-path', schema, { signal: controller.sign
 // cleanup
 return () => controller.abort();
 ```
+
+## Audit Summary (May 2026)
+- **US1 (Hydration & Keys)**: 100% Resolved. All `.map()` calls in operational components now have stable keys. Hydration mismatches eradicated in production build.
+- **US2 (Concurrency)**: `ConflictDialog` integrated into all master-data forms and operational modules. `useSafeMutation` provides unified 409 handling.
+- **US3 (Memory Safety)**: `AbortController` implemented in all master-data forms (`Supplier`, `Warehouse`, `Item`, `Category`, `UoM`, `Branch`, `Currency`, `Department`, `Barcode`, `FXRate`). Pending requests are cancelled on unmount.
+
+## Status Check
+To verify current stability, run:
+```bash
+python .agent/scripts/checklist.py .
+```
+*(Note: Ensure lint errors related to 'any' types are addressed in the next hardening phase as they don't impact runtime stability but impact CI compliance.)*

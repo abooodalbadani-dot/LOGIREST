@@ -6,9 +6,8 @@ export default async function UoMDetailPage(props: { params: Promise<{ locale: s
  setRequestLocale(params.locale);
  
  return (
- <UoMDetailClient
- id={params.id}
- locale={params.locale}
- />
+<UoMDetailClient
+  id={params.id}
+  />
  );
 }

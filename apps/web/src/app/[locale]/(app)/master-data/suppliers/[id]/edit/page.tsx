@@ -19,7 +19,6 @@ export default async function EditSupplierPage(props: { params: Promise<{ locale
     <ProtectedRoute requiredAction="edit" requiredResource="master_data_suppliers">
       <SupplierFormClient 
         id={params.id} 
-        locale={params.locale} 
         createTitle={t('create_title')} 
         editTitle={t('edit_title')} 
         viewTitle={t('view_title')}

@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { Ruler, Activity, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { PermissionGate } from '@/components/auth/PermissionGate';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
@@ -24,18 +23,20 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
+import { useAbortController } from '@/hooks/useAbortController';
+
 interface Props {
   id: string | null;
   createTitle: string;
   editTitle: string;
   viewTitle?: string;
-  locale: string;
   isReadOnly?: boolean;
 }
 
-export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, isReadOnly = false }: Props) {
+export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tu = useTranslations('master_data.uom');
+  const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useUoM(id);
   const create = useCreateUoM();
@@ -54,6 +55,18 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
+
+  useEffect(() => {
+    if (data) {
+      reset({ 
+        code: data.code, 
+        name_ar: data.name_ar, 
+        name_en: data.name_en,
+        is_active: data.is_active,
+        version: data.version
+      });
+    }
+  }, [data, reset]);
 
   // 1. Loading State
   if (id && isLoading) {
@@ -80,26 +93,14 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
     );
   }
 
-  useEffect(() => {
-    if (data) {
-      reset({ 
-        code: data.code, 
-        name_ar: data.name_ar, 
-        name_en: data.name_en,
-        is_active: data.is_active,
-        version: data.version
-      });
-    }
-  }, [data, reset]);
-
   const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values });
+        await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ ...values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
@@ -111,7 +112,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteUoM.mutateAsync(id);
+      await deleteUoM.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
     } catch {
       setShowDeleteConfirm(false);
@@ -138,7 +139,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, locale, i
         isValid={isValid}
         headerActions={
           id && !isReadOnly && (
-            <PermissionGate permission="master-data.uoms.delete">
+            <PermissionGate action="delete" resource="master_data_units_of_measure">
               <Button
                 type="button"
                 variant="ghost"

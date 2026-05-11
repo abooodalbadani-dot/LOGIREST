@@ -31,16 +31,17 @@ export const PRDetailSchema = z.object({
  notes: z.string().nullable().optional(),
  created_at: z.string().optional(),
  created_by: z.string().optional(),
+ updated_at: z.string().optional(),
  lines: z.array(PRLineSchema),
 });
 
 export type PRDetail = z.infer<typeof PRDetailSchema>;
 
 export function usePR(id: string | null) {
- return useQuery({
- queryKey: ['purchase-request', id],
- queryFn: () => apiClient.get(`/procurement/purchase-requests/${id}`, z.object({ data: PRDetailSchema })).then(res => res.data),
- enabled: !!id,
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['purchase-request', id],
+    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests/${id}`, z.object({ data: PRDetailSchema }), signal).then(res => res.data),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
 }

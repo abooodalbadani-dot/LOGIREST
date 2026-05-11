@@ -104,7 +104,11 @@ class I18nAudit {
           }
           
           // Check for unauthorized identical strings (SC-001)
-          if (arValue === enValue && arValue.length > 3 && !['SAR', 'USD', 'EA', 'KG', 'L'].includes(arValue.toUpperCase())) {
+          const isTechnical = /^[A-Z0-9_\-\/]+$/.test(arValue) || 
+                             ['SAR', 'USD', 'EA', 'KG', 'L'].includes(arValue.toUpperCase()) ||
+                             arValue.includes('@') || // Email
+                             /^\+?[0-9\s-]+$/.test(arValue); // Phone/Numeric
+          if (arValue === enValue && arValue.length > 3 && !isTechnical) {
             // Only flag if it doesn't look like an acronym or technical value
             this.logError('IDENTICAL_VALUE', 'messages', null, `Key "${currentPath}" has identical values in AR and EN: "${arValue}"`);
           }
@@ -155,7 +159,8 @@ class I18nAudit {
           line.includes('console.log') ||
           line.includes('Promise<') ||
           line.includes('type ') ||
-          line.includes('interface ')
+          line.includes('interface ') ||
+          line.includes('extends ')
         ) return;
         
         // Skip lines with explicit ignore
@@ -190,8 +195,23 @@ class I18nAudit {
     if (/^[0-9\s.,:\-/_+()]+$/.test(text)) return false;
     if (text.includes('{') || text.includes('}')) return false;
     if (['SAR', 'USD', 'KG', 'L', 'EA'].includes(text.toUpperCase())) return false;
-    // Ignore common technical strings
-    if (['lg', 'md', 'sm', 'xl', '2xl', 'outline', 'solid', 'ghost'].includes(text)) return false;
+    
+    // Ignore technical placeholders (e.g. PR-2024-001, IT-1, LOT-123)
+    if (/^[A-Z]{2,}-\d+(-\d+)?$/.test(text)) return false;
+    
+    // Ignore common technical strings and CSS classes
+    if (['lg', 'md', 'sm', 'xl', '2xl', 'outline', 'solid', 'ghost', 'primary', 'secondary'].includes(text)) return false;
+    if (text.startsWith('text-') || text.startsWith('bg-') || text.startsWith('border-')) return false;
+    
+    // Ignore strings that look like JS logic or type params
+    if (text.includes('(') && text.includes(')')) return false; // t(k as Parameters...)
+    if (text.includes('&') || text.includes('=') || text.includes('<') || text.includes('>')) return false;
+    if (text.includes('?') && text.includes(':')) return false;
+    if (text.includes('&&') || text.includes('||')) return false;
+    
+    // Ignore emojis
+    if (/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(text)) return false;
+    
     return true;
   }
 

@@ -42,10 +42,7 @@ export const StocktakeSessionSchema = z.object({
 export type StocktakeSession = z.infer<typeof StocktakeSessionSchema>;
 export type StocktakeItem = z.infer<typeof StocktakeItemSchema>;
 
-export interface Stocktake extends StocktakeSession {
-  // Keeping this for backward compatibility if needed, 
-  // but StocktakeSession is now the source of truth
-}
+export type Stocktake = StocktakeSession;
 
 export interface CreateStocktakeDTO {
   session_name: string;

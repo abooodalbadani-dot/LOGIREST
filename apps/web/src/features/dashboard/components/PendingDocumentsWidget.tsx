@@ -29,7 +29,7 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
  </div>
  </div>
  <div className="flex flex-col flex-1">
- {docs.map((doc, idx) => (
+ {docs.map((doc, _idx) => (
  <Link 
  key={doc.id} 
  href={`/${doc.path}/${doc.id}`}

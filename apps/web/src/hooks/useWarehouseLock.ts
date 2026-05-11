@@ -14,19 +14,17 @@ const LockSchema = z.object({
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 export function useWarehouseLock(warehouseId: string | null) {
- const query = useQuery<WarehouseLockState>({
- queryKey: ['warehouse-lock', warehouseId],
- queryFn: () => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema),
- staleTime: 30_000,
- enabled: !!warehouseId,
- });
+  const query = useQuery<WarehouseLockState>({
+    queryKey: ['warehouse-lock', warehouseId],
+    queryFn: ({ signal }) => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema, signal),
+    staleTime: 30_000,
+    enabled: !!warehouseId,
+  });
 
- const { router } = useUnsavedChangesGuard();
+  const { router } = useUnsavedChangesGuard();
 
- return {
-   ...query,
-   guardedRouter: router,
- };
+  return {
+    ...query,
+    guardedRouter: router,
+  };
 }
-
-

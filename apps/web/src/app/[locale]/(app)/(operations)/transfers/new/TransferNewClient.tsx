@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+
 import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -22,12 +22,26 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { FormFooter } from '@/components/shared/FormFooter';
-import { cn } from '@/lib/utils';
+
 import { Save, Warehouse, PackagePlus } from 'lucide-react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import React from 'react';
+
+interface NewTransferLine {
+  id: string;
+  item_id: string;
+  item: {
+    id: string;
+    code: string;
+    name_ar: string;
+    name_en: string;
+    primary_uom: { code: string };
+  };
+  qty: number;
+  uom_id: string;
+}
 
 export function TransferNewClient() {
   const params = useParams();
@@ -41,7 +55,7 @@ export function TransferNewClient() {
   const [fromWarehouseId, setFromWarehouseId] = useState('');
   const [toWarehouseId, setToWarehouseId] = useState('');
   const [notes, setNotes] = useState('');
-  const [lines, setLines] = useState<any[]>([]);
+  const [lines, setLines] = useState<NewTransferLine[]>([]);
 
   // Unsaved changes guard
   const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
@@ -62,7 +76,7 @@ export function TransferNewClient() {
         return prev.map(l => l.item_id === item.id ? { ...l, qty: l.qty + 1 } : l);
       }
       return [...prev, {
-        id: Math.random().toString(36).substring(2, 9),
+        id: `temp-${item.id}-${Date.now()}`,
         item_id: item.id,
         item: {
           id: item.id,

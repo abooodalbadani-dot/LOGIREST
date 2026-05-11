@@ -12,7 +12,6 @@ import {
  Users,
  TrendingUp,
  History,
- LayoutDashboard
 } from 'lucide-react';
 import { KPICard } from './KPICard';
 import { NearExpiryWidget } from './NearExpiryWidget';
@@ -30,7 +29,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 export function AdminDashboard() {
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
  const t = useTranslations('dashboard');
- const tc = useTranslations('common');
+ const _tc = useTranslations('common');
  const { locale } = useLocale();
 
  // Mock data for Admin

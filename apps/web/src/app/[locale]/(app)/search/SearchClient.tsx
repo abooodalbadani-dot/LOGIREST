@@ -13,12 +13,9 @@ import {
  Clock, 
  ArrowRight,
  Filter,
- Layers,
  ChevronRight,
  Command,
  X,
- LayoutGrid,
- Calendar,
  AlertCircle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -47,7 +44,7 @@ export default function SearchClient() {
  const [isLoading, setIsLoading] = useState(false);
  
  const t = useTranslations('operational.search');
- const tc = useTranslations('common');
+ const _tc = useTranslations('common');
 
  const [results, setResults] = useState<SearchResult[]>([]);
 

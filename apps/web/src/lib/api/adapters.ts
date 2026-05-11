@@ -16,35 +16,35 @@ import {
 /**
  * Recursive function to convert snake_case keys to camelCase
  */
-export function toCamelCase<T>(obj: any): T {
+export function toCamelCase<T>(obj: unknown): T {
   if (Array.isArray(obj)) {
-    return obj.map(v => toCamelCase(v)) as any;
+    return obj.map(v => toCamelCase(v)) as unknown as T;
   }
   if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
-    return Object.keys(obj).reduce((acc, key) => {
+    return Object.keys(obj as Record<string, unknown>).reduce((acc, key) => {
       const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-      acc[camelKey] = toCamelCase(obj[key]);
+      (acc as Record<string, unknown>)[camelKey] = toCamelCase((obj as Record<string, unknown>)[key]);
       return acc;
-    }, {} as any);
+    }, {} as Record<string, unknown>) as unknown as T;
   }
-  return obj;
+  return obj as T;
 }
 
 /**
  * Recursive function to convert camelCase keys to snake_case
  */
-export function toSnakeCase<T>(obj: any): T {
+export function toSnakeCase<T>(obj: unknown): T {
   if (Array.isArray(obj)) {
-    return obj.map(v => toSnakeCase(v)) as any;
+    return obj.map(v => toSnakeCase(v)) as unknown as T;
   }
   if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
-    return Object.keys(obj).reduce((acc, key) => {
+    return Object.keys(obj as Record<string, unknown>).reduce((acc, key) => {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      acc[snakeKey] = toSnakeCase(obj[key]);
+      (acc as Record<string, unknown>)[snakeKey] = toSnakeCase((obj as Record<string, unknown>)[key]);
       return acc;
-    }, {} as any);
+    }, {} as Record<string, unknown>) as unknown as T;
   }
-  return obj;
+  return obj as T;
 }
 
 /**
@@ -53,13 +53,13 @@ export function toSnakeCase<T>(obj: any): T {
  * complex mappings or value transformations if needed.
  */
 
-export const normalizeDocument = <T extends BaseDocument>(data: any): T => {
+export const normalizeDocument = <T extends BaseDocument>(data: unknown): T => {
   return toCamelCase<T>(data);
 };
 
-export const normalizePR = (data: any): PurchaseRequest => normalizeDocument<PurchaseRequest>(data);
-export const normalizePO = (data: any): PurchaseOrder => normalizeDocument<PurchaseOrder>(data);
-export const normalizeGRN = (data: any): GRN => normalizeDocument<GRN>(data);
-export const normalizeTransfer = (data: any): Transfer => normalizeDocument<Transfer>(data);
-export const normalizeIssue = (data: any): StockIssue => normalizeDocument<StockIssue>(data);
-export const normalizeAdjustment = (data: any): Adjustment => normalizeDocument<Adjustment>(data);
+export const normalizePR = (data: unknown): PurchaseRequest => normalizeDocument<PurchaseRequest>(data);
+export const normalizePO = (data: unknown): PurchaseOrder => normalizeDocument<PurchaseOrder>(data);
+export const normalizeGRN = (data: unknown): GRN => normalizeDocument<GRN>(data);
+export const normalizeTransfer = (data: unknown): Transfer => normalizeDocument<Transfer>(data);
+export const normalizeIssue = (data: unknown): StockIssue => normalizeDocument<StockIssue>(data);
+export const normalizeAdjustment = (data: unknown): Adjustment => normalizeDocument<Adjustment>(data);

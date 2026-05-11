@@ -1,27 +1,25 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter, Link } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { 
- History, 
- Package, 
- ArrowUpRight, 
- ArrowDownLeft, 
- Calendar, 
- ShieldCheck, 
- MapPin,
- Clock,
- Printer,
- Edit,
- Scan,
- Database
+  History, 
+  Package, 
+  ArrowUpRight, 
+  ArrowDownLeft, 
+  Calendar, 
+  MapPin,
+  Clock,
+  Printer,
+  Edit,
+  Scan,
+  Database
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { formatNumber } from '@/utils/currency';
 
 interface LotMovement {
@@ -50,15 +48,17 @@ export default function LotBalanceClient() {
  const tc = useTranslations('common');
 
  const columns: ColumnDef<LotMovement, unknown>[] = [
- {
- accessorKey: 'date',
- header: t('table.datetime'),
- cell: ({ row }) => (
- <span dir="ltr" className="text-label-xs font-bold text-muted-foreground/60">
- {format(new Date(row.original.date), 'dd MMM yyyy, HH:mm')}
- </span>
- ),
- },
+  {
+    accessorKey: 'date',
+    header: t('table.datetime'),
+    cell: ({ row }) => (
+      <ClientOnlyTime 
+        date={row.original.date} 
+        mode="datetime" 
+        className="text-label-xs font-bold text-muted-foreground/60"
+      />
+    ),
+  },
  {
  accessorKey: 'type',
  header: t('table.type'),

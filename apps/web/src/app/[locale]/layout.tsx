@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import { UnsavedChangesProvider } from '@/lib/unsaved-changes/UnsavedChangesProvider';
 import { ConflictProvider } from '@/providers/ConflictProvider';
 import { ConfirmationProvider } from '@/providers/ConfirmationProvider';
+import { ErrorProvider } from '@/providers/ErrorProvider';
 
 
 import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono, yaModernPro } from '@/lib/fonts';
@@ -73,7 +74,9 @@ export default async function LocaleLayout({
  
               <ErrorBoundary>
                 <NetworkStatusBanner />
-                {children}
+                <ErrorProvider>
+                  {children}
+                </ErrorProvider>
                 <SessionTimeoutModal />
                 <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
               </ErrorBoundary>

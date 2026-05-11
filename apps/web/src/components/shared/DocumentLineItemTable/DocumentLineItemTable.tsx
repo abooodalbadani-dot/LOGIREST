@@ -3,6 +3,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useTranslations, useLocale } from 'next-intl';
+import { formatDate } from '@/utils/currency';
 import type { LotAllocation } from '@/types/documents';
 
 export interface LineItem {
@@ -70,24 +71,24 @@ export function DocumentLineItemTable<T extends LineItem>({
  <div className="overflow-x-auto rounded-lg bg-surface-container-lowest">
  <table className="w-full text-start border-collapse">
  <thead className="bg-surface-container-low/50">
- <tr>
- <th className="px-6 h-14 whitespace-nowrap">{h.code}</th>
- <th className="px-6 h-14 whitespace-nowrap">{h.name}</th>
- {!hideLotColumns && (
- <>
- <th className="px-6 h-14 whitespace-nowrap">{h.lot}</th>
- <th className="px-6 h-14 whitespace-nowrap">{h.expiry}</th>
- </>
- )}
- <th className="px-6 h-14 whitespace-nowrap text-center">{h.qty}</th>
- <th className="px-6 h-14 whitespace-nowrap">{h.uom}</th>
- {extraColumns.map((col, i) => (
- <th key={i} className="px-6 h-14 whitespace-nowrap text-center">{col.header}</th>
- ))}
- {!isReadOnly && onRemoveLine && (
- <th className={cn("px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap w-10")} />
- )}
- </tr>
+        <tr>
+          <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.code}</th>
+          <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.name}</th>
+          {!hideLotColumns && (
+            <>
+              <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.lot}</th>
+              <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.expiry}</th>
+            </>
+          )}
+          <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-center">{h.qty}</th>
+          <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.uom}</th>
+          {extraColumns.map((col, i) => (
+            <th key={i} className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-center">{col.header}</th>
+          ))}
+          {!isReadOnly && onRemoveLine && (
+            <th className={cn("px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap w-10")} />
+          )}
+        </tr>
  </thead>
  <tbody>
  {lines.length === 0 ? (
@@ -114,7 +115,7 @@ export function DocumentLineItemTable<T extends LineItem>({
  </td>
  <td className="px-6 font-mono text-label-xs text-muted-foreground/60">
  {line.lot?.expiry_date
- ? <span dir="ltr">{new Date(line.lot.expiry_date).toLocaleDateString()}</span>
+  ? <span dir="ltr">{formatDate(line.lot.expiry_date, locale as 'ar' | 'en')}</span>
  : '—'}
  </td>
  </>

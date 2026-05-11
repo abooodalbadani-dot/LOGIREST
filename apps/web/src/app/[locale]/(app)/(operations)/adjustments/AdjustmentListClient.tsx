@@ -2,7 +2,7 @@
  
 import { useState, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAdjustmentList, AdjustmentSummary } from '@/features/operations/hooks/useAdjustmentList';
@@ -12,14 +12,14 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Plus, CheckCircle2, Clock, Activity, FileCheck, AlertTriangle, Filter } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { format } from 'date-fns';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { isAdjustmentPending, isAdjustmentPosted } from '@/domain/status-guards';
+import { isAdjustmentPending } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
-import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS, type AdjustmentStatus } from '@/contracts/statuses';
  
 // Reason → Semantic visual styling (Hardened for Culinary Architect)
 const REASON_CHIP: Record<string, string> = {
@@ -34,6 +34,7 @@ const REASON_CHIP: Record<string, string> = {
 export function AdjustmentListClient() {
  const t = useTranslations('operations.adjustment');
  const tCommon = useTranslations('common');
+ const locale = useLocale();
  const router = useRouter();
  
  const [page, setPage] = useState(1);
@@ -99,7 +100,7 @@ export function AdjustmentListClient() {
  cell: ({ row }) =>
  row.original.created_at ? (
  <span dir="ltr" className="text-label-xs text-muted-foreground/40 font-mono font-medium">
- {format(new Date(row.original.created_at), 'dd/MM/yyyy')}
+ <ClientOnlyTime date={row.original.created_at} mode="date" />
  </span>
  ) : <span className="opacity-20 text-label-xs">—</span>,
  },
@@ -126,7 +127,6 @@ export function AdjustmentListClient() {
  
   const totalAdjustments = data?.meta?.total || 0;
   const inProgressCount = data?.data?.filter(i => isAdjustmentPending(i.status)).length || 0;
-  const postedCount = data?.data?.filter(i => isAdjustmentPosted(i.status)).length || 0;
   const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
   const pendingApprovalsCount = inProgressCount;
  
@@ -148,7 +148,7 @@ export function AdjustmentListClient() {
  {tCommon('status.live_updates') || 'Correction Pulse'}
  </div>
  <div dir="ltr" className="text-label-xxs font-bold text-muted-foreground/40">
- {tCommon('status.last_sync') || 'Last Sync'}: {new Date().toLocaleTimeString()}
+ {tCommon('status.last_sync') || 'Last Sync'}: <ClientOnlyTime locale={locale as 'ar' | 'en'} fallback="..." />
  </div>
  </div>
  <PermissionGate action="create" resource="adjustment">
@@ -227,11 +227,11 @@ export function AdjustmentListClient() {
  }}
  >
  <SelectTrigger className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20">
- <SelectValue placeholder={tCommon('status.all')} />
+ <SelectValue placeholder={tCommon('statuses.all')} />
  </SelectTrigger>
               <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
-                <SelectItem value="ALL" className="text-label-xs font-bold uppercase">{tCommon('status.all')}</SelectItem>
-                {Object.entries(ADJUSTMENT_STATUS_UI).filter(([key]) => Object.values(ADJUSTMENT_STATUS).includes(key as any)).map(([key, config]) => (
+                <SelectItem value="ALL" className="text-label-xs font-bold uppercase">{tCommon('statuses.all')}</SelectItem>
+                {Object.entries(ADJUSTMENT_STATUS_UI).filter(([key]) => Object.values(ADJUSTMENT_STATUS).includes(key as AdjustmentStatus)).map(([key, config]) => (
                   <SelectItem key={key} value={key} className="text-label-xs font-bold uppercase">
                     {tCommon(config.labelKey)}
                   </SelectItem>

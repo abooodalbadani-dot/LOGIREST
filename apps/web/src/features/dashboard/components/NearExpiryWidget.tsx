@@ -1,8 +1,8 @@
 'use client';
-import { AlertCircle, Calendar, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 export function NearExpiryWidget({ locale }: { locale: string }) {
  const t = useTranslations('dashboard.near_expiry');
@@ -30,7 +30,7 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
  </div>
  </div>
  <div className="flex flex-col">
- {items.map((item, idx) => (
+ {items.map((item, _idx) => (
  <div 
  key={item.id} 
  className="px-6 py-4 transition-all duration-300 flex items-center justify-between group hover:bg-muted/50"
@@ -40,10 +40,15 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
  {isRtl ? item.name_ar : item.name_en}
  </span>
  <div className="flex items-center gap-3">
- <span className={`text-label-xs flex items-center gap-1.5 font-bold ${ item.priority === 'high' ? 'text-status-error' : 'text-muted-foreground/60' }`}>
- <Clock className="w-3 h-3" />
- {t('expires')} {format(new Date(item.expiry_date), 'dd/MM/yyyy')}
- </span>
+  <span className={`text-label-xs flex items-center gap-1.5 font-bold ${ item.priority === 'high' ? 'text-status-error' : 'text-muted-foreground/60' }`}>
+    <Clock className="w-3 h-3" />
+    {t('expires')}{' '}
+    <ClientOnlyTime 
+      date={item.expiry_date} 
+      mode="date" 
+      fallback="--/--/----"
+    />
+  </span>
  {item.priority === 'high' && (
  <span className="flex h-1.5 w-1.5 rounded-full bg-status-error animate-pulse" />
  )}

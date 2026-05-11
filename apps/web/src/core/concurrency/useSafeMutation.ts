@@ -2,6 +2,8 @@
 
 import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
 
+import { ConflictError } from '@/lib/api/ConflictError';
+
 /**
  * AxiosLikeError defines the minimal structure we expect for API errors
  * to detect HTTP 409 Conflict status.
@@ -10,6 +12,8 @@ export interface AxiosLikeError {
   response?: {
     status: number;
   };
+  name?: string;
+  code?: string;
   message?: string;
 }
 
@@ -42,23 +46,27 @@ export function useSafeMutation<
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const { onConflict, onError, ...rest } = options;
 
-  return useMutation({
+  return useMutation<TData, TError, TVariables, TContext>({
     ...rest,
-    onError: (...args) => {
-      const error = args[0] as AxiosLikeError;
-      // 1. Check if this is an Optimistic Locking Conflict (HTTP 409)
-      if (error.response?.status === 409) {
+    onError: (error, variables, context) => {
+      // 1. Check if this is an Optimistic Locking Conflict (HTTP 409 or ConflictError)
+      const isConflict = 
+        error.response?.status === 409 || 
+        error instanceof ConflictError || 
+        error.name === 'ConflictError' ||
+        error.code === 'VERSION_CONFLICT';
+
+      if (isConflict) {
         if (onConflict) {
           onConflict();
-          // If onConflict is handled, we stop propagation here to avoid
-          // showing generic error toasts for a known concurrency issue.
           return;
         }
       }
 
       // 2. Forward to original error handler for all other cases
-      // (or if 409 was received but no onConflict handler was provided)
-      (onError as any)?.(...args);
+      if (onError) {
+        (onError as (err: TError, vars: TVariables, ctx: TContext | undefined) => unknown)(error, variables, context);
+      }
     },
   });
 }

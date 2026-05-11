@@ -1,10 +1,9 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import { ContextSelectorClient } from './ContextSelectorClient';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
- const { locale } = await params;
- const t = await getTranslations({ locale, namespace: 'common' });
+  const { locale } = await params;
  return {
  title: `Context Selector | LogiRest`,
  };

@@ -14,6 +14,7 @@ import {
   Info, 
   Clock 
 } from 'lucide-react';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { cn } from '@/lib/utils';
 import { formatQuantity } from '@/utils/currency';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
@@ -61,9 +62,12 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
               <StatusBadge status={adjustmentStatus as BadgeStatus} />
-              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0">
-                {format(new Date(document?.created_at || new Date()), 'yyyy-MM-dd')}
-              </span>
+              <ClientOnlyTime 
+                date={document?.created_at} 
+                mode="date" 
+                locale={locale as 'ar' | 'en'}
+                className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
+              />
             </div>
           </div>
         </div>
@@ -210,9 +214,12 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                 {document?.posted_at && (
                   <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
                     <span className="text-label-sm text-muted-foreground">{t('posted_at')}</span>
-                    <span className="text-label-xs font-bold" dir="ltr">
-                      {format(new Date(document.posted_at), 'yyyy-MM-dd HH:mm')}
-                    </span>
+                    <ClientOnlyTime 
+                      date={document.posted_at} 
+                      mode="datetime" 
+                      locale={locale as 'ar' | 'en'}
+                      className="text-label-xs font-bold"
+                    />
                   </div>
                 )}
                 {document?.approved_by && (

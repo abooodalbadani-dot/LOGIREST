@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
  const params = useParams();
  const router = useRouter();
  const searchParams = useSearchParams();
- const locale = params.locale as string;
+ const _locale = params.locale as string;
  const token = searchParams.get('token');
  
  const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
  setTimeout(() => {
   router.push('/login');
  }, 3000);
- } catch (err) {
+ } catch (_err) {
  setError(t('invalid_credentials')); // Fallback error
  }
  };

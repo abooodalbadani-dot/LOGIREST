@@ -19,16 +19,20 @@ const CreatePRPayloadSchema = z.object({
 export type CreatePRPayload = z.infer<typeof CreatePRPayloadSchema>;
 
 export function useCreatePR(options?: { onConflict?: () => void }) {
- const queryClient = useQueryClient();
- return useSafeMutation({
- onConflict: options?.onConflict,
- mutationFn: (payload: CreatePRPayload) => 
- apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(payload)),
- onSuccess: (data) => {
- // Seed the cache for the newly created PR
- queryClient.setQueryData(['purchase-request', data.id], data);
- 
- queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
- }
- });
+  const queryClient = useQueryClient();
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    mutationFn: (payload: CreatePRPayload & { signal?: AbortSignal }) => {
+      const { signal, ...data } = payload;
+      return apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(data), signal);
+    },
+    onSuccess: (data) => {
+      // Seed the cache for the newly created PR
+      queryClient.setQueryData(['purchase-request', data.id], data);
+      queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
+    },
+    onError: (error) => {
+      if (error instanceof Error && error.message === 'Aborted') return;
+    }
+  });
 }

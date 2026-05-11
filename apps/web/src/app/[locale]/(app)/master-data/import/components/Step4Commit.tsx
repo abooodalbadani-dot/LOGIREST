@@ -7,10 +7,12 @@ import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useRouter } from '@/i18n/navigation';
 
-interface Step4CommitProps {
- wizard: any;
- locale: string;
-}
+import { ImportWizardState } from '../types';
+ 
+ interface Step4CommitProps {
+  wizard: ImportWizardState;
+  locale: string;
+ }
 
 export function Step4Commit({ wizard, locale }: Step4CommitProps) {
  const t = useTranslations('master_data.import');
@@ -91,7 +93,7 @@ export function Step4Commit({ wizard, locale }: Step4CommitProps) {
  <Button 
  className="flex-1 h-14 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase text-label-xs shadow-lg shadow-cyan-500/20"
  disabled={wizard.isCommitting}
- onClick={wizard.commit}
+ onClick={wizard.handleCommit}
  >
  {wizard.isCommitting ? (
  <>
