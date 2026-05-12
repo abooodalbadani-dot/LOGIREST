@@ -145,7 +145,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
           <StatusBadge status={grn.status} />
           <Button 
             onClick={() => router.push(`/goods-received/${id}`, { skipGuard: true })}
-            className="rounded-xl font-semibold text-label-xs uppercase px-6"
+            className="rounded-sm font-semibold text-label-xs uppercase px-6"
           >
             {t("finish_scanning")}
           </Button>
@@ -154,10 +154,10 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-5 space-y-6">
-          <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem] flex flex-col items-center justify-center min-h-[400px]">
+          <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-sm flex flex-col items-center justify-center min-h-[400px]">
             <div className="w-full max-w-sm space-y-8">
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-primary/10 mb-4">
                   <PackageSearch className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-title-lg font-semibold">{t("scan_mode")}</h3>
@@ -166,6 +166,11 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
 
               <ScanInput
                 onScan={handleScan}
+                onManualTrigger={() => {
+                  setScanStatus("idle");
+                  // Trigger a generic manual search if needed, but for now we'll just focus the input
+                  toast.info(common("manual_entry"));
+                }}
                 scanStatus={scanStatus}
                 statusMessage={statusMessage}
                 isScanning={updateLine.isPending}
@@ -192,7 +197,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
             </Badge>
           </div>
 
-          <Card className="overflow-hidden bg-surface-container-lowest border-none shadow-none rounded-[2rem]">
+          <Card className="overflow-hidden bg-surface-container-lowest border-none shadow-none rounded-sm">
             <Table>
               <TableHeader className="bg-white/[0.02]">
                 <TableRow className="hover:bg-transparent border-none">

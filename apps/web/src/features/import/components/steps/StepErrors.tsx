@@ -16,7 +16,6 @@ interface StepErrorsProps {
 
 export function StepErrors({ wizard, locale }: StepErrorsProps) {
  const t = useTranslations('master_data.import');
- const _tc = useTranslations('common');
  const isRtl = locale === 'ar';
 
  const handleExportErrors = () => {

@@ -14,7 +14,10 @@
       "remove_line": "Remove line",
       "audit_log_filename": "Audit_Log",
       "all_branches": "All Branches",
-      "done": "Done"
+      "done": "Done",
+      "no_data": "No Data",
+      "retry": "Retry",
+      "go_back": "Go Back"
     },
     "admins": "Admins",
     "audit_trail": "Audit Trail / History",
@@ -49,7 +52,7 @@
     "dash": "—",
     "datatable": {
       "export_csv": "Export CSV",
-      "no_records": "No records found.",
+      "no_records": "No Data",
       "of": "of",
       "showing": "Showing",
       "to": "to",
@@ -95,6 +98,9 @@
     },
     "excel": "Excel",
     "expiry": "Expiry",
+    "manual_entry": "Manual Entry",
+    "export": "Export",
+    "loading": "Loading...",
     "export_excel": "Export Excel",
     "filters": "Filters",
     "filters_button": "Refine Stream",
@@ -183,7 +189,7 @@
     "name_ar": "Name (Arabic)",
     "name_en": "Name (English)",
     "no_items": "No items added.",
-    "no_records": "No records found.",
+    "no_records": "No Data",
     "not_available": "N/A",
     "not_found": "Not found",
     "not_logged_in": "Not Logged In",
@@ -212,6 +218,9 @@
     "select_item": "Select Item...",
     "select_supplier": "Select Supplier...",
     "select_warehouse": "Select Warehouse...",
+    "select_department": "Select Department...",
+    "add_item": "Add Item",
+    "quantity": "Quantity",
     "id": "ID",
     "error_occurred": "An error occurred",
     "units": "Units",
@@ -367,7 +376,10 @@
     },
     "modules": {
       "operations": "Operations"
-    }
+    },
+    "warehouse_locked": "Warehouse Locked",
+    "stocktake_in_progress_desc": "Transactions are restricted due to an active stocktake.",
+    "not_available": "Not Available"
   },
   "admin": {
     "action": "Action",
@@ -474,7 +486,7 @@
         "identity": "Brand Identity",
         "legal": "Legal Metadata"
       },
-      "subtitle": "Culinary Architect Identity & Branding",
+      "subtitle": "LogiRest Identity & Branding",
       "title": "Restaurant Profile",
       "upload_logo": "Upload Logo",
       "validation": {
@@ -647,7 +659,7 @@
       "demo_access": "Demo Access",
       "description": "Enter your credentials to access the secure portal.",
       "hero_subtitle": "Precision management for high-performance kitchens. Real-time inventory tracking and automated procurement.",
-      "hero_title": "Culinary Architect",
+      "hero_title": "LogiRest",
       "operator_id": "Operator ID",
       "operator_id_placeholder": "Enter ID or Email",
       "password_placeholder": "Enter Password",
@@ -1036,6 +1048,7 @@
       "active_metrics": "Active Metrics",
       "active_partners": "Active Partners",
       "active_status": "Active Status",
+      "status_label": "Status",
       "barcodes": "Barcodes",
       "base_currency_description": "The system uses the base currency for all internal calculations and reporting.",
       "base_currency_warning": "Warning: Setting this as base currency will affect all exchange rate calculations.",
@@ -1097,6 +1110,7 @@
       "search": "Search",
       "search_categories_placeholder": "Filter categories by name...",
       "search_placeholder": "Search registry...",
+      "status_label": "Status",
       "select_base_unit": "— SELECT BASE UNIT —",
       "sku_definition_protocol": "SKU Definition Protocol",
       "source_unit": "SOURCE UNIT",
@@ -1495,7 +1509,27 @@
         "name_ar_required": "Arabic name is required",
         "name_en_required": "English name is required"
       },
-      "view_title": "Supplier Details"
+      "view_title": "Supplier Details",
+      "profile": {
+        "title": "Vendor Profile",
+        "performance": "Vendor Performance",
+        "financials": "Financial Overview",
+        "orders": "Recent Activity",
+        "metrics": {
+          "total_spend": "Total Spend",
+          "active_pos": "Active POs",
+          "lead_time": "Avg Lead Time",
+          "defect_rate": "Defect Rate"
+        },
+        "trends": "Landed Cost Trends",
+        "reliability_index": "Reliability Index",
+        "reliability_index_desc": "Based on last 50 deliveries",
+        "credit_rating": "Credit Rating",
+        "credit_rating_tier": "Tier A+",
+        "partner_status": "Platinum Partner Status",
+        "market_avg_relative": "Relative to market avg",
+        "no_activity": "No recent activity recorded for this partner."
+      }
     },
     "uom": {
       "create_title": "New UoM",
@@ -2117,6 +2151,8 @@
       "warehouse": "Warehouse"
     },
     "stocktake": {
+      "locked_at": "Locked At",
+      "stocktake_in_progress_desc": "A stocktake session is currently in progress.",
       "active_counting": "Active Counting",
       "already_locked": "This warehouse already has an active stocktake session.",
       "approve": "Approve",
@@ -2271,7 +2307,14 @@
       "warehouse_locked_banner": "Warehouse locked by active stocktake: {sessionNumber}",
       "warehouse_locked_warning": "This warehouse is currently under an active audit sequence.",
       "warehouse_selector": "Select Warehouse",
-      "workflow_state": "Workflow State"
+      "workflow_state": "Workflow State",
+      "archive": "Archive",
+      "archive_title": "Stocktake Archive",
+      "archive_description": "Historical inventory audits and finalized verification sessions",
+      "archived_sessions": "Archived Sessions",
+      "total_posted": "Total Posted",
+      "no_archive_records": "No Archived Records",
+      "archive_empty_description": "Historical stocktake sessions will appear here once finalized."
     },
     "transfer": {
       "complete_receive": "Complete Receive",
@@ -2279,11 +2322,26 @@
       "confirm_receipt": "Confirm Receipt",
       "confirm_shipment": "Confirm Shipment",
       "create_new": "New Transfer",
+      "select_warehouse": "Select Warehouse...",
+      "transfer_parameters": "Transfer Parameters",
+      "items_to_transfer": "Items to Transfer",
+      "scan_item_placeholder": "Scan item barcode or enter SKU...",
+      "save_transfer": "Save Transfer",
+      "warehouse_match_error": "Source and destination warehouses cannot be the same",
       "delivered_posted": "Delivered & Posted",
       "description": "Internal warehouse transfers and movement tracking",
       "destination": "Destination",
       "destination_warehouse": "Destination Warehouse",
       "detail_title": "Transfer Details",
+      "dispute_title": "Dispute Mediation",
+      "dispute_instruction": "Please review the variances below. You must decide whether to accept the receiving warehouse's count, stick to the shipping records, or mark items as lost in transit.",
+      "discrepancy_list": "Item-wise Variance Audit",
+      "resolution_action": "Resolution Action",
+      "action_accept_received": "Accept Received Qty",
+      "action_claim_vendor": "Claim Against Shipper",
+      "action_write_off": "Write-off Loss",
+      "request_recount": "Request Recount",
+      "finalize_resolution": "Finalize Resolution",
       "doc_number": "Document No",
       "fefo_drawer_title": "Lot Allocation (FEFO)",
       "filter_state": "Relocation State",
@@ -2334,6 +2392,25 @@
       "verification_in_progress": "Verification Active",
       "verified_label": "Verified",
       "warehouse_locked": "Cannot proceed: One or more warehouses are locked due to an active stocktake."
+    }
+  },
+  "communications": {
+    "notifications": {
+      "return_to_notifications": "Back to Notifications",
+      "settings_title": "Notification Settings",
+      "inventory_alerts": "Inventory Alerts",
+      "low_stock_alert": "Low Stock Alerts",
+      "low_stock_desc": "Notify when items fall below minimum thresholds",
+      "expiry_alert": "Expiration Warnings",
+      "expiry_desc": "Alert when lots are approaching their use-by date",
+      "procurement_alerts": "Procurement & Approvals",
+      "pending_approval": "Pending Approvals",
+      "pending_desc": "Receive notifications for requests requiring your action",
+      "po_finalized": "Purchase Finalization",
+      "po_desc": "Notify when a PO is fully received or cancelled",
+      "system_security": "Security & System",
+      "security_alert": "Login Security",
+      "security_desc": "Alert on logins from new devices or locations"
     }
   },
   "procurement": {
@@ -2740,5 +2817,65 @@
     "title": "Page Not Found",
     "description": "Sorry, it looks like you've taken a wrong turn. The page you are looking for is currently unavailable.",
     "go_home": "Back to Home"
+  },
+  "landed_cost": {
+    "title": "Landed Cost Calculator",
+    "subtitle": "Calculate and allocate logistics and overhead costs to inventory",
+    "base_cost": "Net Purchase Cost",
+    "freight": "Freight / Shipping",
+    "customs": "Customs & Duties",
+    "insurance": "Insurance",
+    "handling": "Handling Fees",
+    "other": "Other Costs",
+    "total_landed": "Total Landed Cost",
+    "allocation_method": "Allocation Method",
+    "allocate_by_value": "By Value",
+    "allocate_by_weight": "By Weight",
+    "allocate_by_volume": "By Volume",
+    "calculate": "Calculate Allocation",
+    "unit_landed_cost": "Unit Landed Cost",
+    "variance": "Cost Variance"
+  },
+  "yield_management": {
+    "title": "Yield Management",
+    "subtitle": "Monitor production efficiency and component yield analysis",
+    "input_qty": "Input Quantity",
+    "output_qty": "Net Yield Quantity",
+    "waste_qty": "Waste / Loss",
+    "yield_percentage": "Yield %",
+    "efficiency_score": "Efficiency Score",
+    "production_runs": "Production Runs",
+    "active_recipes": "Active Recipes",
+    "top_performers": "Top Yielding Items",
+    "bottlenecks": "Yield Bottlenecks"
+  },
+  "transfers": {
+    "title": "Internal Transfer Hub",
+    "subtitle": "Coordinate and monitor movement of goods between warehouses and departments",
+    "new_transfer": "Initialize Transfer",
+    "source_warehouse": "Source Warehouse",
+    "target_warehouse": "Target Warehouse",
+    "transfer_date": "Transfer Date",
+    "status": "Transfer State",
+    "pending_transfers": "Pending Shipments",
+    "in_transit": "In Transit",
+    "completed_today": "Completed Today",
+    "efficiency_rate": "Transfer Efficiency",
+    "doc_number": "Transfer No",
+    "items_count": "Items",
+    "view_manifest": "View Manifest",
+    "confirm_receipt": "Confirm Receipt"
+  },
+  "barcode_mapping": {
+    "title": "Barcode Mapping Tool",
+    "subtitle": "Fast-track association of physical barcodes with system items",
+    "scan_prompt": "Scan Barcode to Begin",
+    "map_item": "Map to Item",
+    "unit_qty": "Unit Quantity",
+    "mapping_success": "Barcode mapped successfully",
+    "duplicate_warning": "This barcode is already mapped to {item}",
+    "recent_mappings": "Recent Mappings",
+    "bulk_mode": "Bulk Scan Mode",
+    "auto_advance": "Auto-Advance after Scan"
   }
 }

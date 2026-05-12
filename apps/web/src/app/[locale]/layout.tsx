@@ -23,7 +23,7 @@ import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
-  title: 'LogiRest | Kitchen-Store Inventory System',
+  title: 'لوجي ريست | LogiRest',
   description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
   robots: 'index, follow',
   icons: {

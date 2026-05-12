@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
+import Image from 'next/image';
 import {
  Form,
  FormControl,
@@ -116,7 +117,7 @@ export function ItemForm() {
  <div className="relative group/img">
  <div className="w-56 h-56 rounded-[2.5rem] bg-surface-container-highest flex items-center justify-center border-2 border-dashed border-operational-cyan/20 group-hover:border-operational-cyan/40 transition-all overflow-hidden">
  {uploadedImage ? (
- <img src={uploadedImage} alt={tc('item')} className="w-full h-full object-cover animate-in zoom-in-95 duration-500" />
+  <Image src={uploadedImage} alt={tc('item')} fill className="object-cover animate-in zoom-in-95 duration-500" />
  ) : (
  <div className="flex flex-col items-center gap-3">
  <Camera className="w-10 h-10 text-operational-cyan/40 group-hover/img:scale-110 transition-transform" />

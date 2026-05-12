@@ -1,7 +1,7 @@
-# Design System Strategy: The Culinary Architect
+# Design System Strategy: LogiRest
 
 ## 1. Overview & Creative North Star
-The "Culinary Architect" is a high-performance design system engineered for the high-stakes environment of restaurant inventory management. It moves beyond the clinical coldness of standard enterprise software to create an experience of **"Operational Elegance."** 
+The "LogiRest" design system is a high-performance framework engineered for the high-stakes environment of restaurant inventory management. It moves beyond the clinical coldness of standard enterprise software to create an experience of **"Operational Elegance."** 
 
 Our Creative North Star is **The Precision Ledger**. Much like a Michelin-star kitchen, the UI must be organized, spotless, and hyper-functional. We break the "template" look of Material Design 3 by replacing rigid grid lines with **Tonal Architecture**. By using varying depths of surface colors and intentional RTL asymmetry, we guide the eye toward critical data points—stock levels, expiration dates, and procurement needs—without the visual noise of traditional borders.
 

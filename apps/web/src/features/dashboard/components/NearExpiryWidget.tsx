@@ -30,7 +30,7 @@ export function NearExpiryWidget({ locale }: { locale: string }) {
  </div>
  </div>
  <div className="flex flex-col">
- {items.map((item, _idx) => (
+ {items.map((item) => (
  <div 
  key={item.id} 
  className="px-6 py-4 transition-all duration-300 flex items-center justify-between group hover:bg-muted/50"

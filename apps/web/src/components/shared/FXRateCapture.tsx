@@ -5,6 +5,8 @@ import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
+import { useAbortController } from '@/hooks/useAbortController';
+
 const FxRateSchema = z.object({
  rate: z.number()
 });
@@ -21,29 +23,27 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  const tCommon = useTranslations('common');
  const [rate, setRate] = useState<number | ''>(defaultRate || '');
  const [isLoading, setIsLoading] = useState(!defaultRate);
+ const abortController = useAbortController();
  
  useEffect(() => {
  if (defaultRate) return;
  
- const controller = new AbortController();
  const fetchRate = async () => {
  try {
  const response = await apiClient.get(
  `/currencies/fx-rates?from=${fromCurrencyCode}&to=${toCurrencyCode}`,
  z.object({ data: FxRateSchema }),
- controller.signal
+ abortController.signal
  );
  setRate(response.data.rate);
  setIsLoading(false);
- } catch (_err) {
+ } catch (_) {
  setIsLoading(false);
  }
  };
  
  fetchRate();
- 
- return () => { controller.abort(); };
- }, [defaultRate, fromCurrencyCode, toCurrencyCode]);
+ }, [defaultRate, fromCurrencyCode, toCurrencyCode, abortController]);
 
  const numericRate = Number(rate);
  const isValid = numericRate > 0;

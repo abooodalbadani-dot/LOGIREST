@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props) {
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'procurement.po' });
  return {
- title: `${t('approval.title')} | Culinary Architect`,
+ title: `${t('approval.title')} | LogiRest`,
  };
 }
 

@@ -155,8 +155,9 @@ export function DataTable<T>({
     <div className="py-12 px-4">
       {emptyState || (
         <EmptyState
+          variant="minimal"
           title={emptyTitle || t('no_records')}
-          description={emptyDescription || t('no_records_desc')}
+          description={emptyDescription}
         />
       )}
     </div>

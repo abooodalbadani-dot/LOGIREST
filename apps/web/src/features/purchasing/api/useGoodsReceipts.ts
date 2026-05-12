@@ -113,8 +113,14 @@ export function useCreateGoodsReceipt() {
   const queryClient = useQueryClient();
 
   return useSafeMutation({
-    mutationFn: async (data: CreateGoodsReceiptDTO) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    mutationFn: async ({ signal, ...data }: CreateGoodsReceiptDTO & { signal?: AbortSignal }) => {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 1000);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Aborted'));
+        });
+      });
       
       const newGRN: GoodsReceipt = {
         id: `grn-00${nextId++}`,
@@ -144,8 +150,14 @@ export function usePostGoodsReceipt() {
   const queryClient = useQueryClient();
 
   return useSafeMutation({
-    mutationFn: async ({ id, lockedExchangeRate, baseTotalAmount }: { id: string, lockedExchangeRate: number, baseTotalAmount: number }) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    mutationFn: async ({ id, lockedExchangeRate, baseTotalAmount, signal }: { id: string, lockedExchangeRate: number, baseTotalAmount: number, signal?: AbortSignal }) => {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 1000);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Aborted'));
+        });
+      });
       const index = mockGoodsReceipts.findIndex((p) => p.id === id);
       if (index === -1) throw new Error('Goods Receipt not found');
       
@@ -173,9 +185,15 @@ export function useUpdateGRNLine(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: async ({ grnId, item }: { grnId: string, item: GoodsReceiptLineItem }) => {
+    mutationFn: async ({ grnId, item, signal }: { grnId: string, item: GoodsReceiptLineItem, signal?: AbortSignal }) => {
       // Simulation: no real network call
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 300);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Aborted'));
+        });
+      });
       return { grnId, item };
     },
     onMutate: async ({ grnId, item }) => {

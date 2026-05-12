@@ -27,8 +27,8 @@ export function useCreateGRN(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (payload: CreateGRNPayload) => 
-      apiClient.post('/procurement/grns', z.object({ data: GRNDetailSchema }), CreateGRNPayloadSchema.parse(payload)).then(res => res.data),
+    mutationFn: ({ payload, signal }: { payload: CreateGRNPayload; signal?: AbortSignal }) => 
+      apiClient.post('/procurement/grns', z.object({ data: GRNDetailSchema }), CreateGRNPayloadSchema.parse(payload), signal).then(res => res.data),
     onSuccess: (data) => {
       queryClient.setQueryData(['grn', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['grns'] });

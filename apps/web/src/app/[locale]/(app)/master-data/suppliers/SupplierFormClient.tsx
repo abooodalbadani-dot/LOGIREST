@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Truck, CreditCard, ShieldCheck, Edit3, Trash2 } from 'lucide-react';
@@ -45,6 +45,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const tm = useTranslations('master_data.common');
   const ts = useTranslations('master_data.suppliers');
   const tv = useTranslations('master_data.validation');
+  const locale = useLocale();
   const abortController = useAbortController();
 
   const { data, isLoading, isError, refetch } = useSupplier(id);
@@ -173,17 +174,20 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-2 max-w-sm">
-                  <Label htmlFor="sup-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('code')}</Label>
-                  <Input 
-                    id="sup-code" 
-                    dir="ltr" 
-                    {...register('code')} 
-                    disabled={isReadOnly}
-                    className="font-mono font-semibold uppercase text-status-active" 
-                    placeholder={ts('code_placeholder')} 
-                  />
-                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as Parameters<typeof tv>[0])}</p>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <Label htmlFor="sup-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('code')}</Label>
+                    <Input 
+                      id="sup-code" 
+                      dir="ltr" 
+                      {...register('code')} 
+                      disabled={isReadOnly}
+                      className="font-mono font-semibold uppercase text-status-active" 
+                      placeholder={ts('code_placeholder')} 
+                    />
+                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as Parameters<typeof tv>[0])}</p>}
+                  </div>
+                  <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -207,7 +211,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                       dir="rtl" 
                       {...register('name_ar')} 
                       disabled={isReadOnly}
-                      className="font-semibold text-end" 
+                      className="font-semibold" 
                       placeholder={ts('name_ar_placeholder')} 
                     />
                     {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as Parameters<typeof tv>[0])}</p>}
@@ -244,7 +248,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                           <SelectItem value="">—</SelectItem>
                           {currencies?.map((c: Currency) => (
                             <SelectItem key={c.id} value={c.id} className="font-semibold text-label-sm uppercase">
-                              {c.code} — {c.name_en}
+                              {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -283,7 +287,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
+              <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
                   <Label htmlFor="sup-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('is_active')}</Label>
                   <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>

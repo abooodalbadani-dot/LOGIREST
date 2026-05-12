@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
 import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -25,7 +24,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation, StockIssue } from '@/types/documents';
-import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import { ISSUE_STATUS } from '@/contracts/statuses';
@@ -43,7 +41,6 @@ interface IssueFormProps {
 export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const t = useTranslations('operations.issue');
   const locale = useLocale();
-  const _router = useRouter();
   const { user } = useAuth();
   const abortController = useAbortController();
   
@@ -52,7 +49,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
   const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []) as unknown as LineItem[]);
   const [destinationId, setDestinationId] = useState(() => issue?.destination_dept_id ?? '');
-  const [warehouseId, _setWarehouseId] = useState(() => issue?.warehouse_id || 'wh-1');
+  const [warehouseId] = useState(() => issue?.warehouse_id || 'wh-1');
   const [notes, setNotes] = useState(() => issue?.notes || '');
   const [scanError, setScanError] = useState('');
   const [requestedBy, setRequestedBy] = useState(() => issue?.requested_by ?? '');
@@ -75,7 +72,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [_isWarehouseLockedError, setIsWarehouseLockedError] = useState(false);
+  const [, setIsWarehouseLockedError] = useState(false);
 
   // FEFO Allocator State
   const [fefoOpen, setFefoOpen] = useState(false);
@@ -98,14 +95,12 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   });
 
   // Lock Banner state
-  const { data: lockState } = useWarehouseLock(warehouseId);
+  useWarehouseLock(warehouseId);
 
   // Workflow Engine Integrations
   const status = (issue?.status || ISSUE_STATUS.DRAFT) as DocumentStatus;
   const isDocLocked = isDocumentLocked("ISSUE", status);
-  const _isWarehouseLocked = !!lockState?.isLocked;
-  
-  const _canEdit = !isDocLocked;
+
 
 
   const handleScan = async (barcode: string) => {
@@ -200,7 +195,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 {isNew ? t('create_new') : t('detail_title')}
               </h1>
               {!isNew && (
-                <div className="px-2 py-0.5 bg-primary/10 rounded flex items-center gap-1.5">
+                <div className="px-2 py-0.5 bg-primary/10 rounded-sm flex items-center gap-1.5">
                   <span className="text-label-xxs font-semibold uppercase text-primary leading-none">
                     {issue?.document_number || '—'}
                   </span>
@@ -220,10 +215,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 lg:col-span-8 space-y-8">
             {!isDocLocked && (
-              <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+              <div className="bg-surface-container-lowest p-8 rounded-sm shadow-sm relative overflow-hidden group transition-all hover:shadow-md border border-surface-variant/5">
                 <div className="relative space-y-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-sm bg-primary/10 flex items-center justify-center">
                       <Package className="w-4 h-4 text-primary" />
                     </div>
                     <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
@@ -233,10 +228,11 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     disabled={isDocLocked} 
                     placeholder={t('scan_placeholder')} 
                     onError={(bc) => setScanError(t('not_found_prefix') + bc)}
-                    className="bg-surface-container-low rounded-lg transition-all focus-within:ring-1 focus-within:ring-primary-fixed-dim/10 shadow-none border-none"
+                    size="lg"
+                    scannerMode={true}
                   />
                   {scanError && (
-                    <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-500">
+                    <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-sm text-label-xs font-bold text-red-500 uppercase animate-in shake duration-500">
                       <AlertCircle className="w-4 h-4" />
                       {scanError}
                     </div>
@@ -245,13 +241,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               </div>
             )}
             
-            <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
+            <div className="bg-surface-container-lowest rounded-sm overflow-hidden shadow-sm border border-surface-variant/5">
                   <div className="p-8 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-1 h-6 bg-primary/20 rounded-full" />
                       <h3 className="text-label-xs font-semibold uppercase text-primary/30">{t('line_items')}</h3>
                     </div>
-                    <div className="px-4 py-2 bg-surface-container-low rounded-lg text-label-xs font-mono text-primary/40">
+                    <div className="px-4 py-2 bg-surface-container-low rounded-sm text-label-xs font-mono text-primary/40">
                       {lines.length} {t('entries').toUpperCase()}
                     </div>
                   </div>
@@ -267,7 +263,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                             <Input 
                               type="number" 
                               dir="ltr"
-                              className="w-24 h-10 bg-surface-container-low border-none rounded-lg text-center font-mono text-body-md shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 disabled:opacity-50 transition-all"
+                              className="w-24 h-10 bg-surface-container-low border-none rounded-sm text-center font-mono text-body-md shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 disabled:opacity-50 transition-all"
                               value={line.qty as number} 
                               disabled={isDocLocked}
                               onChange={e => {
@@ -307,7 +303,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                             <Button 
                               variant="ghost"
                               size="sm"
-                              className={`h-10 px-5 text-label-xs font-semibold uppercase rounded-lg transition-all ${ isFullyAllocated ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20' }`}
+                              className={`h-10 px-5 text-label-xs font-semibold uppercase rounded-sm transition-all ${ isFullyAllocated ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-primary/10 text-primary hover:bg-primary/20' }`}
                               onClick={() => handleLotClick(line)}
                             >
                               {lineAllocations.length > 0 
@@ -328,10 +324,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
 
           <div className="col-span-12 lg:col-span-4 space-y-8">
-            <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+            <div className="bg-surface-container-lowest p-8 rounded-sm shadow-sm relative overflow-hidden group transition-all hover:shadow-md border border-surface-variant/5">
               <div className="relative space-y-10">
                 <div className="flex items-center gap-4 pb-6">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-sm bg-primary/10 flex items-center justify-center">
                     <FileText className="w-6 h-6 text-primary" />
                   </div>
                   <div>
@@ -351,10 +347,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       onValueChange={(val) => setDestinationId(val || '')} 
                       disabled={isDocLocked}
                     >
-                      <SelectTrigger className="w-full h-12 bg-surface-container-highest border-none rounded-lg px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10">
+                      <SelectTrigger className="w-full h-12 bg-surface-container-highest border-none rounded-sm px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10">
                         <SelectValue placeholder={t('select_department')} />
                       </SelectTrigger>
-                      <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
+                      <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
                         {departments.map((dept) => (
                           <SelectItem key={dept.id} value={dept.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
                             {locale === 'ar' ? dept.name_ar : dept.name_en}
@@ -375,7 +371,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       onChange={e => setRequestedBy(e.target.value)}
                       disabled={isDocLocked}
                       placeholder={t('requested_by_placeholder')}
-                      className="w-full h-12 bg-surface-container-highest border-none rounded-lg px-4 font-bold text-label-sm transition-all placeholder:text-muted-foreground/20 shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
+                      className="w-full h-12 bg-surface-container-highest border-none rounded-sm px-4 font-bold text-label-sm transition-all placeholder:text-muted-foreground/20 shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
                     />
                   </div>
 
@@ -389,16 +385,16 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       onChange={e => setNotes(e.target.value)} 
                       disabled={isDocLocked} 
                       placeholder={t('notes_placeholder')}
-                      className="w-full bg-surface-container-highest border-none rounded-lg p-5 text-label-sm font-medium transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
+                      className="w-full bg-surface-container-highest border-none rounded-sm p-5 text-label-sm font-medium transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+            <div className="bg-surface-container-lowest p-8 rounded-sm shadow-sm relative overflow-hidden group transition-all hover:shadow-md border border-surface-variant/5">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-sm bg-primary/10 flex items-center justify-center">
                   <History className="w-5 h-5 text-primary" />
                 </div>
                 <h4 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('status_history')}</h4>
@@ -412,13 +408,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 <div className="mt-10 pt-8 border-t border-primary/5 space-y-4">
                   <div className="flex justify-between items-center group">
                     <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_by')}</span>
-                    <div className="px-3 py-1 bg-surface-container-low rounded-lg transition-colors group-hover:bg-primary/5">
+                    <div className="px-3 py-1 bg-surface-container-low rounded-sm transition-colors group-hover:bg-primary/5">
                       <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">{user?.name || 'System'}</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center group">
                     <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
-                    <div className="px-3 py-1 bg-surface-container-low rounded-lg transition-colors group-hover:bg-primary/5">
+                    <div className="px-3 py-1 bg-surface-container-low rounded-sm transition-colors group-hover:bg-primary/5">
                       <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
                         {formatDate(issue?.created_at, locale as 'ar' | 'en')}
                       </span>
@@ -455,7 +451,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       />
 
           <Dialog open={fefoOpen} onOpenChange={setFefoOpen}>
-            <DialogContent className="max-h-[85vh] max-w-2xl bg-surface-container-lowest border-none shadow-2xl rounded-lg p-0 overflow-hidden">
+            <DialogContent className="max-h-[85vh] max-w-2xl bg-surface-container-lowest border-none shadow-2xl rounded-sm p-0 overflow-hidden">
               <div className="p-8 border-b border-primary/5 bg-primary/[0.02]">
                 <DialogHeader>
                   <DialogTitle className="text-title-lg font-semibold uppercase italic italic text-foreground">

@@ -11,8 +11,8 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, version }: { id: string; version: number }) => 
-      apiClient.post(`/operations/adjustments/${id}/post`, successSchema, { version }),
+    mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) => 
+      apiClient.post(`/operations/adjustments/${id}/post`, successSchema, { version }, signal),
     onSuccess: (_, { id }) => {
       queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
         if (!old) return old;

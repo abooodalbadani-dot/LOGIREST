@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { useAdminRole, useUpdateRolePermissions, type Permission, type RoleAction } from '@/features/admin/hooks/useAdminRoles';
+import { useAdminRole, useUpdateRolePermissions, type RoleAction } from '@/features/admin/hooks/useAdminRoles';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { ShieldCheck, Lock, AlertCircle } from 'lucide-react';
@@ -23,50 +23,44 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
   const { data: role, isLoading } = useAdminRole(id);
   const { mutateAsync: updatePermissions, isPending } = useUpdateRolePermissions();
 
-  const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
+  const basePermissions = useMemo(() => role?.permissions ?? [], [role]);
+  const [edits, setEdits] = useState<Record<string, Partial<Record<RoleAction, boolean>>>>({});
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const isAdmin = id === 'ADMIN';
   const isAuditor = isReadOnly || isAdmin;
 
-  const [initializedRoleId, setInitializedRoleId] = useState<string | null>(null);
-
-  // Initialize local state when data is loaded
-  if (role && role.id !== initializedRoleId) {
-    setLocalPermissions(JSON.parse(JSON.stringify(role.permissions)));
-    setInitializedRoleId(role.id);
-  }
+  const localPermissions = useMemo(() => {
+    return basePermissions.map(p => ({
+      ...p,
+      actions: { ...p.actions, ...edits[p.module] },
+    }));
+  }, [basePermissions, edits]);
 
   const handleToggle = (module: string, action: RoleAction, checked: boolean) => {
     if (isAuditor) return;
 
-    setLocalPermissions(prev => prev.map(p => {
-      if (p.module === module) {
-        const newActions = { ...p.actions, [action]: checked };
-        
-        // Logical dependency: If any action is enabled, 'view' must be enabled
-        if (checked && action !== 'view') {
-          newActions.view = true;
-        }
-        
-        // If 'view' is disabled, all other actions must be disabled
-        if (!checked && action === 'view') {
-          newActions.create = false;
-          newActions.edit = false;
-          newActions.approve = false;
-          newActions.post = false;
-        }
+    setEdits(prev => {
+      const currentDiff = { ...(prev[module] || {}) };
+      currentDiff[action] = checked;
 
-        return { ...p, actions: newActions };
+      if (checked && action !== 'view') {
+        currentDiff.view = true;
       }
-      return p;
-    }));
+      if (!checked && action === 'view') {
+        currentDiff.create = false;
+        currentDiff.edit = false;
+        currentDiff.approve = false;
+        currentDiff.post = false;
+      }
+
+      return { ...prev, [module]: currentDiff };
+    });
   };
 
   const hasChanges = useMemo(() => {
-    if (!role) return false;
-    return JSON.stringify(role.permissions) !== JSON.stringify(localPermissions);
-  }, [role, localPermissions]);
+    return Object.keys(edits).length > 0;
+  }, [edits]);
 
   const isValid = useMemo(() => {
     return localPermissions.some(p => p.actions.view);

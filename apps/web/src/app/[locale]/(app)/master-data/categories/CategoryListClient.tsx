@@ -136,18 +136,8 @@ export function CategoryListClient() {
         collectionName="master_data_categories"
         emptyState={
           <EmptyState
-            title={tc('empty.title')}
-            description={tc('empty.description')}
-            action={
-              <PermissionGate action="create" resource="master_data">
-                <Link href={`/master-data/categories/new`}>
-                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
-                    <Plus className="w-3.5 h-3.5 me-2" />
-                    {t('create_new')}
-                  </Button>
-                </Link>
-              </PermissionGate>
-            }
+            variant="minimal"
+            title={t('no_data')}
           />
         }
         onRowClick={(r: Category) => router.push(`/master-data/categories/${r.id}`)}

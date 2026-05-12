@@ -53,7 +53,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  const handleConfirm = () => {
  if (!isValid) return;
  const finalAllocations = Object.entries(allocations)
- .filter(([_id, data]) => data.qty > 0)
+ .filter(([_, data]) => data.qty > 0)
  .map(([id, data]) => {
  const lot = lots.find(l => l.id === id)!;
  return {

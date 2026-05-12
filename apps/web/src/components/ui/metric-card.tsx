@@ -46,8 +46,8 @@ export function MetricCard({
  trend, 
  icon: Icon, 
 color = 'cyan', 
-  className,
-  dir = 'ltr'
+  className
+
 }: MetricCardProps) {
  const styles = colorMap[color as keyof typeof colorMap] || colorMap.cyan;
 

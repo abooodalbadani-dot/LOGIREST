@@ -14,6 +14,7 @@ import { useRejectAdjustment } from '@/features/operations/hooks/useRejectAdjust
 import { useUpdateAdjustment } from '@/features/operations/hooks/useUpdateAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
+import { useAbortController } from '@/hooks/useAbortController';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
 import { 
   CheckCircle, 
@@ -77,6 +78,7 @@ export function AdjustmentForm({
   const rejectAdjustment = useRejectAdjustment(id, { onConflict });
   const postAdjustment = usePostAdjustment({ onConflict });
   const updateAdjustment = useUpdateAdjustment({ onConflict });
+  const abortController = useAbortController();
 
   const [warehouseId, setWarehouseId] = useState(document?.warehouse_id || 'wh-1');
   const { data: lockState } = useWarehouseLock(warehouseId);
@@ -107,8 +109,6 @@ export function AdjustmentForm({
 
   // Refresh stock levels when warehouse changes
   useEffect(() => {
-    const controller = new AbortController();
-
     if (canEdit && lines.length > 0) {
       const refreshStock = async () => {
         const BalanceSchema = z.object({
@@ -123,7 +123,7 @@ export function AdjustmentForm({
               const balanceRes = await apiClient.get(
                 `/inventory/balance?warehouse_id=${warehouseId}&search=${line.item.code}`, 
                 BalanceSchema,
-                controller.signal
+                abortController.signal
               );
               const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
               return { ...line, qty_before: currentQty };
@@ -134,7 +134,7 @@ export function AdjustmentForm({
           }));
           
           const hasChanged = updatedLines.some((l, i) => l.qty_before !== lines[i].qty_before);
-          if (hasChanged && !controller.signal.aborted) {
+          if (hasChanged && !abortController.signal.aborted) {
             setLines(updatedLines);
           }
         } catch (err) {
@@ -145,9 +145,7 @@ export function AdjustmentForm({
       
       refreshStock();
     }
-
-    return () => controller.abort();
-  }, [warehouseId, canEdit]);
+  }, [warehouseId, canEdit, abortController]);
 
   const handleSaveDraft = async () => {
     if (lines.length === 0) return;
@@ -167,11 +165,11 @@ export function AdjustmentForm({
       };
 
       if (isNew) {
-        await createAdjustment.mutateAsync(payload);
+        await createAdjustment.mutateAsync({ payload, signal: abortController.signal });
         toast.success(t('create_success'));
         router.push(`/adjustments`);
       } else {
-        await updateAdjustment.mutateAsync({ id, payload });
+        await updateAdjustment.mutateAsync({ id, payload, signal: abortController.signal });
         toast.success(t('update_success'));
       }
     } catch (e) {
@@ -182,7 +180,7 @@ export function AdjustmentForm({
 
   const handleSubmit = async () => {
     try {
-      await submitAdjustment.mutateAsync({ version: document?.version || 0 });
+      await submitAdjustment.mutateAsync({ version: document?.version || 0, signal: abortController.signal });
       toast.success(t('submit_success'));
       setSubmitDialogOpen(false);
     } catch (e) {
@@ -194,7 +192,7 @@ export function AdjustmentForm({
   const handleApprove = async () => {
     if (!!lockState?.isLocked) return;
     try {
-      await approveAdjustment.mutateAsync({ version: document?.version || 0 });
+      await approveAdjustment.mutateAsync({ version: document?.version || 0, signal: abortController.signal });
       toast.success(t('approve_success'));
       setApproveDialogOpen(false);
     } catch (e) {
@@ -207,7 +205,11 @@ export function AdjustmentForm({
     const trimmedComment = rejectionComment.trim();
     if (trimmedComment.length < 15) return;
     try {
-      await rejectAdjustment.mutateAsync({ version: document?.version || 0, reject: trimmedComment });
+      await rejectAdjustment.mutateAsync({ 
+        version: document?.version || 0, 
+        reject: trimmedComment,
+        signal: abortController.signal 
+      });
       toast.success(t('reject_success'));
       setRejectDialogOpen(false);
     } catch (e) {
@@ -219,7 +221,7 @@ export function AdjustmentForm({
   const handlePost = async () => {
     if (!!lockState?.isLocked) return;
     try {
-      await postAdjustment.mutateAsync({ id, version: document?.version || 0 });
+      await postAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
       setPostDialogOpen(false);
       router.push(`/adjustments`);
     } catch (e) {
@@ -247,7 +249,7 @@ export function AdjustmentForm({
           primary_uom: z.object({ id: z.string(), code: z.string() })
         }))
       });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
+      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortController.signal);
       
       if (res.data && res.data.length > 0) {
         const item = res.data[0];
@@ -257,7 +259,11 @@ export function AdjustmentForm({
             qty_on_hand: z.number()
           }))
         });
-        const balanceRes = await apiClient.get(`/inventory/balance?warehouse_id=${warehouseId}&search=${item.code}`, BalanceSchema);
+        const balanceRes = await apiClient.get(
+          `/inventory/balance?warehouse_id=${warehouseId}&search=${item.code}`, 
+          BalanceSchema,
+          abortController.signal
+        );
         const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
 
         setLines(prev => {

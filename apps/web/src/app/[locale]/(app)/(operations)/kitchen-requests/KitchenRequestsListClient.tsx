@@ -145,25 +145,25 @@ export function KitchenRequestsListClient({
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MetricCard
-          label={t('statuses.SUBMITTED')}
+          label={t('statuses.submitted')}
           value={submittedCount}
           icon={<Clock className="w-4 h-4" />}
           color="cyan"
         />
         <MetricCard
-          label={t('statuses.APPROVED')}
+          label={t('statuses.approved')}
           value={approvedCount}
           icon={<CheckCircle2 className="w-4 h-4" />}
           color="emerald"
         />
         <MetricCard
-          label={t('statuses.REJECTED')}
+          label={t('statuses.rejected')}
           value={rejectedCount}
           icon={<AlertCircle className="w-4 h-4" />}
           color="rose"
         />
         <MetricCard
-          label={t('statuses.FULFILLED')}
+          label={t('statuses.fulfilled')}
           value={fulfilledCount}
           icon={<FileText className="w-4 h-4" />}
           color="indigo"

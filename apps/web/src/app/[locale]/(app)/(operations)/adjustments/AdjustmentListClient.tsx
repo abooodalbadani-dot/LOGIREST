@@ -21,7 +21,7 @@ import { isAdjustmentPending } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
 import { ADJUSTMENT_STATUS, type AdjustmentStatus } from '@/contracts/statuses';
  
-// Reason → Semantic visual styling (Hardened for Culinary Architect)
+// Reason → Semantic visual styling (Hardened for LogiRest)
 const REASON_CHIP: Record<string, string> = {
  DAMAGE: 'bg-status-error/10 text-status-error font-bold border border-status-error/5',
  EXPIRY: 'bg-status-warning/10 text-status-warning font-bold border border-status-warning/5',
@@ -195,7 +195,8 @@ export function AdjustmentListClient() {
  collectionName="operations_adjustments"
  emptyState={
  <EmptyState 
- title={t('no_records') || 'No Adjustments Found'} description={t('description') || 'Register your first inventory adjustment to recalibrate stock levels.'} action={
+ variant="minimal"
+ title={tCommon('datatable.no_records')} action={
  <PermissionGate action="create" resource="adjustment">
  <Button 
  onClick={() => router.push('/adjustments/new')}

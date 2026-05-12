@@ -39,6 +39,8 @@ import { useCreateGRN } from '@/features/purchasing/hooks/useCreateGRN';
 import { useUpdateGRN } from '@/features/purchasing/hooks/useUpdateGRN';
 import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { formatCurrency } from '@/utils/currency';
+import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
+import { Item, ItemSchema } from '@/types/master-data';
 
 const grnFormSchema = z.object({
   supplier_id: z.string().min(1, 'Required'),
@@ -105,6 +107,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { data: fxRates } = useFXRates(currencyId, baseCurrency);
   const currentFxRate = fxRates?.[0]?.rate || 1;
 
+  const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
+
   const totalForeign = useMemo(() => {
     return (watchedLines || []).reduce((acc, line) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0);
   }, [watchedLines]);
@@ -126,60 +130,47 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   }, [initialData, reset]);
 
 
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, []);
-
   const handleScan = async (barcode: string) => {
-    try {
-      setScanError('');
-      
-      // Abort any existing scan request
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
+    const item = itemsData?.data?.find(i => i.code === barcode || i.barcode === barcode);
+    
+    if (item) {
+      const currentLines = getValues("lines") || [];
+      const index = currentLines.findIndex(l => l.item.id === item.id);
 
-      const ItemSchema = z.object({
-        data: z.array(z.object({
-          id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
-          primary_uom: z.object({ id: z.string(), code: z.string() })
-        }))
-      });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortControllerRef.current.signal);
-      
-      if (res.data && res.data.length > 0) {
-        const item = res.data[0];
-        const currentLines = getValues("lines") || [];
-        const index = currentLines.findIndex(l => l.item.id === item.id);
-
-        if (index >= 0) {
-          const existing = currentLines[index];
-          update(index, { 
-            ...existing, 
-            qty: existing.qty + 1, 
-            received_qty: existing.received_qty + 1 
-          });
-        } else {
-          append({
-            id: `new-${Date.now()}`,
-            item: item,
-            lot: null,
-            qty: 1,
-            received_qty: 1,
-            uom_id: item.primary_uom.id,
-            unit_cost_foreign: 0,
-            unit_cost_base: 0
-          });
-        }
+      if (index >= 0) {
+        const existing = currentLines[index];
+        update(index, { 
+          ...existing, 
+          qty: existing.qty + 1, 
+          received_qty: existing.received_qty + 1 
+        });
+        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       } else {
-        setScanError(t('no_item_found'));
+        append({
+          id: `new-${Date.now()}`,
+          item: {
+            id: item.id,
+            code: item.code,
+            name_ar: item.name_ar,
+            name_en: item.name_en,
+            primary_uom: {
+              id: item.primary_uom?.id || 'EA',
+              code: item.primary_uom?.code || 'EA'
+            }
+          },
+          lot: null,
+          qty: 1,
+          received_qty: 1,
+          uom_id: item.primary_uom?.id || 'EA',
+          unit_cost_foreign: item.last_purchase_price || 0,
+          unit_cost_base: 0
+        });
+        toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') return;
+      setScanError('');
+    } else {
       setScanError(t('no_item_found'));
+      toast.error(tc('item_not_found'));
     }
   };
 
@@ -194,7 +185,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         <PermissionGate action="post" resource="grn">
           <Button 
             onClick={() => router.push(`/goods-received/${id}/post`)}
-            className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-xl"
+            className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-sm"
           >
             <Send className="w-4 h-4 me-2" />
             {t('post_grn')}
@@ -265,17 +256,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           <DocumentReadOnlyOverlay isPosted={isLocked}>
             <div className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <Label htmlFor="supplier-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</Label>
             <Controller
               name="supplier_id"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-lg px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-sm px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                     <SelectValue placeholder={tc('select_supplier')} />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
+                  <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
                     {suppliers?.map(s => (
                       <SelectItem key={s.id} value={s.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
                         {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
@@ -288,7 +279,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             {errors.supplier_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
           </div>
 
-          <div className="bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
               <Wallet className="w-12 h-12" />
             </div>
@@ -298,10 +289,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-lg px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-sm px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
+                  <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
                     {currencies?.map(c => (
                       <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
                         {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
@@ -314,14 +305,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             {errors.currency_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
           </div>
 
-          <div className="bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
               <PackageSearch className="w-12 h-12" />
             </div>
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
             <div className="mt-2">
               {initialData?.po_number ? (
-                <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-lg">
+                <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-sm">
                   <span dir="ltr" className="font-mono">{initialData.po_number}</span>
                 </Badge>
               ) : (
@@ -330,17 +321,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
             <Label htmlFor="warehouse-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</Label>
             <Controller
               name="warehouse_id"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-lg px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-sm px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
+                  <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
                     {warehouses?.map(w => (
                       <SelectItem key={w.id} value={w.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
                         {locale === 'ar' ? w.nameAr : w.nameEn}
@@ -353,7 +344,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             {errors.warehouse_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouse_id.message}</span>}
           </div>
 
-            <div className="col-span-full bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+            <div className="col-span-full bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
               <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                 <MessageSquare className="w-12 h-12" />
               </div>
@@ -362,22 +353,47 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 id="notes-area"
                 {...register('notes')}
                 disabled={isLocked}
-                className="mt-2 w-full bg-surface-container-low border-none rounded-lg p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none" 
+                className="mt-2 w-full bg-surface-container-low border-none rounded-sm p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none" 
                 placeholder={tc('notes_placeholder')} 
               />
             </div>
           </div>
 
           <div className="space-y-6">
-            <ScanInput 
-              onScan={handleScan} 
-              placeholder={t('scan_placeholder')} 
-              onError={(bc) => setScanError(t('no_item_found') + ': ' + bc)}
-              className="bg-surface-container-lowest rounded-lg transition-all focus-within:ring-1 focus-within:ring-primary-fixed-dim/10 shadow-sm border border-surface-variant/5"
-            />
-            {scanError && <div dir="ltr" className="text-destructive text-label-xs font-semibold uppercase ps-2">{scanError}</div>}
+            <div className="bg-operational-cyan/[0.02] p-8 rounded-sm border border-operational-cyan/10">
+              <div className="flex items-center gap-6 mb-6">
+                <div className="p-3 bg-operational-cyan/10 rounded-sm text-operational-cyan">
+                  <PackageSearch className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-label-sm font-bold uppercase text-foreground">{t('scan_or_search')}</h3>
+                  <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase tracking-wider">{t('specification')}</p>
+                </div>
+              </div>
+              
+              <ScanInput 
+                onScan={handleScan} 
+                onManualTrigger={() => append({
+                  id: `new-${Date.now()}`,
+                  item: { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: 'EA', code: 'EA' } },
+                  lot: null,
+                  qty: 1,
+                  received_qty: 1,
+                  uom_id: 'EA',
+                  unit_cost_foreign: 0,
+                  unit_cost_base: 0
+                })}
+                placeholder={t('scan_placeholder')} 
+                onError={(bc) => setScanError(t('no_item_found') + ': ' + bc)}
+                size="lg"
+              />
+              {scanError && <div dir="ltr" className="text-destructive text-label-xs font-bold uppercase ps-2 mt-4 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-destructive rounded-full animate-pulse" />
+                {scanError}
+              </div>}
+            </div>
             
-            <div className="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm border border-surface-variant/5">
+            <div className="bg-surface-container-lowest rounded-sm overflow-hidden shadow-sm border border-surface-variant/5">
               <DocumentLineItemTable<LineItem> 
                 lines={fields as unknown as LineItem[]} 
                 isReadOnly={isLocked}
@@ -393,7 +409,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                       return (
                         <input type="number" 
                           dir="ltr"
-                          className="w-20 bg-surface-container-low rounded-lg text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
+                          className="w-20 bg-surface-container-low rounded-sm text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
                           {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
                           onChange={e => {
                             const val = Number(e.target.value);
@@ -437,7 +453,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             </div>
           </div>
 
-            <div className="bg-surface-container-lowest p-8 rounded-lg shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl border border-surface-variant/5">
+            <div className="bg-surface-container-lowest p-8 rounded-sm shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl border border-surface-variant/5">
               <div className="absolute top-0 end-0 w-1 h-full bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] group-hover:bg-primary transition-all" />
               
               <div className="space-y-6 relative z-10">

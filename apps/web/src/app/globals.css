@@ -101,19 +101,19 @@
   --status-error: #ef4444;
   --status-info: #3b82f6;
 
-  /* Culinary Architect Surface Foundation */
+  /* LogiRest Surface Foundation */
   --background: #f7f9ff;
   --foreground: #181c20;
 
-  --primary: #004d64;
+  --primary: #116479;
   --primary-foreground: #ffffff;
-  --primary-container: #006684;
+  --primary-container: #135e6d;
 
-  --secondary: #4c616b;
+  --secondary: #5c727d;
   --secondary-foreground: #ffffff;
 
-  --tertiary: #004f4f;
-  --tertiary-container: #006969;
+  --tertiary: #006a6a;
+  --tertiary-container: #008585;
   --tertiary-fixed-dim: #84d4d3;
 
   --muted: #f1f4fa;
@@ -272,19 +272,26 @@
   :lang(ar) h6,
   :lang(ar) .font-bold,
   :lang(ar) .font-semibold {
-    font-weight: 700 !important;
-    opacity: 1 !important;
+    font-weight: 600;
   }
 
   :lang(ar) label {
-    font-weight: 500 !important;
-    color: var(--foreground) !important;
-    opacity: 1 !important;
+    font-weight: 500;
+    color: var(--foreground);
   }
 
   :lang(ar) .text-muted-foreground {
-    color: var(--foreground-ar-muted) !important;
-    opacity: 1 !important;
+    color: var(--foreground-ar-muted);
+  }
+
+
+  /* Ensure text clarity and premium feel for all buttons */
+  button:not(.bg-transparent):not(.bg-none),
+  [data-slot="button"]:not(.bg-transparent):not(.bg-none) {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    font-weight: 700;
+    letter-spacing: 0.025em;
   }
 
   h1,

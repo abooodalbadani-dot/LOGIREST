@@ -2,17 +2,16 @@
 
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Database, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Database, Loader2 } from 'lucide-react';
 import { validateImportData } from '@/lib/import/validation';
 
 import { WizardReturn } from '../../hooks/useImportWizard';
 
 interface StepValidateProps {
  wizard: WizardReturn;
- locale: string;
 }
 
-export function StepValidate({ wizard, locale }: StepValidateProps) {
+export function StepValidate({ wizard }: StepValidateProps) {
  const t = useTranslations('master_data.import');
 
  useEffect(() => {
@@ -25,7 +24,7 @@ export function StepValidate({ wizard, locale }: StepValidateProps) {
  };
 
  runValidation();
- }, [wizard.entity, wizard.data, wizard.setValidationResults]);
+ }, [wizard]);
 
  return (
  <div className="flex flex-col items-center justify-center gap-12 py-20 animate-in fade-in zoom-in-95 duration-500">

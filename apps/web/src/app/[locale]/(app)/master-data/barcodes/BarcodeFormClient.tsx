@@ -215,7 +215,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
                   onScan={(val) => setValue('code', val, { shouldValidate: true })}
                   placeholder={isReadOnly ? "" : tb('scan_or_type')}
                   disabled={isReadOnly}
-                  className="h-11 font-mono font-bold text-label-sm text-status-secondary"
+                  size="md"
                 />
  <input type="hidden" {...register('code')} />
  {errors.code && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.code.message}</p>}

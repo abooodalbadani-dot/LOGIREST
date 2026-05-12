@@ -253,6 +253,7 @@ export function StocktakeListClient({
               containerHeight="600px"
               emptyState={
                 <EmptyState 
+                  variant="minimal"
                   title={t('no_records') || 'No Stocktakes Found'} 
                   description={t('description') || 'Physical inventory verification sessions will appear here.'} 
                   action={

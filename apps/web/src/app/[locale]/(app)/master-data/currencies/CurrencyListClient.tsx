@@ -202,22 +202,12 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  isLoading={isLoading}
  collectionName="master_data_currencies"
   onRowClick={(r: Currency) => router.push(`/master-data/currencies/${r.id}`)}
-  emptyState={
-    <EmptyState 
-      title={t('empty.title')}
-      description={t('empty.description')}
-      action={
-        <PermissionGate action="create" resource="master_data">
-          <Link href={`/master-data/currencies/new`}>
-            <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
-              <Plus className="w-3.5 h-3.5 me-2" />
-              {tc('create')}
-            </Button>
-          </Link>
-        </PermissionGate>
-      }
-    />
-  }
+   emptyState={
+     <EmptyState 
+       variant="minimal"
+       title={tc('no_data')}
+     />
+   }
  filters={
  <div className="flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-medium/30 rounded-sm">
  <div className="flex flex-col gap-2 min-w-[300px] flex-1">

@@ -43,47 +43,59 @@ const normalizeDate = (dateStr: string) => dateStr.split('T')[0];
 
 
 export function useFXRates() {
- const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
- return useQuery({
- queryKey: QUERY_KEY,
- queryFn: async () => {
- await new Promise(resolve => setTimeout(resolve, 500));
- 
- let data = queryClient.getQueryData<FXRate[]>(QUERY_KEY);
- if (!data) {
- data = INITIAL_FX_RATES;
- queryClient.setQueryData(QUERY_KEY, data);
- }
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async ({ signal }) => {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 500);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('AbortError'));
+        });
+      });
+      
+      let data = queryClient.getQueryData<FXRate[]>(QUERY_KEY);
+      if (!data) {
+        data = INITIAL_FX_RATES;
+        queryClient.setQueryData(QUERY_KEY, data);
+      }
 
- // SORTING RULE: 1) effective_date DESC, 2) from_currency_id, 3) to_currency_id
- return [...data].sort((a, b) => {
- if (b.effective_date !== a.effective_date) {
- return b.effective_date.localeCompare(a.effective_date);
- }
- if (a.from_currency_id !== b.from_currency_id) {
- return a.from_currency_id.localeCompare(b.from_currency_id);
- }
- return a.to_currency_id.localeCompare(b.to_currency_id);
- });
- }
- });
+      // SORTING RULE: 1) effective_date DESC, 2) from_currency_id, 3) to_currency_id
+      return [...data].sort((a, b) => {
+        if (b.effective_date !== a.effective_date) {
+          return b.effective_date.localeCompare(a.effective_date);
+        }
+        if (a.from_currency_id !== b.from_currency_id) {
+          return a.from_currency_id.localeCompare(b.from_currency_id);
+        }
+        return a.to_currency_id.localeCompare(b.to_currency_id);
+      });
+    }
+  });
 }
 
 export function useFXRate(id: string | null) {
- const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
- return useQuery({
- queryKey: [...QUERY_KEY, id],
- queryFn: async () => {
- if (!id) return null;
- await new Promise(resolve => setTimeout(resolve, 300));
- 
- const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
- return data.find(f => f.id === id) || null;
- },
- enabled: !!id
- });
+  return useQuery({
+    queryKey: [...QUERY_KEY, id],
+    queryFn: async ({ signal }) => {
+      if (!id) return null;
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 300);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('AbortError'));
+        });
+      });
+      
+      const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
+      return data.find(f => f.id === id) || null;
+    },
+    enabled: !!id
+  });
 }
 
 export function useCreateFXRate() {

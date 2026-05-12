@@ -208,42 +208,42 @@ export default function LotBalanceClient() {
  </div>
  </div>
 
- {/* Floating Action Bar */}
- <div className="fixed bottom-12 start-1/2 -translate-x-1/2 z-50">
+  {/* Floating Action Bar */}
+  <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50">
  <div className="flex items-center gap-8 bg-surface-ledger/95 backdrop-blur-2xl border border-operational-cyan/20 px-10 h-16 rounded-full shadow-2xl transition-all hover:scale-[1.02] group">
- <div className="flex items-center gap-6">
- <button 
- onClick={() => router.push('/inventory/scan-mode')}
- className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
- >
- <Scan className="w-4 h-4 text-operational-cyan" />
- {tc('barcode_scanner')}
- </button>
- <div className="w-px h-6 bg-white/5" />
- <button 
- onClick={() => router.push('/transfers/new')}
- className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
- >
- <MapPin className="w-4 h-4 text-operational-cyan/60" />
- {t('relocate')}
- </button>
- <div className="w-px h-6 bg-white/5" />
- <button 
- onClick={() => window.print()}
- className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
- >
- <Printer className="w-4 h-4 text-operational-cyan/60" />
- {t('print_label')}
- </button>
- <div className="w-px h-6 bg-white/5" />
- <button 
- onClick={() => router.push('/adjustments/new')}
- className="flex items-center gap-3 text-label-xs font-semibold uppercase text-foreground hover:text-operational-cyan transition-colors"
- >
- <Edit className="w-4 h-4 text-operational-cyan/60" />
- {t('adjust')}
- </button>
- </div>
+  <div className="flex items-center gap-6">
+  <button 
+  onClick={() => router.push('/inventory/scan-mode')}
+  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-white hover:text-operational-cyan transition-colors"
+  >
+  <Scan className="w-4 h-4 text-operational-cyan" />
+  {tc('barcode_scanner')}
+  </button>
+  <div className="w-px h-6 bg-white/5" />
+  <button 
+  onClick={() => router.push('/transfers/new')}
+  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-white hover:text-operational-cyan transition-colors"
+  >
+  <MapPin className="w-4 h-4 text-operational-cyan/60" />
+  {t('relocate')}
+  </button>
+  <div className="w-px h-6 bg-white/5" />
+  <button 
+  onClick={() => window.print()}
+  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-white hover:text-operational-cyan transition-colors"
+  >
+  <Printer className="w-4 h-4 text-operational-cyan/60" />
+  {t('print_label')}
+  </button>
+  <div className="w-px h-6 bg-white/5" />
+  <button 
+  onClick={() => router.push('/adjustments/new')}
+  className="flex items-center gap-3 text-label-xs font-semibold uppercase text-white hover:text-operational-cyan transition-colors"
+  >
+  <Edit className="w-4 h-4 text-operational-cyan/60" />
+  {t('adjust')}
+  </button>
+  </div>
  </div>
  </div>
  </div>

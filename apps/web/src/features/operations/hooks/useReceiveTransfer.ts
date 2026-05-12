@@ -23,8 +23,8 @@ export function useReceiveTransfer(id: string, options?: { onConflict?: () => vo
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (body: ReceivePayload) =>
-      apiClient.post(`/operations/transfers/${id}/receive`, successSchema, ReceivePayloadSchema.parse(body)),
+    mutationFn: ({ body, signal }: { body: ReceivePayload; signal?: AbortSignal }) =>
+      apiClient.post(`/operations/transfers/${id}/receive`, successSchema, ReceivePayloadSchema.parse(body), signal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transfer', id] });

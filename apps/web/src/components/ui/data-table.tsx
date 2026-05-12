@@ -67,18 +67,6 @@ export function DataTable<TData, TValue>({
  },
  })
 
- const [isRtl, setIsRtl] = React.useState(false)
-
- React.useEffect(() => {
- setIsRtl(document.documentElement.dir === 'rtl')
- 
- const observer = new MutationObserver(() => {
- setIsRtl(document.documentElement.dir === 'rtl')
- })
- observer.observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] })
- return () => observer.disconnect()
- }, [])
-
  return (
  <div className="space-y-4">
  <div className="flex items-center justify-between">

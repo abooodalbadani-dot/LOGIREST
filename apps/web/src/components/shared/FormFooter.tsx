@@ -59,67 +59,84 @@ export function FormFooter({
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6",
-      "bg-white/80 dark:bg-black/60 backdrop-blur-2xl border-t border-black/5 dark:border-white/5",
-      "shadow-[0_-8px_30px_rgb(0,0,0,0.04)]",
-      "animate-in slide-in-from-bottom-full duration-700 ease-out",
+      "fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-fit max-w-[95vw] px-4",
+      "animate-in slide-in-from-bottom-8 duration-700 ease-out",
       className
     )}>
-      <div className="max-w-[1400px] mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className={cn(
+        "bg-surface-ledger/95 backdrop-blur-2xl",
+        "border border-white/10",
+        "shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),0_0_20px_rgba(var(--primary-rgb),0.15)]",
+        "rounded-full h-12 md:h-14 px-2 md:px-3 flex items-center transition-all gap-1 md:gap-2"
+      )}>
         {/* Secondary Action: Cancel / Back */}
         <Button
           variant="ghost"
           type="button"
           onClick={onCancel}
           disabled={actualIsSaving}
-          className="h-14 px-8 text-label-xs font-black uppercase tracking-widest rounded-2xl bg-surface-container-high/20 hover:bg-surface-container-high transition-all border-none group"
+          className={cn(
+            "h-8 md:h-10 px-3 md:px-5 rounded-full",
+            "text-[10px] md:text-label-sm font-black uppercase tracking-widest",
+            "text-white/60 hover:text-white hover:bg-white/5 transition-all",
+            "group flex items-center gap-2 shrink-0 border-none"
+          )}
         >
           {isLocked ? (
-            <ArrowLeft className={cn("w-4 h-4 me-3 transition-transform group-hover:-translate-x-1")} />
+            <ArrowLeft className={cn("w-4 h-4 md:w-5 md:h-5 transition-transform group-hover:-translate-x-1 rtl:rotate-180 rtl:group-hover:translate-x-1")} />
           ) : (
-            <X className={cn("w-4 h-4 me-3 opacity-60 transition-transform group-hover:rotate-90")} />
+            <X className={cn("w-4 h-4 md:w-5 md:h-5 opacity-50 transition-transform group-hover:rotate-90")} />
           )}
-          {isLocked ? (cancelLabel || t('back_to_list')) : (cancelLabel || t('cancel'))}
+          <span className="hidden md:inline">{isLocked ? (cancelLabel || t('back_to_list')) : (cancelLabel || t('cancel'))}</span>
         </Button>
 
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+        {/* Vertical Divider */}
+        {(actions || (onSubmit && !isLocked)) && (
+          <div className="w-px h-8 bg-white/10 mx-1 shrink-0" />
+        )}
+
+        <div className="flex items-center gap-3">
           {/* Validation Warning Badge */}
           {shouldShowWarning && (
-            <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-error/5 border border-error/10 animate-in fade-in zoom-in duration-300">
-              <AlertCircle className="w-3.5 h-3.5 text-error" />
-              <span className="text-error text-[10px] font-black uppercase tracking-wider">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-status-error/10 border border-status-error/20 animate-in fade-in zoom-in duration-300 shrink-0">
+              <AlertCircle className="w-3.5 h-3.5 text-status-error" />
+              <span className="text-status-error text-[10px] font-black uppercase tracking-wider">
                 {t('check_fields') || 'Check Required Fields'}
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            {/* Custom Extra Actions (e.g., Post, Approve buttons) */}
+          <div className="flex items-center gap-3">
+            {/* Custom Extra Actions (Workflow Actions: Post, Ship, etc) */}
             {actions}
             
-            {/* Primary Action: Save / Submit */}
+            {/* Primary Action: Save / Submit (Drafting) */}
             {onSubmit && !isLocked && (
               <Button
                 onClick={onSubmit}
                 disabled={actualIsSaving || !actualIsValid || (!isDirty && !actualIsSaving)}
                 className={cn(
-                  "h-14 px-12 bg-operational-cyan text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-operational-cyan/30 border-none",
-                  "hover:brightness-110 active:scale-95 hover:shadow-operational-cyan/40",
-                  "disabled:opacity-40 disabled:grayscale disabled:scale-100 disabled:shadow-none"
+                  "h-8 md:h-10 px-6 md:px-10 rounded-full transition-all",
+                  "bg-primary !text-white hover:opacity-90 active:scale-95",
+                  "text-[10px] md:text-label-sm font-black uppercase tracking-widest",
+                  "disabled:opacity-100 disabled:bg-white/10 disabled:text-white/30 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none",
+                  "flex items-center gap-2 shrink-0 shadow-lg shadow-primary/20"
                 )}
               >
                 {actualIsSaving ? (
-                  <Loader2 className="w-5 h-5 me-3 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  saveIcon || <Save className="w-5 h-5 me-3" />
+                  saveIcon || <Save className="w-4 h-4 md:w-5 md:h-5" />
                 )}
-                {actualIsSaving ? t('saving') : (actualSaveLabel || t('save'))}
+                <span>{actualIsSaving ? t('saving') : (actualSaveLabel || t('save'))}</span>
               </Button>
             )}
           </div>
         </div>
       </div>
     </div>
+
+
   );
 }
 
