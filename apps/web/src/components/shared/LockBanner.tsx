@@ -24,15 +24,15 @@ export function LockBanner({ lockState }: { lockState: WarehouseLockState | unde
  </div>
  <div className="flex flex-col gap-0.5">
  <span className="font-semibold text-status-warning uppercase text-label-xs">
- {t('warehouse_locked_banner', { sessionNumber: lockState.sessionNumber || 'N/A' })}
+ {t('warehouse_locked_banner', { sessionNumber: lockState.sessionNumber || tc('not_available') })}
  </span>
  <span className="text-status-warning/80 text-label-sm font-bold leading-relaxed">
  {startTime ? (
  <span className="flex items-center gap-1.5">
- {tc('locked_at')}: <span dir="ltr" className="font-mono font-semibold bg-status-warning/20 px-2 py-0.5 rounded-lg text-label-xs">{startTime}</span>
+ {t('locked_at')}: <span dir="ltr" className="font-mono font-semibold bg-status-warning/20 px-2 py-0.5 rounded-lg text-label-xs">{startTime}</span>
  </span>
  ) : (
- tc('stocktake_in_progress_desc')
+ t('stocktake_in_progress_desc')
  )}
  </span>
  </div>

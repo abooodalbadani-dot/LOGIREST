@@ -10,8 +10,8 @@ export function useCreateIssue(options?: { onConflict?: () => void }) {
  
  return useSafeMutation({
  onConflict: options?.onConflict,
- mutationFn: (data: Partial<StockIssueDetail>) => 
- apiClient.post(`/operations/issues`, z.object({ data: StockIssueDetailSchema }), data).then(res => res.data),
+ mutationFn: ({ signal, ...data }: Partial<StockIssueDetail> & { signal?: AbortSignal }) => 
+ apiClient.post(`/operations/issues`, z.object({ data: StockIssueDetailSchema }), data, signal).then(res => res.data),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['issues'] });
  }

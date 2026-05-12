@@ -204,7 +204,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                         <SelectContent>
                           {branches.map((b) => (
                             <SelectItem key={b.id} value={b.id} className="font-semibold text-label-sm uppercase">
-                              {b.code} — {b.name_en}
+                              {b.code} — {locale === 'ar' ? b.name_ar : b.name_en}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -115,7 +115,7 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
  showCloseButton?: boolean
 }) {
-const _t = useTranslations("common");
+
   return (
     <div
       data-slot="dialog-footer"

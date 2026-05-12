@@ -8,11 +8,11 @@ export function usePostStocktake(sessionId: string, warehouseId: string, options
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (version: number) =>
+    mutationFn: ({ version, signal }: { version: number; signal?: AbortSignal }) =>
       apiClient.post(`/stocktake/sessions/${sessionId}/post`, StocktakeSessionSchema, { 
         version,
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' 
-      }),
+      }, signal),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stocktake-sessions'] });
       qc.invalidateQueries({ queryKey: ['stocktake-session', sessionId] });

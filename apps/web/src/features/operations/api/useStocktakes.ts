@@ -37,8 +37,8 @@ export function useStocktake(id: string) {
 export function useCreateStocktake() {
   const qc = useQueryClient();
   return useSafeMutation({
-    mutationFn: (data: CreateStocktakeDTO) => 
-      apiClient.post('/stocktake/sessions', StocktakeSessionSchema, data),
+    mutationFn: ({ data, signal }: { data: CreateStocktakeDTO; signal?: AbortSignal }) => 
+      apiClient.post('/stocktake/sessions', StocktakeSessionSchema, data, signal),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stocktakes'] }),
   });
 }
@@ -47,9 +47,9 @@ export function useStartStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (id: string) => 
-      apiClient.post(`/stocktake/sessions/${id}/start`, StocktakeSessionSchema),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/start`, StocktakeSessionSchema, null, signal),
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock'] });
@@ -61,9 +61,9 @@ export function useBeginCounting(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (id: string) => 
-      apiClient.post(`/stocktake/sessions/${id}/count`, StocktakeSessionSchema),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/count`, StocktakeSessionSchema, null, signal),
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
     },
@@ -74,9 +74,9 @@ export function useCompleteCounting(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (id: string) => 
-      apiClient.post(`/stocktake/sessions/${id}/submit`, StocktakeSessionSchema),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/submit`, StocktakeSessionSchema, null, signal),
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
     },
@@ -87,8 +87,8 @@ export function useSubmitVariance(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, items }: { id: string; items: { line_id: string; variance_reason?: string }[] }) => 
-      apiClient.post(`/stocktake/sessions/${id}/review_variance`, StocktakeSessionSchema, { items }),
+    mutationFn: ({ id, items, signal }: { id: string; items: { line_id: string; variance_reason?: string }[]; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/review_variance`, StocktakeSessionSchema, { items }, signal),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
@@ -100,11 +100,11 @@ export function useUpdateItemCount(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ stocktakeId, itemId: _itemId, lineId, countedQty, varianceReason }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string }) => 
+    mutationFn: ({ stocktakeId, itemId: _itemId, lineId, countedQty, varianceReason, signal }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string; signal?: AbortSignal }) => 
       apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { 
         counted_qty: countedQty, 
         variance_reason: varianceReason 
-      }),
+      }, signal),
     onSuccess: (_, { stocktakeId }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes', stocktakeId] });
     },
@@ -119,9 +119,9 @@ export function useSubmitCounts(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (dto: SubmitCountDTO) => 
-      apiClient.post(`/stocktake/sessions/${dto.stocktake_id}/submit`, StocktakeSessionSchema, dto),
-    onSuccess: (_, dto) => {
+    mutationFn: ({ dto, signal }: { dto: SubmitCountDTO; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${dto.stocktake_id}/submit`, StocktakeSessionSchema, dto, signal),
+    onSuccess: (_, { dto }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', dto.stocktake_id] });
     },
@@ -132,8 +132,8 @@ export function useApproveStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, comment }: { id: string; comment?: string }) => 
-      apiClient.post(`/stocktake/sessions/${id}/approve`, StocktakeSessionSchema, { comment }),
+    mutationFn: ({ id, comment, signal }: { id: string; comment?: string; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/approve`, StocktakeSessionSchema, { comment }, signal),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
@@ -145,8 +145,8 @@ export function useRejectStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, comment }: { id: string; comment: string }) => 
-      apiClient.post(`/stocktake/sessions/${id}/reject`, StocktakeSessionSchema, { comment }),
+    mutationFn: ({ id, comment, signal }: { id: string; comment: string; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/reject`, StocktakeSessionSchema, { comment }, signal),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
@@ -158,9 +158,9 @@ export function usePostStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (id: string) => 
-      apiClient.post(`/stocktake/sessions/${id}/post`, StocktakeSessionSchema),
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => 
+      apiClient.post(`/stocktake/sessions/${id}/post`, StocktakeSessionSchema, null, signal),
+    onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock'] });

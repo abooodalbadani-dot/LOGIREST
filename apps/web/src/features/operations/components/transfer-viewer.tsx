@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -18,7 +18,7 @@ interface TransferViewerProps {
 }
 
 export function TransferViewer({ transfer }: TransferViewerProps) {
-  const _locale = useLocale();
+
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
   const router = useRouter();

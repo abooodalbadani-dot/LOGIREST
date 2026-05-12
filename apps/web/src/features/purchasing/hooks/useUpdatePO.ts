@@ -1,5 +1,5 @@
 'use client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
@@ -29,8 +29,8 @@ export function useUpdatePO(id: string, options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (payload: UpdatePOPayload) => 
-      apiClient.put(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload)).then(res => res.data),
+    mutationFn: ({ payload, signal }: { payload: UpdatePOPayload; signal?: AbortSignal }) => 
+      apiClient.put(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload), signal).then(res => res.data),
     onSuccess: (data) => {
       // Update cache
       queryClient.setQueryData(['purchase-order', id], data);

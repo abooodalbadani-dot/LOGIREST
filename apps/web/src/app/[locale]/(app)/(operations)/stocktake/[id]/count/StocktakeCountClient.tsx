@@ -30,6 +30,8 @@ import { useAuth } from "@/providers/AuthProvider";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { type DocumentStatus } from "@/core/workflow/document-engine";
 import { isStocktakeCounting } from "@/domain/status-guards";
+import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
+import { useAbortController } from "@/hooks/useAbortController";
 
 export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
@@ -37,6 +39,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const baseRouter = useRouter();
   const { user } = useAuth();
   const { router: guardedRouter } = useUnsavedChangesGuard(false);
+  const abortController = useAbortController();
   const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
   const session = rawSession ? mapToSessionVM(rawSession) : null;
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
@@ -101,7 +104,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
   const debouncedUpdate = useDebouncedCallback(
     (itemId: string, lineId: string, countedQty: number) => {
-      updateCount.mutate({ stocktakeId: id, itemId, lineId, countedQty })
+      updateCount.mutate({ stocktakeId: id, itemId, lineId, countedQty, signal: abortController.signal })
     },
     800
   )
@@ -137,7 +140,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       const newQty = currentQty + 1
       
       setLocalCounts(prev => ({ ...prev, [item.id]: newQty }))
-      updateCount.mutate({ stocktakeId: id, itemId: item.itemId, lineId: item.id, countedQty: newQty })
+      updateCount.mutate({ stocktakeId: id, itemId: item.itemId, lineId: item.id, countedQty: newQty, signal: abortController.signal })
       
       setScanStatus("success")
       setStatusMessage(`${item.itemName}: ${newQty}`)
@@ -160,7 +163,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   }
 
   const handleFinish = () => {
-    completeCounting.mutate(id, {
+    completeCounting.mutate({ id, signal: abortController.signal }, {
       onSuccess: () => {
         toast.success(t('posted_success'))
         guardedRouter.push(`/stocktake/${id}/variance`, { skipGuard: true })
@@ -193,69 +196,71 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             )}
             <StatusBadge 
               status={session.status} 
-              className="px-4 py-1"
+              configMap={STOCKTAKE_STATUS_UI}
+              className="h-9 px-4 text-label-xs font-semibold border-none" 
             />
-            <ActionGuard 
-              documentType="STOCKTAKE" 
-              status={session.status as DocumentStatus} 
-              action="SUBMIT" 
-              role={user?.role || ''}
-            >
-              <PostConfirmDialog
-                title={t('confirm_finish_title')}
-                description={t('confirm_finish_desc')}
-                onConfirm={handleFinish}
-                trigger={
-                  <Button disabled={!hasCountedItems || completeCounting.isPending}>
-                    {t('finish_counting')}
-                  </Button>
-                }
-              />
-            </ActionGuard>
+            <ActionGuard
+              documentType="STOCKTAKE"
+              action="SUBMIT"
+              status={session.status}
+              onConfirm={handleFinish}
+              trigger={
+                <Button 
+                  disabled={!hasCountedItems || completeCounting.isPending}
+                  className="primary-gradient shadow-lg shadow-primary/20"
+                >
+                  {completeCounting.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin me-2" />
+                  ) : null}
+                  {t('finish_counting')}
+                </Button>
+              }
+            />
           </div>
         </PageHeader>
 
-        <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
-          <div className="max-w-md mx-auto mb-12">
-            <ScanInput 
-              onScan={handleScan}
-              scanStatus={scanStatus}
-              statusMessage={statusMessage}
-              isScanning={updateCount.isPending}
-              placeholder={t('scan_placeholder')}
-              scannerMode={true}
-            />
-            <p className="text-center text-label-xs font-semibold text-muted-foreground/30 uppercase mt-3">
-              {t('scan_mode')}
-            </p>
-          </div>
+        <div className="max-w-2xl mx-auto w-full">
+          <ScanInput
+            onScan={handleScan}
+            scanStatus={scanStatus}
+            statusMessage={statusMessage}
+            placeholder={t('scan_barcode_to_count')}
+            label={t('scan_session')}
+            scannerMode={true}
+          />
+        </div>
 
+        <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
           <div 
             ref={parentRef}
-            className="rounded-3xl bg-white/[0.01] overflow-auto h-[600px] relative"
+            className="rounded-3xl bg-white/[0.01] overflow-auto max-h-[600px] relative"
           >
             <Table>
-              <TableHeader className="bg-white/[0.02] sticky top-0 z-10 backdrop-blur-md">
+              <TableHeader className="bg-white/[0.02] sticky top-0 z-10">
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 px-8 w-[40%]">{common('item')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 w-[30%]">{common('lot')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12 w-[150px]">{t('counted_qty')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-end h-12 px-8 w-[100px]">{common('uom')}</TableHead>
+                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 w-[30%]">{t('details')}</TableHead>
+                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12 w-[20%]">{t('counted_qty')}</TableHead>
+                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-end h-12 px-8 w-[10%]">{common('uom')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <div style={{ height: `${totalSize}px`, width: '100%', position: 'relative' }}>
+                <div
+                  style={{
+                    height: `${totalSize}px`,
+                    width: '100%',
+                    position: 'relative',
+                  }}
+                >
                   {virtualRows.map((virtualRow) => {
                     const item = items[virtualRow.index];
                     const isFocused = focusedRowIndex === virtualRow.index;
 
                     return (
-                      <TableRow 
-                        key={virtualRow.key} 
-                        data-index={virtualRow.index}
-                        ref={rowVirtualizer.measureElement}
+                      <TableRow
+                        key={item.id}
                         className={cn(
-                          "hover:bg-white/[0.01] transition-colors border-none group absolute top-0 left-0 w-full",
+                          "absolute top-0 left-0 w-full transition-colors border-none group",
                           isFocused && "bg-primary/5 ring-1 ring-primary/20"
                         )}
                         style={{

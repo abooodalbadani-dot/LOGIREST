@@ -162,18 +162,8 @@ export function DepartmentListClient({ locale }: { locale: string }) {
         onRowClick={(r: Department) => router.push(`/master-data/departments/${r.id}`)}
         emptyState={
           <EmptyState 
-            title={t('empty.title')}
-            description={t('empty.description')}
-            action={
-              <PermissionGate action="create" resource="master_data">
-                <Link href={`/master-data/departments/new`}>
-                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
-                    <Plus className="w-3.5 h-3.5 me-2" />
-                    {tc('create')}
-                  </Button>
-                </Link>
-              </PermissionGate>
-            }
+            variant="minimal"
+            title={tc('no_data')}
           />
         }
         filters={

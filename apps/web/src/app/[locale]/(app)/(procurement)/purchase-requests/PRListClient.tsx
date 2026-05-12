@@ -163,9 +163,8 @@ export function PRListClient() {
  collectionName="procurement_pr"
  emptyState={
  <EmptyState 
- title={t('no_requests_title')}
- description={t('no_requests_desc')}
- action={
+ variant="minimal"
+ title={tc('datatable.no_records')} action={
  <PermissionGate action="create" resource="pr">
   <Link href="/purchase-requests/new">
  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">

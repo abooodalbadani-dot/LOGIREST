@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -29,8 +29,8 @@ interface TransferFormProps {
   onConflict: (type: string, id: string) => void;
 }
 
-export function TransferForm({ transfer, id, onConflict: _onConflict }: TransferFormProps) {
-  const _locale = useLocale();
+export function TransferForm({ transfer, id }: TransferFormProps) {
+
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -219,16 +219,16 @@ export function TransferForm({ transfer, id, onConflict: _onConflict }: Transfer
           isValid={true}
           actions={
             <PermissionGate action="post" resource="transfer">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {transferStatus === TRANSFER_STATUS.DRAFT && (
                   <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role || 'WH_KEEPER'}>
                     <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
                       <Link href={`/transfers/${id}/ship`}>
                         <Button
                           disabled={isEitherLocked}
-                          className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-14 px-10 text-label-xs font-semibold uppercase transition-all shadow-lg shadow-cyan-900/20"
+                          className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-lg shadow-cyan-900/20 active:scale-95"
                         >
-                          <Truck className="w-5 h-5 me-2" />
+                          <Truck className="w-4 h-4 md:w-5 md:h-5 me-2" />
                           {t('ship')}
                         </Button>
                       </Link>
@@ -242,9 +242,9 @@ export function TransferForm({ transfer, id, onConflict: _onConflict }: Transfer
                       <Link href={`/transfers/${id}/receive`}>
                         <Button
                           disabled={isEitherLocked}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-14 px-10 text-label-xs font-semibold uppercase transition-all shadow-lg shadow-emerald-900/20"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
                         >
-                          <PackageCheck className="w-5 h-5 me-2" />
+                          <PackageCheck className="w-4 h-4 md:w-5 md:h-5 me-2" />
                           {t('confirm_receipt')}
                         </Button>
                       </Link>
@@ -255,6 +255,7 @@ export function TransferForm({ transfer, id, onConflict: _onConflict }: Transfer
             </PermissionGate>
           }
         />
+
       </form>
     </div>
   );

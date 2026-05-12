@@ -165,18 +165,8 @@ export function UoMListClient({ locale }: { locale: string }) {
         onRowClick={(r: UoM) => router.push(`/master-data/units-of-measure/${r.id}`)}
         emptyState={
           <EmptyState 
-            title={tu('empty.title')}
-            description={tu('empty.description')}
-            action={
-              <PermissionGate action="create" resource="master_data">
-                <Link href={`/master-data/units-of-measure/new`}>
-                  <Button className="h-10 px-6 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
-                    <Plus className="w-3.5 h-3.5 me-2" />
-                    {t('create_new')}
-                  </Button>
-                </Link>
-              </PermissionGate>
-            }
+            variant="minimal"
+            title={t('no_data')}
           />
         }
         filters={

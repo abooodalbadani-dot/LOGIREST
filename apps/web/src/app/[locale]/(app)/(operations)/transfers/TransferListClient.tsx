@@ -184,7 +184,9 @@ export function TransferListClient() {
           containerHeight="600px"
           emptyState={
             <EmptyState 
-              title={t('no_records')} description={t('description')} action={
+              variant="minimal"
+              title={tCommon('datatable.no_records')} 
+              action={
                 <PermissionGate action="create" resource="transfer">
                   <Button 
                     onClick={() => router.push(`/transfers/new`)}

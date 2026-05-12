@@ -12,11 +12,11 @@ const QUERY_KEY = ['currencies'];
 export function useCurrencies() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       // In production, this would call the API
       // Since I don't have the real API yet, I'll ensure it returns from cache or errors if empty
       // but I am REMOVING the hardcoded objects as requested.
-      const response = await fetch('/api/currencies'); // Placeholder for real API logic
+      const response = await fetch('/api/currencies', { signal }); // Placeholder for real API logic
       if (!response.ok) throw new Error('Failed to fetch currencies');
       return response.json();
     },
@@ -29,10 +29,10 @@ export function useCurrency(id: string | null) {
 
  return useQuery({
  queryKey: [...QUERY_KEY, id],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!id) return null;
       // In production, fetch specific ID
-      const response = await fetch(`/api/currencies/${id}`);
+      const response = await fetch(`/api/currencies/${id}`, { signal });
       if (!response.ok) return null;
       return response.json();
     },
@@ -45,8 +45,7 @@ export function useCreateCurrency() {
  const t = useTranslations('master_data.currencies');
 
  return useMutation({
-    mutationFn: async (variables: CurrencyFormValues & { signal?: AbortSignal }) => {
-      const { signal: _signal, ...values } = variables;
+    mutationFn: async ({ values, signal }: { values: CurrencyFormValues; signal?: AbortSignal }) => {
       const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
  
  // GUARD: Uniqueness (Case-insensitive)
@@ -54,6 +53,14 @@ export function useCreateCurrency() {
  if (exists) {
  throw new Error('code_exists');
  }
+
+      const abortPromise = new Promise((_, reject) => {
+        if (signal?.aborted) return reject(new Error('AbortError'));
+        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
+      });
+
+      const workPromise = (async () => {
+        await new Promise(resolve => setTimeout(resolve, 800));
 
  const newCurrency: Currency = {
  id: `CUR- ${values.code.toUpperCase()}`,
@@ -72,12 +79,16 @@ export function useCreateCurrency() {
  });
 
  return newCurrency;
+      })();
+
+      return Promise.race([workPromise, abortPromise]) as Promise<Currency>;
  },
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
  toast.success(t('created_success'));
  },
  onError: (error: Error) => {
+      if (error.message === 'AbortError') return;
  toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
  }
  });
@@ -89,7 +100,7 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
   onConflict: options?.onConflict,
-  mutationFn: async ({ id, values, signal: _signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
+  mutationFn: async ({ id, values, signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
        const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
   const currency = data.find(c => c.id === id);
   if (!currency) throw new Error('Currency not found');
@@ -129,6 +140,14 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
   }
   }
 
+      const abortPromise = new Promise((_, reject) => {
+        if (signal?.aborted) return reject(new Error('AbortError'));
+        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
+      });
+
+      const workPromise = (async () => {
+        await new Promise(resolve => setTimeout(resolve, 800));
+
   const updatedCurrency: Currency = { 
   ...currency, 
   ...values,
@@ -148,6 +167,9 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
   });
 
   return updatedCurrency;
+      })();
+
+      return Promise.race([workPromise, abortPromise]) as Promise<Currency>;
   },
   onSuccess: (data) => {
   queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -155,6 +177,7 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
   toast.success(t('updated_success'));
   },
   onError: (error: Error) => {
+      if (error.message === 'AbortError') return;
   toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
   }
   });

@@ -257,13 +257,13 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           containerHeight="600px"
           emptyState={
             <EmptyState 
-              title={t('no_records')} 
-              description={t('description')} 
+              variant="minimal"
+              title={tc('datatable.no_records')} 
               action={
                 <PermissionGate action="create" resource="issue">
                   <Button 
                     onClick={() => router.push(`/issues/new`)}
-                    className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20"
+                    className="h-11 px-8 rounded-md bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-lg shadow-cyan-500/20 border-none transition-all active:scale-95"
                   >
                     <Plus className="w-4 h-4 me-2" />
                     {t('create_new')}

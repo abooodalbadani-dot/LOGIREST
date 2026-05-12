@@ -25,7 +25,7 @@ export function useMasterDataItem<T>(entity: string, id: string | null, schema: 
 export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>) {
   const qc = useQueryClient();
   return useMutation({ 
-    mutationFn: (body: unknown) => apiClient.post(`/${entity}`, schema, body), 
+    mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, body, signal), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
       toast.success('Resource created successfully');
@@ -38,7 +38,7 @@ export function useMasterDataUpdate<T>(entity: string, schema: ZodSchema<T>, opt
   const qc = useQueryClient();
   return useSafeMutation({ 
     onConflict: options?.onConflict,
-    mutationFn: ({ id, body }: { id: string; body: unknown }) => apiClient.put(`/${entity}/${id}`, schema, body), 
+    mutationFn: ({ id, body, signal }: { id: string; body: unknown; signal?: AbortSignal }) => apiClient.put(`/${entity}/${id}`, schema, body, signal), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
       toast.success('Resource updated successfully');

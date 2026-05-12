@@ -7,8 +7,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRightLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2, Package, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
+import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
+import { Item } from "@/types/master-data";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +48,8 @@ import { PO_STATUS } from "@/contracts/statuses";
 
 const lineItemSchema = z.object({
   item_id: z.string().min(1),
+  item_name: z.string().optional(),
+  item_code: z.string().optional(),
   quantity: z.number().positive(),
   unit_price: z.number().nonnegative(),
   uom_id: z.string().min(1),
@@ -84,11 +89,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       notes: initialData?.notes || "",
       lines: initialData?.lines.map(l => ({
         item_id: l.item?.id || "",
+        item_name: locale === 'ar' ? l.item?.name_ar : l.item?.name_en,
+        item_code: l.item?.code || "",
         quantity: l.quantity,
         unit_price: l.unit_price,
         uom_id: l.uom_id,
         notes: l.notes || ""
-      })) || [{ item_id: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
+      })) || [{ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
     },
   });
 
@@ -118,6 +125,35 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     control: form.control,
     name: "exchange_rate",
   });
+
+  const { data: itemsData } = useMasterDataList<Item>('items');
+
+  const handleScan = async (barcode: string) => {
+    const item = itemsData?.data?.find(i => i.code === barcode || i.barcode === barcode);
+    if (item) {
+      const currentLines = form.getValues('lines');
+      const existingIndex = currentLines.findIndex(l => l.item_id === item.id);
+      
+      if (existingIndex >= 0) {
+        const qty = currentLines[existingIndex].quantity + 1;
+        form.setValue(`lines.${existingIndex}.quantity`, qty);
+        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+      } else {
+        append({
+          item_id: item.id,
+          item_name: locale === 'ar' ? item.name_ar : item.name_en,
+          item_code: item.code,
+          quantity: 1,
+          unit_price: item.last_purchase_price || 0,
+          uom_id: item.primary_uom?.id || 'PCS',
+          notes: ''
+        });
+        toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+      }
+    } else {
+      toast.error(tc('item_not_found'));
+    }
+  };
 
   const supplierTotalAmount = lines.reduce((sum, line) => sum + ((line.quantity || 0) * (line.unit_price || 0)), 0);
   const baseTotalAmount = supplierTotalAmount * (rate || 1);
@@ -341,37 +377,76 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               </div>
 
               <div className="pt-10">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-surface-container-low/20 p-6 rounded-[1.5rem] border border-surface-container-high/30">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-operational-cyan/10 rounded-2xl flex items-center justify-center text-operational-cyan">
+                      <Package className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tc('items')}</h3>
+                      <p className="text-label-xxs font-semibold text-muted-foreground/30 uppercase mt-0.5">{t('specification')}</p>
+                    </div>
+                  </div>
+
+                  {!isLocked && (
+                    <div className="flex-1 max-w-2xl">
+                      <ScanInput
+                        onScan={handleScan}
+                        onManualTrigger={() => append({ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" })}
+                        placeholder={tc('select_item')}
+                        size="lg"
+                        label={t('scan_or_search')}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center mb-6 px-2">
                   <h3 className="text-title-lg font-semibold uppercase flex items-center gap-3">
                     <span className="w-2 h-2 bg-operational-cyan rounded-full" />
                     {t('line_items')}
                   </h3>
-                  {!isLocked && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-none bg-surface-container-low text-operational-cyan hover:bg-operational-cyan/10 transition-all rounded-xl font-semibold uppercase text-label-xs h-9"
-                      onClick={() => append({ item_id: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" })}
-                    >
-                      <Plus className="h-3.5 w-3.5 me-2" />
-                      {t('add_item')}
-                    </Button>
-                  )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_2fr_auto] gap-4 items-end bg-surface-container-low/30 p-5 rounded-2xl border-none transition-all hover:bg-surface-container-high/40 group">
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_2fr_auto] gap-6 items-end bg-surface-container-low/40 p-6 rounded-2xl border border-surface-container-high/20 transition-all hover:bg-surface-container-high/60 group relative">
                       <FormField
                         control={form.control}
                         name={`lines.${index}.item_id`}
                         render={({ field: inputField }) => (
                           <FormItem>
-                            <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{t('item_sku')}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t('sku_placeholder')} disabled={isLocked} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
-                            </FormControl>
+                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{tc('item')}</FormLabel>
+                            <Select
+                              onValueChange={(val) => {
+                                const item = itemsData?.data?.find(i => i.id === val);
+                                if (item) {
+                                  form.setValue(`lines.${index}.item_id`, item.id);
+                                  form.setValue(`lines.${index}.item_name`, locale === 'ar' ? item.name_ar : item.name_en);
+                                  form.setValue(`lines.${index}.item_code`, item.code);
+                                  form.setValue(`lines.${index}.uom_id`, item.primary_uom?.id || 'PCS');
+                                  form.setValue(`lines.${index}.unit_price`, item.last_purchase_price || 0);
+                                }
+                              }}
+                              value={inputField.value}
+                              disabled={isLocked}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-bold uppercase overflow-hidden">
+                                  <SelectValue placeholder={tc('select_item')} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-surface-container-low border-none rounded-2xl max-h-[300px]">
+                                {itemsData?.data?.map((i: Item) => (
+                                  <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-foreground">{locale === 'ar' ? i.name_ar : i.name_en}</span>
+                                      <span className="text-[10px] text-muted-foreground font-mono">{i.code}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -382,13 +457,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         name={`lines.${index}.quantity`}
                         render={({ field: inputField }) => (
                           <FormItem>
-                            <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{t('quantity')}</FormLabel>
+                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{t('quantity')}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 min="1" 
                                 disabled={isLocked}
-                                className="bg-surface-container-low font-mono border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" 
+                                className="bg-surface-container-low font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-label-xs font-bold" 
                                 dir="ltr" 
                                 {...inputField} 
                                 onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -404,9 +479,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         name={`lines.${index}.uom_id`}
                         render={({ field: inputField }) => (
                           <FormItem>
-                            <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{tc('uom')}</FormLabel>
+                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{tc('uom')}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t('uom_placeholder')} disabled={isLocked} className="bg-surface-container-low font-mono uppercase border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+                              <Input placeholder={t('uom_placeholder')} disabled className="bg-surface-container-high/10 border-none h-11 rounded-xl font-mono uppercase text-label-xs font-bold opacity-50" {...inputField} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -418,14 +493,14 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         name={`lines.${index}.unit_price`}
                         render={({ field: inputField }) => (
                           <FormItem>
-                            <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{t('unit_price')} ({currency})</FormLabel>
+                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{t('unit_price')} ({currency})</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 step="0.01" 
                                 min="0" 
                                 disabled={isLocked}
-                                className="bg-surface-container-low font-mono border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" 
+                                className="bg-surface-container-low font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-label-xs font-bold" 
                                 dir="ltr" 
                                 {...inputField} 
                                 onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
@@ -441,9 +516,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         name={`lines.${index}.notes`}
                         render={({ field: inputField }) => (
                           <FormItem>
-                            <FormLabel className="text-label-xs uppercase font-semibold text-muted-foreground/30">{t('line_notes')}</FormLabel>
+                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{t('line_notes')}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-surface-container-low border-none h-10 rounded-lg focus-visible:ring-operational-cyan/30" {...inputField} />
+                              <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-label-xs font-bold" {...inputField} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -455,7 +530,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           type="button" 
                           variant="ghost" 
                           size="icon" 
-                          className="mb-[2px] text-muted-foreground/50 hover:text-status-error hover:bg-status-error/10 h-10 w-10 transition-colors rounded-lg"
+                          className="mb-[1px] text-muted-foreground/30 hover:text-status-error hover:bg-status-error/10 h-11 w-11 transition-colors rounded-xl"
                           onClick={() => remove(index)}
                           disabled={fields.length === 1}
                         >

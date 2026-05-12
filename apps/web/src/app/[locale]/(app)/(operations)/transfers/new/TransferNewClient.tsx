@@ -27,7 +27,7 @@ import { Save, Warehouse, PackagePlus } from 'lucide-react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
-import React from 'react';
+import { useAbortController } from '@/hooks/useAbortController';
 
 interface NewTransferLine {
   id: string;
@@ -48,6 +48,7 @@ export function TransferNewClient() {
   const locale = (params.locale as 'ar' | 'en') || 'en';
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
+  const abortController = useAbortController();
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const { data: items, isLoading: isLoadingItems, error: errorItems } = useItems();
   const createTransfer = useCreateTransfer();
@@ -95,14 +96,17 @@ export function TransferNewClient() {
     if (!fromWarehouseId || !toWarehouseId || lines.length === 0) return;
     
     createTransfer.mutate({
-      from_warehouse_id: fromWarehouseId,
-      to_warehouse_id: toWarehouseId,
-      notes,
-      lines: lines.map(l => ({
-        item_id: l.item_id,
-        qty: l.qty,
-        uom_id: l.uom_id
-      }))
+      payload: {
+        from_warehouse_id: fromWarehouseId,
+        to_warehouse_id: toWarehouseId,
+        notes,
+        lines: lines.map(l => ({
+          item_id: l.item_id,
+          qty: l.qty,
+          uom_id: l.uom_id
+        }))
+      },
+      signal: abortController.signal
     }, {
       onSuccess: () => {
         router.push(`/transfers`, { skipGuard: true });
@@ -150,26 +154,26 @@ export function TransferNewClient() {
             
             <div className="flex items-center gap-3 mb-6">
               <Warehouse className="w-4 h-4 text-cyan-500" />
-              <h3 className="text-label-xs font-semibold uppercase text-foreground/60">
+              <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
                 {t('transfer_parameters')}
               </h3>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">
+                <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
                   {t('from_warehouse')}
                 </label>
                 <Select
                   value={fromWarehouseId}
                   onValueChange={(val) => setFromWarehouseId(val || '')}
                 >
-                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
+                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
                     <SelectValue placeholder={t('select_warehouse')} />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
                     {warehouses?.map((wh) => (
-                      <SelectItem key={wh.id} value={wh.id} className="text-label-xs font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
+                      <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
                         {locale === 'ar' ? wh.nameAr : wh.nameEn}
                       </SelectItem>
                     ))}
@@ -178,19 +182,19 @@ export function TransferNewClient() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">
+                <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
                   {t('to_warehouse')}
                 </label>
                 <Select
                   value={toWarehouseId}
                   onValueChange={(val) => setToWarehouseId(val || '')}
                 >
-                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
+                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
                     <SelectValue placeholder={t('select_warehouse')} />
                   </SelectTrigger>
                   <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
                     {warehouses?.map((wh) => (
-                      <SelectItem key={wh.id} value={wh.id} className="text-label-xs font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
+                      <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
                         {locale === 'ar' ? wh.nameAr : wh.nameEn}
                       </SelectItem>
                     ))}
@@ -204,7 +208,7 @@ export function TransferNewClient() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">
+                <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
                   {tCommon('notes')}
                 </label>
                 <textarea
@@ -225,7 +229,7 @@ export function TransferNewClient() {
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <PackagePlus className="w-5 h-5 text-emerald-500" />
-                <h3 className="text-label-xs font-semibold uppercase text-foreground/60">
+                <h3 className="text-label-sm font-semibold uppercase tracking-wider text-foreground/70">
                   {t('items_to_transfer')}
                 </h3>
               </div>
@@ -254,29 +258,24 @@ export function TransferNewClient() {
                 headers={{
                   code: tCommon('table_headers.code'),
                   name: tCommon('table_headers.name'),
-                  qty: ' ',
+                  qty: tCommon('table_headers.qty'),
                   uom: tCommon('table_headers.uom'),
                 }}
-                extraColumns={[
-                  {
-                    header: tCommon('table_headers.qty'),
-                    cell: (line) => (
-                      <div className="flex justify-center">
-                        <input
-                          type="number"
-                          min="0.001"
-                          step="0.001"
-                          value={line.qty}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
-                          }}
-                          className="w-20 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none"
-                        />
-                      </div>
-                    )
-                  }
-                ]}
+                renderQty={(line) => (
+                  <div className="flex justify-center">
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="0.001"
+                      value={line.qty}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
+                      }}
+                      className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80"
+                    />
+                  </div>
+                )}
               />
             </div>
           </div>
@@ -285,22 +284,11 @@ export function TransferNewClient() {
 
       <FormFooter
         onCancel={() => router.push('/transfers', { skipGuard: true })}
-        onSubmit={() => {}} // Form handles submit via onSubmit on <form>
+        onSubmit={handleSave}
         isSaving={createTransfer.isPending}
         isDirty={isDirty}
-        isValid={isValid}
-        actions={
-          <div className="flex gap-4 items-center">
-            <Button 
-              type="submit"
-              disabled={!isValid || createTransfer.isPending || isEitherLocked}
-              className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-label-xs font-semibold uppercase transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-30 min-w-[200px]"
-            >
-              <Save className="w-4 h-4 me-2" />
-              {t('save_transfer')}
-            </Button>
-          </div>
-        }
+        isValid={isValid && !isEitherLocked}
+        saveLabel={t('save_transfer')}
       />
     </form>
   );

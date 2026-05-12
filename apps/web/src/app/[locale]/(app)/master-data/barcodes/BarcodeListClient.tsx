@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Plus, CheckCircle2, Package, Search, Barcode as BarcodeIcon } from 'lucide-react';
+import { Plus, CheckCircle2, Package, Search, Barcode as BarcodeIcon, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -160,12 +160,20 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           description={t('description')}
           actions={
             <PermissionGate action="create" resource="master_data">
-              <Link href={`/master-data/barcodes/new`}>
-                <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
-                  <Plus className="w-3.5 h-3.5 me-2" />
-                  {tc('create')}
-                </Button>
-              </Link>
+              <div className="flex gap-4">
+                <Link href={`/master-data/barcodes/mapping`}>
+                  <Button variant="outline" className="h-11 px-6 border-white/5 bg-surface-container-low hover:bg-surface-container-medium text-label-xs font-semibold uppercase rounded-sm">
+                    <ScanLine className="w-3.5 h-3.5 me-2 text-cyan-500" />
+                    {useTranslations('master_data.barcode_mapping')('title')}
+                  </Button>
+                </Link>
+                <Link href={`/master-data/barcodes/new`}>
+                  <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
+                    <Plus className="w-3.5 h-3.5 me-2" />
+                    {tc('create')}
+                  </Button>
+                </Link>
+              </div>
             </PermissionGate>
           }
         />
@@ -205,18 +213,8 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         onRowClick={(r: Barcode) => router.push(`/master-data/barcodes/${r.id}`)}
         emptyState={
           <EmptyState 
-            title={t('empty.title')}
-            description={t('empty.description')}
-            action={
-              <PermissionGate action="create" resource="master_data">
-                <Link href={`/master-data/barcodes/new`}>
-                  <Button className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">
-                    <Plus className="w-3.5 h-3.5 me-2" />
-                    {tc('create')}
-                  </Button>
-                </Link>
-              </PermissionGate>
-            }
+            variant="minimal"
+            title={tc('no_data')}
           />
         }
         filters={

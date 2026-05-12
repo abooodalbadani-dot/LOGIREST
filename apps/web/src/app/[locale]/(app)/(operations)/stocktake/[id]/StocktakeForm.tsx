@@ -57,7 +57,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
   const isCounting = isStocktakeCounting(status) || status === STOCKTAKE_STATUS.STARTED;
 
   return (
-    <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-surface-container-low pb-48 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
       <div className="sticky top-0 z-50 w-full glass-header border-b border-outline-variant/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -80,7 +80,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
             </div>
           </div>
 
-          {actions}
+
         </div>
       </div>
 
@@ -214,6 +214,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
         onCancel={() => router.push('/stocktake')}
         isLocked={isLocked}
         isDirty={false}
+        actions={actions}
       />
     </div>
     </div>

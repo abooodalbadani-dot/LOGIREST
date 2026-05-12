@@ -180,6 +180,7 @@ export function GRNListClient({
             containerHeight="600px"
             emptyState={
               <EmptyState 
+                variant="minimal"
                 title={t('no_grns_title') || 'No Goods Received Notes'} 
                 description={t('no_grns_desc') || 'Create a new GRN when goods are delivered to update stock levels.'} 
                 action={

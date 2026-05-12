@@ -1,5 +1,5 @@
 'use client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
@@ -28,8 +28,8 @@ export function useCreatePO(options?: { onConflict?: () => void }) {
  const queryClient = useQueryClient();
  return useSafeMutation({
  onConflict: options?.onConflict,
- mutationFn: (payload: CreatePOPayload) => 
- apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload)).then(res => res.data),
+ mutationFn: ({ payload, signal }: { payload: CreatePOPayload; signal?: AbortSignal }) => 
+ apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload), signal).then(res => res.data),
  onSuccess: (data) => {
  // Seed the cache for the newly created PO
  queryClient.setQueryData(['purchase-order', data.id], data);

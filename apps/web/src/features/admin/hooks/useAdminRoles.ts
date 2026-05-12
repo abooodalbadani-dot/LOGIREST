@@ -121,55 +121,75 @@ const MOCK_ROLES: AdminRole[] = [
 ];
 
 export function useAdminRoles() {
- return useQuery({
- queryKey: ['admin/roles'],
- queryFn: async () => {
- // Simulate network delay
- await new Promise(resolve => setTimeout(resolve, 500));
- return MOCK_ROLES;
- },
- staleTime: 60_000,
- });
+  return useQuery({
+    queryKey: ['admin/roles'],
+    queryFn: async ({ signal }) => {
+      // Simulate network delay
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 500);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Aborted'));
+        });
+      });
+      return MOCK_ROLES;
+    },
+    staleTime: 60_000,
+  });
 }
 
 export function useAdminRole(id: string | null) {
- return useQuery({
- queryKey: ['admin/roles', id],
- queryFn: async () => {
- await new Promise(resolve => setTimeout(resolve, 300));
- const role = MOCK_ROLES.find(r => r.id === id);
- if (!role) throw new Error('Role not found');
- return role;
- },
- enabled: !!id,
- });
+  return useQuery({
+    queryKey: ['admin/roles', id],
+    queryFn: async ({ signal }) => {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 300);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Aborted'));
+        });
+      });
+      const role = MOCK_ROLES.find(r => r.id === id);
+      if (!role) throw new Error('Role not found');
+      return role;
+    },
+    enabled: !!id,
+  });
 }
 
 export function useUpdateRolePermissions() {
- const queryClient = useQueryClient();
- const t = useTranslations('admin.roles');
+  const queryClient = useQueryClient();
+  const t = useTranslations('admin.roles');
 
- return useMutation({
- mutationFn: async ({ id, permissions }: { id: string; permissions: Permission[] }) => {
- // Simulate latency
- await new Promise(resolve => setTimeout(resolve, 1000));
- 
- // Enforce: Role must have at least one module visibility
- const hasView = permissions.some(p => p.actions.view);
- if (!hasView) {
- throw new Error(t('at_least_one_view'));
- }
+  return useMutation({
+    mutationFn: async ({ id, permissions, signal }: { id: string; permissions: Permission[]; signal?: AbortSignal }) => {
+      return Promise.race([
+        (async () => {
+          // Simulate latency
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Enforce: Role must have at least one module visibility
+          const hasView = permissions.some(p => p.actions.view);
+          if (!hasView) {
+            throw new Error('at_least_one_view');
+          }
 
- // Update in cache simulation
- return { id, permissions };
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: ['admin/roles'] });
- queryClient.invalidateQueries({ queryKey: ['admin/roles', data.id] });
- toast.success(t('permissions_updated'));
- },
- onError: (error: Error) => {
- toast.error(error.message);
- }
- });
+          // Update in cache simulation
+          return { id, permissions };
+        })(),
+        new Promise<never>((_, reject) => 
+          signal?.addEventListener('abort', () => reject(new Error('Aborted')))
+        )
+      ]);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin/roles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin/roles', data.id] });
+      toast.success(t('permissions_updated'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'Aborted') return;
+      toast.error(t(error.message) || error.message);
+    }
+  });
 }

@@ -172,10 +172,8 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  collectionName="procurement_po"
  emptyState={
  <EmptyState 
- title={t('no_orders_title')}
- description={t('no_orders_desc')}
- icon={Truck}
- action={
+ variant="minimal"
+ title={tc('datatable.no_records')} action={
  <PermissionGate action="create" resource="po">
  <Link href="/purchase-orders/new">
  <Button className="h-10 px-6 bg-amber-600 hover:bg-amber-500 text-white text-label-xs font-semibold uppercase rounded-sm transition-all shadow-lg">

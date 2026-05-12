@@ -29,7 +29,6 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 export function AdminDashboard() {
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
  const t = useTranslations('dashboard');
- const _tc = useTranslations('common');
  const { locale } = useLocale();
 
  // Mock data for Admin

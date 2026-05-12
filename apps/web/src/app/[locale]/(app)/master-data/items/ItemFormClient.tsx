@@ -215,26 +215,27 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     />
                     {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as Parameters<typeof tv>[0])}</p>}
                   </div>
+                  <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.barcode')}</Label>
-                    <Controller
-                      name="barcode"
-                      control={control}
-                      render={({ field }) => (
-                        <ScanInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          onScan={(barcode) => { if (!isReadOnly) setValue('barcode', barcode, { shouldValidate: true }); }}
-                          placeholder={ti('fields.barcode')}
-                          clearOnScan={false}
-                          disabled={isReadOnly}
-                          className="font-mono font-semibold text-status-active"
-                        />
-                      )}
-                    />
-                    {errors.barcode && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as Parameters<typeof tv>[0])}</p>}
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.barcode')}</Label>
+                  <Controller
+                    name="barcode"
+                    control={control}
+                    render={({ field }) => (
+                      <ScanInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        onScan={(barcode) => { if (!isReadOnly) setValue('barcode', barcode, { shouldValidate: true }); }}
+                        placeholder={ti('fields.barcode')}
+                        clearOnScan={false}
+                        disabled={isReadOnly}
+                        size="md"
+                      />
+                    )}
+                  />
+                  {errors.barcode && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as Parameters<typeof tv>[0])}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -245,7 +246,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="item-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_ar')}</Label>
-                    <Input id="item-name-ar" dir="rtl" {...register('name_ar')} disabled={isReadOnly} className="font-semibold text-end" />
+                    <Input id="item-name-ar" dir="rtl" {...register('name_ar')} disabled={isReadOnly} className="font-semibold" />
                     {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as Parameters<typeof tv>[0])}</p>}
                   </div>
                 </div>
@@ -259,9 +260,9 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
                     <Boxes className="w-5 h-5 text-tertiary" />
                   </div>
-                  <div>
-                    <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('sections.categorization')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{ti('sections.categorization_desc')}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{ti('sections.categorization')}</h3>
+                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words line-clamp-2">{ti('sections.categorization_desc')}</p>
                   </div>
                 </div>
 
@@ -304,7 +305,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                             <SelectItem value="">{tm('select_none')}</SelectItem>
                             {uoms?.data?.map((u) => (
                               <SelectItem key={u.id} value={u.id} className="uppercase font-semibold text-label-sm">
-                                {u.code} — {u.name_en}
+                                {u.code} — {locale === 'ar' ? u.name_ar : u.name_en}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -320,19 +321,19 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
             {/* Unit Conversion Protocol */}
             <Card className="bg-surface-container-low border-none overflow-hidden">
               <CardContent className="p-8 space-y-8">
-                <div className="flex items-center justify-between border-b border-surface-variant/10 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                <div className="flex items-center justify-between border-b border-surface-variant/10 pb-4 gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center shrink-0">
                       <Scale className="w-5 h-5 text-tertiary" />
                     </div>
-                    <div>
-                      <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('uom_conversions')}</h3>
-                      <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tm('relational_unit_transformation')}</p>
+                    <div className="min-w-0">
+                      <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{ti('uom_conversions')}</h3>
+                      <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words">{tm('relational_unit_transformation')}</p>
                     </div>
                   </div>
                   {!isReadOnly && (
                     <Button type="button" variant="outline" size="sm"
-                      className="h-10 px-4 text-label-xs font-semibold uppercase border-status-secondary/20 hover:bg-status-secondary/5 text-status-secondary transition-all"
+                      className="h-10 px-4 text-label-xs font-semibold uppercase border-status-secondary/20 hover:bg-status-secondary/5 text-status-secondary transition-all shrink-0"
                       onClick={() => append({ from_uom_id: '', to_uom_id: '', factor: 1 })}>
                       <Plus className="w-3.5 h-3.5 me-2" />{ti('add_conversion')}
                     </Button>
@@ -422,16 +423,16 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
                     <ShieldCheck className="w-5 h-5 text-tertiary" />
                   </div>
-                  <div>
-                    <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('fields.is_active')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tm('operational_availability')}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{tm('status_label')}</h3>
+                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words">{tm('operational_availability')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                     <div className="space-y-1">
-                      <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('is_active')}</Label>
+                      <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('status_label')}</Label>
                       <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
                     </div>
                     <Switch 
@@ -442,7 +443,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                     <div className="space-y-1">
                       <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{ti('track_lots')}</Label>
                       <p className={`text-label-sm font-semibold uppercase ${trackLots ? 'text-status-active' : 'text-muted-foreground/40'}`}>{trackLots ? tm('yes') : tm('no')}</p>
@@ -464,9 +465,9 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
                     <Settings2 className="w-5 h-5 text-tertiary" />
                   </div>
-                  <div>
-                    <h3 className="text-body-md font-semibold text-foreground uppercase">{ti('sections.inventory_rules')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{ti('sections.inventory_rules_desc')}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-body-md font-semibold text-foreground uppercase truncate">{ti('sections.inventory_rules')}</h3>
+                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5 break-words">{ti('sections.inventory_rules_desc')}</p>
                   </div>
                 </div>
 

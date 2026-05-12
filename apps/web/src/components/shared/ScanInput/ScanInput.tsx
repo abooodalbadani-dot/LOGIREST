@@ -2,7 +2,8 @@
 
 import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2, ScanLine, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, ScanLine, CheckCircle2, AlertCircle, Keyboard } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface ScanInputProps {
   onScan: (barcode: string) => void | Promise<void>;
@@ -15,24 +16,34 @@ interface ScanInputProps {
   statusMessage?: string;
   isScanning?: boolean;
   clearOnScan?: boolean;
-  scannerMode?: boolean; // New prop for warehouse mode
+  scannerMode?: boolean; 
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onManualTrigger?: () => void;
+  size?: "sm" | "md" | "lg";
+  label?: string;
+  autoFocus?: boolean;
 }
 
-export function ScanInput({ 
-  onScan, 
-  disabled, 
-  placeholder, 
-  className, 
+export function ScanInput({
+  onScan,
+  disabled,
+  placeholder,
+  className,
   scanStatus = "idle",
   statusMessage,
   isScanning,
   clearOnScan = true,
   scannerMode = false,
   value,
-  onChange
+  onChange,
+  onManualTrigger,
+  onCameraActivate,
+  size = "md",
+  label,
+  autoFocus = true
 }: ScanInputProps) {
+  const tc = useTranslations('common');
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const lastScanRef = useRef<{ code: string; time: number }>({ code: '', time: 0 });
@@ -46,29 +57,26 @@ export function ScanInput({
 
   // Auto-focus logic for Scanner Mode
   useEffect(() => {
-    if (scannerMode && !disabled && inputRef.current && scanStatus === 'idle') {
-      // Only steal focus if current focus is not on an input or textarea
+    if ((scannerMode || autoFocus) && !disabled && inputRef.current && scanStatus === 'idle') {
       const activeElement = document.activeElement;
       const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
-      
+
       if (!isInputFocused) {
         inputRef.current.focus();
       }
     }
-  }, [scannerMode, disabled, scanStatus]);
+  }, [scannerMode, autoFocus, disabled, scanStatus]);
 
   // Global Keydown redirection for Scanner Mode
   useEffect(() => {
     if (!scannerMode || disabled) return;
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // If we are already focused on an input, don't interfere
       if (document.activeElement instanceof HTMLInputElement || 
           document.activeElement instanceof HTMLTextAreaElement) {
         return;
       }
 
-      // If it's a character or number, redirect to ScanInput
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         inputRef.current?.focus();
       }
@@ -82,14 +90,13 @@ export function ScanInput({
     const trimmed = val.trim();
     if (!trimmed) return;
 
-    // Prevent Double Trigger (Duplicate scan within 500ms)
     const now = Date.now();
     if (lastScanRef.current.code === trimmed && (now - lastScanRef.current.time) < 500) {
       return;
     }
 
     lastScanRef.current = { code: trimmed, time: now };
-    
+
     if (clearOnScan && inputRef.current) {
       inputRef.current.value = '';
     }
@@ -98,15 +105,13 @@ export function ScanInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Escape clears input
     if (e.key === 'Escape') {
       if (inputRef.current) inputRef.current.value = '';
       return;
     }
 
-    // Enter is the primary trigger
     if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent form submission
+      e.preventDefault();
       e.stopPropagation();
       processScan(e.currentTarget.value);
     }
@@ -114,12 +119,9 @@ export function ScanInput({
 
   const onChangeWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    
     if (onChange) onChange(e);
-
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    
-    // Fallback: Auto-process if user pauses typing (300ms) and it looks like a barcode
+
     if (val.length > 5) {
       debounceTimer.current = setTimeout(() => {
         if (inputRef.current && inputRef.current.value === val) {
@@ -129,23 +131,59 @@ export function ScanInput({
     }
   };
 
+  const sizeConfigs = {
+    sm: {
+      container: "h-12",
+      icon: "w-4 h-4",
+      input: "text-label-sm px-3",
+      button: "px-3 py-1.5 text-[10px]",
+      buttonIcon: "w-3 h-3"
+    },
+    md: {
+      container: "h-16",
+      icon: "w-5 h-5",
+      input: "text-body-md px-4",
+      button: "px-5 py-2.5 text-label-xs",
+      buttonIcon: "w-4 h-4"
+    },
+    lg: {
+      container: "h-20",
+      icon: "w-6 h-6",
+      input: "text-title-medium px-6",
+      button: "px-6 py-3 text-label-xs",
+      buttonIcon: "w-4 h-4"
+    }
+  };
+
+  const config = sizeConfigs[size];
+
   return (
-    <div className={cn("relative group w-full", className)}>
+    <div className={cn("relative group w-full flex flex-col gap-3", className)}>
+      {label && (
+        <label className="text-[11px] font-black uppercase tracking-[0.25em] text-operational-cyan ps-1 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-operational-cyan rounded-full animate-pulse shadow-[0_0_10px_var(--operational-cyan)]" />
+          {label}
+        </label>
+      )}
       <div className={cn(
-        "relative flex items-center transition-all duration-300 rounded-2xl border-2",
-        scanStatus === 'success' ? "border-operational-cyan/50 bg-operational-cyan/5 shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]" :
-        scanStatus === 'error' ? "border-destructive/50 bg-destructive/5 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)]" :
-        "border-transparent bg-surface-container-highest"
+        "relative flex items-center transition-all duration-500 rounded-sm border-[4px] shadow-2xl overflow-hidden",
+        config.container,
+        scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
+        scanStatus === 'error' ? "border-destructive bg-destructive/10 shadow-[0_0_60px_rgba(var(--destructive-rgb),0.25)]" :
+        "border-surface-container-highest bg-surface-container-lowest hover:border-operational-cyan/50 focus-within:border-operational-cyan focus-within:ring-[12px] focus-within:ring-operational-cyan/10 focus-within:bg-surface-container-low"
       )}>
-        <div className="ps-6 text-muted-foreground/40">
+        {/* Background glow when focused */}
+        <div className="absolute inset-0 bg-gradient-to-r from-operational-cyan/5 via-transparent to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+
+        <div className="ps-6 text-muted-foreground/40 transition-colors group-focus-within:text-operational-cyan z-10">
           {isScanning ? (
-            <Loader2 className="w-5 h-5 animate-spin text-operational-cyan" />
+            <Loader2 className={cn("animate-spin text-operational-cyan", config.icon)} />
           ) : scanStatus === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 text-operational-cyan animate-in zoom-in duration-300" />
+            <CheckCircle2 className={cn("text-operational-cyan animate-in zoom-in duration-300", config.icon)} />
           ) : scanStatus === 'error' ? (
-            <AlertCircle className="w-5 h-5 text-destructive animate-in shake duration-300" />
+            <AlertCircle className={cn("text-destructive animate-in shake duration-300", config.icon)} />
           ) : (
-            <ScanLine className="w-5 h-5" />
+            <ScanLine className={cn("transition-transform group-hover:scale-125 duration-300", config.icon)} />
           )}
         </div>
 
@@ -154,32 +192,72 @@ export function ScanInput({
           type="text"
           dir="ltr"
           disabled={disabled || isScanning}
-          placeholder={placeholder}
+          placeholder={placeholder || tc('scan_placeholder')}
           onKeyDown={handleKeyDown}
           onChange={onChangeWrapper}
           autoComplete="off"
           className={cn(
-            "bg-transparent border-none text-foreground rounded-xl text-title-lg px-4 py-5 w-full transition-all duration-[140ms] ease-out",
-            "focus:outline-none focus:shadow-none placeholder:text-muted-foreground/30",
-            "ring-0 focus-visible:ring-0 disabled:opacity-50 font-mono tracking-[0.08em]"
+            "bg-transparent border-none text-foreground w-full transition-all duration-200 outline-none z-10",
+            "placeholder:text-muted-foreground/20 font-mono tracking-[0.25em] font-black",
+            config.input
           )}
         />
 
+        <div className="flex items-center pe-4 gap-3 z-10">
+          {onManualTrigger && (
+            <button
+              type="button"
+              onClick={onManualTrigger}
+              className={cn(
+                "bg-operational-cyan/10 border-2 border-operational-cyan/30 hover:border-operational-cyan hover:bg-operational-cyan text-operational-cyan hover:text-white rounded-sm font-black uppercase transition-all whitespace-nowrap flex items-center gap-3 shadow-lg active:scale-95 group/btn",
+                config.button
+              )}
+            >
+              <Keyboard className={cn("transition-transform group-hover/btn:-translate-y-0.5", config.buttonIcon)} />
+              {tc('manual_entry')}
+            </button>
+          )}
+
+          {onCameraActivate && (
+            <button
+              type="button"
+              onClick={onCameraActivate}
+              className={cn(
+                "p-3 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 transition-all rounded-sm active:scale-95",
+                config.buttonIcon
+              )}
+            >
+              <ScanLine className="w-full h-full" />
+            </button>
+          )}
+        </div>
+
         {statusMessage && (
           <div className={cn(
-            "absolute -bottom-7 start-4 text-label-xs font-semibold uppercase animate-in fade-in slide-in-from-top-1",
-            scanStatus === 'success' ? "text-operational-cyan" : "text-destructive"
+            "absolute -bottom-11 start-0 px-6 py-2.5 rounded-b-sm font-black text-[11px] uppercase tracking-[0.2em] animate-in slide-in-from-top-4 duration-500 shadow-2xl z-20",
+            scanStatus === 'success' ? "bg-operational-cyan text-white shadow-operational-cyan/20" : "bg-destructive text-white shadow-destructive/20"
           )}>
             {statusMessage}
           </div>
         )}
-      </div>
 
-      {/* Decorative scanning line animation */}
-      <div className={cn(
-        "absolute top-0 left-0 w-full h-[2px] bg-operational-cyan/30 opacity-0 pointer-events-none transition-all duration-1000",
-        !disabled && !isScanning && scanStatus === 'idle' && "group-hover:opacity-100 group-hover:top-full"
-      )} />
+        {/* Industrial scan line animation when focused */}
+        <div className={cn(
+          "absolute top-0 left-0 w-[4px] h-full bg-operational-cyan shadow-[0_0_25px_var(--operational-cyan)] opacity-0 pointer-events-none transition-all duration-[2000ms] ease-in-out z-0",
+          "group-focus-within:animate-[scan_2s_infinite]",
+          !disabled && !isScanning && scanStatus === 'idle' && "group-focus-within:opacity-60"
+        )} />
+      </div>
+      
+      <style jsx>{`
+        @keyframes scan {
+          0% { transform: translateX(0); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateX(calc(100% - 4px)); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
+

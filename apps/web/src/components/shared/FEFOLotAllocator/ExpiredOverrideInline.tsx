@@ -1,8 +1,6 @@
 'use client';
-import { useTranslations } from 'next-intl';
 
 export function ExpiredOverrideInline({ onReasonChange }: { onReasonChange: (reason: string) => void }) {
- const _t = useTranslations('common');
  
  return (
  <div className="mt-2 text-body-md bg-status-warning/10 border border-status-warning/30 rounded-xl p-3">

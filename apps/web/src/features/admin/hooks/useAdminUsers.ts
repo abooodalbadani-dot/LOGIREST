@@ -90,7 +90,7 @@ export function useAdminUserMutations() {
  mutationFn: async ({ id, ...values }: UserFormValues & { id: string }) => {
  // Hard Guards (Mutation Level)
  if (currentUser?.id === id) {
-const _originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]);
+
     if (values.role !== 'ADMIN' || values.status === 'INACTIVE') {
  throw new Error(t('cannot_modify_self'));
  }
@@ -122,7 +122,7 @@ const _originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]
  });
 
  const toggleStatus = useMutation({
- mutationFn: async ({ id, status, role: _role }: { id: string; status: 'ACTIVE' | 'INACTIVE', role: string }) => {
+ mutationFn: async ({ id, status }: { id: string; status: 'ACTIVE' | 'INACTIVE', role: string }) => {
  if (currentUser?.id === id && status === 'INACTIVE') {
  throw new Error(t('cannot_deactivate_self'));
  }

@@ -22,7 +22,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
  return (
  <SelectPrimitive.Value
  data-slot="select-value"
- className={cn("flex flex-1 text-start", className)}
+ className={cn("flex flex-1 text-start text-foreground", className)}
  {...props}
  />
  )
@@ -42,7 +42,7 @@ function SelectTrigger({
  "data-slot": "select-trigger",
  "data-size": size,
  className: cn(
- "flex items-center justify-between gap-1.5 rounded-[var(--radius)] border-none bg-surface-container-highest px-4 py-2 text-body-md whitespace-nowrap transition-all duration-[140ms] ease-out outline-none select-none focus-visible:bg-primary-fixed-dim/10 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:bg-destructive/10 data-placeholder:text-muted-foreground/50 data-[size=default]:h-12 data-[size=default]:w-full data-[size=sm]:h-8 data-[size=sm]:rounded-lg data-[size=sm]:px-2.5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ "flex items-center justify-between gap-1.5 rounded-[var(--radius)] border-none bg-surface-container-highest px-4 py-2 text-body-md text-foreground whitespace-nowrap transition-all duration-[140ms] ease-out outline-none select-none focus-visible:bg-primary-fixed-dim/10 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:bg-destructive/10 data-placeholder:text-muted-foreground/50 data-[size=default]:h-12 data-[size=default]:w-full data-[size=sm]:h-8 data-[size=sm]:rounded-lg data-[size=sm]:px-2.5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
  className
  ),
  }
@@ -56,7 +56,7 @@ function SelectTrigger({
  >
  <SelectPrimitive.Icon
  render={
- <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground/60" />
+ <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
  }
  />
  </SelectPrimitive.Trigger>
@@ -71,7 +71,7 @@ function SelectTrigger({
  {children}
  <SelectPrimitive.Icon
  render={
- <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground/60" />
+ <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
  }
  />
  </SelectPrimitive.Trigger>
@@ -139,12 +139,12 @@ function SelectItem({
  <SelectPrimitive.Item
  data-slot="select-item"
  className={cn(
- "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-2 ps-1.5 pe-8 text-label-sm outline-none select-none focus:bg-primary-fixed-dim/10 focus:text-operational-cyan not-data-[variant=destructive]:focus:**:text-operational-cyan data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+ "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-2 ps-1.5 pe-8 text-label-sm text-foreground outline-none select-none focus:bg-primary-fixed-dim/10 focus:text-operational-cyan not-data-[variant=destructive]:focus:**:text-operational-cyan data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
  className
  )}
  {...props}
  >
- <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+ <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap text-foreground">
  {children}
  </SelectPrimitive.ItemText>
  <SelectPrimitive.ItemIndicator

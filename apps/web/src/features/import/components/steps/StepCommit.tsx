@@ -15,7 +15,6 @@ interface StepCommitProps {
 
 export function StepCommit({ wizard, locale }: StepCommitProps) {
  const t = useTranslations('master_data.import');
- const _tc = useTranslations('common');
  const router = useRouter();
  const isRtl = locale === 'ar';
 

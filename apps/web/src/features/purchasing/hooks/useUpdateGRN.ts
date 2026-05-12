@@ -28,8 +28,8 @@ export function useUpdateGRN(id: string, options?: { onConflict?: () => void }) 
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (payload: UpdateGRNPayload) => 
-      apiClient.put(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), UpdateGRNPayloadSchema.parse(payload)).then(res => res.data),
+    mutationFn: ({ payload, signal }: { payload: UpdateGRNPayload; signal?: AbortSignal }) => 
+      apiClient.put(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), UpdateGRNPayloadSchema.parse(payload), signal).then(res => res.data),
     onSuccess: (data) => {
       queryClient.setQueryData(['grn', id], data);
       queryClient.invalidateQueries({ queryKey: ['grns'] });

@@ -16,81 +16,103 @@ const INITIAL_CATEGORIES: Category[] = [
 ];
 
 export function useCategories(filters?: { search?: string }) {
- const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
- return useQuery({
- queryKey: [...QUERY_KEY, filters],
- queryFn: async () => {
- await new Promise(resolve => setTimeout(resolve, 400));
- 
- let data = queryClient.getQueryData<Category[]>(QUERY_KEY);
- if (!data) {
- data = INITIAL_CATEGORIES;
- queryClient.setQueryData(QUERY_KEY, data);
- }
+  return useQuery({
+    queryKey: [...QUERY_KEY, filters],
+    queryFn: async ({ signal }) => {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 400);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('AbortError'));
+        });
+      });
+      
+      let data = queryClient.getQueryData<Category[]>(QUERY_KEY);
+      if (!data) {
+        data = INITIAL_CATEGORIES;
+        queryClient.setQueryData(QUERY_KEY, data);
+      }
 
- let filtered = [...data];
- if (filters?.search) {
- const s = filters.search.toLowerCase();
- filtered = filtered.filter(c => 
- c.name_en.toLowerCase().includes(s) || 
- c.name_ar.includes(s)
- );
- }
+      let filtered = [...data];
+      if (filters?.search) {
+        const s = filters.search.toLowerCase();
+        filtered = filtered.filter(c => 
+          c.name_en.toLowerCase().includes(s) || 
+          c.name_ar.includes(s)
+        );
+      }
 
- return {
- data: filtered,
- meta: {
- total: filtered.length,
- page: 1,
- page_size: 50,
- total_pages: 1
- }
- };
- }
- });
+      return {
+        data: filtered,
+        meta: {
+          total: filtered.length,
+          page: 1,
+          page_size: 50,
+          total_pages: 1
+        }
+      };
+    }
+  });
 }
 
 export function useCategory(id: string | null) {
- const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
- return useQuery({
- queryKey: [...QUERY_KEY, id],
- queryFn: async () => {
- if (!id) return null;
- await new Promise(resolve => setTimeout(resolve, 200));
- 
- const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
- return data.find(c => c.id === id) || null;
- },
- enabled: !!id,
- });
+  return useQuery({
+    queryKey: [...QUERY_KEY, id],
+    queryFn: async ({ signal }) => {
+      if (!id) return null;
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 200);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('AbortError'));
+        });
+      });
+      
+      const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
+      return data.find(c => c.id === id) || null;
+    },
+    enabled: !!id,
+  });
 }
 
 export function useCreateCategory() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.categories');
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.categories');
 
- return useMutation({
- mutationFn: async (values: CategoryFormValues & { signal?: AbortSignal }) => {
- await new Promise(resolve => setTimeout(resolve, 600));
- 
- const newCategory: Category = {
- id: `CAT- ${Math.floor(Math.random() * 1000)}`,
- ...values
- };
+  return useMutation({
+    mutationFn: async ({ values, signal }: { values: CategoryFormValues; signal?: AbortSignal }) => {
+      const abortPromise = new Promise((_, reject) => {
+        if (signal?.aborted) return reject(new Error('AbortError'));
+        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
+      });
 
- queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => [...old, newCategory]);
- return newCategory;
- },
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- toast.success(t('created_success'));
- },
- onError: () => {
- toast.error(t('errors.create_failed'));
- }
- });
+      const workPromise = (async () => {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        const newCategory: Category = {
+          id: `CAT- ${Math.floor(Math.random() * 1000)}`,
+          ...values
+        };
+
+        queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => [...old, newCategory]);
+        return newCategory;
+      })();
+
+      return Promise.race([workPromise, abortPromise]) as Promise<Category>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('created_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'AbortError') return;
+      toast.error(t('errors.create_failed'));
+    }
+  });
 }
 
 export function useUpdateCategory(options?: { onConflict?: () => void }) {
@@ -98,71 +120,89 @@ export function useUpdateCategory(options?: { onConflict?: () => void }) {
   const t = useTranslations('master_data.categories');
 
   return useSafeMutation({
-  onConflict: options?.onConflict,
-  mutationFn: async ({ id, values, signal: _signal }: { id: string; values: CategoryFormValues; signal?: AbortSignal }) => {
-  await new Promise(resolve => setTimeout(resolve, 600));
+    onConflict: options?.onConflict,
+    mutationFn: async ({ id, values, signal }: { id: string; values: CategoryFormValues; signal?: AbortSignal }) => {
+      const abortPromise = new Promise((_, reject) => {
+        if (signal?.aborted) return reject(new Error('AbortError'));
+        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
+      });
 
-  const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
-  const category = data.find(c => c.id === id);
-  if (!category) throw new Error('Category not found');
+      const workPromise = (async () => {
+        await new Promise(resolve => setTimeout(resolve, 600));
 
-    if (values.version !== undefined && values.version < (category.version ?? 0)) {
-      const error = new Error('CONFLICT');
-      Object.assign(error, { response: { status: 409 } });
-      throw error;
+        const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
+        const category = data.find(c => c.id === id);
+        if (!category) throw new Error('Category not found');
+
+        if (values.version !== undefined && values.version < (category.version ?? 0)) {
+          const error = new Error('CONFLICT');
+          Object.assign(error, { response: { status: 409 } });
+          throw error;
+        }
+
+        const updatedCategory = { ...category, ...values, version: (category.version ?? 0) + 1 };
+
+        queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 
+          old.map(c => c.id === id ? updatedCategory : c)
+        );
+
+        return updatedCategory;
+      })();
+
+      return Promise.race([workPromise, abortPromise]) as Promise<Category>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'AbortError') return;
+      toast.error(t('errors.update_failed'));
     }
-
-  const updatedCategory = { ...category, ...values, version: (category.version ?? 0) + 1 };
-
-  queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 
-  old.map(c => c.id === id ? updatedCategory : c)
-  );
-
-  return updatedCategory;
-  },
-  onSuccess: (data) => {
-  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-  queryClient.setQueryData([...QUERY_KEY, data.id], data);
-  toast.success(t('updated_success'));
-  },
-  onError: () => {
-  toast.error(t('errors.update_failed'));
-  }
   });
 }
 
 export function useDeleteCategory() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.categories');
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.categories');
 
- return useMutation({
-mutationFn: async ({ id, signal: _signal }: { id: string; signal?: AbortSignal }) => {
-  await new Promise(resolve => setTimeout(resolve, 600));
-  
-  const _data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
- 
- // OPERATIONAL GUARD: Prevent deletion if linked to items
- // MOCK: CAT-001 has linked items
- if (id === 'CAT-001') {
- throw new Error('GUARD_LINKED_ITEMS');
- }
+  return useMutation({
+    mutationFn: async ({ id, signal }: { id: string; signal?: AbortSignal }) => {
+      const abortPromise = new Promise((_, reject) => {
+        if (signal?.aborted) return reject(new Error('AbortError'));
+        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
+      });
 
- queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 
- old.filter(c => c.id !== id)
- );
- 
- return id;
- },
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- toast.success(t('deleted_success'));
- },
- onError: (error: Error) => {
- if (error.message === 'GUARD_LINKED_ITEMS') {
- toast.error(t('errors.delete_linked_items'));
- } else {
- toast.error(t('errors.delete_failed'));
- }
- }
- });
+      const workPromise = (async () => {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        // OPERATIONAL GUARD: Prevent deletion if linked to items
+        // MOCK: CAT-001 has linked items
+        if (id === 'CAT-001') {
+          throw new Error('GUARD_LINKED_ITEMS');
+        }
+
+        queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 
+          old.filter(c => c.id !== id)
+        );
+        
+        return id;
+      })();
+
+      return Promise.race([workPromise, abortPromise]) as Promise<string>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('deleted_success'));
+    },
+    onError: (error: Error) => {
+      if (error.message === 'AbortError') return;
+      if (error.message === 'GUARD_LINKED_ITEMS') {
+        toast.error(t('errors.delete_linked_items'));
+      } else {
+        toast.error(t('errors.delete_failed'));
+      }
+    }
+  });
 }
