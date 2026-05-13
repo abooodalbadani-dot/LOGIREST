@@ -44,7 +44,7 @@ export function NetworkStatusBanner() {
 
   return (
     <div className={cn(
-      "fixed top-0 inset-x-0 z-[9999] flex items-center justify-center py-1.5 px-4 transition-all duration-500 animate-in slide-in-from-top",
+      "fixed top-0 inset-x-0 z-[9999] flex items-center justify-center py-1.5 px-4 transition-all duration-200 animate-in slide-in-from-top",
       isOffline ? "bg-destructive text-destructive-foreground" : "bg-operational-cyan text-white"
     )}>
       <div className="flex items-center gap-2 text-label-xs font-bold uppercase tracking-wider">

@@ -82,7 +82,7 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-md animate-in fade-in duration-300">
  <div 
- className="bg-surface-container-lowest rounded-3xl border border-outline-low w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200"
+ className="bg-surface-container-lowest rounded-2xl border border-outline-low w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200"
  >
  {/* Nocturne Ghost Border / Glow */}
  <div className="absolute top-0 start-0 w-full h-[2px] bg-gradient-to-r from-transparent via-operational-cyan/50 to-transparent" />

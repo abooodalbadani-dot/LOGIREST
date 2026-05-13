@@ -68,7 +68,7 @@ export function WarehouseForm() {
 
  return (
  <Form {...form}>
- <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-lowest p-8 rounded-[2rem] relative">
+ <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-4xl bg-surface-container-lowest p-8 rounded-2xl relative">
  <h3 className="text-title-lg font-semibold mb-4 text-operational-cyan uppercase">{t('title')}</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <FormField

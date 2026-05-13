@@ -5,13 +5,13 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
- "group/button inline-flex shrink-0 items-center justify-center rounded-[var(--radius)] border border-transparent bg-clip-padding text-body-md font-bold whitespace-nowrap transition-all duration-[140ms] ease-out outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ "group/button inline-flex shrink-0 items-center justify-center rounded-[var(--radius)] border-none bg-clip-padding text-body-md font-bold whitespace-nowrap transition-all duration-[140ms] ease-industrial outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
  {
  variants: {
  variant: {
  default: "bg-[linear-gradient(135deg,var(--primary),var(--primary-container))] !text-white shadow-md shadow-primary/10 hover:opacity-90 hover:scale-[0.99] active:scale-[0.97] border-none",
  outline:
- "border-border-surface bg-transparent text-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+ "bg-surface-container-high text-foreground hover:bg-surface-container-highest hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
  secondary:
  "bg-secondary !text-white hover:bg-secondary/80 aria-expanded:bg-secondary active:scale-[0.98]",
  ghost:

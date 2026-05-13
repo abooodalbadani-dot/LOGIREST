@@ -104,20 +104,20 @@ export function ItemForm() {
  ];
 
  return (
- <div className="flex flex-col lg:flex-row gap-8 max-w-[1400px] mx-auto p-4 lg:p-8 min-h-[800px] animate-in fade-in slide-in-from-bottom-8 duration-700">
+ <div className="flex flex-col lg:flex-row gap-8 max-w-[1400px] mx-auto p-4 lg:p-8 min-h-[800px] animate-in fade-in slide-in-from-bottom-8 duration-200">
  
  {/* Left Sidebar: Image & Stats */}
  <div className="w-full lg:w-[380px] space-y-8">
- <div className="p-8 rounded-[2rem] bg-surface-container-low overflow-hidden relative group transition-all duration-500">
+ <div className="p-8 rounded-2xl bg-surface-container-low overflow-hidden relative group transition-all duration-200">
  <div className="absolute inset-0 bg-gradient-to-br from-operational-cyan/5 to-transparent pointer-events-none" />
  <div className="flex flex-col items-center gap-6 text-center">
  <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">
  {t('image.label')}
  </span>
  <div className="relative group/img">
- <div className="w-56 h-56 rounded-[2.5rem] bg-surface-container-highest flex items-center justify-center border-2 border-dashed border-operational-cyan/20 group-hover:border-operational-cyan/40 transition-all overflow-hidden">
+ <div className="w-56 h-56 rounded-2xl bg-surface-container-highest flex items-center justify-center border-2 border-dashed border-operational-cyan/20 group-hover:border-operational-cyan/40 transition-all overflow-hidden">
  {uploadedImage ? (
-  <Image src={uploadedImage} alt={tc('item')} fill className="object-cover animate-in zoom-in-95 duration-500" />
+  <Image src={uploadedImage} alt={tc('item')} fill className="object-cover animate-in zoom-in-95 duration-200" />
  ) : (
  <div className="flex flex-col items-center gap-3">
  <Camera className="w-10 h-10 text-operational-cyan/40 group-hover/img:scale-110 transition-transform" />
@@ -147,7 +147,7 @@ export function ItemForm() {
  </div>
  </div>
  
- <div className="p-8 rounded-[2rem] bg-surface-container-low transition-all duration-500">
+ <div className="p-8 rounded-2xl bg-surface-container-low transition-all duration-200">
  <h4 className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-6 pb-4">
  {t('glance.title')}
  </h4>
@@ -181,11 +181,11 @@ export function ItemForm() {
  <div className="flex items-center gap-2">
  {steps.map((s) => (
  <div key={s.id} className="flex items-center">
- <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${ step >= s.id ? 'bg-operational-cyan text-white' : 'bg-surface-container-high text-muted-foreground/40' }`}>
+ <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${ step >= s.id ? 'bg-operational-cyan text-white' : 'bg-surface-container-high text-muted-foreground/40' }`}>
  {step > s.id ? <CheckCircle2 className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
  </div>
  {s.id < 3 && (
- <div className={`w-8 h-0.5 mx-2 transition-all duration-500 ${ step > s.id ? 'bg-operational-cyan' : 'bg-surface-container-high' }`} />
+ <div className={`w-8 h-0.5 mx-2 transition-all duration-200 ${ step > s.id ? 'bg-operational-cyan' : 'bg-surface-container-high' }`} />
  )}
  </div>
  ))}
@@ -195,13 +195,13 @@ export function ItemForm() {
 
  <Form {...form}>
  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
- <div className="p-10 rounded-[2.5rem] bg-surface-container-lowest relative overflow-hidden transition-all duration-700">
+ <div className="p-10 rounded-2xl bg-surface-container-lowest relative overflow-hidden transition-all duration-200">
  <div className="absolute top-0 end-0 p-8">
  <span className="text-display-lg text-foreground/5 select-none leading-none">0{step}</span>
  </div>
 
  {step === 1 && (
- <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+ <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-200">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <FormField
  control={form.control}
@@ -283,7 +283,7 @@ export function ItemForm() {
  )}
 
  {step === 2 && (
- <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+ <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-200">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <FormField
  control={form.control}
@@ -311,7 +311,7 @@ export function ItemForm() {
  />
  </div>
 
- <div className="bg-surface-container-low/40 rounded-[2rem] p-8 border-none space-y-6">
+ <div className="bg-surface-container-low/40 rounded-2xl p-8 border-none space-y-6">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
  <Settings2 className="w-5 h-5 text-operational-cyan" />
@@ -330,7 +330,7 @@ export function ItemForm() {
  )}
 
  {step === 3 && (
- <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+ <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-200">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <FormField
  control={form.control}
@@ -375,7 +375,7 @@ export function ItemForm() {
  />
  </div>
 
- <div className="p-6 bg-status-warning/5 rounded-3xl border-none flex items-start gap-4">
+ <div className="p-6 bg-status-warning/5 rounded-2xl border-none flex items-start gap-4">
  <div className="w-10 h-10 rounded-2xl bg-status-warning/10 flex items-center justify-center shrink-0">
  <Bell className="w-5 h-5 text-status-warning" />
  </div>

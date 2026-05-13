@@ -1,85 +1,157 @@
-# Design System Strategy: LogiRest
-
-## 1. Overview & Creative North Star
-The "LogiRest" design system is a high-performance framework engineered for the high-stakes environment of restaurant inventory management. It moves beyond the clinical coldness of standard enterprise software to create an experience of **"Operational Elegance."** 
-
-Our Creative North Star is **The Precision Ledger**. Much like a Michelin-star kitchen, the UI must be organized, spotless, and hyper-functional. We break the "template" look of Material Design 3 by replacing rigid grid lines with **Tonal Architecture**. By using varying depths of surface colors and intentional RTL asymmetry, we guide the eye toward critical data points—stock levels, expiration dates, and procurement needs—without the visual noise of traditional borders.
-
+---
+name: LogiRest Design System
+description: Operational Elegance for High-Integrity Kitchen Store Management.
+colors:
+  primary: "#116479"
+  primary-container: "#135e6d"
+  secondary: "#5c727d"
+  tertiary: "#006a6a"
+  background: "#f7f9ff"
+  foreground: "#181c20"
+  surface-lowest: "#ffffff"
+  surface-low: "#f1f4fa"
+  surface-high: "#eef1f7"
+  surface-highest: "#dfe3e8"
+  operational-cyan: "#006684"
+  operational-red: "#ba1a1a"
+  midnight-ledger: "#0a1b24"
+typography:
+  display:
+    fontFamily: "Tajawal, sans-serif"
+    fontSize: "2rem"
+    fontWeight: 600
+    lineHeight: 1.2
+  body:
+    fontFamily: "IBM Plex Sans Arabic, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.7
+  label:
+    fontFamily: "IBM Plex Sans Arabic, sans-serif"
+    fontSize: "0.75rem"
+    fontWeight: 500
+    letterSpacing: "0.04em"
+rounded:
+  lg: "16px"
+  md: "14px"
+  sm: "12px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "40px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "#ffffff"
+    rounded: "{rounded.lg}"
+    padding: "10px 24px"
+  card:
+    backgroundColor: "{colors.surface-lowest}"
+    rounded: "{rounded.lg}"
+    padding: "16px"
+  input:
+    backgroundColor: "{colors.surface-low}"
+    rounded: "{rounded.lg}"
+    padding: "12px 16px"
 ---
 
-2. Colors & Surface Philosophy
-The palette is rooted in deep professional teals and crisp blues, conveying authority and calm. 
+# Design System: LogiRest
 
-### The "No-Line" Rule
-To achieve a premium, editorial feel, **1px solid borders are strictly prohibited for sectioning.** Boundaries must be defined through background color shifts. For example, a data table (Surface Container Lowest) should sit atop a Surface background. This creates a "flush" look that feels integrated into the hardware.
+## 1. Overview
 
-### Surface Hierarchy & Nesting
-Depth is achieved through the physical stacking of tiers. 
-- **Base Layer:** `surface` (#f7f9ff) for the overall application background.
-- **Sectioning:** Use `surface_container_low` (#f1f4fa) for secondary sidebars or grouping elements.
-- **Actionable Content:** Use `surface_container_lowest` (#ffffff) for primary cards and data tables to make them pop against the background.
+**Creative North Star: "The Culinary Architect"**
 
-### The "Glass & Gradient" Rule
-For floating elements like "Add New Inventory" modals or quick-action FABs, utilize **Glassmorphism**. Use a semi-transparent `surface_container` with a `backdrop-blur` of 12px. To provide "visual soul," apply a subtle linear gradient to primary buttons, transitioning from `primary` (#004d64) to `primary_container` (#006684) at a 135-degree angle.
+LogiRest's visual identity is rooted in the philosophy of **Operational Elegance**. It captures the meticulous precision of a world-class Michelin-star kitchen—where every tool has its place, and every movement is intentional. The system prioritizes high-density data legibility and operational speed over decorative flourishes, favoring a "flush" hardware-integrated look that feels like part of the professional kitchen environment.
 
----
+**Key Characteristics:**
+- **Tonal Depth**: Boundaries are established through background color shifts between surface tiers, not borders.
+- **RTL-First Integrity**: Visual weight and navigation eye-flow are optimized for Arabic speakers first.
+- **Authoritative Density**: High data density without cognitive overload, achieved through clear typographic hierarchy.
+- **Zero-Line Discipline**: 1px solid borders are strictly prohibited for sectioning.
 
-3. Typography
-We use **IBM Plex Sans Arabic** for its mathematical precision and excellent legibility in high-density data environments.
+## 2. Colors
 
-- **Display & Headlines:** Use `headline-lg` (2rem) for dashboard summaries. These should feel like a newspaper headline—bold and authoritative.
-- **The Data Scale:** For the inventory tables, the `body-md` (0.875rem) is our workhorse. 
-- **Editorial Contrast:** Pair `title-sm` (1rem) in `primary` color for section headers with `label-sm` (0.6875rem) in `on_surface_variant` for metadata. This "Big/Small" contrast creates a clear hierarchy that standard M3 layouts often lack.
+The palette is anchored by the deep, authoritative tones of professional store management, punctuated by precision-focused action colors.
 
----
+### Primary
+- **Culinary Teal (#116479)**: The primary brand anchor. Used for core navigation, primary actions, and brand identity. It conveys calm authority and reliability.
 
-4. Elevation & Depth
+### Secondary
+- **Midnight Ledger (#0a1b24)**: Used for deep surface backgrounds (especially in dark mode) and high-integrity header regions. It represents the "immutability" of the system.
 
-### The Layering Principle
-Avoid drop shadows for standard UI components. Instead, "stack" tokens. A `surface_container_high` card placed on a `surface` background provides all the "lift" necessary.
+### Tertiary
+- **Operational Cyan (#006684)**: Used for active states, highlights, and critical classification labels. It is the color of "action" and "current focus."
 
-### Ambient Shadows
-When a "floating" effect is required (e.g., a critical low-stock alert), use an **Ambient Shadow**:
-- **Color:** `on_surface` (#181c20) at 6% opacity.
-- **Blur:** 24px.
-- **Spread:** 0px.
-This mimics natural light reflecting off a polished kitchen surface rather than a digital "glow."
+### Neutral
+- **Base Surface (#f7f9ff)**: The overall application background, providing a clean, low-strain canvas.
+- **Surface Container Low (#f1f4fa)**: Used for secondary groupings and sidebars to provide subtle distinction without lines.
+- **Surface Container Lowest (#ffffff)**: Used for primary cards and data tables to maximize contrast and "pop" the focus data.
 
-### The "Ghost Border" Fallback
-In high-density tables where distinction is mandatory, use a **Ghost Border**: The `outline_variant` token at **15% opacity**. This provides a hint of structure without interrupting the visual flow of the RTL text.
+### Named Rules
+**The No-Line Rule.** 1px solid borders are strictly prohibited for sectioning. Boundaries are established exclusively through background color shifts between the Surface Tiers.
 
----
+**The Rare Accent Rule.** The primary accent colors are used on ≤10% of any given screen. Their rarity ensures that when a color appears, it carries operational meaning.
 
-5. Components
+## 3. Typography
 
-### High-Density Data Tables
-- **Rule:** Forbid horizontal divider lines. 
-- **Styling:** Use alternating row fills using `surface_container_low` and `surface_container_lowest`. 
-- **RTL Alignment:** Ensure the first column (Item Name) has a generous 24px right-margin to anchor the eye.
+LogiRest uses a dual-typeface strategy to balance architectural strength with data legibility.
 
-### Input Fields
-- **Styling:** Use the "Filled" M3 variant but remove the bottom stroke. 
-- **Visuals:** Use `surface_container_highest` as the field background. On focus, transition the background to `primary_fixed_dim` with a 10% opacity to create a subtle "glow" within the field.
+**Display Font:** Tajawal (with sans-serif fallback)
+**Body Font:** IBM Plex Sans Arabic (with sans-serif fallback)
 
-### Status Chips
-- **Success (In Stock):** `tertiary_container` text on `tertiary_fixed_dim` background. 
-- **Error (Out of Stock):** `on_error_container` text on `error_container` background.
-- **Visual Style:** Use `full` (9999px) roundedness for chips to contrast against the `md` (0.375rem) roundedness of the main containers.
+**Character:** Tajawal provides a geometric, authoritative feel for headlines and large numbers. IBM Plex Sans Arabic offers exceptional clarity for high-density inventory data, especially in the technical context of kitchen store management.
 
-### Inventory Quick-Actions (Custom Component)
-A floating, semi-transparent bar at the bottom of the screen using Glassmorphism. It houses "Scan Barcode," "Print Labels," and "Bulk Edit," utilizing `primary` for the background and `on_primary` for icons.
+### Hierarchy
+- **Display** (600, 2rem, 1.2): Used for primary page titles and high-impact dashboard numbers.
+- **Headline** (600, 1.25rem, 1.3): Used for sub-sections and major card titles.
+- **Title** (600, 1rem, 1.4): Used for smaller group headers and secondary navigation labels.
+- **Body** (400, 0.875rem, 1.7): The primary workhorse for all data entry, tables, and descriptions. Max line length capped at 75ch.
+- **Label** (500, 0.75rem, 0.04em): Used for metadata, table headers (uppercase in EN), and status indicators.
 
----
+## 4. Elevation
 
-6. Do's and Don'ts
+LogiRest rejects the "floating card" aesthetic in favor of **Tonal Stacking**. Depth is communicated through the physical stacking of color tiers, creating a solid, grounded feel.
 
-### Do
-- **Do** prioritize RTL flow. The "visual weight" should start from the top right.
-- **Do** use `primary_fixed` for active states in navigation to provide a soft, professional highlight.
-- **Do** use `Tajawal` for large numeric displays in dashboards to give them a modern, architectural feel.
+### Shadow Vocabulary
+- **Ambient Glow** (`box-shadow: 0 0 24px 0 rgba(24, 28, 32, 0.04)`): A whisper-soft diffused shadow used sparingly for floating elements like popovers or tooltips.
 
-### Don'ts
-- **Don't** use 100% black text. Always use `on_surface` (#181c20) to maintain tonal depth.
-- **Don't** use standard M3 "Elevated Cards" with heavy shadows; they clutter the dense inventory view.
-- **Don't** use vertical dividers between table columns. Let the alignment of the Arabic text create the "invisible columns."
-- **Don't** ignore the Dark Mode transition; ensure `inverse_surface` is used for high-contrast messaging to maintain readability in low-light kitchen prep areas.
+### Named Rules
+**The Flush Surface Rule.** Components do not "float" with heavy shadows. They are "inset" or "overlaid" through background contrast, mimicking the precision-fit panels of high-end kitchen equipment.
+
+## 5. Components
+
+### Buttons
+- **Shape:** Rounded (16px)
+- **Primary:** High-contrast Culinary Teal with a subtle gradient to Primary Container. Used for "Confirm" or "Commit" actions.
+- **Hover / Focus:** Subtle scale reduction (0.99) and opacity shift (0.9). Focus uses a high-contrast ring with offset.
+
+### Cards / Containers
+- **Corner Style:** Rounded (16px)
+- **Background:** Surface Container Lowest (#ffffff) against Base Surface.
+- **Shadow Strategy:** Ambient shadow (4%) for very subtle separation if tonal contrast is insufficient.
+
+### Inputs / Fields
+- **Style:** Background-filled (Surface Container Low) with no border.
+- **Focus:** Internal background glow and border-color shift to Primary.
+- **Scan-Input:** Specific styling for barcode-friendly fields with distinct "ready-to-scan" active states.
+
+### Data Tables
+- **Invisible Columns:** Vertical dividers are forbidden. Structure is created through the alignment of Arabic text and intentional whitespace.
+- **Header:** Label Small typography with 60% opacity for maximum "data-primary" focus.
+
+## 6. Do's and Don'ts
+
+### Do:
+- **Do** use tonal backgrounds to separate functional groups.
+- **Do** anchor the visual weight at the top right for RTL eye-flow.
+- **Do** use Tajawal exclusively for architectural headlines and large metrics.
+- **Do** prioritize IBM Plex Sans Arabic for all high-density data entry and table content.
+
+### Don't:
+- **Don't** use 1px solid borders for sectioning; this is a strict violation of Operational Elegance.
+- **Don't** use neon gradients or heavy drop shadows (Material Design clichés).
+- **Don't** use 100% black text; use Tonal Depth (Midnight Ledger) for high-contrast text.
+- **Don't** use decorative animations that delay the visibility of inventory data.
+- **Don't** use side-stripe borders (border-left/right > 1px) as colored accents on cards.

@@ -323,7 +323,7 @@ export function AdjustmentForm({
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-50 w-full glass-header border-b border-outline-variant/50">
+      <div className="sticky top-0 z-50 w-full glass-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex flex-col">
             <h1 className="font-semibold text-title-sm">
@@ -564,12 +564,12 @@ export function AdjustmentForm({
                   <h4 className="text-label-xs font-semibold uppercase">{t('document_info')}</h4>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
+                  <div className="flex justify-between items-center py-3">
                     <span className="text-label-sm text-muted-foreground">{tc('status')}</span>
                     <StatusBadge status={adjustmentStatus as BadgeStatus} />
                   </div>
                   {document?.posted_at && (
-                    <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
+                    <div className="flex justify-between items-center py-3">
                       <span className="text-label-sm text-muted-foreground">{t('posted_at')}</span>
                       <ClientOnlyTime 
                         date={document.posted_at} 
@@ -580,7 +580,7 @@ export function AdjustmentForm({
                     </div>
                   )}
                   {document?.approved_by && (
-                    <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
+                    <div className="flex justify-between items-center py-3">
                       <span className="text-label-sm text-muted-foreground">{t('approved_by')}</span>
                       <span className="text-label-xs font-semibold uppercase text-foreground/70">{document.approved_by}</span>
                     </div>

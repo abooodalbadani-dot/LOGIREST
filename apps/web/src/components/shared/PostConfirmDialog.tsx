@@ -117,10 +117,10 @@ export function PostConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <AlertDialogTrigger render={trigger} />}
-      <AlertDialogContent className={cn("max-w-md border-none ambient-shadow p-8 bg-surface-container-lowest rounded-[2rem] animate-in fade-in zoom-in-95 duration-300", className)}>
+      <AlertDialogContent className={cn("max-w-md border-none ambient-shadow p-8 bg-surface-container-lowest rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
         <AlertDialogHeader className="space-y-4">
           <div className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-500 hover:scale-110",
+            "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-200 hover:scale-110",
             VARIANT_STYLES[variant]
           )}>
             <Icon className="w-6 h-6" />

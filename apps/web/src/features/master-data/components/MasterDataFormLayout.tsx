@@ -40,7 +40,7 @@ export function MasterDataFormLayout({
   const t = useTranslations('master_data.common');
 
   return (
-    <div className="p-8 max-w-[1000px] mx-auto pb-32 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="p-8 max-w-[1000px] mx-auto pb-32 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12">
         <div className="flex items-center gap-6">
           <Button 
@@ -62,7 +62,7 @@ export function MasterDataFormLayout({
         </div>
       </div>
 
-      <div className="bg-surface-container-lowest rounded-[2rem] p-10 relative overflow-hidden">
+      <div className="bg-surface-container-lowest rounded-2xl p-10 relative overflow-hidden">
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 opacity-[0.01] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
         
@@ -71,7 +71,7 @@ export function MasterDataFormLayout({
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-10 py-6 bg-surface-container-low/40 rounded-[2rem]">
+      <div className="flex items-center justify-between px-10 py-6 bg-surface-container-low/40 rounded-2xl">
         <span className="text-label-xs text-muted-foreground/40 uppercase font-semibold">{t('confidential_data')}</span>
         <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2">

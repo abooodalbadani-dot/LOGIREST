@@ -27,19 +27,19 @@ export function EmptyState({
 
   return (
     <div className={cn(
-      "flex flex-col items-center justify-center text-center animate-in fade-in duration-700 w-full relative",
+      "flex flex-col items-center justify-center text-center animate-in fade-in duration-200 w-full relative",
       isMinimal ? "py-32 px-4 gap-6 opacity-20" : "py-20 px-6 gap-8",
       className
     )}>
       {EffectiveIcon ? (
         <div className={cn(
-          "text-muted-foreground/60 transition-colors duration-500",
+          "text-muted-foreground/60 transition-colors duration-200",
           isMinimal ? "w-12 h-12" : "w-16 h-16 mb-2"
         )}>
           <EffectiveIcon className="w-full h-full" strokeWidth={1} />
         </div>
       ) : !isMinimal && (
-        <div className="relative w-64 h-64 mb-4 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-1000">
+        <div className="relative w-64 h-64 mb-4 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-200">
           <Image
             src={imageUrl}
             alt={title}

@@ -47,7 +47,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
   const isLocked = transferStatus !== TRANSFER_STATUS.DRAFT;
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
       <div className="flex items-center justify-between">
         <Breadcrumb 
           items={[
@@ -80,7 +80,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
             
             <Button
               variant="outline"
-              className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
+              className="bg-surface-container-high rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
               onClick={() => window.print()}
             >
               <Printer className="w-4 h-4 me-2" />
@@ -108,19 +108,19 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-surface-container-low/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden shadow-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-surface-container-low/50 p-8 rounded-2xl relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
 
               <div className="space-y-2">
                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>
-                <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-bold text-body-md">
+                <div className="bg-surface-container-highest/40 rounded-xl p-4 font-bold text-body-md">
                   {transfer?.from_warehouse_name}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('to_warehouse')}</label>
-                <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-bold text-body-md">
+                <div className="bg-surface-container-highest/40 rounded-xl p-4 font-bold text-body-md">
                   {transfer?.to_warehouse_name}
                 </div>
               </div>
@@ -128,7 +128,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
               {transfer?.shipped_at && (
                 <div className="space-y-2">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
-                  <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                  <div className="bg-surface-container-highest/30 rounded-xl p-4 flex items-center justify-between">
                     <ClientOnlyTime 
                       date={transfer.shipped_at} 
                       mode="datetime" 
@@ -142,7 +142,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
               {transfer?.received_at && (
                 <div className="space-y-2">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
-                  <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                  <div className="bg-surface-container-highest/30 rounded-xl p-4 flex items-center justify-between">
                     <ClientOnlyTime 
                       date={transfer.received_at} 
                       mode="datetime" 
@@ -155,7 +155,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
 
               <div className="col-span-1 md:col-span-4 space-y-2">
                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('notes')}</label>
-                <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-medium text-body-md min-h-[60px]">
+                <div className="bg-surface-container-highest/40 rounded-xl p-4 font-medium text-body-md min-h-[60px]">
                   {transfer?.notes || '—'}
                 </div>
               </div>
@@ -163,14 +163,14 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
               {transfer?.variance_reason && (
                 <div className="col-span-1 md:col-span-4 space-y-2">
                   <label className="text-label-xs font-semibold uppercase text-status-warning/80 ms-1">{t('variance_reason')}</label>
-                  <div className="bg-status-warning/5 border border-status-warning/20 rounded-xl p-4 font-medium text-body-md">
+                  <div className="bg-status-warning/5 border-none rounded-xl p-4 font-medium text-body-md">
                     {transfer.variance_reason}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="bg-surface-container-low/30 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+            <div className="bg-surface-container-low/30 rounded-2xl overflow-hidden shadow-2xl">
               <DocumentReadOnlyOverlay isPosted={true}>
                 <DocumentLineItemTable
                   lines={transfer?.lines ?? []}
@@ -188,7 +188,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
                       header: t('shipped_qty'),
                       cell: (line: TransferLine) => (
                         <div className="flex justify-center">
-                          <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
+                          <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-xl">
                             {line.shipped_qty ?? line.qty}
                           </span>
                         </div>
@@ -198,7 +198,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
                       header: t('received_qty'),
                       cell: (line: TransferLine) => (
                         <div className="flex justify-center">
-                          <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.received_qty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
+                          <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-xl ${line.received_qty ? 'bg-emerald-500/10 text-emerald-400' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
                             {line.received_qty ?? '—'}
                           </span>
                         </div>

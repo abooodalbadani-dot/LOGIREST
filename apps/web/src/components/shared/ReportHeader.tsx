@@ -16,7 +16,7 @@ export function ReportHeader() {
  if (!profile) return null;
 
  return (
- <div className="hidden print:flex flex-col gap-6 mb-10 border-b border-surface-variant/20 pb-8 animate-in fade-in duration-500">
+ <div className="hidden print:flex flex-col gap-6 mb-10 border-b pb-8 animate-in fade-in duration-200">
  <div className="flex items-start justify-between">
  <div className="flex flex-col gap-2">
  <h1 className="text-headline-lg font-semibold text-foreground">
@@ -28,7 +28,7 @@ export function ReportHeader() {
  </div>
  
  {profile.logo && (
- <div className="w-24 h-24 relative flex items-center justify-center bg-white p-2 rounded-xl shadow-sm border border-surface-variant/10">
+ <div className="w-24 h-24 relative flex items-center justify-center bg-white p-2 rounded-xl shadow-sm border">
  {/* Using standard img for reliable print rendering of base64 */}
  <img 
  src={profile.logo} 

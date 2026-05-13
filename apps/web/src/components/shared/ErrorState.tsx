@@ -70,12 +70,12 @@ export function ErrorState({ title, message, description, onRetry, onBack, error
             )}
           </div>
         }
-        className={cn(config.bgClass, config.borderClass, "rounded-[2.5rem] backdrop-blur-sm p-16")}
+        className={cn(config.bgClass, config.borderClass, "rounded-2xl backdrop-blur-sm p-16")}
       />
       
       {/* Decorative Glow */}
       <div className={cn(
-        "absolute inset-0 blur-[120px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000",
+        "absolute inset-0 blur-[120px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
         config.glowClass
       )} />
     </div>

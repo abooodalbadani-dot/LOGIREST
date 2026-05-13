@@ -27,15 +27,15 @@ export function StepValidate({ wizard }: StepValidateProps) {
  }, [wizard]);
 
  return (
- <div className="flex flex-col items-center justify-center gap-12 py-20 animate-in fade-in zoom-in-95 duration-500">
+ <div className="flex flex-col items-center justify-center gap-12 py-20 animate-in fade-in zoom-in-95 duration-200">
  <div className="relative">
  {/* Pulsing rings */}
  <div className="absolute inset-0 rounded-full bg-cyan-500/10 animate-ping duration-[2000ms]" />
  <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-pulse duration-[1500ms]" />
  
- <div className="relative w-32 h-32 rounded-3xl bg-surface-container-low flex items-center justify-center border border-white/5 shadow-2xl">
+ <div className="relative w-32 h-32 rounded-2xl bg-surface-container-low flex items-center justify-center shadow-2xl">
  <Database className="w-16 h-16 text-cyan-500" />
- <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-background border border-white/5 shadow-lg flex items-center justify-center">
+ <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-background shadow-lg flex items-center justify-center">
  <Loader2 className="w-6 h-6 text-cyan-500 animate-spin" />
  </div>
  </div>
@@ -56,11 +56,11 @@ export function StepValidate({ wizard }: StepValidateProps) {
  </div>
 
  <div className="grid grid-cols-2 gap-4 w-full max-w-md">
- <div className="p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1">
+ <div className="p-6 rounded-2xl bg-surface-container-low/50 space-y-1">
  <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('total_records')}</p>
  <p className="text-headline-lg font-semibold font-mono dir-ltr">{wizard.metadata?.recordCount || 0}</p>
  </div>
- <div className="p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1">
+ <div className="p-6 rounded-2xl bg-surface-container-low/50 space-y-1">
  <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('status')}</p>
  <p className="text-body-md font-bold text-cyan-500 uppercase leading-9 animate-pulse">{t('analyzing')}</p>
  </div>

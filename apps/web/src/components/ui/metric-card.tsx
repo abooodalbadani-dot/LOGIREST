@@ -53,11 +53,11 @@ color = 'cyan',
 
  return (
  <Card className={cn(
- "bg-surface-container-lowest border-none rounded-[2rem] overflow-hidden relative group transition-all hover:bg-surface-container-low/50 hover:ambient-shadow text-foreground",
+ "bg-surface-container-lowest border-none rounded-2xl overflow-hidden relative group transition-all hover:bg-surface-container-low/50 hover:ambient-shadow text-foreground",
  className
  )}>
  {/* Background Icon Decoration */}
- <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity transform group-hover:scale-110 duration-500">
+ <div className="absolute top-0 end-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity transform group-hover:scale-110 duration-200">
  {Icon ? (isValidElement(Icon) ? Icon : React.createElement(Icon as ElementType, { className: "w-24 h-24" })) : null}
  </div>
 

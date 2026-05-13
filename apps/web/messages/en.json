@@ -11,6 +11,7 @@
       "reject": "Reject",
       "submit": "Submit",
       "close": "Close",
+      "view_all": "View All",
       "remove_line": "Remove line",
       "audit_log_filename": "Audit_Log",
       "all_branches": "All Branches",
@@ -23,21 +24,89 @@
     "audit_trail": "Audit Trail / History",
     "back": "Back",
     "back_to_list": "Back to List",
+    "loading_data": "Loading data...",
     "barcode_scanner": "Barcode Scanner",
+    "id": "ID",
+    "location": "Location",
+    "uom": {
+      "label": "Units of Measure",
+      "units": {
+        "l": "Liter (L)",
+        "liter": "L",
+        "kilogram": "kg",
+        "kg": "Kilogram (KG)",
+        "pcs": "PCS",
+        "unit": "Unit",
+        "ea": "Each (EA)"
+      },
+      "create_title": "Define New Unit",
+      "description": "Standardized metrics and measurement specifications",
+      "edit_title": "Modify Measurement Unit",
+      "precision": "High Precision",
+      "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
+      "placeholders": {
+        "code": "UNIT",
+        "name_ar": "اسم الوحدة",
+        "name_en": "Unit Name"
+      },
+      "registry_sync": "Registry Sync",
+      "search_placeholder": "Search units by code or name...",
+      "title": "Units of Measure",
+      "total_metrics": "Total Registry",
+      "view_title": "UoM Details",
+      "created_success": "Measurement unit defined",
+      "deactivated_success": "Measurement unit deactivated",
+      "empty": {
+        "description": "Define standardized units of measure to ensure accuracy across inventory transactions.",
+        "title": "No Measurement Units"
+      },
+      "errors": {
+        "cannot_deactivate_uom_in_use": "Cannot deactivate unit currently assigned to active items.",
+        "cannot_delete_uom_in_use": "Cannot delete measurement unit associated with existing items or conversion rules.",
+        "delete_failed": "Failed to delete measurement unit",
+        "update_failed": "Failed to update unit specifications"
+      },
+      "delete_confirm_title": "Delete Measurement Unit",
+      "delete_confirm_desc": "Are you sure you want to delete this measurement unit? This will remove the unit definition from the registry. Historic transactions will remain intact for audit purposes.",
+      "deleted_success": "Measurement unit removed from registry",
+      "fields": {
+        "code": "Unit Code",
+        "created_at": "Created At",
+        "is_active": "Status",
+        "name_ar": "Unit Name (AR)",
+        "name_en": "Unit Name (EN)"
+      },
+      "updated_success": "Unit specifications updated",
+      "validation": {
+        "code_required": "Unit code is required",
+        "code_uppercase": "Code must be uppercase alphabetic",
+        "name_ar_required": "Arabic name is required",
+        "name_en_required": "English name is required"
+      }
+    },
+    "doc_types": {
+      "pr": "Purchase Request",
+      "adj": "Adjustment",
+      "st": "ST",
+      "grn": "GRN"
+    },
+    "departments": {
+      "label": "Departments",
+      "culinary_lab": "Culinary Lab",
+      "pastry_desserts": "Pastry & Desserts",
+      "kitchen_1": "Kitchen 1",
+      "pastry": "Pastry"
+    },
+    "warehouses": {
+      "label": "Warehouses",
+      "main": "Main Warehouse",
+      "main_hub": "Main Hub",
+      "cold_storage_locked": "Cold Storage (Locked)"
+    },
     "base_currency": "Base Currency",
     "cancel": "Cancel",
-    "categories": {
-      "equipment": "Equipment",
-      "food": "Food & Ingredients",
-      "packaging": "Packaging",
-      "supplies": "Supplies"
-    },
-    "currencies": {
-      "sar": "SAR",
-      "sar_full": "Saudi Riyal",
-      "usd": "USD",
-      "usd_full": "US Dollar"
-    },
+    "categories": "Categories",
+    "currencies": "Currencies",
     "check_fields": "Please check required fields",
     "code": "Code",
     "completed": "Completed",
@@ -117,29 +186,8 @@
     "create_new": "Create New",
     "active": "Active",
     "inactive": "Inactive",
-    "is_active": "Active State",
+    "is_active": "Active",
     "operational_status": "Operational Status",
-    "status": {
-      "all": "All Statuses",
-      "draft": "Draft",
-      "posted": "Posted",
-      "active": "Active",
-      "submitted": "Submitted",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "last_sync": "Last Sync",
-      "live_updates": "Live Updates",
-      "completed": "Completed",
-      "in_transit": "In Transit",
-      "status": "Status",
-      "pending": "Pending",
-      "cancelled": "Cancelled",
-      "voided": "Voided",
-      "received": "Received",
-      "shipped": "Shipped",
-      "closed": "Closed"
-    },
-    "status_label": "Status",
     "statuses": {
       "active": "Active",
       "all": "All Statuses",
@@ -155,8 +203,6 @@
       "healthy": "Healthy",
       "in_transit": "In Transit",
       "inactive": "Inactive",
-      "last_sync": "Last Sync",
-      "live_updates": "Live Updates",
       "low": "Low Stock",
       "open": "Open",
       "partial": "Partial",
@@ -177,12 +223,46 @@
       "variance_submitted": "Variance Submitted",
       "voided": "Voided"
     },
+    "table_headers": {
+      "item": "Item",
+      "uom": "UoM",
+      "qty": "Qty",
+      "price": "Price",
+      "total": "Total",
+      "code": "Code",
+      "name": "Name",
+      "lot": "Lot",
+      "expiry": "Expiry",
+      "notes": "Notes",
+      "available": "Available",
+      "received_qty": "Received Qty",
+      "lot_allocation": "Lot Allocation"
+    },
+    "role": {
+      "admin": "System Administrator",
+      "kitchen_chief": "Kitchen Chief",
+      "store_manager": "Store Manager"
+    },
+    "time_ago": {
+      "minutes": "{count}m ago",
+      "hours": "{count}h ago",
+      "days": "{count}d ago"
+    },
+    "department": "Department",
+    "batch": "Batch",
+    "reasons": {
+      "damage": "Damage",
+      "expiry": "Expiry",
+      "theft": "Theft",
+      "adjustment": "Adjustment"
+    },
+    "status_label": "Status",
     "locked": "Locked",
     "logout": "Logout",
     "lot": "Lot",
     "lot_number": "Lot Number",
     "manifest_state": "Manifest State",
-    "master_data": "Master Data",
+    "master_data": "Master Data Hub",
     "navigation": {
       "master_data": "Master Data"
     },
@@ -190,7 +270,7 @@
     "name_en": "Name (English)",
     "no_items": "No items added.",
     "no_records": "No Data",
-    "not_available": "N/A",
+    "not_available": "Not Available",
     "not_found": "Not found",
     "not_logged_in": "Not Logged In",
     "notes": "Notes",
@@ -215,17 +295,8 @@
     "saving": "Saving...",
     "search": "Search",
     "select_date": "Select date",
-    "select_item": "Select Item...",
-    "select_supplier": "Select Supplier...",
-    "select_warehouse": "Select Warehouse...",
-    "select_department": "Select Department...",
-    "add_item": "Add Item",
-    "quantity": "Quantity",
-    "id": "ID",
-    "error_occurred": "An error occurred",
-    "units": "Units",
-    "batch": "Batch",
-    "location": "Location",
+
+    "units_label": "Units",
     "sidebar": {
       "adjustment": "Adjustments",
       "admin": "Admin",
@@ -288,41 +359,11 @@
       "last_sync": "Last Sync",
       "live_updates": "Live Updates"
     },
-    "table_headers": {
-      "available": "Available",
-      "code": "Item Code",
-      "expiry": "Expiry",
-      "lot": "Lot",
-      "lot_allocation": "Lot Allocation",
-      "name": "Item Name",
-      "qty": "Qty",
-      "received_qty": "Received Qty",
-      "uom": "UoM"
-    },
+
     "total": "Total",
     "total_locations": "Total Locations",
     "total_users": "Total Users",
-    "uoms": {
-      "ea": "Each (EA)",
-      "kg": "Kilogram (KG)",
-      "l": "Liter (L)"
-    },
     "warehouse": "Warehouse",
-    "warehouses": {
-      "cold": "Cold Store",
-      "dry": "Dry Store",
-      "kitchen": "Kitchen Store",
-      "main": "Main Warehouse",
-      "pastry": "Pastry Store",
-      "main_hub": "Main Distribution Hub",
-      "cold_storage_locked": "Cold Storage (LOCKED)"
-    },
-    "departments": {
-      "kitchen_1": "Kitchen 1",
-      "pastry": "Pastry",
-      "culinary_lab": "Main Culinary Lab",
-      "pastry_desserts": "Pastry & Desserts"
-    },
     "fefo": {
       "override_reason": "Override reason",
       "expired_warning": "Warning: This item is expired — usage reason must be provided",
@@ -379,7 +420,83 @@
     },
     "warehouse_locked": "Warehouse Locked",
     "stocktake_in_progress_desc": "Transactions are restricted due to an active stocktake.",
-    "not_available": "Not Available"
+    "read_only_intel": "Read-Only Asset Intelligence",
+    "operational_snapshot": "Operational Snapshot",
+    "verified_static_data": "Verified Static Data",
+    "asset_metadata": "Asset Configuration & Metadata",
+    "confidential_data": "Confidential Operational Data",
+    "secure_connection": "Secure Connection",
+    "active_metrics": "Active Metrics",
+    "active_partners": "Active Partners",
+    "active_status": "Active Status",
+    "barcodes": "Barcodes",
+    "base_currency_description": "The system uses the base currency for all internal calculations and reporting.",
+    "base_currency_warning": "Warning: Setting this as base currency will affect all exchange rate calculations.",
+    "basic_info": "Basic Information",
+    "basic_info_desc": "Core Entity Identification",
+    "bilingual_record": "Bilingual classification record",
+    "branches": "Branches",
+    "categories_desc": "Logical grouping of inventory assets for hierarchical control and reporting",
+    "category_classification_details": "Category classification details",
+    "compliance": "Compliance",
+    "compliance_rate": "Compliance Rate",
+    "cost_center": "Cost Center",
+    "currency_id": "Currency",
+    "edit": "Edit",
+    "flat": "Flat",
+    "global": "Global",
+    "hierarchy_status": "Hierarchy Depth",
+    "identification_naming": "Currency identification and naming",
+    "inactive_status": "Inactive Status",
+    "inventory_taxonomy_units": "Inventory Taxonomy & Units",
+    "manager": "Manager",
+    "master_data_sync": "Master Data Sync",
+    "no": "No",
+    "no_categories_desc": "Group your items into logical categories for better organization.",
+    "no_categories_title": "No Categories Found",
+    "not_set": "Not Set",
+    "null_select": "— NULL SELECT —",
+    "operational_availability": "Operational Availability",
+    "operational_compliance": "Operational Compliance",
+    "operational_details": "Operational Details",
+    "operational_details_desc": "Management and financial mapping",
+    "optimal": "Optimal",
+    "placeholder_sku": "SKU-000-000",
+    "select_none": "—",
+    "precision": "Precision",
+    "quick_tips": "Quick Tips",
+    "registry_status": "Registry Status",
+    "registry_sync": "Registry Sync",
+    "relational_unit_transformation": "Relational Unit Transformation",
+    "required": "Required",
+    "saved_success": "Saved successfully.",
+    "scope": "Scope",
+    "search_categories_placeholder": "Filter categories by name...",
+    "search_placeholder": "Search registry...",
+    "select_base_unit": "— SELECT BASE UNIT —",
+    "sku_definition_protocol": "SKU Definition Protocol",
+    "source_unit": "SOURCE UNIT",
+    "status_description": "Control the visibility and operational availability of this unit.",
+    "suppliers": "Suppliers",
+    "target_unit": "TARGET UNIT",
+    "threshold_parameters": "Threshold Parameters",
+    "total_categories": "Total Groups",
+    "total_skus": "Total SKUs",
+    "total_suppliers": "Total Suppliers",
+    "total_warehouses": "Total Warehouses",
+    "validation": {
+      "code_format": "Code must be uppercase and alphanumeric",
+      "code_min": "Code must be at least 2 characters",
+      "invalid_selection": "Invalid selection",
+      "name_ar_min": "Arabic name must be at least 3 characters",
+      "name_en_min": "English name must be at least 3 characters",
+      "required": "This field is required"
+    },
+    "yes": "Yes",
+    "sync_info": {
+      "live_updates": "Live Updates",
+      "last_sync": "Last Sync"
+    }
   },
   "admin": {
     "action": "Action",
@@ -710,18 +827,36 @@
   },
   "dashboard": {
     "analytics": {
-      "full_report": "Full Analysis",
-      "processing": "Processing Data Streams...",
-      "title": "Intelligence",
-      "velocity": "Movement Velocity"
+      "full_report": "Full Report",
+      "processing": "Processing real-time stream...",
+      "title": "Analytics Engine",
+      "velocity": "Stock Velocity"
     },
     "approval_workflow": "Pending Approvals & Workflow",
     "audit": {
-      "branch_sync": "Branch Sync Complete",
+      "branch_sync": "Branch Sync",
       "role_mutation": "Role Mutation",
-      "subtitle": "Recent Security & Data Mutations",
-      "title": "Audit Stream",
-      "updated_sku": "Updated SKU"
+      "subtitle": "Recent System Mutations",
+      "title": "Audit Trail",
+      "view_all": "View All",
+      "log_templates": {
+        "updated_sku": "Updated SKU: {sku}",
+        "role_mutation": "Role Mutation: {role}",
+        "branch_sync": "Branch Sync Complete",
+        "system_user": "System"
+      },
+      "updated_sku": "Updated SKU",
+      "mock": {
+        "user_mansour": "Mansour",
+        "node_jed": "Jeddah Node",
+        "sku_m102": "M-102 (Oil)",
+        "role_inv_mgr": "Inventory Manager"
+      },
+      "type": {
+        "catalog": "Catalog",
+        "security": "Security",
+        "system": "System"
+      }
     },
     "business_intelligence": "Business Intelligence & Forecasts",
     "description": "Operational Intelligence & Stream Overview",
@@ -735,69 +870,112 @@
       "critical_items": "Items below safety level",
       "immediate_review": "Immediate review required",
       "jeddah_riyadh_active": "Jeddah & Riyadh active",
-      "low_stock": "Low Stock",
-      "low_stock_items": "Low Stock Items",
-      "pending_prs": "Pending Requests",
+      "low_stock": "Low Stock Items",
+      "pending_prs": "Pending PRs",
       "reorder_suggested": "Reorder suggested",
       "total_stock": "Total Stock Value",
       "vs_last_month": "vs last month",
-      "warehouse_locked": "Warehouse Locked"
+      "warehouse_locked": "Warehouse locked",
+      "title": "KPIs"
     },
     "near_expiry": {
       "alert": "Priority Rotation",
       "expires": "Expires",
-      "rotation_report": "View Rotation Report",
-      "title": "Near Expiry Control"
+      "rotation_report": "View Full Rotation Report",
+      "title": "Near Expiry Alerts",
+      "mock": {
+        "milk": "Fresh Milk (B-2)",
+        "yogurt": "Greek Yogurt (B-4)",
+        "chicken": "Whole Chicken (B-1)"
+      }
     },
     "pending_approvals": {
-      "tasks": "tasks",
-      "title": "Pending Approvals",
-      "view_all": "View All Workflow"
+      "tasks": "Actions Required",
+      "title": "Pending Actions",
+      "view_all": "View Full Approval Queue",
+      "mock": {
+        "doc_1": "PR-9021",
+        "doc_2": "ADJ-4402",
+        "doc_3": "PR-9025"
+      }
     },
     "system_health": {
       "backup": "Last Backup",
-      "health_suffix": "Stability",
-      "node_description": "Active Node Performance",
+      "health_suffix": "Health",
+      "node_description": "Global Node Status",
       "online": "Active Users",
       "optimal": "Optimal",
       "sessions": "Sessions",
-      "title": "System Health"
+      "title": "System Health",
+      "last_sync": "Last Sync",
+      "uptime": "Uptime"
     },
-    "title": "Culinary Dashboard",
+    "title": "Dashboard",
     "kitchen": {
-      "operations": "Kitchen Operations",
+      "operations": "Operational Flux",
       "overview": "Overview",
-      "new_request": "New Request",
+      "new_request": "New Supply Request",
       "active_requests": "Active Requests",
-      "awaiting_fulfillment": "Awaiting fulfillment",
+      "awaiting_fulfillment": "Awaiting Fulfillment",
       "critical_shortage": "Critical Shortage",
-      "immediate_action": "Immediate action required",
-      "today_consumption": "Today's Consumption",
+      "immediate_action": "Immediate Action Required",
+      "today_consumption": "Today Consumption",
       "total_items_used": "Total items used today",
-      "stock_health": "Kitchen Stock Health",
-      "overall_availability": "Overall availability",
+      "stock_health": "Stock Health",
+      "overall_availability": "Overall Availability",
       "supply_requests": "Supply Requests",
-      "tracking_flow": "Tracking departmental flow",
+      "tracking_flow": "Real-time tracking flow",
       "view_history": "View History",
       "daily_activity": "Daily Activity",
       "consumption_log": "Consumption Log",
-      "quick_record": "Quick Record Usage",
-      "recorded": "recorded"
+      "quick_record": "Quick Record",
+      "recorded": "Recorded",
+      "department": "Department",
+      "status": {
+        "pending": "Pending",
+        "fulfilled": "Fulfilled",
+        "rejected": "Rejected"
+      },
+      "priority": {
+        "urgent": "Urgent",
+        "high": "High",
+        "normal": "Normal"
+      },
+      "mock": {
+        "request_items_1": "Olive Oil, Basmati Rice, Flour",
+        "request_items_2": "Tomato Paste, Whole Milk",
+        "request_items_3": "Frozen Chicken, Eggs",
+        "consumption_items": {
+          "olive_oil": "Olive Oil",
+          "basmati_rice": "Basmati Rice",
+          "frozen_chicken": "Frozen Chicken",
+          "flour": "Flour"
+        },
+        "consumption_qty": {
+          "liters": "{count} Liters",
+          "kilograms": "{count} Kilograms"
+        }
+      }
     },
     "store": {
-      "logistics": "Logistics & fulfillment",
+      "logistics": "Logistics Flow",
+      "mock_destinations": {
+        "main_kitchen": "Main Kitchen",
+        "branch_b2": "Branch B2",
+        "pastry_dept": "Pastry Department"
+      },
       "control": "Control",
-      "central_warehouse": "Central Warehouse • JED-01",
+      "central_warehouse": "Central Warehouse Node",
       "fulfillment_queue": "Fulfillment Queue",
-      "pending_issues": "Pending Issues & Transfers",
+      "pending_issues": "Pending issues in queue",
       "stock_shortages": "Stock Shortages",
-      "awaiting_procurement": "Awaiting Procurement",
+      "awaiting_procurement": "Awaiting procurement",
       "warehouse_load": "Warehouse Load",
-      "capacity_usage": "Storage Capacity Usage",
+      "capacity_usage": "Capacity usage",
       "asset_value": "Asset Value",
-      "stock_valuation": "On-hand stock valuation",
-      "fefo_guided": "Real-time Stock Allocation (FEFO-Guided)",
-      "more_items": "+{count} more",
+      "stock_valuation": "Total stock valuation",
+      "fefo_guided": "FEFO Guided Allocation",
+      "more_items": "+{count} more items",
       "id_label": "ID",
       "fefo_buffer": "FEFO Buffer",
       "expiring_stock": "Expiring Stock",
@@ -805,19 +983,38 @@
       "throughput": "Throughput",
       "inventory_audit": "Inventory Audit",
       "batch_issue": "Batch Issue",
-      "generate_disposal": "Generate Disposal Log",
+      "generate_disposal": "Generate Disposal / Adjustment",
       "operational": "Operational",
       "direct_issue": "Direct Issue",
       "transfer_request": "Transfer Request",
       "fefo_boundary": "FEFO Boundary",
-      "days_left": "{days}d Left",
+      "days_left": "{days} days left",
       "efficiency": "Efficiency",
-      "weekly_throughput": "Week {week} Throughput",
+      "weekly_throughput": "Weekly Throughput (Week {week})",
       "urgency_urgent": "Urgent",
       "urgency_normal": "Normal",
       "status_allocating": "Allocating",
       "status_pending": "Pending",
-      "status_ready": "Ready"
+      "status_ready": "Ready",
+      "mock": {
+        "items": {
+          "tomato_paste": "Tomato Paste",
+          "whole_milk": "Whole Milk",
+          "fresh_cream": "Fresh Cream"
+        },
+        "locations": {
+          "a1_4": "A1-4"
+        },
+        "batches": {
+          "b992": "B-992",
+          "b102": "B-102",
+          "b041": "B-041"
+        }
+      }
+    },
+    "aria": {
+      "kpi_grid": "KPI Grid",
+      "operational_monitoring": "Operational Monitoring"
     }
   },
   "inventory": {
@@ -1036,106 +1233,6 @@
       "total_groups": "Total Groups",
       "updated_success": "Classification updated",
       "view_title": "Category Details"
-    },
-    "common": {
-      "read_only_intel": "Read-Only Asset Intelligence",
-      "operational_snapshot": "Operational Snapshot",
-      "verified_static_data": "Verified Static Data",
-      "asset_metadata": "Asset Configuration & Metadata",
-      "confidential_data": "Confidential Operational Data",
-      "secure_connection": "Secure Connection",
-      "active": "Active",
-      "active_metrics": "Active Metrics",
-      "active_partners": "Active Partners",
-      "active_status": "Active Status",
-      "status_label": "Status",
-      "barcodes": "Barcodes",
-      "base_currency_description": "The system uses the base currency for all internal calculations and reporting.",
-      "base_currency_warning": "Warning: Setting this as base currency will affect all exchange rate calculations.",
-      "basic_info": "Basic Information",
-      "basic_info_desc": "Core Entity Identification",
-      "bilingual_record": "Bilingual classification record",
-      "branches": "Branches",
-      "cancel": "Cancel",
-      "categories": "Categories",
-      "categories_desc": "Logical grouping of inventory assets for hierarchical control and reporting",
-      "category_classification_details": "Category classification details",
-      "code": "Code",
-      "compliance": "Compliance",
-      "compliance_rate": "Compliance Rate",
-      "cost_center": "Cost Center",
-      "create_new": "Create New",
-      "currencies": "Currencies",
-      "currency_id": "Currency",
-      "departments": "Departments",
-      "edit": "Edit",
-      "flat": "Flat",
-      "global": "Global",
-      "hierarchy_status": "Hierarchy Depth",
-      "home": "Home",
-      "identification_naming": "Currency identification and naming",
-      "inactive": "Inactive",
-      "inactive_status": "Inactive Status",
-      "inventory_taxonomy_units": "Inventory Taxonomy & Units",
-      "is_active": "Active",
-      "items": "Items",
-      "manager": "Manager",
-      "master_data": "Master Data Hub",
-      "master_data_sync": "Master Data Sync",
-      "name": "Name",
-      "name_ar": "Name (Arabic)",
-      "name_en": "Name (English)",
-      "no": "No",
-      "no_categories_desc": "Group your items into logical categories for better organization.",
-      "no_categories_title": "No Categories Found",
-      "not_set": "Not Set",
-      "null_select": "— NULL SELECT —",
-      "operational_availability": "Operational Availability",
-      "operational_compliance": "Operational Compliance",
-      "operational_details": "Operational Details",
-      "operational_details_desc": "Management and financial mapping",
-      "optimal": "Optimal",
-      "placeholder_sku": "SKU-000-000",
-      "select_none": "—",
-      "precision": "Precision",
-      "quick_tips": "Quick Tips",
-      "registry_status": "Registry Status",
-      "registry_sync": "Registry Sync",
-      "relational_unit_transformation": "Relational Unit Transformation",
-      "required": "Required",
-      "save": "Save",
-      "saved_success": "Saved successfully.",
-      "saving": "Saving...",
-      "scope": "Scope",
-      "search": "Search",
-      "search_categories_placeholder": "Filter categories by name...",
-      "search_placeholder": "Search registry...",
-      "status_label": "Status",
-      "select_base_unit": "— SELECT BASE UNIT —",
-      "sku_definition_protocol": "SKU Definition Protocol",
-      "source_unit": "SOURCE UNIT",
-      "status": "Status",
-      "status_description": "Control the visibility and operational availability of this unit.",
-      "suppliers": "Suppliers",
-      "target_unit": "TARGET UNIT",
-      "threshold_parameters": "Threshold Parameters",
-      "total_categories": "Total Groups",
-      "total_locations": "Total Locations",
-      "total_skus": "Total SKUs",
-      "total_suppliers": "Total Suppliers",
-      "total_warehouses": "Total Warehouses",
-      "uom": "Units of Measure",
-      "validation": {
-        "code_format": "Code must be uppercase and alphanumeric",
-        "code_min": "Code must be at least 2 characters",
-        "invalid_selection": "Invalid selection",
-        "name_ar_min": "Arabic name must be at least 3 characters",
-        "name_en_min": "English name must be at least 3 characters",
-        "required": "This field is required"
-      },
-      "view": "View",
-      "warehouses": "Warehouses",
-      "yes": "Yes"
     },
     "currencies": {
       "add_rate": "Add FX Rate",
@@ -1529,63 +1626,6 @@
         "partner_status": "Platinum Partner Status",
         "market_avg_relative": "Relative to market avg",
         "no_activity": "No recent activity recorded for this partner."
-      }
-    },
-    "uom": {
-      "create_title": "New UoM",
-      "description": "Standardized quantification metrics for inventory precision and conversion.",
-      "edit_title": "Edit UoM",
-      "precision": "Precision",
-      "precision_description": "Standard metrics for inventory precision and conversion accuracy across all supply chain nodes.",
-      "placeholders": {
-        "code": "UNIT",
-        "name_ar": "اسم الوحدة",
-        "name_en": "Unit Name"
-      },
-      "registry_sync": "Registry Sync",
-      "search_placeholder": "Filter units by name or code...",
-      "title": "Units of Measure",
-      "total_metrics": "Total Metrics",
-      "view_title": "UoM Details"
-    },
-    "uoms": {
-      "create_title": "Define New Unit",
-      "created_success": "Measurement unit defined",
-      "deactivated_success": "Measurement unit deactivated",
-      "description": "Standardized metrics and measurement specifications",
-      "edit_title": "Modify Measurement Unit",
-      "empty": {
-        "description": "Define standardized units of measure to ensure accuracy across inventory transactions.",
-        "title": "No Measurement Units"
-      },
-      "errors": {
-        "cannot_deactivate_uom_in_use": "Cannot deactivate unit currently assigned to active items.",
-        "cannot_delete_uom_in_use": "Cannot delete measurement unit associated with existing items or conversion rules.",
-        "delete_failed": "Failed to delete measurement unit",
-        "update_failed": "Failed to update unit specifications"
-      },
-      "delete_confirm_title": "Delete Measurement Unit",
-      "delete_confirm_desc": "Are you sure you want to delete this measurement unit? This will remove the unit definition from the registry. Historic transactions will remain intact for audit purposes.",
-      "deleted_success": "Measurement unit removed from registry",
-      "fields": {
-        "code": "Unit Code",
-        "created_at": "Created At",
-        "is_active": "Status",
-        "name_ar": "Unit Name (AR)",
-        "name_en": "Unit Name (EN)"
-      },
-      "precision": "High Precision",
-      "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
-      "registry_sync": "Registry Sync",
-      "search_placeholder": "Search units by code or name...",
-      "title": "Units of Measure",
-      "total_metrics": "Total Registry",
-      "updated_success": "Unit specifications updated",
-      "validation": {
-        "code_required": "Unit code is required",
-        "code_uppercase": "Code must be uppercase alphabetic",
-        "name_ar_required": "Arabic name is required",
-        "name_en_required": "English name is required"
       }
     },
     "warehouses": {
@@ -2521,10 +2561,15 @@
         "submitting": "Submitting..."
       },
       "add_item": "Add Item",
+      "scan_or_search": "Scan or Search Item",
       "currency_placeholder": "Currency",
       "linked_pr_placeholder": "PR-2026-001",
       "item_sku_placeholder": "IT-1",
+      "uom_placeholder": "UoM",
       "pcs_placeholder": "PCS",
+      "errors": {
+        "no_currencies_available": "No currencies available. Please check system settings."
+      },
       "breadcrumb": {
         "new_po": "New PO"
       },

@@ -230,7 +230,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             variant="outline"
             disabled={isSubmitting}
             onClick={form.handleSubmit((v) => onSave(v, false))}
-            className="h-12 px-8 border-none bg-surface-container-low text-foreground text-label-xs font-semibold uppercase rounded-sm hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
+            className="h-12 px-8 border-none bg-surface-container-low text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
           >
             <Save className="w-3.5 h-3.5 me-2" />
             {tc('save')}
@@ -239,7 +239,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             type="button"
             disabled={isSubmitting}
             onClick={form.handleSubmit(handleSubmitClick)}
-            className="h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-sm transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
+            className="h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
           >
             {isSubmitting ? tc('saving') : (
               <>
@@ -259,7 +259,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               <Button
                 onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)}
                 variant="outline"
-                className="h-12 px-8 border-none bg-surface-container-low text-operational-cyan text-label-xs font-semibold uppercase rounded-sm hover:bg-operational-cyan/5 transition-all shadow-xl shadow-black/5"
+                className="h-12 px-8 border-none bg-surface-container-low text-operational-cyan text-label-xs font-semibold uppercase rounded-xl hover:bg-operational-cyan/5 transition-all shadow-xl shadow-black/5"
               >
                 <Edit3 className="w-4 h-4 me-2 opacity-60" />
                 {tc('edit')}
@@ -271,7 +271,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             <PermissionGate action="approve" resource="pr">
               <Button
                 onClick={() => router.push(`/purchase-requests/${initialData?.id}/approve`)}
-                className="h-12 px-10 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 rounded-sm transition-all active:scale-95"
+                className="h-12 px-10 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 rounded-xl transition-all active:scale-95"
               >
                 <ShieldCheck className="w-4 h-4 me-2" />
                 {t('go_to_approval')}
@@ -283,7 +283,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             <PermissionGate action="create" resource="po">
               <Button
                 onClick={() => router.push(`/purchase-orders/new?pr_id=${initialData?.id}`)}
-                className="primary-gradient h-12 px-10 text-white text-label-xs font-semibold uppercase rounded-sm transition-all active:scale-95 border-none shadow-xl shadow-primary/20"
+                className="primary-gradient h-12 px-10 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 border-none shadow-xl shadow-primary/20"
               >
                 <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
                 {t('convert_to_po')}
@@ -302,7 +302,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       <Form {...form}>
         <form className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
           <DocumentLockWrapper isLocked={isLocked}>
-            <div className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-sm relative transition-all duration-700">
+            <div className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-2xl relative transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="text-title-lg font-semibold text-operational-cyan uppercase flex items-center gap-3">
@@ -318,9 +318,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
               </div>
 
               {/* Step 1: Request Header */}
-              <div className="bg-surface-container-low p-8 rounded-sm relative">
+              <div className="bg-surface-container-low p-8 rounded-2xl relative">
                 <div className="flex items-center gap-4 mb-8 pb-6 border-none">
-                  <div className="p-3 rounded-sm bg-operational-cyan/10 text-operational-cyan">
+                  <div className="p-3 rounded-xl bg-operational-cyan/10 text-operational-cyan">
                     <Building2 className="w-5 h-5" />
                   </div>
                   <div>
@@ -341,11 +341,11 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                         </FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-surface-container-lowest border-none h-11 rounded-sm text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
+                            <SelectTrigger className="bg-surface-container-lowest border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
                               <SelectValue placeholder={tc('select_warehouse')} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-surface-container-low border-none rounded-sm">
+                          <SelectContent className="bg-surface-container-low border-none rounded-xl">
                             {warehouses?.data?.map((w: Warehouse) => (
                               <SelectItem key={w.id} value={w.id} className="text-label-xs font-bold">
                                 {locale === 'ar' ? w.name_ar : w.name_en}
@@ -368,7 +368,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                           {t('expected_date')}
                         </FormLabel>
                         <FormControl>
-                          <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-sm font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
+                          <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
                         </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>
@@ -382,7 +382,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                       <FormItem className="lg:col-span-3">
                         <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
                         <FormControl>
-                          <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-sm font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
+                          <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
                         </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>
@@ -393,9 +393,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
               {/* Step 2: Line Items */}
               <div className="space-y-6">
-                <div className="bg-operational-cyan/[0.02] p-8 rounded-sm border border-operational-cyan/10">
+                <div className="bg-operational-cyan/[0.02] p-8 rounded-2xl">
                   <div className="flex items-center gap-6 mb-6">
-                    <div className="p-3 bg-operational-cyan/10 rounded-sm text-operational-cyan">
+                    <div className="p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
                       <Calculator className="w-6 h-6" />
                     </div>
                     <div>
@@ -420,7 +420,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   )}
                 </div>
 
-                <div className="bg-surface-container-lowest rounded-sm overflow-hidden shadow-sm border border-surface-variant/5">
+                <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable
                     lines={fields.map(f => ({ ...f, qty: f.req_qty })) as LineItem[]}
                     isReadOnly={isLocked}
@@ -437,7 +437,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                             type="number"
                             step="0.01"
                             disabled={isLocked}
-                            className="w-24 bg-surface-container-low border-none h-10 rounded-sm font-mono font-bold text-center text-body-md focus:ring-1 focus:ring-operational-cyan/30 outline-none"
+                            className="w-24 bg-surface-container-low border-none h-10 rounded-xl font-mono font-bold text-center text-body-md focus:ring-1 focus:ring-operational-cyan/30 outline-none"
                             dir="ltr"
                             {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
                           />
@@ -468,10 +468,10 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                                 }}
                                 value={form.watch(`lines.${index}.item_id`)}
                               >
-                                <SelectTrigger className="h-10 bg-surface-container-low border-none rounded-sm text-label-xs font-semibold uppercase">
+                                <SelectTrigger className="h-10 bg-surface-container-low border-none rounded-xl text-label-xs font-semibold uppercase">
                                   <SelectValue placeholder={tc('select_item')} />
                                 </SelectTrigger>
-                                <SelectContent className="bg-surface-container-low border-none rounded-sm max-h-[300px]">
+                                <SelectContent className="bg-surface-container-low border-none rounded-xl max-h-[300px]">
                                   {itemsData?.data?.map((i: Item) => (
                                     <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
                                       {i.code} - {locale === 'ar' ? i.name_ar : i.name_en}
@@ -488,7 +488,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                 </div>
 
                 {/* Summary */}
-                <div className="flex items-center justify-end p-8 bg-surface-container-low rounded-sm">
+                <div className="flex items-center justify-end p-8 bg-surface-container-low rounded-xl">
                   <div className="flex items-center gap-6">
                     <div className="text-right">
                       <div className="text-label-xs font-semibold uppercase text-muted-foreground/30">{tc('total_items')}</div>
@@ -496,7 +496,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                         {fields.length} <span className="text-operational-cyan">{tc('items')}</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-sm bg-operational-cyan/10 flex items-center justify-center text-operational-cyan">
+                    <div className="w-12 h-12 rounded-xl bg-operational-cyan/10 flex items-center justify-center text-operational-cyan">
                       <Package className="w-6 h-6" />
                     </div>
                   </div>

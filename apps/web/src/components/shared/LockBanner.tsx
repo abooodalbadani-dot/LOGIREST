@@ -14,7 +14,7 @@ export function LockBanner({ lockState }: { lockState: WarehouseLockState | unde
   const startTime = formatDate(lockState.lockStartedAt, locale);
 
  return (
- <div className="w-full bg-status-warning/10 sm:rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-700 relative overflow-hidden group backdrop-blur-md">
+ <div className="w-full bg-status-warning/10 sm:rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-200 relative overflow-hidden group backdrop-blur-md">
  {/* Visual background element */}
  <div className="absolute inset-0 bg-gradient-to-r from-status-warning/10 to-transparent pointer-events-none" />
  

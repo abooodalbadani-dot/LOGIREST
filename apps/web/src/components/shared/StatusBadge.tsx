@@ -30,7 +30,7 @@ const statusBadgeVariants = cva(
   "bg-status-error/15 text-status-error hover:bg-status-error/25",
   success:
   "bg-status-success/15 text-status-success hover:bg-status-success/25",
-  outline: "text-foreground bg-surface-container border border-border-surface",
+  outline: "text-foreground bg-surface-container border",
   info: "bg-status-info/15 text-status-info hover:bg-status-info/25",
   },
   },

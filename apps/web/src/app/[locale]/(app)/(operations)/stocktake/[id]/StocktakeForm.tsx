@@ -59,7 +59,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
   return (
     <div className="min-h-screen bg-surface-container-low pb-48 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-50 w-full glass-header border-b border-outline-variant/50">
+      <div className="sticky top-0 z-50 w-full glass-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex flex-col">
             <Breadcrumb
@@ -103,9 +103,9 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
               { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
               { label: t('last_updated'), value: session.updatedAt ? <ClientOnlyTime date={session.updatedAt} mode="time" /> : common('dash'), icon: Clock, color: 'text-amber-500' },
             ].map((item, idx) => (
-              <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-lg relative overflow-hidden">
+              <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-xl relative overflow-hidden">
                 <div className="flex items-center justify-between relative z-10">
-                  <div className={cn("w-10 h-10 rounded-lg bg-current/10 flex items-center justify-center", item.color)}>
+                  <div className={cn("w-10 h-10 rounded-xl bg-current/10 flex items-center justify-center", item.color)}>
                     <item.icon className="w-5 h-5" />
                   </div>
                   <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{item.label}</span>
@@ -118,8 +118,8 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           </div>
 
           {/* Summary Table */}
-          <Card className="bg-surface-container-lowest border-none shadow-sm rounded-lg overflow-hidden">
-            <div className="p-6 border-b border-outline-variant/10 flex items-center justify-between">
+          <Card className="bg-surface-container-lowest border-none shadow-sm rounded-2xl overflow-hidden">
+            <div className="p-6 flex items-center justify-between">
               <div className="space-y-1">
                 <h3 className="text-body-md font-semibold text-foreground">{t('inventory_manifest')}</h3>
                 <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('items_to_audit')}</p>
@@ -159,7 +159,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                         <TableCell className="text-center">
                           {showSnapshot && hasCounted ? (
                             <div className={cn(
-                              "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-label-xs font-bold",
+                              "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
                               variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
                               variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
                             )} dir="ltr">
@@ -193,7 +193,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
             </div>
           </Card>
           {/* Status Timeline */}
-          <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm transition-all hover:bg-surface-container-low/50">
+          <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm transition-all hover:bg-surface-container-low/50">
             <div className="flex items-center gap-3 mb-10">
               <History className="w-4 h-4 text-primary opacity-20" />
               <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>

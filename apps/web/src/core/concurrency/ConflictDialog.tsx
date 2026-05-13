@@ -46,7 +46,7 @@ export function ConflictDialog({
 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[425px] rounded-[2rem] border-none shadow-2xl bg-surface-container-lowest overflow-hidden">
+      <DialogContent className="sm:max-w-[425px] rounded-2xl border-none shadow-2xl bg-surface-container-lowest overflow-hidden">
         <DialogHeader className="space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-status-warning/10 flex items-center justify-center animate-bounce-subtle">
             <AlertTriangle className="w-8 h-8 text-status-warning" />
@@ -77,7 +77,7 @@ export function ConflictDialog({
             variant="outline"
             onClick={onClose}
             disabled={isRetrying}
-            className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs border-surface-variant/20 hover:bg-surface-container-high transition-all"
+            className="flex-1 rounded-xl h-12 font-bold uppercase text-label-xs hover:bg-surface-container-high transition-all"
           >
             <X className="w-4 h-4 me-2" />
             {tc('conflict.stay')}

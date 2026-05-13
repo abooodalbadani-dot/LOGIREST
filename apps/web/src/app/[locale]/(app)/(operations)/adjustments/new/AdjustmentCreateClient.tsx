@@ -312,7 +312,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  {selectedItem && (
  <div className="p-4 bg-primary-fixed-dim/5 rounded-2xl border border-primary-fixed-dim/10 space-y-2">
  <div className="flex justify-between items-center text-label-xs font-semibold uppercase">
- <span className="text-muted-foreground/60">{tCommon('uom') || 'Unit of Measure'}</span>
+ <span className="text-muted-foreground/60">{tCommon('uom.label') || 'Unit of Measure'}</span>
  <span className="text-cyan-500">{selectedItem.uom}</span>
  </div>
  <div className="flex justify-between items-center text-label-xs font-semibold uppercase">

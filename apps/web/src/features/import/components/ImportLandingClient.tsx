@@ -45,7 +45,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  ];
 
  return (
- <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto animate-in fade-in duration-700">
+ <div className="flex flex-col gap-8 p-8 max-w-6xl mx-auto animate-in fade-in duration-200">
  <Breadcrumb
  items={[
  { label: tc('navigation.master_data'), href: '/master-data' },
@@ -67,13 +67,13 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  key={card.id}
  onClick={() => router.push(card.href)}
  style={{ animationDelay: `${idx * 100}ms` }}
- className="group relative flex flex-col items-start text-start p-8 rounded-[2rem] bg-surface-container-low/50 border border-white/5 transition-all duration-500 hover:scale-[1.02] hover:bg-surface-container-high hover:border-cyan-500/20 shadow-xl overflow-hidden animate-in slide-in-from-bottom-8 fill-mode-both"
+ className="group relative flex flex-col items-start text-start p-8 rounded-2xl bg-surface-container-low/50 transition-all duration-200 hover:scale-[1.02] hover:bg-surface-container-high hover:border-cyan-500/20 shadow-xl overflow-hidden animate-in slide-in-from-bottom-8 fill-mode-both"
  >
  {/* Background Glow */}
  <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl group-hover:bg-cyan-500/10 transition-colors" />
  
  <div className={cn(
- "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+ "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-200 group-hover:scale-110 group-hover:rotate-3",
  card.color === 'cyan' && "bg-cyan-500/10 text-cyan-500",
  card.color === 'emerald' && "bg-emerald-500/10 text-emerald-500",
  card.color === 'blue' && "bg-blue-500/10 text-blue-500"
@@ -103,7 +103,7 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  </div>
 
  {/* Info Box */}
- <div className="mt-8 p-6 rounded-3xl bg-surface-container-lowest/50 border border-white/5 flex items-center gap-6 max-w-2xl">
+ <div className="mt-8 p-6 rounded-2xl bg-surface-container-lowest/50 flex items-center gap-6 max-w-2xl">
  <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
  <ImportIcon className="w-6 h-6" />
  </div>

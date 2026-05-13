@@ -1,33 +1,22 @@
-
 const fs = require('fs');
-const path = require('path');
+const content = fs.readFileSync('./apps/web/messages/ar.json', 'utf8');
 
-const arPath = path.join(process.cwd(), 'messages', 'ar.json');
-const content = fs.readFileSync(arPath, 'utf8');
+// Simple regex to find top-level and second-level keys
+// This is not perfect but should show duplicates in common
+const lines = content.split('\n');
+const keys = {};
 
-function findDuplicates(jsonStr) {
-  const lines = jsonStr.split('\n');
-  const keys = [];
-  const duplicates = [];
-  
-  lines.forEach((line, index) => {
-    const match = line.match(/"([^"]+)":/);
-    if (match) {
-      const key = match[1];
-      if (keys.includes(key)) {
-        duplicates.push({ key, line: index + 1 });
-      }
-      keys.push(key);
-    }
-  });
-  
-  return duplicates;
-}
+lines.forEach((line, i) => {
+  const match = line.match(/^\s*\"(\w+)\":/);
+  if (match) {
+    const key = match[1];
+    if (!keys[key]) keys[key] = [];
+    keys[key].push(i + 1);
+  }
+});
 
-const duplicates = findDuplicates(content);
-if (duplicates.length > 0) {
-  console.log('Found duplicates:');
-  duplicates.forEach(d => console.log(`Key "${d.key}" at line ${d.line}`));
-} else {
-  console.log('No duplicates found.');
+for (const key in keys) {
+  if (keys[key].length > 1) {
+    console.log(`Duplicate key "${key}" found at lines: ${keys[key].join(', ')}`);
+  }
 }

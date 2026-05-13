@@ -1,27 +1,24 @@
 import json
 
-def check_json(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+def find_duplicates(path):
+    print(f"Checking {path} for duplicate keys...")
+    with open(path, 'rb') as f:
+        content = f.read().decode('utf-8')
     
-    content = "".join(lines)
-    
-    def detect_duplicates(pairs):
-        keys = {}
-        for k, v in pairs:
-            if k in keys:
-                print(f"Duplicate key found: '{k}' at approximately line {keys[k]}")
-            # This is a bit tricky with nested objects, but let's try to find the line
-            # We'll just search for the key in the file
-            keys[k] = "unknown" # Placeholder
-        return dict(pairs)
+    def dict_raise_on_duplicates(ordered_pairs):
+        """Reject duplicate keys."""
+        d = {}
+        for k, v in ordered_pairs:
+            if k in d:
+                print(f"Duplicate key found: {k}")
+            d[k] = v
+        return d
 
     try:
-        json.loads(content, object_pairs_hook=detect_duplicates)
+        json.loads(content, object_pairs_hook=dict_raise_on_duplicates)
+        print("Done checking.")
     except Exception as e:
-        print(f"Error parsing JSON: {e}")
+        print(f"Error during parsing: {e}")
 
-print("Checking en.json:")
-check_json(r'e:\Kitchen‑Store Inventory System\messages\en.json')
-print("\nChecking ar.json:")
-check_json(r'e:\Kitchen‑Store Inventory System\messages\ar.json')
+if __name__ == "__main__":
+    find_duplicates('apps/web/messages/ar.json')

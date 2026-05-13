@@ -24,9 +24,9 @@ export function ThemeToggle() {
  
  <div className="relative z-10">
  {theme === 'dark' ? (
- <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" />
+ <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform duration-200" />
  ) : (
- <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform duration-500" />
+ <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform duration-200" />
  )}
  </div>
  </button>

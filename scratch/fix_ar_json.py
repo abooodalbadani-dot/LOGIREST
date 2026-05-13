@@ -1,24 +1,32 @@
+
 import json
+import os
 
-def fix_json(file_path):
-    with open(file_path, 'rb') as f:
-        content = f.read()
-    
-    # Try to decode as UTF-8, replacing errors
-    decoded = content.decode('utf-8', errors='replace')
-    
-    try:
-        # Check if it's valid JSON now
-        data = json.loads(decoded)
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print("Fixed JSON and saved as UTF-8")
-    except json.JSONDecodeError as e:
-        print(f"JSON Error: {e}")
-        # Print the context of the error
-        start = max(0, e.pos - 50)
-        end = min(len(decoded), e.pos + 50)
-        print(f"Context: {decoded[start:end]}")
+file_path = r'E:\Kitchen‑Store Inventory System\apps\web\messages\ar.json'
 
-if __name__ == "__main__":
-    fix_json('messages/ar.json')
+with open(file_path, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+# Fix common.statuses
+if 'common' in data and 'statuses' in data['common']:
+    data['common']['statuses']['all'] = "الكل"
+    data['common']['statuses']['draft'] = "مسودة"
+
+# Fix common.warehouses
+if 'common' in data and 'warehouses' in data['common']:
+    data['common']['warehouses']['main'] = "المستودع الرئيسي"
+
+# Add operations.issue.warehouse_locked
+if 'operations' in data:
+    if 'issue' not in data['operations']:
+        data['operations']['issue'] = {}
+    data['operations']['issue']['warehouse_locked'] = "المستودع مقفل"
+
+# Ensure common.warehouse_locked exists too if needed
+if 'common' in data:
+    data['common']['warehouse_locked'] = "المستودع مقفل"
+
+with open(file_path, 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+
+print("Successfully updated ar.json")

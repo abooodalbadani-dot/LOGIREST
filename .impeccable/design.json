@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-12T20:52:00Z",
+  "title": "Design System: LogiRest",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Culinary Teal",
+        "canonical": "oklch(45% 0.08 225)",
+        "tonalRamp": ["#002029", "#003542", "#004d64", "#116479", "#2d7d91", "#4897aa", "#64b1c4", "#81ccdf"]
+      },
+      "midnight-ledger": {
+        "role": "neutral",
+        "displayName": "Midnight Ledger",
+        "canonical": "oklch(15% 0.02 225)",
+        "tonalRamp": ["#051118", "#0a1b24", "#1b2d38", "#2d414d", "#405663", "#556c7a", "#6b8391", "#829ba9"]
+      },
+      "operational-cyan": {
+        "role": "tertiary",
+        "displayName": "Operational Cyan",
+        "canonical": "oklch(40% 0.12 225)",
+        "tonalRamp": ["#001e28", "#003443", "#004d64", "#006684", "#0081a4", "#009dc6", "#00bae9", "#4cd6fb"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Tajawal)", "purpose": "Architectural headlines and large metrics." },
+      "body": { "displayName": "Body (IBM Plex Sans Arabic)", "purpose": "High-density data and operational text." }
+    },
+    "shadows": [
+      { "name": "ambient-low", "value": "0 0 24px 0 rgba(24, 28, 32, 0.04)", "purpose": "Whisper-soft diffused shadow for floating elements." }
+    ],
+    "motion": [
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Standard easing for state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The canonical 'Commit' or 'Confirm' action for inventory movements.",
+      "html": "<button class=\"ds-btn-primary\">CONFIRM RECEIPT</button>",
+      "css": ".ds-btn-primary { background: linear-gradient(135deg, #116479 0%, #135e6d 100%); color: #ffffff; padding: 10px 24px; border-radius: 16px; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; border: none; transition: all 140ms cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; } .ds-btn-primary:hover { opacity: 0.9; transform: scale(0.99); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #f7f9ff, 0 0 0 4px #135e6d; }"
+    },
+    {
+      "name": "Inventory Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The base container for inventory items and stock details.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">Item Details</div><div class=\"ds-card-body\">Stock: 142 Units</div></div>",
+      "css": ".ds-card { background: #ffffff; border-radius: 16px; padding: 16px; display: flex; flex-col; gap: 8px; box-shadow: 0 0 24px 0 rgba(24, 28, 32, 0.04); } .ds-card-header { font-weight: 600; color: #116479; } .ds-card-body { color: #181c20; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Culinary Architect",
+    "overview": "LogiRest's visual identity is rooted in the philosophy of Operational Elegance. It captures the meticulous precision of a world-class Michelin-star kitchen—where every tool has its place, and every movement is intentional.",
+    "keyCharacteristics": [
+      "Tonal Depth: Boundaries established through background shifts, not borders.",
+      "RTL-First Integrity: Optimized for Arabic eye-flow.",
+      "Authoritative Density: High visible data without cognitive overload."
+    ],
+    "rules": [
+      { "name": "The No-Line Rule", "body": "1px solid borders are strictly prohibited for sectioning. Boundaries are established exclusively through background color shifts.", "section": "colors" },
+      { "name": "The Flush Surface Rule", "body": "Components do not 'float' with heavy shadows. They are 'inset' or 'overlaid' through background contrast.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use tonal backgrounds to separate functional groups.",
+      "Do anchor the visual weight at the top right for RTL eye-flow.",
+      "Do prioritize IBM Plex Sans Arabic for all high-density data."
+    ],
+    "donts": [
+      "Don't use 1px solid borders for sectioning.",
+      "Don't use neon gradients or heavy drop shadows.",
+      "Don't use decorative animations that delay data visibility."
+    ]
+  }
+}

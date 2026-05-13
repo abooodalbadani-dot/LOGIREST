@@ -69,7 +69,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
 
  return (
  <div className="flex flex-col gap-4">
- <div className="flex justify-between items-center bg-surface-container p-4 rounded-xl border border-border-surface">
+ <div className="flex justify-between items-center bg-surface-container p-4 rounded-xl border">
  <h3 className="font-bold text-foreground">{t('fefo_allocator_title')}</h3>
  <div className={`font-mono font-bold ${totalAllocated !== requestedQty ? 'text-status-error' : 'text-operational-cyan'}`}>
  {t('allocated')}: <span dir="ltr">{totalAllocated} / {requestedQty}</span> {uomLabel}

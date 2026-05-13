@@ -57,28 +57,47 @@ export function ScanInput({
 
   // Auto-focus logic for Scanner Mode
   useEffect(() => {
-    if ((scannerMode || autoFocus) && !disabled && inputRef.current && scanStatus === 'idle') {
-      const activeElement = document.activeElement;
-      const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+    if (!scannerMode || disabled) return;
 
-      if (!isInputFocused) {
-        inputRef.current.focus();
+    const regainFocus = () => {
+      if (!disabled && inputRef.current && !isScanning) {
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+        if (!isInputFocused) {
+          inputRef.current.focus();
+        }
       }
-    }
-  }, [scannerMode, autoFocus, disabled, scanStatus]);
+    };
+
+    // Initial focus
+    regainFocus();
+
+    // Regain focus on clicks and window focus
+    window.addEventListener('click', regainFocus);
+    window.addEventListener('focus', regainFocus);
+    
+    return () => {
+      window.removeEventListener('click', regainFocus);
+      window.removeEventListener('focus', regainFocus);
+    };
+  }, [scannerMode, disabled, scanStatus]);
 
   // Global Keydown redirection for Scanner Mode
   useEffect(() => {
     if (!scannerMode || disabled) return;
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if already in an input or if it's a modifier key
       if (document.activeElement instanceof HTMLInputElement || 
-          document.activeElement instanceof HTMLTextAreaElement) {
+          document.activeElement instanceof HTMLTextAreaElement ||
+          e.ctrlKey || e.metaKey || e.altKey) {
         return;
       }
 
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // If it's a character key, focus the input
+      if (e.key.length === 1) {
         inputRef.current?.focus();
+        // The character will be naturally typed into the focused input by the browser
       }
     };
 
@@ -166,7 +185,7 @@ export function ScanInput({
         </label>
       )}
       <div className={cn(
-        "relative flex items-center transition-all duration-500 rounded-sm border-[4px] shadow-2xl overflow-hidden",
+        "relative flex items-center transition-all duration-200 rounded-sm border-[4px] shadow-2xl overflow-hidden",
         config.container,
         scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
         scanStatus === 'error' ? "border-destructive bg-destructive/10 shadow-[0_0_60px_rgba(var(--destructive-rgb),0.25)]" :
@@ -234,7 +253,7 @@ export function ScanInput({
 
         {statusMessage && (
           <div className={cn(
-            "absolute -bottom-11 start-0 px-6 py-2.5 rounded-b-sm font-black text-[11px] uppercase tracking-[0.2em] animate-in slide-in-from-top-4 duration-500 shadow-2xl z-20",
+            "absolute -bottom-11 start-0 px-6 py-2.5 rounded-b-sm font-black text-[11px] uppercase tracking-[0.2em] animate-in slide-in-from-top-4 duration-200 shadow-2xl z-20",
             scanStatus === 'success' ? "bg-operational-cyan text-white shadow-operational-cyan/20" : "bg-destructive text-white shadow-destructive/20"
           )}>
             {statusMessage}

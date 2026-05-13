@@ -11,7 +11,7 @@ interface PageSkeletonProps {
 export function PageSkeleton({ variant = 'list' }: PageSkeletonProps) {
   if (variant === 'detail') {
     return (
-      <div className="p-8 max-w-[1000px] mx-auto space-y-10 animate-in fade-in duration-500">
+      <div className="p-8 max-w-[1000px] mx-auto space-y-10 animate-in fade-in duration-200">
         {/* Header Skeleton */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12">
           <div className="flex items-center gap-6">
@@ -28,7 +28,7 @@ export function PageSkeleton({ variant = 'list' }: PageSkeletonProps) {
           <div className="lg:col-span-2 space-y-8">
             {/* Main Form Section */}
             <Card className="bg-surface-container-low border-none overflow-hidden p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+              <div className="flex items-center gap-3 pb-4 border-b">
                 <Skeleton className="w-10 h-10 rounded-md" />
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-32" />
@@ -76,7 +76,7 @@ export function PageSkeleton({ variant = 'list' }: PageSkeletonProps) {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 p-8">
+    <div className="space-y-10 animate-in fade-in duration-200 p-8">
       {/* Header Skeleton */}
       <div className="space-y-4">
         <Skeleton className="h-4 w-48" />

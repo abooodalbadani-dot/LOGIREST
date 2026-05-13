@@ -26,10 +26,10 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
 
  if (isSuccess) {
  return (
- <div className="flex flex-col items-center justify-center gap-10 py-16 text-center animate-in fade-in zoom-in duration-700">
+ <div className="flex flex-col items-center justify-center gap-10 py-16 text-center animate-in fade-in zoom-in duration-200">
  <div className="relative">
  <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping duration-[3000ms]" />
- <div className="w-32 h-32 rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-neon-emerald">
+ <div className="w-32 h-32 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-neon-emerald">
  <CheckCircle2 className="w-16 h-16" />
  </div>
  </div>
@@ -44,11 +44,11 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  </div>
 
  <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mt-6">
- <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1">
+ <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 space-y-1">
  <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('imported_records')}</p>
  <p className="text-headline-lg font-semibold font-mono dir-ltr text-emerald-500">{wizard.metadata?.recordCount || 0}</p>
  </div>
- <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 border border-white/5 space-y-1 text-center">
+ <div className="flex-1 p-6 rounded-2xl bg-surface-container-low/50 space-y-1 text-center">
  <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('status')}</p>
  <p className="text-body-md font-bold text-emerald-500 uppercase leading-9">{t('committed')}</p>
  </div>
@@ -70,7 +70,7 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  }
 
  return (
- <div className="flex flex-col gap-10 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <div className="flex flex-col gap-10 py-6 animate-in fade-in slide-in-from-bottom-4 duration-200">
  <div className="space-y-4">
  <h2 className="text-headline-lg font-semibold uppercase text-foreground">
  {t('commit_title')}
@@ -81,7 +81,7 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <div className="p-8 rounded-3xl bg-surface-container-low/50 border border-white/5 space-y-4 relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-surface-container-low/50 space-y-4 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
  <Database className="w-20 h-20" />
  </div>
@@ -89,7 +89,7 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  <p className="text-headline-lg font-semibold uppercase text-cyan-500">{wizard.entity}</p>
  </div>
 
- <div className="p-8 rounded-3xl bg-surface-container-low/50 border border-white/5 space-y-4 relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-surface-container-low/50 space-y-4 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
  <Save className="w-20 h-20" />
  </div>
@@ -97,7 +97,7 @@ export function StepCommit({ wizard, locale }: StepCommitProps) {
  <p className="text-headline-lg font-semibold font-mono dir-ltr">{wizard.metadata?.recordCount || 0}</p>
  </div>
 
- <div className="p-8 rounded-3xl bg-surface-container-low/50 border border-white/5 space-y-4 relative overflow-hidden group">
+ <div className="p-8 rounded-2xl bg-surface-container-low/50 space-y-4 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
  <AlertCircle className="w-20 h-20" />
  </div>

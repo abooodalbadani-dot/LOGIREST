@@ -185,7 +185,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         <PermissionGate action="post" resource="grn">
           <Button 
             onClick={() => router.push(`/goods-received/${id}/post`)}
-            className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-sm"
+            className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-xl"
           >
             <Send className="w-4 h-4 me-2" />
             {t('post_grn')}
@@ -256,17 +256,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           <DocumentReadOnlyOverlay isPosted={isLocked}>
             <div className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
             <Label htmlFor="supplier-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</Label>
             <Controller
               name="supplier_id"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-sm px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                     <SelectValue placeholder={tc('select_supplier')} />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
+                  <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
                     {suppliers?.map(s => (
                       <SelectItem key={s.id} value={s.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
                         {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
@@ -279,7 +279,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             {errors.supplier_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
           </div>
 
-          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
               <Wallet className="w-12 h-12" />
             </div>
@@ -289,10 +289,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-sm px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
+                  <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
                     {currencies?.map(c => (
                       <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
                         {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
@@ -305,14 +305,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             {errors.currency_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
           </div>
 
-          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
             <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
               <PackageSearch className="w-12 h-12" />
             </div>
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
             <div className="mt-2">
               {initialData?.po_number ? (
-                <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-sm">
+                <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
                   <span dir="ltr" className="font-mono">{initialData.po_number}</span>
                 </Badge>
               ) : (
@@ -321,17 +321,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
             <Label htmlFor="warehouse-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</Label>
             <Controller
               name="warehouse_id"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-sm px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-sm shadow-2xl">
+                  <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
                     {warehouses?.map(w => (
                       <SelectItem key={w.id} value={w.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
                         {locale === 'ar' ? w.nameAr : w.nameEn}
@@ -344,7 +344,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             {errors.warehouse_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouse_id.message}</span>}
           </div>
 
-            <div className="col-span-full bg-surface-container-lowest p-6 rounded-sm shadow-sm flex flex-col gap-1 group relative overflow-hidden border border-surface-variant/5">
+            <div className="col-span-full bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
               <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                 <MessageSquare className="w-12 h-12" />
               </div>
@@ -353,16 +353,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 id="notes-area"
                 {...register('notes')}
                 disabled={isLocked}
-                className="mt-2 w-full bg-surface-container-low border-none rounded-sm p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none" 
+                className="mt-2 w-full bg-surface-container-low border-none rounded-xl p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none" 
                 placeholder={tc('notes_placeholder')} 
               />
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-operational-cyan/[0.02] p-8 rounded-sm border border-operational-cyan/10">
+            <div className="bg-operational-cyan/[0.02] p-8 rounded-2xl">
               <div className="flex items-center gap-6 mb-6">
-                <div className="p-3 bg-operational-cyan/10 rounded-sm text-operational-cyan">
+                <div className="p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
                   <PackageSearch className="w-6 h-6" />
                 </div>
                 <div>
@@ -393,7 +393,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               </div>}
             </div>
             
-            <div className="bg-surface-container-lowest rounded-sm overflow-hidden shadow-sm border border-surface-variant/5">
+            <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
               <DocumentLineItemTable<LineItem> 
                 lines={fields as unknown as LineItem[]} 
                 isReadOnly={isLocked}
@@ -409,7 +409,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                       return (
                         <input type="number" 
                           dir="ltr"
-                          className="w-20 bg-surface-container-low rounded-sm text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
+                          className="w-20 bg-surface-container-low rounded-xl text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
                           {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
                           onChange={e => {
                             const val = Number(e.target.value);
@@ -441,7 +441,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         </DocumentReadOnlyOverlay>
 
         <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8 pt-10">
-          <div className="flex flex-col items-end gap-1 px-6 border-e border-surface-container-high/20">
+          <div className="flex flex-col items-end gap-1 px-6">
             <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">
               {t('market_index_ref')}
             </p>
@@ -453,7 +453,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             </div>
           </div>
 
-            <div className="bg-surface-container-lowest p-8 rounded-sm shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl border border-surface-variant/5">
+            <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl">
               <div className="absolute top-0 end-0 w-1 h-full bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] group-hover:bg-primary transition-all" />
               
               <div className="space-y-6 relative z-10">
@@ -464,7 +464,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   </p>
                 </div>
                 
-                <div className="h-px bg-surface-container-high/20 w-full" />
+
                 
                 <div className="flex justify-between items-center gap-10">
                   <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency || '' })}</p>

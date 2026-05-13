@@ -82,13 +82,13 @@ export function DataTable<TData, TValue>({
  </div>
  ) : <div />}
  {enableExport && (
- <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high border-border-surface">
+ <Button variant="outline" onClick={onExport} className="bg-surface-container-low hover:bg-surface-container-high">
  <Download className="me-2 h-4 w-4" />
  {t("table.export")}
  </Button>
  )}
  </div>
- <div className="rounded-xl border border-border-surface bg-surface-container-low overflow-hidden shadow-sm">
+ <div className="rounded-[var(--radius)] bg-surface-container-low overflow-hidden shadow-sm">
  <Table>
  <TableHeader>
  {table.getHeaderGroups().map((headerGroup) => (

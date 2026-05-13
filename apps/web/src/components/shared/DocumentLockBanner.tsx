@@ -53,7 +53,7 @@ export function DocumentLockBanner({
 
   return (
     <div className={cn(
-      "w-full sm:rounded-2xl p-5 flex items-center justify-between gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-700 backdrop-blur-xl border-2 shadow-2xl shadow-black/5",
+      "w-full sm:rounded-2xl p-5 flex items-center justify-between gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-200 backdrop-blur-xl border-2 shadow-2xl shadow-black/5",
       styles[effectiveVariant],
       className
     )}>
@@ -73,7 +73,7 @@ export function DocumentLockBanner({
               {isLocked ? t('document_locked') : t('document_status')}
             </span>
             {lockReason && (
-              <span className="px-1.5 py-0.5 rounded bg-black/5 text-[9px] font-bold uppercase opacity-40 border border-black/5">
+              <span className="px-1.5 py-0.5 rounded bg-black/5 text-[9px] font-bold uppercase opacity-40 border">
                 {lockReason}
               </span>
             )}
@@ -111,7 +111,7 @@ export function DocumentLockWrapper({
 }) {
   return (
     <div className={cn(
-      "transition-all duration-500 ease-in-out w-full",
+      "transition-all duration-200 ease-in-out w-full",
       isLocked && "opacity-85 grayscale-[0.2] contrast-[0.95]",
       className
     )}>

@@ -11,6 +11,7 @@
       "reject": "رفض",
       "submit": "إرسال",
       "close": "إغلاق",
+      "view_all": "عرض الكل",
       "remove_line": "حذف السطر",
       "audit_log_filename": "سجل_التدقيق",
       "all_branches": "جميع الفروع",
@@ -19,28 +20,103 @@
       "retry": "إعادة المحاولة",
       "go_back": "رجوع"
     },
+    "purchasing": "المشتريات",
+    "purchase_orders": "أوامر الشراء",
+    "loading_data": "جاري تحميل البيانات...",
+    "item_not_found": "الصنف غير موجود",
+    "item_added": "تم إضافة {name}",
+    "item_added_quantity_updated": "تم تحديث كمية {name}",
+    "error_occurred": "حدث خطأ ما",
+    "select_item": "اختر صنفاً...",
     "admins": "المسؤولين",
     "audit_trail": "سجل المراجعة / التاريخ",
     "back": "رجوع",
     "back_to_list": "العودة للقائمة",
     "barcode_scanner": "ماسح الباركود",
+    "id": "المعرف",
+    "location": "الموقع",
+    "uom": {
+      "label": "وحدة القياس",
+      "units": {
+        "l": "لتر (L)",
+        "liter": "لتر",
+        "kilogram": "كجم",
+        "kg": "كيلوجرام (KG)",
+        "pcs": "قطعة",
+        "unit": "وحدة",
+        "ea": "حبة (EA)"
+      },
+      "create_title": "تعريف وحدة جديدة",
+      "description": "المقاييس الموحدة ومواصفات القياس",
+      "edit_title": "تعديل وحدة القياس",
+      "precision": "دقة عالية",
+      "precision_description": "يتم معايرة الوحدات لضمان دقة المخزون على مستوى المؤسسة والتسوية المالية.",
+      "placeholders": {
+        "code": "UNIT",
+        "name_ar": "اسم الوحدة (AR)",
+        "name_en": "اسم الوحدة (EN)"
+      },
+      "registry_sync": "مزامنة السجل",
+      "search_placeholder": "البحث عن الوحدات بالكود أو الاسم...",
+      "title": "وحدات القياس",
+      "total_metrics": "إجمالي السجل",
+      "view_title": "تفاصيل وحدة القياس",
+      "created_success": "تم تعريف وحدة القياس",
+      "deactivated_success": "تم إيقاف وحدة القياس",
+      "empty": {
+        "description": "حدد وحدات قياس موحدة لضمان الدقة عبر معاملات المخزون.",
+        "title": "لا توجد وحدات قياس"
+      },
+      "errors": {
+        "cannot_deactivate_uom_in_use": "لا يمكن إيقاف وحدة مرتبطة حالياً بأصناف نشطة.",
+        "cannot_delete_uom_in_use": "لا يمكن حذف وحدة القياس لارتباطها بأصناف موجودة أو قواعد تحويل.",
+        "delete_failed": "فشل حذف وحدة القياس",
+        "update_failed": "فشل تحديث مواصفات الوحدة"
+      },
+      "delete_confirm_title": "حذف وحدة القياس",
+      "delete_confirm_desc": "هل أنت متأكد أنك تريد حذف وحدة القياس هذه؟ سيؤدي هذا إلى إزالة تعريف الوحدة من السجل. ستظل المعاملات التاريخية سليمة لأغراض التدقيق.",
+      "deleted_success": "تمت إزالة وحدة القياس من السجل",
+      "fields": {
+        "code": "كود الوحدة",
+        "created_at": "تاريخ الإنشاء",
+        "is_active": "الحالة",
+        "name_ar": "اسم الوحدة (AR)",
+        "name_en": "اسم الوحدة (EN)"
+      },
+      "updated_success": "تم تحديث مواصفات الوحدة",
+      "validation": {
+        "code_required": "كود الوحدة مطلوب",
+        "code_uppercase": "يجب أن يكون الكود أحرف كبيرة فقط",
+        "name_ar_required": "الاسم بالعربية مطلوب",
+        "name_en_required": "الاسم بالإنجليزية مطلوب"
+      }
+    },
+    "doc_types": {
+      "pr": "طلب شراء",
+      "adj": "تسوية",
+      "st": "جرد",
+      "grn": "إشعار استلام"
+    },
+    "departments": {
+      "label": "الأقسام",
+      "culinary_lab": "مختبر الطهي",
+      "pastry_desserts": "المعجنات والحلويات",
+      "kitchen_1": "المطبخ 1",
+      "pastry": "المعجنات"
+    },
+    "warehouses": {
+      "label": "المستودعات",
+      "main": "المستودع الرئيسي",
+      "main_hub": "المركز الرئيسي",
+      "cold_storage_locked": "المخزن البارد (مغلق)"
+    },
     "manual_entry": "إدخال يدوي",
     "export": "تصدير",
     "loading": "جاري التحميل...",
     "base_currency": "العملة الأساسية",
     "cancel": "إلغاء",
-    "categories": {
-      "equipment": "المعدات",
-      "food": "الأغذية والمكونات",
-      "packaging": "التغليف",
-      "supplies": "المستلزمات"
-    },
-    "currencies": {
-      "sar": "ر.س",
-      "sar_full": "ريال سعودي",
-      "usd": "دولار",
-      "usd_full": "دولار أمريكي"
-    },
+    "categories": "الفئات",
+    "currencies": "العملات",
     "check_fields": "يرجى التحقق من الحقول المطلوبة",
     "code": "الكود",
     "completed": "مكتمل",
@@ -111,35 +187,14 @@
       "ar": "العربية",
       "en": "الإنجليزية"
     },
-    "name": "الاسم",
+    "name": "اسم المطعم",
     "home": "الرئيسية",
     "view": "عرض",
-    "create_new": "إنشاء جديد",
+    "create_new": "طلب جديد",
     "active": "نشط",
     "inactive": "غير نشط",
-    "is_active": "الحالة النشطة",
+    "is_active": "الحالة",
     "operational_status": "الحالة التشغيلية",
-    "status": {
-      "all": "الكل",
-      "draft": "مسودة",
-      "posted": "تم الترحيل",
-      "active": "نشط",
-      "submitted": "مقدم",
-      "approved": "معتمد",
-      "rejected": "مرفوض",
-      "last_sync": "آخر مزامنة",
-      "live_updates": "تحديثات مباشرة",
-      "completed": "مكتمل",
-      "in_transit": "في الطريق",
-      "status": "الحالة",
-      "pending": "قيد الانتظار",
-      "cancelled": "ملغي",
-      "voided": "ملغي/باطل",
-      "received": "مستلم",
-      "shipped": "تم الشحن",
-      "closed": "مغلق"
-    },
-    "status_label": "الحالة",
     "statuses": {
       "active": "نشط",
       "all": "الكل",
@@ -155,8 +210,6 @@
       "healthy": "سليم",
       "in_transit": "في الطريق",
       "inactive": "غير نشط",
-      "last_sync": "آخر مزامنة",
-      "live_updates": "تحديثات مباشرة",
       "low": "مخزون منخفض",
       "open": "مفتوح",
       "partial": "جزئي",
@@ -177,6 +230,40 @@
       "variance_submitted": "تم تقديم الفوارق",
       "voided": "ملغي/باطل"
     },
+    "table_headers": {
+      "item": "الصنف",
+      "uom": "الوحدة",
+      "qty": "الكمية",
+      "price": "السعر",
+      "total": "الإجمالي",
+      "code": "الكود",
+      "name": "الاسم",
+      "lot": "الدفعة",
+      "expiry": "تاريخ الانتهاء",
+      "notes": "ملاحظات",
+      "available": "متاح",
+      "received_qty": "الكمية المستلمة",
+      "lot_allocation": "تخصيص الدفعة"
+    },
+    "role": {
+      "admin": "مسؤول النظام",
+      "kitchen_chief": "رئيس المطبخ",
+      "store_manager": "مدير المستودع"
+    },
+    "time_ago": {
+      "minutes": "منذ {count} دقيقة",
+      "hours": "منذ {count} ساعة",
+      "days": "منذ {count} يوم"
+    },
+    "department": "القسم",
+    "batch": "الدفعة",
+    "reasons": {
+      "damage": "تلف",
+      "expiry": "انتهاء صلاحية",
+      "theft": "سرقة",
+      "adjustment": "تسوية"
+    },
+    "status_label": "حالة السجل",
     "locked": "مقفل",
     "logout": "تسجيل الخروج",
     "lot": "الدفعة",
@@ -186,8 +273,8 @@
     "navigation": {
       "master_data": "مركز البيانات الأساسية"
     },
-    "name_ar": "الاسم (AR)",
-    "name_en": "الاسم (EN)",
+    "name_ar": "الاسم (بالعربية)",
+    "name_en": "الاسم (بالإنجليزية)",
     "no_items": "لا توجد أصناف.",
     "no_records": "لايوجد بيانات",
     "not_available": "غير متوفر",
@@ -211,21 +298,11 @@
     "read_only_mode": "وضع القراءة فقط",
     "ref_document": "مستند المرجع",
     "reset": "إعادة تعيين",
-    "save": "حفظ",
+    "save": "حفظ الصنف",
     "saving": "جاري الحفظ...",
     "search": "بحث",
     "select_date": "اختر التاريخ",
-    "select_item": "اختر الصنف...",
-    "select_supplier": "اختر المورد",
-    "select_warehouse": "اختر المستودع...",
-    "select_department": "اختر القسم...",
-    "add_item": "إضافة صنف",
-    "quantity": "الكمية",
-    "id": "المعرف",
-    "error_occurred": "حدث خطأ ما",
-    "units": "وحدات",
-    "batch": "الدفعة",
-    "location": "الموقع",
+    "units_label": "وحدات",
     "sidebar": {
       "adjustment": "التسويات",
       "admin": "مسؤول النظام",
@@ -283,47 +360,16 @@
       "last_sync": "آخر مزامنة",
       "live_updates": "مراقبة انتهاء مباشر"
     },
-    "table_headers": {
-      "available": "متاح",
-      "code": "كود الصنف",
-      "expiry": "انتهاء صلاحية",
-      "lot": "الدفعة",
-      "lot_allocation": "تخصيص الدفعة",
-      "name": "الاسم",
-      "qty": "الكمية",
-      "received_qty": "الكمية المستلمة",
-      "uom": "وحدة القياس"
-    },
     "total": "القيمة الإجمالية",
     "total_locations": "إجمالي المواقع",
     "total_users": "إجمالي المستخدمين",
     "warehouse_locked": "المستودع مقفل",
     "stocktake_in_progress_desc": "العمليات مقيدة بسبب وجود جرد نشط حالياً.",
-    "uoms": {
-      "ea": "حبة (EA)",
-      "kg": "كيلوجرام (KG)",
-      "l": "لتر (L)"
-    },
     "warehouse": "المستودع",
-    "warehouses": {
-      "cold": "مبرد",
-      "dry": "جاف",
-      "kitchen": "مخزن المطبخ",
-      "main": "رئيسي",
-      "pastry": "مخزن الحلويات",
-      "main_hub": "مركز التوزيع الرئيسي",
-      "cold_storage_locked": "مستودع التبريد (مقفل)"
-    },
-    "departments": {
-      "kitchen_1": "مطبخ 1",
-      "pastry": "الحلويات",
-      "culinary_lab": "مختبر الطهي الرئيسي",
-      "pastry_desserts": "الحلويات والحلويات"
-    },
     "fefo": {
       "override_reason": "سبب التجاوز",
       "expired_warning": "تحذير: هذا الصنف منتهي الصلاحية - يجب تقديم سبب الاستخدام",
-      "expired_status": "⛔ منتهي الصلاحية",
+      "expired_status": "⛔ Expired",
       "required_commitment": "الالتزام المطلوب",
       "units": "الوحدات",
       "allocated_status": "حالة التخصيص",
@@ -378,6 +424,83 @@
     },
     "modules": {
       "operations": "العمليات"
+    },
+    "read_only_intel": "ذكاء الأصول (للقراءة فقط)",
+    "operational_snapshot": "لقطة تشغيلية",
+    "verified_static_data": "بيانات ثابتة موثقة",
+    "asset_metadata": "تكوين الأصول والبيانات الوصفية",
+    "confidential_data": "بيانات تشغيلية سرية",
+    "secure_connection": "اتصال آمن",
+    "active_metrics": "المقاييس النشطة",
+    "active_partners": "الشركاء النشطون",
+    "active_status": "حالة النشاط",
+    "barcodes": "ربط الباركود",
+    "base_currency_description": "يستخدم النظام العملة الأساسية لجميع الحسابات الداخلية والتقارير.",
+    "base_currency_warning": "تغيير العملة الأساسية يؤثر على جميع التقارير المالية.",
+    "basic_info": "المعلومات الأساسية",
+    "basic_info_desc": "التعريف الأساسي للكيان",
+    "bilingual_record": "سجل تصنيف ثنائي اللغة",
+    "branches": "الفروع",
+    "categories_desc": "تجميع منطقي لأصول المخزون للتحكم الهرمي والتقارير",
+    "category_classification_details": "تفاصيل تصنيف الفئة",
+    "compliance": "الامتثال",
+    "compliance_rate": "معدل الامتثال",
+    "cost_center": "معرف مركز التكلفة",
+    "currency_id": "العملة",
+    "edit": "تعديل",
+    "flat": "مسطح",
+    "global": "عام",
+    "hierarchy_status": "عمق التسلسل الهرمي",
+    "identification_naming": "التعريف والتسمية",
+    "inactive_status": "حالة عدم النشاط",
+    "inventory_taxonomy_units": "تصنيف المخزون والوحدات",
+    "manager": "مدير الوحدة",
+    "master_data_sync": "مزامنة البيانات الأساسية",
+    "no": "لا",
+    "no_categories_desc": "قم بتجميع العناصر الخاصة بك في فئات منطقية لتنظيم أفضل.",
+    "no_categories_title": "لم يتم العثور على فئات",
+    "not_set": "غير محدد",
+    "null_select": "— اختيار فارغ —",
+    "operational_availability": "التوافر التشغيلي",
+    "operational_compliance": "الامتثال التشغيلي",
+    "operational_details": "التفاصيل التشغيلية",
+    "operational_details_desc": "الإدارة والربط المالي",
+    "optimal": "مثالي",
+    "placeholder_sku": "SKU-000-000",
+    "select_none": "—",
+    "precision": "دقة عالية",
+    "quick_tips": "نصائح سريعة",
+    "registry_status": "حالة السجل",
+    "registry_sync": "مزامنة السجل",
+    "relational_unit_transformation": "تحويل الوحدات العلائقي",
+    "required": "هذا الحقل مطلوب",
+    "saved_success": "تم الحفظ بنجاح.",
+    "scope": "النطاق",
+    "search_categories_placeholder": "تصفية الفئات بالاسم...",
+    "search_placeholder": "البحث في الجلسات...",
+    "select_base_unit": "— اختر الوحدة الأساسية —",
+    "sku_definition_protocol": "بروتوكول تعريف SKU",
+    "source_unit": "الوحدة المصدر",
+    "status_description": "التحكم في رؤية ومدى توفر هذه العقدة تشغيلياً.",
+    "suppliers": "الموردون",
+    "target_unit": "الوحدة الهدف",
+    "threshold_parameters": "معايير العتبة",
+    "total_categories": "إجمالي المجموعات",
+    "total_skus": "إجمالي الأصناف",
+    "total_suppliers": "إجمالي الموردين",
+    "total_warehouses": "إجمالي المستودعات",
+    "validation": {
+      "code_format": "يجب أن يكون الرمز 3 أحرف كبيرة (ISO 4217)",
+      "code_min": "يجب أن يكون الكود حرفين على الأقل",
+      "invalid_selection": "اختيار غير صالح",
+      "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل",
+      "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
+      "required": "هذا الحقل مطلوب"
+    },
+    "yes": "نعم",
+    "sync_info": {
+      "live_updates": "تحديثات مباشرة",
+      "last_sync": "آخر مزامنة"
     }
   },
   "admin": {
@@ -709,18 +832,36 @@
   },
   "dashboard": {
     "analytics": {
-      "full_report": "التحليل الكامل",
-      "processing": "جاري معالجة تدفقات البيانات...",
-      "title": "الذكاء",
-      "velocity": "سرعة الحركة"
+      "full_report": "التقرير الكامل",
+      "processing": "جاري معالجة البيانات...",
+      "title": "محرك التحليلات",
+      "velocity": "سرعة المخزون"
     },
     "approval_workflow": "الموافقات المعلقة وسير العمل",
     "audit": {
-      "branch_sync": "مزامنة الفرع مكتملة",
-      "role_mutation": "تعديل الدور",
-      "subtitle": "تغييرات البيانات والأمن الأخيرة",
-      "title": "تدفق المراجعة",
-      "updated_sku": "تم تحديث SKU"
+      "branch_sync": "مزامنة الفروع",
+      "role_mutation": "تغيير صلاحيات",
+      "subtitle": "تغييرات النظام الأخيرة",
+      "title": "سجل التدقيق",
+      "view_all": "عرض الكل",
+      "log_templates": {
+        "updated_sku": "تم تحديث SKU: {sku}",
+        "role_mutation": "تعديل الدور: {role}",
+        "branch_sync": "مزامنة الفرع مكتملة",
+        "system_user": "النظام"
+      },
+      "updated_sku": "تحديث صنف",
+      "mock": {
+        "user_mansour": "منصور",
+        "node_jed": "عقدة جدة",
+        "sku_m102": "M-102 (زيت)",
+        "role_inv_mgr": "مدير المخزون"
+      },
+      "type": {
+        "catalog": "الكتالوج",
+        "security": "الأمان",
+        "system": "النظام"
+      }
     },
     "business_intelligence": "ذكاء الأعمال والتوقعات",
     "description": "الذكاء التشغيلي ونظرة عامة على البيانات",
@@ -732,91 +873,153 @@
     "kpi": {
       "active_stocktakes": "عمليات جرد نشطة",
       "critical_items": "أصناف تحت مستوى الأمان",
-      "immediate_review": "يتطلب مراجعة فورية",
+      "immediate_review": "تتطلب مراجعة فورية",
       "jeddah_riyadh_active": "جدة والرياض نشطة",
-      "low_stock": "مخزون منخفض",
-      "low_stock_items": "أصناف منخفضة المخزون",
-      "pending_prs": "طلبات قيد الانتظار",
-      "reorder_suggested": "يُقترح إعادة الطلب",
+      "low_stock": "أصناف منخفضة المخزون",
+      "pending_prs": "طلبات شراء معلقة",
+      "reorder_suggested": "يوصى بإعادة الطلب",
       "total_stock": "إجمالي قيمة المخزون",
-      "vs_last_month": "مقابل الشهر الماضي",
-      "warehouse_locked": "المستودع مقفل"
+      "vs_last_month": "مقارنة بالشهر الماضي",
+      "warehouse_locked": "المستودع مقفل",
+      "title": "مؤشرات الأداء الرئيسية"
     },
     "near_expiry": {
-      "alert": "تدوير الأولوية",
-      "expires": "تنتهي في",
-      "rotation_report": "عرض تقرير التدوير",
-      "title": "مراقبة قرب الانتهاء"
+      "alert": "أولوية التدوير",
+      "expires": "ينتهي في",
+      "rotation_report": "عرض تقرير التدوير الكامل",
+      "title": "تنبيهات قرب الانتهاء",
+      "mock": {
+        "milk": "حليب طازج (B-2)",
+        "yogurt": "زبادي يوناني (B-4)",
+        "chicken": "دجاج كامل (B-1)"
+      }
     },
     "pending_approvals": {
-      "tasks": "مهام",
-      "title": "الموافقات المعلقة",
-      "view_all": "عرض كافة سير العمل"
+      "tasks": "إجراءات مطلوبة",
+      "title": "إجراءات معلقة",
+      "view_all": "عرض طابور الاعتمادات الكامل",
+      "mock": {
+        "doc_1": "PR-9021",
+        "doc_2": "ADJ-4402",
+        "doc_3": "PR-9025"
+      }
     },
     "system_health": {
       "backup": "آخر نسخة احتياطية",
-      "health_suffix": "الاستقرار",
-      "node_description": "أداء العقد النشطة",
+      "health_suffix": "الحالة",
+      "node_description": "حالة العقدة العالمية",
       "online": "المستخدمين النشطين",
       "optimal": "مثالي",
       "sessions": "جلسات",
-      "title": "سلامة النظام"
+      "title": "حالة النظام",
+      "last_sync": "آخر مزامنة",
+      "uptime": "وقت التشغيل"
     },
-    "title": "لوحة القيادة المطبخية",
+    "title": "لوحة التحكم",
     "kitchen": {
-      "operations": "عمليات المطبخ",
+      "operations": "التدفق التشغيلي",
       "overview": "نظرة عامة",
-      "new_request": "طلب جديد",
+      "new_request": "طلب توريد جديد",
       "active_requests": "الطلبات النشطة",
       "awaiting_fulfillment": "في انتظار التنفيذ",
       "critical_shortage": "نقص حرج",
-      "immediate_action": "مطلوب اتخاذ إجراء فوري",
+      "immediate_action": "يتطلب إجراءً فورياً",
       "today_consumption": "استهلاك اليوم",
       "total_items_used": "إجمالي الأصناف المستخدمة اليوم",
-      "stock_health": "صحة مخزون المطبخ",
+      "stock_health": "صحة المخزون",
       "overall_availability": "التوفر العام",
-      "supply_requests": "طلبات التوريد",
-      "tracking_flow": "تتبع التدفق القسمي",
+      "supply_requests": "طلب توريد الأصناف",
+      "tracking_flow": "تتبع التدفق اللحظي",
       "view_history": "عرض السجل",
       "daily_activity": "النشاط اليومي",
       "consumption_log": "سجل الاستهلاك",
-      "quick_record": "تسجيل سريع للاستخدام",
-      "recorded": "تم تسجيله"
+      "quick_record": "تسجيل سريع",
+      "recorded": "تم تسجيله",
+      "department": "القسم",
+      "status": {
+        "pending": "قيد الانتظار",
+        "fulfilled": "تم التنفيذ",
+        "rejected": "مرفوض"
+      },
+      "priority": {
+        "urgent": "عاجلة",
+        "high": "عالية",
+        "normal": "عادية"
+      },
+      "mock": {
+        "request_items_1": "زيت زيتون، أرز بسمتي، دقيق",
+        "request_items_2": "معجون طماطم، حليب كامل الدسم",
+        "request_items_3": "دجاج مجمد، بيض",
+        "consumption_items": {
+          "olive_oil": "زيت زيتون",
+          "basmati_rice": "أرز بسمتي",
+          "frozen_chicken": "دجاج مجمد",
+          "flour": "دقيق"
+        },
+        "consumption_qty": {
+          "liters": "{count} لتر",
+          "kilograms": "{count} كجم"
+        }
+      }
     },
     "store": {
-      "logistics": "الخدمات اللوجستية والتنفيذ",
+      "logistics": "التدفق اللوجستي",
+      "mock_destinations": {
+        "main_kitchen": "المطبخ الرئيسي",
+        "branch_b2": "فرع B2",
+        "pastry_dept": "قسم الحلويات"
+      },
       "control": "التحكم",
-      "central_warehouse": "المستودع المركزي • JED-01",
+      "central_warehouse": "عقدة المستودع المركزي",
       "fulfillment_queue": "طابور التنفيذ",
-      "pending_issues": "عمليات الصرف والتحويل المعلقة",
+      "pending_issues": "طلبات معلقة في الطابور",
       "stock_shortages": "نقص المخزون",
-      "awaiting_procurement": "في انتظار المشتريات",
+      "awaiting_procurement": "في انتظار التوريد",
       "warehouse_load": "حمولة المستودع",
-      "capacity_usage": "استخدام السعة التخزينية",
+      "capacity_usage": "استخدام السعة",
       "asset_value": "قيمة الأصول",
-      "stock_valuation": "تقييم المخزون المتاح",
-      "fefo_guided": "تخصيص المخزون الفوري (بتوجيه FEFO)",
-      "more_items": "+{count} أخرى",
+      "stock_valuation": "إجمالي تقييم المخزون",
+      "fefo_guided": "تخصيص موجه (FEFO)",
+      "more_items": "+{count} أصناف إضافية",
       "id_label": "معرف",
-      "fefo_buffer": "حاجز FEFO",
-      "expiring_stock": "مخزون منتهي الصلاحية",
-      "stock_velocity": "سرعة دوران المخزون",
+      "fefo_buffer": "منطقة FEFO",
+      "expiring_stock": "مخزون قارب على الانتهاء",
+      "stock_velocity": "سرعة المخزون",
       "throughput": "معدل التدفق",
       "inventory_audit": "تدقيق المخزون",
-      "batch_issue": "صرف دفعات",
-      "generate_disposal": "إنشاء سجل التخلص",
+      "batch_issue": "صرف دفعة",
+      "generate_disposal": "إنشاء طلب إتلاف / تسوية",
       "operational": "التشغيلي",
       "direct_issue": "صرف مباشر",
       "transfer_request": "طلب تحويل",
       "fefo_boundary": "حدود FEFO",
       "days_left": "متبقي {days} يوم",
       "efficiency": "الكفاءة",
-      "weekly_throughput": "إنتاجية الأسبوع {week}",
+      "weekly_throughput": "الإنتاجية الأسبوعية (الأسبوع {week})",
       "urgency_urgent": "عاجل",
       "urgency_normal": "عادي",
       "status_allocating": "جاري التخصيص",
       "status_pending": "قيد الانتظار",
-      "status_ready": "جاهز"
+      "status_ready": "جاهز",
+      "mock": {
+        "items": {
+          "tomato_paste": "معجون طماطم",
+          "whole_milk": "حليب كامل الدسم",
+          "fresh_cream": "كريمة طازجة"
+        },
+        "locations": {
+          "a1_4": "A1-4"
+        },
+        "batches": {
+          "b992": "B-992",
+          "b102": "B-102",
+          "b041": "B-041"
+        }
+      }
+    },
+    "aria": {
+      "kpi_grid": "شبكة مؤشرات الأداء",
+      "operational_monitoring": "المراقبة التشغيلية"
     }
   },
   "inventory": {
@@ -1035,105 +1238,6 @@
       "total_groups": "إجمالي المجموعات",
       "updated_success": "تم تحديث التصنيف",
       "view_title": "تفاصيل الفئة"
-    },
-    "common": {
-      "read_only_intel": "ذكاء الأصول (للقراءة فقط)",
-      "operational_snapshot": "لقطة تشغيلية",
-      "verified_static_data": "بيانات ثابتة موثقة",
-      "asset_metadata": "تكوين الأصول والبيانات الوصفية",
-      "confidential_data": "بيانات تشغيلية سرية",
-      "secure_connection": "اتصال آمن",
-      "active": "نشط",
-      "active_metrics": "المقاييس النشطة",
-      "active_partners": "الشركاء النشطون",
-      "active_status": "حالة النشاط",
-      "status_label": "حالة السجل",
-      "barcodes": "ربط الباركود",
-      "base_currency_description": "يستخدم النظام العملة الأساسية لجميع الحسابات الداخلية والتقارير.",
-      "base_currency_warning": "تغيير العملة الأساسية يؤثر على جميع التقارير المالية.",
-      "basic_info": "المعلومات الأساسية",
-      "basic_info_desc": "التعريف الأساسي للكيان",
-      "bilingual_record": "سجل تصنيف ثنائي اللغة",
-      "branches": "الفروع",
-      "cancel": "إلغاء",
-      "categories": "الفئات",
-      "categories_desc": "تجميع منطقي لأصول المخزون للتحكم الهرمي والتقارير",
-      "category_classification_details": "تفاصيل تصنيف الفئة",
-      "code": "الكود",
-      "compliance": "الامتثال",
-      "compliance_rate": "معدل الامتثال",
-      "cost_center": "معرف مركز التكلفة",
-      "create_new": "طلب جديد",
-      "currencies": "العملات",
-      "currency_id": "العملة",
-      "departments": "الأقسام",
-      "edit": "تعديل",
-      "flat": "مسطح",
-      "global": "عام",
-      "hierarchy_status": "عمق التسلسل الهرمي",
-      "home": "الرئيسية",
-      "identification_naming": "التعريف والتسمية",
-      "inactive": "غير نشط",
-      "inactive_status": "حالة عدم النشاط",
-      "inventory_taxonomy_units": "تصنيف المخزون والوحدات",
-      "is_active": "الحالة",
-      "items": "الأصناف",
-      "manager": "مدير الوحدة",
-      "master_data": "مركز البيانات الأساسية",
-      "master_data_sync": "مزامنة البيانات الأساسية",
-      "name": "اسم المطعم",
-      "name_ar": "الاسم (بالعربية)",
-      "name_en": "الاسم (بالإنجليزية)",
-      "no": "لا",
-      "no_categories_desc": "قم بتجميع العناصر الخاصة بك في فئات منطقية لتنظيم أفضل.",
-      "no_categories_title": "لم يتم العثور على فئات",
-      "not_set": "غير محدد",
-      "null_select": "— اختيار فارغ —",
-      "operational_availability": "التوافر التشغيلي",
-      "operational_compliance": "الامتثال التشغيلي",
-      "operational_details": "التفاصيل التشغيلية",
-      "operational_details_desc": "الإدارة والربط المالي",
-      "optimal": "مثالي",
-      "placeholder_sku": "SKU-000-000",
-      "select_none": "—",
-      "precision": "دقة عالية",
-      "quick_tips": "نصائح سريعة",
-      "registry_status": "حالة السجل",
-      "registry_sync": "مزامنة السجل",
-      "relational_unit_transformation": "تحويل الوحدات العلائقي",
-      "required": "هذا الحقل مطلوب",
-      "save": "حفظ الصنف",
-      "saved_success": "تم الحفظ بنجاح.",
-      "saving": "جاري الحفظ...",
-      "scope": "النطاق",
-      "search": "بحث",
-      "search_categories_placeholder": "تصفية الفئات بالاسم...",
-      "search_placeholder": "البحث في الجلسات...",
-      "select_base_unit": "— اختر الوحدة الأساسية —",
-      "sku_definition_protocol": "بروتوكول تعريف SKU",
-      "source_unit": "الوحدة المصدر",
-      "status": "الحالة",
-      "status_description": "التحكم في رؤية ومدى توفر هذه العقدة تشغيلياً.",
-      "suppliers": "الموردون",
-      "target_unit": "الوحدة الهدف",
-      "threshold_parameters": "معايير العتبة",
-      "total_categories": "إجمالي المجموعات",
-      "total_locations": "إجمالي المواقع",
-      "total_skus": "إجمالي الأصناف",
-      "total_suppliers": "إجمالي الموردين",
-      "total_warehouses": "إجمالي المستودعات",
-      "uom": "وحدة القياس",
-      "validation": {
-        "code_format": "يجب أن يكون الرمز 3 أحرف كبيرة (ISO 4217)",
-        "code_min": "يجب أن يكون الكود حرفين على الأقل",
-        "invalid_selection": "اختيار غير صالح",
-        "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل",
-        "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
-        "required": "هذا الحقل مطلوب"
-      },
-      "view": "عرض",
-      "warehouses": "المستودعات",
-      "yes": "نعم"
     },
     "currencies": {
       "add_rate": "إضافة سعر صرف",
@@ -1527,63 +1631,6 @@
         "partner_status": "حالة الشريك البلاتيني",
         "market_avg_relative": "نسبة إلى متوسط السوق",
         "no_activity": "لم يتم تسجيل أي نشاط مؤخرًا لهذا الشريك."
-      }
-    },
-    "uom": {
-      "create_title": "وحدة قياس جديدة",
-      "description": "مقاييس الكمية الموحدة لدقة المخزون والتحويل.",
-      "edit_title": "تعديل وحدة القياس",
-      "precision": "الدقة",
-      "precision_description": "المقاييس القياسية لدقة المخزون ودقة التحويل عبر جميع عقد سلسلة التوريد.",
-      "placeholders": {
-        "code": "UNIT",
-        "name_ar": "اسم الوحدة (AR)",
-        "name_en": "اسم الوحدة (EN)"
-      },
-      "registry_sync": "مزامنة السجل",
-      "search_placeholder": "تصفية الوحدات حسب الاسم أو الكود...",
-      "title": "وحدات القياس",
-      "total_metrics": "إجمالي المقاييس",
-      "view_title": "تفاصيل وحدة القياس"
-    },
-    "uoms": {
-      "create_title": "تعريف وحدة جديدة",
-      "created_success": "تم تعريف وحدة القياس",
-      "deactivated_success": "تم إيقاف وحدة القياس",
-      "description": "المقاييس الموحدة ومواصفات القياس",
-      "edit_title": "تعديل وحدة القياس",
-      "empty": {
-        "description": "حدد وحدات قياس موحدة لضمان الدقة عبر معاملات المخزون.",
-        "title": "لا توجد وحدات قياس"
-      },
-      "errors": {
-        "cannot_deactivate_uom_in_use": "لا يمكن إيقاف وحدة مرتبطة حالياً بأصناف نشطة.",
-        "cannot_delete_uom_in_use": "لا يمكن حذف وحدة القياس لارتباطها بأصناف موجودة أو قواعد تحويل.",
-        "delete_failed": "فشل حذف وحدة القياس",
-        "update_failed": "فشل تحديث مواصفات الوحدة"
-      },
-      "delete_confirm_title": "حذف وحدة القياس",
-      "delete_confirm_desc": "هل أنت متأكد أنك تريد حذف وحدة القياس هذه؟ سيؤدي هذا إلى إزالة تعريف الوحدة من السجل. ستظل المعاملات التاريخية سليمة لأغراض التدقيق.",
-      "deleted_success": "تمت إزالة وحدة القياس من السجل",
-      "fields": {
-        "code": "كود الوحدة",
-        "created_at": "تاريخ الإنشاء",
-        "is_active": "الحالة",
-        "name_ar": "اسم الوحدة (AR)",
-        "name_en": "اسم الوحدة (EN)"
-      },
-      "precision": "دقة عالية",
-      "precision_description": "يتم معايرة الوحدات لضمان دقة المخزون على مستوى المؤسسة والتسوية المالية.",
-      "registry_sync": "مزامنة السجل",
-      "search_placeholder": "البحث عن الوحدات بالكود أو الاسم...",
-      "title": "وحدات القياس",
-      "total_metrics": "إجمالي السجل",
-      "updated_success": "تم تحديث مواصفات الوحدة",
-      "validation": {
-        "code_required": "كود الوحدة مطلوب",
-        "code_uppercase": "يجب أن يكون الكود أحرف كبيرة فقط",
-        "name_ar_required": "الاسم بالعربية مطلوب",
-        "name_en_required": "الاسم بالإنجليزية مطلوب"
       }
     },
     "warehouses": {
@@ -1991,7 +2038,7 @@
       "empty_manifest": "البيان فارغ. بانتظار تسجيل المكونات.",
       "enroll_component": "تسجيل مكون",
       "entries": "بنود تم اكتشافها",
-      "expired_status": "⛔ منتهي الصلاحية",
+      "expired_status": "⛔ Expired",
       "expiry": "تاريخ الانتهاء",
       "fefo_allocator_title": "تخصيص الدفعات",
       "fefo_drawer_title": "تخصيص الدفعات (FEFO)",
@@ -2073,7 +2120,8 @@
         "items_required": "مطلوب صنف واحد على الأقل",
         "qty_positive": "يجب أن تكون الكمية أكبر من الصفر",
         "warehouse_required": "المستودع المصدر مطلوب"
-      }
+      },
+      "warehouse_locked": "المستودع مقفل"
     },
     "expired_override": {
       "title": "منتج منتهي الصلاحية",
@@ -2519,10 +2567,15 @@
         "submitting": "جاري الإرسال..."
       },
       "add_item": "صنف جديد",
+      "scan_or_search": "مسح أو بحث عن صنف",
       "currency_placeholder": "العملة",
       "linked_pr_placeholder": "PR-2026-001",
       "item_sku_placeholder": "IT-1",
+      "uom_placeholder": "PCS",
       "pcs_placeholder": "PCS",
+      "errors": {
+        "no_currencies_available": "لا توجد عملات متاحة. يرجى التحقق من إعدادات النظام."
+      },
       "breadcrumb": {
         "new_po": "أمر شراء جديد"
       },
@@ -2617,7 +2670,6 @@
       "title": "أوامر الشراء",
       "total_amount": "إجمالي المبلغ",
       "unit_price": "سعر الوحدة",
-      "uom_placeholder": "PCS",
       "validation": {
         "at_least_one_item": "يجب إضافة صنف واحد على الأقل",
         "currency_required": "العملة المفضلة مطلوبة",

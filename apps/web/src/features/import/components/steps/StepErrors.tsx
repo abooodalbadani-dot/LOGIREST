@@ -39,8 +39,8 @@ export function StepErrors({ wizard, locale }: StepErrorsProps) {
  };
 
  return (
- <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="flex items-center gap-6 p-8 rounded-3xl bg-red-500/5 border border-red-500/10">
+ <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
+ <div className="flex items-center gap-6 p-8 rounded-2xl bg-red-500/5 border border-red-500/10">
  <div className="w-16 h-16 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
  <AlertCircle className="w-10 h-10" />
  </div>
@@ -55,12 +55,12 @@ export function StepErrors({ wizard, locale }: StepErrorsProps) {
  </div>
 
  {/* Error Table */}
- <div className="border border-white/5 rounded-2xl overflow-hidden bg-surface-container-low/30 shadow-inner">
+ <div className="rounded-2xl overflow-hidden bg-surface-container-low/30 shadow-inner">
  <div className="overflow-x-auto">
  <table className="w-full text-left">
  <thead>
  <tr className={cn(
- "bg-surface-container-low/50 border-b border-white/5",
+ "bg-surface-container-low/50",
  isRtl && "text-right"
  )}>
  <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/60 w-24">{t('row')}</th>
@@ -69,7 +69,7 @@ export function StepErrors({ wizard, locale }: StepErrorsProps) {
  <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/60">{t('error_message')}</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-white/5">
+ <tbody className="">
  {wizard.errors.slice(0, 10).map((error: ValidationError, i: number) => (
  <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
  <td className="px-6 py-4 font-mono dir-ltr text-label-sm font-bold text-red-400">
@@ -93,7 +93,7 @@ export function StepErrors({ wizard, locale }: StepErrorsProps) {
  </table>
  </div>
  {wizard.errors.length > 10 && (
- <div className="p-4 text-center border-t border-white/5 bg-surface-container-low/20">
+ <div className="p-4 text-center bg-surface-container-low/20">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">
  {t('showing_first_n_errors', { count: 10, total: wizard.errors.length })}
  </p>

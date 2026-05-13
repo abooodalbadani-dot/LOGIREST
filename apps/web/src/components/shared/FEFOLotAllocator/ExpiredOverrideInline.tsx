@@ -8,7 +8,7 @@ export function ExpiredOverrideInline({ onReasonChange }: { onReasonChange: (rea
  تحذير: هذا المنتج منتهي الصلاحية — يجب إدخال سبب الاستخدام
  </div>
  <textarea 
- className="w-full bg-surface-container border border-border-surface rounded-lg p-2 text-foreground focus:border-status-warning outline-none min-h-[60px]"
+ className="w-full bg-surface-container border rounded-lg p-2 text-foreground focus:border-status-warning outline-none min-h-[60px]"
  onChange={(e) => onReasonChange(e.target.value)}
  placeholder="سبب الاستخدام / Override reason"
  required

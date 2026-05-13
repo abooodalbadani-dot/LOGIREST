@@ -54,7 +54,7 @@ export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) 
  const isLatest = idx === entries.length - 1;
 
  return (
- <div key={idx} className="relative flex gap-6 animate-in fade-in slide-in-from-start-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
+ <div key={idx} className="relative flex gap-6 animate-in fade-in slide-in-from-start-4 duration-200" style={{ animationDelay: `${idx * 100}ms` }}>
  <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-surface-container-low border border-surface-container-highest shadow-xl overflow-hidden group">
  <div className={cn("absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity", config.glow)} />
  <Icon className={cn("w-5 h-5 relative z-10", config.color, isLatest && "animate-pulse")} />

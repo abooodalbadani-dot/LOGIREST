@@ -4,6 +4,7 @@ import * as React from "react";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 
 import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,7 +12,7 @@ import { ArrowRightLeft, Plus, Trash2, Package, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
-import { Item } from "@/types/master-data";
+import { Item, ItemSchema } from "@/types/master-data";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,8 @@ import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { formatCurrency } from "@/utils/currency";
+import { PurchaseOrderLineItems } from "./purchase-order-line-items";
+
 
 
 import { DocumentLockBanner, DocumentLockWrapper } from "@/components/shared/DocumentLockBanner";
@@ -77,6 +80,11 @@ interface PurchaseOrderFormProps {
 }
 
 export function PurchaseOrderForm({ initialData, mode = "create", onConflict, actions }: PurchaseOrderFormProps) {
+  const locale = useLocale();
+  const t = useTranslations("procurement.po");
+  const tc = useTranslations("common");
+  const router = useRouter();
+  
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -98,17 +106,11 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       })) || [{ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
     },
   });
-
-  const { router } = useUnsavedChangesGuard(form.formState.isDirty);
-
-  const locale = useLocale();
-  const t = useTranslations("procurement.po");
-  const tc = useTranslations("common");
   
   const createMutation = useCreatePO();
   const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, prepend, remove, update } = useFieldArray({
     control: form.control,
     name: "lines",
   });
@@ -126,20 +128,36 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     name: "exchange_rate",
   });
 
-  const { data: itemsData } = useMasterDataList<Item>('items');
+  const [scanStatus, setScanStatus] = React.useState<"idle" | "success" | "error">("idle");
+  const [statusMessage, setStatusMessage] = React.useState("");
+
+  const { data: itemsData, isLoading: loadingItems } = useMasterDataList<Item>('items', ItemSchema);
 
   const handleScan = async (barcode: string) => {
-    const item = itemsData?.data?.find(i => i.code === barcode || i.barcode === barcode);
+    if (loadingItems) {
+      toast.info(tc('loading_data'));
+      return;
+    }
+
+    const cleanBarcode = barcode.trim().toLowerCase();
+    const item = itemsData?.data?.find(i => 
+      i.code?.toLowerCase() === cleanBarcode || 
+      i.barcode?.toLowerCase() === cleanBarcode
+    );
     if (item) {
       const currentLines = form.getValues('lines');
+      // If the first line is empty, replace it instead of appending
+      const isFirstLineEmpty = currentLines.length === 1 && !currentLines[0].item_id;
+      
       const existingIndex = currentLines.findIndex(l => l.item_id === item.id);
       
-      if (existingIndex >= 0) {
-        const qty = currentLines[existingIndex].quantity + 1;
-        form.setValue(`lines.${existingIndex}.quantity`, qty);
-        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
-      } else {
-        append({
+      if (existingIndex >= 0 && !isFirstLineEmpty) {
+        const qty = (currentLines[existingIndex].quantity || 0) + 1;
+        update(existingIndex, { ...currentLines[existingIndex], quantity: qty });
+        setScanStatus("success");
+        setStatusMessage(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+      } else if (isFirstLineEmpty) {
+        update(0, {
           item_id: item.id,
           item_name: locale === 'ar' ? item.name_ar : item.name_en,
           item_code: item.code,
@@ -148,10 +166,33 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
           uom_id: item.primary_uom?.id || 'PCS',
           notes: ''
         });
-        toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        setScanStatus("success");
+        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+      } else {
+        prepend({
+          item_id: item.id,
+          item_name: locale === 'ar' ? item.name_ar : item.name_en,
+          item_code: item.code,
+          quantity: 1,
+          unit_price: item.last_purchase_price || 0,
+          uom_id: item.primary_uom?.id || 'PCS',
+          notes: ''
+        });
+        setScanStatus("success");
+        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       }
+
+      setTimeout(() => {
+        setScanStatus("idle");
+        setStatusMessage("");
+      }, 2000);
     } else {
-      toast.error(tc('item_not_found'));
+      setScanStatus("error");
+      setStatusMessage(tc('item_not_found'));
+      setTimeout(() => {
+        setScanStatus("idle");
+        setStatusMessage("");
+      }, 3000);
     }
   };
 
@@ -203,8 +244,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   if (loadingSuppliers || loadingCurrencies || loadingWarehouses || loadingSettings) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-64 bg-surface-container-low rounded-3xl" />
-        <div className="h-96 bg-surface-container-low rounded-3xl" />
+        <div className="h-64 bg-surface-container-low rounded-2xl" />
+        <div className="h-96 bg-surface-container-low rounded-2xl" />
       </div>
     );
   }
@@ -215,8 +256,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <DocumentLockBanner isLocked={isLocked} status={status} />
 
         <div className="px-8 pt-8">
-          <div className="bg-surface-container-lowest p-8 rounded-[2rem] relative shadow-2xl shadow-black/5">
-            <div className="flex items-center justify-between border-b border-surface-container-high/50 pb-6 mb-6">
+          <div className="bg-surface-container-lowest p-8 rounded-2xl relative shadow-2xl shadow-black/5">
+            <div className="flex items-center justify-between pb-6 mb-6">
               <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
@@ -311,7 +352,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-surface-container-high/50 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 mt-4">
                 <FormField
                   control={form.control}
                   name="currency_code"
@@ -377,7 +418,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               </div>
 
               <div className="pt-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-surface-container-low/20 p-6 rounded-[1.5rem] border border-surface-container-high/30">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-surface-container-low/20 p-6 rounded-2xl">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-operational-cyan/10 rounded-2xl flex items-center justify-center text-operational-cyan">
                       <Package className="w-6 h-6" />
@@ -392,154 +433,33 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                     <div className="flex-1 max-w-2xl">
                       <ScanInput
                         onScan={handleScan}
-                        onManualTrigger={() => append({ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" })}
+                        scanStatus={scanStatus}
+                        statusMessage={statusMessage}
+                        onManualTrigger={() => {
+                          prepend({ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" });
+                        }}
                         placeholder={tc('select_item')}
                         size="lg"
                         label={t('scan_or_search')}
+                        scannerMode={true}
+                        allowFocusWhileStatusSet={true}
                       />
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-between items-center mb-6 px-2">
-                  <h3 className="text-title-lg font-semibold uppercase flex items-center gap-3">
-                    <span className="w-2 h-2 bg-operational-cyan rounded-full" />
-                    {t('line_items')}
-                  </h3>
-                </div>
+                <PurchaseOrderLineItems 
+                  form={form}
+                  itemsData={itemsData}
+                  isLocked={isLocked}
+                  currency={currency}
+                  fields={fields}
+                  remove={remove}
+                  update={update}
+                  prepend={prepend}
+                  append={append}
+                />
 
-                <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_2fr_auto] gap-6 items-end bg-surface-container-low/40 p-6 rounded-2xl border border-surface-container-high/20 transition-all hover:bg-surface-container-high/60 group relative">
-                      <FormField
-                        control={form.control}
-                        name={`lines.${index}.item_id`}
-                        render={({ field: inputField }) => (
-                          <FormItem>
-                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{tc('item')}</FormLabel>
-                            <Select
-                              onValueChange={(val) => {
-                                const item = itemsData?.data?.find(i => i.id === val);
-                                if (item) {
-                                  form.setValue(`lines.${index}.item_id`, item.id);
-                                  form.setValue(`lines.${index}.item_name`, locale === 'ar' ? item.name_ar : item.name_en);
-                                  form.setValue(`lines.${index}.item_code`, item.code);
-                                  form.setValue(`lines.${index}.uom_id`, item.primary_uom?.id || 'PCS');
-                                  form.setValue(`lines.${index}.unit_price`, item.last_purchase_price || 0);
-                                }
-                              }}
-                              value={inputField.value}
-                              disabled={isLocked}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-bold uppercase overflow-hidden">
-                                  <SelectValue placeholder={tc('select_item')} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-surface-container-low border-none rounded-2xl max-h-[300px]">
-                                {itemsData?.data?.map((i: Item) => (
-                                  <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="text-foreground">{locale === 'ar' ? i.name_ar : i.name_en}</span>
-                                      <span className="text-[10px] text-muted-foreground font-mono">{i.code}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`lines.${index}.quantity`}
-                        render={({ field: inputField }) => (
-                          <FormItem>
-                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{t('quantity')}</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                min="1" 
-                                disabled={isLocked}
-                                className="bg-surface-container-low font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-label-xs font-bold" 
-                                dir="ltr" 
-                                {...inputField} 
-                                onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`lines.${index}.uom_id`}
-                        render={({ field: inputField }) => (
-                          <FormItem>
-                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{tc('uom')}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t('uom_placeholder')} disabled className="bg-surface-container-high/10 border-none h-11 rounded-xl font-mono uppercase text-label-xs font-bold opacity-50" {...inputField} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`lines.${index}.unit_price`}
-                        render={({ field: inputField }) => (
-                          <FormItem>
-                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{t('unit_price')} ({currency})</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01" 
-                                min="0" 
-                                disabled={isLocked}
-                                className="bg-surface-container-low font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-label-xs font-bold" 
-                                dir="ltr" 
-                                {...inputField} 
-                                onChange={(e) => inputField.onChange(e.target.valueAsNumber)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`lines.${index}.notes`}
-                        render={({ field: inputField }) => (
-                          <FormItem>
-                            <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/30 mb-2">{t('line_notes')}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t('notes_placeholder')} disabled={isLocked} className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-label-xs font-bold" {...inputField} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {!isLocked && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          className="mb-[1px] text-muted-foreground/30 hover:text-status-error hover:bg-status-error/10 h-11 w-11 transition-colors rounded-xl"
-                          onClick={() => remove(index)}
-                          disabled={fields.length === 1}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
                 
                 <div className="mt-10 flex flex-col md:flex-row justify-end gap-6">
                   <div className="bg-surface-container-high/20 px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px]">

@@ -137,9 +137,9 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <PageHeader 
-        title={t('title')} 
-        description={t('description')} 
+      <PageHeader
+        title={t('title')}
+        description={t('description')}
         actions={
           <div className="flex items-center gap-4">
             <PermissionGate action="create" resource="issue">
@@ -186,7 +186,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
               ))}
             </div>
             <div className="text-label-xxs font-semibold text-muted-foreground/40 leading-tight">
-              <span className="text-foreground">{t('operators_count', { count: 3 })}</span> {t('operators_active')}<br/>{t('fulfillment_stream')}
+              <span className="text-foreground">{t('operators_count', { count: 3 })}</span> {t('operators_active')}<br />{t('fulfillment_stream')}
             </div>
           </div>
         </div>
@@ -200,7 +200,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
               <Search className="w-4 h-4" />
             </div>
             <Input
-              placeholder={t('search_placeholder')} 
+              placeholder={t('search_placeholder')}
               className="w-full bg-surface-container-high/50 border-none h-14 ps-14 pe-6 text-label-xs font-semibold rounded-md shadow-inner shadow-black/5 focus-visible:ring-2 focus-visible:ring-cyan-500/10 transition-all"
             />
           </div>
@@ -209,7 +209,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
             <div className="w-px h-10 bg-surface-container-high/50 mx-2" />
             <div className="flex items-center gap-2">
               <Select
-                value={initialStatus || 'ALL'} 
+                value={initialStatus || 'ALL'}
                 onValueChange={handleStatusChange}
               >
                 <SelectTrigger className="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10">
@@ -256,12 +256,13 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           enableVirtualization={true}
           containerHeight="600px"
           emptyState={
-            <EmptyState 
+            <EmptyState
               variant="minimal"
-              title={tc('datatable.no_records')} 
+              title={t('no_records')}
+              description={t('description')}
               action={
                 <PermissionGate action="create" resource="issue">
-                  <Button 
+                  <Button
                     onClick={() => router.push(`/issues/new`)}
                     className="h-11 px-8 rounded-md bg-operational-cyan hover:bg-operational-cyan/90 text-white shadow-lg shadow-cyan-500/20 border-none transition-all active:scale-95"
                   >

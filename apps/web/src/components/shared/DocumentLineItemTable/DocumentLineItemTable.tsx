@@ -105,7 +105,7 @@ export function DocumentLineItemTable<T extends LineItem>({
               <tr 
                 key={line.id} 
                 className={cn(
-                  "group transition-all hover:bg-primary/[0.04] border-b border-surface-variant/5",
+                  "group transition-all hover:bg-primary/[0.04] border-b",
                   idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/30"
                 )}
               >
@@ -135,7 +135,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   {renderQty ? (
                     renderQty(line)
                   ) : (
-                    <span dir="ltr" className="font-mono text-body-md font-bold text-foreground bg-surface-container-high/20 px-3 py-1 rounded-sm border border-surface-variant/10">
+                    <span dir="ltr" className="font-mono text-body-md font-bold text-foreground bg-surface-container-high/20 px-3 py-1 rounded-sm border">
                       {line.qty}
                     </span>
                   )}

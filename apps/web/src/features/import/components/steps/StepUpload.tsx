@@ -77,7 +77,7 @@ export function StepUpload({ wizard }: StepUploadProps) {
  };
 
  return (
- <div className="flex flex-col items-center justify-center gap-10 py-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+ <div className="flex flex-col items-center justify-center gap-10 py-10 animate-in fade-in slide-in-from-bottom-4 duration-200">
  <div className="text-center space-y-4 max-w-xl">
  <h2 className="text-headline-lg font-semibold uppercase text-foreground">
  {t('upload_title')}
@@ -92,7 +92,7 @@ export function StepUpload({ wizard }: StepUploadProps) {
  {!file ? (
  <div 
  onClick={() => fileInputRef.current?.click()}
- className="group cursor-pointer border-2 border-dashed border-muted-foreground/10 rounded-3xl p-16 flex flex-col items-center gap-6 transition-all hover:border-cyan-500/30 hover:bg-cyan-500/[0.02]"
+ className="group cursor-pointer border-2 border-dashed border-muted-foreground/10 rounded-2xl p-16 flex flex-col items-center gap-6 transition-all hover:border-cyan-500/30 hover:bg-cyan-500/[0.02]"
  >
  <div className="w-20 h-20 rounded-2xl bg-surface-container-low flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-cyan-500/10 group-hover:text-cyan-500">
  <Upload className="w-10 h-10" />
@@ -110,7 +110,7 @@ export function StepUpload({ wizard }: StepUploadProps) {
  />
  </div>
  ) : (
- <div className="bg-surface-container-low/50 rounded-3xl p-8 border border-white/5 flex items-center justify-between animate-in zoom-in-95 duration-300">
+ <div className="bg-surface-container-low/50 rounded-2xl p-8 flex items-center justify-between animate-in zoom-in-95 duration-300">
  <div className="flex items-center gap-5">
  <div className="w-16 h-16 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
  <FileIcon className="w-8 h-8" />

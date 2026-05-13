@@ -86,8 +86,8 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-surface-container-lowest border-none p-0 overflow-hidden rounded-3xl">
-        <div className="bg-muted/10 p-8 border-b border-border-surface">
+      <DialogContent className="sm:max-w-2xl bg-surface-container-lowest border-none p-0 overflow-hidden rounded-2xl">
+        <div className="bg-muted/10 p-8 border-b">
           <DialogHeader>
             <div className="flex items-center gap-4 mb-2">
               <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan border border-operational-cyan/20">
@@ -110,7 +110,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
         <div className="p-8 space-y-8">
           {/* Allocation Progress Bar */}
-          <div className="bg-muted/5 p-6 rounded-3xl">
+          <div className="bg-muted/5 p-6 rounded-2xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex flex-col">
                 <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t("required_commitment")}</span>
@@ -127,9 +127,9 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
               </div>
             </div>
             
-            <div className="h-3 bg-muted/20 rounded-full overflow-hidden border border-black/5 p-0.5">
+            <div className="h-3 bg-muted/20 rounded-full overflow-hidden border p-0.5">
               <div 
-                className={`h-full rounded-full transition-all duration-700 ${isComplete ? 'bg-status-success' : isOver ? 'bg-status-error' : 'bg-primary animate-pulse'}`}
+                className={`h-full rounded-full transition-all duration-200 ${isComplete ? 'bg-status-success' : isOver ? 'bg-status-error' : 'bg-primary animate-pulse'}`}
                 style={{ width: `${Math.min(100, (totalAllocated / requestedQty) * 100)}%` }}
               />
             </div>
@@ -158,7 +158,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
             </h4>
             
             {availableLots.length === 0 ? (
-              <div className="py-12 text-center bg-muted/5 rounded-3xl border border-dashed border-border-surface">
+              <div className="py-12 text-center bg-muted/5 rounded-2xl border border-dashed">
                 <PackageSearch className="w-12 h-12 mx-auto text-muted-foreground/10 mb-4" />
                 <p className="text-label-xs font-bold text-muted-foreground/30 uppercase">{t("no_lots_available")}</p>
               </div>
@@ -172,7 +172,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                   return (
                     <div
                       key={lot.lotNumber}
-                      className={`p-5 rounded-2xl border transition-all duration-300 group ${ isExpired ? 'bg-status-error/5 border-status-error/20 opacity-60' : isNearExpiry ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10' : 'bg-surface-container-low border-border-surface hover:border-operational-cyan/30 hover:bg-muted/50' }`}
+                      className={`p-5 rounded-2xl border transition-all duration-300 group ${ isExpired ? 'bg-status-error/5 border-status-error/20 opacity-60' : isNearExpiry ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10' : 'bg-surface-container-low hover:border-operational-cyan/30 hover:bg-muted/50' }`}
                     >
                       <div className="flex items-center gap-6">
                         <div className="flex-1 space-y-1">
@@ -228,7 +228,7 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
           </div>
         </div>
 
-        <div className="p-8 bg-muted/10 border-t border-border-surface flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="p-8 bg-muted/10 border-t flex flex-col md:flex-row items-center justify-between gap-4">
           <Button 
             variant="ghost" 
             onClick={onClose}

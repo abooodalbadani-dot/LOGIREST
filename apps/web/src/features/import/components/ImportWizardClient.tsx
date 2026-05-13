@@ -75,7 +75,7 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
  <div key={step.id} className="flex flex-col items-center gap-4 relative z-10 bg-background px-4">
  <div 
  className={cn(
- "w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-500",
+ "w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-200",
  isActive && "border-cyan-500 bg-cyan-500/10 text-cyan-500 scale-110 shadow-[0_0_20px_rgba(6,182,212,0.2)]",
  isCompleted && !isActive && "border-emerald-500 bg-emerald-500/10 text-emerald-500",
  !isActive && !isCompleted && "border-muted-foreground/20 bg-background text-muted-foreground/40"
@@ -101,7 +101,7 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
  </div>
 
  {/* Step Content */}
- <div className="mt-4 bg-surface-container-lowest/50 rounded-2xl p-8 border border-white/5 shadow-xl relative overflow-hidden min-h-[400px]">
+ <div className="mt-4 bg-surface-container-lowest/50 rounded-2xl p-8 shadow-xl relative overflow-hidden min-h-[400px]">
  {/* Subtle grid background */}
  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.03),transparent)] pointer-events-none" />
  

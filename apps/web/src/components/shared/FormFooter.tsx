@@ -60,7 +60,7 @@ export function FormFooter({
   return (
     <div className={cn(
       "fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-fit max-w-[95vw] px-4",
-      "animate-in slide-in-from-bottom-8 duration-700 ease-out",
+      "animate-in slide-in-from-bottom-8 duration-200 ease-out",
       className
     )}>
       <div className={cn(
