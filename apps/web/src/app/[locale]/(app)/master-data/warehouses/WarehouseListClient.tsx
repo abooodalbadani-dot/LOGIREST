@@ -30,9 +30,9 @@ export function WarehouseListClient({ locale }: { locale: string }) {
   const warehouses = data?.data || [];
 
   const WAREHOUSE_TYPE_STYLES: Record<string, { label: string; color: string; shadow: string }> = useMemo(() => ({
-    MAIN: { label: t('types.MAIN'), color: 'text-primary', shadow: 'shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]' },
-    COLD: { label: t('types.COLD'), color: 'text-operational-cyan', shadow: 'shadow-[0_0_8px_rgba(var(--cyan-rgb),0.4)]' },
-    DRY: { label: t('types.DRY'), color: 'text-operational-orange', shadow: 'shadow-[0_0_8px_rgba(var(--orange-rgb),0.4)]' },
+    MAIN: { label: t('types.main'), color: 'text-primary', shadow: 'shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]' },
+    COLD: { label: t('types.cold'), color: 'text-operational-cyan', shadow: 'shadow-[0_0_8px_rgba(var(--cyan-rgb),0.4)]' },
+    DRY: { label: t('types.dry'), color: 'text-operational-orange', shadow: 'shadow-[0_0_8px_rgba(var(--orange-rgb),0.4)]' },
   }), [t]);
 
   const stats = useMemo(() => ({

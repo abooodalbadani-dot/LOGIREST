@@ -1,6 +1,4 @@
-import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic, Tajawal, IBM_Plex_Mono } from 'next/font/google';
-import localFont from 'next/font/local';
-
+import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic, Cairo, IBM_Plex_Mono } from 'next/font/google';
 
 export const ibmPlexSans = IBM_Plex_Sans({ 
  subsets: ['latin'], 
@@ -23,16 +21,10 @@ export const ibmPlexMono = IBM_Plex_Mono({
  display: 'swap'
 });
 
-export const tajawal = Tajawal({
- subsets: ['arabic'],
- weight: ['400', '500', '700', '800', '900'],
- variable: '--font-tajawal',
+export const cairo = Cairo({
+ subsets: ['arabic', 'latin'],
+ weight: ['300', '400', '500', '600', '700', '800', '900'],
+ variable: '--font-cairo',
  display: 'swap'
-});
-
-export const yaModernPro = localFont({
- src: './Ya-ModernPro-Bold.otf',
- variable: '--font-ya-modern',
- display: 'swap',
 });
 

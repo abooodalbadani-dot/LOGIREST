@@ -295,7 +295,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                       <SelectContent>
                         {(['MAIN','DRY','COLD','VIRTUAL'] as const).map((ty) => (
                           <SelectItem key={ty} value={ty} className="font-semibold text-label-sm uppercase">
-                            {tw(`types.${ty}` as any)}
+                            {tw(`types.${ty.toLowerCase()}` as any)}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -27,17 +27,17 @@ import { cn } from '@/lib/utils';
 
 const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'] as const;
 
-const AdjustmentFormSchema = z.object({
- warehouse_id: z.string().min(1, 'Warehouse is required'),
- item_id: z.string().min(1, 'Item is required'),
- lot_number: z.string().optional(),
- quantity: z.number().positive('Quantity must be greater than zero'),
- direction: z.enum(['INCREASE', 'DECREASE']),
- reason_category: z.string().min(1, 'Reason category is required'),
- notes: z.string().min(10, 'Notes must be at least 10 characters'),
+const getAdjustmentFormSchema = (t: any) => z.object({
+  warehouse_id: z.string().min(1, t('validation.warehouse_required')),
+  item_id: z.string().min(1, t('validation.item_required')),
+  lot_number: z.string().optional(),
+  quantity: z.number().positive(t('validation.quantity_positive')),
+  direction: z.enum(['INCREASE', 'DECREASE']),
+  reason_category: z.string().min(1, t('validation.reason_required')),
+  notes: z.string().min(10, t('validation.notes_min_length')),
 });
 
-type AdjustmentFormValues = z.infer<typeof AdjustmentFormSchema>;
+type AdjustmentFormValues = z.infer<ReturnType<typeof getAdjustmentFormSchema>>;
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
@@ -45,6 +45,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.adjustment');
  const tCommon = useTranslations('common');
  
+ const schema = getAdjustmentFormSchema(t);
+
  const {
  register,
  handleSubmit,
@@ -52,7 +54,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  control,
  formState: { errors, isValid, isDirty },
  } = useForm<AdjustmentFormValues>({
- resolver: zodResolver(AdjustmentFormSchema),
+ resolver: zodResolver(schema),
  defaultValues: {
  direction: 'INCREASE',
  reason_category: 'DAMAGE',
@@ -77,16 +79,18 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
    if (!!lockState?.isLocked) return;
    
    createAdjustment.mutate({
-     warehouse_id: data.warehouse_id,
-     reason: data.reason_category,
-     notes: data.notes,
-     lines: [{
-       item_id: data.item_id,
-       qty: data.quantity,
-       uom_id: selectedItem?.uom || 'EA', // Use the UOM from selected item
-       direction: data.direction,
-       lot_allocations: data.lot_number ? [{ lot_id: data.lot_number, qty: data.quantity }] : undefined
-     }]
+     payload: {
+       warehouse_id: data.warehouse_id,
+       reason: data.reason_category,
+       notes: data.notes,
+       lines: [{
+         item_id: data.item_id,
+         qty: data.quantity,
+         uom_id: selectedItem?.uom || 'EA', // Use the UOM from selected item
+         direction: data.direction,
+         lot_allocations: data.lot_number ? [{ lot_id: data.lot_number, qty: data.quantity }] : undefined
+       }]
+     }
    }, {
      onSuccess: () => {
        router.push("/adjustments", { skipGuard: true });
@@ -106,7 +110,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  
  <PageHeader
  title={t('create_new')}
- description={t('subtitle') || 'Inventory Calibrate Protocol'} actions={
+ description={t('subtitle')} actions={
  <Button 
  onClick={handleSubmit(onSubmit)} 
  disabled={!isValid || createAdjustment.isPending || !!lockState?.isLocked}
@@ -130,7 +134,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  <div className="flex items-center gap-3 mb-2">
  <Info className="w-4 h-4 text-cyan-500" />
  <h3 className={cn("text-label-xs font-semibold uppercase text-foreground/60")}>
- {t('details_section') || 'Document Details'}
+ {t('details_section')}
  </h3>
  </div>
 
@@ -143,7 +147,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  onValueChange={(val) => setValue('warehouse_id', (val as string) || '', { shouldValidate: true })}
  >
  <SelectTrigger className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-bold text-body-md border-none hover:bg-surface-container-highest/60 transition-all outline-none ring-0 focus:ring-0 focus:bg-surface-container-highest/80">
- <SelectValue placeholder={tCommon('select_warehouse') || 'Select Warehouse'} />
+ <SelectValue placeholder={tCommon('select_warehouse')} />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-highest rounded-xl shadow-2xl border-none">
  {warehouses?.map(w => (
@@ -206,7 +210,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  <div className="flex items-center gap-3 mb-2">
  <Package className="w-4 h-4 text-emerald-500" />
  <h3 className={cn("text-label-xs font-semibold uppercase text-foreground/60")}>
- {t('lines_section') || 'Adjustment Lines'}
+ {t('lines_section')}
  </h3>
  </div>
 
@@ -219,7 +223,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  onValueChange={(val) => setValue('item_id', (val as string) || '', { shouldValidate: true })}
  >
  <SelectTrigger className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-bold text-body-md border-none hover:bg-surface-container-highest/60 transition-all outline-none ring-0 focus:ring-0 focus:bg-surface-container-highest/80">
- <SelectValue placeholder={tCommon('select_item') || 'Select Item'} />
+ <SelectValue placeholder={tCommon('select_item')} />
  </SelectTrigger>
  <SelectContent className="bg-surface-container-highest rounded-xl shadow-2xl border-none max-h-[300px]">
  {items?.map(item => (
@@ -300,11 +304,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  {/* Lot Number */}
  <div className="space-y-2">
  <label className={cn("text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1")}>
- {tCommon('lot_number') || 'Lot Number'}
+ {tCommon('lot_number')}
  </label>
  <Input
  {...register('lot_number')}
- placeholder={t('lot_placeholder') || 'Enter lot number if applicable...'} className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-mono text-body-md border-none focus:bg-primary-fixed-dim/10 transition-all outline-none shadow-none ring-0 focus-visible:ring-0 px-6"
+ placeholder={t('lot_placeholder')} className="w-full bg-surface-container-highest/40 rounded-xl h-[52px] font-mono text-body-md border-none focus:bg-primary-fixed-dim/10 transition-all outline-none shadow-none ring-0 focus-visible:ring-0 px-6"
  />
  </div>
 
@@ -312,11 +316,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
  {selectedItem && (
  <div className="p-4 bg-primary-fixed-dim/5 rounded-2xl border border-primary-fixed-dim/10 space-y-2">
  <div className="flex justify-between items-center text-label-xs font-semibold uppercase">
- <span className="text-muted-foreground/60">{tCommon('uom.label') || 'Unit of Measure'}</span>
+ <span className="text-muted-foreground/60">{tCommon('uom.label')}</span>
  <span className="text-cyan-500">{selectedItem.uom}</span>
  </div>
  <div className="flex justify-between items-center text-label-xs font-semibold uppercase">
- <span className="text-muted-foreground/60">{tCommon('sku') || 'SKU Code'}</span>
+ <span className="text-muted-foreground/60">{tCommon('sku')}</span>
  <span className="text-foreground/80 font-mono">{selectedItem.sku}</span>
  </div>
  </div>

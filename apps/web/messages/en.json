@@ -451,9 +451,7 @@
       "operations": "Operations"
     },
     "warehouse_locked": "Warehouse Locked",
-    "warehouseLocked": "Warehouse Locked",
     "stocktake_in_progress_desc": "Transactions are restricted due to an active stocktake.",
-    "stocktakeInProgressDesc": "Transactions are restricted due to an active stocktake.",
     "read_only_intel": "Read-Only Asset Intelligence",
     "operational_snapshot": "Operational Snapshot",
     "verified_static_data": "Verified Static Data",
@@ -832,6 +830,8 @@
     "forgot_password": "Recover Access",
     "forgot_password_desc": "Enter your registered operator ID to receive recovery protocols.",
     "invalid_credentials": "The credentials provided were not recognized by the security backbone.",
+    "invalid_reset_link": "Invalid Recovery Link",
+    "invalid_reset_link_desc": "The recovery link you followed is invalid or has expired. Please request a new link.",
     "login_failed": "Authentication Failed",
     "login": {
       "access_protocol": "Access Protocol",
@@ -839,7 +839,7 @@
       "demo_access": "Demo Access",
       "description": "Enter your credentials to access the secure portal.",
       "hero_subtitle": "Precision management for high-performance kitchens. Real-time inventory tracking and automated procurement.",
-      "hero_title": "LogiRest",
+      "hero_title": "LogiRest | لوجي ريست",
       "operator_id": "Operator ID",
       "operator_id_placeholder": "Enter ID or Email",
       "password_placeholder": "Enter Password",
@@ -847,7 +847,10 @@
       "system_online": "System Online",
       "title": "Authorization Required",
       "v3_enabled": "Enterprise v3 Enabled",
-      "version": "v3.1.04"
+      "version": "v3.1.04",
+      "biometric_link": "BIOMETRIC LINK",
+      "hardware_token": "HARDWARE TOKEN",
+      "initialize_session": "INITIALIZE SESSION"
     },
     "new_password": "New Password",
     "password": "Password",
@@ -1805,10 +1808,10 @@
       "type_transit": "Transit Hub",
       "type_virtual": "Virtual / Transit",
       "types": {
-        "MAIN": "Main",
-        "COLD": "Cold Storage",
-        "DRY": "Dry Storage",
-        "VIRTUAL": "Virtual"
+        "main": "Main",
+        "cold": "Cold Storage",
+        "dry": "Dry Storage",
+        "virtual": "Virtual"
       },
       "updated_success": "Warehouse details updated",
       "validation": {
@@ -2210,6 +2213,7 @@
       "confirm_rejection": "Confirm Rejection",
       "correction_volume": "Correction Volume",
       "create_new": "New Adjustment",
+      "subtitle": "Inventory Calibrate Protocol",
       "critical_losses": "Critical Losses",
       "description": "Manual stock level corrections",
       "detail_title": "Adjustment Details",
@@ -2272,15 +2276,23 @@
       },
       "scan_placeholder": "Scan item barcode or enter code...",
       "search_placeholder": "Search Adjustment Documents...",
+      "status": "Status",
       "submit_confirm_desc": "Submit this adjustment for manager approval? You will not be able to edit it until it is reviewed.",
       "submit_confirm_title": "Submit Adjustment",
       "submit_for_approval": "Submit for Approval",
-      "subtitle": "Inventory Calibration Protocol",
+      "sync_history": "Syncing adjustment history...",
       "title": "Inventory Adjustments",
       "title_edit": "Edit Adjustment",
       "title_new": "New Adjustment",
       "type": "Type",
-      "warehouse": "Warehouse"
+      "warehouse": "Warehouse",
+      "validation": {
+        "item_required": "Item is required",
+        "notes_min_length": "Notes must be at least 10 characters",
+        "quantity_positive": "Quantity must be greater than zero",
+        "reason_required": "Reason category is required",
+        "warehouse_required": "Warehouse is required"
+      }
     },
     "issue": {
       "active_consumption": "Active Consumption",

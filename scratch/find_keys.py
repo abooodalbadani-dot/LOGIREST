@@ -1,12 +1,15 @@
-import re
+import json
 
-def find_key_occurrences(file_path, key):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for i, line in enumerate(f, 1):
-            if re.search(fr'^  "{key}":', line):
-                print(f"{file_path}:{i}: {line.strip()}")
+with open('apps/web/messages/en.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
 
-find_key_occurrences('apps/web/messages/en.json', 'operational')
-find_key_occurrences('apps/web/messages/ar.json', 'operational')
-find_key_occurrences('apps/web/messages/en.json', 'operations')
-find_key_occurrences('apps/web/messages/ar.json', 'operations')
+def find_path(d, target, path=""):
+    if isinstance(d, dict):
+        for k, v in d.items():
+            new_path = f"{path}.{k}" if path else k
+            if k == target:
+                print(f"Found '{target}' at path: {new_path}")
+            find_path(v, target, new_path)
+
+find_path(data, "operations")
+find_path(data, "adjustment")

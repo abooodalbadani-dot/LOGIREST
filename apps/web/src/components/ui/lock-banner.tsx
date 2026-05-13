@@ -19,10 +19,10 @@ export function LockBanner({ message }: LockBannerProps) {
  </div>
  <div className="flex flex-col">
  <span className="font-bold text-status-warning uppercase text-body-md">
- {t("warehouseLocked") || "Warehouse Locked"}
+ {t("warehouse_locked") || "Warehouse Locked"}
  </span>
  <span className="text-status-warning/80 text-label-sm sm:text-body-md">
- {message || t("stocktakeInProgressDesc") || "Transactions are restricted due to an active stocktake."}
+ {message || t("stocktake_in_progress_desc") || "Transactions are restricted due to an active stocktake."}
  </span>
  </div>
  </div>

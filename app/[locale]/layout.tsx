@@ -13,7 +13,7 @@ import { ConfirmationProvider } from '@/providers/ConfirmationProvider';
 import { ErrorProvider } from '@/providers/ErrorProvider';
 
 
-import { ibmPlexSans, ibmPlexSansArabic, tajawal, ibmPlexMono, yaModernPro } from '@/lib/fonts';
+import { ibmPlexSans, ibmPlexSansArabic, cairo, ibmPlexMono } from '@/lib/fonts';
 
 
 import { Metadata, Viewport } from 'next';
@@ -61,7 +61,7 @@ export default async function LocaleLayout({
 
  return (
  <html lang={locale} dir={direction} className={theme} suppressHydrationWarning>
- <body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${tajawal.variable} ${yaModernPro.variable}`}>
+ <body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${cairo.variable}`}>
 
  <NextIntlClientProvider messages={messages} locale={locale}>
  <QueryProvider>

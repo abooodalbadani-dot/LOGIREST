@@ -5,8 +5,8 @@
 
 @theme {
   /* Fonts */
-  --font-sans: var(--font-ya-modern), var(--font-ibm-plex-arabic), var(--font-ibm-plex), sans-serif;
-  --font-display: var(--font-ya-modern), var(--font-tajawal), var(--font-ibm-plex-arabic), sans-serif;
+  --font-sans: var(--font-cairo), var(--font-ibm-plex-arabic), var(--font-ibm-plex), sans-serif;
+  --font-display: var(--font-cairo), var(--font-ibm-plex-arabic), sans-serif;
 
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 
@@ -347,7 +347,7 @@
 
   /* Table Headers */
 
-  /* Tajawal for large numbers/displays ONLY */
+  /* Cairo for large numbers/displays ONLY */
   .font-display {
     font-family: var(--font-display);
   }

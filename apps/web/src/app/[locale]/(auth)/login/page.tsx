@@ -1,12 +1,25 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, AlertCircle, UtensilsCrossed, ShieldCheck, BadgeCheck, Key, EyeOff, LogIn } from 'lucide-react';
+import {
+    Loader2,
+    AlertCircle,
+    ShieldCheck,
+    BadgeCheck,
+    Key,
+    EyeOff,
+    Eye,
+    LogIn,
+    Fingerprint,
+    Usb,
+    Activity
+} from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import LocaleSwitcher from '@/components/shared/LocaleSwitcher';
 
@@ -21,11 +34,10 @@ export default function LoginPage() {
     const t = useTranslations('auth');
     const router = useRouter();
 
-    console.log(`[LoginPage] hero_title: ${t('login.hero_title')}`);
-
     const { login, user, isLoading: authLoading } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const redirected = useRef(false);
 
     // Redirect authenticated users to dashboard
@@ -54,112 +66,201 @@ export default function LoginPage() {
     // Show overlay spinner only when redirecting (user is authenticated)
     if (!authLoading && user) {
         return (
-            <div className="flex w-full items-center justify-center min-h-screen bg-background">
-                <Loader2 className="w-8 h-8 animate-spin text-operational-cyan" />
+            <div className="flex w-full items-center justify-center min-h-screen bg-[#050505]">
+                <div className="relative">
+                    <Loader2 className="w-12 h-12 animate-spin text-operational-cyan" />
+                    <div className="absolute inset-0 blur-xl bg-operational-cyan/20 animate-pulse" />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="flex w-full min-h-screen lg:h-screen lg:overflow-hidden bg-background">
-            {/* Left Panel */}
-            <div className="hidden lg:flex w-[45%] relative flex-col justify-between p-12 overflow-hidden bg-background border-r border-white/5 shrink-0">
-                {/* Faint Background image overlay with glassmorphism touches */}
-                <div className="absolute -top-40 -start-40 w-96 h-96 bg-operational-cyan/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
-                <div className="absolute -bottom-40 -end-40 w-96 h-96 bg-primary/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none opacity-60" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50 z-0" />
+        <div className="flex flex-col lg:flex-row w-full min-h-screen bg-[#f7f9ff] dark:bg-[#050505] selection:bg-operational-cyan/30 text-[#181c20] dark:text-white overflow-x-hidden">
+            {/* Left Panel: Brand Experience (Right in RTL) */}
+            <div className="hidden lg:flex lg:basis-1/2 relative flex-col justify-between p-8 xl:p-12 overflow-hidden border-e border-black/5 dark:border-white/5 bg-white dark:bg-[#050505] shrink-0">
+                {/* Background Image with sophisticated overlays */}
+                <div className="absolute inset-0 z-0">
+                    <Image
+                        src="/kitchen-bg.png"
+                        alt="Professional Kitchen"
+                        fill
+                        priority
+                        className="object-cover scale-105"
+                    />
+                    {/* Multi-layer overlays for depth and legibility */}
+                    <div className="absolute inset-0 bg-white/60 dark:bg-black/70 backdrop-blur-[1px]" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white dark:from-[#050505] via-white/40 dark:via-[#050505]/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90 dark:to-[#050505]/90" />
 
-                {/* Top Left */}
-                <div className="relative z-10">
+                    {/* Dynamic accent glows */}
+                    <div className="absolute -top-40 -start-40 w-[600px] h-[600px] bg-operational-cyan/10 blur-[120px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+                    <div className="absolute bottom-1/4 -end-20 w-[400px] h-[400px] bg-primary/10 blur-[100px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+                </div>
+
+                {/* Top Navigation Overlay */}
+                <div className="relative z-10 flex items-center justify-between">
+                    <div className="flex items-center gap-3 bg-black/5 dark:bg-white/5 backdrop-blur-xl border border-black/10 dark:border-white/10 px-4 py-2 rounded-2xl">
+                        <Activity className="w-4 h-4 text-operational-cyan animate-pulse" />
+                        <span className="text-[10px] font-bold text-black/70 dark:text-white/70 uppercase tracking-widest">{t('login.system_online')}</span>
+                    </div>
                     <LocaleSwitcher />
                 </div>
 
-                {/* Bottom Left Content */}
-                <div className="relative z-10 mt-auto">
-                    <div className="text-operational-cyan mb-6">
-                        <UtensilsCrossed className="w-10 h-10" strokeWidth={2.5} />
+                {/* Content Overlay */}
+                <div className="relative z-10 mt-auto w-full flex flex-col items-start">
+                    <div className="inline-flex items-center gap-4 mb-8">
+                        <div className="w-16 h-16 bg-operational-cyan/10 border border-operational-cyan/30 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.15)] group overflow-hidden">
+                            <Image 
+                                src="/logoicon.png" 
+                                alt="LogiRest Logo" 
+                                width={36} 
+                                height={36} 
+                                className="transition-transform duration-500 group-hover:scale-110 object-contain"
+                            />
+                        </div>
+                        <div className="h-10 w-px bg-black/10 dark:bg-white/10" />
+                        <div className="px-3 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg backdrop-blur-sm">
+                            <span className="text-[10px] font-mono text-black/50 dark:text-white/50 tracking-tighter uppercase">{t('login.version')}</span>
+                        </div>
                     </div>
-                    <h1 className="text-headline-lg font-bold text-foreground mb-4">
+
+                    <h1 className="text-display-xs xl:text-display-sm font-black text-[#02617c] mb-2 leading-none tracking-tight whitespace-normal xl:whitespace-nowrap overflow-visible">
                         {t('login.hero_title')}
                     </h1>
-                    <p className="text-body-md text-muted-foreground/60 max-w-sm leading-relaxed mb-8">
+                    <p className="text-body-sm text-black/60 dark:text-white/60 mb-6 leading-relaxed font-light whitespace-normal xl:whitespace-nowrap">
                         {t('login.hero_subtitle')}
                     </p>
-                    <div className="flex items-center gap-2 text-label-xs text-muted-foreground/60 border border-border-muted/50 bg-surface-container-low/80 backdrop-blur-md w-fit px-3 py-1.5 rounded-md">
-                        <ShieldCheck className="w-3.5 h-3.5 text-operational-cyan" />
-                        <span>{t('login.v3_enabled')}</span>
+
+                    <div className="flex flex-wrap gap-4 items-center">
+                        <div className="flex items-center gap-3 text-label-sm text-operational-cyan/80 border border-operational-cyan/20 bg-operational-cyan/5 backdrop-blur-md px-4 py-2.5 rounded-xl transition-all hover:bg-operational-cyan/10">
+                            <ShieldCheck className="w-5 h-5" />
+                            <span className="font-semibold tracking-wide uppercase">{t('login.v3_enabled')}</span>
+                        </div>
+
+                        <div className="flex -space-x-3">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-[#050505] bg-black/10 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-[11px] font-bold text-black/70 dark:text-white/70">
+                                    OP
+                                </div>
+                            ))}
+                            <div className="w-10 h-10 rounded-full border-2 border-white dark:border-[#050505] bg-operational-cyan/20 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-operational-cyan">
+                                +12
+                            </div>
+                        </div>
+                        <span className="text-[10px] text-black/60 dark:text-white/60 font-bold tracking-widest">ACTIVE OPERATORS</span>
                     </div>
                 </div>
+
+                {/* Decorative scanning line */}
+                <div className="absolute top-0 right-0 w-[2px] h-full bg-gradient-to-b from-transparent via-operational-cyan/20 to-transparent animate-pulse" />
             </div>
 
-            {/* Right Panel */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 bg-background relative lg:overflow-y-auto py-12 sm:py-16">
-                {/* Animated Glow effects for Right Panel */}
-                <div className="absolute -top-32 -end-32 w-80 h-80 bg-operational-cyan/15 blur-[80px] rounded-full mix-blend-screen animate-pulse pointer-events-none" />
-                <div className="absolute -bottom-32 -start-32 w-80 h-80 bg-primary/10 blur-[80px] rounded-full mix-blend-screen opacity-50 pointer-events-none" />
+            {/* Right Panel: Functional Core (Left in RTL) */}
+            <div className="flex-1 min-w-[300px] flex flex-col items-stretch justify-center p-4 sm:p-6 lg:p-8 relative lg:overflow-y-auto bg-[#f7f9ff] dark:bg-[#050505] overflow-x-hidden">
+                {/* Background decorative elements */}
+                <div className="absolute top-1/4 end-1/4 w-[300px] h-[300px] bg-operational-cyan/5 blur-[100px] rounded-full pointer-events-none" />
+                <div className="w-full max-w-4xl mx-auto relative z-10">
+                    {/* Mobile-only Branding Header */}
+                    <div className="lg:hidden flex flex-col items-center mb-4 animate-in fade-in slide-in-from-top-8 duration-1000">
+                        <div className="w-12 h-12 bg-operational-cyan/10 border border-operational-cyan/30 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
+                            <Image 
+                                src="/logoicon.png" 
+                                alt="LogiRest Logo" 
+                                width={28} 
+                                height={28} 
+                                className="object-contain"
+                            />
+                        </div>
+                        <h1 className="text-display-xs font-black text-[#02617c] tracking-tighter text-center">
+                            {t('login.hero_title')}
+                        </h1>
+                        <div className="mt-1 px-1.5 py-0.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded text-[8px] font-mono text-black/40 dark:text-white/40 uppercase">
+                            {t('login.version')}
+                        </div>
+                    </div>
 
-                <div className="w-full max-w-[420px] p-8 sm:p-10 bg-surface-container-low/60 backdrop-blur-2xl rounded-3xl border border-white/5 shadow-2xl relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <div className="mb-10 text-center">
-                        <h2 className="text-headline-sm font-bold text-foreground mb-3 tracking-tight">
+                    <div className="mb-3 text-center lg:text-start">
+                        <h2 className="text-title-sm font-bold text-black dark:text-white mb-1 tracking-tight">
                             {t('login.title')}
                         </h2>
-                        <p className="text-body-md text-muted-foreground/70 px-2">
+                        <p className="text-[10px] text-black/60 dark:text-white/60">
                             {t('login.description')}
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Operator ID */}
-                        <div className="space-y-2.5 group/field">
-                            <label className="text-label-sm font-semibold uppercase tracking-wider text-muted-foreground ms-1 flex items-center gap-2">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+                        {/* Operator ID Input */}
+                        <div className="space-y-1.5">
+                            <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-black/80 dark:text-white/80 ms-1 flex items-center gap-2">
                                 {t('login.operator_id')}
                             </label>
-                            <div className="relative group/input">
+                            <div className="relative group">
                                 <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none z-10">
-                                    <BadgeCheck className="w-5 h-5 text-muted-foreground/50 group-focus-within/input:text-operational-cyan transition-colors" />
+                                    <BadgeCheck className="w-3 h-3 text-black/30 dark:text-white/40 group-focus-within:text-operational-cyan transition-colors duration-300" />
                                 </div>
                                 <input
                                     type="email"
                                     placeholder={t('login.operator_id_placeholder')}
-                                    className="w-full bg-surface-container-lowest/50 border border-white/10 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 hover:bg-surface-container-lowest/80 transition-all h-14 rounded-xl text-body-lg ps-12 pe-4 outline-none placeholder:text-muted-foreground/40"
+                                    className="w-full bg-black/[0.02] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-3 outline-none placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"
                                     {...register('email')}
                                 />
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-operational-cyan/20 to-transparent opacity-0 group-focus-within/input:opacity-10 pointer-events-none transition-opacity duration-500" />
                             </div>
-                            {errors.email && <p className="text-label-sm text-status-error font-medium ms-1 mt-1">{errors.email.message}</p>}
+                            {errors.email && <p className="text-[10px] text-status-error font-medium ms-1 mt-0.5">{errors.email.message}</p>}
                         </div>
 
-                        {/* Access Protocol */}
-                        <div className="space-y-2.5 group/field">
+                        {/* Access Protocol Input */}
+                        <div className="space-y-1.5">
                             <div className="flex items-center justify-between ms-1">
-                                <label className="text-label-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-black/80 dark:text-white/80">
                                     {t('login.access_protocol')}
                                 </label>
-                                <button type="button" onClick={() => router.push('/forgot-password')} className="text-label-sm text-operational-cyan hover:text-operational-cyan/80 font-semibold transition-colors">
+                                <button type="button" onClick={() => router.push('/forgot-password')} className="text-[8px] text-operational-cyan hover:text-black dark:hover:text-white font-bold transition-colors uppercase tracking-widest">
                                     {t('login.recover_access')}
                                 </button>
                             </div>
-                            <div className="relative group/input">
+                            <div className="relative group">
                                 <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none z-10">
-                                    <Key className="w-5 h-5 text-muted-foreground/50 group-focus-within/input:text-operational-cyan transition-colors" />
+                                    <Key className="w-3 h-3 text-black/30 dark:text-white/40 group-focus-within:text-operational-cyan transition-colors duration-300" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     placeholder={t('login.password_placeholder')}
-                                    className="w-full bg-surface-container-lowest/50 border border-white/10 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 hover:bg-surface-container-lowest/80 transition-all h-14 rounded-xl text-body-lg ps-12 pe-12 outline-none placeholder:text-muted-foreground/40"
+                                    className="w-full bg-black/[0.02] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-9 outline-none placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"
                                     {...register('password')}
                                 />
-                                <div className="absolute inset-y-0 end-0 pe-4 flex items-center cursor-pointer z-10">
-                                    <EyeOff className="w-5 h-5 text-muted-foreground/40 hover:text-foreground transition-colors" />
-                                </div>
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-operational-cyan/20 to-transparent opacity-0 group-focus-within/input:opacity-10 pointer-events-none transition-opacity duration-500" />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 end-0 pe-2.5 flex items-center text-black/30 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors z-20"
+                                >
+                                    {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                </button>
                             </div>
-                            {errors.password && <p className="text-label-sm text-status-error font-medium ms-1 mt-1">{errors.password.message}</p>}
+                            {errors.password && <p className="text-[10px] text-status-error font-medium ms-1 mt-0.5">{errors.password.message}</p>}
+                        </div>
+
+                        {/* Advanced Security Methods */}
+                        <div className="grid grid-cols-2 gap-3 py-1">
+                            <button
+                                type="button"
+                                className="flex flex-col items-center justify-center gap-1 p-2 rounded border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/5 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] hover:border-operational-cyan/30 transition-all group opacity-80 hover:opacity-100"
+                            >
+                                <Fingerprint className="w-4 h-4 text-black/30 dark:text-white/40 group-hover:text-operational-cyan transition-colors" />
+                                <span className="text-[7px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 group-hover:text-black/70 dark:group-hover:text-white/70">{t('login.biometric_link')}</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="flex flex-col items-center justify-center gap-1 p-2 rounded border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/5 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] hover:border-operational-cyan/30 transition-all group opacity-80 hover:opacity-100"
+                            >
+                                <Usb className="w-4 h-4 text-black/30 dark:text-white/40 group-hover:text-operational-cyan transition-colors" />
+                                <span className="text-[7px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 group-hover:text-black/70 dark:group-hover:text-white/70">{t('login.hardware_token')}</span>
+                            </button>
                         </div>
 
                         {error && (
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-status-error/10 text-label-sm font-medium text-status-error border border-status-error/20 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <AlertCircle className="w-5 h-5 shrink-0" />
+                            <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-status-error/10 text-[11px] font-medium text-status-error border border-status-error/20 animate-in zoom-in-95 duration-300">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 {error}
                             </div>
                         )}
@@ -167,56 +268,52 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full h-14 text-title-sm font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[0.98] active:scale-95 disabled:opacity-70 rounded-xl relative overflow-hidden group/btn mt-4 flex items-center justify-center gap-2"
+                            className="w-full h-9 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan dark:hover:bg-operational-cyan hover:text-white transition-all duration-300 rounded relative overflow-hidden group/btn shadow-[0_4px_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)] disabled:opacity-50 mt-0.5"
                         >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out" />
-                            <span className="relative flex items-center justify-center gap-2">
+                            <span className="relative flex items-center justify-center gap-1.5 uppercase tracking-[0.15em] text-[10px]">
                                 {isSubmitting ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <Loader2 className="w-3 h-3 animate-spin" />
                                 ) : (
                                     <>
-                                        <LogIn className="w-5 h-5" />
-                                        {t('login.authenticate')}
+                                        <LogIn className="w-3 h-3" />
+                                        {t('login.initialize_session')}
                                     </>
                                 )}
                             </span>
                         </button>
                     </form>
 
-                    {/* Demo Credentials Helper - Subtle Design */}
-                    <div className="mt-8 border border-white/5 rounded-2xl p-4 bg-surface-container-lowest/30 backdrop-blur-sm">
-                        <div className="text-label-xs text-muted-foreground/60 uppercase mb-3 font-semibold tracking-wider flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan/50" />
-                            {t('login.demo_access')}
+                    {/* Quick-Switch Operator Portal (Demo Helper) */}
+                    <div className="mt-5 pt-3 border-t border-black/5 dark:border-white/5">
+                        <div className="flex items-center justify-between mb-2 px-1">
+                            <span className="text-[7.5px] font-bold text-black/30 dark:text-white/30 uppercase tracking-[0.2em]">{t('login.demo_access')}</span>
+                            <div className="flex gap-1">
+                                <div className="w-0.5 h-0.5 rounded-full bg-operational-cyan" />
+                                <div className="w-0.5 h-0.5 rounded-full bg-operational-cyan/40" />
+                                <div className="w-0.5 h-0.5 rounded-full bg-operational-cyan/10" />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2.5">
+                        <div className="grid grid-cols-2 gap-2">
                             {[
                                 { role: t('roles.admin'), email: 'admin@kitchen.io' },
                                 { role: t('roles.manager'), email: 'store@kitchen.io' },
                                 { role: t('roles.chief'), email: 'kitchen@kitchen.io' },
                                 { role: t('roles.procurement'), email: 'procurement@kitchen.io' }
                             ].map((cred, i) => (
-                                <div
+                                <button
                                     key={i}
-                                    className="p-2 rounded-xl hover:bg-surface-container-low/80 border border-transparent hover:border-white/5 transition-all cursor-pointer group"
+                                    type="button"
+                                    className="text-start p-2 rounded bg-black/[0.01] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 hover:border-operational-cyan/30 hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-all group"
                                     onClick={() => {
                                         setValue('email', cred.email, { shouldValidate: true });
                                         setValue('password', 'password123', { shouldValidate: true });
                                     }}
                                 >
-                                    <div className="text-label-xs font-bold text-muted-foreground/70 group-hover:text-operational-cyan transition-colors">{cred.role}</div>
-                                    <div className="text-[11px] font-mono text-muted-foreground/40 truncate mt-0.5">{cred.email}</div>
-                                </div>
+                                    <div className="text-[9px] font-bold text-black/70 dark:text-white/70 group-hover:text-operational-cyan transition-colors mb-0.5 uppercase tracking-wider">{cred.role}</div>
+                                    <div className="text-[8.5px] font-mono text-black/40 dark:text-white/40 truncate">{cred.email}</div>
+                                </button>
                             ))}
                         </div>
-                    </div>
-
-                    <div className="mt-8 pt-5 border-t border-white/10 flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-operational-cyan animate-pulse" />
-                            <span className="text-label-xs text-muted-foreground/60 font-semibold tracking-wide uppercase">{t('login.system_online')}</span>
-                        </div>
-                        <span className="text-label-xs text-muted-foreground/40 font-mono bg-white/5 px-2 py-1 rounded-md">{t('login.version')}</span>
                     </div>
                 </div>
             </div>

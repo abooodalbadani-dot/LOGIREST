@@ -17,10 +17,10 @@
       "all_branches": "جميع الفروع",
       "done": "تم",
       "retry": "إعادة المحاولة",
+      "no_data": "لا يوجد بيانات",
       "go_back": "رجوع",
       "back_to_list": "العودة إلى القائمة"
     },
-    "no_data": "لا يوجد بيانات",
     "purchasing": "المشتريات",
     "purchase_orders": "أوامر الشراء",
     "subject": "الموضوع",
@@ -445,8 +445,6 @@
     "modules": {
       "operations": "العمليات"
     },
-    "warehouseLocked": "المستودع مقفل",
-    "stocktakeInProgressDesc": "المعاملات مقيدة بسبب عملية جرد جارية.",
     "read_only_intel": "ذكاء الأصول (للقراءة فقط)",
     "operational_snapshot": "لقطة تشغيلية",
     "verified_static_data": "بيانات ثابتة موثقة",
@@ -542,6 +540,7 @@
     "add_item": "إضافة صنف",
     "quantity": "الكمية",
     "total_items": "إجمالي الأصناف",
+    "no_data": "لا يوجد بيانات",
     "fields": {
       "type": "النوع",
       "item": "الصنف",
@@ -825,6 +824,8 @@
     "forgot_password": "استعادة الوصول",
     "forgot_password_desc": "أدخل معرف المشغل المسجل لتلقي بروتوكولات الاستعادة.",
     "invalid_credentials": "بيانات الاعتماد المقدمة لم يتم التعرف عليها من قبل العمود الفقري الأمني.",
+    "invalid_reset_link": "رابط استعادة غير صالح",
+    "invalid_reset_link_desc": "رابط استعادة الوصول الذي اتبعته غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.",
     "login_failed": "فشلت عملية المصادقة",
     "login": {
       "access_protocol": "بروتوكول الوصول",
@@ -832,7 +833,7 @@
       "demo_access": "وصول تجريبي",
       "description": "أدخل بيانات الاعتماد الخاصة بك للوصول إلى البوابة الآمنة.",
       "hero_subtitle": "إدارة دقيقة للمطابخ عالية الأداء. تتبع المخزون في الوقت الفعلي والمشتريات المؤتمتة.",
-      "hero_title": "لوجي ريست | LogiRest",
+      "hero_title": "LogiRest | لوجي ريست",
       "operator_id": "معرف المشغل",
       "operator_id_placeholder": "أدخل المعرف أو البريد الإلكتروني",
       "password_placeholder": "أدخل كلمة المرور",
@@ -840,7 +841,10 @@
       "system_online": "النظام متصل",
       "title": "مطلوب تصريح دخول",
       "v3_enabled": "تم تفعيل العمود الفقري الآمن V3",
-      "version": "الإصدار v3.1.04"
+      "version": "الإصدار v3.1.04",
+      "biometric_link": "رابط القياس الحيوي",
+      "hardware_token": "رمز الأمان المادي",
+      "initialize_session": "بدء الجلسة"
     },
     "new_password": "كلمة المرور الجديدة",
     "password": "كلمة المرور",
@@ -1798,10 +1802,10 @@
       "type_transit": "مركز عبور",
       "type_virtual": "افتراضي / ترانزيت",
       "types": {
-        "MAIN": "رئيسي",
-        "COLD": "مبرد",
-        "DRY": "جاف",
-        "VIRTUAL": "افتراضي"
+        "main": "رئيسي",
+        "cold": "مبرد",
+        "dry": "جاف",
+        "virtual": "افتراضي"
       },
       "updated_success": "تم تحديث تفاصيل المستودع",
       "validation": {
@@ -2203,6 +2207,7 @@
       "confirm_rejection": "تأكيد الرفض",
       "correction_volume": "حجم التصحيح",
       "create_new": "تعديل جديد",
+      "subtitle": "بروتوكول معايرة المخزون",
       "critical_losses": "خسائر حرجة",
       "description": "قم بتسجيل أول تعديل للمخزون لإعادة معايرة مستويات المخزون.",
       "detail_title": "تفاصيل التعديل",
@@ -2265,15 +2270,23 @@
       },
       "scan_placeholder": "امسح صنفاً...",
       "search_placeholder": "البحث في وثائق التعديل...",
+      "status": "الحالة",
       "submit_confirm_desc": "تقديم هذا التعديل لموافقة المدير؟ لن تتمكن من تعديله حتى تتم مراجعته.",
       "submit_confirm_title": "تقديم التعديل",
       "submit_for_approval": "تقديم للموافقة",
-      "subtitle": "بروتوكول معايرة المخزون",
+      "sync_history": "جاري مزامنة سجل التعديلات...",
       "title": "تعديلات المخزون",
       "title_edit": "تعديل التعديل",
       "title_new": "تعديل جديد",
       "type": "النوع",
-      "warehouse": "المستودع"
+      "warehouse": "المستودع",
+      "validation": {
+        "item_required": "الصنف مطلوب",
+        "notes_min_length": "يجب أن تكون الملاحظات 10 أحرف على الأقل",
+        "quantity_positive": "يجب أن تكون الكمية أكبر من الصفر",
+        "reason_required": "فئة السبب مطلوبة",
+        "warehouse_required": "المستودع مطلوب"
+      }
     },
     "issue": {
       "active_consumption": "الاستهلاك النشط",
