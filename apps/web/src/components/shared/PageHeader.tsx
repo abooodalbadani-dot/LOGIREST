@@ -45,18 +45,18 @@ export function PageHeader({
  </Link>
  )}
  {icon && <div className="flex-shrink-0">{icon}</div>}
- <h1 className="text-headline-lg md:text-headline-lg font-semibold text-foreground uppercase italic leading-none">
- {title}
- </h1>
- {showStatus && status && (
- <StatusBadge status={status as BadgeStatus} />
- )}
- </div>
- {(subtitle || description) && (
- <p className="text-muted-foreground/60 font-medium uppercase text-label-xs max-w-2xl">
- {subtitle || description}
- </p>
- )}
+  <h1 className="text-headline-lg md:text-headline-lg font-semibold text-foreground leading-normal">
+  {title}
+  </h1>
+  {showStatus && status && (
+  <StatusBadge status={status as BadgeStatus} />
+  )}
+  </div>
+  {(subtitle || description) && (
+   <p className="text-muted-foreground/60 font-medium text-label-xs whitespace-nowrap">
+   {subtitle || description}
+   </p>
+  )}
  </div>
 
  {actions && (

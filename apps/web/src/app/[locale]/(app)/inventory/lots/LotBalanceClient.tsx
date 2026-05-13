@@ -34,7 +34,7 @@ interface LotMovement {
 
 // Mock movement data for the ledger
 const MOCK_MOVEMENTS: LotMovement[] = [
- { id: '1', date: '2024-05-15T10:00:00Z', type: 'IN', qty: 500, balance: 500, reference: 'PO-2024-0012', user: 'أحمد محمود' },
+ { id: '1', date: '2024-05-15T10:00:00Z', type: 'IN', qty: 500, balance: 500, reference: 'PO-2024-0012', user: 'بركات امين' },
  { id: '2', date: '2024-05-16T14:30:00Z', type: 'OUT', qty: 50, balance: 450, reference: 'TR-9902', user: 'سارة خالد' },
  { id: '3', date: '2024-05-18T09:15:00Z', type: 'OUT', qty: 100, balance: 350, reference: 'ADJ-102', user: 'محمد علي' },
  { id: '4', date: '2024-05-20T11:45:00Z', type: 'OUT', qty: 25, balance: 325, reference: 'TR-9915', user: 'سارة خالد' },

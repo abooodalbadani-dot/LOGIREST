@@ -78,16 +78,16 @@ export function StepUpload({ wizard }: StepUploadProps) {
 
  return (
  <div className="flex flex-col items-center justify-center gap-10 py-10 animate-in fade-in slide-in-from-bottom-4 duration-200">
- <div className="text-center space-y-4 max-w-xl">
- <h2 className="text-headline-lg font-semibold uppercase text-foreground">
- {t('upload_title')}
- </h2>
- <p className="text-muted-foreground text-body-md leading-relaxed">
- {t('upload_description')}
- </p>
- </div>
+  <div className="text-center space-y-4 w-full">
+  <h2 className="text-headline-lg font-semibold text-foreground">
+  {t('upload_title')}
+  </h2>
+  <p className="text-muted-foreground text-body-md leading-relaxed">
+  {t('upload_description')}
+  </p>
+  </div>
 
- <div className="w-full max-w-2xl space-y-8">
+ <div className="w-full space-y-8">
  {/* Drop Zone / Selection */}
  {!file ? (
  <div 
@@ -97,10 +97,10 @@ export function StepUpload({ wizard }: StepUploadProps) {
  <div className="w-20 h-20 rounded-2xl bg-surface-container-low flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-cyan-500/10 group-hover:text-cyan-500">
  <Upload className="w-10 h-10" />
  </div>
- <div className="text-center">
- <p className="font-bold uppercase text-body-md mb-1">{t('click_to_upload')}</p>
- <p className="text-label-sm text-muted-foreground font-medium uppercase opacity-60">{t('upload_hint')}</p>
- </div>
+  <div className="text-center">
+  <p className="font-bold text-body-md mb-1">{t('click_to_upload')}</p>
+  <p className="text-label-sm text-muted-foreground font-medium opacity-60">{t('upload_hint')}</p>
+  </div>
  <input 
  type="file" 
  ref={fileInputRef} 
@@ -117,9 +117,9 @@ export function StepUpload({ wizard }: StepUploadProps) {
  </div>
  <div>
  <p className="font-bold text-title-sm leading-none mb-2">{file.name}</p>
- <p className="text-label-sm font-mono text-muted-foreground uppercase">
- {(file.size / 1024 / 1024).toFixed(2)} MB
- </p>
+  <p className="text-label-sm font-mono text-muted-foreground">
+  {(file.size / 1024 / 1024).toFixed(2)} MB
+  </p>
  </div>
  </div>
  <Button 
@@ -140,30 +140,30 @@ export function StepUpload({ wizard }: StepUploadProps) {
  onClick={handleDownloadTemplate}
  className="w-full sm:w-auto px-10 h-14 rounded-xl border-muted-foreground/10 bg-surface-container-low hover:bg-surface-container-high transition-all active:scale-95 group"
  >
- <Download className="w-5 h-5 me-3 transition-transform group-hover:-translate-y-1" />
- <span className="font-bold uppercase text-label-sm">{t('download_template')}</span>
- </Button>
- 
- <Button 
- disabled={!file || isParsing}
- onClick={handleUpload}
- className={cn(
- "w-full sm:w-auto px-16 h-14 rounded-xl font-bold uppercase text-label-sm transition-all active:scale-95",
- file ? "primary-gradient shadow-neon-sm" : "opacity-50 grayscale"
- )}
- >
- {isParsing ? <Loader2 className="w-5 h-5 animate-spin me-3" /> : <Upload className="w-5 h-5 me-3" />}
- {t('upload_cta')}
- </Button>
+  <Download className="w-5 h-5 me-3 transition-transform group-hover:-translate-y-1" />
+  <span className="font-bold text-label-sm">{t('download_template')}</span>
+  </Button>
+  
+  <Button 
+  disabled={!file || isParsing}
+  onClick={handleUpload}
+  className={cn(
+  "w-full sm:w-auto px-16 h-14 rounded-xl font-bold text-label-sm transition-all active:scale-95",
+  file ? "primary-gradient shadow-neon-sm" : "opacity-50 grayscale"
+  )}
+  >
+  {isParsing ? <Loader2 className="w-5 h-5 animate-spin me-3" /> : <Upload className="w-5 h-5 me-3" />}
+  {t('upload_cta')}
+  </Button>
  </div>
  </div>
 
- <div className="flex items-center gap-3 p-5 rounded-2xl bg-amber-500/5 text-amber-500 border border-amber-500/10 max-w-md">
- <Loader2 className="w-5 h-5 animate-pulse shrink-0" />
- <p className="text-label-xs font-bold uppercase leading-relaxed">
- {t('upload_warning')}
- </p>
- </div>
+  <div className="flex items-center gap-3 p-5 rounded-2xl bg-amber-500/5 text-amber-500 border border-amber-500/10 w-full">
+  <Loader2 className="w-5 h-5 animate-pulse shrink-0" />
+  <p className="text-label-xs font-bold leading-relaxed">
+  {t('upload_warning')}
+  </p>
+  </div>
  </div>
  );
 }

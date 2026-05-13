@@ -217,7 +217,6 @@ function LineItemRow({
                     <SelectItem
                       key={i.id}
                       value={i.id}
-                      textValue={locale === 'ar' ? i.name_ar : i.name_en}
                       className="text-label-xs font-bold focus:bg-operational-cyan/10 focus:text-operational-cyan transition-colors"
                     >
                       <div className="flex flex-col gap-0.5">

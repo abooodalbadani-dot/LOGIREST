@@ -1,46 +1,48 @@
 import json
+import sys
+import re
 
-def find_duplicate_keys(obj, path=""):
-    if isinstance(obj, dict):
-        keys = list(obj.keys())
-        # We can't actually find duplicate keys this way because json.loads() overwrites them
-        # We need a custom decoder or to read the file line by line
-        pass
+def find_duplicates_with_lines(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
 
-def find_duplicates_raw(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
-        stack = []
-        path = []
-        duplicates = []
+    def get_path_line(path, lines):
+        # This is a simple heuristic to find the line number of a key path
+        # It's not perfect for deeply nested identical keys but should work for our case
+        current_line = 0
+        parts = path.split('.')
+        for part in parts:
+            found = False
+            for i in range(current_line, len(lines)):
+                if f'"{part}"' in lines[i]:
+                    current_line = i
+                    found = True
+                    break
+            if not found:
+                return -1
+        return current_line + 1
+
+    class DuplicateKeyDetector(json.JSONDecoder):
+        def __init__(self, *args, **kwargs):
+            super().__init__(object_pairs_hook=self.check_duplicates, *args, **kwargs)
         
-        # Simple heuristic: check for same key at same level
-        # This is hard to do perfectly without a full parser that preserves duplicates
-        # But we can look for "key": multiple times within the same { } block
-        
-        # Actually, let's use a simpler approach: 
-        # For each line like "key": ..., store the key and the current nesting level
-        # If we see it again at the same level before the block closes, it's a duplicate.
-        
-        level = 0
-        keys_at_level = {}
-        
-        for i, line in enumerate(f, 1):
-            line = line.strip()
-            if line.endswith('{'):
-                level += 1
-                keys_at_level[level] = set()
-            elif line.startswith('}'):
-                if level in keys_at_level:
-                    del keys_at_level[level]
-                level -= 1
-            elif '"' in line and ':' in line:
-                key = line.split('"')[1]
-                if level in keys_at_level:
-                    if key in keys_at_level[level]:
-                        print(f"Duplicate key '{key}' at line {i}")
-                    else:
-                        keys_at_level[level].add(key)
+        def check_duplicates(self, pairs):
+            d = {}
+            for k, v in pairs:
+                if k in d:
+                    print(f"Duplicate key found: {k}")
+                d[k] = v
+            return d
+
+    print(f"Checking {file_path} for duplicates...")
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            json.load(f, cls=DuplicateKeyDetector)
+    except Exception as e:
+        print(f"Error parsing {file_path}: {e}")
 
 if __name__ == "__main__":
-    import sys
-    find_duplicates_raw(sys.argv[1])
+    if len(sys.argv) < 2:
+        print("Usage: python find_duplicates.py <file_path>")
+    else:
+        find_duplicates_with_lines(sys.argv[1])

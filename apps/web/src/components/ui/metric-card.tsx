@@ -74,7 +74,7 @@ color = 'cyan',
  </div>
 
  <div className="space-y-1">
- <CardDescription className="text-label-xs font-semibold uppercase text-muted-foreground/60" dir="auto" style={{ unicodeBidi: 'isolate' }}>
+ <CardDescription className="text-label-xs font-semibold uppercase text-muted-foreground/60 whitespace-nowrap" dir="auto" style={{ unicodeBidi: 'isolate' }}>
  {label}
  </CardDescription>
  <CardTitle className={cn("text-headline-lg font-display font-bold", styles.text)} dir="auto" style={{ unicodeBidi: 'isolate' }}>

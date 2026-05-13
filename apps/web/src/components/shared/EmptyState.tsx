@@ -52,18 +52,18 @@ export function EmptyState({
       )}
 
       <div className={cn(
-        "flex flex-col items-center",
-        isMinimal ? "max-w-md space-y-1" : "max-w-lg space-y-4"
+        "flex flex-col items-center w-full",
+        isMinimal ? "space-y-1" : "space-y-4"
       )}>
         <h3 className={cn(
-          "font-semibold tracking-widest whitespace-nowrap",
+          "font-semibold w-full whitespace-nowrap",
           isMinimal ? "text-label-xs uppercase text-muted-foreground/60" : "text-title-lg uppercase text-foreground/90"
         )}>
           {title}
         </h3>
         {description && (
           <p className={cn(
-            "text-muted-foreground/60 font-medium leading-relaxed",
+            "text-muted-foreground/60 font-medium leading-relaxed w-full whitespace-nowrap",
             isMinimal ? "text-label-xs" : "text-body-md"
           )}>
             {description}

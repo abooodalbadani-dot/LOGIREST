@@ -182,7 +182,9 @@ export function DataTable<T>({
                     key={header.id} 
                     className={`px-4 h-14 font-bold whitespace-nowrap bg-surface-container-low/30 backdrop-blur-sm ${isNumeric ? 'text-end' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className={cn("flex h-full items-center", isNumeric ? "justify-end" : "justify-start")}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </div>
                   </th>
                 );
               })}
@@ -214,7 +216,7 @@ export function DataTable<T>({
                       return (
                         <td 
                           key={cell.id} 
-                          className={`px-4 text-body-md font-medium border-none ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
+                          className={`px-4 text-body-md font-medium border-none whitespace-nowrap ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                           dir={isNumeric ? 'ltr' : undefined}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -245,7 +247,7 @@ export function DataTable<T>({
                   return (
                     <td 
                       key={cell.id} 
-                      className={`px-4 text-body-md font-medium border-none ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
+                      className={`px-4 text-body-md font-medium border-none whitespace-nowrap ${isNumeric ? 'text-end font-mono' : 'text-start'} ${isFirst ? 'ps-8' : ''} ${isLast ? 'pe-8' : ''}`}
                       dir={isNumeric ? 'ltr' : undefined}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -262,7 +264,7 @@ export function DataTable<T>({
 
  {pagination && !isLoading && data.length > 0 && (
  <div className="flex items-center justify-between mt-2 px-2">
- <div className={cn("text-label-xs font-bold text-muted-foreground uppercase opacity-70")}>
+ <div className={cn("text-label-xs font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap")}>
  {t('showing')} <span dir="ltr">{(pagination.page - 1) * pagination.pageSize + 1}</span> {t('to')} <span dir="ltr">{Math.min(pagination.page * pagination.pageSize, pagination.total)}</span> {t('of')} <span dir="ltr">{pagination.total}</span>
  </div>
  <Pagination 

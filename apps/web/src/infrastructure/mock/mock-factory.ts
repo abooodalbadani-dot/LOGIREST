@@ -118,7 +118,7 @@ export const MockFactory = {
       request_number: (overrides as Record<string, unknown>).request_number as string || base.document_number,
       status: overrides.status || KITCHEN_REQUEST_STATUS.DRAFT,
       department_id: overrides.department_id || 'DEPT-001',
-      requested_by: overrides.requested_by || 'Ahmed Ali',
+      requested_by: overrides.requested_by || 'Barakat Amin',
       requested_at: base.created_at,
       updated_at: base.created_at,
       items: overrides.items || [],

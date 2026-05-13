@@ -2,7 +2,7 @@ export const authMocks: Record<string, unknown> = {
  'POST /auth/login': {
  user: {
  id: 'user-1',
- name: 'أحمد المنصور',
+ name: 'بركات امين',
  email: 'admin@demo.com',
  role: 'ADMIN',
  scopes: [

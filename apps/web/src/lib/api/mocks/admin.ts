@@ -41,8 +41,8 @@ export const adminMocks: Record<string, unknown> = {
  data: [
  {
  id: 'user-1',
- name: 'أحمد المنصور',
- email: 'ahmed@logirest.com',
+ name: 'بركات امين',
+ email: 'barakat@logirest.com',
  role: 'ADMIN',
  scopes: [
  { branch_id: 'br-1', warehouse_id: null, department_id: null },
@@ -82,8 +82,8 @@ export const adminMocks: Record<string, unknown> = {
 
  'GET /admin/users/user-1': {
  id: 'user-1',
- name: 'أحمد المنصور',
- email: 'ahmed@logirest.com',
+ name: 'بركات امين',
+ email: 'barakat@logirest.com',
  role: 'ADMIN',
  scopes: [
  { branch_id: 'br-1', warehouse_id: null, department_id: null },
@@ -98,7 +98,7 @@ export const adminMocks: Record<string, unknown> = {
  entity_id: 'item-1',
  action: 'UPDATE',
  user_id: 'user-1',
- user_name: 'أحمد المنصور',
+ user_name: 'بركات امين',
  changes: [
  { field: 'name_ar', old_value: 'لحم بقر', new_value: 'لحم بقر طازج' },
  { field: 'min_stock_level', old_value: 50, new_value: 30 },
@@ -123,7 +123,7 @@ export const adminMocks: Record<string, unknown> = {
  entity_id: 'wh-2',
  action: 'CREATE',
  user_id: 'user-1',
- user_name: 'أحمد المنصور',
+ user_name: 'بركات امين',
  changes: [
  { field: 'code', old_value: null, new_value: 'WH-002' },
  { field: 'name_ar', old_value: null, new_value: 'مستودع التبريد' },
@@ -148,7 +148,7 @@ export const adminMocks: Record<string, unknown> = {
  entity_id: 'user-3',
  action: 'UPDATE',
  user_id: 'user-1',
- user_name: 'أحمد المنصور',
+ user_name: 'بركات امين',
  changes: [
  { field: 'role', old_value: 'WH_KEEPER', new_value: 'INV_MGR' },
  ],

@@ -198,8 +198,9 @@ export function useDeleteCategory() {
     },
     onError: (error: Error) => {
       if (error.message === 'AbortError') return;
-      if (error.message === 'GUARD_LINKED_ITEMS') {
-        toast.error(t('errors.delete_linked_items'));
+      const translationKey = `errors.${error.message}`;
+      if (t.has(translationKey)) {
+        toast.error(t(translationKey));
       } else {
         toast.error(t('errors.delete_failed'));
       }

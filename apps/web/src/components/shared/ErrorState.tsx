@@ -70,7 +70,7 @@ export function ErrorState({ title, message, description, onRetry, onBack, error
             )}
           </div>
         }
-        className={cn(config.bgClass, config.borderClass, "rounded-2xl backdrop-blur-sm p-16")}
+        className={cn(config.bgClass, config.borderClass, "rounded-2xl backdrop-blur-sm p-8 md:p-16")}
       />
       
       {/* Decorative Glow */}

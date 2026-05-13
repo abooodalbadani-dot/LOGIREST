@@ -4,6 +4,17 @@ import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'n
 import { type ThemeProviderProps } from 'next-themes';
 import { useEffect, useState } from 'react';
 
+// Suppress React 19 "script tag" warning from next-themes in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const orig = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('Encountered a script tag')) {
+      return;
+    }
+    orig.apply(console, args);
+  };
+}
+
 /**
  * ThemeProvider wrapper using next-themes
  * 
@@ -11,12 +22,16 @@ import { useEffect, useState } from 'react';
  * Synchronizes with cookies for server-side persistence to prevent hydration flicker.
  */
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
- return (
- <NextThemesProvider {...props}>
- <ThemeSync />
- {children}
- </NextThemesProvider>
- );
+  return (
+    <NextThemesProvider 
+      {...props} 
+      enableSystem={false}
+      disableTransitionOnChange
+    >
+      <ThemeSync />
+      {children}
+    </NextThemesProvider>
+  );
 }
 
 /**

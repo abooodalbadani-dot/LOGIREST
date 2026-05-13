@@ -95,9 +95,9 @@ export function useUpdateBranch(options?: { onConflict?: () => void }) {
       const err = error as { name?: string; code?: string; message?: string };
       if (err.name === 'AbortError') return;
       
-      // Handle specific error codes if returned by API/Mock
-      const errorCode = err.code || err.message;
-      toast.error(t(`errors.${errorCode}`) || t('errors.update_failed'));
+      const errorCode = err.code || err.message || 'update_failed';
+      const translationKey = `errors.${errorCode}`;
+      toast.error(t.has(translationKey) ? t(translationKey) : t('errors.update_failed'));
     }
   });
 }
@@ -116,8 +116,9 @@ export function useDeleteBranch() {
     },
     onError: (error: unknown) => {
       if (error instanceof Error && error.name === 'AbortError') return;
-      const errorCode = (error as { code?: string })?.code || (error as Error)?.message;
-      toast.error(t(`errors.${errorCode}`) || t('errors.delete_failed'));
+      const errorCode = (error as { code?: string })?.code || (error as Error)?.message || 'delete_failed';
+      const translationKey = `errors.${errorCode}`;
+      toast.error(t.has(translationKey) ? t(translationKey) : t('errors.delete_failed'));
     }
   });
 }

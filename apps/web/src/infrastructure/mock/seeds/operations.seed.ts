@@ -5,7 +5,7 @@ import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
 
 export const initialIssues: StockIssue[] = [
-  MockFactory.createIssue({ id: 'iss-1', document_number: 'ISS-2026-001', status: ISSUE_STATUS.DRAFT, destination_dept_id: 'dep-1', requested_by: 'Ahmed Al-Mansour' }),
+  MockFactory.createIssue({ id: 'iss-1', document_number: 'ISS-2026-001', status: ISSUE_STATUS.DRAFT, destination_dept_id: 'dep-1', requested_by: 'Barakat Amin' }),
   MockFactory.createIssue({ id: 'iss-2', document_number: 'ISS-2026-002', status: ISSUE_STATUS.POSTED, destination_dept_id: 'dep-2', requested_by: 'Sara Hassan', posted_at: '2026-04-17T11:00:00Z', posted_by: 'user-2' }),
   MockFactory.createIssue({ id: 'iss-3', document_number: 'ISS-2026-003', status: ISSUE_STATUS.DRAFT, destination_dept_id: 'dep-1', requested_by: 'Khalid Nasser', notes: 'Urgent' })
 ];

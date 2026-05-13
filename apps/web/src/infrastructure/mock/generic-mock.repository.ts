@@ -26,7 +26,7 @@ export class GenericMockRepository<T extends { id: string | number }> implements
 
   async findById(id: string | number): Promise<T | null> {
     const data = await this.findAll();
-    const item = data.find(i => i.id === id);
+    const item = data.find(i => i?.id === id);
     return item ? this.schema.parse(item) : null;
   }
 

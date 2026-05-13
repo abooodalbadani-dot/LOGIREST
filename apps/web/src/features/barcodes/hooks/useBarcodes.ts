@@ -105,7 +105,7 @@ export function useCreateBarcode() {
           const data = queryClient.getQueryData<Barcode[]>(QUERY_KEY) || INITIAL_BARCODES;
           
           // GUARD: Uniqueness
-          const exists = data.some(b => b.code.toLowerCase() === values.code.toLowerCase());
+          const exists = data.some(b => b && b.code && b.code.toLowerCase() === values.code.toLowerCase());
           if (exists) {
             throw new Error('code_exists');
           }
@@ -131,7 +131,9 @@ export function useCreateBarcode() {
     },
     onError: (error: Error) => {
       if (error.message === 'Aborted') return;
-      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+      const key = `errors.${error.message}`;
+      const message = t.has(key) ? t(key) : error.message || t('errors.create_failed');
+      toast.error(message);
     }
   });
 }
@@ -158,7 +160,7 @@ export function useUpdateBarcode(options?: { onConflict?: () => void }) {
 
           // GUARD: Uniqueness if code changed
           if (values.code.toLowerCase() !== barcode.code.toLowerCase()) {
-            const exists = data.some(b => b.id !== id && b.code.toLowerCase() === values.code.toLowerCase());
+            const exists = data.some(b => b && b.id !== id && b.code && b.code.toLowerCase() === values.code.toLowerCase());
             if (exists) {
               throw new Error('code_exists');
             }
@@ -195,7 +197,9 @@ export function useUpdateBarcode(options?: { onConflict?: () => void }) {
     },
     onError: (error: Error) => {
       if (error.message === 'Aborted') return;
-      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+      const key = `errors.${error.message}`;
+      const message = t.has(key) ? t(key) : error.message || t('errors.update_failed');
+      toast.error(message);
     }
   });
 }
@@ -231,7 +235,9 @@ export function useDeleteBarcode() {
     },
     onError: (error: Error) => {
       if (error.message === 'Aborted') return;
-      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+      const key = `errors.${error.message}`;
+      const message = t.has(key) ? t(key) : error.message || t('errors.delete_failed');
+      toast.error(message);
     }
   });
 }

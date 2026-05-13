@@ -67,7 +67,7 @@ export function StatusTimeline({ entries }: { entries: StatusTimelineEntry[] }) 
  config.color,
  isLatest && "drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
  )}>
- {tCommon(`status.${entry.status.toLowerCase() as Status}`) || entry.status}
+ {tCommon(`statuses.${entry.status.toLowerCase() as Status}`) || entry.status}
  </p>
  {isLatest && (
  <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-500 animate-ping" />

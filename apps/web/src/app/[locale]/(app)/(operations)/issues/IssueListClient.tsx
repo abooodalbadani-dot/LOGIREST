@@ -67,11 +67,11 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       accessorKey: 'document_number',
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{t('doc_number')}</span>,
       cell: ({ row }) => (
-        <div className="flex flex-col">
+        <div className="flex items-center gap-2">
           <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500">
             {row.original.document_number}
           </span>
-          <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">
+          <span className="text-[10px] font-bold text-muted-foreground/20 uppercase tracking-tight">
             {t('internal_voucher')}
           </span>
         </div>
@@ -95,16 +95,17 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       accessorKey: 'created_at',
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{tc('created_at')}</span>,
       cell: ({ row }) => (
-        <div className="flex flex-col items-start gap-0.5">
+        <div className="flex items-center gap-2">
           <ClientOnlyTime
             date={row.original.created_at}
             mode="date"
             className="text-label-xs font-mono font-medium text-muted-foreground/60 tabular-nums"
           />
+          <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
           <ClientOnlyTime
             date={row.original.created_at}
             mode="time"
-            className="text-label-xxs font-semibold text-muted-foreground/20 uppercase"
+            className="text-label-xs font-mono font-medium text-muted-foreground/30 tabular-nums uppercase"
           />
         </div>
       ),
@@ -144,7 +145,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           <div className="flex items-center gap-4">
             <PermissionGate action="create" resource="issue">
               <Link href={`/issues/new`}>
-                <Button className="h-10 px-6 rounded-md bg-surface-container-low border border-outline-low/5 text-label-xs font-semibold uppercase gap-2 group transition-all hover:bg-surface-container-medium shadow-sm">
+                <Button className="h-10 px-6 rounded-md bg-surface-container-low border border-outline-low/5 text-label-xs font-semibold uppercase gap-2 group transition-all hover:bg-surface-container-medium shadow-sm whitespace-nowrap">
                   <Plus className="w-3.5 h-3.5 me-2" />
                   {t('create_new')}
                 </Button>
@@ -176,7 +177,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           trend="active"
           color="emerald"
         />
-        <div className="bg-surface-container-low p-6 flex flex-col gap-2 transition-colors hover:bg-surface-container-lowest justify-center border border-outline-low/5 rounded-lg shadow-sm">
+        <div className="bg-surface-container-lowest p-6 flex flex-col gap-2 transition-all hover:bg-surface-container-low/50 justify-center rounded-2xl ambient-shadow hover:scale-[1.01] duration-200">
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2 rtl:space-x-reverse">
               {[1, 2, 3].map(i => (
@@ -185,16 +186,16 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                 </div>
               ))}
             </div>
-            <div className="text-label-xxs font-semibold text-muted-foreground/40 leading-tight">
-              <span className="text-foreground">{t('operators_count', { count: 3 })}</span> {t('operators_active')}<br />{t('fulfillment_stream')}
+            <div className="text-label-xxs font-semibold text-muted-foreground/40 leading-tight whitespace-nowrap">
+              <span className="text-foreground">{t('operators_count', { count: 3 })}</span> {t('operators_active')} • {t('fulfillment_stream')}
             </div>
           </div>
         </div>
       </div>
 
       {/* Advanced Filter Substrate */}
-      <div className="bg-surface-container-low p-6 rounded-lg border border-outline-low/5 shadow-sm">
-        <div className="flex flex-wrap items-center gap-6">
+      <div className="bg-surface-container-low/50 p-6 rounded-xl border border-outline-low/10 ambient-shadow backdrop-blur-sm">
+        <div className="flex items-center justify-between gap-6 overflow-x-auto no-scrollbar">
           <div className="flex-1 min-w-[300px] relative group">
             <div className="absolute inset-y-0 start-5 flex items-center pointer-events-none transition-colors group-focus-within:text-cyan-500 text-muted-foreground/30">
               <Search className="w-4 h-4" />
@@ -212,7 +213,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                 value={initialStatus || 'ALL'}
                 onValueChange={handleStatusChange}
               >
-                <SelectTrigger className="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10">
+                <SelectTrigger className="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap">
                   <SelectValue placeholder={tc('statuses.all')} />
                 </SelectTrigger>
                 <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
@@ -234,7 +235,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
             </div>
           </div>
 
-          <div className="flex items-center gap-1 bg-surface-container-high/50 p-1.5 rounded-md shadow-inner shadow-black/5 ms-auto">
+          <div className="flex items-center gap-1 bg-surface-container-high/50 p-1.5 rounded-md shadow-inner shadow-black/5">
             <Button size="icon" variant="ghost" className="w-11 h-11 rounded-md text-cyan-500 bg-surface-container-low shadow-sm">
               <LayoutGrid className="w-4 h-4" />
             </Button>

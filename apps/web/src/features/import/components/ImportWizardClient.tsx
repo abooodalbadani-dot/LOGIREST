@@ -57,48 +57,45 @@ export function ImportWizardClient({ entity, locale }: ImportWizardClientProps) 
  />
 
  {/* Stepper Container */}
- <div 
- className={cn(
- "flex items-center justify-between relative px-10 py-8",
- isRtl && "flex-row-reverse"
- )}
- >
- {/* Connector Line */}
- <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-muted-foreground/10 -translate-y-1/2 z-0 mx-20" />
- 
- {steps.map((step) => {
- const isActive = wizard.step === step.id || (wizard.step === 'SUCCESS' && step.id === 'COMMIT');
- const isCompleted = currentStepOrder > step.order || (wizard.step === 'SUCCESS' && step.id === 'COMMIT');
- const StepIcon = step.icon;
+  <div 
+  className="flex items-center justify-between relative px-10 py-8 w-full"
+  >
+  {/* Connector Line */}
+  <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-muted-foreground/10 -translate-y-1/2 z-0 mx-20" />
+  
+  {steps.map((step) => {
+  const isActive = wizard.step === step.id || (wizard.step === 'SUCCESS' && step.id === 'COMMIT');
+  const isCompleted = currentStepOrder > step.order || (wizard.step === 'SUCCESS' && step.id === 'COMMIT');
+  const StepIcon = step.icon;
 
- return (
- <div key={step.id} className="flex flex-col items-center gap-4 relative z-10 bg-background px-4">
- <div 
- className={cn(
- "w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-200",
- isActive && "border-cyan-500 bg-cyan-500/10 text-cyan-500 scale-110 shadow-[0_0_20px_rgba(6,182,212,0.2)]",
- isCompleted && !isActive && "border-emerald-500 bg-emerald-500/10 text-emerald-500",
- !isActive && !isCompleted && "border-muted-foreground/20 bg-background text-muted-foreground/40"
- )}
- >
- {isCompleted && !isActive ? <CheckCircle2 className="w-6 h-6" /> : <StepIcon className="w-6 h-6" />}
- </div>
- 
- <div className="flex flex-col items-center">
- <span className="text-label-xs font-semibold opacity-30 mb-0.5">0{step.order}</span>
- <span 
- className={cn(
- "text-label-xs font-bold uppercase text-center whitespace-nowrap",
- isActive ? "text-cyan-500" : isCompleted ? "text-emerald-500" : "text-muted-foreground/40"
- )}
- >
- {step.label}
- </span>
- </div>
- </div>
- );
- })}
- </div>
+  return (
+  <div key={step.id} className="flex flex-col items-center gap-4 relative z-10 bg-background px-4">
+  <div 
+  className={cn(
+  "w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-200",
+  isActive && "border-cyan-500 bg-cyan-500/10 text-cyan-500 scale-110 shadow-[0_0_20px_rgba(6,182,212,0.2)]",
+  isCompleted && !isActive && "border-emerald-500 bg-emerald-500/10 text-emerald-500",
+  !isActive && !isCompleted && "border-muted-foreground/20 bg-background text-muted-foreground/40"
+  )}
+  >
+  {isCompleted && !isActive ? <CheckCircle2 className="w-6 h-6" /> : <StepIcon className="w-6 h-6" />}
+  </div>
+  
+  <div className="flex flex-col items-center">
+  <span className="text-label-xs font-semibold opacity-30 mb-0.5">0{step.order}</span>
+  <span 
+  className={cn(
+  "text-label-xs font-bold text-center whitespace-nowrap",
+  isActive ? "text-cyan-500" : isCompleted ? "text-emerald-500" : "text-muted-foreground/40"
+  )}
+  >
+  {step.label}
+  </span>
+  </div>
+  </div>
+  );
+  })}
+  </div>
 
  {/* Step Content */}
  <div className="mt-4 bg-surface-container-lowest/50 rounded-2xl p-8 shadow-xl relative overflow-hidden min-h-[400px]">

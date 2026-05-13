@@ -3,7 +3,7 @@ import { PR_STATUS, PO_STATUS, GRN_STATUS } from '@/contracts/statuses';
 import { PurchaseRequest, PurchaseOrder, GRN } from '@/types/documents';
 
 export const initialPRs: PurchaseRequest[] = [
-  MockFactory.createPR({ id: 'pr-1', document_number: 'PR-2023-001', status: PR_STATUS.DRAFT, created_by: 'Ahmed Ali' }),
+  MockFactory.createPR({ id: 'pr-1', document_number: 'PR-2023-001', status: PR_STATUS.DRAFT, created_by: 'Barakat Amin' }),
   MockFactory.createPR({ id: 'pr-2', document_number: 'PR-2023-002', status: PR_STATUS.APPROVED, warehouse_id: 'wh-2', created_by: 'Sarah J.' })
 ];
 

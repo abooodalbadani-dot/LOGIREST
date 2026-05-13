@@ -26,7 +26,7 @@ const MOCK_OVERRIDES = [
  lot_number: 'LOT-XP-992',
  expiry_date: '2024-04-15',
  overridden_at: '2024-05-01T10:30:00Z',
- overridden_by: 'Ahmed Manager',
+ overridden_by: 'Barakat Amin',
  reason: 'Emergency stock shortage - quality verified by chef',
  qty: 5,
  uom: 'LTR'

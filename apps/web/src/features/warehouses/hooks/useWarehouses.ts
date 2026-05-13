@@ -91,7 +91,8 @@ export function useUpdateWarehouse(options?: { onConflict?: () => void }) {
       if (error instanceof Error && error.name === 'AbortError') return;
       
       const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'update_failed';
-      toast.error(t(`errors.${errorCode}`) || t('errors.update_failed'));
+      const translationKey = `errors.${errorCode}`;
+      toast.error(t.has(translationKey) ? t(translationKey) : t('errors.update_failed'));
     }
   });
 }
@@ -112,7 +113,8 @@ export function useDeleteWarehouse() {
       if (error instanceof Error && error.name === 'AbortError') return;
       
       const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'delete_failed';
-      toast.error(t(`errors.${errorCode}`) || t('errors.delete_failed'));
+      const translationKey = `errors.${errorCode}`;
+      toast.error(t.has(translationKey) ? t(translationKey) : t('errors.delete_failed'));
     }
   });
 }

@@ -82,16 +82,16 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  </div>
 
  <div className="space-y-2 relative z-10">
- <h3 className="text-title-lg font-semibold uppercase text-foreground group-hover:text-cyan-500 transition-colors">
- {card.title}
- </h3>
+  <h3 className="text-title-lg font-semibold text-foreground group-hover:text-cyan-500 transition-colors">
+  {card.title}
+  </h3>
  <p className="text-body-md text-muted-foreground font-medium leading-relaxed opacity-70">
  {card.description}
  </p>
  </div>
 
- <div className="mt-8 flex items-center gap-2 text-label-xs font-semibold uppercase text-cyan-500/60 group-hover:text-cyan-500 transition-all">
- <span>{t('start_import')}</span>
+  <div className="mt-8 flex items-center gap-2 text-label-xs font-semibold text-cyan-500/60 group-hover:text-cyan-500 transition-all">
+  <span>{t('start_import')}</span>
  <ArrowRight className={cn(
  "w-4 h-4 transition-transform group-hover:translate-x-2",
  isRtl && "rotate-180 group-hover:-translate-x-2"
@@ -108,9 +108,9 @@ export function ImportLandingClient({ locale }: ImportLandingClientProps) {
  <ImportIcon className="w-6 h-6" />
  </div>
  <div className="space-y-1">
- <p className="text-label-xs font-semibold uppercase text-amber-500/80">
- {t('note_title')}
- </p>
+  <p className="text-label-xs font-semibold text-amber-500/80">
+  {t('note_title')}
+  </p>
  <p className="text-label-sm text-muted-foreground font-medium">
  {t('note_description')}
  </p>

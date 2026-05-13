@@ -41,28 +41,28 @@ export function StepValidate({ wizard }: StepValidateProps) {
  </div>
  </div>
 
- <div className="text-center space-y-4">
- <h2 className="text-headline-lg font-semibold uppercase text-foreground">
- {t('validating_title')}
- </h2>
+ <div className="text-center space-y-4 w-full">
+  <h2 className="text-headline-lg font-semibold text-foreground">
+  {t('validating_title')}
+  </h2>
  <div className="flex items-center justify-center gap-3">
  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:-0.3s]" />
  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:-0.15s]" />
  <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce" />
- <p className="text-muted-foreground text-label-sm font-bold uppercase ms-2">
- {t('integrity_check_in_progress')}
- </p>
+  <p className="text-muted-foreground text-label-sm font-bold ms-2">
+  {t('integrity_check_in_progress')}
+  </p>
  </div>
  </div>
 
- <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+ <div className="grid grid-cols-2 gap-4 w-full">
  <div className="p-6 rounded-2xl bg-surface-container-low/50 space-y-1">
- <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('total_records')}</p>
+  <p className="text-label-xs font-bold text-muted-foreground opacity-60">{t('total_records')}</p>
  <p className="text-headline-lg font-semibold font-mono dir-ltr">{wizard.metadata?.recordCount || 0}</p>
  </div>
  <div className="p-6 rounded-2xl bg-surface-container-low/50 space-y-1">
- <p className="text-label-xs font-bold text-muted-foreground uppercase opacity-60">{t('status')}</p>
- <p className="text-body-md font-bold text-cyan-500 uppercase leading-9 animate-pulse">{t('analyzing')}</p>
+  <p className="text-label-xs font-bold text-muted-foreground opacity-60">{t('status')}</p>
+  <p className="text-body-md font-bold text-cyan-500 leading-9 animate-pulse">{t('analyzing')}</p>
  </div>
  </div>
  </div>

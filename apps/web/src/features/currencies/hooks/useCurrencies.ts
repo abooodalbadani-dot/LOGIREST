@@ -115,10 +115,10 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
 
   // GUARD: Uniqueness if code changed
   if (values.code.toUpperCase() !== currency.code.toUpperCase()) {
-  const exists = data.some(c => c.id !== id && c.code.toUpperCase() === values.code.toUpperCase());
-  if (exists) {
-  throw new Error('code_exists');
-  }
+    const exists = data.some(c => c && c.id !== id && c.code && c.code.toUpperCase() === values.code.toUpperCase());
+    if (exists) {
+      throw new Error('code_exists');
+    }
   }
 
   // GUARD: Cannot deactivate base currency

@@ -90,7 +90,7 @@ export function AdjustmentListClient() {
         ) : (
           <span className="inline-flex items-center gap-1.5 text-label-xs font-bold text-muted-foreground/30 italic">
             <Clock className="w-3.5 h-3.5" />
-            {tCommon('status.pending') || 'Pending'}
+            {tCommon('statuses.pending')}
           </span>
         ),
     },
@@ -145,10 +145,10 @@ export function AdjustmentListClient() {
             <div className="flex flex-col items-end gap-1 border-e border-outline-low pe-6 hidden md:flex">
               <div className="text-label-xs font-semibold uppercase text-muted-foreground/60 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
-                {tCommon('status.live_updates') || 'Correction Pulse'}
+                {tCommon('statuses.live_updates')}
               </div>
               <div dir="ltr" className="text-label-xxs font-bold text-muted-foreground/40">
-                {tCommon('status.last_sync') || 'Last Sync'}: <ClientOnlyTime locale={locale as 'ar' | 'en'} fallback="..." />
+                {tCommon('statuses.last_sync')}: <ClientOnlyTime locale={locale as 'ar' | 'en'} fallback="..." />
               </div>
             </div>
             <PermissionGate action="create" resource="adjustment">
@@ -217,7 +217,7 @@ export function AdjustmentListClient() {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex flex-wrap items-center gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg">
+          <div className="flex items-center gap-6 w-full py-6 px-8 bg-surface-container-low/50 border border-outline-low/10 rounded-xl ambient-shadow backdrop-blur-sm overflow-x-auto no-scrollbar">
             <div className="flex flex-col gap-2.5 min-w-[240px] flex-1">
               <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('status_label')}</label>
               <Select
@@ -227,7 +227,7 @@ export function AdjustmentListClient() {
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20">
+                <SelectTrigger className="w-full bg-surface-container-highest/20 border-none h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 shadow-inner shadow-black/5">
                   <SelectValue placeholder={tCommon('statuses.all')} />
                 </SelectTrigger>
                 <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
@@ -245,13 +245,13 @@ export function AdjustmentListClient() {
               <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('search')}</label>
               <div className="relative group">
                 <Input
-                  placeholder={t('search_placeholder') || 'Search Adjustment Documents...'} className="w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20"
+                  placeholder={t('search_placeholder') || 'Search Adjustment Documents...'} className="w-full bg-surface-container-highest/20 border-none h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20 shadow-inner shadow-black/5"
                 />
                 <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-active/40 transition-colors group-hover:text-status-active/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
             </div>
 
-            <Button className="h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-label-xs font-bold uppercase rounded-md transition-all border border-outline-low/10 group">
+            <Button className="h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-label-xs font-bold uppercase rounded-md transition-all border border-outline-low/10 shadow-sm group">
               <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180 text-status-active/60" />
               {tCommon('filters_button')}
             </Button>

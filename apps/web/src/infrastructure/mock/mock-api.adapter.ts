@@ -1,6 +1,6 @@
 import { db } from './mock-database';
 import { MockFactory } from './mock-factory';
-import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus } from '@/types/documents';
+import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus, PRLineItem } from '@/types/documents';
 import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency, FXRate, Lot } from '@/types/master-data';
 import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
@@ -37,6 +37,48 @@ async function recordMovement(params: {
     direction: params.direction,
     qty: params.qty,
   });
+}
+
+/**
+ * Hydrates a Purchase Request with full line item details and mappings
+ */
+async function hydratePR(pr: PurchaseRequest, body: any): Promise<PurchaseRequest> {
+  const lines = await Promise.all((body.lines || []).map(async (l: any) => {
+    const item = await db.items.findById(l.item_id);
+    const qty = l.qty ?? l.req_qty ?? 0;
+    return {
+      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
+      document_id: pr.id,
+      item_id: l.item_id,
+      item: item ? {
+        id: item.id,
+        code: item.code,
+        name_ar: item.name_ar,
+        name_en: item.name_en,
+        primary_uom: item.primary_uom
+      } : l.item,
+      lot_id: l.lot_id || null,
+      lot: null,
+      qty,
+      uom_id: l.uom_id || item?.primary_uom.id || '',
+      unit_cost: null,
+      requested_qty: qty,
+      req_qty: qty, // Alias for feature schema
+      approved_qty: l.approved_qty ?? null
+    } as PRLineItem & { req_qty: number };
+  }));
+
+  const deptId = body.department_id || body.requested_by_dept || pr.requested_by_dept;
+  const date = body.expected_date || body.required_by_date || pr.required_by_date;
+
+  return {
+    ...pr,
+    requested_by_dept: deptId,
+    department_id: deptId, // Alias for feature schema
+    required_by_date: date,
+    expected_date: date, // Alias for feature schema
+    lines
+  } as PurchaseRequest & { department_id: string, expected_date: string };
 }
 
 /**
@@ -116,7 +158,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
             code: 'VERSION_CONFLICT',
             message: 'Conflict detected: this record has been modified by another user.',
             current_version: 2,
-            updated_by: 'Ahmed Ali',
+            updated_by: 'Barakat Amin',
             updated_at: new Date().toISOString()
           }
         };
@@ -265,9 +307,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
               // 2. Increase in destination
               const allLots = await db.lots.findAll();
               const destLot = allLots.find(l => 
-                l.warehouse_id === doc.to_warehouse_id && 
-                l.item_id === line.item_id && 
-                l.lot_number === sourceLot.lot_number
+                l?.warehouse_id === doc.to_warehouse_id && 
+                l?.item_id === line.item_id && 
+                l?.lot_number === sourceLot.lot_number
               );
 
               if (destLot) {
@@ -319,7 +361,6 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   }
 
   // --- Stocktake Routes ---
-  // ... existing stocktake routes ...
   if (normalizedPath === '/stocktake/sessions') {
     if (method === 'GET') {
       const sessions = await db.stocktake.findAll();
@@ -337,7 +378,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'POST') {
       // Check for active session in the same warehouse
       const sessions = await db.stocktake.findAll();
-      const active = sessions.find(s => s.warehouse_id === (body as Record<string, unknown>).warehouse_id && !['POSTED', 'CANCELLED'].includes(s.status));
+      const active = sessions.find(s => s && s.warehouse_id === (body as any)?.warehouse_id && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
       if (active) {
         return {
           error: {
@@ -349,7 +390,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       // Snapshot Freeze: Capture current inventory levels from db.lots
       const warehouseLots = await db.lots.findAll();
-      const warehouseItems = warehouseLots.filter(l => l.warehouse_id === (body as Record<string, unknown>).warehouse_id);
+      const warehouseItems = warehouseLots.filter(l => l?.warehouse_id === (body as any)?.warehouse_id);
       
       // Group by item to get total quantity if there are multiple lots
       const itemTotals = warehouseItems.reduce((acc, lot) => {
@@ -441,7 +482,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       if (action === 'POST') {
         const warehouseLots = await db.lots.findAll();
         for (const line of session.items) {
-          const lot = warehouseLots.find(l => l.item_id === line.item_id && l.warehouse_id === session.warehouse_id);
+          const lot = warehouseLots.find(l => l && l.item_id === line.item_id && l.warehouse_id === session.warehouse_id);
           if (lot) {
             lot.qty_available = line.counted_qty ?? 0;
             await db.lots.save(lot);
@@ -483,7 +524,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   if (normalizedPath.startsWith('/inventory/warehouses/') && path.endsWith('/lock')) {
     const warehouseId = normalizedPath.split('/')[3];
     const sessions = await db.stocktake.findAll();
-    const active = sessions.find(s => s.warehouse_id === warehouseId && !['POSTED', 'CANCELLED'].includes(s.status));
+    const active = sessions.find(s => s && s.warehouse_id === warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
     return {
       isLocked: !!active,
       sessionId: active?.id || null,
@@ -560,11 +601,19 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     }
   }
 
-
   // --- Procurement Routes ---
   if (normalizedPath === '/procurement/purchase-requests') {
-    if (method === 'GET') return MockFactory.wrapPagination(await db.pr.findAll());
-    if (method === 'POST') return db.pr.save(MockFactory.createPR(body as PurchaseRequest));
+    if (method === 'GET') {
+      const all = await db.pr.findAll();
+      const hydrated = await Promise.all(all.map(p => hydratePR(p, p)));
+      return MockFactory.wrapPagination(hydrated);
+    }
+    if (method === 'POST') {
+      const pr = MockFactory.createPR(body as any);
+      const hydrated = await hydratePR(pr, body);
+      const saved = await db.pr.save(hydrated);
+      return hydratePR(saved, body);
+    }
   }
   if (normalizedPath.startsWith('/procurement/purchase-requests/')) {
     const parts = normalizedPath.split('/');
@@ -572,8 +621,16 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.pr.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
-    if (method === 'PUT') return db.pr.save({ ...(body as PurchaseRequest), id });
+    if (method === 'GET') {
+      const hydrated = await hydratePR(doc, doc);
+      return { data: hydrated };
+    }
+
+    if (method === 'PUT') {
+      const hydrated = await hydratePR({ ...doc, ...(body as any) }, body);
+      const saved = await db.pr.save({ ...hydrated, id });
+      return hydratePR(saved, body);
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
@@ -594,7 +651,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.po.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
+    if (method === 'GET') return { data: doc };
     if (method === 'PUT') return db.po.save({ ...(body as PurchaseOrder), id });
 
     if (parts.length === 5) {
@@ -721,7 +778,3 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   console.warn(`[MockApiAdapter] Route not handled: ${method} ${path}`);
   return undefined;
 }
-
-
-
-

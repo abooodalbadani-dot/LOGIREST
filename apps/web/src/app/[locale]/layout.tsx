@@ -59,37 +59,37 @@ export default async function LocaleLayout({
   const theme = cookieStore.get('theme')?.value as 'light' | 'dark' || 'light';
 
 
- return (
- <html lang={locale} dir={direction} className={theme} suppressHydrationWarning>
- <body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${tajawal.variable} ${yaModernPro.variable}`}>
-
- <NextIntlClientProvider messages={messages} locale={locale}>
- <QueryProvider>
- <UnsavedChangesProvider>
- <ConflictProvider>
- <ConfirmationProvider>
- <AuthProvider>
- <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
- <WarehouseScopeProvider>
- 
-              <ErrorBoundary>
-                <NetworkStatusBanner />
-                <ErrorProvider>
-                  {children}
-                </ErrorProvider>
-                <SessionTimeoutModal />
-                <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
-              </ErrorBoundary>
- 
- </WarehouseScopeProvider>
- </ThemeProvider>
- </AuthProvider>
- </ConfirmationProvider>
- </ConflictProvider>
- </UnsavedChangesProvider>
- </QueryProvider>
- </NextIntlClientProvider>
- </body>
- </html>
- );
+  return (
+    <html lang={locale} dir={direction} suppressHydrationWarning>
+      <body 
+        className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${tajawal.variable} ${yaModernPro.variable}`}
+        suppressHydrationWarning
+      >
+        <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
+          <NextIntlClientProvider messages={messages} locale={locale}>
+            <QueryProvider>
+              <UnsavedChangesProvider>
+                <ConflictProvider>
+                  <ConfirmationProvider>
+                    <AuthProvider>
+                      <WarehouseScopeProvider>
+                        <ErrorBoundary>
+                          <NetworkStatusBanner />
+                          <ErrorProvider>
+                            {children}
+                          </ErrorProvider>
+                          <SessionTimeoutModal />
+                          <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
+                        </ErrorBoundary>
+                      </WarehouseScopeProvider>
+                    </AuthProvider>
+                  </ConfirmationProvider>
+                </ConflictProvider>
+              </UnsavedChangesProvider>
+            </QueryProvider>
+          </NextIntlClientProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }

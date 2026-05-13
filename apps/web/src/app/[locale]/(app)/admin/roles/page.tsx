@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'admin' });
   return {
-    title: `${t('roles')} | LogiRest`,
+    title: `${t('roles.roles_title')} | LogiRest`,
     description: t('roles.roles_page_description'),
   };
 }
@@ -23,7 +23,7 @@ export default async function RolesPage(props: { params: Promise<{ locale: strin
     <ProtectedRoute requiredAction="view" requiredResource="admin">
       <div className="flex flex-col gap-10 p-8 max-w-[1600px] mx-auto">
         <PageHeader 
-          title={t('roles')} 
+          title={t('roles.roles_title')} 
           description={t('roles.roles_page_description')}
           actions={
             <Link href="/admin/roles/matrix">

@@ -165,11 +165,10 @@ export function useUpdateUoM(options?: { onConflict?: () => void }) {
       toast.success(t('updated_success'));
     },
     onError: (error: Error) => {
-      if (error.message === 'GUARD_LINKED_ITEMS') {
-        toast.error(t('errors.cannot_deactivate_uom_in_use'));
-      } else {
-        toast.error(t('errors.update_failed'));
-      }
+      if (error.message === 'Aborted') return;
+      const key = `errors.${error.message}`;
+      const message = t.has(key) ? t(key) : error.message || t('errors.update_failed');
+      toast.error(message);
     }
   });
 }
@@ -205,7 +204,10 @@ export function useDeleteUoM() {
       toast.success(t('deleted_success'));
     },
     onError: (error: Error) => {
-      toast.error(t(`errors.${error.message}`) || t('errors.delete_failed'));
+      if (error.message === 'Aborted') return;
+      const key = `errors.${error.message}`;
+      const message = t.has(key) ? t(key) : error.message || t('errors.delete_failed');
+      toast.error(message);
     }
   });
 }

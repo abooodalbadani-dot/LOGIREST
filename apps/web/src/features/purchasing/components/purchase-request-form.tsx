@@ -105,8 +105,8 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const form = useForm<PurchaseRequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ? {
-      department_id: initialData.department_id,
-      expected_date: initialData.expected_date.split('T')[0],
+      department_id: initialData.department_id || '',
+      expected_date: initialData.expected_date ? initialData.expected_date.split('T')[0] : '',
       notes: initialData.notes || '',
       lines: initialData.lines.map(l => ({
         id: l.id,
@@ -120,7 +120,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             code: l.item.primary_uom?.code || 'EA'
           }
         },
-        req_qty: l.req_qty,
+        req_qty: l.req_qty || 0,
         uom_id: l.uom_id,
       })),
     } : {
