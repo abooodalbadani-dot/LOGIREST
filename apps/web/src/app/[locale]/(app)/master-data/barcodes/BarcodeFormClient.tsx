@@ -86,7 +86,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
       if (id) {
         await update.mutateAsync({ id, values });
       } else {
-        await create.mutateAsync(values);
+        await create.mutateAsync({ values });
       }
       reset(values);
       guardedRouter.push('/master-data/barcodes', { skipGuard: true });

@@ -71,7 +71,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 
  const handleStart = () => {
-   startStocktake.mutate(id, {
+   startStocktake.mutate({ id }, {
      onSuccess: () => {
        router.push(`/stocktake/${id}/count`, { skipGuard: true });
      }

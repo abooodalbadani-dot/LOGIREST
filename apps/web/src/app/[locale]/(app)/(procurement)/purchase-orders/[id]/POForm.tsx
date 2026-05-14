@@ -117,14 +117,16 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  async function onSubmit(values: PurchaseOrderFormValues) {
  try {
  if (mode === "edit" && initialData) {
- await updateMutation.mutateAsync({ ...values, version: initialData.version || 1 });
+   await updateMutation.mutateAsync({ 
+    payload: { ...values, version: initialData.version || 1 } 
+  });
  toast.success(t("edit_success"));
  } else {
   if (!currencies || currencies.length === 0) {
     toast.error(t('errors.no_currencies_available'));
     return;
   }
-  const result = await createMutation.mutateAsync(values);
+     const result = await createMutation.mutateAsync({ payload: values });
  toast.success(t("submit_success"));
   router.push(`/purchase-orders/${result.id}`);
  }

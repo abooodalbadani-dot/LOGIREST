@@ -35,7 +35,7 @@ export function StocktakeArchiveClient({
   const searchParams = useSearchParams();
 
   // For Archive, we only show POSTED and CLOSED sessions
-  const { data, isLoading } = useStocktakeList({
+  const { data, isLoading, error } = useStocktakeList({
     status: STOCKTAKE_STATUS.POSTED, // In a real scenario, this might support multiple archive statuses
     warehouse_id: initialWarehouseId,
     page: initialPage
@@ -123,6 +123,7 @@ export function StocktakeArchiveClient({
 
       <QueryBoundary 
         isLoading={isLoading} 
+        error={error}
         loadingFallback={<PageSkeleton />}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -168,7 +169,7 @@ export function StocktakeArchiveClient({
               data={data?.data || []}
               isLoading={false}
               onRowClick={(row: StocktakeSummary) => router.push(`/stocktake/${row.id}`)}
-              collectionName="operations_stocktake_archive"
+              collectionName="operations_stocktake"
               emptyState={
                 <EmptyState 
                   title={t('no_archive_records') || 'No Archived Records'} 

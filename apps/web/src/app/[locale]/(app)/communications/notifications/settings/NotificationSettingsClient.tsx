@@ -11,6 +11,14 @@ export function NotificationSettingsClient() {
   const t = useTranslations('communications.notifications');
   const tc = useTranslations('common');
 
+  const [settings, setSettings] = React.useState({
+    lowStock: true,
+    expiry: true,
+    pendingApproval: true,
+    poFinalized: false,
+    security: true,
+  });
+
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col gap-4 border-b border-outline-low pb-8">
@@ -55,14 +63,20 @@ export function NotificationSettingsClient() {
                 <Label className="text-label-sm font-bold uppercase">{t('low_stock_alert') || 'Low Stock Alerts'}</Label>
                 <p className="text-label-xs text-muted-foreground/60 uppercase">{t('low_stock_desc') || 'Notify when items fall below minimum thresholds'}</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.lowStock} 
+                onCheckedChange={(val) => setSettings(s => ({ ...s, lowStock: val }))} 
+              />
             </div>
             <div className="flex items-center justify-between p-6 bg-surface-container-lowest/40">
               <div className="space-y-0.5">
                 <Label className="text-label-sm font-bold uppercase">{t('expiry_alert') || 'Expiration Warnings'}</Label>
                 <p className="text-label-xs text-muted-foreground/60 uppercase">{t('expiry_desc') || 'Alert when lots are approaching their use-by date'}</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.expiry} 
+                onCheckedChange={(val) => setSettings(s => ({ ...s, expiry: val }))} 
+              />
             </div>
           </div>
         </section>
@@ -81,14 +95,20 @@ export function NotificationSettingsClient() {
                 <Label className="text-label-sm font-bold uppercase">{t('pending_approval') || 'Pending Approvals'}</Label>
                 <p className="text-label-xs text-muted-foreground/60 uppercase">{t('pending_desc') || 'Receive notifications for requests requiring your action'}</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.pendingApproval} 
+                onCheckedChange={(val) => setSettings(s => ({ ...s, pendingApproval: val }))} 
+              />
             </div>
             <div className="flex items-center justify-between p-6 bg-surface-container-lowest/40">
               <div className="space-y-0.5">
                 <Label className="text-label-sm font-bold uppercase">{t('po_finalized') || 'Purchase Finalization'}</Label>
                 <p className="text-label-xs text-muted-foreground/60 uppercase">{t('po_desc') || 'Notify when a PO is fully received or cancelled'}</p>
               </div>
-              <Switch />
+              <Switch 
+                checked={settings.poFinalized} 
+                onCheckedChange={(val) => setSettings(s => ({ ...s, poFinalized: val }))} 
+              />
             </div>
           </div>
         </section>
@@ -107,7 +127,10 @@ export function NotificationSettingsClient() {
                 <Label className="text-label-sm font-bold uppercase">{t('security_alert') || 'Login Security'}</Label>
                 <p className="text-label-xs text-muted-foreground/60 uppercase">{t('security_desc') || 'Alert on logins from new devices or locations'}</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.security} 
+                onCheckedChange={(val) => setSettings(s => ({ ...s, security: val }))} 
+              />
             </div>
           </div>
         </section>

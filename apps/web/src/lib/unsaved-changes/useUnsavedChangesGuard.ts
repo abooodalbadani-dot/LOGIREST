@@ -6,7 +6,9 @@ import { useRouter as useNextIntlRouter } from '@/i18n/navigation';
 
 export interface GuardedRouterOptions {
   skipGuard?: boolean;
-  [key: string]: unknown;
+  locale?: string;
+  scroll?: boolean;
+  [key: string]: any;
 }
 
 /**

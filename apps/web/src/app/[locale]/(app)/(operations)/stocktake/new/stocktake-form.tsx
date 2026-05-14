@@ -82,9 +82,11 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
 
  const onSubmit = (data: StocktakeFormValues) => {
     createStocktake.mutate({
-      session_name: data.sessionName,
-      warehouse_id: data.warehouseId,
-      description: data.description,
+      data: {
+        session_name: data.sessionName,
+        warehouse_id: data.warehouseId,
+        description: data.description,
+      },
     }, {
       onSuccess: (session) => {
         router.push(`/stocktake/${session.id}`, { skipGuard: true });

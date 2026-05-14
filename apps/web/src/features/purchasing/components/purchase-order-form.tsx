@@ -83,7 +83,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const locale = useLocale();
   const t = useTranslations("procurement.po");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const { router, setDirty } = useUnsavedChangesGuard();
   
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(formSchema),
@@ -106,6 +106,11 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       })) || [{ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
     },
   });
+
+  // Sync dirty state
+  React.useEffect(() => {
+    setDirty(form.formState.isDirty);
+  }, [form.formState.isDirty, setDirty]);
   
   const createMutation = useCreatePO();
   const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
@@ -207,17 +212,18 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   async function onSubmit(values: PurchaseOrderFormValues) {
     try {
       if (mode === "edit" && initialData) {
-        await updateMutation.mutateAsync({ ...values, version: initialData.version ?? 0 });
+        await updateMutation.mutateAsync({ 
+          payload: { ...values, version: initialData.version ?? 0 } 
+        });
         toast.success(t("edit_success"));
       } else {
         if (!currencies || currencies.length === 0) {
           toast.error(t('errors.no_currencies_available'));
           return;
         }
-        const result = await createMutation.mutateAsync(values);
+        const result = await createMutation.mutateAsync({ payload: values });
         toast.success(t("submit_success"));
         router.push(`/purchase-orders/${result.id}`, { skipGuard: true });
-
       }
     } catch (error) {
       console.error(error);
@@ -442,7 +448,6 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         size="lg"
                         label={t('scan_or_search')}
                         scannerMode={true}
-                        allowFocusWhileStatusSet={true}
                       />
                     </div>
                   )}
@@ -457,7 +462,6 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   remove={remove}
                   update={update}
                   prepend={prepend}
-                  append={append}
                 />
 
                 

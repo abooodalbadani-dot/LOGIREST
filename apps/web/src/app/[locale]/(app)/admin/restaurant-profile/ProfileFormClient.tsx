@@ -67,7 +67,7 @@ const { register, handleSubmit, formState: { errors, isDirty }, reset, setValue,
 
 const onSubmit = async (data: RestaurantProfile) => {
     try {
-      await updateProfile(data);
+      await updateProfile({ values: data });
       reset(data);
     } catch {
       // Error handled by mutation hooks

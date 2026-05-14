@@ -6,7 +6,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 
 interface QueryBoundaryProps {
   isLoading: boolean;
-  error: unknown;
+  error?: unknown;
   children: ReactNode;
   loadingFallback?: ReactNode;
   errorFallback?: ReactNode;
@@ -20,11 +20,11 @@ export function QueryBoundary({
   errorFallback,
 }: QueryBoundaryProps) {
   if (isLoading) {
-    return loadingFallback || <LoadingSkeleton />;
+    return <>{loadingFallback || <LoadingSkeleton />}</>;
   }
 
   if (error) {
-    return errorFallback || <ErrorState onRetry={() => window.location.reload()} />;
+    return <>{errorFallback || <ErrorState onRetry={() => window.location.reload()} />}</>;
   }
 
   return <>{children}</>;

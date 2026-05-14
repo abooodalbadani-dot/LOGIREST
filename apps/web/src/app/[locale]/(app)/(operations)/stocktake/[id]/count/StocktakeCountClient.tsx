@@ -178,6 +178,11 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalSize = rowVirtualizer.getTotalSize();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start || 0 : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalSize - (virtualRows[virtualRows.length - 1]?.end || 0)
+      : 0;
 
   return (
     <PermissionGate action="edit" resource="operations_stocktake">
@@ -209,9 +214,9 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                   disabled={!hasCountedItems || completeCounting.isPending}
                   className="primary-gradient shadow-lg shadow-primary/20"
                 >
-                  {completeCounting.isPending ? (
+                  {completeCounting.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin me-2" />
-                  ) : null}
+                  )}
                   {t('finish_counting')}
                 </Button>
               }
@@ -245,29 +250,26 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <div
-                  style={{
-                    height: `${totalSize}px`,
-                    width: '100%',
-                    position: 'relative',
-                  }}
-                >
-                  {virtualRows.map((virtualRow) => {
-                    const item = items[virtualRow.index];
-                    const isFocused = focusedRowIndex === virtualRow.index;
+                {paddingTop > 0 && (
+                  <TableRow style={{ height: `${paddingTop}px` }} className="hover:bg-transparent border-none">
+                    <TableCell colSpan={4} className="p-0" />
+                  </TableRow>
+                )}
+                {virtualRows.map((virtualRow) => {
+                  const item = items[virtualRow.index];
+                  const isFocused = focusedRowIndex === virtualRow.index;
 
-                    return (
-                      <TableRow
-                        key={item.id}
-                        className={cn(
-                          "absolute top-0 left-0 w-full transition-colors border-none group",
-                          isFocused && "bg-primary/5 ring-1 ring-primary/20"
-                        )}
-                        style={{
-                          height: `${virtualRow.size}px`,
-                          transform: `translateY(${virtualRow.start}px)`,
-                        }}
-                      >
+                  return (
+                    <TableRow
+                      key={item.id}
+                      className={cn(
+                        "transition-colors border-none group",
+                        isFocused && "bg-primary/5 ring-1 ring-primary/20"
+                      )}
+                      style={{
+                        height: `${virtualRow.size}px`,
+                      }}
+                    >
                         <TableCell className="px-8 py-6">
                           <div className="flex flex-col gap-1">
                             <span className="font-semibold text-foreground group-hover:text-primary transition-colors">{item.itemName}</span>
@@ -304,10 +306,14 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                         <TableCell className="text-end px-8 font-semibold text-label-xs text-muted-foreground/40 uppercase">
                           {item.uom}
                         </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </div>
+                    </TableRow>
+                  );
+                })}
+                {paddingBottom > 0 && (
+                  <TableRow style={{ height: `${paddingBottom}px` }} className="hover:bg-transparent border-none">
+                    <TableCell colSpan={4} className="p-0" />
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
             {items.length === 0 && (

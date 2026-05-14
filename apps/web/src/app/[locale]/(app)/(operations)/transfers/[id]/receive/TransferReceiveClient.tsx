@@ -82,10 +82,12 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     }));
     
     receiveTransfer.mutate({
-      version: transfer.version ?? 0,
-      lines: receiveLines,
-      confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
-      variance_reason: hasVariance ? varianceReason : undefined
+      body: {
+        version: transfer.version ?? 0,
+        lines: receiveLines,
+        confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
+        variance_reason: hasVariance ? varianceReason : undefined
+      }
     }, {
       onSuccess: () => {
         router.push(`/transfers/${id}`, { skipGuard: true });

@@ -47,7 +47,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  });
 
  const onSubmit = handleSubmit(async (values) => {
- await create.mutateAsync(values);
+     await create.mutateAsync({ body: values });
  reset({ from_currency_id: currencyId, to_currency_id: '', rate: 0, effective_date: new Date().toISOString().substring(0, 10) });
  });
 
