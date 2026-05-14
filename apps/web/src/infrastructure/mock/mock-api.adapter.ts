@@ -8,6 +8,26 @@ import { InventoryMovement } from '@/types/inventory';
 import { getNextStatusV2, canPerformActionV2, DocumentAction } from '@/core/workflow/document-engine';
 import { STOCKTAKE_STATUS } from '@/contracts/statuses';
 
+interface HydrationLine {
+  id?: string;
+  item_id: string;
+  item?: Record<string, unknown>;
+  qty?: number;
+  req_qty?: number;
+  lot_id?: string;
+  uom_id?: string;
+  approved_qty?: number | null;
+}
+
+interface HydrationBody {
+  lines?: HydrationLine[];
+  department_id?: string;
+  requested_by_dept?: string;
+  expected_date?: string;
+  required_by_date?: string;
+  warehouse_id?: string;
+}
+
 /**
  * Helper to record inventory movements
  */
@@ -42,8 +62,8 @@ async function recordMovement(params: {
 /**
  * Hydrates a Purchase Request with full line item details and mappings
  */
-async function hydratePR(pr: PurchaseRequest, body: any): Promise<PurchaseRequest> {
-  const lines = await Promise.all((body.lines || []).map(async (l: any) => {
+async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<PurchaseRequest> {
+  const lines = await Promise.all((body.lines || []).map(async (l) => {
     const item = await db.items.findById(l.item_id);
     const qty = l.qty ?? l.req_qty ?? 0;
     return {
@@ -378,7 +398,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'POST') {
       // Check for active session in the same warehouse
       const sessions = await db.stocktake.findAll();
-      const active = sessions.find(s => s && s.warehouse_id === (body as any)?.warehouse_id && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
+      const active = sessions.find(s => s && s.warehouse_id === (body as HydrationBody)?.warehouse_id && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
       if (active) {
         return {
           error: {
@@ -390,7 +410,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       // Snapshot Freeze: Capture current inventory levels from db.lots
       const warehouseLots = await db.lots.findAll();
-      const warehouseItems = warehouseLots.filter(l => l?.warehouse_id === (body as any)?.warehouse_id);
+      const warehouseItems = warehouseLots.filter(l => l?.warehouse_id === (body as HydrationBody)?.warehouse_id);
       
       // Group by item to get total quantity if there are multiple lots
       const itemTotals = warehouseItems.reduce((acc, lot) => {
@@ -609,10 +629,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       return MockFactory.wrapPagination(hydrated);
     }
     if (method === 'POST') {
-      const pr = MockFactory.createPR(body as any);
-      const hydrated = await hydratePR(pr, body);
+      const pr = MockFactory.createPR(body as Partial<PurchaseRequest>);
+      const hydrated = await hydratePR(pr, body as HydrationBody);
       const saved = await db.pr.save(hydrated);
-      return hydratePR(saved, body);
+      return hydratePR(saved, body as HydrationBody);
     }
   }
   if (normalizedPath.startsWith('/procurement/purchase-requests/')) {
@@ -627,9 +647,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     }
 
     if (method === 'PUT') {
-      const hydrated = await hydratePR({ ...doc, ...(body as any) }, body);
+      const hydrated = await hydratePR({ ...doc, ...(body as Partial<PurchaseRequest>) }, body as HydrationBody);
       const saved = await db.pr.save({ ...hydrated, id });
-      return hydratePR(saved, body);
+      return hydratePR(saved, body as HydrationBody);
     }
 
     if (parts.length === 5) {

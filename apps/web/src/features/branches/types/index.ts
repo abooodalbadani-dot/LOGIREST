@@ -1,19 +1,15 @@
-export interface Branch {
- id: string;
- code: string;
- nameEn: string;
- nameAr: string;
- status: 'ACTIVE' | 'INACTIVE';
- createdAt: string;
- updatedAt: string;
-}
+import { Branch as CoreBranch } from '@/types/master-data';
+
+export type Branch = CoreBranch;
 
 export interface CreateBranchDTO {
- code: string;
- nameEn: string;
- nameAr: string;
- status: 'ACTIVE' | 'INACTIVE';
+  code: string;
+  name_ar: string;
+  name_en: string;
+  is_active: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateBranchDTO extends Partial<CreateBranchDTO> {}
+export interface UpdateBranchDTO extends Partial<CreateBranchDTO> {
+  version?: number;
+}

@@ -101,7 +101,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       }
       reset(values);
       guardedRouter.push('/master-data/items', { skipGuard: true });
-    } catch (_error) {
+    } catch {
       // Handled by mutation callbacks
     }
   });
@@ -213,7 +213,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       className="font-mono font-semibold uppercase text-status-active" 
                       placeholder={ti('fields.sku_placeholder')} 
                     />
-                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
+                    {errors.code?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
                   </div>
                   <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
                 </div>
@@ -235,19 +235,19 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       />
                     )}
                   />
-                  {errors.barcode && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as any)}</p>}
+                  {errors.barcode?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as never)}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <Label htmlFor="item-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_en')}</Label>
                     <Input id="item-name-en" dir="ltr" {...register('name_en')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as any)}</p>}
+                    {errors.name_en?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as never)}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="item-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_ar')}</Label>
                     <Input id="item-name-ar" dir="rtl" {...register('name_ar')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as any)}</p>}
+                    {errors.name_ar?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as never)}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -288,7 +288,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         </Select>
                       )}
                     />
-                    {errors.category_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.category_id.message as any)}</p>}
+                    {errors.category_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.category_id.message as never)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -312,7 +312,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         </Select>
                       )}
                     />
-                    {errors.primary_uom_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primary_uom_id.message as any)}</p>}
+                    {errors.primary_uom_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primary_uom_id.message as never)}</p>}
                   </div>
                 </div>
               </CardContent>

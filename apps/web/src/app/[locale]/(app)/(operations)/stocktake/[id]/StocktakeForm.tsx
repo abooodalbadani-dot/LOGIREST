@@ -51,7 +51,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
 
   const status = session.status as DocumentStatus;
   const warehouse = warehouses?.find(w => w.id === session.warehouseId);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
 
   // Note: We use canPerformAction directly for internal flags where ActionGuard (JSX) isn't appropriate
   const isCounting = isStocktakeCounting(status) || status === STOCKTAKE_STATUS.STARTED;

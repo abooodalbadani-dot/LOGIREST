@@ -22,7 +22,7 @@ export default async function EmailOutboxPage(props: { params: Promise<{ locale:
  <div className="flex flex-col gap-6">
  <PageHeader 
  title={t('outbox')} 
- description="Track sent emails and notification history"
+ description={t('outbox_page_desc')}
  />
  <EmailOutboxClient />
  </div>

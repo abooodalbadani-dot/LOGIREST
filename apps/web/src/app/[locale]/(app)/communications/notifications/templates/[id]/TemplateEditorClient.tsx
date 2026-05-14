@@ -34,6 +34,8 @@ interface Props {
 
 export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
   const t = useTranslations('notifications');
+  const t_common = useTranslations('common');
+  const tc = useTranslations('communications.templates.editor');
   const qc = useQueryClient();
   const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm({
     defaultValues: {
@@ -94,7 +96,7 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
  <div className="absolute top-0 start-0 w-full h-[1px] bg-gradient-to-r from-transparent via-operational-cyan/30 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
  <div className="flex items-center gap-2 mb-2 text-operational-cyan/70 font-semibold text-label-sm uppercase">
  <span className="w-2 h-2 rounded-full bg-operational-cyan shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.3)]" />
- العربية (RTL)
+ {t_common('languages.arabic')} (RTL)
  </div>
 
  <div className="grid gap-2">
@@ -122,7 +124,7 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
  <div className="absolute top-0 start-0 w-full h-[1px] bg-gradient-to-r from-transparent via-operational-cyan/40 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity" />
  <div className="flex items-center gap-2 mb-2 text-operational-cyan/80 font-bold text-label-xs uppercase">
  <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan shadow-[0_0_12px_rgba(var(--operational-cyan-rgb),0.4)] animate-pulse" />
- English (LTR)
+ {t_common('languages.english')} (LTR)
  </div>
 
  <div className="grid gap-2">
@@ -154,7 +156,7 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
  disabled={updateMutation.isPending}
  className="bg-operational-cyan text-white hover:brightness-110 min-w-[140px] h-11 font-bold uppercase text-label-xs shadow-[0_12px_24px_-8px_rgba(var(--operational-cyan-rgb),0.4)] active:scale-[0.98] transition-all"
  >
- {updateMutation.isPending ? '...' : t('subject_ar').includes('عربي') ? 'حفظ التغييرات' : 'Save Changes'}
+ {updateMutation.isPending ? '...' : t_common('actions.save')}
  </Button>
  </PermissionGate>
     <Button
@@ -163,13 +165,13 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
       onClick={() => guardedRouter.push('/communications/notifications/templates', { skipGuard: true })}
       className="text-muted-foreground hover:text-foreground hover:bg-surface-container-high h-11 px-6 font-bold uppercase text-label-xs"
     >
-      {t('retry') === 'إعادة المحاولة' ? 'إلغاء' : 'Cancel'}
+      {t_common('actions.cancel')}
     </Button>
  </div>
 
  <div className="flex items-center gap-3 text-label-xs font-bold uppercase text-muted-foreground/60">
  <span className="w-1.5 h-1.5 rounded-full bg-operational-cyan/50" />
- {t('code')}: <span className="font-mono text-foreground">{data?.code}</span>
+ {t_common('fields.code')}: <span className="font-mono text-foreground">{data?.code}</span>
  </div>
  </div>
  </form>
@@ -179,8 +181,8 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
  <div className="rounded-[15px] border border-border-muted/20 bg-surface-container-low overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
  <div className="flex items-center justify-between px-6 py-4 border-b border-border-muted/20 bg-surface-container/30 backdrop-blur-md">
  <div className="flex items-center gap-3">
- <span className="text-label-xs font-semibold uppercase text-foreground/80">{t('preview')}</span>
- <span className="px-2 py-0.5 rounded bg-operational-cyan/10 text-operational-cyan text-label-xxs font-semibold uppercase border border-operational-cyan/20">Live View</span>
+ <span className="text-label-xs font-semibold uppercase text-foreground/80">{t_common('preview')}</span>
+ <span className="px-2 py-0.5 rounded bg-operational-cyan/10 text-operational-cyan text-label-xxs font-semibold uppercase border border-operational-cyan/20">{tc('live_view')}</span>
  </div>
  <div className="flex bg-surface-container-lowest/50 rounded-lg p-1 border border-border-muted/20 backdrop-blur-sm">
  <button
@@ -188,14 +190,14 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
  className={`px-5 py-1.5 rounded-md text-label-xs font-semibold uppercase transition-all ${previewLang === 'ar' ? 'bg-operational-cyan text-white shadow-[0_8px_16px_-4px_rgba(var(--operational-cyan-rgb),0.4)]' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
  onClick={() => setPreviewLang('ar')}
  >
- Arabic
+ {t_common('languages.arabic')}
  </button>
  <button
  type="button"
  className={`px-5 py-1.5 rounded-md text-label-xs font-semibold uppercase transition-all ${previewLang === 'en' ? 'bg-operational-cyan text-white shadow-[0_8px_16px_-4px_rgba(var(--operational-cyan-rgb),0.4)]' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
  onClick={() => setPreviewLang('en')}
  >
- English
+ {t_common('languages.english')}
  </button>
  </div>
  </div>
@@ -206,14 +208,14 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
  dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
  >
  <div className="pb-6 border-b border-border-muted/10 relative">
- <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold mb-2 block">Subject Header</span>
+ <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold mb-2 block">{tc('subject_header')}</span>
  <p className="text-headline-lg font-bold text-foreground leading-tight">{subject || '...'}</p>
  <div className="absolute bottom-0 start-0 w-12 h-1 bg-operational-cyan/20" />
  </div>
  <div className="relative">
- <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold mb-3 block">Message Body</span>
+ <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold mb-3 block">{tc('message_body')}</span>
  <p className="text-foreground/80 whitespace-pre-wrap leading-[1.8] text-body-md font-medium">
- {body || 'Start typing to see preview...'}
+ {body || t_common('placeholders.typing_preview')}
  </p>
  </div>
  </div>

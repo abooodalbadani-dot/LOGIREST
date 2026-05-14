@@ -83,7 +83,7 @@ export default function LoginPage() {
                 <div className="absolute inset-0 z-0">
                     <Image
                         src="/kitchen-bg.png"
-                        alt="Professional Kitchen"
+                        alt={t('login.professional_kitchen_alt')}
                         fill
                         priority
                         className="object-cover scale-105"
@@ -113,7 +113,7 @@ export default function LoginPage() {
                         <div className="w-16 h-16 bg-operational-cyan/10 border border-operational-cyan/30 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.15)] group overflow-hidden">
                             <Image 
                                 src="/logoicon.png" 
-                                alt="LogiRest Logo" 
+                                alt={t('logo_alt')} 
                                 width={36} 
                                 height={36} 
                                 className="transition-transform duration-500 group-hover:scale-110 object-contain"
@@ -148,7 +148,7 @@ export default function LoginPage() {
                                 +12
                             </div>
                         </div>
-                        <span className="text-[10px] text-black/60 dark:text-white/60 font-bold tracking-widest">ACTIVE OPERATORS</span>
+                        <span className="text-[10px] text-black/60 dark:text-white/60 font-bold tracking-widest">{t('login.active_operators')}</span>
                     </div>
                 </div>
 
@@ -166,7 +166,7 @@ export default function LoginPage() {
                         <div className="w-12 h-12 bg-operational-cyan/10 border border-operational-cyan/30 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
                             <Image 
                                 src="/logoicon.png" 
-                                alt="LogiRest Logo" 
+                                alt={t('logo_alt')} 
                                 width={28} 
                                 height={28} 
                                 className="object-contain"

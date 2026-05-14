@@ -106,7 +106,7 @@ describe('PostConfirmDialog', () => {
  it('renders children when provided', () => {
  render(
  <PostConfirmDialog {...defaultProps}>
- <div data-testid="custom-child">Custom Content</div>
+ <div data-testid="custom-child">{"custom_content"}</div>
  </PostConfirmDialog>
  );
  expect(screen.getByTestId('custom-child')).toBeInTheDocument();

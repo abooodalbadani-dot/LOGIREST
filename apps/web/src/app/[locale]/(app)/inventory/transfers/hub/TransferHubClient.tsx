@@ -94,7 +94,7 @@ export function TransferHubClient() {
     },
     {
       id: 'route',
-      header: 'Route',
+      header: t('route'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3 text-sm font-medium">
           <span className="text-muted-foreground">{row.original.source}</span>
@@ -196,12 +196,12 @@ export function TransferHubClient() {
 
       <div className="bg-surface-container-low rounded-sm border border-white/5 shadow-2xl overflow-hidden">
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">Active Movement Registry</h3>
+          <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">{t('registry.title')}</h3>
           <div className="flex gap-4">
              <div className="h-2 w-32 bg-white/5 rounded-full overflow-hidden self-center">
                 <div className="h-full bg-primary w-2/3" />
              </div>
-             <span className="text-[10px] font-bold uppercase opacity-50">67% Capacity Utilization</span>
+             <span className="text-[10px] font-bold uppercase opacity-50">{t('capacity_utilization', { percent: 67 })}</span>
           </div>
         </div>
         <PrecisionTable 

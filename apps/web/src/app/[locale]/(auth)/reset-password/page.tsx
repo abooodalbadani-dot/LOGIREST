@@ -36,6 +36,7 @@ type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
     const t = useTranslations('auth');
+    const tc = useTranslations('common');
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
@@ -115,7 +116,7 @@ export default function ResetPasswordPage() {
                 <div className="absolute inset-0 z-0">
                     <Image
                         src="/kitchen-bg.png"
-                        alt="Professional Kitchen"
+                        alt={t('login.professional_kitchen_alt')}
                         fill
                         priority
                         className="object-cover scale-105"
@@ -140,7 +141,7 @@ export default function ResetPasswordPage() {
                 <div className="relative z-10 mt-auto w-full flex flex-col items-start">
                     <div className="inline-flex items-center gap-4 mb-8">
                         <div className="w-16 h-16 bg-operational-cyan/10 border border-operational-cyan/30 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.15)] group overflow-hidden">
-                            <Image src="/logoicon.png" alt="LogiRest Logo" width={36} height={36} className="object-contain" />
+                            <Image src="/logoicon.png" alt={tc('branding.logirest_logo')} width={36} height={36} className="object-contain" />
                         </div>
                         <div className="h-10 w-px bg-black/10 dark:bg-white/10" />
                         <div className="px-3 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg backdrop-blur-sm">
@@ -171,7 +172,7 @@ export default function ResetPasswordPage() {
                                 +12
                             </div>
                         </div>
-                        <span className="text-[10px] text-black/60 dark:text-white/60 font-bold tracking-widest">ACTIVE OPERATORS</span>
+                        <span className="text-[10px] text-black/60 dark:text-white/60 font-bold tracking-widest">{t('login.active_operators')}</span>
                     </div>
                 </div>
                 <div className="absolute top-0 right-0 w-[2px] h-full bg-gradient-to-b from-transparent via-operational-cyan/20 to-transparent animate-pulse" />
@@ -185,7 +186,7 @@ export default function ResetPasswordPage() {
                     {/* Mobile Branding */}
                     <div className="lg:hidden flex flex-col items-center mb-4 animate-in fade-in slide-in-from-top-8 duration-1000">
                         <div className="w-12 h-12 bg-operational-cyan/10 border border-operational-cyan/30 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
-                            <Image src="/logoicon.png" alt="LogiRest Logo" width={28} height={28} className="object-contain" />
+                            <Image src="/logoicon.png" alt={tc('branding.logirest_logo')} width={28} height={28} className="object-contain" />
                         </div>
                         <h1 className="text-display-xs font-black text-[#02617c] tracking-tighter text-center">{t('login.hero_title')}</h1>
                         <div className="mt-1 px-1.5 py-0.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded text-[8px] font-mono text-black/40 dark:text-white/40 uppercase">

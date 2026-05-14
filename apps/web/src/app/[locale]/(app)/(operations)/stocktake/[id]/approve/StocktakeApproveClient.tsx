@@ -70,7 +70,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  }
 
  const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouse_name || session.warehouse_id);
+ const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
  const currencyCode = 'SAR'; // Base currency
 
  // Calculations

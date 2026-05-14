@@ -13,13 +13,52 @@
       "close": "إغلاق",
       "view_all": "عرض الكل",
       "remove_line": "حذف السطر",
-      "audit_log_filename": "سجل_التدقيق",
-      "all_branches": "جميع الفروع",
+      "audit_log_filename": "سجل_المراجعة",
+      "all_branches": "كل الفروع",
       "done": "تم",
+      "no_data": "لا توجد بيانات",
       "retry": "إعادة المحاولة",
-      "no_data": "لا يوجد بيانات",
-      "go_back": "رجوع",
-      "back_to_list": "العودة إلى القائمة"
+      "go_back": "العودة",
+      "back_to_list": "العودة للقائمة",
+      "reload_page": "إعادة تحميل الصفحة"
+    },
+    "operational_audit": "تدقيق تشغيلي",
+    "units_short": {
+      "kg": "كجم",
+      "percent": "%"
+    },
+    "labels": {
+      "std": "نموذجي"
+    },
+    "errors": {
+      "something_went_wrong": "حدث خطأ ما",
+      "unexpected_error": "حدث خطأ غير متوقع في التطبيق.",
+      "error_occurred": "حدث خطأ",
+      "check_fields": "يرجى التحقق من الحقول المطلوبة",
+      "generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.",
+      "title": "فشل الإجراء",
+      "not_found_title": "السجل غير موجود",
+      "not_found_message": "السجل الذي تبحث عنه غير موجود أو قد يكون تم حذفه."
+    },
+    "branding": {
+      "logo_alt": "شعار لوجي ريست",
+      "restaurant_logo": "شعار المطعم",
+      "logirest_logo": "شعار لوجي ريست"
+    },
+    "placeholders": {
+      "lot_number": "مثال: LOT-2024-001",
+      "override_reason": "سبب التجاوز"
+    },
+    "ui": {
+      "toggle_theme": "تغيير المظهر",
+      "scan_barcode": "مسح الباركود...",
+      "loading": "جاري التحميل..."
+    },
+    "profile": {
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "tax_number": "الرقم الضريبي",
+      "cr_number": "رقم السجل التجاري"
     },
     "purchasing": "المشتريات",
     "purchase_orders": "أوامر الشراء",
@@ -175,13 +214,6 @@
       "updated_at": "آخر تحديث في",
       "updated_by": "تم التحديث بواسطة",
       "your_version": "نسختك"
-    },
-    "errors": {
-      "check_fields": "يرجى التحقق من الحقول المطلوبة",
-      "generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.",
-      "title": "فشل الإجراء",
-      "not_found_title": "السجل غير موجود",
-      "not_found_message": "السجل الذي تبحث عنه غير موجود أو قد يكون تم حذفه."
     },
     "unsaved_changes": {
       "title": "تغييرات غير محفوظة",
@@ -389,7 +421,7 @@
     "fefo": {
       "override_reason": "سبب التجاوز",
       "expired_warning": "تحذير: هذا الصنف منتهي الصلاحية - يجب تقديم سبب الاستخدام",
-      "expired_status": "⛔ Expired",
+      "expired_status": "⛔ منتهي الصلاحية",
       "required_commitment": "الالتزام المطلوب",
       "units": "الوحدات",
       "allocated_status": "حالة التخصيص",
@@ -816,6 +848,7 @@
       "login_button": "الانتقال لتسجيل الدخول"
     },
     "back_to_login": "العودة إلى البوابة",
+    "logo_alt": "شعار لوجي ريست",
     "confirm_new_password": "تأكيد كلمة المرور الجديدة",
     "demo_credentials": "وصول تجريبي",
     "email": "البريد الإلكتروني",
@@ -844,7 +877,10 @@
       "version": "الإصدار v3.1.04",
       "biometric_link": "رابط القياس الحيوي",
       "hardware_token": "رمز الأمان المادي",
-      "initialize_session": "بدء الجلسة"
+      "initialize_session": "بدء الجلسة",
+      "professional_kitchen_alt": "مطبخ احترافي",
+      "active_operators": "المشغلون النشطون",
+      "operator_placeholder": "operator@logirest.io"
     },
     "new_password": "كلمة المرور الجديدة",
     "password": "كلمة المرور",
@@ -1805,7 +1841,8 @@
         "main": "رئيسي",
         "cold": "مبرد",
         "dry": "جاف",
-        "virtual": "افتراضي"
+        "virtual": "افتراضي",
+        "transit": "مركز عبور"
       },
       "updated_success": "تم تحديث تفاصيل المستودع",
       "validation": {
@@ -2007,7 +2044,13 @@
       "failed": "فشل"
     },
     "outbox_page_desc": "تتبع رسائل البريد الإلكتروني المرسلة وتاريخ التنبيهات",
-    "notifications_page_desc": "تنبيهات النظام، تحذيرات انخفاض المخزون، والأحداث التشغيلية"
+    "notifications_page_desc": "تنبيهات النظام، تحذيرات انخفاض المخزون، والأحداث التشغيلية",
+    "templates_live_view": "عرض مباشر",
+    "templates_subject_header": "رأس الموضوع",
+    "templates_message_body": "نص الرسالة",
+    "preview_arabic": "العربية",
+    "preview_english": "الإنجليزية",
+    "preview_placeholder": "ابدأ الكتابة لرؤية المعاينة..."
   },
   "operational": {
     "inventory": {
@@ -2285,7 +2328,9 @@
         "notes_min_length": "يجب أن تكون الملاحظات 10 أحرف على الأقل",
         "quantity_positive": "يجب أن تكون الكمية أكبر من الصفر",
         "reason_required": "فئة السبب مطلوبة",
-        "warehouse_required": "المستودع مطلوب"
+        "warehouse_required": "المستودع مطلوب",
+        "notes_max_length": "لا يمكن أن تتجاوز الملاحظات 1000 حرف",
+        "quantity_max": "الكمية تتجاوز الحد الأقصى المسموح به"
       }
     },
     "issue": {
@@ -2310,7 +2355,7 @@
       "empty_manifest": "البيان فارغ. بانتظار تسجيل المكونات.",
       "enroll_component": "تسجيل مكون",
       "entries": "بنود تم اكتشافها",
-      "expired_status": "⛔ Expired",
+      "expired_status": "⛔ منتهي الصلاحية",
       "expiry": "تاريخ الانتهاء",
       "fefo_allocator_title": "تخصيص الدفعات",
       "fefo_drawer_title": "تخصيص الدفعات (FEFO)",
@@ -2384,7 +2429,14 @@
         "expiry_label": "تنتهي في: {date}",
         "breadcrumb_operations": "العمليات",
         "breadcrumb_issues": "سندات الصرف",
-        "breadcrumb_scan": "وضع المسح"
+        "breadcrumb_scan": "وضع المسح",
+        "exit_mode": "الخروج من وضع المسح",
+        "ready_for_barcode": "جاهز لمسح الباركود...",
+        "awaiting_first_scan": "بانتظار المسح الأول",
+        "allocated_status": "تم التخصيص ✓",
+        "pending_lots_status": "دفعات معلقة",
+        "loading": "جاري التحميل...",
+        "qty": "الكمية"
       },
       "warehouse_locked": "المستودع مقفل",
       "validation": {
@@ -2731,6 +2783,13 @@
       "system_security": "الأمان والنظام",
       "security_alert": "أمان تسجيل الدخول",
       "security_desc": "التنبيه عند تسجيل الدخول من أجهزة أو مواقع جديدة"
+    },
+    "templates": {
+      "editor": {
+        "live_view": "العرض المباشر",
+        "subject_header": "عنوان الموضوع",
+        "message_body": "نص الرسالة"
+      }
     }
   },
   "procurement": {
@@ -3143,8 +3202,16 @@
   },
   "not_found": {
     "title": "الصفحة غير موجودة",
-    "description": "عذراً، يبدو أنك سلكت طريقاً خاطئاً. الصفحة التي تبحث عنها غير متوفرة حالياً.",
-    "go_home": "العودة للرئيسية"
+    "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+    "go_home": "العودة للمركز الرئيسي",
+    "mission_title": "مهمتنا",
+    "mission_description": "في لوجي ريست، نؤمن بالدقة السلسة. تم بناء نظامنا لضمان عدم ضياع غرام واحد من المخزون في فجوة عدم الكفاءة.",
+    "trusted_by": "موثوق به من قبل قادة الصناعة",
+    "partners": {
+      "global_kitchen": "GLOBAL_KITCHEN",
+      "resto_pro": "RESTO_PRO",
+      "food_logistics": "FOOD_LOGISTICS"
+    }
   },
   "landed_cost": {
     "title": "حاسبة التكلفة النهائية (Landed Cost)",
@@ -3175,7 +3242,25 @@
     "production_runs": "عمليات الإنتاج",
     "active_recipes": "الوصفات النشطة",
     "top_performers": "الأصناف الأعلى عائداً",
-    "bottlenecks": "عقبات الإنتاج"
+    "bottlenecks": "اختناقات الإنتاجية",
+    "new_batch": "دفعة جديدة",
+    "recipe_yield_log": "سجل إنتاجية الوصفات",
+    "view_history": "عرض السجل",
+    "vs_standard": "{value} مقابل المعياري",
+    "mock": {
+      "recipes": {
+        "ribeye": "تحضير ريب آي سوس فيد",
+        "pasta": "عجينة مكرونة طازجة",
+        "asparagus": "هليون مقلم",
+        "puree": "بوريه جزر"
+      },
+      "categories": {
+        "protein": "بروتين",
+        "starch": "نشويات",
+        "vegetable": "خضروات",
+        "prep": "تحضير"
+      }
+    }
   },
   "transfers": {
     "title": "مركز التحويلات الداخلية",
@@ -3184,6 +3269,7 @@
     "source_warehouse": "المستودع المصدر",
     "target_warehouse": "المستودع الهدف",
     "transfer_date": "تاريخ التحويل",
+    "route": "المسار",
     "status": "حالة التحويل",
     "pending_transfers": "شحنات قيد الانتظار",
     "in_transit": "قيد النقل",
@@ -3192,6 +3278,21 @@
     "doc_number": "رقم التحويل",
     "items_count": "الأصناف",
     "view_manifest": "عرض البيان",
-    "confirm_receipt": "تأكيد الاستلام"
+    "confirm_receipt": "تأكيد الاستلام",
+    "registry": {
+      "title": "سجل الحركة النشط",
+      "description": "مراقبة مباشرة لجميع حركات المخزون عبر الشبكة التنظيمية."
+    },
+    "capacity": {
+      "title": "استغلال السعة",
+      "description": "تحليل حجمي ووزني للموقع المستهدف."
+    },
+    "capacity_utilization": "{percent}% استهلاك السعة"
+  },
+  "fefo": {
+    "warning": "تحذير: هذا المنتج منتهي الصلاحية",
+    "require_reason": "يجب إدخال سبب التجاوز",
+    "override_warning": "تحذير: هذا المنتج منتهي الصلاحية — يجب إدخال سبب الاستخدام",
+    "reason_placeholder": "سبب الاستخدام"
   }
 }

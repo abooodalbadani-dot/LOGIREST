@@ -1,4 +1,5 @@
 import { StocktakeSession, StocktakeItem } from '../types/stocktake';
+import { DocumentStatus } from '@/core/workflow/document-engine';
 
 export interface StocktakeItemVM {
   id: string;
@@ -21,7 +22,7 @@ export interface StocktakeSessionVM {
   sessionName: string;
   warehouseId: string;
   warehouseName?: string;
-  status: string;
+  status: DocumentStatus;
   snapshotAt: string;
   startedBy: string;
   postedAt: string | null;

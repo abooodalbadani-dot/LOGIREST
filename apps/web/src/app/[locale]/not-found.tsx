@@ -36,18 +36,18 @@ export default function NotFound() {
 
             <div className="pt-16 space-y-10">
               <div className="space-y-4 p-8 rounded-[2rem] bg-surface-container-low/30 border border-surface-variant/5 backdrop-blur-sm shadow-inner">
-                <h3 className="text-label-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/40">Our Mission</h3>
+                <h3 className="text-label-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/40">{t('mission_title')}</h3>
                 <p className="text-label-sm font-medium text-muted-foreground/60 max-w-[65ch] mx-auto italic leading-loose">
-                  &quot;At LogiRest, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.&quot;
+                  {t('mission_description')}
                 </p>
               </div>
 
               <div className="space-y-6">
-                <h3 className="text-label-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/40">Trusted By Industry Leaders</h3>
+                <h3 className="text-label-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/40">{t('trusted_by')}</h3>
                 <div className="flex flex-wrap justify-center gap-10 grayscale opacity-20 hover:opacity-40 transition-opacity">
-                  <span className="text-headline-xs font-black tracking-tighter">GLOBAL_KITCHEN</span>
-                  <span className="text-headline-xs font-black tracking-tighter">RESTO_PRO</span>
-                  <span className="text-headline-xs font-black tracking-tighter">FOOD_LOGISTICS</span>
+                  <span className="text-headline-xs font-black tracking-tighter">{t('partners.global_kitchen')}</span>
+                  <span className="text-headline-xs font-black tracking-tighter">{t('partners.resto_pro')}</span>
+                  <span className="text-headline-xs font-black tracking-tighter">{t('partners.food_logistics')}</span>
                 </div>
               </div>
             </div>

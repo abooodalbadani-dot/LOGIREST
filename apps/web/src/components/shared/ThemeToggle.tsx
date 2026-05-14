@@ -3,22 +3,24 @@
 import { useTheme } from '@/providers/ThemeProvider';
 import { Sun, Moon } from 'lucide-react';
 
+import { useTranslations } from 'next-intl';
 
 export function ThemeToggle() {
- const { theme, toggleTheme, mounted } = useTheme();
- 
- if (!mounted) {
- return (
- <div className="w-9 h-9 rounded-xl bg-surface-container-low animate-pulse" />
- );
- }
+  const t = useTranslations('common');
+  const { theme, toggleTheme, mounted } = useTheme();
+  
+  if (!mounted) {
+    return (
+      <div className="w-9 h-9 rounded-xl bg-surface-container-low animate-pulse" />
+    );
+  }
 
- return (
- <button
- onClick={toggleTheme}
- className="p-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all group relative overflow-hidden"
- aria-label="Toggle Theme"
- >
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all group relative overflow-hidden"
+      aria-label={t('ui.toggle_theme')}
+    >
  {/* Subtle glow effect */}
  <div className="absolute inset-0 bg-operational-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity" />
  

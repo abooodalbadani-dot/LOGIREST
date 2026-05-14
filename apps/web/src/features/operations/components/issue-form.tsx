@@ -12,6 +12,8 @@ import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
+import { LockBanner } from '@/components/shared/LockBanner';
+
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { formatDate } from '@/utils/currency';
@@ -72,7 +74,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [, setIsWarehouseLockedError] = useState(false);
+  const [isWarehouseLockedError, setIsWarehouseLockedError] = useState(false);
+
 
   // FEFO Allocator State
   const [fefoOpen, setFefoOpen] = useState(false);
@@ -95,11 +98,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   });
 
   // Lock Banner state
-  useWarehouseLock(warehouseId);
+  const { data: lockState } = useWarehouseLock(warehouseId);
 
   // Workflow Engine Integrations
   const status = (issue?.status || ISSUE_STATUS.DRAFT) as DocumentStatus;
   const isDocLocked = isDocumentLocked("ISSUE", status);
+  const isWarehouseLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
+  const effectiveIsLocked = isDocLocked || isWarehouseLocked;
+
 
 
 
@@ -166,6 +172,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     }
   };
 
+
   const history = useMemo((): StatusTimelineEntry[] => {
     if (!issue) return [];
     const h: StatusTimelineEntry[] = [
@@ -208,9 +215,11 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
         <DocumentLockBanner isLocked={isDocLocked} status={status} />
+        {isWarehouseLocked && <div className="px-6 lg:px-10 pt-4"><LockBanner lockState={lockState} /></div>}
         
-        <DocumentLockWrapper isLocked={isDocLocked}>
+        <DocumentLockWrapper isLocked={effectiveIsLocked}>
           <div className="flex-1 px-6 lg:px-10 py-8">
+
         
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 lg:col-span-8 space-y-8">
@@ -225,12 +234,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   </div>
                   <ScanInput 
                     onScan={handleScan} 
-                    disabled={isDocLocked} 
+                    disabled={effectiveIsLocked} 
                     placeholder={t('scan_placeholder')} 
                     onError={(bc) => setScanError(t('not_found_prefix') + bc)}
                     size="lg"
                     scannerMode={true}
                   />
+
                   {scanError && (
                     <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-200">
                       <AlertCircle className="w-4 h-4" />
@@ -265,8 +275,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                               dir="ltr"
                               className="w-24 h-10 bg-surface-container-low border-none rounded-xl text-center font-mono text-body-md shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 disabled:opacity-50 transition-all"
                               value={line.qty as number} 
-                              disabled={isDocLocked}
+                              disabled={effectiveIsLocked}
                               onChange={e => {
+
                                 const val = Number(e.target.value);
                                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
                               }} 
@@ -282,8 +293,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                           const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocated_qty, 0);
                           const isFullyAllocated = totalAllocated >= line.qty;
                           
-                          if (isDocLocked) {
+                          if (effectiveIsLocked) {
                             return (
+
                               <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                                 {lineAllocations.map((alloc, idx) => (
                                   <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-xl flex items-center gap-1.5">
@@ -345,8 +357,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     <Select 
                       value={destinationId} 
                       onValueChange={(val) => setDestinationId(val || '')} 
-                      disabled={isDocLocked}
+                      disabled={effectiveIsLocked}
                     >
+
                       <SelectTrigger className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10">
                         <SelectValue placeholder={t('select_department')} />
                       </SelectTrigger>
@@ -369,8 +382,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       type="text"
                       value={requestedBy}
                       onChange={e => setRequestedBy(e.target.value)}
-                      disabled={isDocLocked}
+                      disabled={effectiveIsLocked}
                       placeholder={t('requested_by_placeholder')}
+
                       className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all placeholder:text-muted-foreground/20 shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
                     />
                   </div>
@@ -383,8 +397,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     <Textarea 
                       value={notes} 
                       onChange={e => setNotes(e.target.value)} 
-                      disabled={isDocLocked} 
+                      disabled={effectiveIsLocked} 
                       placeholder={t('notes_placeholder')}
+
                       className="w-full bg-surface-container-highest border-none rounded-xl p-5 text-label-sm font-medium transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
                     />
                   </div>
@@ -430,8 +445,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         </DocumentLockWrapper>
 
         <FormFooter 
-          isLocked={isDocLocked}
+          isLocked={effectiveIsLocked}
           onCancel={() => guardedRouter.push('/issues')}
+
           onSubmit={() => setIsPostDialogOpen(true)}
           isPending={isPostPending}
           submitLabel={t('post_issue')}

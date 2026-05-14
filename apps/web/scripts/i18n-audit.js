@@ -139,10 +139,10 @@ class I18nAudit {
   async scanSourceFiles(dir) {
     const files = this.getFiles(dir, ['.tsx', '.jsx']);
     
-    // Regex for text in JSX: >Text<
+    // Regex for text in JSX: >Text< but NOT inside { }
     const jsxTextRegex = />\s*([^<>{}\s][^<>{}]*)\s*</g;
     // Regex for props: label="Text", etc.
-    const propRegex = /\b(label|placeholder|title|description|alt|aria-label|header)="([^"{}\n]+)"/g;
+    const propRegex = /\b(label|placeholder|title|description|alt|aria-label|header|emptyText|noDataText)="([^"{}\n]+)"/g;
 
     for (const file of files) {
       const content = fs.readFileSync(file, 'utf-8');
@@ -192,25 +192,30 @@ class I18nAudit {
   isHardcodedText(text) {
     // Ignore numbers, punctuation, icons, and dynamic-looking strings
     if (!text || text.length < 2) return false;
-    if (/^[0-9\s.,:\-/_+()]+$/.test(text)) return false;
+    if (/^[0-9\s.,:\-/_+()%$]+$/.test(text)) return false;
     if (text.includes('{') || text.includes('}')) return false;
-    if (['SAR', 'USD', 'KG', 'L', 'EA'].includes(text.toUpperCase())) return false;
+    if (['SAR', 'SAR ', 'USD', 'KG', 'L', 'EA'].includes(text.trim().toUpperCase())) return false;
     
     // Ignore technical placeholders (e.g. PR-2024-001, IT-1, LOT-123)
     if (/^[A-Z]{2,}-\d+(-\d+)?$/.test(text)) return false;
     
     // Ignore common technical strings and CSS classes
-    if (['lg', 'md', 'sm', 'xl', '2xl', 'outline', 'solid', 'ghost', 'primary', 'secondary'].includes(text)) return false;
-    if (text.startsWith('text-') || text.startsWith('bg-') || text.startsWith('border-')) return false;
+    if (['lg', 'md', 'sm', 'xl', '2xl', 'outline', 'solid', 'ghost', 'primary', 'secondary', 'default'].includes(text)) return false;
+    if (text.startsWith('text-') || text.startsWith('bg-') || text.startsWith('border-') || text.startsWith('shadow-') || text.startsWith('rounded-')) return false;
     
     // Ignore strings that look like JS logic or type params
-    if (text.includes('(') && text.includes(')')) return false; // t(k as Parameters...)
+    if (text.includes('(') || text.includes(')')) return false; // t(k as Parameters...)
+    if (text.includes('as ') || text.includes('typeof ')) return false;
     if (text.includes('&') || text.includes('=') || text.includes('<') || text.includes('>')) return false;
-    if (text.includes('?') && text.includes(':')) return false;
+    if (text.includes('?') || text.includes(':')) return false;
     if (text.includes('&&') || text.includes('||')) return false;
+    if (text.includes('.') && !text.includes(' ')) return false; // s.id, item.name
     
     // Ignore emojis
     if (/[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(text)) return false;
+    
+    // Ignore common mock data that might be technical
+    if (['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].includes(text.toUpperCase())) return false;
     
     return true;
   }

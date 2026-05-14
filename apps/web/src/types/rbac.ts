@@ -37,6 +37,7 @@ export type ResourceType =
  | 'procurement_logistics_pipeline'
  | 'kitchen_requests'
  | 'operations_kitchen_requests'
+ | 'yield_runs'
  | 'generic_table';
 
 export type ActionType = 

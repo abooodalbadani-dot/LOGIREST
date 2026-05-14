@@ -168,7 +168,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
  {warehouses?.map((wh) => (
  <SelectItem key={wh.id} value={wh.id} className="text-label-xs font-bold py-3">
- {locale === 'ar' ? wh.nameAr : wh.nameEn}
+                  {locale === 'ar' ? wh.name_ar : wh.name_en}
  </SelectItem>
  ))}
  </SelectContent>

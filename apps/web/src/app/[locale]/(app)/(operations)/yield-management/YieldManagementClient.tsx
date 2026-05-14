@@ -36,8 +36,8 @@ interface YieldItem {
 const MOCK_YIELD_DATA: YieldItem[] = [
   {
     id: '1',
-    recipe_name: 'Sous-vide Ribeye Prep',
-    category: 'Protein',
+    recipe_name: 'mock.recipes.ribeye',
+    category: 'mock.categories.protein',
     input_qty: 25.0,
     output_qty: 18.5,
     waste_qty: 6.5,
@@ -47,8 +47,8 @@ const MOCK_YIELD_DATA: YieldItem[] = [
   },
   {
     id: '2',
-    recipe_name: 'Fresh Pasta Dough',
-    category: 'Starch',
+    recipe_name: 'mock.recipes.pasta',
+    category: 'mock.categories.starch',
     input_qty: 10.0,
     output_qty: 9.8,
     waste_qty: 0.2,
@@ -58,8 +58,8 @@ const MOCK_YIELD_DATA: YieldItem[] = [
   },
   {
     id: '3',
-    recipe_name: 'Trimmed Asparagus',
-    category: 'Vegetable',
+    recipe_name: 'mock.recipes.asparagus',
+    category: 'mock.categories.vegetable',
     input_qty: 15.0,
     output_qty: 11.2,
     waste_qty: 3.8,
@@ -69,8 +69,8 @@ const MOCK_YIELD_DATA: YieldItem[] = [
   },
   {
     id: '4',
-    recipe_name: 'Carrot Puree',
-    category: 'Prep',
+    recipe_name: 'mock.recipes.puree',
+    category: 'mock.categories.prep',
     input_qty: 5.0,
     output_qty: 3.2,
     waste_qty: 1.8,
@@ -110,8 +110,8 @@ export function YieldManagementClient() {
       header: tc('name'),
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-foreground">{row.original.recipe_name}</span>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.original.category}</span>
+          <span className="font-semibold text-foreground">{t(row.original.recipe_name as Parameters<typeof t>[0])}</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{t(row.original.category as Parameters<typeof t>[0])}</span>
         </div>
       ),
     },
@@ -172,7 +172,7 @@ export function YieldManagementClient() {
         actions={
           <Button className="h-11 px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-label-xs font-bold uppercase rounded-sm transition-all shadow-lg shadow-primary/20">
             <ClipboardList className="w-3.5 h-3.5 me-2" />
-            New Batch
+            {t('new_batch')}
           </Button>
         }
       />
@@ -216,15 +216,15 @@ export function YieldManagementClient() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-rose-500/5 rounded-sm border border-rose-500/10">
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold">Trimmed Asparagus</span>
-                  <span className="text-[10px] text-rose-400">-5.4% vs Standard</span>
+                  <span className="text-sm font-semibold">{t('mock.recipes.asparagus')}</span>
+                  <span className="text-[10px] text-rose-400">{t('vs_standard', { value: '-5.4%' })}</span>
                 </div>
                 <ArrowDownRight className="w-4 h-4 text-rose-400" />
               </div>
               <div className="flex items-center justify-between p-3 bg-amber-500/5 rounded-sm border border-amber-500/10">
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold">Carrot Puree</span>
-                  <span className="text-[10px] text-amber-400">-1.0% vs Standard</span>
+                  <span className="text-sm font-semibold">{t('mock.recipes.puree')}</span>
+                  <span className="text-[10px] text-amber-400">{t('vs_standard', { value: '-1.0%' })}</span>
                 </div>
                 <ArrowDownRight className="w-4 h-4 text-amber-400" />
               </div>
@@ -239,8 +239,8 @@ export function YieldManagementClient() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-emerald-500/5 rounded-sm border border-emerald-500/10">
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold">Fresh Pasta Dough</span>
-                  <span className="text-[10px] text-emerald-400">+4.0% vs Standard</span>
+                  <span className="text-sm font-semibold">{t('mock.recipes.pasta')}</span>
+                  <span className="text-[10px] text-emerald-400">{t('vs_standard', { value: '+4.0%' })}</span>
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-emerald-400" />
               </div>
@@ -251,9 +251,9 @@ export function YieldManagementClient() {
         {/* Main Performance Table */}
         <div className="lg:col-span-3 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">Recipe Yield Log</h3>
+            <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest">{t('recipe_yield_log')}</h3>
             <Button variant="ghost" size="sm" className="text-[10px] uppercase font-bold text-primary">
-              View History <ChevronRight className="w-3 h-3 ms-1" />
+              {t('view_history')} <ChevronRight className="w-3 h-3 ms-1" />
             </Button>
           </div>
           <PrecisionTable 

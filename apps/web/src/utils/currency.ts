@@ -49,10 +49,13 @@ export function formatNumber(
   const safeLocale = locale || 'en';
   const formatterLocale = safeLocale === 'ar' ? 'ar-u-nu-latn' : 'en-US';
   
-  return new Intl.NumberFormat(formatterLocale, {
-    minimumFractionDigits: precision,
-    maximumFractionDigits: precision,
-  }).format(safeValue);
+  const options: Intl.NumberFormatOptions = {};
+  if (precision !== undefined) {
+    options.minimumFractionDigits = precision;
+    options.maximumFractionDigits = precision;
+  }
+  
+  return new Intl.NumberFormat(formatterLocale, options).format(safeValue);
 }
 
 /**

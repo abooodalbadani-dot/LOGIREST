@@ -36,7 +36,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   
   const { data: warehouses } = useWarehouses();
   const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouse_name || session.warehouse_id);
+  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">

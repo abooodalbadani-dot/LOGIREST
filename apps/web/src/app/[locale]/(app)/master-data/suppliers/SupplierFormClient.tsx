@@ -185,7 +185,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                       className="font-mono font-semibold uppercase text-status-active" 
                       placeholder={ts('code_placeholder')} 
                     />
-                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as any)}</p>}
+                    {errors.code?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
                   </div>
                   <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
                 </div>
@@ -201,7 +201,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                       className="font-semibold" 
                       placeholder={ts('name_en_placeholder')} 
                     />
-                    {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as any)}</p>}
+                    {errors.name_en?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as never)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -214,7 +214,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                       className="font-semibold" 
                       placeholder={ts('name_ar_placeholder')} 
                     />
-                    {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as any)}</p>}
+                    {errors.name_ar?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as never)}</p>}
                   </div>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                       </Select>
                     )}
                   />
-                  {errors.currency_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as any)}</p>}
+                  {errors.currency_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as never)}</p>}
                 </div>
 
                 <div className="space-y-2">

@@ -2,8 +2,8 @@
 ≡ا¤ Checking Structural Parity...
 node : [IDENTICAL_VALUE] messages - Key "common.fefo.expired_status" has identical values in AR and EN: "ظؤ¤ Expired"
 At line:1 char:1
-+ node scripts/i18n-audit.js > i18n-audit-fresh.txt 2>&1
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ node scripts/i18n-audit.js > i18n-audit-filtered.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: ([IDENTICAL_VALU...: "ظؤ¤ Expired":String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
@@ -11,13 +11,8 @@ At line:1 char:1
 ╪▒┘è╪│╪ز"
 [IDENTICAL_VALUE] messages - Key "operations.issue.expired_status" has identical values in AR and EN: "ظؤ¤ Expired"
 ≡ا¤ Scanning Source Files for Hardcoded Strings...
-[HARDCODED_TEXT] app\[locale]\(app)\(operations)\issues\new\issue-form.tsx:66 - Found raw text in JSX: "t(k as 
-Parameters"
-[HARDCODED_TEXT] app\[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx:63 - Found raw text in JSX: "t(k as 
-Parameters"
 [HARDCODED_TEXT] app\[locale]\(app)\(procurement)\goods-received\[id]\scan-mode\LotEntryModal.tsx:124 - Found raw text 
 in prop: "e.g. LOT-2024-001"
-[HARDCODED_TEXT] app\[locale]\(app)\admin\settings\SettingsClient.tsx:159 - Found raw text in JSX: "Loading..."
 [HARDCODED_TEXT] app\[locale]\(app)\communications\email-outbox\page.tsx:25 - Found raw text in prop: "Track sent 
 emails and notification history"
 [HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\page.tsx:25 - Found raw text in prop: "System alerts, 
@@ -28,31 +23,10 @@ raw text in JSX: "Live View"
 raw text in JSX: "Subject Header"
 [HARDCODED_TEXT] app\[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx:214 - Found 
 raw text in JSX: "Message Body"
-[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:139 - Found raw text in JSX: "94%"
-[HARDCODED_TEXT] app\[locale]\(app)\inventory\scan-mode\ScannerClient.tsx:143 - Found raw text in JSX: "99.8%"
 [HARDCODED_TEXT] app\[locale]\(app)\inventory\transfers\hub\TransferHubClient.tsx:199 - Found raw text in JSX: "Active 
 Movement Registry"
 [HARDCODED_TEXT] app\[locale]\(app)\inventory\transfers\hub\TransferHubClient.tsx:204 - Found raw text in JSX: "67% 
 Capacity Utilization"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\import\components\Step2Validate.tsx:71 - Found raw text in JSX: "0 ?"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:191 - Found raw text 
-in JSX: "Logistics.com"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "JAN"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "FEB"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "MAR"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "APR"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "MAY"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "JUN"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:224 - Found raw text 
-in JSX: "JUL"
-[HARDCODED_TEXT] app\[locale]\(app)\master-data\suppliers\[id]\profile\SupplierProfileClient.tsx:247 - Found raw text 
-in JSX: "+4.2%"
 [HARDCODED_TEXT] app\[locale]\(auth)\reset-password\page.tsx:143 - Found raw text in prop: "LogiRest Logo"
 [HARDCODED_TEXT] app\[locale]\(auth)\reset-password\page.tsx:188 - Found raw text in prop: "LogiRest Logo"
 [HARDCODED_TEXT] app\[locale]\not-found.tsx:39 - Found raw text in JSX: "Our Mission"
@@ -72,16 +46,15 @@ unexpected error."
 [HARDCODED_TEXT] components\shared\ReportHeader.tsx:35 - Found raw text in prop: "Restaurant Logo"
 [HARDCODED_TEXT] components\shared\ThemeToggle.tsx:20 - Found raw text in prop: "Toggle Theme"
 [HARDCODED_TEXT] components\ui\scan-input.tsx:59 - Found raw text in prop: "Scan barcode..."
-[HARDCODED_TEXT] features\items\components\item-form.tsx:185 - Found raw text in JSX: "s.id ?"
 ≡ا¤ Checking for Blacklisted Placeholders...
 ≡ا¤ Enforcing snake_case naming convention...
 
 --- Audit Report ---
 Total Keys: 2714
 Missing Keys: 0
-Hardcoded Strings: 40
+Hardcoded Strings: 24
 Placeholder Violations: 0
 Invalid Key Names: 0
 
 Status: ظإî FAIL
-Total Issues: 43
+Total Issues: 27

@@ -69,7 +69,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     useForm<WarehouseFormValues>({
       resolver: zodResolver(WarehouseFormSchema),
       disabled: isReadOnly,
-      defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'MAIN', is_active: true, version: undefined },
+      defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'main', is_active: true, version: undefined },
     });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
@@ -293,9 +293,9 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(['MAIN','DRY','COLD','VIRTUAL'] as const).map((ty) => (
+                        {(['main','dry','cold','virtual','transit'] as const).map((ty) => (
                           <SelectItem key={ty} value={ty} className="font-semibold text-label-sm uppercase">
-                            {tw(`types.${ty.toLowerCase()}` as any)}
+                            {tw(`types.${ty.toLowerCase() as 'main' | 'dry' | 'cold' | 'virtual' | 'transit'}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>

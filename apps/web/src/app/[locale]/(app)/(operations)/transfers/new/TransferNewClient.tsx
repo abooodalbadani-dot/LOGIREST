@@ -68,7 +68,7 @@ export function TransferNewClient() {
   const isEitherLocked = !!fromLockState?.isLocked || !!toLockState?.isLocked;
 
   const handleAddItem = (barcode: string) => {
-    const item = items?.find(i => i.sku === barcode);
+    const item = items?.find(i => i.barcode === barcode || i.code === barcode);
     if (!item) return;
 
     setLines(prev => {
@@ -81,13 +81,13 @@ export function TransferNewClient() {
         item_id: item.id,
         item: {
           id: item.id,
-          code: item.sku,
-          name_ar: item.nameAr,
-          name_en: item.nameEn,
-          primary_uom: { code: item.uom }
+          code: item.code,
+          name_ar: item.name_ar,
+          name_en: item.name_en,
+          primary_uom: { code: item.primary_uom.code }
         },
         qty: 1,
-        uom_id: item.uom
+        uom_id: item.primary_uom.id
       }];
     });
   };
@@ -174,7 +174,7 @@ export function TransferNewClient() {
                   <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
                     {warehouses?.map((wh) => (
                       <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
-                        {locale === 'ar' ? wh.nameAr : wh.nameEn}
+                        {locale === 'ar' ? wh.name_ar : wh.name_en}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -195,7 +195,7 @@ export function TransferNewClient() {
                   <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
                     {warehouses?.map((wh) => (
                       <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
-                        {locale === 'ar' ? wh.nameAr : wh.nameEn}
+                        {locale === 'ar' ? wh.name_ar : wh.name_en}
                       </SelectItem>
                     ))}
                   </SelectContent>

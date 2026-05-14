@@ -154,7 +154,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                       type="button"
                       onClick={() => onRemoveLine(line.id)}
                       className="text-muted-foreground/20 hover:text-destructive hover:bg-destructive/5 transition-all p-2 rounded-sm"
-                      aria-label="Remove line"
+                      aria-label={tc('actions.remove_line')}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

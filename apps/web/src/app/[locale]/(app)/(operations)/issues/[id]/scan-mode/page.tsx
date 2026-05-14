@@ -136,7 +136,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
   const isPosted = isIssuePosted(issue?.status);
  const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
 
- if (isLoading) return <div className="p-8 text-center">Loading...</div>;
+ if (isLoading) return <div className="p-8 text-center">{t('scan_mode.loading')}</div>;
 
  return (
  <div className="min-h-screen bg-surface-container-lowest flex flex-col p-4 space-y-6">
@@ -149,13 +149,13 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-operational-cyan opacity-75"></span>
  <span className="relative inline-flex rounded-full h-2 w-2 bg-operational-cyan"></span>
  </span>
- <span className="text-operational-cyan/80 text-label-sm font-mono uppercase italic">Immersive Scan Mode</span>
+ <span className="text-operational-cyan/80 text-label-sm font-mono uppercase italic">{t('scan_mode.title')}</span>
  </div>
  </div>
  <div className="flex items-center gap-4">
  <StatusBadge status={(issue?.status ?? 'DRAFT') as BadgeStatus} />
  <Link href={`/issues/${id}`}>
- <Button variant="outline" size="sm">Exit Scan Mode</Button>
+ <Button variant="outline" size="sm">{t('scan_mode.exit_mode')}</Button>
  </Link>
  </div>
  </div>
@@ -167,7 +167,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <ScanInput 
  onScan={handleScan} 
  disabled={isPosted || isLocked} 
- placeholder="READY FOR BARCODE..." 
+ placeholder={t('scan_mode.ready_for_barcode')} 
  className="text-headline-lg py-10 font-mono text-center bg-surface-container-highest border-none rounded-3xl focus:ring-4 focus:ring-operational-cyan/30 transition-all placeholder:text-foreground/30 shadow-inner"
  scannerMode={true}
  />
@@ -188,7 +188,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  </div>
  <div className="flex items-center gap-8">
  <div className="text-end">
- <div className="text-label-sm text-muted-foreground uppercase mb-1">Quantity</div>
+ <div className="text-label-sm text-muted-foreground uppercase mb-1">{t('scan_mode.qty')}</div>
  <div className="text-headline-lg font-bold font-mono">{line.qty} <span className="text-body-md opacity-60">{line.item.primary_uom.code}</span></div>
  </div>
  <button 
@@ -196,7 +196,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  onClick={() => { setActiveLine(line); setFefoOpen(true); }}
  disabled={isPosted}
  >
- {isFullyAllocated ? `ALLOCATED ✓` : `PENDING LOTS`}
+ {isFullyAllocated ? t('scan_mode.allocated_status') : t('scan_mode.pending_lots_status')}
  </button>
  </div>
  </div>
@@ -206,7 +206,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  ) : (
  <div className="flex h-full items-center justify-center flex-col text-muted-foreground">
  <div className="text-headline-lg mb-4">📦</div>
- <div className="text-headline-lg">Awaiting First Scan</div>
+ <div className="text-headline-lg">{t('scan_mode.awaiting_first_scan')}</div>
  </div>
  )}
  </div>

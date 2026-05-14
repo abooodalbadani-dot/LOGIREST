@@ -19,7 +19,46 @@
       "no_data": "No Data",
       "retry": "Retry",
       "go_back": "Go Back",
-      "back_to_list": "Back to List"
+      "back_to_list": "Back to List",
+      "reload_page": "Reload Page"
+    },
+    "operational_audit": "Operational Audit",
+    "units_short": {
+      "kg": "kg",
+      "percent": "%"
+    },
+    "labels": {
+      "std": "Std"
+    },
+    "placeholders": {
+      "lot_number": "e.g. LOT-2024-001",
+      "override_reason": "Override reason"
+    },
+    "branding": {
+      "restaurant_logo": "Restaurant Logo",
+      "logirest_logo": "LogiRest Logo",
+      "logo_alt": "LogiRest Logo"
+    },
+    "errors": {
+      "something_went_wrong": "Something went wrong",
+      "unexpected_error": "The application encountered an unexpected error.",
+      "error_occurred": "An error occurred",
+      "check_fields": "Please check required fields",
+      "generic": "An unexpected error occurred. Please try again or contact support.",
+      "title": "Error Encountered",
+      "not_found_title": "Record Not Found",
+      "not_found_message": "The record you are looking for does not exist or may have been deleted."
+    },
+    "ui": {
+      "toggle_theme": "Toggle Theme",
+      "scan_barcode": "Scan barcode...",
+      "loading": "Loading..."
+    },
+    "profile": {
+      "phone": "Phone",
+      "email": "Email",
+      "tax_number": "Tax Number",
+      "cr_number": "CR Number"
     },
     "admins": "Admins",
     "audit_trail": "Audit Trail / History",
@@ -172,13 +211,6 @@
       "updated_by": "Updated by",
       "your_version": "Your version"
     },
-    "errors": {
-      "check_fields": "Please check required fields",
-      "generic": "An unexpected error occurred. Please try again or contact support.",
-      "title": "Error Encountered",
-      "not_found_title": "Record Not Found",
-      "not_found_message": "The record you are looking for does not exist or may have been deleted."
-    },
     "unsaved_changes": {
       "title": "Unsaved Changes",
       "description": "You have unsaved changes. Are you sure you want to leave?",
@@ -285,7 +317,7 @@
     "lot": "Lot",
     "lot_number": "Lot Number",
     "manifest_state": "Manifest State",
-    "master_data": "Master Data Hub",
+    "master_data": "Master Data",
     "navigation": {
       "master_data": "Master Data"
     },
@@ -475,13 +507,7 @@
     "cost_center": "Cost Center",
     "currency_id": "Currency",
     "category": "Category",
-    "name": "Name",
-    "search": "Search",
-    "home": "Home",
-    "master_data": "Master Data",
-    "barcodes": "Barcodes",
     "selected": "Selected",
-    "sku": "SKU",
     "today": "Today",
     "clear_history": "Clear History",
     "edit": "Edit",
@@ -822,6 +848,7 @@
       "login_button": "Go to Login"
     },
     "back_to_login": "Return to Portal",
+    "logo_alt": "LogiRest Logo",
     "confirm_new_password": "Confirm New Password",
     "demo_credentials": "Demo Access",
     "email": "Email Address",
@@ -839,7 +866,7 @@
       "demo_access": "Demo Access",
       "description": "Enter your credentials to access the secure portal.",
       "hero_subtitle": "Precision management for high-performance kitchens. Real-time inventory tracking and automated procurement.",
-      "hero_title": "LogiRest | لوجي ريست",
+      "hero_title": "LogiRest | Smart Inventory Control",
       "operator_id": "Operator ID",
       "operator_id_placeholder": "Enter ID or Email",
       "password_placeholder": "Enter Password",
@@ -850,7 +877,10 @@
       "version": "v3.1.04",
       "biometric_link": "BIOMETRIC LINK",
       "hardware_token": "HARDWARE TOKEN",
-      "initialize_session": "INITIALIZE SESSION"
+      "initialize_session": "INITIALIZE SESSION",
+      "professional_kitchen_alt": "Professional Kitchen",
+      "active_operators": "ACTIVE OPERATORS",
+      "operator_placeholder": "operator@logirest.io"
     },
     "new_password": "New Password",
     "password": "Password",
@@ -1811,7 +1841,8 @@
         "main": "Main",
         "cold": "Cold Storage",
         "dry": "Dry Storage",
-        "virtual": "Virtual"
+        "virtual": "Virtual",
+        "transit": "Transit Hub"
       },
       "updated_success": "Warehouse details updated",
       "validation": {
@@ -2013,7 +2044,13 @@
       "failed": "Failed"
     },
     "outbox_page_desc": "Track sent emails and notification history",
-    "notifications_page_desc": "System alerts, low-stock warnings, and operational events"
+    "notifications_page_desc": "System alerts, low-stock warnings, and operational events",
+    "templates_live_view": "Live View",
+    "templates_subject_header": "Subject Header",
+    "templates_message_body": "Message Body",
+    "preview_arabic": "Arabic",
+    "preview_english": "English",
+    "preview_placeholder": "Start typing to see preview..."
   },
   "operational": {
     "inventory": {
@@ -2291,7 +2328,9 @@
         "notes_min_length": "Notes must be at least 10 characters",
         "quantity_positive": "Quantity must be greater than zero",
         "reason_required": "Reason category is required",
-        "warehouse_required": "Warehouse is required"
+        "warehouse_required": "Warehouse is required",
+        "notes_max_length": "Notes cannot exceed 1000 characters",
+        "quantity_max": "Quantity exceeds maximum allowed"
       }
     },
     "issue": {
@@ -2390,7 +2429,14 @@
         "expiry_label": "Exp: {date}",
         "breadcrumb_operations": "Operations",
         "breadcrumb_issues": "Stock Issues",
-        "breadcrumb_scan": "Scan Mode"
+        "breadcrumb_scan": "Scan Mode",
+        "exit_mode": "Exit Scan Mode",
+        "ready_for_barcode": "READY FOR BARCODE...",
+        "awaiting_first_scan": "Awaiting First Scan",
+        "allocated_status": "ALLOCATED ✓",
+        "pending_lots_status": "PENDING LOTS",
+        "loading": "Loading...",
+        "qty": "Quantity"
       },
       "warehouse_locked": "Warehouse is locked due to an active stocktake.",
       "validation": {
@@ -2737,6 +2783,13 @@
       "system_security": "Security & System",
       "security_alert": "Login Security",
       "security_desc": "Alert on logins from new devices or locations"
+    },
+    "templates": {
+      "editor": {
+        "live_view": "Live View",
+        "subject_header": "Subject Header",
+        "message_body": "Message Body"
+      }
     }
   },
   "procurement": {
@@ -3147,11 +3200,6 @@
     "title": "Reports Hub",
     "view_report": "View Report"
   },
-  "not_found": {
-    "title": "Page Not Found",
-    "description": "Sorry, it looks like you've taken a wrong turn. The page you are looking for is currently unavailable.",
-    "go_home": "Back to Home"
-  },
   "landed_cost": {
     "title": "Landed Cost Calculator",
     "subtitle": "Calculate and allocate logistics and overhead costs to inventory",
@@ -3181,7 +3229,25 @@
     "production_runs": "Production Runs",
     "active_recipes": "Active Recipes",
     "top_performers": "Top Yielding Items",
-    "bottlenecks": "Yield Bottlenecks"
+    "bottlenecks": "Yield Bottlenecks",
+    "new_batch": "New Batch",
+    "recipe_yield_log": "Recipe Yield Log",
+    "view_history": "View History",
+    "vs_standard": "{value} vs Standard",
+    "mock": {
+      "recipes": {
+        "ribeye": "Sous-vide Ribeye Prep",
+        "pasta": "Fresh Pasta Dough",
+        "asparagus": "Trimmed Asparagus",
+        "puree": "Carrot Puree"
+      },
+      "categories": {
+        "protein": "Protein",
+        "starch": "Starch",
+        "vegetable": "Vegetable",
+        "prep": "Prep"
+      }
+    }
   },
   "transfers": {
     "title": "Internal Transfer Hub",
@@ -3190,6 +3256,7 @@
     "source_warehouse": "Source Warehouse",
     "target_warehouse": "Target Warehouse",
     "transfer_date": "Transfer Date",
+    "route": "Route",
     "status": "Transfer State",
     "pending_transfers": "Pending Shipments",
     "in_transit": "In Transit",
@@ -3198,6 +3265,34 @@
     "doc_number": "Transfer No",
     "items_count": "Items",
     "view_manifest": "View Manifest",
-    "confirm_receipt": "Confirm Receipt"
+    "confirm_receipt": "Confirm Receipt",
+    "registry": {
+      "title": "Active Movement Registry",
+      "description": "Live monitor of all stock movements across the organizational grid."
+    },
+    "capacity": {
+      "title": "Capacity Utilization",
+      "description": "Volumetric and weight-based analysis of the target node."
+    },
+    "capacity_utilization": "{percent}% Capacity Utilization"
+  },
+  "not_found": {
+    "title": "Page Not Found",
+    "description": "The requested resource could not be found or has been moved.",
+    "go_home": "Back to Control Center",
+    "mission_title": "Our Mission",
+    "mission_description": "At LogiRest, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.",
+    "trusted_by": "Trusted By Industry Leaders",
+    "partners": {
+      "global_kitchen": "GLOBAL_KITCHEN",
+      "resto_pro": "RESTO_PRO",
+      "food_logistics": "FOOD_LOGISTICS"
+    }
+  },
+  "fefo": {
+    "warning": "Warning: This product is expired",
+    "require_reason": "You must enter an override reason",
+    "override_warning": "Warning: This product is expired — you must enter an override reason",
+    "reason_placeholder": "Override reason"
   }
 }

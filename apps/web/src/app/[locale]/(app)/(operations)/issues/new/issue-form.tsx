@@ -34,18 +34,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const buildLineSchema = (t: (k: string) => string) => z.object({
- itemId: z.string().min(1, t('validation.item_required')),
- requestedQuantity: z.number().min(0.01, t('validation.qty_positive')),
- allocatedQuantity: z.number(),
- lots: z.array(z.custom<IssueLot>()),
- notes: z.string().optional(),
+  item_id: z.string().min(1, t('validation.item_required')),
+  requested_qty: z.number().min(0.01, t('validation.qty_positive')),
+  qty: z.number(),
+  lot_allocations: z.array(z.custom<IssueLot>()),
+  notes: z.string().optional(),
 });
 
 const buildFormSchema = (t: (k: string) => string) => z.object({
- warehouseId: z.string().min(1, t('validation.warehouse_required')),
- departmentId: z.string().min(1, t('validation.department_required')),
- items: z.array(buildLineSchema(t)).min(1, t('validation.items_required')),
- notes: z.string().optional(),
+  warehouse_id: z.string().min(1, t('validation.warehouse_required')),
+  destination_dept_id: z.string().min(1, t('validation.department_required')),
+  lines: z.array(buildLineSchema(t)).min(1, t('validation.items_required')),
+  notes: z.string().optional(),
 });
 
 type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
@@ -66,13 +66,13 @@ export function IssueForm() {
  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
  const form = useForm<IssueFormValues>({
- resolver: zodResolver(formSchema),
- defaultValues: {
- warehouseId: "",
- departmentId: "",
- items: [],
- notes: "",
- },
+  resolver: zodResolver(formSchema),
+  defaultValues: {
+    warehouse_id: "",
+    destination_dept_id: "",
+    lines: [],
+    notes: "",
+  },
  });
 
  // Register dirty state
@@ -81,13 +81,13 @@ export function IssueForm() {
  }, [form.formState.isDirty, registerDirty]);
 
  const { fields, append, remove, update } = useFieldArray({
- control: form.control,
- name: "items",
+  control: form.control,
+  name: "lines",
  });
 
  const watchedWarehouse = useWatch({
- control: form.control,
- name: "warehouseId",
+  control: form.control,
+  name: "warehouse_id",
  });
  const isWarehouseLocked = LOCKED_WAREHOUSES.has(watchedWarehouse);
 
@@ -96,19 +96,19 @@ export function IssueForm() {
  setAllocatorOpen(true);
  };
 
- const handleAllocate = (lots: IssueLot[]) => {
- if (activeLineIndex === null) return;
- const line = fields[activeLineIndex];
- const allocated = lots.reduce((s, l) => s + l.allocatedQuantity, 0);
- update(activeLineIndex, {
- ...line,
- allocatedQuantity: allocated,
- lots,
- });
+ const handleAllocate = (lot_allocations: IssueLot[]) => {
+  if (activeLineIndex === null) return;
+  const line = fields[activeLineIndex];
+  const allocated = lot_allocations.reduce((s, l) => s + l.allocated_qty, 0);
+  update(activeLineIndex, {
+    ...line,
+    qty: allocated,
+    lot_allocations,
+  });
  };
 
  const allLinesAllocated = fields.length > 0 && fields.every(
- (f) => (f.allocatedQuantity ?? 0) >= (f.requestedQuantity ?? 0)
+  (f) => (f.qty ?? 0) >= (f.requested_qty ?? 0)
  );
 
  const onSubmit = (data: IssueFormValues) => {
@@ -147,9 +147,9 @@ export function IssueForm() {
  )}
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
- <FormField<IssueFormValues, "warehouseId">
+ <FormField<IssueFormValues, "warehouse_id">
  control={form.control}
- name="warehouseId"
+ name="warehouse_id"
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
@@ -172,9 +172,9 @@ export function IssueForm() {
  )}
  />
 
- <FormField<IssueFormValues, "departmentId">
+ <FormField<IssueFormValues, "destination_dept_id">
  control={form.control}
- name="departmentId"
+ name="destination_dept_id"
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
@@ -233,7 +233,7 @@ export function IssueForm() {
  variant="outline" 
  size="sm" 
  className="h-12 px-8 border-cyan-500/30 text-cyan-500 bg-cyan-500/5 hover:bg-cyan-500 hover:text-white rounded-[1.25rem] text-label-xs font-semibold uppercase transition-all shadow-lg shadow-cyan-500/5"
- onClick={() => append({ itemId: "", requestedQuantity: 1, allocatedQuantity: 0, lots: [] })}
+ onClick={() => append({ item_id: "", requested_qty: 1, qty: 0, lot_allocations: [] })}
  >
  <Plus className="h-4 w-4 me-2" />
  {t('enroll_component')}
@@ -250,55 +250,55 @@ export function IssueForm() {
  </div>
  ) : (
  fields.map((field, index) => {
- const isAllocated = (field.allocatedQuantity ?? 0) >= (field.requestedQuantity ?? 0);
- const hasSelection = !!field.itemId;
+ const isAllocated = (field.qty ?? 0) >= (field.requested_qty ?? 0);
+ const hasSelection = !!field.item_id;
  
  return (
  <div key={field.id} className={`grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1.5fr_1.5fr_auto] gap-4 md:gap-8 items-end p-5 md:p-8 rounded-[2.25rem] border transition-all duration-500 group ${isAllocated ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-lg shadow-emerald-500/5" : "bg-surface-container-low border-surface-container-high/20 hover:border-cyan-500/30 hover:bg-surface-container-medium shadow-xl shadow-black/5"}`}>
  
- <FormField<IssueFormValues, `items.${number}.itemId`>
- control={form.control}
- name={`items.${index}.itemId`}
- render={({ field: inputField }) => (
- <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3">{t('item_label')}</FormLabel>
- <FormControl>
- <Input placeholder={t('sku_placeholder')} className="bg-surface-container-high/30 border-none h-12 px-5 text-label-xs font-semibold font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
- </FormControl>
- <FormMessage className="text-label-xxs font-semibold" />
- </FormItem>
- )}
- />
+  <FormField<IssueFormValues, `lines.${number}.item_id`>
+  control={form.control}
+  name={`lines.${index}.item_id`}
+  render={({ field: inputField }) => (
+  <FormItem>
+  <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3">{t('item_label')}</FormLabel>
+  <FormControl>
+  <Input placeholder={t('sku_placeholder')} className="bg-surface-container-high/30 border-none h-12 px-5 text-label-xs font-semibold font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
+  </FormControl>
+  <FormMessage className="text-label-xxs font-semibold" />
+  </FormItem>
+  )}
+  />
 
- <FormField<IssueFormValues, `items.${number}.requestedQuantity`>
- control={form.control}
- name={`items.${index}.requestedQuantity`}
- render={({ field: inputField }) => (
- <FormItem>
- <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3 text-center block w-full">{t('request_qty')}</FormLabel>
- <FormControl>
- <Input 
- type="number" 
- min="0.01" 
- step="0.01" 
- dir="ltr"
- className="bg-surface-container-high/30 border-none h-12 px-4 text-label-sm font-semibold text-center rounded-xl shadow-inner shadow-black/5"
- {...inputField} 
- onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
- />
- </FormControl>
- <FormMessage />
- </FormItem>
- )}
- />
+  <FormField<IssueFormValues, `lines.${number}.requested_qty`>
+  control={form.control}
+  name={`lines.${index}.requested_qty`}
+  render={({ field: inputField }) => (
+  <FormItem>
+  <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3 text-center block w-full">{t('request_qty')}</FormLabel>
+  <FormControl>
+  <Input 
+  type="number" 
+  min="0.01" 
+  step="0.01" 
+  dir="ltr"
+  className="bg-surface-container-high/30 border-none h-12 px-4 text-label-sm font-semibold text-center rounded-xl shadow-inner shadow-black/5"
+  {...inputField} 
+  onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
+  />
+  </FormControl>
+  <FormMessage />
+  </FormItem>
+  )}
+  />
 
- <div className="flex flex-col items-center gap-1.5 pb-1">
- <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40">{t('fulfillment_status')}</span>
- <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/60/20"}`}>
- <span className="text-label-sm font-semibold tabular-nums">{field.allocatedQuantity || 0}</span>
- {isAllocated ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4 opacity-30" />}
- </div>
- </div>
+  <div className="flex flex-col items-center gap-1.5 pb-1">
+  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40">{t('fulfillment_status')}</span>
+  <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/60/20"}`}>
+  <span className="text-label-sm font-semibold tabular-nums">{field.qty || 0}</span>
+  {isAllocated ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4 opacity-30" />}
+  </div>
+  </div>
 
  <div className="pb-1">
  <Button
@@ -336,12 +336,12 @@ export function IssueForm() {
  <div className="w-16 h-16 rounded-[1.75rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
  <PackageCheck className="w-8 h-8 text-cyan-500" />
  </div>
- <div>
- <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
- <div className="text-title-lg font-bold text-foreground">
- {fields.filter(f => (f.allocatedQuantity ?? 0) >= (f.requestedQuantity ?? 0)).length} / {fields.length} {t('protocol_validations')}
- </div>
- </div>
+  <div>
+  <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
+  <div className="text-title-lg font-bold text-foreground">
+  {fields.filter(f => (f.qty ?? 0) >= (f.requested_qty ?? 0)).length} / {fields.length} {t('protocol_validations')}
+  </div>
+  </div>
  </div>
  
  <div className="flex items-center gap-6">
@@ -364,16 +364,16 @@ export function IssueForm() {
  </div>
  </form>
 
- {/* FEFO Allocator Overlay */}
- {activeLineIndex !== null && (
- <FEFOLotAllocator
- isOpen={allocatorOpen}
- onClose={() => setAllocatorOpen(false)}
- itemId={fields[activeLineIndex].itemId}
- requestedQty={fields[activeLineIndex].requestedQuantity || 1}
- onAllocate={handleAllocate}
- />
- )}
+  {/* FEFO Allocator Overlay */}
+  {activeLineIndex !== null && (
+  <FEFOLotAllocator
+  isOpen={allocatorOpen}
+  onClose={() => setAllocatorOpen(false)}
+  itemId={fields[activeLineIndex].item_id}
+  requestedQty={fields[activeLineIndex].requested_qty || 1}
+  onAllocate={handleAllocate}
+  />
+  )}
 
  {/* Posting Confirmation Sequence */}
  <PostConfirmDialog

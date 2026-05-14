@@ -8,7 +8,7 @@ export const IssueSummarySchema = z.object({
   id: z.string(),
   document_number: z.string(),
   status: BadgeStatusSchema,
-  destination_department_id: z.string().nullable().optional(),
+  destination_dept_id: z.string().nullable().optional(),
   warehouse_id: z.string(),
   created_at: z.string(),
   posted_at: z.string().nullable().optional()

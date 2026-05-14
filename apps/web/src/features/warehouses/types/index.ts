@@ -1,20 +1,12 @@
-export interface Warehouse {
- id: string;
- code: string;
- branchId: string; // Relation to Branch
- nameEn: string;
- nameAr: string;
- type: 'MAIN' | 'TRANSIT' | 'VIRTUAL';
- status: 'ACTIVE' | 'INACTIVE';
- createdAt: string;
- updatedAt: string;
-}
+import { Warehouse as CoreWarehouse } from '@/types/master-data';
+
+export type Warehouse = CoreWarehouse;
 
 export interface CreateWarehouseDTO {
- code: string;
- branchId: string;
- nameEn: string;
- nameAr: string;
- type: 'MAIN' | 'TRANSIT' | 'VIRTUAL';
- status: 'ACTIVE' | 'INACTIVE';
+  code: string;
+  branch_id: string;
+  name_ar: string;
+  name_en: string;
+  type: Warehouse['type'];
+  is_active: boolean;
 }

@@ -30,15 +30,15 @@ export function WarehouseListClient({ locale }: { locale: string }) {
   const warehouses = data?.data || [];
 
   const WAREHOUSE_TYPE_STYLES: Record<string, { label: string; color: string; shadow: string }> = useMemo(() => ({
-    MAIN: { label: t('types.main'), color: 'text-primary', shadow: 'shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]' },
-    COLD: { label: t('types.cold'), color: 'text-operational-cyan', shadow: 'shadow-[0_0_8px_rgba(var(--cyan-rgb),0.4)]' },
-    DRY: { label: t('types.dry'), color: 'text-operational-orange', shadow: 'shadow-[0_0_8px_rgba(var(--orange-rgb),0.4)]' },
+    main: { label: t('types.main'), color: 'text-primary', shadow: 'shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]' },
+    cold: { label: t('types.cold'), color: 'text-operational-cyan', shadow: 'shadow-[0_0_8px_rgba(var(--cyan-rgb),0.4)]' },
+    dry: { label: t('types.dry'), color: 'text-operational-orange', shadow: 'shadow-[0_0_8px_rgba(var(--orange-rgb),0.4)]' },
   }), [t]);
 
   const stats = useMemo(() => ({
     total: data?.meta?.total || 0,
     active: warehouses.filter(w => w.is_active).length,
-    physical: warehouses.filter(w => w.type === 'MAIN' || w.type === 'COLD').length,
+    physical: warehouses.filter(w => w.type === 'main' || w.type === 'cold').length,
   }), [data, warehouses]);
 
   const columns = useMemo<ColumnDef<Warehouse, unknown>[]>(() => [
@@ -117,7 +117,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
         </div>
       ),
     },
-  ], [tc, t, locale, router, WAREHOUSE_TYPE_STYLES]);
+  ], [tc, t, router, WAREHOUSE_TYPE_STYLES]);
 
   if (isLoading) return <PageSkeleton variant="list" />;
   if (isError) return <ErrorState onRetry={refetch} />;

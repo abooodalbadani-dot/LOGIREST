@@ -121,7 +121,7 @@ export function LotEntryModal({
  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t("lot_number")}</FormLabel>
  <FormControl>
  <Input 
- placeholder="e.g. LOT-2024-001" 
+ placeholder={common("placeholders.lot_number")} 
  {...field} 
  className="bg-surface-container-medium border-none h-12 rounded-xl font-semibold focus-visible:ring-1 focus-visible:ring-primary/30"
  />

@@ -66,8 +66,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     return schema.parse(data);
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      // Silent skip for aborted requests
-      return new Promise(() => {}); 
+      // Re-throw so callers (like TanStack Query) know it was cancelled
+      throw error; 
     }
     throw error;
   }

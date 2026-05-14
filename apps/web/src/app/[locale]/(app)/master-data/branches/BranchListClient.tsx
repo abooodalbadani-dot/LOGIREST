@@ -24,7 +24,7 @@ export function BranchListClient({ locale }: { locale: string }) {
  const t = useTranslations('master_data.branches');
  const tc = useTranslations('common');
  const router = useRouter();
- const [_page, setPage] = useState(1);
+ const [, setPage] = useState(1);
  const [search, setSearch] = useState('');
 
   const { data, isLoading, isError, refetch } = useBranches({ search });
@@ -112,7 +112,7 @@ export function BranchListClient({ locale }: { locale: string }) {
         </div>
       ),
     },
-  ], [tc, t, locale, router]);
+  ], [tc, t, router]);
 
   if (isLoading && !data) return <PageSkeleton variant="list" />;
   if (isError) return <ErrorState error={500} onRetry={() => refetch()} />;

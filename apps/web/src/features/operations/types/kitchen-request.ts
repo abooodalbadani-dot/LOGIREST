@@ -38,16 +38,16 @@ export interface KitchenRequest {
 }
 
 export const KitchenRequestItemSchema = z.object({
- itemId: z.string().min(1, 'required'),
- quantity: z.number().positive('must_be_positive'),
- notes: z.string().optional(),
+  item_id: z.string().min(1, 'required'),
+  quantity: z.number().positive('must_be_positive'),
+  notes: z.string().optional(),
 });
 
 export const KitchenRequestSchema = z.object({
- departmentId: z.string().min(1, 'required'),
- warehouseId: z.string().min(1, 'required'),
- notes: z.string().optional(),
- items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
+  department_id: z.string().min(1, 'required'),
+  warehouse_id: z.string().min(1, 'required'),
+  notes: z.string().optional(),
+  items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
 });
 
 export type CreateKitchenRequestDTO = z.infer<typeof KitchenRequestSchema>;

@@ -73,7 +73,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const [rejectionReason, setRejectionReason] = useState('');
   
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
-  const [fulfillmentData, setFulfillmentData] = useState<{ itemId: string; fulfilledQuantity: number }[]>([]);
+  const [fulfillmentData, setFulfillmentData] = useState<{ item_id: string; fulfilled_quantity: number }[]>([]);
 
   const history = useMemo((): StatusTimelineEntry[] => {
     const h: StatusTimelineEntry[] = [
@@ -125,8 +125,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const openFulfillDialog = () => {
     setFulfillmentData(
       request.items.map((item: KitchenRequestItem) => ({
-        itemId: item.item_id,
-        fulfilledQuantity: item.quantity
+        item_id: item.item_id,
+        fulfilled_quantity: item.quantity
       }))
     );
     setFulfillDialogOpen(true);
@@ -403,10 +403,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   step="0.01"
                   dir="ltr"
                   className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30"
-                  value={fulfillmentData.find(f => f.itemId === item.item_id)?.fulfilledQuantity || 0}
+                  value={fulfillmentData.find(f => f.item_id === item.item_id)?.fulfilled_quantity || 0}
                   onChange={(e) => {
                     const val = Number(e.target.value);
-                    setFulfillmentData(prev => prev.map(f => f.itemId === item.item_id ? { ...f, fulfilledQuantity: val } : f));
+                    setFulfillmentData(prev => prev.map(f => f.item_id === item.item_id ? { ...f, fulfilled_quantity: val } : f));
                   }}
                 />
               </div>

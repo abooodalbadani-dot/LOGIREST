@@ -137,7 +137,7 @@ export function PostConfirmDialog({
             <button 
               onClick={() => handleOpenChange(false)}
               className="absolute right-8 top-8 w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all text-muted-foreground/60 hover:text-foreground"
-              aria-label="Close"
+              aria-label={t('actions.close')}
             >
               ✕
             </button>

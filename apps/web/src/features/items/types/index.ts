@@ -1,24 +1,16 @@
-export interface Item {
- id: string;
- sku: string;
- nameEn: string;
- nameAr: string;
- category: 'FOOD' | 'EQUIPMENT' | 'PACKAGING' | 'SUPPLIES';
- uom: 'EA' | 'KG' | 'L' | 'BOX' | 'PACK' | 'BAG';
- minStockLevel: number;
- costPrice: number;
- status: 'ACTIVE' | 'INACTIVE';
- createdAt: string;
- updatedAt: string;
-}
+import { Item as CoreItem } from '@/types/master-data';
+
+export type Item = CoreItem;
 
 export interface CreateItemDTO {
- sku: string;
- nameEn: string;
- nameAr: string;
- category: 'FOOD' | 'EQUIPMENT' | 'PACKAGING' | 'SUPPLIES';
- uom: 'EA' | 'KG' | 'L' | 'BOX' | 'PACK' | 'BAG';
- minStockLevel: number;
- costPrice: number;
- status: 'ACTIVE' | 'INACTIVE';
+  code: string;
+  barcode: string;
+  name_ar: string;
+  name_en: string;
+  category_id: string;
+  primary_uom_id: string;
+  track_lots: boolean;
+  min_stock_level: number;
+  reorder_point: number;
+  is_active: boolean;
 }

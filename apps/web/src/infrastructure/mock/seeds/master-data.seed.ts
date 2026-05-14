@@ -9,10 +9,10 @@ export const initialBranches: Branch[] = [
 ];
 
 export const initialWarehouses: Warehouse[] = [
-  { id: 'wh-1', branch_id: 'br-1', code: 'WH-001', name_ar: 'المستودع الرئيسي', name_en: 'Main Warehouse', type: 'MAIN', is_active: true },
-  { id: 'wh-2', branch_id: 'br-1', code: 'WH-002', name_ar: 'مستودع التبريد', name_en: 'Cold Storage', type: 'COLD', is_active: true },
-  { id: 'wh-3', branch_id: 'br-2', code: 'WH-003', name_ar: 'المستودع الجاف', name_en: 'Dry Storage', type: 'DRY', is_active: true },
-  { id: 'wh-4', branch_id: 'br-3', code: 'WH-004', name_ar: 'مستودع افتراضي', name_en: 'Virtual WH', type: 'VIRTUAL', is_active: true }
+  { id: 'wh-1', branch_id: 'br-1', code: 'WH-001', name_ar: 'المستودع الرئيسي', name_en: 'Main Warehouse', type: 'main', is_active: true },
+  { id: 'wh-2', branch_id: 'br-1', code: 'WH-002', name_ar: 'مستودع التبريد', name_en: 'Cold Storage', type: 'cold', is_active: true },
+  { id: 'wh-3', branch_id: 'br-2', code: 'WH-003', name_ar: 'المستودع الجاف', name_en: 'Dry Storage', type: 'dry', is_active: true },
+  { id: 'wh-4', branch_id: 'br-3', code: 'WH-004', name_ar: 'مستودع افتراضي', name_en: 'Virtual WH', type: 'virtual', is_active: true }
 ];
 
 export const initialDepartments: Department[] = [

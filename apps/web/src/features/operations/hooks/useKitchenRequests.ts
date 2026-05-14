@@ -80,7 +80,7 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
   const queryClient = useQueryClient();
    return useSafeMutation({
      onConflict: options?.onConflict,
-      mutationFn: ({ id, items, version, signal }: { id: string; items: { itemId: string; fulfilledQuantity: number }[]; version: number; signal?: AbortSignal }) =>
+      mutationFn: ({ id, items, version, signal }: { id: string; items: { item_id: string; fulfilled_quantity: number }[]; version: number; signal?: AbortSignal }) =>
         apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items, version }, signal),
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });

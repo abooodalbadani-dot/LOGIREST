@@ -11,11 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
-  Wallet, 
-  PackageSearch, 
-  MessageSquare, 
+import {
+  TrendingUp,
+  Wallet,
+  PackageSearch,
+  MessageSquare,
   Send
 } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
@@ -65,19 +65,19 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const tc = useTranslations('common');
   const locale = useLocale();
   const { user } = useAuth();
-  
+
   const isNew = id === 'new';
   const lastResetId = useRef<string | null>(null);
 
   const { data: suppliers } = useSuppliers();
   const { data: warehouses } = useWarehouses();
   const { data: currencies } = useCurrencies();
-  
+
   const createMutation = useCreateGRN({ onConflict });
   const updateMutation = useUpdateGRN(initialData?.id || '', { onConflict });
 
   const [scanError, setScanError] = useState('');
-  
+
   const status = (initialData?.status || GRN_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('GRN', status);
 
@@ -122,7 +122,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         warehouse_id: initialData.warehouse_id || 'wh-1',
         notes: initialData.notes || '',
         lines: initialData.lines || []
-      }, { 
+      }, {
         keepDirty: false,
         keepTouched: false
       });
@@ -132,17 +132,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   const handleScan = async (barcode: string) => {
     const item = itemsData?.data?.find(i => i.code === barcode || i.barcode === barcode);
-    
+
     if (item) {
       const currentLines = getValues("lines") || [];
       const index = currentLines.findIndex(l => l.item.id === item.id);
 
       if (index >= 0) {
         const existing = currentLines[index];
-        update(index, { 
-          ...existing, 
-          qty: existing.qty + 1, 
-          received_qty: existing.received_qty + 1 
+        update(index, {
+          ...existing,
+          qty: existing.qty + 1,
+          received_qty: existing.received_qty + 1
         });
         toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       } else {
@@ -177,13 +177,13 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const handleLotClick = (_line: LineItem) => {
     toast.info("Standardized lot allocation pending");
   };
-  
+
 
   const workflowActions = (
     <div className="flex items-center gap-3">
       <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role || 'WH_KEEPER'}>
         <PermissionGate action="post" resource="grn">
-          <Button 
+          <Button
             onClick={() => router.push(`/goods-received/${id}/post`)}
             className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-xl"
           >
@@ -217,13 +217,15 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       };
 
       if (isNew) {
-        const result = await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync({ payload });
         toast.success(t('create_success'));
         router.push(`/goods-received/${result.id}`, { skipGuard: true });
       } else if (initialData) {
         await updateMutation.mutateAsync({
-          ...payload,
-          version: initialData.version
+          payload: {
+            ...payload,
+            version: initialData.version
+          }
         });
         toast.success(t('update_success'));
       }
@@ -239,7 +241,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   return (
     <div className="flex flex-col min-h-screen bg-surface-container-low pb-32">
       <DocumentLockBanner status={status} isLocked={isLocked} />
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
         <div className="flex items-center justify-between px-2">
           <div className="flex flex-col">
@@ -255,207 +257,207 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         <DocumentLockWrapper isLocked={isLocked}>
           <DocumentReadOnlyOverlay isPosted={isLocked}>
             <div className="space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
-            <Label htmlFor="supplier-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</Label>
-            <Controller
-              name="supplier_id"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
-                    <SelectValue placeholder={tc('select_supplier')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                    {suppliers?.map(s => (
-                      <SelectItem key={s.id} value={s.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
-                        {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.supplier_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
-          </div>
-
-          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
-            <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-              <Wallet className="w-12 h-12" />
-            </div>
-            <Label htmlFor="currency-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</Label>
-            <Controller
-              name="currency_id"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                    {currencies?.map(c => (
-                      <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
-                        {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.currency_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
-          </div>
-
-          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
-            <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-              <PackageSearch className="w-12 h-12" />
-            </div>
-            <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
-            <div className="mt-2">
-              {initialData?.po_number ? (
-                <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
-                  <span dir="ltr" className="font-mono">{initialData.po_number}</span>
-                </Badge>
-              ) : (
-                <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
-            <Label htmlFor="warehouse-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</Label>
-            <Controller
-              name="warehouse_id"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                    {warehouses?.map(w => (
-                      <SelectItem key={w.id} value={w.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
-                        {locale === 'ar' ? w.nameAr : w.nameEn}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.warehouse_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouse_id.message}</span>}
-          </div>
-
-            <div className="col-span-full bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
-              <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                <MessageSquare className="w-12 h-12" />
-              </div>
-              <Label htmlFor="notes-area" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('notes')}</Label>
-              <Textarea 
-                id="notes-area"
-                {...register('notes')}
-                disabled={isLocked}
-                className="mt-2 w-full bg-surface-container-low border-none rounded-xl p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none" 
-                placeholder={tc('notes_placeholder')} 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-operational-cyan/[0.02] p-8 rounded-2xl">
-              <div className="flex items-center gap-6 mb-6">
-                <div className="p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
-                  <PackageSearch className="w-6 h-6" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                  <Label htmlFor="supplier-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</Label>
+                  <Controller
+                    name="supplier_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                          <SelectValue placeholder={tc('select_supplier')} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
+                          {suppliers?.map(s => (
+                            <SelectItem key={s.id} value={s.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
+                              {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.supplier_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
                 </div>
-                <div>
-                  <h3 className="text-label-sm font-bold uppercase text-foreground">{t('scan_or_search')}</h3>
-                  <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase tracking-wider">{t('specification')}</p>
+
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                  <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                    <Wallet className="w-12 h-12" />
+                  </div>
+                  <Label htmlFor="currency-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</Label>
+                  <Controller
+                    name="currency_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
+                          {currencies?.map(c => (
+                            <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
+                              {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.currency_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
+                </div>
+
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                  <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                    <PackageSearch className="w-12 h-12" />
+                  </div>
+                  <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
+                  <div className="mt-2">
+                    {initialData?.po_number ? (
+                      <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
+                        <span dir="ltr" className="font-mono">{initialData.po_number}</span>
+                      </Badge>
+                    ) : (
+                      <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                  <Label htmlFor="warehouse-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</Label>
+                  <Controller
+                    name="warehouse_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
+                          {warehouses?.map(w => (
+                            <SelectItem key={w.id} value={w.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
+                              {locale === 'ar' ? w.name_ar : w.name_en}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.warehouse_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouse_id.message}</span>}
+                </div>
+
+                <div className="col-span-full bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                  <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                    <MessageSquare className="w-12 h-12" />
+                  </div>
+                  <Label htmlFor="notes-area" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('notes')}</Label>
+                  <Textarea
+                    id="notes-area"
+                    {...register('notes')}
+                    disabled={isLocked}
+                    className="mt-2 w-full bg-surface-container-low border-none rounded-xl p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none"
+                    placeholder={tc('notes_placeholder')}
+                  />
                 </div>
               </div>
-              
-              <ScanInput 
-                onScan={handleScan} 
-                onManualTrigger={() => append({
-                  id: `new-${Date.now()}`,
-                  item: { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: 'EA', code: 'EA' } },
-                  lot: null,
-                  qty: 1,
-                  received_qty: 1,
-                  uom_id: 'EA',
-                  unit_cost_foreign: 0,
-                  unit_cost_base: 0
-                })}
-                placeholder={t('scan_placeholder')} 
-                onError={(bc) => setScanError(t('no_item_found') + ': ' + bc)}
-                size="lg"
-              />
-              {scanError && <div dir="ltr" className="text-destructive text-label-xs font-bold uppercase ps-2 mt-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-destructive rounded-full animate-pulse" />
-                {scanError}
-              </div>}
-            </div>
-            
-            <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
-              <DocumentLineItemTable<LineItem> 
-                lines={fields as unknown as LineItem[]} 
-                isReadOnly={isLocked}
-                onRemoveLine={(id) => {
-                  const idx = fields.findIndex(f => f.id === id);
-                  if (idx >= 0) remove(idx);
-                }}
-                extraColumns={[
-                  {
-                    header: tc('table_headers.received_qty'),
-                    cell: (field: LineItem) => {
-                      const index = fields.findIndex(f => f.id === field.id);
-                      return (
-                        <input type="number" 
-                          dir="ltr"
-                          className="w-20 bg-surface-container-low rounded-xl text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
-                          {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
-                          onChange={e => {
-                            const val = Number(e.target.value);
-                            update(index, { ...fields[index], received_qty: val, qty: val } as LineItem);
-                          }}
-                        />
-                      );
-                    }
-                  },
-                  {
-                    header: tc('table_headers.lot_allocation'),
-                    cell: (field: LineItem) => (
-                      <button 
-                        type="button" 
-                        className="text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary text-label-xs font-semibold uppercase transition-all"
-                        onClick={() => handleLotClick(field)}
-                      >
-                        {field.lot ? (
-                          <span dir="ltr" className="font-mono">{field.lot.lot_number}</span>
-                        ) : t('allocate_lot')}
-                      </button>
-                    )
-                  }
-                ]}
-              />
-            </div>
-            </div>
-          </div>
-        </DocumentReadOnlyOverlay>
 
-        <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8 pt-10">
-          <div className="flex flex-col items-end gap-1 px-6">
-            <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">
-              {t('market_index_ref')}
-            </p>
-            <div className="flex items-center gap-2 text-primary">
-              <TrendingUp className="w-3 h-3" />
-              <p dir="ltr" className="text-label-sm font-mono font-semibold">
-                1 {currencyId} = {currentFxRate} {baseCurrency}
+              <div className="space-y-6">
+                <div className="bg-operational-cyan/[0.02] p-8 rounded-2xl">
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className="p-3 bg-operational-cyan/10 rounded-xl text-operational-cyan">
+                      <PackageSearch className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-label-sm font-bold uppercase text-foreground">{t('scan_or_search')}</h3>
+                      <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase tracking-wider">{t('specification')}</p>
+                    </div>
+                  </div>
+
+                  <ScanInput
+                    onScan={handleScan}
+                    onManualTrigger={() => append({
+                      id: `new-${Date.now()}`,
+                      item: { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: 'EA', code: 'EA' } },
+                      lot: null,
+                      qty: 1,
+                      received_qty: 1,
+                      uom_id: 'EA',
+                      unit_cost_foreign: 0,
+                      unit_cost_base: 0
+                    })}
+                    placeholder={t('scan_placeholder')}
+                    onError={(bc) => setScanError(t('no_item_found') + ': ' + bc)}
+                    size="lg"
+                  />
+                  {scanError && <div dir="ltr" className="text-destructive text-label-xs font-bold uppercase ps-2 mt-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-destructive rounded-full animate-pulse" />
+                    {scanError}
+                  </div>}
+                </div>
+
+                <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
+                  <DocumentLineItemTable<LineItem>
+                    lines={fields as unknown as LineItem[]}
+                    isReadOnly={isLocked}
+                    onRemoveLine={(id) => {
+                      const idx = fields.findIndex(f => f.id === id);
+                      if (idx >= 0) remove(idx);
+                    }}
+                    extraColumns={[
+                      {
+                        header: tc('table_headers.received_qty'),
+                        cell: (field: LineItem) => {
+                          const index = fields.findIndex(f => f.id === field.id);
+                          return (
+                            <input type="number"
+                              dir="ltr"
+                              className="w-20 bg-surface-container-low rounded-xl text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
+                              {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
+                              onChange={e => {
+                                const val = Number(e.target.value);
+                                update(index, { ...fields[index], received_qty: val, qty: val } as LineItem);
+                              }}
+                            />
+                          );
+                        }
+                      },
+                      {
+                        header: tc('table_headers.lot_allocation'),
+                        cell: (field: LineItem) => (
+                          <button
+                            type="button"
+                            className="text-primary underline underline-offset-4 decoration-dotted decoration-primary/40 hover:decoration-primary text-label-xs font-semibold uppercase transition-all"
+                            onClick={() => handleLotClick(field)}
+                          >
+                            {field.lot ? (
+                              <span dir="ltr" className="font-mono">{field.lot.lot_number}</span>
+                            ) : t('allocate_lot')}
+                          </button>
+                        )
+                      }
+                    ]}
+                  />
+                </div>
+              </div>
+            </div>
+          </DocumentReadOnlyOverlay>
+
+          <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8 pt-10">
+            <div className="flex flex-col items-end gap-1 px-6">
+              <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">
+                {t('market_index_ref')}
               </p>
+              <div className="flex items-center gap-2 text-primary">
+                <TrendingUp className="w-3 h-3" />
+                <p dir="ltr" className="text-label-sm font-mono font-semibold">
+                  1 {currencyId} = {currentFxRate} {baseCurrency}
+                </p>
+              </div>
             </div>
-          </div>
 
             <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-xl relative overflow-hidden min-w-[340px] group transition-all hover:shadow-2xl">
               <div className="absolute top-0 end-0 w-1 h-full bg-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] group-hover:bg-primary transition-all" />
-              
+
               <div className="space-y-6 relative z-10">
                 <div className="flex justify-between items-baseline gap-10">
                   <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId || '' })}</p>
@@ -463,9 +465,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                     {formatCurrency(totalForeign, currencyId, locale as 'ar' | 'en')}
                   </p>
                 </div>
-                
 
-                
+
+
                 <div className="flex justify-between items-center gap-10">
                   <p className="text-label-xs font-semibold uppercase text-primary/20">{t('base_value', { currency: baseCurrency || '' })}</p>
                   <p dir="ltr" className="text-title-lg font-mono font-semibold text-primary/60">
@@ -477,7 +479,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           </div>
         </DocumentLockWrapper>
 
-        <FormFooter 
+        <FormFooter
           isLocked={isLocked}
           onCancel={() => router.push('/goods-received', { skipGuard: !isDirty })}
           actions={actions || workflowActions}

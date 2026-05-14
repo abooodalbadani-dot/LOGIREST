@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ─── Interfaces ────────────────────────────────────────────────────────────────
 
 export interface Branch { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
-export interface Warehouse { id: string; branch_id: string; code: string; name_ar: string; name_en: string; type: 'MAIN'|'DRY'|'COLD'|'VIRTUAL'; is_active: boolean; version?: number; }
+export interface Warehouse { id: string; branch_id: string; code: string; name_ar: string; name_en: string; type: 'main'|'dry'|'cold'|'virtual'|'transit'; is_active: boolean; version?: number; }
 export interface Department { 
  id: string; 
  branch_id: string; 
@@ -20,7 +20,7 @@ export interface Department {
 export interface UoM { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
 export interface UoMConversion { from_uom_id: string; to_uom_id: string; factor: number; }
 export interface Category { id: string; name_ar: string; name_en: string; version?: number; }
-export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; is_active: boolean; version?: number; }
+export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; last_purchase_price?: number; is_active: boolean; version?: number; }
 export interface Lot { id: string; item_id: string; warehouse_id: string; lot_number: string; expiry_date: string | null; qty_available: number; is_expired: boolean; is_near_expiry: boolean; }
 export interface Supplier { id: string; code: string; name_ar: string; name_en: string; currency_id: string; payment_terms: string; is_active: boolean; version?: number; }
 export interface Currency { id: string; code: string; name_ar: string; name_en: string; symbol?: string; is_base_currency: boolean; is_active: boolean; created_at: string; version?: number; }
@@ -36,7 +36,7 @@ export const BranchSchema = z.object({
 
 export const WarehouseSchema = z.object({
  id: z.string(), branch_id: z.string(), code: z.string(), name_ar: z.string(),
- name_en: z.string(), type: z.enum(['MAIN','DRY','COLD','VIRTUAL']), is_active: z.boolean(),
+ name_en: z.string(), type: z.enum(['main','dry','cold','virtual','transit']), is_active: z.boolean(),
  version: z.number().optional()
 });
 
@@ -71,7 +71,9 @@ export const ItemSchema = z.object({
  category_id: z.string(),
  primary_uom: UoMSchema,
  uom_conversions: z.array(UoMConversionSchema),
- track_lots: z.boolean(), min_stock_level: z.number(), reorder_point: z.number(), is_active: z.boolean(),
+ track_lots: z.boolean(), min_stock_level: z.number(), reorder_point: z.number(),
+ last_purchase_price: z.number().optional(),
+ is_active: z.boolean(),
  version: z.number().optional()
 });
 
@@ -123,7 +125,7 @@ export const WarehouseFormSchema = z.object({
   code: z.string().min(2, 'master_data.warehouses.validation.code_min').regex(/^[A-Z0-9_-]+$/, 'master_data.warehouses.validation.code_format'),
   name_ar: z.string().min(3, 'master_data.warehouses.validation.name_ar_min'),
   name_en: z.string().min(3, 'master_data.warehouses.validation.name_en_min'),
-  type: z.enum(['MAIN', 'DRY', 'COLD', 'VIRTUAL']),
+  type: z.enum(['main', 'dry', 'cold', 'virtual', 'transit']),
   is_active: z.boolean(),
   version: z.number().optional()
 });

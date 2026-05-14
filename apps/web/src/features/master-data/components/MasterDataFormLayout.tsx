@@ -20,6 +20,7 @@ interface Props {
   saveDisabled?: boolean;
   isDirty?: boolean;
   isValid?: boolean;
+  backHref?: string;
   headerActions?: ReactNode;
 }
 
@@ -35,7 +36,8 @@ export function MasterDataFormLayout({
   saveDisabled = false,
   isDirty = true,
   isValid = true,
-  headerActions
+  headerActions,
+  backHref
 }: Props) {
   const t = useTranslations('master_data.common');
 

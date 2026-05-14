@@ -12,35 +12,32 @@ export function useWarehouses() {
             { 
               id: 'wh-1', 
               code: 'WH-Riyadh-MAIN', 
-              branchId: '1', 
-              nameEn: 'Riyadh Central Warehouse', 
-              nameAr: 'مستودع الرياض المركزي', 
-              type: 'MAIN',
-              status: 'ACTIVE', 
-              createdAt: '2023-11-01T10:00:00Z', 
-              updatedAt: '2023-11-01T10:00:00Z' 
+              branch_id: '1', 
+              name_en: 'Riyadh Central Warehouse', 
+              name_ar: 'مستودع الرياض المركزي', 
+              type: 'main',
+              is_active: true, 
+              version: 1
             },
             { 
               id: 'wh-2', 
               code: 'WH-Jeddah-TR', 
-              branchId: '2', 
-              nameEn: 'Jeddah Transit Hub', 
-              nameAr: 'نقطة عبور جدة', 
-              type: 'TRANSIT',
-              status: 'ACTIVE', 
-              createdAt: '2023-11-15T09:30:00Z', 
-              updatedAt: '2023-11-15T09:30:00Z' 
+              branch_id: '2', 
+              name_en: 'Jeddah Transit Hub', 
+              name_ar: 'نقطة عبور جدة', 
+              type: 'transit',
+              is_active: true, 
+              version: 1
             },
             { 
               id: 'wh-3', 
               code: 'WH-Dam-VIR', 
-              branchId: '3', 
-              nameEn: 'Dammam Virtual Stock', 
-              nameAr: 'مخزون الدمام الافتراضي', 
-              type: 'VIRTUAL',
-              status: 'INACTIVE', 
-              createdAt: '2024-01-10T14:20:00Z', 
-              updatedAt: '2024-01-10T14:20:00Z' 
+              branch_id: '3', 
+              name_en: 'Dammam Virtual Stock', 
+              name_ar: 'مخزون الدمام الافتراضي', 
+              type: 'virtual',
+              is_active: false, 
+              version: 1
             },
           ]);
         }, 600);
