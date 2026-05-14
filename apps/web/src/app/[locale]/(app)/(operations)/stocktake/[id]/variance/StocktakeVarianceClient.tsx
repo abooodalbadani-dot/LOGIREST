@@ -74,7 +74,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
   if (!session) return <ErrorState onRetry={() => window.location.reload()} />;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+ const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
  const currencyCode = 'SAR';
 
  const itemsWithVariance = session.items.filter(i => (i.countedQty || 0) - (i.snapshotQty ?? 0) !== 0);

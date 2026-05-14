@@ -66,7 +66,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
   if (sessionError || errorWarehouses || errorLock || !session) return <ErrorState onRetry={() => window.location.reload()} />;
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+ const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
 
  const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 

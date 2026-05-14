@@ -125,7 +125,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   if (sessionError || errorWarehouses || !session) return <ErrorState onRetry={() => window.location.reload()} />;
   
   const warehouse = warehouses?.find((w) => w.id === session.warehouseId);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
 
   if (!isStocktakeCounting(session.status)) {
     baseRouter.replace(`/stocktake/${id}`);

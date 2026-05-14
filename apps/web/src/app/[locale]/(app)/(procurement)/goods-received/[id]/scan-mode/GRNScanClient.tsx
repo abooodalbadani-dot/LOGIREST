@@ -85,7 +85,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
         }, {
           onSuccess: () => {
             setScanStatus("success")
-            setStatusMessage(`${locale === 'ar' ? item.nameAr : item.nameEn}: ${nextQty}`)
+            setStatusMessage(`${locale === 'ar' ? item.name_ar : item.name_en}: ${nextQty}`)
             
             setTimeout(() => {
               setScanStatus("idle")
@@ -94,11 +94,11 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
           }
         })
       } else {
-        setPendingItem({ id: item.id, name: locale === 'ar' ? item.nameAr : item.nameEn, barcode })
+        setPendingItem({ id: item.id, name: locale === 'ar' ? item.name_ar : item.name_en, barcode })
         setLotModalOpen(true)
       }
     } else {
-      setPendingItem({ id: item.id, name: locale === 'ar' ? item.nameAr : item.nameEn, barcode })
+      setPendingItem({ id: item.id, name: locale === 'ar' ? item.name_ar : item.name_en, barcode })
       setLotModalOpen(true)
     }
   }
@@ -214,7 +214,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
                       <TableCell className="px-8 py-5">
                         <div className="flex flex-col gap-0.5">
                           <span className="font-semibold text-body-md text-foreground group-hover:text-primary transition-colors">
-                            {masterItem ? (locale === 'ar' ? masterItem.nameAr : masterItem.nameEn) : item.itemId}
+                            {masterItem ? (locale === 'ar' ? masterItem.name_ar : masterItem.name_en) : item.itemId}
                           </span>
                           <span className="text-label-xs font-mono text-muted-foreground/40" dir="ltr">{masterItem?.sku || item.itemId}</span>
                         </div>

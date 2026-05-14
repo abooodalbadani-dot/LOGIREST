@@ -145,7 +145,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
       i.barcode?.toLowerCase() === cleanBarcode
     );
     if (item) {
-      const currentLines = form.getValues('lines');
+      const currentLines = form.getValues('lines') as PurchaseOrderFormValues['lines'];
       // If the first line is empty, replace it instead of appending
       const isFirstLineEmpty = currentLines.length === 1 && !currentLines[0].item_id;
       
@@ -341,7 +341,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         <SelectContent className="bg-surface-container-low border-none rounded-xl">
                           {warehouses?.map(w => (
                             <SelectItem key={w.id} value={w.id}>
-                              {locale === 'ar' ? w.nameAr : w.nameEn}
+                              {locale === 'ar' ? w.name_ar : w.name_en}
                             </SelectItem>
                           ))}
                         </SelectContent>

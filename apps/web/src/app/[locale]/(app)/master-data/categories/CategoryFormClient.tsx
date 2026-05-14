@@ -93,7 +93,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
       if (id) {
         await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
+        await create.mutateAsync({ values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/categories', { skipGuard: true });

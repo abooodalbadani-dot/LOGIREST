@@ -59,12 +59,12 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  }
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.nameAr : warehouse.nameEn) : (session.warehouseName || session.warehouseId);
+ const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
 
   const handlePost = () => {
     if (confirmValue !== confirmKeyword) return;
     
-    postStocktake.mutate(id, {
+    postStocktake.mutate({ id }, {
       onSuccess: () => {
         toast.success(t('posted_success_variance'));
         router.push(`/stocktake/${id}`, { skipGuard: true });

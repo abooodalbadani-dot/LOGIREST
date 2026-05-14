@@ -118,7 +118,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
               {tCommon('error.submission_failed')}
             </p>
             <p className="text-body-sm text-status-error/80 leading-relaxed">
-              {(createAdjustment.error as any)?.message || tCommon('error.generic')}
+              {createAdjustment.error instanceof Error ? createAdjustment.error.message : tCommon('error.generic')}
             </p>
           </div>
         </div>

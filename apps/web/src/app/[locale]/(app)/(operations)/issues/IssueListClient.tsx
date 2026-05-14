@@ -86,7 +86,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
             <Activity className="w-3 h-3 text-muted-foreground/40" />
           </div>
           <span className="text-label-xs font-semibold text-muted-foreground/60">
-            {row.original.destination_department_id || '—'}
+            {row.original.destination_dept_id || '—'}
           </span>
         </div>
       ),

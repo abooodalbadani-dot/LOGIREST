@@ -107,7 +107,7 @@ export function CurrencyFormClient({
       if (id) {
         await update.mutateAsync({ id, values, signal: abortController.signal });
       } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
+        await create.mutateAsync({ values, signal: abortController.signal });
       }
       reset(values);
       guardedRouter.push('/master-data/currencies', { skipGuard: true });

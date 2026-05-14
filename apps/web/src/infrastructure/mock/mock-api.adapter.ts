@@ -14,7 +14,7 @@ interface HydrationLine {
   item?: Record<string, unknown>;
   qty?: number;
   req_qty?: number;
-  lot_id?: string;
+  lot_id?: string | null;
   uom_id?: string;
   approved_qty?: number | null;
 }
