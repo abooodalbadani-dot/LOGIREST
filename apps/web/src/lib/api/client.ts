@@ -12,6 +12,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     const { getMockResponse } = await import('./mocks/index');
     const mockData = await getMockResponse(method, path, body);
     if (mockData !== undefined) {
+      console.log(`[Mock API] ${method} ${path}`, mockData);
       // Detect mock error responses and throw them as API errors
       if (mockData && typeof mockData === 'object' && 'error' in mockData) {
         const errorObj = (mockData as { error: Record<string, unknown> }).error;
@@ -34,6 +35,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     }
   }
 
+  console.log(`[API Request] ${method} ${BASE}${path}`, { body });
+
   try {
     const res = await fetch(`${BASE}${path}`, {
       method,
@@ -45,6 +48,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
       },
       body: body ? JSON.stringify(body) : undefined,
     });
+    
+    console.log(`[API Response] ${method} ${path} - Status: ${res.status}`);
     
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
@@ -58,7 +63,11 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     }
 
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ code: 'NETWORK_ERROR', message: 'errors.network', field_errors: null }));
+      const err: ApiError = await res.json().catch(() => {
+        console.error(`[API Error] Failed to parse error response for ${path}`);
+        return { code: 'NETWORK_ERROR', message: 'errors.network', field_errors: null };
+      });
+      console.error(`[API Error] ${method} ${path}`, err);
       throw err;
     }
     

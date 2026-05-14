@@ -856,7 +856,7 @@
     "email_sent_desc": "An access recovery link has been dispatched to {email}. Please verify your inbox.",
     "forgot_password": "Recover Access",
     "forgot_password_desc": "Enter your registered operator ID to receive recovery protocols.",
-    "invalid_credentials": "The credentials provided were not recognized by the security backbone.",
+    "invalid_credentials": "The email or password you entered is incorrect. Please try again.",
     "invalid_reset_link": "Invalid Recovery Link",
     "invalid_reset_link_desc": "The recovery link you followed is invalid or has expired. Please request a new link.",
     "login_failed": "Authentication Failed",

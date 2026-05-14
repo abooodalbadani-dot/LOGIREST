@@ -102,7 +102,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(parsedUser);
       setToken(data.token);
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('[Auth] Login sequence failed:', {
+        error: err,
+        message: err instanceof Error ? err.message : String(err),
+        timestamp: new Date().toISOString()
+      });
       throw new Error(t('login_failed'));
     }
   };
