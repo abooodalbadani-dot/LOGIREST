@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Bell, Shield, Package, ShoppingCart, Save, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';

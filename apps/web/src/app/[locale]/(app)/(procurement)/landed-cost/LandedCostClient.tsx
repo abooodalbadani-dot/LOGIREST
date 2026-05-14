@@ -13,7 +13,7 @@ import { ColumnDef } from '@tanstack/react-table';
 
 interface LandedCostItem {
   id: string;
-  sku: string;
+  code: string;
   name: string;
   qty: number;
   base_unit_cost: number;
@@ -27,7 +27,7 @@ interface LandedCostItem {
 const MOCK_ITEMS: LandedCostItem[] = [
   {
     id: '1',
-    sku: 'RAW-FLOUR-01',
+    code: 'RAW-FLOUR-01',
     name: 'Premium Wheat Flour',
     qty: 100,
     base_unit_cost: 5.5,
@@ -39,7 +39,7 @@ const MOCK_ITEMS: LandedCostItem[] = [
   },
   {
     id: '2',
-    sku: 'RAW-OIL-02',
+    code: 'RAW-OIL-02',
     name: 'Olive Oil Extra Virgin',
     qty: 50,
     base_unit_cost: 45.0,
@@ -106,9 +106,9 @@ export function LandedCostClient() {
 
   const columns: ColumnDef<LandedCostItem, unknown>[] = [
     {
-      accessorKey: 'sku',
+      accessorKey: 'code',
       header: tc('code'),
-      cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-muted-foreground">{row.original.sku}</span>,
+      cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-muted-foreground">{row.original.code}</span>,
     },
     {
       accessorKey: 'name',

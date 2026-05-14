@@ -12,9 +12,10 @@ import { WizardReturn } from '../../hooks/useImportWizard';
 
 interface StepUploadProps {
  wizard: WizardReturn;
+ locale: string;
 }
 
-export function StepUpload({ wizard }: StepUploadProps) {
+export function StepUpload({ wizard, locale }: StepUploadProps) {
  const t = useTranslations('master_data.import');
  const [file, setFile] = useState<File | null>(null);
  const [isParsing, setIsParsing] = useState(false);

@@ -52,7 +52,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
 
   // Filter items that might need barcodes (just an example filter for the tool)
   const pendingItems = useMemo(() => {
-    return items.filter(item => !item.sku?.startsWith('BC-')); // Mock logic for "missing barcodes"
+    return items.filter(item => !item.code?.startsWith('BC-')); // Mock logic for "missing barcodes"
   }, [items]);
 
   const stats = useMemo(() => {
@@ -87,11 +87,11 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
 
   const columns = useMemo<ColumnDef<Item, unknown>[]>(() => [
     { 
-      accessorKey: 'sku', 
+      accessorKey: 'code', 
       header: tc('sku'),
       cell: ({ row }) => (
         <span className="font-mono text-label-xs font-bold text-muted-foreground/60 uppercase">
-          {row.original.sku || '---'}
+          {row.original.code || '---'}
         </span>
       )
     },
@@ -249,7 +249,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                       <Package className="w-4 h-4 text-amber-500/50" />
                       <div className="flex-1 overflow-hidden">
                         <p className="text-label-sm font-bold truncate">{locale === 'ar' ? selectedItem.name_ar : selectedItem.name_en}</p>
-                        <p className="text-[10px] font-mono opacity-40 uppercase">{selectedItem.sku}</p>
+                        <p className="text-[10px] font-mono opacity-40 uppercase">{selectedItem.code}</p>
                       </div>
                       <button onClick={() => setSelectedItem(null)}>
                         <XCircle className="w-4 h-4 text-muted-foreground/40 hover:text-red-500 transition-colors" />

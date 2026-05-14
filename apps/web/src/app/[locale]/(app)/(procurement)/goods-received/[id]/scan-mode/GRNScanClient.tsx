@@ -59,7 +59,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
   }
 
   const handleScan = (barcode: string) => {
-    const item = items?.find(i => i.sku === barcode || i.id === barcode)
+    const item = items?.find(i => i.code === barcode || i.id === barcode || i.barcode === barcode)
     
     if (!item) {
       setScanStatus("error")
@@ -216,7 +216,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
                           <span className="font-semibold text-body-md text-foreground group-hover:text-primary transition-colors">
                             {masterItem ? (locale === 'ar' ? masterItem.name_ar : masterItem.name_en) : item.itemId}
                           </span>
-                          <span className="text-label-xs font-mono text-muted-foreground/40" dir="ltr">{masterItem?.sku || item.itemId}</span>
+                          <span className="text-label-xs font-mono text-muted-foreground/40" dir="ltr">{masterItem?.code || item.itemId}</span>
                         </div>
                       </TableCell>
                       <TableCell>

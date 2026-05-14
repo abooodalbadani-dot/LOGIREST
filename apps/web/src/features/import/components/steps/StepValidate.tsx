@@ -9,9 +9,10 @@ import { WizardReturn } from '../../hooks/useImportWizard';
 
 interface StepValidateProps {
  wizard: WizardReturn;
+ locale: string;
 }
 
-export function StepValidate({ wizard }: StepValidateProps) {
+export function StepValidate({ wizard, locale }: StepValidateProps) {
  const t = useTranslations('master_data.import');
 
  useEffect(() => {

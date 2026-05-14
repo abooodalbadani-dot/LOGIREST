@@ -456,7 +456,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                               <Select
                                 onValueChange={(val) => {
                                   const item = itemsData?.data?.find((i: Item) => i.id === val);
-                                  form.setValue(`lines.${index}.item_id`, val);
+                                  form.setValue(`lines.${index}.item_id`, val || '');
                                   form.setValue(`lines.${index}.item`, {
                                     id: item?.id || '',
                                     code: item?.code || '',

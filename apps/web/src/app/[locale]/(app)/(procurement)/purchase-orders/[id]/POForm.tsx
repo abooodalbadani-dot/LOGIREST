@@ -240,7 +240,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <SelectContent className="bg-surface-container-low border-none rounded-xl">
  {warehouses?.map(w => (
  <SelectItem key={w.id} value={w.id}>
- {w.nameEn}
+ {w.name_en}
  </SelectItem>
  ))}
  </SelectContent>

@@ -22,7 +22,7 @@ export interface UoMConversion { from_uom_id: string; to_uom_id: string; factor:
 export interface Category { id: string; name_ar: string; name_en: string; version?: number; }
 export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; last_purchase_price?: number; is_active: boolean; version?: number; }
 export interface Lot { id: string; item_id: string; warehouse_id: string; lot_number: string; expiry_date: string | null; qty_available: number; is_expired: boolean; is_near_expiry: boolean; }
-export interface Supplier { id: string; code: string; name_ar: string; name_en: string; currency_id: string; payment_terms: string; is_active: boolean; version?: number; }
+export interface Supplier { id: string; code: string; name_ar: string; name_en: string; email?: string; phone?: string; tax_number?: string; currency_id: string; payment_terms: string; is_active: boolean; version?: number; }
 export interface Currency { id: string; code: string; name_ar: string; name_en: string; symbol?: string; is_base_currency: boolean; is_active: boolean; created_at: string; version?: number; }
 export interface FXRate { id: string; from_currency_id: string; to_currency_id: string; rate: number; effective_date: string; is_active: boolean; created_at: string; version?: number; }
 export interface Barcode { id: string; item_id: string; uom_id: string; code: string; default_qty: number; is_active: boolean; version?: number; }
@@ -85,6 +85,7 @@ export const LotSchema = z.object({
 
 export const SupplierSchema = z.object({
  id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
+ email: z.string().optional(), phone: z.string().optional(), tax_number: z.string().optional(),
  currency_id: z.string(), payment_terms: z.string(), is_active: z.boolean(), version: z.number().optional()
 });
 

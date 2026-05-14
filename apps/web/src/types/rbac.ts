@@ -38,6 +38,10 @@ export type ResourceType =
  | 'kitchen_requests'
  | 'operations_kitchen_requests'
  | 'yield_runs'
+ | 'inventory_items'
+ | 'supplier_profile_activity'
+ | 'mapping_pending_items'
+ | 'internal_transfers'
  | 'generic_table';
 
 export type ActionType = 
@@ -87,6 +91,10 @@ export const PERMISSION_MATRIX: Partial<Record<UserRole, Partial<Record<Resource
  zones: ['view', 'create', 'edit', 'delete', 'export', 'update'],
  email_settings: ['view', 'create', 'edit', 'delete', 'export', 'update'],
  barcode_mapping: ['view', 'create', 'edit', 'delete', 'export', 'update'],
+ inventory_items: ['view', 'create', 'edit', 'delete', 'export', 'update'],
+ supplier_profile_activity: ['view', 'create', 'edit', 'delete', 'export', 'update'],
+ mapping_pending_items: ['view', 'create', 'edit', 'delete', 'export', 'update'],
+ internal_transfers: ['view', 'create', 'edit', 'delete', 'export', 'update', 'ship', 'receive'],
  generic_table: ['view', 'create', 'edit', 'delete', 'export', 'update'],
  },
  STORE_MGR: {
