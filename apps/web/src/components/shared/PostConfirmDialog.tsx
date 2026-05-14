@@ -85,7 +85,7 @@ export function PostConfirmDialog({
   const locale = useLocale();
   const [internalOpen, setInternalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
-  
+
   const open = controlledOpen ?? internalOpen;
   const rawOnOpenChange = controlledOnOpenChange ?? setInternalOpen;
 
@@ -117,7 +117,7 @@ export function PostConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <AlertDialogTrigger render={trigger} />}
-      <AlertDialogContent className={cn("max-w-md border-none ambient-shadow p-8 bg-surface-container-lowest rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
+      <AlertDialogContent className={cn("sm:max-w-2xl w-[95vw] sm:w-full border-none ambient-shadow p-8 bg-surface-container-lowest rounded-2xl animate-in fade-in zoom-in-95 duration-300", className)}>
         <AlertDialogHeader className="space-y-4">
           <div className={cn(
             "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-200 hover:scale-110",
@@ -134,7 +134,7 @@ export function PostConfirmDialog({
             </AlertDialogDescription>
           </div>
           {!isLoading && (
-            <button 
+            <button
               onClick={() => handleOpenChange(false)}
               className="absolute right-8 top-8 w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all text-muted-foreground/60 hover:text-foreground"
               aria-label={t('actions.close')}
@@ -167,7 +167,7 @@ export function PostConfirmDialog({
               <label className="text-label-xs font-bold text-muted-foreground/40 uppercase ms-1">
                 {t('confirm_word_prompt', { keyword: requiredWord })}
               </label>
-              <Input 
+              <Input
                 type="text"
                 value={confirmInput}
                 onChange={(e) => setConfirmInput(e.target.value)}

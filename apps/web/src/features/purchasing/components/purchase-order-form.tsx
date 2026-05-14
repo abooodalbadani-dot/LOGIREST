@@ -49,7 +49,7 @@ import { FormFooter } from "@/components/shared/FormFooter";
 import { isDocumentLocked, type DocumentStatus } from "@/core/workflow/document-engine";
 import { PO_STATUS } from "@/contracts/statuses";
 
-const lineItemSchema = z.object({
+export const lineItemSchema = z.object({
   item_id: z.string().min(1),
   item_name: z.string().optional(),
   item_code: z.string().optional(),
@@ -59,7 +59,7 @@ const lineItemSchema = z.object({
   notes: z.string().optional(),
 });
 
-const formSchema = z.object({
+export const formSchema = z.object({
   supplier_id: z.string().min(1),
   pr_id: z.string().optional(),
   currency_code: z.string().min(1),
@@ -70,7 +70,8 @@ const formSchema = z.object({
   lines: z.array(lineItemSchema).min(1),
 });
 
-type PurchaseOrderFormValues = z.infer<typeof formSchema>;
+export type PurchaseOrderFormValues = z.infer<typeof formSchema>;
+
 
 interface PurchaseOrderFormProps {
   initialData?: PODetail;

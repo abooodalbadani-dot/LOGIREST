@@ -65,7 +65,7 @@ export const useTheme = () => {
  const currentTheme = (forcedTheme || theme) as 'light' | 'dark';
 
  return {
- theme: mounted ? currentTheme : 'dark', // Fallback to dark during SSR/Hydration
+    theme: mounted ? currentTheme : undefined, // Return undefined during SSR/Hydration to prevent mismatch
  setTheme: (t: 'light' | 'dark') => setTheme(t),
  toggleTheme: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
  mounted

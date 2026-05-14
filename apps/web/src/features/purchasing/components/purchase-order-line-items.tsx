@@ -19,19 +19,20 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { UseFormReturn, useWatch } from "react-hook-form";
+import { UseFormReturn, useWatch, FieldArrayWithId } from "react-hook-form";
 import { Item } from "@/types/master-data";
 import { cn } from "@/lib/utils";
+import { PurchaseOrderFormValues } from "./purchase-order-form";
 
 interface PurchaseOrderLineItemsProps {
-  form: UseFormReturn<any>;
-  itemsData: any;
+  form: UseFormReturn<PurchaseOrderFormValues>;
+  itemsData: { data: Item[] } | undefined;
   isLocked: boolean;
   currency: string;
-  fields: any[];
+  fields: FieldArrayWithId<PurchaseOrderFormValues, "lines", "id">[];
   remove: (index: number) => void;
-  update: (index: number, value: any) => void;
-  prepend: (value: any) => void;
+  update: (index: number, value: PurchaseOrderFormValues['lines'][number]) => void;
+  prepend: (value: PurchaseOrderFormValues['lines'][number]) => void;
 }
 
 export function PurchaseOrderLineItems({
@@ -145,14 +146,14 @@ export function PurchaseOrderLineItems({
 
 interface LineItemRowProps {
   index: number;
-  form: UseFormReturn<any>;
-  itemsData: any;
+  form: UseFormReturn<PurchaseOrderFormValues>;
+  itemsData: { data: Item[] } | undefined;
   isLocked: boolean;
   remove: (index: number) => void;
-  update: (index: number, value: any) => void;
-  virtualRow: any;
-  t: any;
-  tc: any;
+  update: (index: number, value: PurchaseOrderFormValues['lines'][number]) => void;
+  virtualRow: { start: number };
+  t: (key: string) => string;
+  tc: (key: string) => string;
   locale: string;
 }
 
@@ -208,7 +209,7 @@ function LineItemRow({
                 <FormControl>
                   <SelectTrigger className="bg-surface-container-high border border-white/20 h-11 w-full rounded-xl focus:ring-1 focus:ring-operational-cyan/50 text-body-sm font-bold uppercase overflow-hidden transition-all group-hover:bg-surface-container-highest group-hover:border-operational-cyan/30 shadow-sm relative">
                     <SelectValue placeholder={tc('select_item')}>
-                      {rowValues.item_name || (inputField.value ? itemsData?.data?.find((i: any) => i.id === inputField.value)?.name_ar : null)}
+                      {rowValues.item_name || (inputField.value ? itemsData?.data?.find((i: Item) => i.id === inputField.value)?.name_ar : null)}
                     </SelectValue>
                   </SelectTrigger>
                 </FormControl>

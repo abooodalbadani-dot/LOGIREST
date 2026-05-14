@@ -33,11 +33,11 @@ export function proxy(request: NextRequest) {
   // 3. Helpers & Normalization
   const publicPaths = ['/login', '/forgot-password', '/reset-password'];
   const internalPaths = ['/debug', '/test-bed', '/style-guide'];
-  
+
   // Extract pure path (no locale)
   const purePathname = hasLocalePrefix ? '/' + segments.slice(2).join('/') : pathname;
   const normalizedPath = purePathname === '/' ? '/' : (purePathname.startsWith('/') ? purePathname : '/' + purePathname);
-  
+
   const isPublicPage = publicPaths.includes(normalizedPath);
   const isInternalPath = internalPaths.some(p => normalizedPath.startsWith(p));
   const isRoot = normalizedPath === '/';
@@ -46,10 +46,10 @@ export function proxy(request: NextRequest) {
   const constructUrl = (targetPath: string) => {
     const url = request.nextUrl.clone();
     // Ensure targetPath doesn't already have the locale
-    const cleanTarget = targetPath.startsWith(`/${locale}`) 
-      ? targetPath.replace(`/${locale}`, '') 
+    const cleanTarget = targetPath.startsWith(`/${locale}`)
+      ? targetPath.replace(`/${locale}`, '')
       : targetPath;
-    
+
     url.pathname = `/${locale}${cleanTarget.startsWith('/') ? '' : '/'}${cleanTarget}`;
     return url;
   };
@@ -64,25 +64,27 @@ export function proxy(request: NextRequest) {
 
   // A. Internal Tooling Guard (Production)
   if (isInternalPath && process.env.NODE_ENV === 'production') {
+    console.log(`[Proxy] Blocking internal path in production: ${pathname}`);
     return NextResponse.rewrite(new URL(`/${locale}/404`, request.url));
   }
 
   // B. Unauthenticated -> Login (Locale-Safe)
   if (!token && !isPublicPage) {
+    console.log(`[Proxy] Unauthenticated access to protected route: ${pathname} -> Redirecting to /login`);
     return NextResponse.redirect(constructUrl('/login'));
   }
 
   // C. Authenticated on Public Page -> Dashboard
   if (token && (isPublicPage || isRoot)) {
+    console.log(`[Proxy] Authenticated user on public/root page: ${pathname} -> Redirecting to /dashboard`);
     return NextResponse.redirect(constructUrl('/dashboard'));
   }
 
-
-
-
   // 4. Final Locale Handling via next-intl
+  console.log(`[Proxy] Proceeding with locale middleware for: ${pathname}`);
   return intlMiddleware(request);
 }
+
 
 export const config = {
   matcher: [

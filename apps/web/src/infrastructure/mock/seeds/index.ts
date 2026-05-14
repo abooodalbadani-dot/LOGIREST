@@ -39,8 +39,14 @@ async function seedIfEmpty<T extends { id: string | number }>(
   repo: { findAll: () => Promise<T[]>; saveAll: (data: T[]) => Promise<T[]> }, 
   data: T[]
 ) {
-  const existing = await repo.findAll();
-  if (existing.length === 0) {
+  try {
+    const existing = await repo.findAll();
+    if (existing.length === 0) {
+      await repo.saveAll(data);
+    }
+  } catch (error) {
+    console.warn('🌱 Seed validation failed or data stale, re-seeding...', error);
+    // If validation fails, we force-overwrite with seed data to stabilize the environment
     await repo.saveAll(data);
   }
 }
