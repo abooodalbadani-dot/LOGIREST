@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
  isLocked && 'pointer-events-none grayscale-[0.3] opacity-90'
  )}>
  <div className="w-full min-h-screen flex justify-center">
- <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+ <div className="w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 py-4 md:py-6">
  {children}
  </div>
  </div>
