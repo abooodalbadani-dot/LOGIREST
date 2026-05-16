@@ -11,7 +11,7 @@ export function useRejectPO(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: async ({ id, reason, version, signal }: { id: string; reason: string; version: number; signal?: AbortSignal }) => {
-      const response = await apiClient.post(`/procurement/purchase-orders/${id}/reject`, successSchema, { reason, version }, signal);
+      const response = await apiClient.post(`/procurement/purchase-orders/${id}/reject`, successSchema, { reason, version }, { signal });
       return response;
     },
     onSuccess: (_, { id }) => {

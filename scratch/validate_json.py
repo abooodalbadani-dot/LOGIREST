@@ -1,31 +1,23 @@
 import json
 import sys
 
-try:
-    with open('apps/web/messages/ar.json', 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    print("ar.json is valid JSON")
-    
-    # Check for specific keys
-    keys_to_check = [
-        ["common", "statuses", "draft"],
-        ["common", "warehouses", "main"],
-        ["operations", "issue", "warehouse_locked"]
-    ]
-    
-    for key_path in keys_to_check:
-        curr = data
-        found = True
-        for part in key_path:
-            if isinstance(curr, dict) and part in curr:
-                curr = curr[part]
-            else:
-                found = False
-                break
-        if found:
-            print(f"Found key: {'.'.join(key_path)}")
-        else:
-            print(f"MISSING key: {'.'.join(key_path)}")
+def validate_json(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            json.load(f)
+        print(f"JSON in {file_path} is valid.")
+    except json.JSONDecodeError as e:
+        print(f"JSON in {file_path} is INVALID.")
+        print(f"Error: {e}")
+        # Print some context around the error line
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            start = max(0, e.lineno - 5)
+            end = min(len(lines), e.lineno + 5)
+            for i in range(start, end):
+                prefix = ">>>" if i + 1 == e.lineno else "   "
+                print(f"{prefix} {i+1}: {lines[i].strip()}")
 
-except Exception as e:
-    print(f"Error: {e}")
+if __name__ == "__main__":
+    validate_json(r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json")
+    validate_json(r"e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json")

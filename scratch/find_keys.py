@@ -1,15 +1,13 @@
-import json
+import re
 
-with open('apps/web/messages/en.json', 'r', encoding='utf-8') as f:
-    data = json.load(f)
-
-def find_path(d, target, path=""):
-    if isinstance(d, dict):
-        for k, v in d.items():
-            new_path = f"{path}.{k}" if path else k
-            if k == target:
-                print(f"Found '{target}' at path: {new_path}")
-            find_path(v, target, new_path)
-
-find_path(data, "operations")
-find_path(data, "adjustment")
+with open("e:/Kitchen‑Store Inventory System/apps/web/messages/en.json", 'r', encoding='utf-8') as f:
+    for i, line in enumerate(f):
+        if re.match(r'^\s+"[a-z_]+": \{', line):
+            # Check indentation
+            indent = len(line) - len(line.lstrip())
+            if indent == 2:
+                print(f"Top-level key at line {i+1}: {line.strip()}")
+            elif indent == 4:
+                print(f"Second-level key at line {i+1}: {line.strip()}")
+        if i > 3000:
+            break

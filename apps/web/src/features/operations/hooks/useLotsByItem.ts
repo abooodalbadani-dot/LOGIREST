@@ -25,7 +25,7 @@ export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; war
  is_expired: z.boolean().optional(),
  is_near_expiry: z.boolean().optional(),
  }))
- }), signal);
+ }), { signal });
 
  return res.data.map((item) => {
  const lot: Lot = {

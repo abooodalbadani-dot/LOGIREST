@@ -29,7 +29,7 @@ export function useAdjustmentList(filters: { status?: string; warehouse_id?: str
 
   return useQuery({
     queryKey: ['adjustments', filters],
-    queryFn: ({ signal }) => apiClient.get(`/operations/adjustments?${params.toString()}`, paginatedSchema(AdjustmentSummarySchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/operations/adjustments?${params.toString()}`, paginatedSchema(AdjustmentSummarySchema), { signal }),
     staleTime: 60_000,
   });
 }

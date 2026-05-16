@@ -25,7 +25,7 @@ export function useTransferList(filters: { status?: string; page?: number } = {}
  
   return useQuery({
     queryKey: ['transfers', filters],
-    queryFn: ({ signal }) => apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(TransferSummarySchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(TransferSummarySchema), { signal }),
     staleTime: 60_000,
   });
 }

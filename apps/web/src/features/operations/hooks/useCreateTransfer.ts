@@ -29,7 +29,7 @@ export function useCreateTransfer(options?: { onConflict?: () => void }) {
  return useSafeMutation({
  onConflict: options?.onConflict,
  mutationFn: ({ payload, signal }: { payload: CreateTransferPayload; signal?: AbortSignal }) => 
- apiClient.post('/operations/transfers', TransferDetailSchema, CreateTransferPayloadSchema.parse(payload), signal),
+ apiClient.post('/operations/transfers', TransferDetailSchema, CreateTransferPayloadSchema.parse(payload), { signal }),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['transfers'] });
  }

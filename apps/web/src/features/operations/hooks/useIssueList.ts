@@ -34,7 +34,7 @@ export function useIssueList({ status, page = 1 }: { status?: string; page?: num
             total_pages: z.number()
           })
         })
-      }), signal);
+      }), { signal });
       return res;
     }
   });

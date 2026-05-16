@@ -30,7 +30,7 @@ export function useItems(filters?: { search?: string; category_id?: string; is_a
       if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active));
       
       const path = `/items${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedItemsSchema, signal);
+      return apiClient.get(path, PaginatedItemsSchema, { signal });
     }
   });
 }
@@ -40,7 +40,7 @@ export function useItem(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/items/${id}`, ItemSchema, signal);
+      return apiClient.get(`/items/${id}`, ItemSchema, { signal });
     },
     enabled: !!id,
   });
@@ -56,7 +56,7 @@ export function useCreateItem() {
       return apiClient.post('/items', ItemSchema, {
         ...dataValues,
         code: dataValues.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -80,7 +80,7 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
       return apiClient.put(`/items/${id}`, ItemSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -107,7 +107,7 @@ export function useDeleteItem() {
 
   return useMutation({
     mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/items/${id}`, z.unknown(), signal);
+      return apiClient.del(`/items/${id}`, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

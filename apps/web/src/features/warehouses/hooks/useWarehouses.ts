@@ -30,7 +30,7 @@ export function useWarehouses(filters?: { branch_id?: string; search?: string })
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/warehouses${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedWarehousesSchema, signal);
+      return apiClient.get(path, PaginatedWarehousesSchema, { signal });
     }
   });
 }
@@ -40,7 +40,7 @@ export function useWarehouse(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/warehouses/${id}`, WarehouseSchema, signal);
+      return apiClient.get(`/warehouses/${id}`, WarehouseSchema, { signal });
     },
     enabled: !!id
   });
@@ -56,7 +56,7 @@ export function useCreateWarehouse() {
       return apiClient.post('/warehouses', WarehouseSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -80,7 +80,7 @@ export function useUpdateWarehouse(options?: { onConflict?: () => void }) {
       return apiClient.put(`/warehouses/${id}`, WarehouseSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -103,7 +103,7 @@ export function useDeleteWarehouse() {
 
   return useMutation({
     mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/warehouses/${id}`, z.object({ id: z.string() }).or(z.unknown()), signal);
+      return apiClient.del(`/warehouses/${id}`, z.object({ id: z.string() }).or(z.unknown()), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

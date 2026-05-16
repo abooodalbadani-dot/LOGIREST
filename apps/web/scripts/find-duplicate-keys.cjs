@@ -1,10 +1,9 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
-const path = require('path');
 
 function findDuplicates(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const json = JSON.parse(content);
-  const keys = new Set();
   const duplicates = [];
 
   function checkKeys(obj, prefix = '') {

@@ -16,7 +16,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 export function useWarehouseLock(warehouseId: string | null) {
   const query = useQuery<WarehouseLockState>({
     queryKey: ['warehouse-lock', warehouseId],
-    queryFn: ({ signal }) => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema, signal),
+    queryFn: ({ signal }) => apiClient.get(`/inventory/warehouses/${warehouseId}/lock`, LockSchema, { signal }),
     staleTime: 30_000,
     enabled: !!warehouseId,
   });

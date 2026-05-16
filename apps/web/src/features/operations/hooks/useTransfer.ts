@@ -70,7 +70,7 @@ export type TransferLine = z.infer<typeof TransferLineSchema>;
 export function useTransfer(id: string | null) {
   return useQuery({
     queryKey: ['transfer', id],
-    queryFn: ({ signal }) => apiClient.get(`/operations/transfers/${id}`, TransferDetailSchema, signal),
+    queryFn: ({ signal }) => apiClient.get(`/operations/transfers/${id}`, TransferDetailSchema, { signal }),
     enabled: !!id,
     staleTime: 60_000,
   });

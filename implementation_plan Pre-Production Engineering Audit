@@ -1,0 +1,181 @@
+# Navigation UX Fix — Implementation Plan
+
+## Summary
+
+Based on two forensic audit passes, we have **7 confirmed, actionable fixes** across the codebase. No exploratory guesswork — every change below is tied to a verified file + line number. The scope is surgical: redirect logic, missing action buttons, and breadcrumb/backHref hardening. Zero UI redesign.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Fix #3 (Convert to GRN)** requires knowing the GRN creation route signature. Based on the PO form's `pr_id` pattern, the target URL is `/goods-receipts/new?po_id={id}`. Confirm or correct before implementation.
+
+> [!WARNING]
+> **Fix #4 (AdjustmentCreateClient redirect)** — The `onSuccess` callback is currently inside `useCreateAdjustment`. We will need to pass the redirect as a callback prop or use a wrapper. Confirm the preferred pattern: **(A)** pass `onSuccess` into the hook call site, or **(B)** handle it inside the form component directly (same pattern as `purchase-request-form.tsx` lines 213–226).
+
+---
+
+## Confirmed Issues (from Forensic Audit)
+
+| # | Severity | File | Issue |
+|---|---|---|---|
+| 1 | 🔴 High | `PRApprovalClient.tsx` | Redirects to list after approve/reject; loses context |
+| 2 | 🔴 High | `PODetailClient.tsx` | Missing "Convert to GRN" action button |
+| 3 | 🟡 Med | `AdjustmentCreateClient.tsx` | No `onSuccess` redirect — falls through to nothing |
+| 4 | 🟡 Med | `MasterDataFormLayout.tsx` | `backHref` prop ignored (dead back button) |
+| 5 | 🟡 Med | `AdjustmentCreateClient.tsx` | Cancel uses `router.back()` (unreliable on direct nav) |
+| 6 | 🟢 Low | `KitchenRequestFormClient.tsx` | Cancel uses `router.back()` (same issue) |
+| 7 | 🟢 Low | `IssueListClient.tsx` | `ActionMenu` `onDelete` is a `console.log` stub |
+
+> **Already fixed (no action needed):**
+> - `purchase-request-form.tsx` — `onSave` correctly redirects to `/purchase-requests/${prId}` (lines 222, 226). ✅
+> - `TransferNewClient.tsx` — `onSuccess` correctly redirects to `/transfers/${data.id}` (line 112). ✅
+
+---
+
+## Proposed Changes
+
+### Fix 1 — PRApprovalClient: Redirect to detail after approve/reject
+
+#### [MODIFY] `PRApprovalClient.tsx`
+**Path:** `apps/web/src/app/[locale]/(app)/(procurement)/purchase-requests/[id]/approve/PRApprovalClient.tsx`
+
+- In `handleApprove` and `handleReject` `onSuccess` callbacks, change:
+  ```diff
+  - router.push('/purchase-requests');
+  + router.push(`/purchase-requests/${id}`);
+  ```
+- The `id` is already available from `useParams()` or as a prop.
+
+---
+
+### Fix 2 — PODetailClient: Add "Convert to GRN" action button
+
+#### [MODIFY] `PODetailClient.tsx`
+**Path:** `apps/web/src/app/[locale]/(app)/(procurement)/purchase-orders/[id]/PODetailClient.tsx`
+
+- Inside the `ActionGuard`/action section, add:
+  ```tsx
+  <ActionGuard documentType="PO" status={status} action="CONVERT_TO_GRN" role={user?.role}>
+    <PermissionGate action="create" resource="grn">
+      <Button
+        onClick={() => router.push(`/goods-receipts/new?po_id=${id}`)}
+        className="..."
+      >
+        <ArrowRight className="w-4 h-4 me-2 rtl:rotate-180" />
+        {t('convert_to_grn')}
+      </Button>
+    </PermissionGate>
+  </ActionGuard>
+  ```
+- Requires adding `"CONVERT_TO_GRN"` to the PO document engine's allowed actions for `APPROVED` status.
+
+---
+
+### Fix 3 — AdjustmentCreateClient: Add `onSuccess` redirect + fix `onCancel`
+
+#### [MODIFY] `AdjustmentCreateClient.tsx`
+**Path:** `apps/web/src/app/[locale]/(app)/(operations)/adjustments/new/AdjustmentCreateClient.tsx`
+
+- In the `createAdjustment.mutate(...)` call, add an `onSuccess` callback:
+  ```diff
+  + onSuccess: (data) => {
+  +   router.push(`/adjustments/${data.id}`, { skipGuard: true });
+  + }
+  ```
+- Change the cancel handler from `router.back()` to:
+  ```diff
+  - router.back()
+  + router.push('/adjustments', { skipGuard: true })
+  ```
+
+---
+
+### Fix 4 — MasterDataFormLayout: Honor the `backHref` prop
+
+#### [MODIFY] `MasterDataFormLayout.tsx`
+**Path:** `apps/web/src/components/shared/MasterDataFormLayout.tsx`
+
+- The component receives `backHref` but never uses it in the back button's `onClick`. Fix:
+  ```diff
+  - onClick={() => router.back()}
+  + onClick={() => backHref ? router.push(backHref) : router.back()}
+  ```
+  This is a one-line fix; all existing callers that pass `backHref` will instantly benefit.
+
+---
+
+### Fix 5 — KitchenRequestFormClient: Fix `onCancel` navigation
+
+#### [MODIFY] `KitchenRequestFormClient.tsx`
+**Path:** `apps/web/src/app/[locale]/(app)/(operations)/kitchen-requests/new/KitchenRequestFormClient.tsx`
+
+- Change cancel handler from `router.back()` to an explicit path:
+  ```diff
+  - onCancel={() => router.back()}
+  + onCancel={() => router.push('/kitchen-requests', { skipGuard: true })}
+  ```
+
+---
+
+### Fix 6 — Add i18n key for `convert_to_grn` (required by Fix 2)
+
+#### [MODIFY] `en.json` and `ar.json`
+**Path:** `apps/web/messages/en.json` and `apps/web/messages/ar.json`
+
+Add under `procurement.po`:
+```json
+"convert_to_grn": "Convert to GRN"
+// ar.json:
+"convert_to_grn": "تحويل إلى استلام بضاعة"
+```
+
+---
+
+### Fix 7 — IssueListClient: Wire up `onDelete` (stub cleanup)
+
+#### [MODIFY] `IssueListClient.tsx`
+**Path:** `apps/web/src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx`
+
+- Replace `console.log('Delete Issue', ...)` stub with a real `useDeleteIssue` mutation call, or at minimum a toast warning if deletion is not yet supported:
+  ```diff
+  - onDelete={() => { console.log('Delete Issue', row.original.id); }}
+  + onDelete={() => toast.error(tc('delete_not_supported'))}
+  ```
+  This prevents silent no-ops in production.
+
+---
+
+## Execution Order
+
+These fixes are independent and can be done in any order, but the recommended sequence is:
+
+1. **Fix 4** (MasterDataFormLayout) — broadest impact, single line, zero risk
+2. **Fix 1** (PRApprovalClient) — highest user-facing severity
+3. **Fix 3** (AdjustmentCreateClient) — redirect + cancel in one file
+4. **Fix 5** (KitchenRequestFormClient) — cancel fix
+5. **Fix 2 + Fix 6** (PODetailClient + i18n) — together, they depend on each other
+6. **Fix 7** (IssueListClient stub) — lowest risk, last
+
+---
+
+## Verification Plan
+
+### Automated
+- Run `npm run build` — must produce zero TypeScript errors.
+- Run ESLint: `npx eslint apps/web/src --max-warnings=0`
+
+### Manual Verification (per fix)
+
+| Fix | Test Steps |
+|-----|-----------|
+| Fix 1 | Approve a PR → should land on PR detail, not list |
+| Fix 1 | Reject a PR → same |
+| Fix 2 | Open an APPROVED PO → "Convert to GRN" button should appear |
+| Fix 3 | Submit a new Adjustment → should redirect to the new adjustment's detail page |
+| Fix 3 | Click Cancel on Adjustment form → should go to `/adjustments` list |
+| Fix 4 | Open any master data form (Category, Unit, Supplier) → Back button should navigate to the list |
+| Fix 5 | Click Cancel on Kitchen Request form → should go to `/kitchen-requests` list |
+| Fix 6 | Check AR locale for "Convert to GRN" button text renders correctly |
+| Fix 7 | Open Issues list → Delete action should no longer be a silent no-op |

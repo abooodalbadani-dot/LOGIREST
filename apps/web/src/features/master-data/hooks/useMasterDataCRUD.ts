@@ -9,7 +9,7 @@ export function useMasterDataList<T>(entity: string, schema: ZodSchema<T>, filte
   const params = new URLSearchParams(filters as Record<string, string>);
   return useQuery({ 
     queryKey: [entity, filters], 
-    queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, paginatedSchema(schema), signal), 
+    queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, paginatedSchema(schema), { signal }), 
     staleTime: 60_000 
   });
 }
@@ -17,7 +17,7 @@ export function useMasterDataList<T>(entity: string, schema: ZodSchema<T>, filte
 export function useMasterDataItem<T>(entity: string, id: string | null, schema: ZodSchema<T>) {
   return useQuery({ 
     queryKey: [entity, id], 
-    queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, schema, signal), 
+    queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, schema, { signal }), 
     enabled: !!id 
   });
 }
@@ -25,7 +25,7 @@ export function useMasterDataItem<T>(entity: string, id: string | null, schema: 
 export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>) {
   const qc = useQueryClient();
   return useMutation({ 
-    mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, body, signal), 
+    mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, body, { signal }), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
       toast.success('Resource created successfully');
@@ -38,7 +38,7 @@ export function useMasterDataUpdate<T>(entity: string, schema: ZodSchema<T>, opt
   const qc = useQueryClient();
   return useSafeMutation({ 
     onConflict: options?.onConflict,
-    mutationFn: ({ id, body, signal }: { id: string; body: unknown; signal?: AbortSignal }) => apiClient.put(`/${entity}/${id}`, schema, body, signal), 
+    mutationFn: ({ id, body, signal }: { id: string; body: unknown; signal?: AbortSignal }) => apiClient.put(`/${entity}/${id}`, schema, body, { signal }), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
       toast.success('Resource updated successfully');

@@ -22,6 +22,7 @@
       "back_to_list": "Back to List",
       "reload_page": "Reload Page"
     },
+    "min_chars_required": "Minimum {count} characters required",
     "operational_audit": "Operational Audit",
     "units_short": {
       "kg": "kg",
@@ -32,7 +33,8 @@
     },
     "placeholders": {
       "lot_number": "e.g. LOT-2024-001",
-      "override_reason": "Override reason"
+      "override_reason": "Override reason",
+      "typing_preview": "Start typing to see preview..."
     },
     "branding": {
       "restaurant_logo": "Restaurant Logo",
@@ -64,6 +66,8 @@
     "audit_trail": "Audit Trail / History",
     "history": "History",
     "back": "Back",
+    "recipe": "Recipe / Item",
+    "search_placeholder": "Search...",
     "back_to_list": "Back to List",
     "purchasing": "Purchasing",
     "purchase_orders": "Purchase Orders",
@@ -97,7 +101,7 @@
       "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
       "placeholders": {
         "code": "UNIT",
-        "name_ar": "اسم الوحدة",
+        "name_ar": "\u0627\u0633\u0645 \u0627\u0644\u0648\u062d\u062f\u0629",
         "name_en": "Unit Name"
       },
       "registry_sync": "Registry Sync",
@@ -175,7 +179,7 @@
     "created_at": "Created At",
     "updated_at": "Updated At",
     "updated_by": "Updated By",
-    "dash": "—",
+    "dash": "\u2014",
     "datatable": {
       "export_csv": "Export CSV",
       "no_records": "No Data",
@@ -232,6 +236,7 @@
       "ar": "Arabic",
       "en": "English"
     },
+    "language": "Language",
     "name": "Name",
     "home": "Home",
     "view": "View",
@@ -368,7 +373,7 @@
       "admins": "Admins",
       "audit_log": "Audit History",
       "balance": "Inventory Balance",
-      "barcodes": "Barcode Mapping",
+      "barcodes": "Barcode Registry",
       "branches": "Branch Locations",
       "categories": "Categories",
       "currencies": "Currency Registry",
@@ -408,7 +413,17 @@
       "transfer": "Transfers",
       "uom": "Units of Measure",
       "users": "User Accounts",
-      "warehouses": "Warehouse Nodes"
+      "warehouses": "Warehouse Nodes",
+      "landed_cost": "Landed Cost",
+      "yield_management": "Yield Management",
+      "mail_settings": "Mail Server Settings",
+      "expired_override": "Expired Overrides",
+      "stocktake_archive": "Stocktake Archive",
+      "transfer_hub": "Transfer Hub",
+      "scan_mode": "Scan Mode",
+      "notification_settings": "Notification Settings",
+      "barcode_mapping": "Barcode Mapping",
+      "roles_matrix": "Authorization Matrix"
     },
     "sku": "SKU",
     "status_filtering": "Status Filtering",
@@ -430,8 +445,8 @@
     "warehouse": "Warehouse",
     "fefo": {
       "override_reason": "Override reason",
-      "expired_warning": "Warning: This item is expired — usage reason must be provided",
-      "expired_status": "⛔ Expired",
+      "expired_warning": "Warning: This item is expired \u2014 usage reason must be provided",
+      "expired_status": "\u26d4 Expired",
       "required_commitment": "Required Commitment",
       "units": "Units",
       "allocated_status": "Allocated Status",
@@ -523,14 +538,14 @@
     "no_categories_desc": "Group your items into logical categories for better organization.",
     "no_categories_title": "No Categories Found",
     "not_set": "Not Set",
-    "null_select": "— NULL SELECT —",
+    "null_select": "\u2014 NULL SELECT \u2014",
     "operational_availability": "Operational Availability",
     "operational_compliance": "Operational Compliance",
     "operational_details": "Operational Details",
     "operational_details_desc": "Management and financial mapping",
     "optimal": "Optimal",
     "placeholder_sku": "SKU-000-000",
-    "select_none": "—",
+    "select_none": "\u2014",
     "precision": "Precision",
     "quick_tips": "Quick Tips",
     "hardware_usage": "Hardware Usage & Guidelines",
@@ -542,7 +557,7 @@
     "scope": "Scope",
     "search_categories_placeholder": "Filter categories by name...",
     "search_placeholder": "Search registry...",
-    "select_base_unit": "— SELECT BASE UNIT —",
+    "select_base_unit": "\u2014 SELECT BASE UNIT \u2014",
     "sku_definition_protocol": "SKU Definition Protocol",
     "source_unit": "SOURCE UNIT",
     "status_description": "Control the visibility and operational availability of this unit.",
@@ -702,10 +717,37 @@
       "auth_matrix": "Authorization Matrix",
       "defined_resources": "Defined Resources",
       "immutable_note": "The permission matrix is immutable in the current runtime environment. Changes require security clearance and deployment of a new RBAC manifest.",
+      "security_enforcement": "Security context enforcement active",
       "rbac_enforcement": "RBAC Enforcement",
       "registered_roles": "Registered Roles",
       "resource": "Resource",
-      "strict": "Strict"
+      "strict": "Strict",
+      "total_roles": "Total Roles",
+      "last_update": "Last Update",
+      "active_permissions": "Active Permissions",
+      "pending_audits": "Pending Audits",
+      "security_score": "Security Score",
+      "module": "Module",
+      "role_access": "Role Access",
+      "download_report": "Download Report",
+      "share": "Share",
+      "level": {
+        "none": "No Access",
+        "read": "Read-Only",
+        "full": "Full Access"
+      },
+      "status": {
+        "active": "Active",
+        "restricted": "Restricted",
+        "inherited": "Inherited"
+      },
+      "role_names": {
+        "ADMIN": "System Administrator",
+        "INV_MGR": "Inventory Manager",
+        "WH_KEEPER": "Warehouse Keeper",
+        "PROC_OFFICER": "Procurement Officer",
+        "AUDITOR": "Financial Auditor"
+      }
     },
     "roles": {
       "actions": "Actions",
@@ -733,7 +775,11 @@
       "save_changes": "Save Permission Map",
       "users_count": "Users Count",
       "view": "View",
-      "view_detail": "View Details"
+      "view_detail": "View Details",
+      "procurement": "Procurement",
+      "operations": "Operations",
+      "inventory": "Inventory",
+      "administration": "Administration"
     },
     "scopes": "Scopes",
     "settings": {
@@ -753,7 +799,66 @@
       "settings_saved": "System settings updated successfully",
       "settings_subtitle": "Operational Configuration & Global Parameters",
       "settings_title": "System Settings",
-      "system_name": "System Name"
+      "system_name": "System Name",
+      "mail_settings_card": "SMTP / API Server Configuration",
+      "currencies_card": "Currencies & Exchange",
+      "language_location_card": "Time & Language",
+      "exchange_rates": "Exchange Rates",
+      "base_currency_display": "Base System Currency",
+      "currency_code": "Code",
+      "rate_value": "Rate (to Base)",
+      "last_update": "Last Update",
+      "save_all": "Save All Settings",
+      "cancel": "Cancel",
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "syncing": "Syncing"
+      },
+      "metrics": {
+        "total_accounts": "Total Accounts",
+        "active_roles": "Active Roles",
+        "security_score": "Security Score"
+      }
+    },
+    "mail_settings": {
+      "title": "Mail Server Settings",
+      "subtitle": "SMTP & Infrastructure Configuration",
+      "server_section": "Server Parameters",
+      "auth_section": "Authentication & Security",
+      "smtp_host": "SMTP Host",
+      "smtp_port": "SMTP Port",
+      "smtp_user": "Username / User ID",
+      "smtp_password": "Password / Secret",
+      "smtp_encryption": "Encryption Method",
+      "encryption_none": "None (Unencrypted)",
+      "encryption_ssl": "SSL (Port 465)",
+      "encryption_tls": "TLS / STARTTLS (Port 587)",
+      "test_connection": "Test SMTP Connection",
+      "connection_success": "SMTP connection verified successfully",
+      "connection_failed": "Failed to establish SMTP connection",
+      "placeholder_host": "e.g. smtp.gmail.com",
+      "placeholder_port": "587",
+      "return_to_admin": "Return to Admin Panel",
+      "identity_section": "Sender Identity",
+      "sender_name": "Sender Name",
+      "reply_to_email": "Reply-to Email",
+      "save_success": "Mail server settings updated successfully",
+      "provider_label": "Service Provider",
+      "provider_ses": "Amazon SES",
+      "provider_smtp": "Standard SMTP",
+      "status_label": "Current Connection Status",
+      "status_connected": "Connected successfully",
+      "status_last_check": "Last check: {time} ago",
+      "technical_tip_title": "Technical Tip",
+      "technical_tip_desc": "Use port 587 with TLS encryption as recommended by most modern providers for better compatibility and security.",
+      "encryption_card_title": "Full Encryption System",
+      "ssl_tls_label": "SSL/TLS Encryption",
+      "ssl_tls_desc": "Secures connection between server and application",
+      "send_test_email": "Send Test Email",
+      "label_access_key": "Access Key ID",
+      "label_secret_key": "Secret Access Key",
+      "label_region": "AWS Region"
     },
     "timestamp": "Timestamp",
     "title": "Access Management",
@@ -1332,7 +1437,7 @@
       "layers": "Layers",
       "mapping_status": "Mapping Status",
       "placeholders": {
-        "name_ar": "مثال: مواد خام",
+        "name_ar": "\u0645\u062b\u0627\u0644: \u0645\u0648\u0627\u062f \u062e\u0627\u0645",
         "name_en": "e.g. Raw Materials"
       },
       "search_placeholder": "Filter categories by name or code...",
@@ -1585,7 +1690,7 @@
       "success_description": "Successfully synchronized {count} records with the Master Data Hub.",
       "success_title": "Import Successful",
       "title": "Bulk Import",
-      "upload_hint": "XLSX ONLY • MAX 20MB",
+      "upload_hint": "XLSX ONLY \u2022 MAX 20MB",
       "total_records": "Manifest Rows",
       "try_again": "Re-initialize",
       "uoms": "Units of Measure",
@@ -1738,7 +1843,7 @@
       "phone": "Phone Number",
       "code_placeholder": "e.g. V-001",
       "name_en_placeholder": "Global Distributors",
-      "name_ar_placeholder": "الموزعون العالميون",
+      "name_ar_placeholder": "\u0627\u0644\u0645\u0648\u0632\u0639\u0648\u0646 \u0627\u0644\u0639\u0627\u0644\u0645\u064a\u0648\u0646",
       "contact_person_placeholder": "John Doe",
       "phone_placeholder": "+966 50 000 0000",
       "email_placeholder": "vendor@example.com",
@@ -1817,7 +1922,7 @@
         "type": "Storage Type"
       },
       "name_ar": "Name (AR)",
-      "name_ar_placeholder": "المستودع الرئيسي",
+      "name_ar_placeholder": "\u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639 \u0627\u0644\u0631\u0626\u064a\u0633\u064a",
       "name_en": "Name (EN)",
       "name_en_placeholder": "Main Warehouse",
       "operational_status": "Operational Status",
@@ -1860,7 +1965,7 @@
     },
     "common": {
       "code": "Code",
-      "select_none": "—",
+      "select_none": "\u2014",
       "status_label": "Status",
       "operational_availability": "Operational Availability",
       "active": "Active",
@@ -1905,7 +2010,7 @@
       "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
       "placeholders": {
         "code": "UNIT",
-        "name_ar": "اسم الوحدة",
+        "name_ar": "\u0627\u0633\u0645 \u0627\u0644\u0648\u062d\u062f\u0629",
         "name_en": "Unit Name"
       },
       "registry_sync": "Registry Sync",
@@ -2026,6 +2131,7 @@
     "status": "Status",
     "subject_ar": "Subject (Arabic)",
     "subject_en": "Subject (English)",
+    "settings": "Notification Settings",
     "templates": "Notification Templates",
     "title": "Notifications",
     "total_volume": "Total Volume",
@@ -2050,7 +2156,42 @@
     "templates_message_body": "Message Body",
     "preview_arabic": "Arabic",
     "preview_english": "English",
-    "preview_placeholder": "Start typing to see preview..."
+    "preview_placeholder": "Start typing to see preview...",
+    "add_template": "Add New Template",
+    "search_placeholder": "Search templates...",
+    "subtitle_templates": "Manage and customize all system notifications and automated communication workflows.",
+    "stats_templates": {
+      "total_templates": "Total Templates",
+      "active_templates": "Active Templates",
+      "avg_open_rate": "Avg Open Rate",
+      "monthly_updates": "Updates This Month"
+    },
+    "editor_redesign": {
+      "library_title": "Template Library",
+      "live_preview": "Live Preview",
+      "designer_tip": "Designer Tip",
+      "designer_tip_desc": "Use dynamic variables carefully to avoid layout shifts in mobile view.",
+      "variable_chips": "Dynamic Variables:",
+      "save_changes": "Save Changes",
+      "test_send": "Test Send",
+      "view_desktop": "View Desktop",
+      "view_mobile": "View Mobile",
+      "history": "Version History",
+      "languages": "Languages",
+      "full_preview": "Full Preview",
+      "delete_template": "Delete Template",
+      "last_updated": "Last updated",
+      "just_now": "Just now",
+      "yesterday": "Yesterday",
+      "days_ago": "{count} days ago",
+      "variables": {
+        "item_name": "Item Name",
+        "qty": "Quantity",
+        "supplier": "Supplier",
+        "order_date": "Order Date",
+        "branch": "Branch"
+      }
+    }
   },
   "operational": {
     "inventory": {
@@ -2064,6 +2205,9 @@
       "filter_status": "Stock Status",
       "low_stock": "Low Stock Items",
       "near_expiry": "Near Expiry",
+      "expired_override": {
+        "title": "Expired Override"
+      },
       "pagination_info": "Showing {start}-{end} of {total}",
       "print_labels": "Print Labels",
       "quick_actions": "QUICK ACTIONS:",
@@ -2079,7 +2223,8 @@
         "balance": "Stock Balance",
         "lots": "Lot Control",
         "movements": "Movement Ledger",
-        "scan": "Scan Protocol"
+        "scan": "Scan Protocol",
+        "expired_override": "Expired Overrides"
       },
       "scanner": {
         "active": "Scanner Active",
@@ -2134,7 +2279,7 @@
       },
       "placeholders": {
         "sku": "E.G. ITEM-9902",
-        "name_ar": "أرز بسمتي 5 كجم",
+        "name_ar": "\u0623\u0631\u0632 \u0628\u0633\u0645\u062a\u064a 5 \u0643\u062c\u0645",
         "name_en": "Basmati Rice 5kg",
         "select_category": "Select Category",
         "select_uom": "Select UoM"
@@ -2331,7 +2476,21 @@
         "warehouse_required": "Warehouse is required",
         "notes_max_length": "Notes cannot exceed 1000 characters",
         "quantity_max": "Quantity exceeds maximum allowed"
-      }
+      },
+      "errors": {
+        "create_failed": "Failed to create adjustment",
+        "update_failed": "Failed to update adjustment",
+        "post_failed": "Failed to post adjustment",
+        "approve_failed": "Failed to approve adjustment",
+        "reject_failed": "Failed to reject adjustment",
+        "insufficient_stock": "Insufficient stock for this adjustment",
+        "invalid_status_transition": "Invalid status transition"
+      },
+      "created_success": "Adjustment created successfully",
+      "updated_success": "Adjustment updated successfully",
+      "approved_success": "Adjustment approved",
+      "rejected_success": "Adjustment rejected",
+      "submitted_success": "Adjustment submitted for approval"
     },
     "issue": {
       "active_consumption": "Active Consumption",
@@ -2355,7 +2514,7 @@
       "empty_manifest": "Manifest empty. Awaiting component enrollment.",
       "enroll_component": "Enroll Component",
       "entries": "Entries",
-      "expired_status": "⛔ Expired",
+      "expired_status": "\u26d4 Expired",
       "expiry": "Expiry",
       "fefo_allocator_title": "Allocate Lots",
       "fefo_drawer_title": "Lot Allocation (FEFO)",
@@ -2425,7 +2584,7 @@
         "scanned_items_count": "Scanned Items ({count})",
         "undo": "Undo",
         "empty_state": "No items scanned yet.",
-        "expired_warning": "Expired — Override Allowed",
+        "expired_warning": "Expired \u2014 Override Allowed",
         "expiry_label": "Exp: {date}",
         "breadcrumb_operations": "Operations",
         "breadcrumb_issues": "Stock Issues",
@@ -2433,19 +2592,29 @@
         "exit_mode": "Exit Scan Mode",
         "ready_for_barcode": "READY FOR BARCODE...",
         "awaiting_first_scan": "Awaiting First Scan",
-        "allocated_status": "ALLOCATED ✓",
+        "allocated_status": "ALLOCATED \u2713",
         "pending_lots_status": "PENDING LOTS",
         "loading": "Loading...",
         "qty": "Quantity"
       },
-      "warehouse_locked": "Warehouse is locked due to an active stocktake.",
       "validation": {
-        "department_required": "Destination department is required",
-        "item_required": "Item SKU is required",
-        "items_required": "At least one item is required",
-        "qty_positive": "Quantity must be greater than zero",
-        "warehouse_required": "Source warehouse is required"
-      }
+        "warehouse_locked": "Warehouse is locked due to an active stocktake.",
+        "warehouse_required": "Source warehouse is required",
+        "department_required": "Department is required",
+        "item_required": "Item is required",
+        "qty_positive": "Quantity must be positive",
+        "items_required": "Items are required"
+      },
+      "errors": {
+        "create_failed": "Failed to create issue",
+        "update_failed": "Failed to update issue",
+        "post_failed": "Failed to post issue",
+        "insufficient_stock": "Insufficient stock for this issue",
+        "warehouse_locked": "Source warehouse is locked"
+      },
+      "created_success": "Stock Issue created successfully",
+      "updated_success": "Stock Issue updated successfully",
+      "posted_success": "Stock Issue posted successfully"
     },
     "expired_override": {
       "title": "Expired Product",
@@ -2496,6 +2665,7 @@
       "requested": "Requested",
       "requested_by": "Requested By",
       "requests": "Requests",
+      "search_placeholder": "Search Requisitions...",
       "save_draft": "Save Draft",
       "specify_components": "Specify items and quantities",
       "status": "Status",
@@ -2516,9 +2686,18 @@
         "line_notes_placeholder": "Line specific notes...",
         "qty_positive": "Quantity must be positive",
         "specify_components": "Specify request components",
-        "warehouse_required": "Warehouse is required"
+        "warehouse_required": "Warehouse is required",
+        "min_chars_required": "Minimum {count} characters required"
       },
-      "warehouse": "Warehouse"
+      "warehouse": "Warehouse",
+      "errors": {
+        "create_failed": "Failed to create kitchen request",
+        "update_failed": "Failed to update request status",
+        "fulfill_failed": "Failed to fulfill request"
+      },
+      "created_success": "Kitchen Request created successfully",
+      "status_updated_success": "Request status updated successfully",
+      "fulfilled_success": "Request fulfilled successfully"
     },
     "stocktake": {
       "audit_trail": "Audit Trail",
@@ -2686,7 +2865,17 @@
       "archived_sessions": "Archived Sessions",
       "total_posted": "Total Posted",
       "no_archive_records": "No Archived Records",
-      "archive_empty_description": "Historical stocktake sessions will appear here once finalized."
+      "archive_empty_description": "Historical stocktake sessions will appear here once finalized.",
+      "errors": {
+        "create_failed": "Failed to create stocktake session",
+        "start_failed": "Failed to start stocktake session",
+        "update_failed": "Failed to update stocktake quantities",
+        "post_failed": "Failed to post stocktake session",
+        "reject_failed": "Failed to reject stocktake session"
+      },
+      "created_success": "Stocktake session created successfully",
+      "started_success": "Stocktake session started successfully",
+      "updated_success": "Stocktake quantities updated successfully"
     },
     "transfer": {
       "complete_receive": "Complete Receive",
@@ -2761,6 +2950,17 @@
       "variance_reason": "Variance Reason",
       "variance_reason_placeholder": "Describe the reason for the quantity discrepancy (min 10 chars)...",
       "variance_required_error": "A reason is required when a quantity variance exists.",
+      "errors": {
+        "create_failed": "Failed to create transfer",
+        "ship_failed": "Failed to ship transfer",
+        "receive_failed": "Failed to receive transfer",
+        "post_failed": "Failed to post transfer",
+        "warehouse_match_error": "Source and destination warehouses cannot be the same",
+        "insufficient_stock": "Insufficient stock for this transfer"
+      },
+      "created_success": "Stock Transfer created successfully",
+      "shipped_success": "Stock Transfer shipped successfully",
+      "received_success": "Stock Transfer received successfully",
       "verification_in_progress": "Verification Active",
       "verified_label": "Verified",
       "warehouse_locked": "Cannot proceed: One or more warehouses are locked due to an active stocktake."
@@ -2809,6 +3009,7 @@
       "confirm_keyword_placeholder": "Type '{keyword}' to confirm...",
       "confirm_lot": "Confirm Lot Identity",
       "create_new": "Create New",
+      "create_success": "Goods Received Note created successfully.",
       "description": "Log and process incoming goods from suppliers.",
       "detail_sub": "Goods Received Notification Detail",
       "detail_title": "Goods Received Note",
@@ -2844,7 +3045,7 @@
       "operational_status": "Operational Status",
       "order_reference": "Order Reference",
       "partner_identity": "Partner Identity",
-      "pending_label": "— PENDING —",
+      "pending_label": "\u2014 PENDING \u2014",
       "pending_po": "Pending PO Commitment",
       "pending_posting": "Pending Posting",
       "post_confirm_desc": "After posting, the GRN cannot be edited. Ensure all quantities and costs are correct.",
@@ -2859,9 +3060,14 @@
       "receiving_qty": "Receiving Qty",
       "receiving_warehouse": "Receiving Warehouse",
       "save_draft": "Save Draft",
+      "update_success": "Goods Received Note updated successfully.",
       "scan_log": "Operational Scan History",
       "scan_mode": "Scanning Protocol Active",
       "scan_mode_sub": "High-performance operational acquisition layer",
+      "errors": {
+        "no_currencies_available": "No currencies available for FX selection."
+      },
+      "sku_registry": "SKU Registry",
       "scan_placeholder": "Scan barcode or type...",
       "scanned_manifest": "Scanned Manifest",
       "search_placeholder": "Search for GRN documents...",
@@ -2899,7 +3105,8 @@
         "post": "Post Order",
         "reject": "Reject",
         "submit": "Submit Purchase Order",
-        "submitting": "Submitting..."
+        "submitting": "Submitting...",
+        "convert_to_grn": "Convert to GRN"
       },
       "add_item": "Add Item",
       "scan_or_search": "Scan or Search Item",
@@ -3057,7 +3264,9 @@
       "create_title": "Create Purchase Request",
       "department": "Department",
       "description": "Internal procurement requests and approval workflow",
-      "detail_title": "PR Composition",
+      "detail_title": "Purchase Request Details",
+      "create_success": "Purchase request created successfully.",
+      "update_success": "Purchase request updated successfully.",
       "doc_number": "Document No",
       "draft": "Draft",
       "edit_not_allowed": "Modification Locked",
@@ -3114,7 +3323,9 @@
       "scan_or_search": "Scan barcode or search for items"
     }
   },
-  "profile": {
+  "user_profile": {
+    "return_to_dashboard": "Return to Dashboard",
+    "security_protocol": "Operational Security Protocol",
     "assigned_scopes": "Assigned Scopes",
     "change_password": "Change Password",
     "confirm_password": "Confirm New Password",
@@ -3129,13 +3340,29 @@
     "role": "Role",
     "security": "Security Protocols",
     "language_preference": "Language Preference",
+    "two_fa": "2FA Authentication",
     "verified_identity": "Verified Identity",
+    "activity_summary": "Activity Summary",
+    "preferences": "Preferences",
+    "verified_account": "Verified Account",
+    "personal_info": "Personal Info",
+    "password_mgmt": "Password Management",
+    "night_mode": "Night Mode",
+    "last_login": "Last Login",
+    "account_status": "Account Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "identity": "User Identity",
     "global_access": "No specific operational scopes assigned (Global Access)",
     "title": "User Profile",
-    "two_fa": "2FA Authentication",
     "phase_requirement": "Phase {phase} Requirement",
     "security_hardened": "Your security credentials are now hardened and synced.",
     "enterprise_security": "Enterprise Security",
+    "settings_desc": "Manage your account details, preferences, and security.",
+    "stocktakes": "Stocktakes",
+    "purchase_requests": "Purchase Requests",
+    "default_warehouse": "Default Warehouse",
+    "save_changes": "Save Changes",
     "errors": {
       "update_failed": "Failed to update password"
     }
@@ -3204,6 +3431,7 @@
     "title": "Landed Cost Calculator",
     "subtitle": "Calculate and allocate logistics and overhead costs to inventory",
     "base_cost": "Net Purchase Cost",
+    "qty": "Quantity",
     "freight": "Freight / Shipping",
     "customs": "Customs & Duties",
     "insurance": "Insurance",
@@ -3231,6 +3459,9 @@
     "top_performers": "Top Yielding Items",
     "bottlenecks": "Yield Bottlenecks",
     "new_batch": "New Batch",
+    "new_batch_description": "Start a new production batch to track yield and efficiency",
+    "batch_details": "Batch Details",
+    "batch_details_desc": "Configure your production run parameters",
     "recipe_yield_log": "Recipe Yield Log",
     "view_history": "View History",
     "vs_standard": "{value} vs Standard",
@@ -3259,7 +3490,9 @@
     "route": "Route",
     "status": "Transfer State",
     "pending_transfers": "Pending Shipments",
+    "pending": "Pending",
     "in_transit": "In Transit",
+    "completed": "Completed",
     "completed_today": "Completed Today",
     "efficiency_rate": "Transfer Efficiency",
     "doc_number": "Transfer No",
@@ -3292,7 +3525,19 @@
   "fefo": {
     "warning": "Warning: This product is expired",
     "require_reason": "You must enter an override reason",
-    "override_warning": "Warning: This product is expired — you must enter an override reason",
+    "override_warning": "Warning: This product is expired \u2014 you must enter an override reason",
     "reason_placeholder": "Override reason"
+  },
+  "profile_page": {
+    "sections": {
+      "activity": "Activity Summary",
+      "personal_info": "Personal Information",
+      "security": "Security Settings"
+    },
+    "activity": {
+      "last_login": "Last Login",
+      "recent_updates": "Recent Updates",
+      "items_managed": "Items Managed"
+    }
   }
 }

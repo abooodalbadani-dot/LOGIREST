@@ -1,0 +1,16 @@
+src/app/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx(113,12): error TS2741: Property 'id' is missing in type '{ resource: "adjustment"; viewUrl: string; editUrl: string; onDelete: () => void; }' but required in type 'ActionMenuProps'.
+src/app/[locale]/(app)/(operations)/issues/IssueListClient.tsx(119,12): error TS2741: Property 'id' is missing in type '{ resource: "issue"; viewUrl: string; editUrl: string; onDelete: () => void; }' but required in type 'ActionMenuProps'.
+src/app/[locale]/(app)/(operations)/stocktake/[id]/StocktakeDetailClient.tsx(148,9): error TS2322: Type '{ session: StocktakeSessionVM; locale: "ar" | "en"; actions: Element; isLocked: boolean; onConflict: (err?: unknown) => void; }' is not assignable to type 'IntrinsicAttributes & StocktakeFormProps'.
+  Property 'onConflict' does not exist on type 'IntrinsicAttributes & StocktakeFormProps'.
+src/app/[locale]/(app)/(operations)/transfers/TransferListClient.tsx(98,12): error TS2741: Property 'id' is missing in type '{ resource: "transfer"; viewUrl: string; editUrl: string; onDelete: () => void; }' but required in type 'ActionMenuProps'.
+src/app/[locale]/(app)/(procurement)/goods-received/GRNListClient.tsx(96,10): error TS2741: Property 'id' is missing in type '{ resource: "grn"; viewUrl: string; editUrl: string; onDelete: () => void; }' but required in type 'ActionMenuProps'.
+src/app/[locale]/(app)/(procurement)/goods-received/page.tsx(26,17): error TS2322: Type '{ initialStatus: string | undefined; initialPage: number; locale: "ar" | "en"; }' is not assignable to type 'IntrinsicAttributes & { initialStatus?: string | undefined; initialPage: number; }'.
+  Property 'locale' does not exist on type 'IntrinsicAttributes & { initialStatus?: string | undefined; initialPage: number; }'.
+src/app/[locale]/(app)/admin/audit-logs/AuditLogsClient.tsx(188,35): error TS2339: Property 'page_pages' does not exist on type '{ page: number; page_size: number; total: number; total_pages: number; }'.
+src/app/[locale]/(app)/communications/notifications/templates/TemplateListClient.tsx(207,30): error TS2339: Property 'total_records' does not exist on type '{ page: number; page_size: number; total: number; total_pages: number; }'.
+src/app/[locale]/(app)/master-data/import/ImportWizardClient.tsx(116,63): error TS2322: Type '{ wizard: ImportWizardState; locale: string; }' is not assignable to type 'IntrinsicAttributes & { wizard: ImportWizardState; }'.
+  Property 'locale' does not exist on type 'IntrinsicAttributes & { wizard: ImportWizardState; }'.
+src/app/[locale]/(app)/master-data/warehouses/page.tsx(20,23): error TS2322: Type '{ locale: string; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'locale' does not exist on type 'IntrinsicAttributes'.
+src/features/purchasing/components/grn-form.tsx(429,59): error TS2554: Expected 0 arguments, but got 1.
+src/infrastructure/mock/mock-api.adapter.ts(794,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type '{ department_id: string; warehouse_id: string; items: { item_id: string; quantity: number; notes?: string | undefined; }[]; notes?: string | undefined; }'.

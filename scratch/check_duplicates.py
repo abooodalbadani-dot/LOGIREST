@@ -1,17 +1,16 @@
-import re
-import os
+import json
 
-def check_duplicates(filename):
-    if not os.path.exists(filename):
-        print(f"{filename} not found")
-        return
-    with open(filename, 'r', encoding='utf-8') as f:
-        content = f.read()
-        common_matches = re.findall(r'\"common\": {', content)
-        master_data_matches = re.findall(r'\"master_data\": {', content)
-        print(f"File: {filename}")
-        print(f"  'common' matches: {len(common_matches)}")
-        print(f"  'master_data' matches: {len(master_data_matches)}")
+def check_duplicates(pairs):
+    d = {}
+    for k, v in pairs:
+        if k in d:
+            print(f"Duplicate key found: {k}")
+        d[k] = v
+    return d
 
-check_duplicates('apps/web/messages/en.json')
-check_duplicates('apps/web/messages/ar.json')
+try:
+    with open('apps/web/messages/ar.json', 'r', encoding='utf-8') as f:
+        json.load(f, object_pairs_hook=check_duplicates)
+    print("Check complete")
+except Exception as e:
+    print(f"Error: {e}")

@@ -16,7 +16,7 @@ export type Currency = z.infer<typeof CurrencySchema>;
 export function useCurrencies() {
   return useQuery({
     queryKey: ['currencies'],
-    queryFn: ({ signal }) => apiClient.get('/currencies', z.object({ data: z.array(CurrencySchema) }), signal).then(res => res.data),
+    queryFn: ({ signal }) => apiClient.get('/currencies', z.object({ data: z.array(CurrencySchema) }), { signal }).then(res => res.data),
     staleTime: Infinity,
   });
 }

@@ -10,7 +10,7 @@ export function useApprovePR(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) => 
-      apiClient.post(`/procurement/purchase-requests/${id}/approve`, successSchema, { version }, signal),
+      apiClient.post(`/procurement/purchase-requests/${id}/approve`, successSchema, { version }, { signal }),
     onSuccess: (_, { id }) => {
       // Simulate state transition in cache
       queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {

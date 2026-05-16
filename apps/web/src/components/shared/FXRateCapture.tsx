@@ -33,7 +33,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  const response = await apiClient.get(
  `/currencies/fx-rates?from=${fromCurrencyCode}&to=${toCurrencyCode}`,
  z.object({ data: FxRateSchema }),
- abortController.signal
+ { signal: abortController.signal }
  );
  setRate(response.data.rate);
  setIsLoading(false);

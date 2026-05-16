@@ -11,7 +11,7 @@ export function usePostIssue(id: string, options?: { onConflict?: () => void }) 
     onConflict: options?.onConflict,
     mutationFn: (data: { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE'; version: number; signal?: AbortSignal }) => {
       const { signal, ...payload } = data;
-      return apiClient.post(`/operations/issues/${id}/post`, successSchema, payload, signal);
+      return apiClient.post(`/operations/issues/${id}/post`, successSchema, payload, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] });

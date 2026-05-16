@@ -32,7 +32,7 @@ export function useKitchenRequestList(filters: { status?: string; department_id?
 
   return useQuery({
     queryKey: ['kitchen-requests', filters],
-    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(KitchenRequestSummarySchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(KitchenRequestSummarySchema), { signal }),
     staleTime: 60_000,
   });
 }
@@ -40,7 +40,7 @@ export function useKitchenRequestList(filters: { status?: string; department_id?
 export function useKitchenRequest(id: string) {
   return useQuery({
     queryKey: ['kitchen-requests', id],
-    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema, signal),
+    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema, { signal }),
     enabled: !!id,
   });
 }
@@ -50,7 +50,7 @@ export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
  return useSafeMutation({
  onConflict: options?.onConflict,
   mutationFn: ({ data, signal }: { data: CreateKitchenRequestDTO & { isDraft?: boolean }; signal?: AbortSignal }) => 
-  apiClient.post('/operations/kitchen-requests', KitchenRequestDetailSchema, data, signal),
+  apiClient.post('/operations/kitchen-requests', KitchenRequestDetailSchema, data, { signal }),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
  },
@@ -65,7 +65,7 @@ export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => voi
    return useSafeMutation({
      onConflict: options?.onConflict,
       mutationFn: ({ id, status, reason, version, signal }: { id: string; status: string; reason?: string; version: number; signal?: AbortSignal }) =>
-        apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason, version }, signal),
+        apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason, version }, { signal }),
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
@@ -81,7 +81,7 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
    return useSafeMutation({
      onConflict: options?.onConflict,
       mutationFn: ({ id, items, version, signal }: { id: string; items: { item_id: string; fulfilled_quantity: number }[]; version: number; signal?: AbortSignal }) =>
-        apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items, version }, signal),
+        apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items, version }, { signal }),
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });

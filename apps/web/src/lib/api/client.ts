@@ -82,9 +82,14 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
   }
 }
 
+export interface RequestOptions {
+  signal?: AbortSignal;
+}
+
 export const apiClient = {
-  get: <T>(path: string, schema: ZodSchema<T>, signal?: AbortSignal) => request<T>('GET', path, schema, undefined, signal),
-  post: <T>(path: string, schema: ZodSchema<T>, body?: unknown, signal?: AbortSignal) => request<T>('POST', path, schema, body, signal),
-  put: <T>(path: string, schema: ZodSchema<T>, body?: unknown, signal?: AbortSignal) => request<T>('PUT', path, schema, body, signal),
-  del: <T>(path: string, schema: ZodSchema<T>, signal?: AbortSignal) => request<T>('DELETE', path, schema, undefined, signal),
+  get: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('GET', path, schema, undefined, options?.signal),
+  post: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('POST', path, schema, body, options?.signal),
+  put: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, schema, body, options?.signal),
+  patch: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, schema, body, options?.signal),
+  del: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('DELETE', path, schema, undefined, options?.signal),
 };

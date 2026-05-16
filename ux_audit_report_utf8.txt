@@ -1,0 +1,32 @@
+
+[UX AUDIT] 616 files checked
+--------------------------------------------------
+[!] ISSUES (49):
+  - [Cognitive Load] globals.css: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] KitchenRequestsListClient.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] StocktakeForm.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] StocktakeViewer.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] StocktakeStartClient.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] TransferDisputeClient.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] YieldManagementClient.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] GRNViewer.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] POViewer.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Cognitive Load] RolesViewerClient.tsx: Form inputs without labels. Use <label> for accessibility and clarity.
+[*] WARNINGS (3888):
+  - [Trust] globals.css: Form without security indicators. Add 'SSL Secure' or lock icon.
+  - [Cognitive Load] globals.css: High visual noise detected. Many colors and borders increase cognitive load.
+  - [Typography] globals.css: Adjacent font weights (600/500). Skip at least 2 levels for contrast.
+  - [Typography] globals.css: Fixed font sizes without clamp(). Consider fluid typography: clamp(MIN, PREFERRED, MAX)
+  - [Visual] globals.css: Blur used without semi-transparent background (Glassmorphism fail)
+  - [Performance] globals.css: Animating expensive properties (bottom, height, top). Use transform/opacity where possible.
+  - [Accessibility] globals.css: Animations found without prefers-reduced-motion check
+  - [Visual] globals.css: Simple/Unnatural shadow detected. Consider multiple layers or Y > X offset for realism.
+  - [Color] globals.css: 51 distinct colors. Consider 60-30-10 rule: dominant (60%), secondary (30%), accent (10%).
+  - [Color] globals.css: Color variables without HSL. Consider HSL for easier palette adjustment (Hue, Saturation, Lightness).
+  - [Visceral] layout.tsx: Hero section lacks visual appeal. Consider gradients or subtle animations.
+  - [Visual] layout.tsx: Hero section without visual interest. Consider gradient for depth.
+  - [Animation] layout.tsx: Async operations without loading indicator. Add skeleton or spinner for perceived performance.
+  - [Fitts' Law] not-found.tsx: Small targets (< 44px)
+  - [Visual] not-found.tsx: Flat design with no depth. Consider shadows or subtle gradients for hierarchy.
+[+] PASSED CHECKS: 167
+STATUS: FAIL

@@ -22,7 +22,7 @@ export function useEmailOutbox(filters: { status?: string; page?: number } = {})
  params.set('page', String(filters.page ?? 1));
   return useQuery({
     queryKey: ['notifications/outbox', filters],
-    queryFn: ({ signal }) => apiClient.get(`/notifications/outbox?${params.toString()}`, paginatedSchema(EmailOutboxEntrySchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/notifications/outbox?${params.toString()}`, paginatedSchema(EmailOutboxEntrySchema), { signal }),
     staleTime: 60_000,
   });
 }

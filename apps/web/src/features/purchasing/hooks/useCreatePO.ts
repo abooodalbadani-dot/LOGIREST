@@ -29,7 +29,7 @@ export function useCreatePO(options?: { onConflict?: () => void }) {
  return useSafeMutation({
  onConflict: options?.onConflict,
  mutationFn: ({ payload, signal }: { payload: CreatePOPayload; signal?: AbortSignal }) => 
- apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload), signal).then(res => res.data),
+ apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload), { signal }).then(res => res.data),
  onSuccess: (data) => {
  // Seed the cache for the newly created PO
  queryClient.setQueryData(['purchase-order', data.id], data);

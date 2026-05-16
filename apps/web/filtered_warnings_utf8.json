@@ -1,0 +1,326 @@
+﻿[
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\barcodes\\BarcodeListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "The 'barcodes' logical expression could make the dependencies of useMemo Hook (at line 42) change on every render. To fix this, wrap the initialization of 'barcodes' in its own useMemo() Hook.",
+        "line": 32,
+        "column": 9,
+        "nodeType": "VariableDeclarator",
+        "endLine": 32,
+        "endColumn": 41
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "React Hook useMemo has an unnecessary dependency: 'locale'. Either exclude it or remove the dependency array.",
+        "line": 146,
+        "column": 6,
+        "nodeType": "ArrayExpression",
+        "endLine": 146,
+        "endColumn": 42,
+        "suggestions": [
+          {
+            "desc": "Update the dependencies array to be: [tc, t, router, items, uoms]",
+            "fix": {
+              "range": [
+                5621,
+                5657
+              ],
+              "text": "[tc, t, router, items, uoms]"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\barcodes\\mapping\\BarcodeMappingClient.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "The 'items' logical expression could make the dependencies of useMemo Hook (at line 56) change on every render. To fix this, wrap the initialization of 'items' in its own useMemo() Hook.",
+        "line": 50,
+        "column": 9,
+        "nodeType": "VariableDeclarator",
+        "endLine": 50,
+        "endColumn": 38
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "The 'items' logical expression could make the dependencies of useMemo Hook (at line 64) change on every render. To fix this, wrap the initialization of 'items' in its own useMemo() Hook.",
+        "line": 50,
+        "column": 9,
+        "nodeType": "VariableDeclarator",
+        "endLine": 50,
+        "endColumn": 38
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'_uoms' is assigned a value but never used.",
+        "line": 51,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 51,
+        "endColumn": 14
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\branches\\BranchFormClient.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'_locale' is defined but never used.",
+        "line": 43,
+        "column": 83,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 43,
+        "endColumn": 90
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\branches\\BranchListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'locale' is defined but never used.",
+        "line": 23,
+        "column": 36,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 23,
+        "endColumn": 42
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\currencies\\CurrencyListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "React Hook useMemo has an unnecessary dependency: 'locale'. Either exclude it or remove the dependency array.",
+        "line": 135,
+        "column": 5,
+        "nodeType": "ArrayExpression",
+        "endLine": 135,
+        "endColumn": 28,
+        "suggestions": [
+          {
+            "desc": "Update the dependencies array to be: [tc, t, router]",
+            "fix": {
+              "range": [
+                4517,
+                4540
+              ],
+              "text": "[tc, t, router]"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\departments\\DepartmentListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'_page' is assigned a value but never used.",
+        "line": 26,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 26,
+        "endColumn": 15
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "The 'departments' logical expression could make the dependencies of useMemo Hook (at line 37) change on every render. To fix this, wrap the initialization of 'departments' in its own useMemo() Hook.",
+        "line": 30,
+        "column": 9,
+        "nodeType": "VariableDeclarator",
+        "endLine": 30,
+        "endColumn": 44
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "React Hook useMemo has an unnecessary dependency: 'locale'. Either exclude it or remove the dependency array.",
+        "line": 102,
+        "column": 6,
+        "nodeType": "ArrayExpression",
+        "endLine": 102,
+        "endColumn": 29,
+        "suggestions": [
+          {
+            "desc": "Update the dependencies array to be: [tc, t, router]",
+            "fix": {
+              "range": [
+                3960,
+                3983
+              ],
+              "text": "[tc, t, router]"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\fx-rates\\FXRateListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "The 'rates' logical expression could make the dependencies of useMemo Hook (at line 42) change on every render. To fix this, wrap the initialization of 'rates' in its own useMemo() Hook.",
+        "line": 32,
+        "column": 9,
+        "nodeType": "VariableDeclarator",
+        "endLine": 32,
+        "endColumn": 27
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "React Hook useMemo has a missing dependency: 'getCurrencyCode'. Either include it or remove the dependency array.",
+        "line": 115,
+        "column": 6,
+        "nodeType": "ArrayExpression",
+        "endLine": 115,
+        "endColumn": 42,
+        "suggestions": [
+          {
+            "desc": "Update the dependencies array to be: [tfx, t, getCurrencyCode, locale, router]",
+            "fix": {
+              "range": [
+                4821,
+                4857
+              ],
+              "text": "[tfx, t, getCurrencyCode, locale, router]"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\import\\components\\Step1Upload.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'_locale' is defined but never used.",
+        "line": 16,
+        "column": 47,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 16,
+        "endColumn": 54
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\import\\components\\Step2Validate.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "severity": 1,
+        "message": "React Hook useEffect has a missing dependency: 'wizard'. Either include it or remove the dependency array.",
+        "line": 31,
+        "column": 5,
+        "nodeType": "ArrayExpression",
+        "endLine": 31,
+        "endColumn": 7,
+        "suggestions": [
+          {
+            "desc": "Update the dependencies array to be: [wizard]",
+            "fix": {
+              "range": [
+                1066,
+                1068
+              ],
+              "text": "[wizard]"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\items\\ItemListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'locale' is defined but never used.",
+        "line": 22,
+        "column": 34,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 22,
+        "endColumn": 40
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\suppliers\\SupplierListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'locale' is defined but never used.",
+        "line": 22,
+        "column": 38,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 22,
+        "endColumn": 44
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\master-data\\units-of-measure\\UoMListClient.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'locale' is defined but never used.",
+        "line": 22,
+        "column": 33,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 22,
+        "endColumn": 39
+      }
+    ]
+  },
+  {
+    "filePath": "E:\\KitchenظّStore Inventory System\\apps\\web\\src\\features\\master-data\\components\\MasterDataFormLayout.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'backHref' is defined but never used.",
+        "line": 40,
+        "column": 3,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 40,
+        "endColumn": 11
+      }
+    ]
+  }
+]

@@ -10,7 +10,7 @@ export function usePostGRN(id: string, options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ signal, ...data }: { fx_rate: number; confirmation: 'ACKNOWLEDGE_IRREVERSIBLE'; version: number; signal?: AbortSignal }) => 
-      apiClient.post(`/procurement/grns/${id}/post`, successSchema, data, signal),
+      apiClient.post(`/procurement/grns/${id}/post`, successSchema, data, { signal }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grns'] });
       queryClient.invalidateQueries({ queryKey: ['grn', id] });

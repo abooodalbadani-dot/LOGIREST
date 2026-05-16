@@ -24,7 +24,7 @@ export function useCreatePR(options?: { onConflict?: () => void }) {
     onConflict: options?.onConflict,
     mutationFn: (payload: CreatePRPayload & { signal?: AbortSignal }) => {
       const { signal, ...data } = payload;
-      return apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(data), signal);
+      return apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(data), { signal });
     },
     onSuccess: (data) => {
       // Seed the cache for the newly created PR

@@ -1,0 +1,225 @@
+
+> web@0.1.0 lint
+> eslint
+
+
+E:\KitchenظّStore Inventory System\apps\web\parse_lint_relevant.cjs
+  1:12  error    A `require()` style import is forbidden    @typescript-eslint/no-require-imports
+  2:7   warning  'path' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  2:14  error    A `require()` style import is forbidden    @typescript-eslint/no-require-imports
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\stocktake\[id]\count\StocktakeCountClient.tsx
+  19:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  55:26  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\stocktake\[id]\count\StocktakeCountClient.tsx:55:26
+  53 |   const items = session?.items || []
+  54 |
+> 55 |   const rowVirtualizer = useVirtualizer({
+     |                          ^^^^^^^^^^^^^^ TanStack Virtual's `useVirtualizer()` API returns functions that cannot be memoized safely
+  56 |     count: items.length,
+  57 |     getScrollElement: () => parentRef.current,
+  58 |     estimateSize: () => 88,  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\stocktake\[id]\start\page.tsx
+  1:10  warning  'getTranslations' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx
+  43:10  warning  'Skeleton' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\TransferListClient.tsx
+  209:60  warning  'key' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\[id]\TransferDetailClient.tsx
+  16:9  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\[id]\receive\TransferReceiveClient.tsx
+   3:29  warning  'useEffect' is defined but never used               @typescript-eslint/no-unused-vars
+  75:19  warning  'registerDirty' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\[id]\ship\TransferShipClient.tsx
+   5:10  warning  'useRouter' is defined but never used           @typescript-eslint/no-unused-vars
+  18:10  warning  'ConflictDialog' is defined but never used      @typescript-eslint/no-unused-vars
+  19:10  warning  'useConflictHandler' is defined but never used  @typescript-eslint/no-unused-vars
+  20:10  warning  'isDocumentLocked' is defined but never used    @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\transfers\new\TransferNewClient.tsx
+   9:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+  26:10  warning  'Save' is defined but never used    @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\(operations)\yield-management\YieldManagementClient.tsx
+   9:10  warning  'Input' is defined but never used             @typescript-eslint/no-unused-vars
+  10:10  warning  'Label' is defined but never used             @typescript-eslint/no-unused-vars
+  87:16  warning  'setData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\mail-settings\MailSettingsClient.tsx
+  19:3   warning  'Info' is defined but never used             @typescript-eslint/no-unused-vars
+  31:10  warning  'Switch' is defined but never used           @typescript-eslint/no-unused-vars
+  54:48  warning  'errors' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  69:14  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\restaurant-profile\ProfileFormClient.tsx
+  35:37  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\roles\RolesListClient.tsx
+  12:43  warning  '_locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\roles\RolesViewerClient.tsx
+   5:53  warning  'ActionType' is defined but never used  @typescript-eslint/no-unused-vars
+  16:10  warning  'cn' is defined but never used          @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\roles\[id]\RoleDetailClient.tsx
+  20:44  warning  '_locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\settings\SettingsClient.tsx
+   8:11  warning  'Clock' is defined but never used                         @typescript-eslint/no-unused-vars
+  45:9   warning  'showCurrencyWarning' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\users\UserListClient.tsx
+  28:42  warning  '_locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\admin\users\[id]\UserFormClient.tsx
+  47:9  warning  '_router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\communications\notifications\templates\TemplateListClient.tsx
+  8:3  warning  'XCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\context-selector\ContextSelectorClient.tsx
+  23:17  warning  '_user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\context-selector\page.tsx
+  6:11  warning  'locale' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\barcodes\BarcodeListClient.tsx
+  22:37  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\fx-rates\FXRateListClient.tsx
+  115:6  warning  React Hook useMemo has an unnecessary dependency: 'currencies'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\import\components\Step1Upload.tsx
+  11:11  warning  'Step1UploadProps' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\items\ItemListClient.tsx
+  22:34  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\suppliers\SupplierListClient.tsx
+  22:38  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\master-data\units-of-measure\UoMListClient.tsx
+  22:33  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\profile\page.tsx
+   7:35  warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+   8:15  warning  'Star' is defined but never used          @typescript-eslint/no-unused-vars
+   8:45  warning  'Bell' is defined but never used          @typescript-eslint/no-unused-vars
+   9:18  warning  'ScanLine' is defined but never used      @typescript-eslint/no-unused-vars
+   9:36  warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+  12:10  warning  'Separator' is defined but never used     @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(app)\search\SearchClient.tsx
+  47:8  warning  '_tc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\app\[locale]\(auth)\forgot-password\page.tsx
+  15:5   warning  'Lock' is defined but never used  @typescript-eslint/no-unused-vars
+  49:18  warning  '_err' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\shared\DataTable\DataTable.tsx
+  22:27  warning  'useLocale' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  81:16  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\shared\DataTable\DataTable.tsx:81:16
+  79 |   const parentRef = React.useRef<HTMLDivElement>(null);
+  80 |
+> 81 |  const table = useReactTable({
+     |                ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  82 |  data: data || [],
+  83 |  columns,
+  84 |  getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\shared\GlobalErrorBoundary.tsx
+  38:42  warning  '_' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\shared\PrecisionTable.tsx
+  70:24  warning  'row' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\ui\data-table.tsx
+  55:16  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\ui\data-table.tsx:55:16
+  53 |  const t = useTranslations("common");
+  54 |
+> 55 |  const table = useReactTable({
+     |                ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  56 |  data,
+  57 |  columns,
+  58 |  getCoreRowModel: getCoreRowModel(),  react-hooks/incompatible-library
+
+E:\KitchenظّStore Inventory System\apps\web\src\components\ui\fefo-lot-allocator.tsx
+  48:6  warning  React Hook React.useMemo has an unnecessary dependency: 'isOpen'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\barcodes\hooks\useBarcodes.ts
+  216:17  warning  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\branches\types\index.ts
+  12:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-empty-object-type')
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\dashboard\components\NearExpiryWidget.tsx
+  18:9  warning  'isRtl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\import\components\ImportLandingClient.tsx
+  17:8  warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\import\components\ImportWizardClient.tsx
+  24:8  warning  'isRtl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\import\components\steps\StepCommit.tsx
+  6:10  warning  'cn' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\import\components\steps\StepUpload.tsx
+  18:38  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\import\components\steps\StepValidate.tsx
+  15:40  warning  'locale' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\master-data\components\MasterDataFormLayout.tsx
+  40:3  warning  'backHref' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\operations\api\useStocktakes.ts
+  103:41  warning  '_itemId' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\purchasing\components\purchase-order-line-items.tsx
+  52:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+E:\KitchenظّStore Inventory System\apps\web\src\features\purchasing\components\purchase-order-line-items.tsx:52:23
+  50 |   const prevFieldsLength = React.useRef(fields.length);
+  51 |
+> 52 |   const virtualizer = useVirtualizer({
+     |                       ^^^^^^^^^^^^^^ TanStack Virtual's `useVirtualizer()` API returns functions that cannot be memoized safely
+  53 |     count: fields.length,
+  54 |     getScrollElement: () => parentRef.current,
+  55 |     estimateSize: () => 80,  react-hooks/incompatible-library
+
+ظ£û 68 problems (2 errors, 66 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
+node.exe : npm error Lifecycle script `lint` failed with error:
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm error Lifec...led with error::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm error code 1
+npm error path E:\KitchenظّStore Inventory System\apps\web
+npm error workspace web@0.1.0
+npm error location E:\KitchenظّStore Inventory System\apps\web
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c eslint

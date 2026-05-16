@@ -16,7 +16,7 @@ export type Supplier = z.infer<typeof SupplierSchema>;
 export function useSuppliers() {
   return useQuery({
     queryKey: ['suppliers'],
-    queryFn: ({ signal }) => apiClient.get('/suppliers', z.object({ data: z.array(SupplierSchema) }), signal).then(res => res.data),
+    queryFn: ({ signal }) => apiClient.get('/suppliers', z.object({ data: z.array(SupplierSchema) }), { signal }).then(res => res.data),
     staleTime: 60_000,
   });
 }

@@ -32,7 +32,7 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, payload, signal }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal }) => 
-      apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), signal),
+      apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), { signal }),
     onSuccess: (data) => {
       queryClient.setQueryData(['adjustment', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });

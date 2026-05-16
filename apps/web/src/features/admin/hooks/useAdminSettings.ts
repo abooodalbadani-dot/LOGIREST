@@ -10,7 +10,7 @@ export { AdminSettingsSchema, type AdminSettings };
 export function useAdminSettings() {
   return useQuery({
     queryKey: ['admin/settings'],
-    queryFn: ({ signal }) => apiClient.get('/admin/settings', AdminSettingsSchema, signal),
+    queryFn: ({ signal }) => apiClient.get('/admin/settings', AdminSettingsSchema, { signal }),
     staleTime: 60_000,
   });
 }

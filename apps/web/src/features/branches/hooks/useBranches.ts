@@ -33,7 +33,7 @@ export function useBranches(filters?: { search?: string }) {
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/branches${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedBranchesSchema, signal);
+      return apiClient.get(path, PaginatedBranchesSchema, { signal });
     },
     staleTime: 60_000,
   });
@@ -44,7 +44,7 @@ export function useBranch(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/branches/${id}`, BranchSchema, signal);
+      return apiClient.get(`/branches/${id}`, BranchSchema, { signal });
     },
     enabled: !!id,
   });
@@ -60,7 +60,7 @@ export function useCreateBranch() {
       return apiClient.post('/branches', BranchSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -84,7 +84,7 @@ export function useUpdateBranch(options?: { onConflict?: () => void }) {
       return apiClient.put(`/branches/${id}`, BranchSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -108,7 +108,7 @@ export function useDeleteBranch() {
 
   return useMutation({
     mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/branches/${id}`, z.unknown(), signal);
+      return apiClient.del(`/branches/${id}`, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

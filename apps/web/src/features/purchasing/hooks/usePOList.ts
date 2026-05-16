@@ -27,7 +27,7 @@ export function usePOList(filters: { status?: string; supplier_id?: string; page
  
   return useQuery({
     queryKey: ['purchase-orders', filters],
-    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(POSummarySchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(POSummarySchema), { signal }),
     staleTime: 60_000,
   });
 }

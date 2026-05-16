@@ -30,7 +30,7 @@ export function useDepartments(filters?: { branch_id?: string; warehouse_id?: st
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/departments${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedDepartmentsSchema, signal);
+      return apiClient.get(path, PaginatedDepartmentsSchema, { signal });
     }
   });
 }
@@ -40,7 +40,7 @@ export function useDepartment(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/departments/${id}`, DepartmentSchema, signal);
+      return apiClient.get(`/departments/${id}`, DepartmentSchema, { signal });
     },
     enabled: !!id
   });
@@ -56,7 +56,7 @@ export function useCreateDepartment() {
       return apiClient.post('/departments', DepartmentSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -80,7 +80,7 @@ export function useUpdateDepartment(options?: { onConflict?: () => void }) {
       return apiClient.put(`/departments/${id}`, DepartmentSchema, {
         ...values,
         code: values.code.toUpperCase()
-      }, signal);
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -104,7 +104,7 @@ export function useDeleteDepartment() {
 
   return useMutation({
     mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/departments/${id}`, z.unknown(), signal);
+      return apiClient.del(`/departments/${id}`, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

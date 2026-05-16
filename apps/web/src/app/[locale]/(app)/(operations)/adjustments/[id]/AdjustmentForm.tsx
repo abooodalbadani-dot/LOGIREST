@@ -123,7 +123,7 @@ export function AdjustmentForm({
               const balanceRes = await apiClient.get(
                 `/inventory/balance?warehouse_id=${warehouseId}&search=${line.item.code}`, 
                 BalanceSchema,
-                abortController.signal
+                { signal: abortController.signal }
               );
               const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
               return { ...line, qty_before: currentQty };
@@ -249,7 +249,7 @@ export function AdjustmentForm({
           primary_uom: z.object({ id: z.string(), code: z.string() })
         }))
       });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortController.signal);
+      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, { signal: abortController.signal });
       
       if (res.data && res.data.length > 0) {
         const item = res.data[0];
@@ -262,7 +262,7 @@ export function AdjustmentForm({
         const balanceRes = await apiClient.get(
           `/inventory/balance?warehouse_id=${warehouseId}&search=${item.code}`, 
           BalanceSchema,
-          abortController.signal
+          { signal: abortController.signal }
         );
         const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
 

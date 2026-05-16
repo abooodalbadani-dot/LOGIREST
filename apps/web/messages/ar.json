@@ -22,6 +22,7 @@
       "back_to_list": "العودة للقائمة",
       "reload_page": "إعادة تحميل الصفحة"
     },
+    "min_chars_required": "يجب إدخال {count} أحرف على الأقل",
     "operational_audit": "تدقيق تشغيلي",
     "units_short": {
       "kg": "كجم",
@@ -47,7 +48,8 @@
     },
     "placeholders": {
       "lot_number": "مثال: LOT-2024-001",
-      "override_reason": "سبب التجاوز"
+      "override_reason": "سبب التجاوز",
+      "typing_preview": "ابدأ الكتابة لرؤية المعاينة..."
     },
     "ui": {
       "toggle_theme": "تغيير المظهر",
@@ -76,6 +78,8 @@
     "audit_trail": "سجل المراجعة / التاريخ",
     "history": "السجل",
     "back": "رجوع",
+    "recipe": "الوصفة / الصنف",
+    "search_placeholder": "بحث...",
     "back_to_list": "العودة للقائمة",
     "barcode_scanner": "ماسح الباركود",
     "id": "المعرف",
@@ -233,6 +237,7 @@
       "ar": "العربية",
       "en": "الإنجليزية"
     },
+    "language": "اللغة",
     "name": "الاسم",
     "home": "الرئيسية",
     "view": "عرض",
@@ -369,7 +374,7 @@
       "admins": "المسؤولين",
       "audit_log": "سجل التدقيق",
       "balance": "أرصدة المخزون",
-      "barcodes": "ربط الباركود",
+      "barcodes": "سجل الباركود",
       "branches": "الفروع",
       "categories": "الفئات",
       "currencies": "العملات",
@@ -409,7 +414,17 @@
       "transfer": "التحويلات",
       "uom": "وحدة القياس",
       "users": "حسابات المستخدمين",
-      "warehouses": "المستودعات"
+      "warehouses": "المستودعات",
+      "landed_cost": "التكلفة الواصلة",
+      "yield_management": "إدارة العائد",
+      "mail_settings": "إعدادات خادم البريد",
+      "expired_override": "تجاوزات انتهاء الصلاحية",
+      "stocktake_archive": "أرشيف الجرد",
+      "transfer_hub": "مركز التحويلات",
+      "scan_mode": "وضع المسح",
+      "notification_settings": "إعدادات التنبيهات",
+      "barcode_mapping": "تخطيط الباركود",
+      "roles_matrix": "مصفوفة الصلاحيات"
     },
     "sku": "رمز الصنف (SKU)",
     "status_filtering": "تصفية الحالات",
@@ -702,10 +717,37 @@
       "auth_matrix": "مصفوفة الصلاحيات",
       "defined_resources": "الموارد المعرفة",
       "immutable_note": "مصفوفة الصلاحيات غير قابلة للتغيير في بيئة التشغيل الحالية. تتطلب التغييرات تصريحًا أمنيًا ونشر بيان RBAC جديد.",
+      "security_enforcement": "تطبيق فرض سياق الأمان",
       "rbac_enforcement": "فرض RBAC",
       "registered_roles": "الأدوار المسجلة",
       "resource": "المورد",
-      "strict": "صارم"
+      "strict": "صارم",
+      "total_roles": "إجمالي الأدوار",
+      "last_update": "آخر تحديث",
+      "active_permissions": "الصلاحيات النشطة",
+      "pending_audits": "عمليات تدقيق معلقة",
+      "security_score": "مؤشر أمان النظام",
+      "module": "الوحدة",
+      "role_access": "صلاحيات الوصول للأدوار",
+      "download_report": "تحميل التقرير",
+      "share": "مشاركة",
+      "level": {
+        "none": "لا يوجد صلاحية",
+        "read": "عرض فقط",
+        "full": "صلاحية كاملة"
+      },
+      "status": {
+        "active": "نشط",
+        "restricted": "مقيد",
+        "inherited": "مورث"
+      },
+      "role_names": {
+        "ADMIN": "مدير النظام",
+        "INV_MGR": "مدير المخزون",
+        "WH_KEEPER": "أمين المستودع",
+        "PROC_OFFICER": "مسؤول المشتريات",
+        "AUDITOR": "مدقق مالي"
+      }
     },
     "roles": {
       "actions": "الإجراءات",
@@ -733,7 +775,11 @@
       "save_changes": "حفظ خريطة الصلاحيات",
       "users_count": "عدد المستخدمين",
       "view": "عرض",
-      "view_detail": "عرض التفاصيل"
+      "view_detail": "عرض التفاصيل",
+      "procurement": "المشتريات",
+      "operations": "العمليات",
+      "inventory": "المخزون",
+      "administration": "الإدارة"
     },
     "scopes": "النطاقات",
     "settings": {
@@ -753,7 +799,66 @@
       "settings_saved": "تم تحديث إعدادات النظام بنجاح",
       "settings_subtitle": "التكوين التشغيلي والمعلمات العالمية",
       "settings_title": "إعدادات النظام",
-      "system_name": "اسم النظام"
+      "system_name": "اسم النظام",
+      "mail_settings_card": "إعدادات خادم SMTP / API",
+      "currencies_card": "العملات والصرف",
+      "language_location_card": "الوقت واللغة",
+      "exchange_rates": "أسعار الصرف",
+      "base_currency_display": "عملة النظام الأساسية",
+      "currency_code": "الرمز",
+      "rate_value": "السعر (مقابل الأساس)",
+      "last_update": "آخر تحديث",
+      "save_all": "حفظ كافة الإعدادات",
+      "cancel": "إلغاء",
+      "status": {
+        "connected": "متصل",
+        "disconnected": "غير متصل",
+        "syncing": "جاري المزامنة"
+      },
+      "metrics": {
+        "total_accounts": "إجمالي الحسابات",
+        "active_roles": "الأدوار النشطة",
+        "security_score": "مؤشر الأمان"
+      }
+    },
+    "mail_settings": {
+      "title": "إعدادات خادم البريد",
+      "subtitle": "تكوين بروتوكول SMTP والبنية التحتية",
+      "server_section": "معلمات الخادم",
+      "auth_section": "المصادقة والأمان",
+      "smtp_host": "مضيف SMTP",
+      "smtp_port": "منفذ SMTP",
+      "smtp_user": "اسم المستخدم / المعرف",
+      "smtp_password": "كلمة المرور / السر",
+      "smtp_encryption": "طريقة التشفير",
+      "encryption_none": "بدون (غير مشفر)",
+      "encryption_ssl": "SSL (المنفذ 465)",
+      "encryption_tls": "TLS / STARTTLS (المنفذ 587)",
+      "test_connection": "اختبار اتصال SMTP",
+      "connection_success": "تم التحقق من اتصال SMTP بنجاح",
+      "connection_failed": "فشل في إنشاء اتصال SMTP",
+      "placeholder_host": "مثلاً smtp.gmail.com",
+      "placeholder_port": "587",
+      "return_to_admin": "العودة إلى لوحة الإدارة",
+      "identity_section": "هوية المرسل",
+      "sender_name": "اسم المرسل",
+      "reply_to_email": "البريد الإلكتروني للرد",
+      "save_success": "تم تحديث إعدادات خادم البريد بنجاح",
+      "provider_label": "مزود الخدمة",
+      "provider_ses": "Amazon SES",
+      "provider_smtp": "Standard SMTP",
+      "status_label": "حالة الاتصال الحالية",
+      "status_connected": "متصل بنجاح",
+      "status_last_check": "آخر فحص: منذ {time}",
+      "technical_tip_title": "نصيحة تقنية",
+      "technical_tip_desc": "استخدم منفذ 587 مع تشفير TLS هو الخيار الموصى به لمعظم مزودي الخدمة الحديثين لضمان أفضل توافقية وأمان.",
+      "encryption_card_title": "نظام التشفير المتكامل",
+      "ssl_tls_label": "تشفير SSL/TLS",
+      "ssl_tls_desc": "تأمين الاتصال بين الخادم والتطبيق",
+      "send_test_email": "إرسال بريد تجريبي",
+      "label_access_key": "معرف مفتاح الوصول (Access Key ID)",
+      "label_secret_key": "مفتاح الوصول السري (Secret Access Key)",
+      "label_region": "منطقة AWS"
     },
     "timestamp": "الطابع الزمني",
     "title": "إدارة الوصول",
@@ -2026,6 +2131,7 @@
     "status": "الحالة",
     "subject_ar": "الموضوع (عربي)",
     "subject_en": "الموضوع (الإنجليزية)",
+    "settings": "إعدادات التنبيهات",
     "templates": "قوالب الإشعارات",
     "title": "التنبيهات",
     "total_volume": "إجمالي الحجم",
@@ -2050,7 +2156,42 @@
     "templates_message_body": "نص الرسالة",
     "preview_arabic": "العربية",
     "preview_english": "الإنجليزية",
-    "preview_placeholder": "ابدأ الكتابة لرؤية المعاينة..."
+    "preview_placeholder": "ابدأ الكتابة لرؤية المعاينة...",
+    "add_template": "إضافة قالب جديد",
+    "search_placeholder": "البحث عن قالب...",
+    "subtitle_templates": "إدارة وتخصيص جميع إشعارات النظام وقوالب التواصل التلقائية الموجهة للموردين والموظفين.",
+    "stats_templates": {
+      "total_templates": "إجمالي القوالب",
+      "active_templates": "قوالب نشطة",
+      "avg_open_rate": "متوسط فتح الرسائل",
+      "monthly_updates": "تحديثات هذا الشهر"
+    },
+    "editor_redesign": {
+      "library_title": "مكتبة القوالب",
+      "live_preview": "معاينة مباشرة",
+      "designer_tip": "نصيحة للمصمم",
+      "designer_tip_desc": "استخدم المتغيرات بحذر لتجنب تداخل النصوص الطويلة في واجهة الجوال.",
+      "variable_chips": "المتغيرات الديناميكية:",
+      "save_changes": "حفظ التعديلات",
+      "test_send": "تجربة الإرسال",
+      "view_desktop": "عرض سطح المكتب",
+      "view_mobile": "عرض الجوال",
+      "history": "تاريخ النسخ",
+      "languages": "اللغات",
+      "full_preview": "معاينة كاملة",
+      "delete_template": "حذف القالب",
+      "last_updated": "آخر تحديث",
+      "just_now": "منذ ساعتين",
+      "yesterday": "أمس",
+      "days_ago": "منذ {count} أيام",
+      "variables": {
+        "item_name": "اسم_العنصر",
+        "qty": "الكمية",
+        "supplier": "المورد",
+        "order_date": "تاريخ_الطلب",
+        "branch": "الفرع"
+      }
+    }
   },
   "operational": {
     "inventory": {
@@ -2064,6 +2205,9 @@
       "filter_status": "حالة المخزون",
       "low_stock": "أصناف منخفضة المخزون",
       "near_expiry": "قريب الانتهاء",
+      "expired_override": {
+        "title": "تجاوز الصلاحية"
+      },
       "pagination_info": "عرض {start}-{end} من {total}",
       "print_labels": "طباعة الملصقات",
       "quick_actions": "إجراءات سريعة:",
@@ -2079,7 +2223,8 @@
         "balance": "رصيد المخزون",
         "lots": "التحكم في الدفعات",
         "movements": "سجل الحركة",
-        "scan": "بروتوكول المسح"
+        "scan": "بروتوكول المسح",
+        "expired_override": "تجاوزات الصلاحية"
       },
       "scanner": {
         "active": "الماسح نشط",
@@ -2331,7 +2476,21 @@
         "warehouse_required": "المستودع مطلوب",
         "notes_max_length": "لا يمكن أن تتجاوز الملاحظات 1000 حرف",
         "quantity_max": "الكمية تتجاوز الحد الأقصى المسموح به"
-      }
+      },
+      "errors": {
+        "create_failed": "فشل إنشاء التعديل",
+        "update_failed": "فشل تحديث التعديل",
+        "post_failed": "فشل ترحيل التعديل",
+        "approve_failed": "فشلت الموافقة على التعديل",
+        "reject_failed": "فشل رفض التعديل",
+        "insufficient_stock": "المخزون غير كافٍ لهذا التعديل",
+        "invalid_status_transition": "انتقال حالة غير صالح"
+      },
+      "created_success": "تم إنشاء التعديل بنجاح",
+      "updated_success": "تم تحديث التعديل بنجاح",
+      "approved_success": "تمت الموافقة على التعديل",
+      "rejected_success": "تم رفض التعديل",
+      "submitted_success": "تم تقديم التعديل للموافقة"
     },
     "issue": {
       "active_consumption": "الاستهلاك النشط",
@@ -2438,14 +2597,24 @@
         "loading": "جاري التحميل...",
         "qty": "الكمية"
       },
-      "warehouse_locked": "المستودع مقفل",
       "validation": {
-        "department_required": "القسم الوجهة مطلوب",
-        "item_required": "رمز SKU للصنف مطلوب",
-        "items_required": "مطلوب صنف واحد على الأقل",
+        "warehouse_locked": "المستودع مقفل بسبب جرد نشط",
+        "warehouse_required": "المستودع المصدر مطلوب",
+        "department_required": "القسم مطلوب",
+        "item_required": "الصنف مطلوب",
         "qty_positive": "يجب أن تكون الكمية أكبر من الصفر",
-        "warehouse_required": "المستودع المصدر مطلوب"
-      }
+        "items_required": "يجب إضافة أصناف للسند"
+      },
+      "errors": {
+        "create_failed": "فشل إنشاء سند الصرف",
+        "update_failed": "فشل تحديث سند الصرف",
+        "post_failed": "فشل ترحيل سند الصرف",
+        "insufficient_stock": "المخزون غير كافٍ لهذا الصرف",
+        "warehouse_locked": "المستودع المصدر مقفل"
+      },
+      "created_success": "تم إنشاء سند الصرف بنجاح",
+      "updated_success": "تم تحديث سند الصرف بنجاح",
+      "posted_success": "تم ترحيل سند الصرف بنجاح"
     },
     "expired_override": {
       "title": "منتج منتهي الصلاحية",
@@ -2496,6 +2665,7 @@
       "requested": "المطلوب",
       "requested_by": "طلب بواسطة",
       "requests": "الطلبات",
+      "search_placeholder": "البحث في الطلبات التشغيلية...",
       "save_draft": "حفظ مسودة",
       "specify_components": "تحديد الأصناف والكميات",
       "status": "الحالة",
@@ -2516,9 +2686,18 @@
         "line_notes_placeholder": "ملاحظات السطر...",
         "qty_positive": "الكمية يجب أن تكون موجبة",
         "specify_components": "حدد مكونات الطلب",
-        "warehouse_required": "المستودع مطلوب"
+        "warehouse_required": "المستودع مطلوب",
+        "min_chars_required": "يجب إدخال {count} أحرف على الأقل"
       },
-      "warehouse": "المستودع"
+      "warehouse": "المستودع",
+      "errors": {
+        "create_failed": "فشل إنشاء طلب المطبخ",
+        "update_failed": "فشل تحديث حالة الطلب",
+        "fulfill_failed": "فشل تنفيذ الطلب"
+      },
+      "created_success": "تم إنشاء طلب المطبخ بنجاح",
+      "status_updated_success": "تم تحديث حالة الطلب بنجاح",
+      "fulfilled_success": "تم تنفيذ الطلب بنجاح"
     },
     "stocktake": {
       "audit_trail": "سجل المراجعة",
@@ -2686,7 +2865,17 @@
       "archived_sessions": "الجلسات المؤرشفة",
       "total_posted": "إجمالي المرحل",
       "no_archive_records": "لا توجد سجلات مؤرشفة",
-      "archive_empty_description": "ستظهر جلسات الجرد التاريخية هنا بمجرد اكتمالها وترحيلها."
+      "archive_empty_description": "ستظهر جلسات الجرد التاريخية هنا بمجرد اكتمالها وترحيلها.",
+      "errors": {
+        "create_failed": "فشل إنشاء جلسة الجرد",
+        "start_failed": "فشل بدء جلسة الجرد",
+        "update_failed": "فشل تحديث كميات الجرد",
+        "post_failed": "فشل ترحيل جلسة الجرد",
+        "reject_failed": "فشل رفض جلسة الجرد"
+      },
+      "created_success": "تم إنشاء جلسة الجرد بنجاح",
+      "started_success": "تم بدء جلسة الجرد بنجاح",
+      "updated_success": "تم تحديث كميات الجرد بنجاح"
     },
     "transfer": {
       "complete_receive": "إكمال الاستلام",
@@ -2761,6 +2950,17 @@
       "variance_reason": "سبب الاختلاف",
       "variance_reason_placeholder": "صف سبب اختلاف الكمية (10 أحرف على الأقل)...",
       "variance_required_error": "يجب تقديم سبب عند وجود اختلاف في الكمية.",
+      "errors": {
+        "create_failed": "فشل إنشاء عملية النقل",
+        "ship_failed": "فشل شحن عملية النقل",
+        "receive_failed": "فشل استلام عملية النقل",
+        "post_failed": "فشل ترحيل عملية النقل",
+        "warehouse_match_error": "لا يمكن أن يكون مستودع المصدر والوجهة متطابقين",
+        "insufficient_stock": "المخزون غير كافٍ لهذا التحويل"
+      },
+      "created_success": "تم إنشاء عملية النقل بنجاح",
+      "shipped_success": "تم شحن عملية النقل بنجاح",
+      "received_success": "تم استلام عملية النقل بنجاح",
       "verification_in_progress": "التحقق نشط",
       "verified_label": "تم التحقق",
       "warehouse_locked": "لا يمكن المتابعة: مستودع واحد أو أكثر مقفل بسبب جرد نشط."
@@ -2808,10 +3008,11 @@
       "confirm_keyword": "ترحيل",
       "confirm_keyword_placeholder": "اكتب '{keyword}' للتأكيد...",
       "confirm_lot": "تأكيد هوية الدفعة",
-      "create_new": "طلب جديد",
-      "description": "إدارة استلام البضائع والمواد من الموردين",
+      "create_new": "إنشاء جديد",
+      "create_success": "تم إنشاء سند استلام البضائع بنجاح.",
+      "description": "تسجيل ومعالجة البضائع الواردة من الموردين.",
       "detail_sub": "تفاصيل إشعار استلام البضائع",
-      "detail_title": "تفاصيل التحويل",
+      "detail_title": "تفاصيل سند استلام البضائع",
       "direct_receipt": "استلام مباشر",
       "document_specification": "مواصفات استلام البضائع",
       "expiry_date": "تاريخ الانتهاء",
@@ -2837,21 +3038,21 @@
       "lot_required": "رقم الدفعة مطلوب",
       "market_index_ref": "مرجع مؤشر السوق",
       "new_manifest_sub": "بيان دخول بضائع جديد",
-      "no_item_found": "لم يتم العثور على الصنف في هذا الجرد",
+      "no_item_found": "لم يتم العثور على الصنف في هذا المستند",
       "no_grns_title": "لا توجد سندات استلام بضائع",
       "no_grns_desc": "قم بإنشاء سند استلام جديد عند تسليم البضائع لتحديث مستويات المخزون.",
-      "no_records": "لم يتم العثور على سجلات تحويل",
+      "no_records": "لا توجد سجلات مسح",
       "operational_status": "الحالة التشغيلية",
       "order_reference": "مرجع الطلب",
       "partner_identity": "هوية الشريك",
       "pending_label": "— قيد الانتظار —",
       "pending_po": "ارتباط أمر شراء معلق",
       "pending_posting": "انتظار الترحيل",
-      "post_confirm_desc": "سيتم إنشاء مستندات تسوية لجميع الفروقات وسيتم رفع القفل عن المستودع.",
-      "post_confirm_title": "تأكيد ترحيل الجرد",
+      "post_confirm_desc": "بعد الترحيل، لا يمكن تعديل سند الاستلام. تأكد من صحة جميع الكميات والتكاليف.",
+      "post_confirm_title": "تأكيد ترحيل سند الاستلام",
       "post_grn": "ترحيل السند",
-      "post_irreversible": "ترحيل التدقيق هو إجراء غير قابل للتراجع.",
-      "posted_success": "تم ترحيل الجرد بنجاح ورُفع القفل عن المستودع.",
+      "post_irreversible": "هذا الإجراء غير قابل للتراجع تماماً.",
+      "posted_success": "تم ترحيل سند الاستلام بنجاح.",
       "qty_greater_than_zero": "يجب أن تكون الكمية أكبر من الصفر",
       "receipt_total": "إجمالي الإيصال ({currency})",
       "received_manifest_sub": "مانيفست الاستلام",
@@ -2859,12 +3060,17 @@
       "receiving_qty": "الكمية المستلمة",
       "receiving_warehouse": "مستودع الاستلام",
       "save_draft": "حفظ كمسودة",
+      "update_success": "تم تحديث سند استلام البضائع بنجاح.",
       "scan_log": "سجل المسح التشغيلي",
       "scan_mode": "بروتوكول المسح نشط",
       "scan_mode_sub": "طبقة الاستحواذ التشغيلي عالية الأداء",
+      "errors": {
+        "no_currencies_available": "لا توجد عملات متاحة للاختيار."
+      },
+      "sku_registry": "سجل الأصناف",
       "scan_placeholder": "امسح الباركود...",
       "scanned_manifest": "البيان الممسوح",
-      "search_placeholder": "البحث في الجلسات...",
+      "search_placeholder": "بحث في سندات الاستلام...",
       "select_warehouse": "اختر المستودع...",
       "stats": {
         "awaiting_audit": "في انتظار المراجعة",
@@ -2899,7 +3105,8 @@
         "post": "ترحيل",
         "reject": "رفض",
         "submit": "تقديم الطلب",
-        "submitting": "جاري الإرسال..."
+        "submitting": "جاري الإرسال...",
+        "convert_to_grn": "تحويل إلى استلام بضاعة"
       },
       "add_item": "صنف جديد",
       "scan_or_search": "مسح أو بحث عن صنف",
@@ -3057,7 +3264,9 @@
       "create_title": "إنشاء طلب شراء جديد",
       "department": "القسم",
       "description": "إدارة طلبات الشراء الداخلية وسير عمل الاعتماد",
-      "detail_title": "تفاصيل التحويل",
+      "detail_title": "تفاصيل طلب الشراء",
+      "create_success": "تم إنشاء طلب الشراء بنجاح.",
+      "update_success": "تم تحديث طلب الشراء بنجاح.",
       "doc_number": "رقم الطلب",
       "draft": "مسودة",
       "edit_not_allowed": "التعديل مغلق",
@@ -3073,7 +3282,7 @@
         "pending": "قيد الاعتماد",
         "total": "القيمة الإجمالية"
       },
-      "new_intent": "غرض أمر جديد",
+      "new_intent": "غرض طلب جديد",
       "no_requests_desc": "ابدأ دورة المشتريات عن طريق إنشاء طلب جديد.",
       "no_requests_title": "لايوجد بيانات",
       "posted_success": "تم ترحيل طلب الشراء بنجاح.",
@@ -3114,28 +3323,46 @@
       "scan_or_search": "امسح الباركود أو ابحث عن الأصناف"
     }
   },
-  "profile": {
+  "user_profile": {
+    "return_to_dashboard": "العودة للوحة التحكم",
+    "security_protocol": "بروتوكول الأمن التشغيلي",
     "assigned_scopes": "النطاقات المعينة",
     "change_password": "تغيير كلمة المرور",
     "confirm_password": "تأكيد كلمة المرور الجديدة",
     "current_password": "كلمة المرور الحالية",
     "details": "التفاصيل",
-    "email": "contact@restaurant.com",
+    "email": "البريد الإلكتروني",
     "logout": "إنهاء الجلسة",
-    "name": "اسم المطعم",
+    "name": "الاسم",
     "new_password": "كلمة المرور الجديدة",
     "password_updated": "تم تحديث كلمة المرور بنجاح.",
     "passwords_match": "كلمات المرور غير متطابقة.",
     "role": "الدور",
     "security": "بروتوكولات الأمان",
     "language_preference": "تفضيلات اللغة",
-    "verified_identity": "الهوية المتحقق منها",
+    "two_fa": "مصادقة 2FA",
+    "verified_identity": "هوية موثقة",
+    "activity_summary": "ملخص النشاط",
+    "preferences": "التفضيلات",
+    "verified_account": "حساب موثق",
+    "personal_info": "المعلومات الشخصية",
+    "password_mgmt": "إدارة كلمة المرور",
+    "night_mode": "الوضع الليلي",
+    "last_login": "آخر تسجيل دخول",
+    "account_status": "حالة الحساب",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "identity": "هوية المستخدم",
     "global_access": "لا توجد نطاقات تشغيلية محددة (وصول عالمي)",
     "title": "الملف الشخصي",
-    "two_fa": "المصادقة الثنائية (2FA)",
     "phase_requirement": "متطلبات المرحلة {phase}",
     "security_hardened": "تم تعزيز بيانات الاعتماد الخاصة بك ومزامنتها.",
     "enterprise_security": "أمن المؤسسة",
+    "settings_desc": "إدارة تفاصيل حسابك، تفضيلات العرض، والأمان.",
+    "stocktakes": "عمليات الجرد",
+    "purchase_requests": "طلبات الشراء",
+    "default_warehouse": "عرض المستودع الافتراضي",
+    "save_changes": "حفظ التغييرات",
     "errors": {
       "update_failed": "فشل تحديث كلمة المرور"
     }
@@ -3200,23 +3427,11 @@
     "title": "مركز التقارير",
     "view_report": "عرض التقرير"
   },
-  "not_found": {
-    "title": "الصفحة غير موجودة",
-    "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
-    "go_home": "العودة للمركز الرئيسي",
-    "mission_title": "مهمتنا",
-    "mission_description": "في لوجي ريست، نؤمن بالدقة السلسة. تم بناء نظامنا لضمان عدم ضياع غرام واحد من المخزون في فجوة عدم الكفاءة.",
-    "trusted_by": "موثوق به من قبل قادة الصناعة",
-    "partners": {
-      "global_kitchen": "GLOBAL_KITCHEN",
-      "resto_pro": "RESTO_PRO",
-      "food_logistics": "FOOD_LOGISTICS"
-    }
-  },
   "landed_cost": {
     "title": "حاسبة التكلفة النهائية (Landed Cost)",
     "subtitle": "حساب وتوزيع تكاليف اللوجستيات والمصاريف الإضافية على المخزون",
     "base_cost": "صافي تكلفة الشراء",
+    "qty": "الكمية",
     "freight": "الشحن / النقل",
     "customs": "الجمارك والرسوم",
     "insurance": "التأمين",
@@ -3244,6 +3459,9 @@
     "top_performers": "الأصناف الأعلى عائداً",
     "bottlenecks": "اختناقات الإنتاجية",
     "new_batch": "دفعة جديدة",
+    "new_batch_description": "بدء دفعة إنتاج جديدة لتتبع العائد والكفاءة",
+    "batch_details": "تفاصيل الدفعة",
+    "batch_details_desc": "تكوين معايير تشغيل الإنتاج",
     "recipe_yield_log": "سجل إنتاجية الوصفات",
     "view_history": "عرض السجل",
     "vs_standard": "{value} مقابل المعياري",
@@ -3272,7 +3490,9 @@
     "route": "المسار",
     "status": "حالة التحويل",
     "pending_transfers": "شحنات قيد الانتظار",
+    "pending": "قيد الانتظار",
     "in_transit": "قيد النقل",
+    "completed": "مكتمل",
     "completed_today": "اكتملت اليوم",
     "efficiency_rate": "كفاءة التحويل",
     "doc_number": "رقم التحويل",
@@ -3289,10 +3509,35 @@
     },
     "capacity_utilization": "{percent}% استهلاك السعة"
   },
+  "not_found": {
+    "title": "الصفحة غير موجودة",
+    "description": "المورد المطلوب غير موجود أو تم نقله.",
+    "go_home": "العودة إلى مركز التحكم",
+    "mission_title": "مهمتنا",
+    "mission_description": "في LogiRest، نؤمن بالدقة المتناهية. نظامنا مبني لضمان عدم ضياع أي جرام من المخزون في فراغ عدم الكفاءة.",
+    "trusted_by": "موثوق من قبل قادة الصناعة",
+    "partners": {
+      "global_kitchen": "GLOBAL_KITCHEN",
+      "resto_pro": "RESTO_PRO",
+      "food_logistics": "FOOD_LOGISTICS"
+    }
+  },
   "fefo": {
     "warning": "تحذير: هذا المنتج منتهي الصلاحية",
     "require_reason": "يجب إدخال سبب التجاوز",
     "override_warning": "تحذير: هذا المنتج منتهي الصلاحية — يجب إدخال سبب الاستخدام",
     "reason_placeholder": "سبب الاستخدام"
+  },
+  "profile_page": {
+    "sections": {
+      "activity": "ملخص النشاط",
+      "personal_info": "المعلومات الشخصية",
+      "security": "إعدادات الأمان"
+    },
+    "activity": {
+      "last_login": "آخر دخول",
+      "recent_updates": "التحديثات الأخيرة",
+      "items_managed": "الأصناف المدارة"
+    }
   }
 }

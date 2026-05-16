@@ -30,7 +30,7 @@ export function useUpdatePO(id: string, options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ payload, signal }: { payload: UpdatePOPayload; signal?: AbortSignal }) => 
-      apiClient.put(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload), signal).then(res => res.data),
+      apiClient.put(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload), { signal }).then(res => res.data),
     onSuccess: (data) => {
       // Update cache
       queryClient.setQueryData(['purchase-order', id], data);

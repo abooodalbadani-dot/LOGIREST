@@ -12,7 +12,7 @@ export function useInventoryLots(filters: { include_expired?: boolean; page?: nu
  if (filters.include_expired) qs.append('include_expired', 'true');
  if (filters.page) qs.append('page', filters.page.toString());
  const path = `/inventory/lots${qs.toString() ? `?${qs.toString()}` : ''}`;
-  return apiClient.get(path, paginatedSchema(InventoryLotSchema), signal);
+  return apiClient.get(path, paginatedSchema(InventoryLotSchema), { signal });
  },
  staleTime: 60_000,
  });

@@ -12,7 +12,7 @@ export function useApproveAdjustment(id: string, options?: { onConflict?: () => 
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ version, signal }: { version: number; signal?: AbortSignal }) =>
-      apiClient.post(`/operations/adjustments/${id}/approve`, successSchema, { version }, signal),
+      apiClient.post(`/operations/adjustments/${id}/approve`, successSchema, { version }, { signal }),
     onSuccess: () => {
       queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
         if (!old) return old;

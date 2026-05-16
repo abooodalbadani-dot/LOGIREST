@@ -12,7 +12,7 @@ export function usePostStocktake(sessionId: string, warehouseId: string, options
       apiClient.post(`/stocktake/sessions/${sessionId}/post`, StocktakeSessionSchema, { 
         version,
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' 
-      }, signal),
+      }, { signal }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stocktake-sessions'] });
       qc.invalidateQueries({ queryKey: ['stocktake-session', sessionId] });

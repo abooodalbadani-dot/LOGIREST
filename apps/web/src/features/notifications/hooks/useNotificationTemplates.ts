@@ -22,7 +22,7 @@ export function useNotificationTemplates(filters: { page?: number } = {}) {
  params.set('page', String(filters.page ?? 1));
   return useQuery({
     queryKey: ['notifications/templates', filters],
-    queryFn: ({ signal }) => apiClient.get(`/notifications/templates?${params.toString()}`, paginatedSchema(NotificationTemplateSchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/notifications/templates?${params.toString()}`, paginatedSchema(NotificationTemplateSchema), { signal }),
     staleTime: 60_000,
   });
 }
@@ -30,7 +30,7 @@ export function useNotificationTemplates(filters: { page?: number } = {}) {
 export function useNotificationTemplate(id: string | null) {
   return useQuery({
     queryKey: ['notifications/templates', id],
-    queryFn: ({ signal }) => apiClient.get(`/notifications/templates/${id}`, NotificationTemplateSchema, signal),
+    queryFn: ({ signal }) => apiClient.get(`/notifications/templates/${id}`, NotificationTemplateSchema, { signal }),
     enabled: !!id,
   });
 }

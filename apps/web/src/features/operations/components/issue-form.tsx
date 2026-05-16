@@ -118,7 +118,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           primary_uom: z.object({ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string() })
         }))
       });
-      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortController.signal);
+      const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, { signal: abortController.signal });
       if (res.data && res.data.length > 0) {
         const item = res.data[0];
         setLines(prev => {

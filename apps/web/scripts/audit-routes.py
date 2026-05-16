@@ -75,7 +75,14 @@ IGNORE_PREFIXES = [
     '/procurement/',
     '/operations/',
     '/notifications/',
-    '/currencies/'
+    '/currencies/',
+    '/warehouses/',
+    '/items/',
+    '/departments/',
+    '/branches/',
+    '/categories/',
+    '/suppliers/',
+    '/units-of-measure/'
 ]
 
 # Routes that are known to be active but might not have static links

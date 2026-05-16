@@ -10,7 +10,7 @@ export function useRejectPR(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, reason, version, signal }: { id: string; reason: string; version: number; signal?: AbortSignal }) => 
-      apiClient.post(`/procurement/purchase-requests/${id}/reject`, successSchema, { reason, version }, signal),
+      apiClient.post(`/procurement/purchase-requests/${id}/reject`, successSchema, { reason, version }, { signal }),
     onSuccess: (_, { id }) => {
       // Simulate state transition in cache
       queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {

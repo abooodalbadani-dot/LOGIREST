@@ -1,12 +1,12 @@
-ن",
-      "search_placeholder": "استعلام عن الأصناف أو SKU...",
-      "add_item": "صنف جديد",
-      "export": "تصدير �  }
-}
-      "suppliers": "الموردون",
-        "suppliers_desc": "تفاصيل الموردين وجهات الاتصال والأداء"
-      },
-      "sections": {
-        "products": "المنتجات",
-        "suppliers": "الموردون",
-        "wareho
+",
+      "cold_storage_locked": "المخزن البارد (مغلق)"
+    },
+    "manual_entry": "إدخال يدوي",
+    "export": "تصدير",
+    "loading": "جاري التحميل...",
+    "base_currency": "العملة الأساسية",
+    "cancel": "إلغاء",
+    "categories": "الفئات",
+    "currencies": {
+      "label": "العملات",
+      "sar_full": "ريال سع

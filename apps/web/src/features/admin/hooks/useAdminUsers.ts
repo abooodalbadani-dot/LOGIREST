@@ -28,7 +28,7 @@ export function useAdminUsers(filters: { page?: number } = {}) {
  params.set('page', String(filters.page ?? 1));
  return useQuery({
  queryKey: ['admin/users', filters],
-  queryFn: ({ signal }) => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema), signal),
+  queryFn: ({ signal }) => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema), { signal }),
  staleTime: 60_000,
  });
 }
@@ -36,7 +36,7 @@ export function useAdminUsers(filters: { page?: number } = {}) {
 export function useAdminUser(id: string | null) {
  return useQuery({
  queryKey: ['admin/users', id],
-  queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, signal),
+  queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, { signal }),
  enabled: !!id,
  });
 }

@@ -27,7 +27,7 @@ export function usePRList(filters: { status?: string; department_id?: string; pa
 
   return useQuery({
     queryKey: ['purchase-requests', filters],
-    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema), signal),
+    queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema), { signal }),
     staleTime: 60_000,
   });
 }

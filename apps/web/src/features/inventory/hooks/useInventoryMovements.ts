@@ -18,7 +18,7 @@ export function useInventoryMovements(filters: {
  if (filters.document_type) qs.append('document_type', filters.document_type);
  
  const path = `/inventory/movements${qs.toString() ? `?${qs.toString()}` : ''}`;
-  return apiClient.get(path, paginatedSchema(InventoryMovementSchema), signal);
+  return apiClient.get(path, paginatedSchema(InventoryMovementSchema), { signal });
  },
  staleTime: 60_000,
  });
