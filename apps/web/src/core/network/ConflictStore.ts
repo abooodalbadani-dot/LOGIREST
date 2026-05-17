@@ -1,4 +1,4 @@
-type ConflictInfo = {
+export type ConflictInfo = {
   message: string;
   code: string;
   currentVersion?: number;

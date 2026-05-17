@@ -9,9 +9,9 @@ export function usePostIssue(id: string, options?: { onConflict?: () => void }) 
   
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (data: { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE'; version: number; signal?: AbortSignal }) => {
-      const { signal, ...payload } = data;
-      return apiClient.post(`/operations/issues/${id}/post`, successSchema, payload, { signal });
+    mutationFn: (data: { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE'; version: number; signal?: AbortSignal; headers?: Record<string, string> }) => {
+      const { signal, headers, ...payload } = data;
+      return apiClient.post(`/operations/issues/${id}/post`, successSchema, payload, { signal, headers });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] });

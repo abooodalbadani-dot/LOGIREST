@@ -4,9 +4,11 @@ import { ConflictError } from './ConflictError';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
-async function request<T>(method: string, path: string, schema: ZodSchema<T>, body?: unknown, signal?: AbortSignal): Promise<T> {
+async function request<T>(method: string, path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('logirest_token') : null;
   const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
+  const signal = options?.signal;
+  const customHeaders = options?.headers;
   
   if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
     const { getMockResponse } = await import('./mocks/index');
@@ -45,6 +47,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
         'Content-Type': 'application/json',
         'Accept-Language': locale,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...customHeaders,
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -84,12 +87,13 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
 
 export interface RequestOptions {
   signal?: AbortSignal;
+  headers?: Record<string, string>;
 }
 
 export const apiClient = {
-  get: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('GET', path, schema, undefined, options?.signal),
-  post: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('POST', path, schema, body, options?.signal),
-  put: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, schema, body, options?.signal),
-  patch: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, schema, body, options?.signal),
-  del: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('DELETE', path, schema, undefined, options?.signal),
+  get: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('GET', path, schema, undefined, options),
+  post: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('POST', path, schema, body, options),
+  put: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, schema, body, options),
+  patch: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, schema, body, options),
+  del: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('DELETE', path, schema, undefined, options),
 };

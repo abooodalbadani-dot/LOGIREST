@@ -41,6 +41,8 @@ interface DocumentLineItemTableProps<T extends LineItem = LineItem> {
  hideLotColumns?: boolean;
   /** Custom renderer for the quantity cell. */
   renderQty?: (line: T) => React.ReactNode;
+  /** High density mode (ultra-dense alternating borderless grid layout) */
+  dense?: boolean;
 }
 
 
@@ -52,6 +54,7 @@ export function DocumentLineItemTable<T extends LineItem>({
   headers = {},
   hideLotColumns = false,
   renderQty,
+  dense = false,
 }: DocumentLineItemTableProps<T>) {
   const t = useTranslations('common.table_headers');
   const tc = useTranslations('common');
@@ -72,31 +75,31 @@ export function DocumentLineItemTable<T extends LineItem>({
   const totalCols = baseCols + extraColumns.length + (!isReadOnly && onRemoveLine ? 1 : 0);
 
   return (
-    <div className="overflow-x-auto rounded-sm bg-surface-container-lowest">
+    <div className={cn("overflow-x-auto rounded-sm bg-surface-container-lowest", dense ? "border border-surface-container-high/30 shadow-sm" : "")}>
       <table className="w-full text-start border-collapse">
-        <thead className="bg-surface-container-low/50">
+        <thead className={cn("bg-surface-container-low/50", dense ? "border-b border-surface-container-high/50" : "")}>
           <tr>
-            <th className="px-8 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 text-start min-w-[300px]">{h.name}</th>
+            <th className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 text-start", dense ? "px-4 py-2 h-9 text-[10px]" : "px-8 h-14 min-w-[300px]")}>{h.name}</th>
             {!hideLotColumns && (
               <>
-                <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.lot}</th>
-                <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.expiry}</th>
+                <th className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 whitespace-nowrap text-start", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.lot}</th>
+                <th className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 whitespace-nowrap text-start", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.expiry}</th>
               </>
             )}
-            <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-center">{h.qty}</th>
-            <th className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-start">{h.uom}</th>
+            <th className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 whitespace-nowrap text-center", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.qty}</th>
+            <th className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 whitespace-nowrap text-start", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{h.uom}</th>
             {extraColumns.map((col, i) => (
-              <th key={i} className="px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap text-center">{col.header}</th>
+              <th key={i} className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 whitespace-nowrap text-center", dense ? "px-3 py-2 h-9 text-[10px]" : "px-6 h-14")}>{col.header}</th>
             ))}
             {!isReadOnly && onRemoveLine && (
-              <th className={cn("px-6 h-14 text-label-xs font-semibold uppercase text-muted-foreground/40 whitespace-nowrap w-10")} />
+              <th className={cn("text-label-xs font-bold uppercase text-muted-foreground/40 whitespace-nowrap w-10", dense ? "px-3 py-2 h-9" : "px-6 h-14")} />
             )}
           </tr>
         </thead>
         <tbody>
           {lines.length === 0 ? (
             <tr>
-              <td colSpan={totalCols} className="px-8 py-20 text-center">
+              <td colSpan={totalCols} className={cn("text-center", dense ? "px-4 py-10" : "px-8 py-20")}>
                 <p className={cn("text-label-xs font-semibold uppercase text-muted-foreground/20 italic")}>{tc('no_items')}</p>
               </td>
             </tr>
@@ -105,58 +108,59 @@ export function DocumentLineItemTable<T extends LineItem>({
               <tr 
                 key={line.id} 
                 className={cn(
-                  "group transition-all hover:bg-primary/[0.04] border-b",
+                  "group transition-all hover:bg-primary/[0.04]",
+                  dense ? "border-none" : "border-b",
                   idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/30"
                 )}
               >
-                <td className="px-8 py-5">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors">
+                <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
+                  <div className="flex flex-col gap-0.5">
+                    <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
                       {locale === 'ar' ? line.item.name_ar : line.item.name_en}
                     </span>
-                    <span className="font-mono text-[10px] font-semibold text-muted-foreground/40 tracking-wider uppercase" dir="ltr">
+                    <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
                       {line.item.code}
                     </span>
                   </div>
                 </td>
                 {!hideLotColumns && (
                   <>
-                    <td className="px-6 font-mono text-label-xs text-muted-foreground/60">
+                    <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
                       {line.lot ? <span dir="ltr">{line.lot.lot_number}</span> : <span className="opacity-20">—</span>}
                     </td>
-                    <td className="px-6 font-mono text-label-xs text-muted-foreground/60">
+                    <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
                       {line.lot?.expiry_date
                         ? <span dir="ltr">{formatDate(line.lot.expiry_date, locale as 'ar' | 'en')}</span>
                         : <span className="opacity-20">—</span>}
                     </td>
                   </>
                 )}
-                <td className="px-6 text-center">
+                <td className={cn("text-center", dense ? "px-3 py-1.5" : "px-6")}>
                   {renderQty ? (
                     renderQty(line)
                   ) : (
-                    <span dir="ltr" className="font-mono text-body-md font-bold text-foreground bg-surface-container-high/20 px-3 py-1 rounded-sm border">
+                    <span dir="ltr" className={cn("font-mono font-bold text-foreground bg-surface-container-high/20 rounded-sm border", dense ? "text-xs px-2 py-0.5" : "text-body-md px-3 py-1")}>
                       {line.qty}
                     </span>
                   )}
                 </td>
-                <td className="px-6">
+                <td className={cn(dense ? "px-3 py-1.5" : "px-6")}>
                   <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                 </td>
                 {extraColumns.map((col, i) => (
-                  <td key={i} className="px-6 text-center">
+                  <td key={i} className={cn("text-center", dense ? "px-3 py-1.5" : "px-6")}>
                     {col.cell(line)}
                   </td>
                 ))}
                 {!isReadOnly && onRemoveLine && (
-                  <td className="px-6 text-center">
+                  <td className={cn("text-center", dense ? "px-2 py-1" : "px-6")}>
                     <button
                       type="button"
                       onClick={() => onRemoveLine(line.id)}
-                      className="text-muted-foreground/20 hover:text-destructive hover:bg-destructive/5 transition-all p-2 rounded-sm"
+                      className={cn("text-muted-foreground/20 hover:text-destructive hover:bg-destructive/5 transition-all rounded-sm", dense ? "p-1" : "p-2")}
                       aria-label={tc('actions.remove_line')}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={cn(dense ? "w-3.5 h-3.5" : "w-4 h-4")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>

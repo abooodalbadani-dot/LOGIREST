@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useParams } from 'next/navigation';
@@ -22,6 +22,8 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { FormFooter } from '@/components/shared/FormFooter';
+import { toast } from 'sonner';
+import { audioAlerts } from '@/utils/audio';
 
 import { Save, Warehouse, PackagePlus } from 'lucide-react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -58,6 +60,14 @@ export function TransferNewClient() {
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<NewTransferLine[]>([]);
 
+  const idempotencyKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID();
+    }
+  }, []);
+
   // Unsaved changes guard
   const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
   const { router } = useUnsavedChangesGuard(isDirty);
@@ -68,8 +78,18 @@ export function TransferNewClient() {
   const isEitherLocked = !!fromLockState?.isLocked || !!toLockState?.isLocked;
 
   const handleAddItem = (barcode: string) => {
+    if (isEitherLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
+      return;
+    }
+
     const item = items?.find(i => i.barcode === barcode || i.code === barcode);
-    if (!item) return;
+    if (!item) {
+      audioAlerts.playScanInvalid();
+      toast.error(tCommon('no_item_found') || "Item not found.");
+      return;
+    }
 
     setLines(prev => {
       const existing = prev.find(l => l.item_id === item.id);
@@ -85,15 +105,22 @@ export function TransferNewClient() {
           name_ar: item.name_ar,
           name_en: item.name_en,
           primary_uom: { code: item.primary_uom.code }
-        },
+         },
         qty: 1,
         uom_id: item.primary_uom.id
       }];
     });
+
+    audioAlerts.playScanSuccess();
   };
 
   const handleSave = () => {
     if (!fromWarehouseId || !toWarehouseId || lines.length === 0) return;
+    if (isEitherLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Action mutation blocked.");
+      return;
+    }
     
     createTransfer.mutate({
       payload: {
@@ -106,7 +133,10 @@ export function TransferNewClient() {
           uom_id: l.uom_id
         }))
       },
-      signal: abortController.signal
+      signal: abortController.signal,
+      headers: {
+        'X-Idempotency-Key': idempotencyKeyRef.current || ''
+      }
     }, {
       onSuccess: () => {
         router.push(`/transfers`, { skipGuard: true });
@@ -167,6 +197,7 @@ export function TransferNewClient() {
                 <Select
                   value={fromWarehouseId}
                   onValueChange={(val) => setFromWarehouseId(val || '')}
+                  disabled={isEitherLocked}
                 >
                   <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
                     <SelectValue placeholder={t('select_warehouse')} />
@@ -188,6 +219,7 @@ export function TransferNewClient() {
                 <Select
                   value={toWarehouseId}
                   onValueChange={(val) => setToWarehouseId(val || '')}
+                  disabled={isEitherLocked}
                 >
                   <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
                     <SelectValue placeholder={t('select_warehouse')} />
@@ -214,6 +246,7 @@ export function TransferNewClient() {
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
+                  disabled={isEitherLocked}
                   placeholder={t('notes_placeholder')}
                   className="w-full bg-surface-container-highest/40 border border-white/5 rounded-2xl p-4 font-medium text-body-md focus:ring-2 focus:ring-cyan-500/30 transition-all outline-none resize-none min-h-[120px] hover:bg-surface-container-highest/60"
                 />
@@ -244,7 +277,10 @@ export function TransferNewClient() {
             <div className="mb-8">
               <ScanInput 
                 onScan={handleAddItem}
-                placeholder={t('scan_item_placeholder')} className="max-w-md mx-auto"
+                placeholder={t('scan_item_placeholder')} 
+                className="max-w-md mx-auto"
+                scannerMode={true}
+                size="lg"
               />
             </div>
 
@@ -252,9 +288,10 @@ export function TransferNewClient() {
               <DocumentLineItemTable
                 lines={lines}
                 locale={locale}
-                isReadOnly={false}
+                isReadOnly={isEitherLocked}
                 onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
                 hideLotColumns={true}
+                dense={true}
                 headers={{
                   code: tCommon('table_headers.code'),
                   name: tCommon('table_headers.name'),
@@ -268,11 +305,12 @@ export function TransferNewClient() {
                       min="0.001"
                       step="0.001"
                       value={line.qty}
+                      disabled={isEitherLocked}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
                       }}
-                      className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80"
+                      className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
                     />
                   </div>
                 )}
@@ -288,6 +326,7 @@ export function TransferNewClient() {
         isSaving={createTransfer.isPending}
         isDirty={isDirty}
         isValid={isValid && !isEitherLocked}
+        isLocked={isEitherLocked}
         saveLabel={t('save_transfer')}
       />
     </form>

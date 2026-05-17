@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/Doc
 import { FormFooter } from '@/components/shared/FormFooter';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
 import { LockBanner } from '@/components/shared/LockBanner';
+import { toast } from 'sonner';
+import { audioAlerts } from '@/utils/audio';
 
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -56,6 +58,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const [scanError, setScanError] = useState('');
   const [requestedBy, setRequestedBy] = useState(() => issue?.requested_by ?? '');
 
+  const idempotencyKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID();
+    }
+  }, []);
+
   // Unsaved Changes Guard
   const isDirty = useMemo(() => {
     if (isNew) {
@@ -75,7 +85,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [isWarehouseLockedError, setIsWarehouseLockedError] = useState(false);
-
 
   // FEFO Allocator State
   const [fefoOpen, setFefoOpen] = useState(false);
@@ -106,10 +115,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const isWarehouseLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
   const effectiveIsLocked = isDocLocked || isWarehouseLocked;
 
-
-
-
   const handleScan = async (barcode: string) => {
+    if (isWarehouseLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
+      setScanError(t('warehouse_locked_mutation_blocked') || "Warehouse is locked.");
+      return;
+    }
+
     try {
       setScanError('');
       const ItemSchema = z.object({
@@ -119,26 +132,115 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         }))
       });
       const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, { signal: abortController.signal });
-      if (res.data && res.data.length > 0) {
-        const item = res.data[0];
+      if (!res.data || res.data.length === 0) {
+        audioAlerts.playScanInvalid();
+        setScanError(t('no_item_found'));
+        toast.error(t('no_item_found'));
+        return;
+      }
+      
+      const item = res.data[0];
+
+      // Query available lots for the item
+      const LotsResponseSchema = z.object({
+        data: z.array(z.object({
+          id: z.string(),
+          item_id: z.string(),
+          lot_number: z.string(),
+          expiry_date: z.string(),
+          total_qty: z.number().optional(),
+          qty_available: z.number().optional(),
+          is_expired: z.boolean().optional(),
+          is_near_expiry: z.boolean().optional(),
+        }))
+      });
+
+      const lotsRes = await apiClient.get(
+        `/operations/lots-available?item_id=${item.id}&warehouse_id=${warehouseId}`, 
+        LotsResponseSchema, 
+        { signal: abortController.signal }
+      );
+
+      const availableLots = (lotsRes.data || []).map((lotItem) => ({
+        id: lotItem.id,
+        item_id: lotItem.item_id,
+        warehouse_id: warehouseId,
+        lot_number: lotItem.lot_number,
+        expiry_date: lotItem.expiry_date,
+        qty_available: lotItem.total_qty ?? lotItem.qty_available ?? 0,
+        is_expired: lotItem.is_expired ?? false,
+        is_near_expiry: lotItem.is_near_expiry ?? false,
+      }));
+
+      // Filter non-expired lots with stock and sort by FEFO
+      const validLots = availableLots
+        .filter(l => !l.is_expired && l.qty_available > 0)
+        .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+
+      const existingLine = lines.find(l => l.item.id === item.id);
+      const targetQty = existingLine ? existingLine.qty + 1 : 1;
+      const totalAvailable = validLots.reduce((sum, lot) => sum + lot.qty_available, 0);
+
+      if (totalAvailable <= 0) {
+        audioAlerts.playScanInvalid();
+        toast.error(t('no_stock_available') || "Shortage: No available stock for this item in this warehouse.");
+        setScanError(t('no_stock_available') || "Shortage: No available stock.");
+        return;
+      }
+
+      // If exactly one valid, non-expired lot exists and covers the full requested quantity, allocate automatically
+      if (validLots.length === 1 && validLots[0].qty_available >= targetQty) {
+        const allocation = [{
+          lot_id: validLots[0].id,
+          lot_number: validLots[0].lot_number,
+          expiry_date: validLots[0].expiry_date,
+          allocated_qty: targetQty,
+          override_reason: null
+        }];
+
         setLines(prev => {
           const existing = prev.find(l => l.item.id === item.id);
           if (existing) {
-            return prev.map(l => l.item.id === item.id ? { ...l, qty: l.qty + 1 } : l);
+            return prev.map(l => l.item.id === item.id ? { ...l, qty: targetQty, lot_allocations: allocation } : l);
           }
           return [...prev, {
             id: `new-${Date.now()}`,
             item,
-            qty: 1,
+            qty: targetQty,
             uom_id: item.primary_uom.id,
-            lot_allocations: []
+            lot_allocations: allocation
           }];
         });
+
+        audioAlerts.playScanSuccess();
+        toast.success(t('allocated_successfully') || "FEFO auto-allocated successfully.");
       } else {
-        setScanError(t('no_item_found'));
+        // Partial shortage warning
+        if (totalAvailable < targetQty) {
+          toast.warning(t('shortage_warning') || `Shortage: Only ${totalAvailable} available, but ${targetQty} requested.`);
+        }
+
+        let lineToActivate: LineItem;
+        if (existingLine) {
+          lineToActivate = { ...existingLine, qty: targetQty };
+          setLines(prev => prev.map(l => l.id === existingLine.id ? lineToActivate : l));
+        } else {
+          lineToActivate = {
+            id: `new-${Date.now()}`,
+            item,
+            qty: targetQty,
+            uom_id: item.primary_uom.id,
+            lot_allocations: []
+          };
+          setLines(prev => [...prev, lineToActivate]);
+        }
+
+        setActiveLine(lineToActivate);
+        setFefoOpen(true);
       }
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError') return;
+      audioAlerts.playScanInvalid();
       setScanError(t('no_item_found'));
     }
   };
@@ -152,13 +254,28 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     setFefoOpen(true);
   };
 
+  const handleCloseFEFO = () => {
+    setFefoOpen(false);
+    if (activeLine && activeLine.id.startsWith('new-')) {
+      const currentLine = lines.find(l => l.id === activeLine.id);
+      const hasAllocations = (currentLine?.lot_allocations && currentLine.lot_allocations.length > 0);
+      if (!hasAllocations) {
+        setLines(prev => prev.filter(l => l.id !== activeLine.id));
+      }
+    }
+    setActiveLine(null);
+  };
+
   const handlePost = async () => {
     if (!issue) return;
     try {
       await postIssue.mutateAsync({ 
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
         version: issue.version,
-        signal: abortController.signal
+        signal: abortController.signal,
+        headers: {
+          'X-Idempotency-Key': idempotencyKeyRef.current || ''
+        }
       });
       setIsPostDialogOpen(false);
       guardedRouter.push('/issues', { skipGuard: true });
@@ -171,7 +288,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       }
     }
   };
-
 
   const history = useMemo((): StatusTimelineEntry[] => {
     if (!issue) return [];
@@ -219,39 +335,40 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         
         <DocumentLockWrapper isLocked={effectiveIsLocked}>
           <div className="flex-1 px-6 lg:px-10 py-8">
+            <div className="grid grid-cols-12 gap-8">
+              <div className="col-span-12 lg:col-span-8 space-y-8">
+                {!isDocLocked && (
+                  <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                    <div className="relative space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Package className="w-4 h-4 text-primary" />
+                        </div>
+                        <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
+                      </div>
+                      <ScanInput 
+                        onScan={handleScan} 
+                        disabled={effectiveIsLocked || fefoOpen} 
+                        placeholder={t('scan_placeholder')} 
+                        onError={(bc) => {
+                          audioAlerts.playScanInvalid();
+                          setScanError(t('not_found_prefix') + bc);
+                        }}
+                        size="lg"
+                        scannerMode={true}
+                      />
 
-        
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-12 lg:col-span-8 space-y-8">
-            {!isDocLocked && (
-              <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
-                <div className="relative space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Package className="w-4 h-4 text-primary" />
+                      {scanError && (
+                        <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-200">
+                          <AlertCircle className="w-4 h-4" />
+                          {scanError}
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('scan_and_add')}</h3>
                   </div>
-                  <ScanInput 
-                    onScan={handleScan} 
-                    disabled={effectiveIsLocked} 
-                    placeholder={t('scan_placeholder')} 
-                    onError={(bc) => setScanError(t('not_found_prefix') + bc)}
-                    size="lg"
-                    scannerMode={true}
-                  />
-
-                  {scanError && (
-                    <div className="flex items-center gap-3 p-4 bg-red-500/5 rounded-xl text-label-xs font-bold text-red-500 uppercase animate-in shake duration-200">
-                      <AlertCircle className="w-4 h-4" />
-                      {scanError}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
+                )}
+                
+                <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
                   <div className="p-8 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-1 h-6 bg-primary/20 rounded-full" />
@@ -263,8 +380,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   </div>
                   <DocumentLineItemTable 
                     lines={lines} 
-                    locale={locale as 'ar' | 'en'} isReadOnly={isDocLocked}
+                    locale={locale as 'ar' | 'en'} 
+                    isReadOnly={isDocLocked}
                     onRemoveLine={removeLine}
+                    dense={true}
                     extraColumns={[
                       {
                         header: t('qty'),
@@ -273,11 +392,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                             <Input 
                               type="number" 
                               dir="ltr"
-                              className="w-24 h-10 bg-surface-container-low border-none rounded-xl text-center font-mono text-body-md shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 disabled:opacity-50 transition-all"
+                              className="w-20 h-8 bg-surface-container-low border-none rounded-sm text-center font-mono text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 disabled:opacity-50 transition-all"
                               value={line.qty as number} 
                               disabled={effectiveIsLocked}
                               onChange={e => {
-
                                 const val = Number(e.target.value);
                                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
                               }} 
@@ -295,7 +413,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                           
                           if (effectiveIsLocked) {
                             return (
-
                               <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                                 {lineAllocations.map((alloc, idx) => (
                                   <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-xl flex items-center gap-1.5">
@@ -332,114 +449,109 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                     ]}
                   />
                 </div>
-            </div>
-
-
-          <div className="col-span-12 lg:col-span-4 space-y-8">
-            <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
-              <div className="relative space-y-10">
-                <div className="flex items-center gap-4 pb-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('document_manifest')}</h3>
-                    <p className="text-label-xs text-primary/20 font-bold">{t('operational_parameters')}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-8">
-                  <div className="space-y-3 group">
-                    <div className="flex items-center gap-2">
-                      <ArrowRight className={cn("w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity", locale === 'ar' ? "rotate-180" : "")} />
-                      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('destination')}</label>
-                    </div>
-                    <Select 
-                      value={destinationId} 
-                      onValueChange={(val) => setDestinationId(val || '')} 
-                      disabled={effectiveIsLocked}
-                    >
-
-                      <SelectTrigger className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10">
-                        <SelectValue placeholder={t('select_department')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
-                            {locale === 'ar' ? dept.name_ar : dept.name_en}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3 group">
-                    <div className="flex items-center gap-2">
-                      <User className="w-3 h-3 text-cyan-500/50" />
-                      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by')}</label>
-                    </div>
-                    <Input 
-                      type="text"
-                      value={requestedBy}
-                      onChange={e => setRequestedBy(e.target.value)}
-                      disabled={effectiveIsLocked}
-                      placeholder={t('requested_by_placeholder')}
-
-                      className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all placeholder:text-muted-foreground/20 shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
-                    />
-                  </div>
-
-                  <div className="space-y-3 group pt-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3 h-3 text-cyan-500/50" />
-                      <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('operational_notes')}</label>
-                    </div>
-                    <Textarea 
-                      value={notes} 
-                      onChange={e => setNotes(e.target.value)} 
-                      disabled={effectiveIsLocked} 
-                      placeholder={t('notes_placeholder')}
-
-                      className="w-full bg-surface-container-highest border-none rounded-xl p-5 text-label-sm font-medium transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <History className="w-5 h-5 text-primary" />
-                </div>
-                <h4 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('status_history')}</h4>
-              </div>
-              
-              <div className="relative ps-2">
-                <StatusTimeline entries={history} />
               </div>
 
-              {!isNew && (
-                <div className="mt-10 pt-8 space-y-4">
-                  <div className="flex justify-between items-center group">
-                    <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_by')}</span>
-                    <div className="px-3 py-1 bg-surface-container-low rounded-xl transition-colors group-hover:bg-primary/5">
-                      <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">{user?.name || 'System'}</span>
+              <div className="col-span-12 lg:col-span-4 space-y-8">
+                <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                  <div className="relative space-y-10">
+                    <div className="flex items-center gap-4 pb-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <FileText className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('document_manifest')}</h3>
+                        <p className="text-label-xs text-primary/20 font-bold">{t('operational_parameters')}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex justify-between items-center group">
-                    <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
-                    <div className="px-3 py-1 bg-surface-container-low rounded-xl transition-colors group-hover:bg-primary/5">
-                      <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
-                        {formatDate(issue?.created_at, locale as 'ar' | 'en')}
-                      </span>
+
+                    <div className="space-y-8">
+                      <div className="space-y-3 group">
+                        <div className="flex items-center gap-2">
+                          <ArrowRight className={cn("w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity", locale === 'ar' ? "rotate-180" : "")} />
+                          <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('destination')}</label>
+                        </div>
+                        <Select 
+                          value={destinationId} 
+                          onValueChange={(val) => setDestinationId(val || '')} 
+                          disabled={effectiveIsLocked}
+                        >
+                          <SelectTrigger className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10">
+                            <SelectValue placeholder={t('select_department')} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
+                            {departments.map((dept) => (
+                              <SelectItem key={dept.id} value={dept.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
+                                {locale === 'ar' ? dept.name_ar : dept.name_en}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3 group">
+                        <div className="flex items-center gap-2">
+                          <User className="w-3 h-3 text-cyan-500/50" />
+                          <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('requested_by')}</label>
+                        </div>
+                        <Input 
+                          type="text"
+                          value={requestedBy}
+                          onChange={e => setRequestedBy(e.target.value)}
+                          disabled={effectiveIsLocked}
+                          placeholder={t('requested_by_placeholder')}
+                          className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all placeholder:text-muted-foreground/20 shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
+                        />
+                      </div>
+
+                      <div className="space-y-3 group pt-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-cyan-500/50" />
+                          <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('operational_notes')}</label>
+                        </div>
+                        <Textarea 
+                          value={notes} 
+                          onChange={e => setNotes(e.target.value)} 
+                          disabled={effectiveIsLocked} 
+                          placeholder={t('notes_placeholder')}
+                          className="w-full bg-surface-container-highest border-none rounded-xl p-5 text-label-sm font-medium transition-all min-h-[140px] resize-none placeholder:text-muted-foreground/20 leading-relaxed shadow-none focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
 
-          </div>
+                <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <History className="w-5 h-5 text-primary" />
+                    </div>
+                    <h4 className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('status_history')}</h4>
+                  </div>
+                  
+                  <div className="relative ps-2">
+                    <StatusTimeline entries={history} />
+                  </div>
+
+                  {!isNew && (
+                    <div className="mt-10 pt-8 space-y-4">
+                      <div className="flex justify-between items-center group">
+                        <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_by')}</span>
+                        <div className="px-3 py-1 bg-surface-container-low rounded-xl transition-colors group-hover:bg-primary/5">
+                          <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">{user?.name || 'System'}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center group">
+                        <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
+                        <div className="px-3 py-1 bg-surface-container-low rounded-xl transition-colors group-hover:bg-primary/5">
+                          <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
+                            {formatDate(issue?.created_at, locale as 'ar' | 'en')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </DocumentLockWrapper>
@@ -447,7 +559,6 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         <FormFooter 
           isLocked={effectiveIsLocked}
           onCancel={() => guardedRouter.push('/issues')}
-
           onSubmit={() => setIsPostDialogOpen(true)}
           isPending={isPostPending}
           submitLabel={t('post_issue')}
@@ -466,30 +577,38 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         isLoading={isPostPending}
       />
 
-          <Dialog open={fefoOpen} onOpenChange={setFefoOpen}>
-            <DialogContent className="max-h-[85vh] max-w-2xl bg-surface-container-lowest border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
-              <div className="p-8 bg-primary/[0.02]">
-                <DialogHeader>
-                  <DialogTitle className="text-title-lg font-semibold uppercase italic italic text-foreground">
-                    {t('fefo_drawer_title')}: <span className="text-primary font-mono">{locale === 'ar' ? activeLine?.item.name_ar : activeLine?.item.name_en}</span>
-                  </DialogTitle>
-                </DialogHeader>
-              </div>
-              <div className="p-8">
-                {activeLine && (
-                  <FEFOLotAllocator
-                    lots={lots}
-                    requestedQty={activeLine.qty}
-                    uomLabel={activeLine.item.primary_uom.code}
-                    userRole={user?.role || 'WH_KEEPER'} onAllocate={(allocations) => {
-                      setLines(prev => prev.map(l => l.id === activeLine.id ? {
-                        ...l, lot_allocations: allocations
-                      } : l));
-                      setFefoOpen(false);
-                    }}
-                    onClose={() => setFefoOpen(false)}
-                  />
-                )}
+      <Dialog open={fefoOpen} onOpenChange={(open) => {
+        if (!open) {
+          handleCloseFEFO();
+        } else {
+          setFefoOpen(true);
+        }
+      }}>
+        <DialogContent className="max-h-[85vh] max-w-2xl bg-surface-container-lowest border-none shadow-2xl rounded-2xl p-0 overflow-hidden">
+          <div className="p-8 bg-primary/[0.02]">
+            <DialogHeader>
+              <DialogTitle className="text-title-lg font-semibold uppercase italic text-foreground">
+                {t('fefo_drawer_title')}: <span className="text-primary font-mono">{locale === 'ar' ? activeLine?.item.name_ar : activeLine?.item.name_en}</span>
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-8">
+            {activeLine && (
+              <FEFOLotAllocator
+                lots={lots}
+                requestedQty={activeLine.qty}
+                uomLabel={activeLine.item.primary_uom.code}
+                userRole={user?.role || 'WH_KEEPER'} 
+                onAllocate={(allocations) => {
+                  setLines(prev => prev.map(l => l.id === activeLine.id ? {
+                    ...l, lot_allocations: allocations
+                  } : l));
+                  setFefoOpen(false);
+                  setActiveLine(null);
+                }}
+                onClose={handleCloseFEFO}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

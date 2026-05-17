@@ -8,7 +8,7 @@ export interface GuardedRouterOptions {
   skipGuard?: boolean;
   locale?: string;
   scroll?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

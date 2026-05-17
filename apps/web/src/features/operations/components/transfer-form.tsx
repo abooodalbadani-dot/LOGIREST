@@ -45,6 +45,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
 
   const transferStatus = (transfer?.transfer_status || TRANSFER_STATUS.DRAFT) as DocumentStatus;
   const isLocked = transferStatus !== TRANSFER_STATUS.DRAFT;
+  const isLockedState = isEitherLocked || isLocked;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -96,10 +97,10 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
       >
         <DocumentLockBanner 
           status={transferStatus} 
-          isLocked={isLocked} 
+          isLocked={isLockedState} 
         />
 
-        <DocumentLockWrapper isLocked={isLocked}>
+        <DocumentLockWrapper isLocked={isLockedState}>
           <div className="space-y-8">
             <div className="space-y-2">
               {isFromLocked && <LockBanner lockState={fromLockState} />}
@@ -177,6 +178,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
                   isReadOnly={true}
                   onRemoveLine={() => {}}
                   hideLotColumns={true}
+                  dense={true}
                   headers={{
                     code: tCommon('table_headers.code'),
                     name: tCommon('table_headers.name'),
@@ -214,7 +216,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
         <FormFooter 
           onCancel={() => router.push(`/transfers`)}
           isSaving={false}
-          isLocked={isLocked}
+          isLocked={isLockedState}
           isDirty={false}
           isValid={true}
           actions={

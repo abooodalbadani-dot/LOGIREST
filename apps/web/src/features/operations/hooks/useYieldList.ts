@@ -7,7 +7,7 @@ import { QUERY_KEY, YieldBatchSchema } from './useYield';
 
 const YieldListResponseSchema = z.array(YieldBatchSchema);
 
-export function useYieldList(filters?: Record<string, any>) {
+export function useYieldList(filters?: Record<string, unknown>) {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
     queryFn: ({ signal }) => 

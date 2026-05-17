@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
+import { LockBanner } from '@/components/shared/LockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { useTransfer, TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useReceiveTransfer } from '@/features/operations/hooks/useReceiveTransfer';
@@ -17,10 +18,13 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PackageCheck, ArrowLeft, AlertCircle, Info } from 'lucide-react';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { cn } from '@/lib/utils';
-import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAuth } from '@/providers/AuthProvider';
+import { toast } from 'sonner';
+import { audioAlerts } from '@/utils/audio';
+import { useAbortController } from '@/hooks/useAbortController';
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -33,6 +37,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   const { user } = useAuth();
   const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('transfer', id);
   const receiveTransfer = useReceiveTransfer(id, { onConflict: triggerConflict });
+  const abortController = useAbortController();
 
   const [lines, setLines] = useState<(TransferLine & { _receivedQty?: number })[]>([]);
   const [varianceReason, setVarianceReason] = useState('');
@@ -40,9 +45,19 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
+  const idempotencyKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID();
+    }
+  }, []);
+
   const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
   const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
   const isEitherLocked = (fromLockState?.isLocked || toLockState?.isLocked) ?? false;
+  const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
+  const isLockedState = isEitherLocked || isWorkflowLocked;
 
   const [prevTransferId, setPrevTransferId] = useState<string | null>(null);
   
@@ -74,8 +89,59 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
   const { router, registerDirty } = useUnsavedChangesGuard(isDirty);
 
+  const handleScan = useCallback((barcode: string) => {
+    if (isLockedState) {
+      audioAlerts.playScanBlocked();
+      setScanStatus('error');
+      const msg = isEitherLocked 
+        ? (t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.")
+        : (t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.");
+      setStatusMessage(msg);
+      toast.error(msg);
+      setTimeout(() => setScanStatus('idle'), 2000);
+      return;
+    }
+
+    const lineIndex = lines.findIndex(l => l.item?.code === barcode);
+    if (lineIndex !== -1) {
+      const line = lines[lineIndex];
+      const shippedQty = line.shipped_qty ?? line.qty;
+      const currentReceived = line._receivedQty ?? 0;
+
+      if (currentReceived >= shippedQty) {
+        audioAlerts.playScanDuplicate();
+        setScanStatus('error');
+        const msg = t('scan_duplicate_warning') || "Item already fully verified.";
+        setStatusMessage(msg);
+        toast.warning(msg);
+        setTimeout(() => setScanStatus('idle'), 2000);
+        return;
+      }
+
+      setLines(prev => prev.map((l, i) => 
+        i === lineIndex ? { ...l, _receivedQty: (l._receivedQty ?? 0) + 1 } : l
+      ));
+      setScanStatus('success');
+      audioAlerts.playScanSuccess();
+      setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.name_ar : line.item?.name_en}`);
+      setTimeout(() => setScanStatus('idle'), 2000);
+    } else {
+      setScanStatus('error');
+      audioAlerts.playScanInvalid();
+      setStatusMessage(t('scan_error'));
+      toast.error(t('scan_error'));
+      setTimeout(() => setScanStatus('idle'), 2000);
+    }
+  }, [lines, isLockedState, isEitherLocked, t, locale]);
+
   const handleReceive = () => {
     if (!transfer) return;
+    if (isLockedState) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Action mutation blocked.");
+      return;
+    }
+
     const receiveLines = lines.map(l => ({
       line_id: l.id,
       received_qty: l._receivedQty ?? l.qty
@@ -87,6 +153,10 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
         lines: receiveLines,
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
         variance_reason: hasVariance ? varianceReason : undefined
+      },
+      signal: abortController.signal,
+      headers: {
+        'X-Idempotency-Key': idempotencyKeyRef.current || ''
       }
     }, {
       onSuccess: () => {
@@ -144,9 +214,14 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
       <div className="space-y-4">
         <DocumentLockBanner 
-          isLocked={true}
+          isLocked={isLockedState}
           status={transfer.transfer_status as DocumentStatus}
         />
+        
+        {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
+        {toLockState?.isLocked && toLockState.sessionId !== fromLockState?.sessionId && (
+          <LockBanner lockState={toLockState} />
+        )}
         
         {hasVariance && (
           <div className="bg-status-warning/10 border border-status-warning/30 rounded-2xl p-4 flex items-start gap-4 animate-in slide-in-from-top-2 duration-500">
@@ -159,7 +234,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
         )}
       </div>
 
-      <DocumentLockWrapper isLocked={false}>
+      <DocumentLockWrapper isLocked={isLockedState}>
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-surface-container-low/50 rounded-3xl border border-white/5 p-8 space-y-6 relative overflow-hidden h-full">
@@ -204,13 +279,14 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
               <textarea
                 value={varianceReason}
                 onChange={e => setVarianceReason(e.target.value)}
-                disabled={!hasVariance}
+                disabled={!hasVariance || isLockedState}
                 placeholder={t('variance_reason_placeholder')}
                 className={cn(
                   "w-full bg-surface-container-highest/40 border rounded-2xl p-4 font-medium text-body-md focus:ring-2 transition-all outline-none resize-none min-h-[140px]",
                   hasVariance 
                     ? 'border-status-warning/20 focus:ring-status-warning/30 hover:bg-surface-container-highest/60' 
-                    : 'border-white/5 opacity-40 cursor-not-allowed'
+                    : 'border-white/5 opacity-40 cursor-not-allowed',
+                  isLockedState ? 'opacity-40 cursor-not-allowed' : ''
                 )}
               />
               {!isVarianceValid && hasVariance && (
@@ -237,25 +313,12 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
             <div className="p-6 bg-surface-container-low/50 border-b border-white/5">
               <ScanInput
-                onScan={(barcode) => {
-                  const lineIndex = lines.findIndex(l => l.item?.code === barcode);
-                  if (lineIndex !== -1) {
-                    setLines(prev => prev.map((l, i) => 
-                      i === lineIndex ? { ...l, _receivedQty: (l._receivedQty ?? 0) + 1 } : l
-                    ));
-                    setScanStatus('success');
-                    setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? lines[lineIndex].item?.name_ar : lines[lineIndex].item?.name_en}`);
-                    setTimeout(() => setScanStatus('idle'), 2000);
-                  } else {
-                    setScanStatus('error');
-                    setStatusMessage(t('scan_error'));
-                    setTimeout(() => setScanStatus('idle'), 2000);
-                  }
-                }}
+                onScan={handleScan}
                 placeholder={t('scan_placeholder_receive')}
                 scanStatus={scanStatus}
                 statusMessage={statusMessage}
                 scannerMode={true}
+                size="lg"
                 className="max-w-md mx-auto"
               />
             </div>
@@ -263,7 +326,8 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
             <DocumentLineItemTable
               lines={lines}
               locale={locale}
-              isReadOnly={false}
+              isReadOnly={isLockedState}
+              dense={true}
               onRemoveLine={() => {}}
               hideLotColumns={true}
               headers={{
@@ -290,8 +354,10 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                       <input
                         type="number"
                         dir="ltr"
+                        disabled={isLockedState}
                         className={cn(
                           "w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all",
+                          isLockedState ? 'opacity-40 cursor-not-allowed' : '',
                           (line._receivedQty ?? 0) !== (line.shipped_qty ?? line.qty) 
                             ? 'text-status-warning border-status-warning/40 focus:ring-status-warning/30 shadow-[0_0_15px_rgba(255,152,0,0.1)]' 
                             : 'text-emerald-500 border-emerald-500/20 focus:ring-emerald-500/30'
@@ -319,7 +385,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
           <PermissionGate action="post" resource="transfer">
             <Button
               type="submit"
-              disabled={isEitherLocked || receiveTransfer.isPending || !isVarianceValid}
+              disabled={isLockedState || receiveTransfer.isPending || !isVarianceValid}
               className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none min-w-[240px]"
             >
               <PackageCheck className="w-5 h-5 me-3" />

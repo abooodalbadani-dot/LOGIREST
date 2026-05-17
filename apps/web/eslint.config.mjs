@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "**/*.min.js",
     "debug-*.js",
     "check-*.js",
+    "*.cjs",
+    "*.py",
   ]),
 ]);
 

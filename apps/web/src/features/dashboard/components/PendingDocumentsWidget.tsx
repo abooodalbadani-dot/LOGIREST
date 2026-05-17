@@ -3,16 +3,58 @@ import { FileText, ChevronRight, Timer, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 
-export function PendingDocumentsWidget({ locale }: { locale: string }) {
+export interface PendingDocument {
+  id: string;
+  document_number: string;
+  type: 'PR' | 'PO' | 'ADJUSTMENT' | 'ISSUE' | 'TRANSFER';
+  status: string;
+  priority: string;
+  destination: string;
+  created_at: string;
+  total_value?: number;
+}
+
+export function PendingDocumentsWidget({ 
+  locale, 
+  data 
+}: { 
+  locale: string;
+  data?: PendingDocument[];
+}) {
   const t = useTranslations('dashboard.pending_approvals');
   const tc = useTranslations('common');
   
-  // Mock data for pending documents
-  const docs = [
-    { id: '1', type: 'pr', numberKey: 'doc_1', deptKey: 'kitchen', total: 4500.00, date: '2024-04-20', path: 'purchase-requests' },
-    { id: '2', type: 'adj', numberKey: 'doc_2', warehouseKey: 'main_store', reasonKey: 'damage', date: '2024-04-21', path: 'adjustments' },
-    { id: '3', type: 'pr', numberKey: 'doc_3', deptKey: 'bakery', total: 1200.50, date: '2024-04-22', path: 'purchase-requests' },
-  ];
+  // Map dynamic API data if available, otherwise fall back to mock data
+  const docs = data
+    ? data.map((doc) => {
+        let path = 'purchase-requests';
+        if (doc.type === 'PO') path = 'purchase-orders';
+        else if (doc.type === 'ADJUSTMENT') path = 'adjustments';
+        else if (doc.type === 'ISSUE') path = 'kitchen-requests';
+        else if (doc.type === 'TRANSFER') path = 'internal-transfers';
+
+        let typeKey = doc.type.toLowerCase();
+        if (typeKey === 'adjustment') typeKey = 'adj';
+
+        return {
+          id: doc.id,
+          type: typeKey,
+          number: doc.document_number,
+          destination: doc.destination,
+          total: doc.total_value,
+          date: doc.created_at,
+          path,
+          isApi: true,
+          numberKey: '',
+          deptKey: '',
+          warehouseKey: '',
+        };
+      })
+    : [
+        { id: '1', type: 'pr', number: 'PR-9021', destination: 'kitchen', total: 4500.00, date: '2024-04-20', path: 'purchase-requests', isApi: false, numberKey: 'doc_1', deptKey: 'kitchen', warehouseKey: '' },
+        { id: '2', type: 'adj', number: 'ADJ-4402', destination: 'main_store', total: undefined, date: '2024-04-21', path: 'adjustments', isApi: false, numberKey: 'doc_2', deptKey: '', warehouseKey: 'main_store' },
+        { id: '3', type: 'pr', number: 'PR-9025', destination: 'bakery', total: 1200.50, date: '2024-04-22', path: 'purchase-requests', isApi: false, numberKey: 'doc_3', deptKey: 'bakery', warehouseKey: '' },
+      ];
 
   const isRtl = locale === 'ar';
 
@@ -42,12 +84,14 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
                   {tc(`doc_types.${doc.type}`)}
                 </span>
                 <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors font-mono">
-                  {t(`mock.${doc.numberKey}`)}
+                  {doc.isApi ? doc.number : t(`mock.${doc.numberKey}`)}
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-label-xs text-muted-foreground font-bold">
-                  {doc.deptKey ? tc(`departments.${doc.deptKey}`) : tc(`warehouses.${doc.warehouseKey}`)}
+                  {doc.isApi 
+                    ? doc.destination 
+                    : (doc.deptKey ? tc(`departments.${doc.deptKey}`) : tc(`warehouses.${doc.warehouseKey}`))}
                 </span>
                 <div className="flex items-center gap-1.5 text-label-xxs font-bold text-muted-foreground uppercase ps-3">
                   <Timer className="w-3 h-3" />
@@ -55,8 +99,20 @@ export function PendingDocumentsWidget({ locale }: { locale: string }) {
                 </div>
               </div>
             </div>
-            <div className="p-2 text-muted-foreground/20 group-hover:text-operational-cyan group-hover:bg-operational-cyan/10 rounded-xl transition-all border-none">
-              <ArrowUpRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRtl ? 'rotate-[-90deg] group-hover:rotate-[-45deg]' : ''}`} />
+            <div className="flex items-center gap-4">
+              {doc.total !== undefined && (
+                <div className="flex flex-col items-end">
+                  <span className="text-body-sm font-semibold text-foreground tabular-nums">
+                    {doc.total.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
+                    SAR
+                  </span>
+                </div>
+              )}
+              <div className="p-2 text-muted-foreground/20 group-hover:text-operational-cyan group-hover:bg-operational-cyan/10 rounded-xl transition-all border-none">
+                <ArrowUpRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isRtl ? 'rotate-[-90deg] group-hover:rotate-[-45deg]' : ''}`} />
+              </div>
             </div>
           </Link>
         ))}

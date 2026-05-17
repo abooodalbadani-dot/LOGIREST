@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { conflictStore } from '@/core/network/ConflictStore';
+import { conflictStore, ConflictInfo } from '@/core/network/ConflictStore';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl';
 
 export function ConflictDialog() {
   const t = useTranslations('common.conflict');
-  const [conflict, setConflict] = useState<any>(null);
+  const [conflict, setConflict] = useState<ConflictInfo | null>(null);
 
   useEffect(() => {
     const unsubscribe = conflictStore.subscribe((c) => setConflict(c));

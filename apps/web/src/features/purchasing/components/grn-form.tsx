@@ -41,6 +41,8 @@ import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { formatCurrency } from '@/utils/currency';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { Item, ItemSchema } from '@/types/master-data';
+import { useWarehouseLock } from '@/hooks/useWarehouseLock';
+import { LockBanner } from '@/components/shared/LockBanner';
 
 const grnFormSchema = z.object({
   supplier_id: z.string().min(1, 'Required'),
@@ -63,11 +65,19 @@ interface GRNFormProps {
 export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) {
   const t = useTranslations('procurement.grn');
   const tc = useTranslations('common');
+  const ts = useTranslations('operations.stocktake');
   const locale = useLocale();
   const { user } = useAuth();
 
   const isNew = id === 'new';
   const lastResetId = useRef<string | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID();
+    }
+  }, []);
 
   const { data: suppliers } = useSuppliers();
   const { data: warehouses } = useWarehouses();
@@ -100,6 +110,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { router } = useUnsavedChangesGuard(isDirty);
 
   const currencyId = useWatch({ control, name: 'currency_id' });
+  const warehouseId = useWatch({ control, name: 'warehouse_id' });
+  const { data: warehouseLock } = useWarehouseLock(warehouseId || null);
+  const isWarehouseLocked = !!warehouseLock?.isLocked;
   const watchedLines = useWatch({ control, name: 'lines' });
 
   const { data: settings } = useAdminSettings();
@@ -131,9 +144,13 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
 
   const handleScan = async (barcode: string) => {
+    if (isWarehouseLocked) {
+      toast.error(ts('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
+      throw new Error('WarehouseLocked');
+    }
     const item = itemsData?.data?.find(i => i.code === barcode || i.barcode === barcode);
 
-    if (item) {
+      if (item) {
       const currentLines = getValues("lines") || [];
       const index = currentLines.findIndex(l => l.item.id === item.id);
 
@@ -171,6 +188,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     } else {
       setScanError(t('no_item_found'));
       toast.error(tc('item_not_found'));
+      throw new Error('ItemNotFound');
     }
   };
 
@@ -184,8 +202,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role || 'WH_KEEPER'}>
         <PermissionGate action="post" resource="grn">
           <Button
+            disabled={isLocked || isWarehouseLocked}
             onClick={() => router.push(`/goods-received/${id}/post`)}
-            className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-xl"
+            className="h-12 px-8 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase shadow-xl shadow-operational-cyan/20 transition-all rounded-xl disabled:opacity-50"
           >
             <Send className="w-4 h-4 me-2" />
             {t('post_grn')}
@@ -216,8 +235,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         }))
       };
 
+      const headers = { 'X-Idempotency-Key': idempotencyKeyRef.current || '' };
+
       if (isNew) {
-        const result = await createMutation.mutateAsync({ payload });
+        const result = await createMutation.mutateAsync({ payload, headers });
         toast.success(t('create_success'));
         router.push(`/goods-received/${result.id}`, { skipGuard: true });
       } else if (initialData) {
@@ -225,7 +246,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           payload: {
             ...payload,
             version: initialData.version
-          }
+          },
+          headers
         });
         toast.success(t('update_success'));
       }
@@ -241,6 +263,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   return (
     <div className="flex flex-col min-h-screen bg-surface-container-low pb-32">
       <DocumentLockBanner status={status} isLocked={isLocked} />
+      <LockBanner lockState={warehouseLock} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
         <div className="flex items-center justify-between px-2">
@@ -254,8 +277,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           </div>
         </div>
 
-        <DocumentLockWrapper isLocked={isLocked}>
-          <DocumentReadOnlyOverlay isPosted={isLocked}>
+        <DocumentLockWrapper isLocked={isLocked || isWarehouseLocked}>
+          <DocumentReadOnlyOverlay isPosted={isLocked || isWarehouseLocked}>
             <div className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
@@ -264,7 +287,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                     name="supplier_id"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked || isWarehouseLocked}>
                         <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                           <SelectValue placeholder={tc('select_supplier')} />
                         </SelectTrigger>
@@ -290,7 +313,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                     name="currency_id"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked || isWarehouseLocked}>
                         <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                           <SelectValue />
                         </SelectTrigger>
@@ -329,7 +352,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                     name="warehouse_id"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked || isWarehouseLocked}>
                         <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
                           <SelectValue />
                         </SelectTrigger>
@@ -354,7 +377,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   <Textarea
                     id="notes-area"
                     {...register('notes')}
-                    disabled={isLocked}
+                    disabled={isLocked || isWarehouseLocked}
                     className="mt-2 w-full bg-surface-container-low border-none rounded-xl p-4 focus-visible:ring-1 focus-visible:ring-primary-fixed-dim/10 outline-none transition-all text-body-md font-medium min-h-[100px] resize-none text-foreground shadow-none"
                     placeholder={tc('notes_placeholder')}
                   />
@@ -375,7 +398,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
                   <ScanInput
                     onScan={handleScan}
-                    onManualTrigger={() => append({
+                    scannerMode={true}
+                    disabled={isLocked}
+                    onManualTrigger={isLocked || isWarehouseLocked ? undefined : () => append({
                       id: `new-${Date.now()}`,
                       item: { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: 'EA', code: 'EA' } },
                       lot: null,
@@ -398,7 +423,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable<LineItem>
                     lines={fields as unknown as LineItem[]}
-                    isReadOnly={isLocked}
+                    isReadOnly={isLocked || isWarehouseLocked}
+                    dense={true}
                     onRemoveLine={(id) => {
                       const idx = fields.findIndex(f => f.id === id);
                       if (idx >= 0) remove(idx);
@@ -411,7 +437,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                           return (
                             <input type="number"
                               dir="ltr"
-                              className="w-20 bg-surface-container-low rounded-xl text-center px-2 py-1.5 font-mono text-body-md focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all"
+                              disabled={isLocked || isWarehouseLocked}
+                              className="w-20 rounded-sm border border-surface-container-high/30 bg-surface-container-low text-center px-2 py-0.5 font-mono text-xs focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all disabled:opacity-50 h-7"
                               {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
                               onChange={e => {
                                 const val = Number(e.target.value);
@@ -480,7 +507,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         </DocumentLockWrapper>
 
         <FormFooter
-          isLocked={isLocked}
+          isLocked={isLocked || isWarehouseLocked}
           onCancel={() => router.push('/goods-received', { skipGuard: !isDirty })}
           actions={actions || workflowActions}
           onSubmit={handleSubmit(onSubmit)}

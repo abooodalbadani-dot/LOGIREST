@@ -4,6 +4,8 @@ import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, ScanLine, CheckCircle2, AlertCircle, Keyboard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAlwaysFocused } from '@/hooks/useAlwaysFocused';
+import { useScannerWedge } from '@/hooks/useScannerWedge';
 
 interface ScanInputProps {
   onScan: (barcode: string) => void | Promise<void>;
@@ -23,6 +25,7 @@ interface ScanInputProps {
   size?: "sm" | "md" | "lg";
   label?: string;
   autoFocus?: boolean;
+  latencyThreshold?: number;
 }
 
 export function ScanInput({
@@ -41,7 +44,8 @@ export function ScanInput({
   onCameraActivate,
   size = "md",
   label,
-  autoFocus = true
+  autoFocus = true,
+  latencyThreshold
 }: ScanInputProps) {
   const tc = useTranslations('common');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,55 +59,8 @@ export function ScanInput({
     }
   }, [value]);
 
-  // Auto-focus logic for Scanner Mode
-  useEffect(() => {
-    if (!scannerMode || disabled) return;
-
-    const regainFocus = () => {
-      if (!disabled && inputRef.current && !isScanning) {
-        const activeElement = document.activeElement;
-        const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
-        if (!isInputFocused) {
-          inputRef.current.focus();
-        }
-      }
-    };
-
-    // Initial focus
-    regainFocus();
-
-    // Regain focus on clicks and window focus
-    window.addEventListener('click', regainFocus);
-    window.addEventListener('focus', regainFocus);
-    
-    return () => {
-      window.removeEventListener('click', regainFocus);
-      window.removeEventListener('focus', regainFocus);
-    };
-  }, [scannerMode, disabled, scanStatus]);
-
-  // Global Keydown redirection for Scanner Mode
-  useEffect(() => {
-    if (!scannerMode || disabled) return;
-
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if already in an input or if it's a modifier key
-      if (document.activeElement instanceof HTMLInputElement || 
-          document.activeElement instanceof HTMLTextAreaElement ||
-          e.ctrlKey || e.metaKey || e.altKey) {
-        return;
-      }
-
-      // If it's a character key, focus the input
-      if (e.key.length === 1) {
-        inputRef.current?.focus();
-        // The character will be naturally typed into the focused input by the browser
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [scannerMode, disabled]);
+  // Scoped autofocus regain to keep cursor locked to scanner input while respecting standard dropdown, form field, and modal blurs.
+  useAlwaysFocused(inputRef, scannerMode && !disabled);
 
   const processScan = async (val: string) => {
     const trimmed = val.trim();
@@ -123,17 +80,23 @@ export function ScanInput({
     await onScan(trimmed);
   };
 
+  // timing-based keyboard wedge handling, deduplication, and synth tones
+  const { handleKeyDown: handleWedgeKeyDown } = useScannerWedge({
+    onScan: async (barcode) => {
+      await processScan(barcode);
+    },
+    enabled: scannerMode && !disabled,
+    latencyThreshold,
+  });
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       if (inputRef.current) inputRef.current.value = '';
       return;
     }
 
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      processScan(e.currentTarget.value);
-    }
+    // Route event through wedge scanner handler (timing keydown checks)
+    handleWedgeKeyDown(e);
   };
 
   const onChangeWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {

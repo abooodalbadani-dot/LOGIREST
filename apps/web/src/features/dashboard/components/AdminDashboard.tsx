@@ -1,14 +1,15 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { 
-  Activity, 
-  AlertTriangle, 
-  ClipboardCheck, 
-  Database, 
-  FileText, 
-  Package, 
-  ShieldCheck, 
+import { useDashboardStats } from '../hooks/useDashboardStats';
+import {
+  Activity,
+  AlertTriangle,
+  ClipboardCheck,
+  Database,
+  FileText,
+  Package,
+  ShieldCheck,
   Users,
   TrendingUp,
   History,
@@ -28,26 +29,23 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 
 export function AdminDashboard() {
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
+  const { data: stats, isLoading: loadingStats, error } = useDashboardStats();
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
 
-  // Mock data for Admin
-  const stats = {
-    totalStockValue: 1245300.50,
-    baseCurrency: settings?.base_currency || 'SAR',
-    pendingPRs: 7,
-    activeStocktakes: 2,
-    lowStockItems: 14,
-    systemHealth: 98.4,
-    activeUsers: 24,
-    lastBackup: tc('time_ago.hours', { count: 2 }),
-    nearExpiryCount: 12,
-  };
-
-  if (loadingSettings) {
+  if (loadingSettings || loadingStats) {
     return <PageSkeleton />;
   }
+
+  if (error || !stats) {
+    return <div className="p-8 text-status-error uppercase font-bold">{t('error_loading')}</div>;
+  }
+
+  const baseCurrency = settings?.base_currency || 'SAR';
+
+  // Additional derived info
+  const lastBackupTime = tc('time_ago.hours', { count: 2 });
 
   return (
     <main role="main" className="space-y-10">
@@ -68,7 +66,7 @@ export function AdminDashboard() {
         <h2 id="kpi-grid-title" className="sr-only">{t('aria.kpi_grid')}</h2>
         <KPICard
           title={t('kpi.total_stock')}
-          value={formatCurrency(stats.totalStockValue, stats.baseCurrency, locale as 'ar' | 'en')}
+          value={formatCurrency(stats.total_value, baseCurrency, locale as 'ar' | 'en')}
           icon={Package}
           accent="cyan"
           trend={{ value: '12%', isPositive: true }}
@@ -76,21 +74,21 @@ export function AdminDashboard() {
         />
         <KPICard
           title={t('kpi.pending_prs')}
-          value={formatNumber(stats.pendingPRs, locale as 'ar' | 'en')}
+          value={formatNumber(stats.pending_prs, locale as 'ar' | 'en')}
           icon={FileText}
           accent="amber"
           description={t('kpi.immediate_review')}
         />
         <KPICard
           title={t('kpi.active_stocktakes')}
-          value={formatNumber(stats.activeStocktakes, locale as 'ar' | 'en')}
+          value={formatNumber(stats.active_stocktakes, locale as 'ar' | 'en')}
           icon={ClipboardCheck}
           accent="cyan"
           description={t('kpi.warehouse_locked')}
         />
         <KPICard
           title={t('kpi.low_stock')}
-          value={formatNumber(stats.lowStockItems, locale as 'ar' | 'en')}
+          value={formatNumber(stats.low_stock_items, locale as 'ar' | 'en')}
           icon={AlertTriangle}
           accent="red"
           description={t('kpi.reorder_suggested')}
@@ -111,7 +109,7 @@ export function AdminDashboard() {
                   {t('system_health.optimal')}
                 </Badge>
               </div>
-              <CardTitle className="text-headline-lg font-semibold uppercase italic">{stats.systemHealth}% {t('system_health.health_suffix')}</CardTitle>
+              <CardTitle className="text-headline-lg font-semibold uppercase italic">{stats.system_health}% {t('system_health.health_suffix')}</CardTitle>
               <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('system_health.node_description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-4">
@@ -123,14 +121,14 @@ export function AdminDashboard() {
                   <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5">
                     <Database className="w-3 h-3" /> {t('system_health.backup')}
                   </span>
-                  <span className="text-label-sm font-bold text-foreground">{stats.lastBackup}</span>
+                  <span className="text-label-sm font-bold text-foreground">{lastBackupTime}</span>
                 </div>
                 <div className="p-3 bg-surface-container-low rounded-xl border-none space-y-1">
                   <Link href="/admin/users" className="contents">
                     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5 hover:text-operational-cyan cursor-pointer transition-colors">
                       <Users className="w-3 h-3" /> {t('system_health.online')}
                     </span>
-                    <span className="text-label-sm font-bold text-foreground">{stats.activeUsers} {t('system_health.sessions')}</span>
+                    <span className="text-label-sm font-bold text-foreground">{stats.active_users} {t('system_health.sessions')}</span>
                   </Link>
                 </div>
               </div>
@@ -141,10 +139,10 @@ export function AdminDashboard() {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
-                  <History className="w-3 h-3" /> 
+                  <History className="w-3 h-3" />
                   {t('audit.title')}
                 </span>
-                <Link href="/reports">
+                <Link href="/admin/audit-logs">
                   <Button variant="ghost" size="sm" className="h-6 text-label-xxs font-semibold uppercase text-muted-foreground/40 hover:text-operational-cyan">
                     {t('audit.view_all')}
                   </Button>
@@ -154,15 +152,11 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-transparent">
-                {[
-                  { action: `${t('audit.updated_sku')}: ${t('audit.mock.sku_m102')}`, user: t('audit.mock.user_mansour'), time: tc('time_ago.minutes', { count: 12 }), type: 'catalog' },
-                  { action: `${t('audit.role_mutation')}: ${t('audit.mock.role_inv_mgr')}`, user: t('system_health.optimal'), time: tc('time_ago.hours', { count: 1 }), type: 'security' },
-                  { action: t('audit.branch_sync'), user: t('audit.mock.node_jed'), time: tc('time_ago.hours', { count: 3 }), type: 'system' },
-                ].map((log, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group cursor-pointer">
+                {stats.system_audit_logs.map((log) => (
+                  <div key={log.id} className="flex items-center justify-between p-4 hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group cursor-pointer">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-label-xs font-bold text-foreground group-hover:text-operational-cyan transition-colors">{log.action}</span>
-                      <span className="text-label-xxs font-medium text-muted-foreground/40">{log.user}</span>
+                      <span className="text-label-xs font-bold text-foreground group-hover:text-operational-cyan transition-colors uppercase">{log.action}</span>
+                      <span className="text-label-xxs font-medium text-muted-foreground/40 uppercase">{log.user} • {log.type}</span>
                     </div>
                     <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase font-mono">{log.time}</span>
                   </div>
@@ -176,10 +170,10 @@ export function AdminDashboard() {
         <section className="lg:col-span-2 space-y-8" aria-labelledby="operational-monitoring-title">
           <h2 id="operational-monitoring-title" className="sr-only">{t('aria.operational_monitoring')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <PendingDocumentsWidget locale={locale} />
-            <NearExpiryWidget locale={locale} />
+            <PendingDocumentsWidget locale={locale} data={stats.pending_approvals} />
+            <NearExpiryWidget locale={locale} data={stats.expiring_lots} />
           </div>
-          
+
           <Card className="bg-surface-container-lowest border-none rounded-2xl relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(var(--primary-rgb),0.05),transparent_70%)]" />
             <CardHeader className="flex flex-row items-center justify-between pb-6">

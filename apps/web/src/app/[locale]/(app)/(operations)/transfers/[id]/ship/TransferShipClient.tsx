@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -23,18 +23,33 @@ import { AlertCircle, Truck, ArrowLeft, Printer } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { toast } from 'sonner';
+import { audioAlerts } from '@/utils/audio';
+import { useAbortController } from '@/hooks/useAbortController';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ErrorState } from '@/components/shared/ErrorState';
 
 export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
-  const { data: transfer, isLoading } = useTransfer(id);
+  const { data: transfer, isLoading, error } = useTransfer(id);
   const { user } = useAuth();
-  const shipTransfer = useShipTransfer();
+  const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('transfer', id);
+  const shipTransfer = useShipTransfer({ onConflict: triggerConflict });
+  const abortController = useAbortController();
 
   const [scannedLines, setScannedLines] = useState<Record<string, number>>({});
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+
+  const idempotencyKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID();
+    }
+  }, []);
 
   const isDirty = Object.keys(scannedLines).length > 0;
   const { router } = useUnsavedChangesGuard(isDirty);
@@ -42,28 +57,69 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
   const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
   const isEitherLocked = (fromLockState?.isLocked || toLockState?.isLocked) ?? false;
+  const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
+  const isLockedState = isEitherLocked || isWorkflowLocked;
 
   const handleScan = useCallback((barcode: string) => {
+    if (isLockedState) {
+      audioAlerts.playScanBlocked();
+      setScanStatus('error');
+      const msg = isEitherLocked 
+        ? (t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.")
+        : (t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.");
+      setStatusMessage(msg);
+      toast.error(msg);
+      setTimeout(() => setScanStatus('idle'), 2000);
+      return;
+    }
+
     const line = transfer?.lines.find(l => l.item?.code === barcode);
     if (line) {
+      const currentScanned = scannedLines[line.id] ?? 0;
+      if (currentScanned >= line.qty) {
+        audioAlerts.playScanDuplicate();
+        setScanStatus('error');
+        const msg = t('scan_duplicate_warning') || "Item already fully verified.";
+        setStatusMessage(msg);
+        toast.warning(msg);
+        setTimeout(() => setScanStatus('idle'), 2000);
+        return;
+      }
+
       setScannedLines(prev => ({
         ...prev,
         [line.id]: (prev[line.id] ?? 0) + 1
       }));
       setScanStatus('success');
+      audioAlerts.playScanSuccess();
       setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.name_ar : line.item?.name_en}`);
       setTimeout(() => setScanStatus('idle'), 2000);
     } else {
       setScanStatus('error');
+      audioAlerts.playScanInvalid();
       setStatusMessage(t('scan_error'));
+      toast.error(t('scan_error'));
       setTimeout(() => setScanStatus('idle'), 2000);
     }
-  }, [transfer, t, locale]);
+  }, [transfer, scannedLines, isEitherLocked, t, locale]);
 
   const handleShip = () => {
     if (!transfer) return;
+    if (isEitherLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Action mutation blocked.");
+      return;
+    }
+
     shipTransfer.mutate(
-      { id, version: transfer.version || 1 },
+      { 
+        id, 
+        version: transfer.version || 1,
+        signal: abortController.signal,
+        headers: {
+          'X-Idempotency-Key': idempotencyKeyRef.current || ''
+        }
+      },
       {
         onSuccess: () => {
           router.push(`/transfers/${id}`, { skipGuard: true });
@@ -72,14 +128,12 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
     );
   };
 
-  if (isLoading || !transfer) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative w-24 h-24 flex items-center justify-center text-cyan-500">
-          <Truck className="w-12 h-12 animate-bounce" />
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
+
+  if (error || !transfer) {
+    return <ErrorState onRetry={() => window.location.reload()} />;
   }
 
   if (!canPerformActionV2('TRANSFER', transfer?.transfer_status as DocumentStatus, 'SHIP', user?.role)) {
@@ -138,11 +192,11 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
         className="space-y-8"
       >
         <DocumentLockBanner 
-          status={transfer.transfer_status} 
-          isLocked={false} 
+          status={transfer.transfer_status as DocumentStatus} 
+          isLocked={isLockedState} 
         />
 
-        <DocumentLockWrapper isLocked={false}>
+        <DocumentLockWrapper isLocked={isLockedState}>
           <div className="space-y-4">
             {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
             {toLockState?.isLocked && toLockState.sessionId !== fromLockState?.sessionId && (
@@ -173,6 +227,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
                       scanStatus={scanStatus}
                       statusMessage={statusMessage}
                       scannerMode={true}
+                      size="lg"
                       className="w-full"
                     />
                   </div>
@@ -198,6 +253,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
                   isReadOnly={true}
                   onRemoveLine={() => {}}
                   hideLotColumns={true}
+                  dense={true}
                   headers={{
                     code: tCommon('table_headers.code'),
                     name: tCommon('table_headers.name'),
@@ -237,13 +293,13 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
           onCancel={() => router.push(`/transfers/${id}`, { skipGuard: true })}
           onSubmit={handleShip}
           isSaving={shipTransfer.isPending}
-          isLocked={false}
+          isLocked={isLockedState}
           isDirty={isDirty}
           isValid={allScanned}
           actions={
             <PermissionGate action="post" resource="transfer">
               <Button
-                disabled={isEitherLocked || shipTransfer.isPending}
+                disabled={isLockedState || shipTransfer.isPending || !allScanned}
                 onClick={() => setConfirmDialogOpen(true)}
                 className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
               >
@@ -263,6 +319,12 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
           requiresTextConfirmation={false}
           onConfirm={handleShip}
           isLoading={shipTransfer.isPending}
+        />
+
+        <ConflictDialog 
+          open={open}
+          onReload={handleReload}
+          onClose={handleClose}
         />
       </form>
     </div>
