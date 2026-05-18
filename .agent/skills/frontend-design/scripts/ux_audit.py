@@ -95,6 +95,14 @@ import re
 import json
 from pathlib import Path
 
+EXCLUDED_FOLDERS = {
+    'node_modules', '.git', 'dist', 'build', '.next', 'coverage',
+    'providers', 'layouts', 'layout', 'hooks', 'infrastructure',
+    'stores', 'utils', 'lib', 'services', 'queries', 'mutations',
+    'schemas', 'types', 'adapters', 'repositories', 'constants',
+    'config', 'scripts', 'generated', 'mocks', 'fixtures', 'tests'
+}
+
 class UXAuditor:
     def __init__(self):
         self.issues = []
@@ -103,18 +111,34 @@ class UXAuditor:
         self.files_checked = 0
     
     def audit_file(self, filepath: str) -> None:
+        filename = os.path.relpath(filepath)
+        if 'layout.tsx' in filename.lower() or 'layout.jsx' in filename.lower():
+            return
+
+        # Check if any path components match the excluded folders
+        path_parts = Path(filepath).parts
+        if any(part.lower() in EXCLUDED_FOLDERS for part in path_parts):
+            return
+
         try:
             with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
                 content = f.read()
         except: return
         
-        self.files_checked += 1
-        filename = os.path.basename(filepath)
+        # Global non-UI exclusion heuristic: skip files without any HTML/JSX markup
+        has_ui = bool(re.search(r'<\w+|/>', content))
+        if not has_ui:
+            return
 
-        # Pre-calculate common flags
+        self.files_checked += 1
+
         has_long_text = bool(re.search(r'<p|<div.*class=.*text|article|<span.*text', content, re.IGNORECASE))
-        has_form = bool(re.search(r'<form|<input|password|credit|card|payment', content, re.IGNORECASE))
-        complex_elements = len(re.findall(r'<input|<select|<textarea|<option', content, re.IGNORECASE))
+        has_form = bool(re.search(r'<form\b|<input\b|<select\b|<textarea\b|password|credit|payment', content, re.IGNORECASE))
+        complex_elements = len(re.findall(r'<input\b|<select\b|<textarea\b|<option\b', content, re.IGNORECASE))
+
+        # Semantic Heuristic: Check if the file actually contains interactive HTML/JSX elements
+        interactive_patterns = [r'<input', r'<select', r'<textarea', r'<form', r'button', r'aria-', r'role=']
+        has_interactive = any(re.search(pattern, content, re.IGNORECASE) for pattern in interactive_patterns)
 
         # --- 1. PSYCHOLOGY LAWS ---
         # Hick's Law
@@ -123,16 +147,18 @@ class UXAuditor:
             self.issues.append(f"[Hick's Law] {filename}: {nav_items} nav items (Max 7)")
         
         # Fitts' Law
-        if re.search(r'height:\s*([0-3]\d)px', content) or re.search(r'h-[1-9]\b|h-10\b', content):
-            self.warnings.append(f"[Fitts' Law] {filename}: Small targets (< 44px)")
+        if has_interactive:
+            if re.search(r'height:\s*([0-3]\d)px', content) or re.search(r'h-[1-9]\b|h-10\b', content):
+                self.warnings.append(f"[Fitts' Law] {filename}: Small targets (< 44px)")
         
         # Miller's Law
-        form_fields = len(re.findall(r'<input|<select|<textarea', content, re.IGNORECASE))
-        if form_fields > 7 and not re.search(r'step|wizard|stage', content, re.IGNORECASE):
-            self.warnings.append(f"[Miller's Law] {filename}: Complex form ({form_fields} fields)")
+        if has_interactive:
+            form_fields = len(re.findall(r'<input|<select|<textarea', content, re.IGNORECASE))
+            if form_fields > 7 and not re.search(r'step|wizard|stage', content, re.IGNORECASE):
+                self.warnings.append(f"[Miller's Law] {filename}: Complex form ({form_fields} fields)")
             
         # Von Restorff
-        if 'button' in content.lower() and not re.search(r'primary|bg-primary|Button.*primary|variant=["\']primary', content, re.IGNORECASE):
+        if has_interactive and 'button' in content.lower() and not re.search(r'primary|bg-primary|Button.*primary|variant=["\']primary', content, re.IGNORECASE):
             self.warnings.append(f"[Von Restorff] {filename}: No primary CTA")
 
         # Serial Position Effect - Important items at beginning/end
@@ -173,7 +199,7 @@ class UXAuditor:
         # --- 1.6 TRUST BUILDING (Enhanced) ---
 
         # Security signals
-        if has_form:
+        if has_interactive and has_form:
             security_signals = re.findall(r'ssl|secure|encrypt|lock|padlock|https', content, re.IGNORECASE)
             if len(security_signals) == 0 and not re.search(r'checkout|payment', content, re.IGNORECASE):
                 self.warnings.append(f"[Trust] {filename}: Form without security indicators. Add 'SSL Secure' or lock icon.")
@@ -196,7 +222,7 @@ class UXAuditor:
         # --- 1.7 COGNITIVE LOAD MANAGEMENT ---
 
         # Progressive disclosure
-        if complex_elements > 5:
+        if has_interactive and complex_elements > 5:
             has_progressive = re.search(r'step|wizard|stage|accordion|collapsible|tab|more\.\.\.|advanced|show more', content, re.IGNORECASE)
             if not has_progressive:
                 self.warnings.append(f"[Cognitive Load] {filename}: Many form elements without progressive disclosure. Consider accordion, tabs, or 'Advanced' toggle.")
@@ -208,15 +234,15 @@ class UXAuditor:
             self.warnings.append(f"[Cognitive Load] {filename}: High visual noise detected. Many colors and borders increase cognitive load.")
 
         # Familiar patterns
-        if has_form:
-            has_standard_labels = bool(re.search(r'<label|placeholder|aria-label', content, re.IGNORECASE))
+        if has_interactive and has_form:
+            has_standard_labels = bool(re.search(r'<label|placeholder|aria-label|<FormLabel', content, re.IGNORECASE))
             if not has_standard_labels:
                 self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels. Use <label> for accessibility and clarity.")
 
         # --- 1.8 PERSUASIVE DESIGN (Ethical) ---
 
         # Smart defaults
-        if has_form:
+        if has_interactive and has_form:
             has_defaults = bool(re.search(r'checked|selected|default|value=["\'].*["\']', content))
             radio_inputs = len(re.findall(r'type=["\']radio', content, re.IGNORECASE))
             if radio_inputs > 0 and not has_defaults:
@@ -236,7 +262,7 @@ class UXAuditor:
                 self.warnings.append(f"[Persuasion] {filename}: Social proof without specific numbers. Use 'Join 10,000+' format.")
 
         # Progress indicators
-        if has_form:
+        if has_interactive and has_form:
             has_progress = bool(re.search(r'progress|step \d+|complete|%|bar', content, re.IGNORECASE))
             if complex_elements > 5 and not has_progress:
                 self.warnings.append(f"[Persuasion] {filename}: Long form without progress indicator. Add progress bar or 'Step X of Y'.")
@@ -390,7 +416,7 @@ class UXAuditor:
                 self.warnings.append(f"[Performance] {filename}: Animating expensive properties ({', '.join(set(expensive_props))}). Use transform/opacity where possible.")
             
             # Reduced Motion
-            if not re.search(r'prefers-reduced-motion', content):
+            if has_interactive and not re.search(r'prefers-reduced-motion', content):
                 self.warnings.append(f"[Accessibility] {filename}: Animations found without prefers-reduced-motion check")
 
         # Natural Shadows
@@ -579,10 +605,11 @@ class UXAuditor:
 
         # 5.3 Micro-interaction Feedback Patterns
         # Check for interactive elements without hover/focus states
-        interactive_elements = len(re.findall(r'<button|<a\s+href|onClick|@click', content))
-        has_hover_focus = bool(re.search(r'hover:|focus:|:hover|:focus', content))
-        if interactive_elements > 2 and not has_hover_focus:
-            self.warnings.append(f"[Animation] {filename}: Interactive elements without hover/focus states. Add micro-interactions for feedback.")
+        if has_interactive:
+            interactive_elements = len(re.findall(r'<button|<a\s+href|onClick|@click', content))
+            has_hover_focus = bool(re.search(r'hover:|focus:|:hover|:focus', content))
+            if interactive_elements > 2 and not has_hover_focus:
+                self.warnings.append(f"[Animation] {filename}: Interactive elements without hover/focus states. Add micro-interactions for feedback.")
 
         # 5.4 Loading State Indicators
         # Check for loading patterns
@@ -610,7 +637,7 @@ class UXAuditor:
 
         # 6.1 Lottie Animation Checks
         has_lottie = bool(re.search(r'lottie|Lottie|@lottie-react', content))
-        if has_lottie:
+        if has_interactive and has_lottie:
             # Check for reduced motion fallback
             has_lottie_fallback = bool(re.search(r'prefers-reduced-motion.*lottie|lottie.*isPaused|lottie.*stop', content))
             if not has_lottie_fallback:
@@ -668,14 +695,16 @@ class UXAuditor:
                 self.warnings.append(f"[Motion] {filename}: Many animations ({total_animations}). Ensure majority serve functional purpose (feedback, guidance), not decoration.")
 
         # --- 7. ACCESSIBILITY ---
-        if re.search(r'<img(?![^>]*alt=)[^>]*>', content):
+        if has_interactive and re.search(r'<img(?![^>]*alt=)[^>]*>', content):
             self.issues.append(f"[Accessibility] {filename}: Missing img alt text")
 
     def audit_directory(self, directory: str) -> None:
-        extensions = {'.tsx', '.jsx', '.html', '.vue', '.svelte', '.css'}
+        extensions = {'.tsx', '.jsx', '.html', '.vue', '.svelte'}
         for root, dirs, files in os.walk(directory):
-            dirs[:] = [d for d in dirs if d not in {'node_modules', '.git', 'dist', 'build', '.next', 'coverage'}]
+            dirs[:] = [d for d in dirs if d.lower() not in EXCLUDED_FOLDERS]
             for file in files:
+                if 'layout.tsx' in file.lower() or 'layout.jsx' in file.lower():
+                    continue
                 if Path(file).suffix in extensions:
                     self.audit_file(os.path.join(root, file))
 

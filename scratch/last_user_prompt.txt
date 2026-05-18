@@ -1,0 +1,37 @@
+<USER_REQUEST>
+أولاً: ممتاز أنك أنشأت التقرير بهذا المستوى من الدقة 👌  
+التحليل منطقي، ومن الواضح أنك فهمت المشكلة المعمارية بالكامل.
+
+الآن سأعطيك القرار النهائي الواضح بدون تعقيد.
+
+---
+
+# ✅ القرار الاستراتيجي النهائي
+
+## 🔹 1) لا نعيد أي ملف من الـ backup كما هو
+لا يوجد “Restore”.
+يوجد فقط:
+
+> ✅ Visual Extraction  
+> ❌ Not Logic Restoration
+
+كل ما في الـ backup:
+- camelCase
+- absence of idempotency
+- absence of lock states
+- absence of concurrency guards
+
+هذه خطوط حمراء.
+
+---
+
+## 🔹 2) Orphan Routes — نعم نربطها فوراً
+
+هذه أولوية حقيقية لأنها:
+- تكسر Phase 1 dynamic route coverage
+- تجعل النظام يبدو ناقصاً
+- تخفي ميزات موجودة فعلياً
+
+✅ أوافق على الأربع نقاط بالكامل.
+
+<truncated 3456 bytes>

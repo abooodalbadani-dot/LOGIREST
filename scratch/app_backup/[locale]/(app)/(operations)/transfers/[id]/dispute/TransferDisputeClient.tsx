@@ -137,7 +137,10 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
                 header: t('resolution_action') || 'Resolution Action',
                 cell: () => (
                   <div className="flex justify-center px-4 min-w-[200px]">
-                    <select className="w-full bg-surface-container-highest/20 border border-outline-low h-10 px-4 text-label-xs font-bold uppercase rounded-md outline-none focus:ring-1 focus:ring-operational-cyan transition-all">
+                    <select 
+                      aria-label={t('resolution_action') || 'Resolution Action'}
+                      className="w-full bg-surface-container-highest/20 border border-outline-low h-10 px-4 text-label-xs font-bold uppercase rounded-md outline-none focus:ring-1 focus:ring-operational-cyan transition-all"
+                    >
                       <option>{t('action_accept_received') || 'Accept Received Qty'}</option>
                       <option>{t('action_claim_vendor') || 'Claim Against Shipper'}</option>
                       <option>{t('action_write_off') || 'Write-off Loss'}</option>

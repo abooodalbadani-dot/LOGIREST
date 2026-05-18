@@ -1,0 +1,47 @@
+<USER_REQUEST>
+1. Dirty State vs Immersive Scan Navigation
+
+✅ Option A — Strict Guard
+
+Do NOT auto-save or silently synchronize drafts before entering scan mode.
+
+Reason:
+- transactional forms must remain deterministic
+- silent draft persistence creates hidden state mutations
+- operators must consciously confirm state transitions
+
+Correct behavior:
+- use the existing UnsavedChangesGuard
+- block navigation if dirty
+- require explicit:
+  - Save
+  - Discard
+  - Cancel
+
+Do NOT introduce auto-sync logic now.
+
+---
+
+2. Locked Documents & Readonly Scanner States
+
+✅ Option A — Hidden
+
+If the document is locked/posted:
+- hide Scan Mode actions entirely
+- do not expose readonly scanner routes
+
+Reason:
+- scan mode represents mutation workflow
+- exposing scanner UI on immutable documents creates operational ambiguity
+- readonly scan visualization adds complexity with little operational value
+
+Rule:
+```text
+locked document = no scan mode access
+```
+
+---
+
+3. Category Edit Localization Validation
+
+<truncated 2240 bytes>

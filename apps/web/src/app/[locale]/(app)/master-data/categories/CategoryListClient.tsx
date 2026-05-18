@@ -28,6 +28,15 @@ export function CategoryListClient() {
 
   const columns = useMemo<ColumnDef<Category, unknown>[]>(() => [
     {
+      accessorKey: 'code',
+      header: tc('fields.code'),
+      cell: ({ row }) => (
+        <span className="font-mono font-bold text-label-xs bg-surface-container-highest/60 border border-surface-variant/10 px-2.5 py-1 rounded text-muted-foreground">
+          {row.original.code || row.original.id}
+        </span>
+      ),
+    },
+    {
       accessorKey: 'name_en',
       header: t('name'),
       cell: ({ row }) => (

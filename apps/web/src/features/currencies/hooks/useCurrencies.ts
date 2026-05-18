@@ -21,14 +21,14 @@ export function useCurrencies() {
       return response.json();
     },
     // Ensure data is cached and shared
-    staleTime: 1000 * 60 * 5, 
+    staleTime: 1000 * 60 * 5,
   });
 }
 
 export function useCurrency(id: string | null) {
 
- return useQuery({
- queryKey: [...QUERY_KEY, id],
+  return useQuery({
+    queryKey: [...QUERY_KEY, id],
     queryFn: async ({ signal }) => {
       if (!id) return null;
       // In production, fetch specific ID
@@ -36,23 +36,23 @@ export function useCurrency(id: string | null) {
       if (!response.ok) return null;
       return response.json();
     },
- enabled: !!id
- });
+    enabled: !!id
+  });
 }
 
 export function useCreateCurrency() {
- const queryClient = useQueryClient();
- const t = useTranslations('master_data.currencies');
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.currencies');
 
- return useMutation({
+  return useMutation({
     mutationFn: async ({ values, signal }: { values: CurrencyFormValues; signal?: AbortSignal }) => {
       const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
- 
- // GUARD: Uniqueness (Case-insensitive)
- const exists = data.some(c => c.code.toUpperCase() === values.code.toUpperCase());
- if (exists) {
- throw new Error('code_exists');
- }
+
+      // GUARD: Uniqueness (Case-insensitive)
+      const exists = data.some(c => c.code.toUpperCase() === values.code.toUpperCase());
+      if (exists) {
+        throw new Error('code_exists');
+      }
 
       const abortPromise = new Promise((_, reject) => {
         if (signal?.aborted) return reject(new Error('AbortError'));
@@ -62,36 +62,36 @@ export function useCreateCurrency() {
       const workPromise = (async () => {
         await new Promise(resolve => setTimeout(resolve, 800));
 
- const newCurrency: Currency = {
- id: `CUR- ${values.code.toUpperCase()}`,
- ...values,
- code: values.code.toUpperCase(),
- created_at: new Date().toISOString()
- };
+        const newCurrency: Currency = {
+          id: `CUR- ${values.code.toUpperCase()}`,
+          ...values,
+          code: values.code.toUpperCase(),
+          created_at: new Date().toISOString()
+        };
 
- queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
- let updated = [...old];
- // If new is base, unset others
- if (newCurrency.is_base_currency) {
- updated = updated.map(c => ({ ...c, is_base_currency: false }));
- }
- return [...updated, newCurrency];
- });
+        queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
+          let updated = [...old];
+          // If new is base, unset others
+          if (newCurrency.is_base_currency) {
+            updated = updated.map(c => ({ ...c, is_base_currency: false }));
+          }
+          return [...updated, newCurrency];
+        });
 
- return newCurrency;
+        return newCurrency;
       })();
 
       return Promise.race([workPromise, abortPromise]) as Promise<Currency>;
- },
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: QUERY_KEY });
- toast.success(t('created_success'));
- },
- onError: (error: Error) => {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success(t('created_success'));
+    },
+    onError: (error: Error) => {
       if (error.message === 'AbortError') return;
- toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
- }
- });
+      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    }
+  });
 }
 
 export function useUpdateCurrency(options?: { onConflict?: () => void }) {
@@ -99,46 +99,46 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
   const t = useTranslations('master_data.currencies');
 
   return useSafeMutation({
-  onConflict: options?.onConflict,
-  mutationFn: async ({ id, values, signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
-       const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
-  const currency = data.find(c => c.id === id);
-  if (!currency) throw new Error('Currency not found');
+    onConflict: options?.onConflict,
+    mutationFn: async ({ id, values, signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
+      const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
+      const currency = data.find(c => c.id === id);
+      if (!currency) throw new Error('Currency not found');
 
-    if (values.version !== undefined && values.version < (currency.version ?? 0)) {
-      throw new ConflictError({
-        message: 'CONFLICT',
-        code: 'VERSION_CONFLICT',
-        currentVersion: currency.version
-      });
-    }
+      if (values.version !== undefined && values.version < (currency.version ?? 0)) {
+        throw new ConflictError({
+          message: 'CONFLICT',
+          code: 'VERSION_CONFLICT',
+          currentVersion: currency.version
+        });
+      }
 
-  // GUARD: Uniqueness if code changed
-  if (values.code.toUpperCase() !== currency.code.toUpperCase()) {
-    const exists = data.some(c => c && c.id !== id && c.code && c.code.toUpperCase() === values.code.toUpperCase());
-    if (exists) {
-      throw new Error('code_exists');
-    }
-  }
+      // GUARD: Uniqueness if code changed
+      if (values.code.toUpperCase() !== currency.code.toUpperCase()) {
+        const exists = data.some(c => c && c.id !== id && c.code && c.code.toUpperCase() === values.code.toUpperCase());
+        if (exists) {
+          throw new Error('code_exists');
+        }
+      }
 
-  // GUARD: Cannot deactivate base currency
-  if (values.is_active === false && currency.is_base_currency) {
-  throw new Error('cannot_deactivate_base');
-  }
+      // GUARD: Cannot deactivate base currency
+      if (values.is_active === false && currency.is_base_currency) {
+        throw new Error('cannot_deactivate_base');
+      }
 
-   // GUARD: Deactivation if in use (Operational check should be done by API)
-   if (values.is_active === false && currency.is_active === true) {
-     // In production, the API will prevent deactivation if in use
-   }
+      // GUARD: Deactivation if in use (Operational check should be done by API)
+      if (values.is_active === false && currency.is_active === true) {
+        // In production, the API will prevent deactivation if in use
+      }
 
-  // GUARD: Base currency logic
-  // If unsetting base, check if another one exists
-  if (currency.is_base_currency && !values.is_base_currency) {
-  const otherBase = data.some(c => c.id !== id && c.is_base_currency);
-  if (!otherBase) {
-  throw new Error('base_required');
-  }
-  }
+      // GUARD: Base currency logic
+      // If unsetting base, check if another one exists
+      if (currency.is_base_currency && !values.is_base_currency) {
+        const otherBase = data.some(c => c.id !== id && c.is_base_currency);
+        if (!otherBase) {
+          throw new Error('base_required');
+        }
+      }
 
       const abortPromise = new Promise((_, reject) => {
         if (signal?.aborted) return reject(new Error('AbortError'));
@@ -148,37 +148,37 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
       const workPromise = (async () => {
         await new Promise(resolve => setTimeout(resolve, 800));
 
-  const updatedCurrency: Currency = { 
-  ...currency, 
-  ...values,
-  code: values.code.toUpperCase(),
-  version: (currency.version ?? 0) + 1
-  };
+        const updatedCurrency: Currency = {
+          ...currency,
+          ...values,
+          code: values.code.toUpperCase(),
+          version: (currency.version ?? 0) + 1
+        };
 
-   queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
-  let updated = old.map(c => c.id === id ? updatedCurrency : c);
-  
-  // If this one is now base, unset others
-  if (updatedCurrency.is_base_currency) {
-  updated = updated.map(c => c.id === id ? c : { ...c, is_base_currency: false });
-  }
-  
-  return updated;
-  });
+        queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
+          let updated = old.map(c => c.id === id ? updatedCurrency : c);
 
-  return updatedCurrency;
+          // If this one is now base, unset others
+          if (updatedCurrency.is_base_currency) {
+            updated = updated.map(c => c.id === id ? c : { ...c, is_base_currency: false });
+          }
+
+          return updated;
+        });
+
+        return updatedCurrency;
       })();
 
       return Promise.race([workPromise, abortPromise]) as Promise<Currency>;
-  },
-  onSuccess: (data) => {
-  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-  queryClient.setQueryData([...QUERY_KEY, data.id], data);
-  toast.success(t('updated_success'));
-  },
-  onError: (error: Error) => {
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('updated_success'));
+    },
+    onError: (error: Error) => {
       if (error.message === 'AbortError') return;
-  toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
-  }
+      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    }
   });
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Plus, Search, ArrowRightLeft, Calendar, ShieldCheck, History } from 'lucide-react';
@@ -19,17 +19,69 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
+import { useAuth } from '@/providers/AuthProvider';
+import { toast } from 'sonner';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export function FXRateListClient({ locale }: { locale: string }) {
   const t = useTranslations('common');
   const tfx = useTranslations('master_data.fx_rates');
+  const tAuth = useTranslations('auth');
+  const tPermissions = useTranslations('permissions');
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+  const redirectFired = useRef(false);
 
   const { data, isLoading } = useFXRates();
   const { data: currencies } = useCurrencies();
+  const { user, isLoading: authLoading } = useAuth();
 
   const rates = data || [];
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const normalizedRole = useMemo(() => {
+    if (authLoading || !user) return null;
+    return user.role === 'ADMIN' ? 'admin' :
+           user.role === 'AUDITOR' ? 'auditor' :
+           ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk';
+  }, [user, authLoading]);
+
+  const getUnauthorizedMessage = () => {
+    try {
+      const msg1 = t('errors.unauthorized');
+      if (msg1 && msg1 !== 'errors.unauthorized') return msg1;
+    } catch (e) {}
+
+    try {
+      const msg2 = tAuth('errors.unauthorized');
+      if (msg2 && msg2 !== 'errors.unauthorized') return msg2;
+    } catch (e) {}
+
+    try {
+      const msg3 = tPermissions('access_denied');
+      if (msg3 && msg3 !== 'access_denied') return msg3;
+    } catch (e) {}
+
+    return locale === 'ar'
+      ? 'ليس لديك صلاحية للوصول إلى هذه الصفحة.'
+      : 'You do not have permission to access this page.';
+  };
+
+  useEffect(() => {
+    if (isMounted && !authLoading) {
+      if (!user || normalizedRole === 'clerk') {
+        if (!redirectFired.current) {
+          redirectFired.current = true;
+          toast.error(getUnauthorizedMessage());
+          router.replace('/dashboard');
+        }
+      }
+    }
+  }, [isMounted, authLoading, user, normalizedRole, router, locale]);
 
   const stats = useMemo(() => {
     return {
@@ -43,82 +95,97 @@ export function FXRateListClient({ locale }: { locale: string }) {
 
   const getCurrencyCode = (id: string) => (currencies || []).find((c: Currency) => c.id === id)?.code || id;
 
-  const columns = useMemo<ColumnDef<FXRate, unknown>[]>(() => [
-    {
-      accessorKey: 'from_currency',
-      header: tfx('fields.from_currency'),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <span className="font-bold text-operational-cyan font-mono uppercase px-2 py-0.5 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5">{getCurrencyCode(row.original.from_currency_id)}</span>
-          <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground/40" />
-          <span className="font-bold text-label-sm uppercase px-2 py-0.5 bg-surface-container rounded-lg border border-surface-variant/10">{getCurrencyCode(row.original.to_currency_id)}</span>
-        </div>
-      )
-    },
-    {
-      accessorKey: 'rate',
-      header: tfx('fields.rate'),
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-mono text-label-sm font-bold text-status-active tabular-nums">
-            {formatRate(row.original.rate, locale as 'ar' | 'en', 4)}
-          </span>
-          <span className="text-label-xxs text-muted-foreground/60 font-medium">
-            1 {getCurrencyCode(row.original.from_currency_id)} = {formatRate(row.original.rate, locale as 'ar' | 'en', 4)} {getCurrencyCode(row.original.to_currency_id)}
-          </span>
-        </div>
-      )
-    },
-    {
-      accessorKey: 'effective_date',
-      header: tfx('fields.effective_date'),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-label-xs font-bold text-muted-foreground bg-surface-container/50 px-2.5 py-1 rounded-lg w-fit">
-          <Calendar className="w-3.5 h-3.5 opacity-40 text-operational-cyan" />
-          <ClientOnlyTime 
-            date={row.original.effective_date} 
-            mode="date" 
-            locale={locale as 'ar' | 'en'} 
-            fallback="--/--/----" 
-          />
-        </div>
-      )
-    },
-    {
-      accessorKey: 'is_active',
-      header: t('status'),
-      cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
-      )
-    },
-    {
-      id: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <PermissionGate action="edit" resource="master_data">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/master-data/fx-rates/${row.original.id}/edit`);
-            }}
-          >
-            {t('edit')}
-          </Button>
-        </PermissionGate>
-      </div>
-      )
+  const columns = useMemo<ColumnDef<FXRate, unknown>[]>(() => {
+    const baseCols: ColumnDef<FXRate, unknown>[] = [
+      {
+        accessorKey: 'from_currency',
+        header: tfx('fields.from_currency'),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3">
+            <span className="font-bold text-operational-cyan font-mono uppercase px-2 py-0.5 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5">{getCurrencyCode(row.original.from_currency_id)}</span>
+            <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground/40" />
+            <span className="font-bold text-label-sm uppercase px-2 py-0.5 bg-surface-container rounded-lg border border-surface-variant/10">{getCurrencyCode(row.original.to_currency_id)}</span>
+          </div>
+        )
+      },
+      {
+        accessorKey: 'rate',
+        header: tfx('fields.rate'),
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="font-mono text-label-sm font-bold text-status-active tabular-nums">
+              {formatRate(row.original.rate, locale as 'ar' | 'en', 4)}
+            </span>
+            <span className="text-label-xxs text-muted-foreground/60 font-medium">
+              1 {getCurrencyCode(row.original.from_currency_id)} = {formatRate(row.original.rate, locale as 'ar' | 'en', 4)} {getCurrencyCode(row.original.to_currency_id)}
+            </span>
+          </div>
+        )
+      },
+      {
+        accessorKey: 'effective_date',
+        header: tfx('fields.effective_date'),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2 text-label-xs font-bold text-muted-foreground bg-surface-container/50 px-2.5 py-1 rounded-lg w-fit">
+            <Calendar className="w-3.5 h-3.5 opacity-40 text-operational-cyan" />
+            <ClientOnlyTime 
+              date={row.original.effective_date} 
+              mode="date" 
+              locale={locale as 'ar' | 'en'} 
+              fallback="--/--/----" 
+            />
+          </div>
+        )
+      },
+      {
+        accessorKey: 'is_active',
+        header: t('status'),
+        cell: ({ row }) => (
+          <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
+        )
+      }
+    ];
+
+    if (normalizedRole !== 'auditor') {
+      baseCols.push({
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <PermissionGate action="edit" resource="master_data">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/master-data/fx-rates/${row.original.id}/edit`);
+                }}
+              >
+                {t('edit')}
+              </Button>
+            </PermissionGate>
+          </div>
+        )
+      });
     }
-  ], [t, tfx, router, currencies, locale]);
+
+    return baseCols;
+  }, [t, tfx, router, currencies, locale, normalizedRole]);
 
   const breadcrumbs = [
     { label: t('home'), href: `/dashboard` },
     { label: t('master_data'), href: `/master-data` },
     { label: tfx('title'), href: `/master-data/fx-rates` }
   ];
+
+  if (authLoading || !isMounted) {
+    return <PageSkeleton variant="list" />;
+  }
+
+  if (!user || normalizedRole === 'clerk') {
+    return null;
+  }
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -128,14 +195,16 @@ export function FXRateListClient({ locale }: { locale: string }) {
           title={tfx('title')} 
           description={tfx('description')}
           actions={
-            <PermissionGate action="create" resource="master_data">
-              <Link href={`/master-data/fx-rates/new`}>
-                <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
-                  <Plus className="w-3.5 h-3.5 me-2" />
-                  {t('create_new')}
-                </Button>
-              </Link>
-            </PermissionGate>
+            normalizedRole !== 'auditor' && (
+              <PermissionGate action="create" resource="master_data">
+                <Link href={`/master-data/fx-rates/new`}>
+                  <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">
+                    <Plus className="w-3.5 h-3.5 me-2" />
+                    {t('create_new')}
+                  </Button>
+                </Link>
+              </PermissionGate>
+            )
           }
         />
       </div>

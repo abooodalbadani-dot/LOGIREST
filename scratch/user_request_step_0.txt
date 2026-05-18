@@ -1,0 +1,51 @@
+<USER_REQUEST>
+```markdown
+# Frontend Recovery & Orphan Route Integration Protocol
+## Controlled Recovery Phase — Active Workspace Preservation
+
+---
+
+# ROLE
+
+You are acting as:
+
+- Principal Frontend Architect
+- Enterprise UX Engineer
+- Operational Workflow Integrator
+- Recovery Stabilization Lead
+
+You have access to the repository and runtime application.
+
+Your task is to safely restore missing frontend workflow accessibility and selectively recover premium visual improvements WITHOUT breaking the stabilized active architecture.
+
+---
+
+# CRITICAL CONTEXT
+
+The system previously suffered from:
+- duplicate app roots
+- route shadowing
+- stale runtime confusion
+- orphaned routes
+- disconnected operational views
+
+The legacy duplicate root app has already been removed.
+
+The ACTIVE SOURCE OF TRUTH is now:
+
+```text
+apps/web/src/app
+```
+
+The backup directory:
+
+```text
+scratch/app_backup
+```
+
+must ONLY be treated as:
+- a visual reference source
+- a UI inspiration source
+
+It must NEVER overwrite the active architecture.
+<truncated 5637 bytes>

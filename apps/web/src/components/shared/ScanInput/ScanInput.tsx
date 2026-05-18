@@ -11,6 +11,7 @@ interface ScanInputProps {
   onScan: (barcode: string) => void | Promise<void>;
   onError?: (barcode: string) => void;
   disabled?: boolean;
+  readOnly?: boolean;
   placeholder?: string;
   className?: string;
   onCameraActivate?: () => void;
@@ -31,6 +32,7 @@ interface ScanInputProps {
 export function ScanInput({
   onScan,
   disabled,
+  readOnly = false,
   placeholder,
   className,
   scanStatus = "idle",
@@ -60,7 +62,8 @@ export function ScanInput({
   }, [value]);
 
   // Scoped autofocus regain to keep cursor locked to scanner input while respecting standard dropdown, form field, and modal blurs.
-  useAlwaysFocused(inputRef, scannerMode && !disabled);
+  // Disable focus lock if scanner is readOnly to prevent focus wars/loops
+  useAlwaysFocused(inputRef, scannerMode && !disabled && !readOnly);
 
   const processScan = async (val: string) => {
     const trimmed = val.trim();
@@ -85,11 +88,12 @@ export function ScanInput({
     onScan: async (barcode) => {
       await processScan(barcode);
     },
-    enabled: scannerMode && !disabled,
+    enabled: scannerMode && !disabled && !readOnly,
     latencyThreshold,
   });
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     if (e.key === 'Escape') {
       if (inputRef.current) inputRef.current.value = '';
       return;
@@ -100,6 +104,7 @@ export function ScanInput({
   };
 
   const onChangeWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     const val = e.target.value;
     if (onChange) onChange(e);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -152,6 +157,7 @@ export function ScanInput({
         config.container,
         scanStatus === 'success' ? "border-operational-cyan bg-operational-cyan/10 shadow-[0_0_60px_rgba(var(--operational-cyan-rgb),0.25)]" :
         scanStatus === 'error' ? "border-destructive bg-destructive/10 shadow-[0_0_60px_rgba(var(--destructive-rgb),0.25)]" :
+        readOnly ? "border-surface-container-highest bg-surface-container-low/60 opacity-80 cursor-default" :
         "border-surface-container-highest bg-surface-container-lowest hover:border-operational-cyan/50 focus-within:border-operational-cyan focus-within:ring-[12px] focus-within:ring-operational-cyan/10 focus-within:bg-surface-container-low"
       )}>
         {/* Background glow when focused */}
@@ -174,6 +180,7 @@ export function ScanInput({
           type="text"
           dir="ltr"
           disabled={disabled || isScanning}
+          readOnly={readOnly}
           placeholder={placeholder || tc('scan_placeholder')}
           onKeyDown={handleKeyDown}
           onChange={onChangeWrapper}
@@ -181,12 +188,13 @@ export function ScanInput({
           className={cn(
             "bg-transparent border-none text-foreground w-full transition-all duration-200 outline-none z-10",
             "placeholder:text-muted-foreground/20 font-mono tracking-[0.25em] font-black",
+            readOnly && "cursor-default select-all opacity-70",
             config.input
           )}
         />
 
         <div className="flex items-center pe-4 gap-3 z-10">
-          {onManualTrigger && (
+          {onManualTrigger && !readOnly && (
             <button
               type="button"
               onClick={onManualTrigger}
@@ -200,7 +208,7 @@ export function ScanInput({
             </button>
           )}
 
-          {onCameraActivate && (
+          {onCameraActivate && !readOnly && (
             <button
               type="button"
               onClick={onCameraActivate}
@@ -227,7 +235,7 @@ export function ScanInput({
         <div className={cn(
           "absolute top-0 left-0 w-[4px] h-full bg-operational-cyan shadow-[0_0_25px_var(--operational-cyan)] opacity-0 pointer-events-none transition-all duration-[2000ms] ease-in-out z-0",
           "group-focus-within:animate-[scan_2s_infinite]",
-          !disabled && !isScanning && scanStatus === 'idle' && "group-focus-within:opacity-60"
+          !disabled && !isScanning && !readOnly && scanStatus === 'idle' && "group-focus-within:opacity-60"
         )} />
       </div>
       

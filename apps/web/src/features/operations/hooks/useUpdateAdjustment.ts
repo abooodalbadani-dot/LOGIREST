@@ -31,8 +31,8 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, payload, signal }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal }) => 
-      apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), { signal }),
+    mutationFn: ({ id, payload, signal, headers }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
+      apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), { signal, headers }),
     onSuccess: (data) => {
       queryClient.setQueryData(['adjustment', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });

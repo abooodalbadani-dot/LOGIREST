@@ -16,7 +16,7 @@ export function LockBanner({ lockState }: { lockState: WarehouseLockState | unde
  return (
  <div className="w-full bg-status-warning/10 sm:rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-200 relative overflow-hidden group backdrop-blur-md">
  {/* Visual background element */}
- <div className="absolute inset-0 bg-gradient-to-r from-status-warning/10 to-transparent pointer-events-none" />
+ <div className={`absolute inset-0 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-status-warning/10 to-transparent pointer-events-none`} />
  
  <div className="flex items-center gap-4 w-full sm:w-auto relative z-10">
  <div className="flex shrink-0 items-center justify-center h-12 w-12 rounded-xl bg-status-warning/20 text-status-warning">

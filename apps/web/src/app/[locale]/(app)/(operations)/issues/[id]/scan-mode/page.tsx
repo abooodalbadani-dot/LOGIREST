@@ -23,6 +23,9 @@ import type { BadgeStatus } from '@/components/shared/StatusBadge';
 import type { LotAllocation } from '@/types/documents';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { isIssuePosted } from '@/domain/status-guards';
+import { isDocumentLocked } from '@/core/workflow/document-engine';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { toast } from 'sonner';
 
 type ScanEntry = { barcode: string; item_name: string; timestamp: Date; success: boolean };
 
@@ -47,8 +50,8 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
 
 function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  const t = useTranslations('operations.issue');
- const router = useRouter();
  const { user } = useAuth();
+ const router = useRouter();
  
  const isNew = id === 'new';
  const { data: issue, isLoading } = useIssue(isNew ? null : id);

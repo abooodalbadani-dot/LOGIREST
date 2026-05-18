@@ -42,7 +42,16 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
 
     const actions = (
       <div className="flex gap-2 items-center">
-        {!isLocked && (
+        {isLocked ? (
+          <Button
+            onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
+            variant="outline"
+            className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-status-warning/20 text-status-warning hover:bg-status-warning/5 transition-all"
+          >
+            <Scan className="w-4 h-4 me-2" />
+            {t('inspect_scan_registers')}
+          </Button>
+        ) : (
           <Button
             onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
             variant="outline"

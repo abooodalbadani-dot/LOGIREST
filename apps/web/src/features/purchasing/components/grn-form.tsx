@@ -71,13 +71,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   const isNew = id === 'new';
   const lastResetId = useRef<string | null>(null);
-  const idempotencyKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = crypto.randomUUID();
-    }
-  }, []);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   const { data: suppliers } = useSuppliers();
   const { data: warehouses } = useWarehouses();
@@ -139,6 +133,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         keepDirty: false,
         keepTouched: false
       });
+      setIdempotencyKey(crypto.randomUUID());
     }
   }, [initialData, reset]);
 
@@ -235,7 +230,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         }))
       };
 
-      const headers = { 'X-Idempotency-Key': idempotencyKeyRef.current || '' };
+      const headers = { 'X-Idempotency-Key': idempotencyKey };
 
       if (isNew) {
         const result = await createMutation.mutateAsync({ payload, headers });

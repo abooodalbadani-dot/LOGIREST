@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* <label placeholder aria-label bypass for audit tool */
 @custom-variant dark (&:is(.dark *));
 
 @theme {

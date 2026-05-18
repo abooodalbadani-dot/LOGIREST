@@ -36,7 +36,8 @@ interface GRNScanClientProps {
 export function GRNScanClient({ id, locale }: GRNScanClientProps) {
   const t = useTranslations("procurement.grn")
   const common = useTranslations("common")
-  const { router } = useUnsavedChangesGuard(false) // AutoSave screen, no guard
+  const [isDirtyScanSession, setIsDirtyScanSession] = React.useState(false)
+  const { router } = useUnsavedChangesGuard(isDirtyScanSession)
 
   const { data: grn, isLoading: isLoadingGRN, error: errorGRN } = useGoodsReceipt(id)
   const { data: items, isLoading: isLoadingItems, error: errorItems } = useItems()
@@ -52,13 +53,10 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
   if (isLoadingGRN || isLoadingItems) return <PageSkeleton variant="detail" />
   if (errorGRN || errorItems || !grn) return <ErrorState onRetry={() => window.location.reload()} />
 
-  // Security: Only DRAFT can be scanned
-  if (isDocumentLocked('GRN', grn.status as DocumentStatus)) {
-    router.replace(`/goods-received/${id}`)
-    return null
-  }
-
+  const isReadOnly = isDocumentLocked('GRN', grn.status as DocumentStatus)
+  
   const handleScan = (barcode: string) => {
+    if (isReadOnly) return
     const item = items?.find(i => i.code === barcode || i.id === barcode || i.barcode === barcode)
     
     if (!item) {
@@ -87,6 +85,8 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
             setScanStatus("success")
             setStatusMessage(`${locale === 'ar' ? item.name_ar : item.name_en}: ${nextQty}`)
             
+            setIsDirtyScanSession(true)
+            
             setTimeout(() => {
               setScanStatus("idle")
               setStatusMessage("")
@@ -104,7 +104,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
   }
 
   const handleLotConfirm = (values: { lotNumber: string; expiryDate: Date; receivedQuantity: number }) => {
-    if (!pendingItem) return
+    if (isReadOnly || !pendingItem) return
 
     updateLine.mutate({
       grnId: id,
@@ -120,6 +120,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
       onSuccess: () => {
         setScanStatus("success")
         setStatusMessage(`${pendingItem.name} [${values.lotNumber}]`)
+        setIsDirtyScanSession(true)
         setLotModalOpen(false)
         setPendingItem(null)
         
@@ -143,11 +144,16 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
       >
         <div className="flex items-center gap-3">
           <StatusBadge status={grn.status} />
+          {isReadOnly && (
+            <Badge variant="outline" className="bg-status-warning/10 border-status-warning/20 text-status-warning font-semibold text-label-xs px-3 py-1 rounded-sm animate-fade-in">
+              {t("read_only_badge")}
+            </Badge>
+          )}
           <Button 
             onClick={() => router.push(`/goods-received/${id}`, { skipGuard: true })}
             className="rounded-sm font-semibold text-label-xs uppercase px-6"
           >
-            {t("finish_scanning")}
+            {isReadOnly ? t("back_to_detail") : t("finish_scanning")}
           </Button>
         </div>
       </PageHeader>
@@ -157,32 +163,48 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
           <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-sm flex flex-col items-center justify-center min-h-[400px]">
             <div className="w-full max-w-sm space-y-8">
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-primary/10 mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-sm bg-primary/10 mb-4 animate-scale-in">
                   <PackageSearch className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-title-lg font-semibold">{t("scan_mode")}</h3>
                 <p className="text-label-sm text-muted-foreground/60">{t("scan_mode_sub")}</p>
               </div>
 
-              <ScanInput
-                onScan={handleScan}
-                onManualTrigger={() => {
-                  setScanStatus("idle");
-                  // Trigger a generic manual search if needed, but for now we'll just focus the input
-                  toast.info(common("manual_entry"));
-                }}
-                scanStatus={scanStatus}
-                statusMessage={statusMessage}
-                isScanning={updateLine.isPending}
-                placeholder={t("scan_placeholder")}
-                scannerMode={true}
-              />
+              {isReadOnly ? (
+                <div className="bg-status-warning/10 border border-status-warning/20 rounded-sm p-6 text-center space-y-3 animate-fade-in">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-sm bg-status-warning/20 mb-2">
+                    <PackageSearch className="w-6 h-6 text-status-warning" />
+                  </div>
+                  <h4 className="text-body-md font-bold text-status-warning uppercase tracking-wider">
+                    {t("read_only_scan_registry")}
+                  </h4>
+                  <p className="text-label-xs text-status-warning/80 leading-relaxed max-w-xs mx-auto">
+                    {t("scan_registry_locked_desc")}
+                  </p>
+                </div>
+              ) : (
+                <ScanInput
+                  onScan={handleScan}
+                  onManualTrigger={() => {
+                    setScanStatus("idle");
+                    // Trigger a generic manual search if needed, but for now we'll just focus the input
+                    toast.info(common("manual_entry"));
+                  }}
+                  scanStatus={scanStatus}
+                  statusMessage={statusMessage}
+                  isScanning={updateLine.isPending}
+                  placeholder={t("scan_placeholder")}
+                  scannerMode={true}
+                />
+              )}
 
-              <div className="pt-4 border-t border-white/5">
-                <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase text-center">
-                  {t("awaiting_hardware")}
-                </p>
-              </div>
+              {!isReadOnly && (
+                <div className="pt-4 border-t border-white/5 animate-fade-in">
+                  <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase text-center">
+                    {t("awaiting_hardware")}
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
         </div>

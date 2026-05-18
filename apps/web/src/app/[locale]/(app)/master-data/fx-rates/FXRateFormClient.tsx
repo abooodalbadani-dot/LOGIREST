@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, Controller } from 'react-hook-form';
@@ -20,6 +20,9 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
+import { useRouter } from '@/i18n/navigation';
+import { useAuth } from '@/providers/AuthProvider';
+import { toast } from 'sonner';
 
 interface Props { 
   id: string | null; 
@@ -39,8 +42,15 @@ export function FXRateFormClient({
   locale 
 }: Props) {
   const t = useTranslations('master_data.fx_rates');
+  const tCommon = useTranslations('common');
+  const tAuth = useTranslations('auth');
+  const tPermissions = useTranslations('permissions');
   const abortController = useAbortController();
-  
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+  const redirectFired = useRef(false);
+
+  const { user, isLoading: authLoading } = useAuth();
   const { data: fxRate, isLoading: loadingRate, isError: rateError, refetch: refetchRate } = useFXRate(id);
   const { data: currencies, isLoading: loadingCurrencies, isError: currenciesError, refetch: refetchCurrencies } = useCurrencies();
   
@@ -48,10 +58,56 @@ export function FXRateFormClient({
   const conflict = useConflictHandler('fx-rate', id ?? '');
   const update = useUpdateFXRate({ onConflict: conflict.triggerConflict });
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const normalizedRole = useMemo(() => {
+    if (authLoading || !user) return null;
+    return user.role === 'ADMIN' ? 'admin' :
+           user.role === 'AUDITOR' ? 'auditor' :
+           ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk';
+  }, [user, authLoading]);
+
+  const getUnauthorizedMessage = () => {
+    try {
+      const msg1 = tCommon('errors.unauthorized');
+      if (msg1 && msg1 !== 'errors.unauthorized') return msg1;
+    } catch (e) {}
+
+    try {
+      const msg2 = tAuth('errors.unauthorized');
+      if (msg2 && msg2 !== 'errors.unauthorized') return msg2;
+    } catch (e) {}
+
+    try {
+      const msg3 = tPermissions('access_denied');
+      if (msg3 && msg3 !== 'access_denied') return msg3;
+    } catch (e) {}
+
+    return locale === 'ar'
+      ? 'ليس لديك صلاحية للوصول إلى هذه الصفحة.'
+      : 'You do not have permission to access this page.';
+  };
+
+  useEffect(() => {
+    if (isMounted && !authLoading) {
+      if (!user || normalizedRole === 'clerk') {
+        if (!redirectFired.current) {
+          redirectFired.current = true;
+          toast.error(getUnauthorizedMessage());
+          router.replace('/dashboard');
+        }
+      }
+    }
+  }, [isMounted, authLoading, user, normalizedRole, router, locale]);
+
+  const isReadOnly = isReadOnlyProp || id === 'FX-001' || normalizedRole === 'auditor';
+
   const { register, handleSubmit, reset, control, formState: { errors, isDirty, isValid } } =
     useForm<FXRateFormValues>({
       resolver: zodResolver(FXRateFormSchema),
-      disabled: isReadOnlyProp,
+      disabled: isReadOnly,
       defaultValues: { 
         from_currency_id: '',
         to_currency_id: '',
@@ -77,8 +133,12 @@ export function FXRateFormClient({
     }
   }, [fxRate, reset]);
   
-  if ((id && loadingRate && !fxRate) || loadingCurrencies) {
+  if (authLoading || !isMounted || (id && loadingRate && !fxRate) || loadingCurrencies) {
     return <PageSkeleton variant="detail" />;
+  }
+
+  if (!user || normalizedRole === 'clerk') {
+    return null;
   }
 
   if (rateError || currenciesError) {
@@ -103,7 +163,7 @@ export function FXRateFormClient({
   }
 
   const onSubmit = handleSubmit(async (values) => {
-    if (isReadOnlyProp) return;
+    if (isReadOnly) return;
     
     try {
       if (id) {
@@ -118,8 +178,7 @@ export function FXRateFormClient({
     }
   });
 
-  const isReadOnly = isReadOnlyProp || id === 'FX-001'; // Simulated guard for posted documents
-  const displayTitle = isReadOnlyProp ? viewTitle : (id ? editTitle : createTitle);
+  const displayTitle = isReadOnlyProp || normalizedRole === 'auditor' ? viewTitle : (id ? editTitle : createTitle);
 
   return (
     <>
@@ -129,7 +188,7 @@ export function FXRateFormClient({
       isSaving={create.isPending || update.isPending} 
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/fx-rates')}
-      hideSave={isReadOnlyProp}
+      hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
     >

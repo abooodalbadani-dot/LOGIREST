@@ -1,0 +1,973 @@
+{
+  "summary": {
+    "identical": 194,
+    "modified": 53,
+    "added_active": 6,
+    "deleted_active": 0
+  },
+  "details": [
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\adjustments\\AdjustmentListClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 263,
+      "lines_b": 263,
+      "a_features": [
+        "animations",
+        "audit_logging",
+        "rbac_check"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism",
+        "audit_logging",
+        "rbac_check"
+      ],
+      "verdict": "ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\adjustments\\[id]\\AdjustmentForm.tsx",
+      "status": "MODIFIED",
+      "lines_a": 716,
+      "lines_b": 750,
+      "a_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "audit_logging",
+        "scan_mode"
+      ],
+      "b_features": [
+        "idempotency",
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "audit_logging",
+        "scan_mode",
+        "audio_alerts"
+      ],
+      "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\adjustments\\new\\AdjustmentCreateClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 328,
+      "lines_b": 402,
+      "a_features": [
+        "lockState",
+        "camelCase_properties",
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations"
+      ],
+      "verdict": "BACKUP HAS VISUAL IMPROVEMENTS (Premium design lost in active)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\issues\\IssueListClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 287,
+      "lines_b": 288,
+      "a_features": [
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\issues\\[id]\\scan-mode\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 274,
+      "lines_b": 274,
+      "a_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "scan_mode"
+      ],
+      "b_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "scan_mode"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\issues\\new\\issue-form.tsx",
+      "status": "MODIFIED",
+      "lines_a": 393,
+      "lines_b": 393,
+      "a_features": [
+        "lockState",
+        "animations"
+      ],
+      "b_features": [
+        "lockState",
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\kitchen-requests\\[id]\\KitchenRequestForm.tsx",
+      "status": "MODIFIED",
+      "lines_a": 422,
+      "lines_b": 473,
+      "a_features": [
+        "lockState",
+        "animations"
+      ],
+      "b_features": [
+        "idempotency",
+        "lockState",
+        "animations",
+        "glassmorphism",
+        "audio_alerts"
+      ],
+      "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\kitchen-requests\\new\\KitchenRequestFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 290,
+      "lines_b": 290,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\StocktakeForm.tsx",
+      "status": "MODIFIED",
+      "lines_a": 222,
+      "lines_b": 222,
+      "a_features": [
+        "lockState",
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "audit_logging"
+      ],
+      "b_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "audit_logging"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\StocktakeViewer.tsx",
+      "status": "MODIFIED",
+      "lines_a": 204,
+      "lines_b": 204,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "audit_logging"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "audit_logging"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\approve\\StocktakeApproveClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 315,
+      "lines_b": 315,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\count\\StocktakeCountClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 323,
+      "lines_b": 379,
+      "a_features": [
+        "virtualization_bug",
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "rbac_check"
+      ],
+      "b_features": [
+        "idempotency",
+        "lockState",
+        "virtualization_fix",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "audio_alerts",
+        "rbac_check"
+      ],
+      "verdict": "ACTIVE CODE IS LARGER (Active contains more complete/fixed logic)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\post\\StocktakePostClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 169,
+      "lines_b": 169,
+      "a_features": [
+        "camelCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\start\\StocktakeStartClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 242,
+      "lines_b": 242,
+      "a_features": [
+        "lockState",
+        "camelCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "b_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\variance\\StocktakeVarianceClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 281,
+      "lines_b": 281,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\archive\\StocktakeArchiveClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 191,
+      "lines_b": 192,
+      "a_features": [
+        "animations",
+        "audit_logging"
+      ],
+      "b_features": [
+        "animations",
+        "audit_logging"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\new\\stocktake-form.tsx",
+      "status": "MODIFIED",
+      "lines_a": 275,
+      "lines_b": 277,
+      "a_features": [
+        "lockState",
+        "camelCase_properties",
+        "animations",
+        "audit_logging",
+        "rbac_check"
+      ],
+      "b_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "audit_logging",
+        "rbac_check"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\TransferListClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 241,
+      "lines_b": 241,
+      "a_features": [
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\[id]\\dispute\\TransferDisputeClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 157,
+      "lines_b": 157,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "audit_logging"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "audit_logging"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\[id]\\receive\\TransferReceiveClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 348,
+      "lines_b": 411,
+      "a_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "rbac_check"
+      ],
+      "b_features": [
+        "idempotency",
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "audio_alerts",
+        "rbac_check"
+      ],
+      "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\[id]\\ship\\TransferShipClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 270,
+      "lines_b": 334,
+      "a_features": [
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "rbac_check"
+      ],
+      "b_features": [
+        "idempotency",
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "audio_alerts",
+        "rbac_check"
+      ],
+      "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\hub\\TransferHubClient.tsx",
+      "status": "ADDED_IN_B",
+      "lines_a": 0,
+      "lines_b": 241,
+      "a_features": [],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "NEW WORK (Added in active branch, not in backup)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\hub\\page.tsx",
+      "status": "ADDED_IN_B",
+      "lines_a": 0,
+      "lines_b": 5,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "NEW WORK (Added in active branch, not in backup)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\transfers\\new\\TransferNewClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 295,
+      "lines_b": 328,
+      "a_features": [
+        "lockState",
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode"
+      ],
+      "b_features": [
+        "idempotency",
+        "lockState",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode",
+        "audio_alerts"
+      ],
+      "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\yield-management\\YieldManagementClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 268,
+      "lines_b": 268,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\yield-management\\new\\YieldNewBatchClient.tsx",
+      "status": "ADDED_IN_B",
+      "lines_a": 0,
+      "lines_b": 140,
+      "a_features": [],
+      "b_features": [
+        "animations"
+      ],
+      "verdict": "NEW WORK (Added in active branch, not in backup)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(operations)\\yield-management\\new\\page.tsx",
+      "status": "ADDED_IN_B",
+      "lines_a": 0,
+      "lines_b": 14,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "NEW WORK (Added in active branch, not in backup)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(procurement)\\goods-received\\[id]\\scan-mode\\GRNScanClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 268,
+      "lines_b": 268,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "scan_mode"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(procurement)\\goods-received\\[id]\\scan-mode\\LotEntryModal.tsx",
+      "status": "MODIFIED",
+      "lines_a": 222,
+      "lines_b": 222,
+      "a_features": [
+        "animations"
+      ],
+      "b_features": [
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(procurement)\\goods-received\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 30,
+      "lines_b": 30,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(procurement)\\landed-cost\\LandedCostClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 261,
+      "lines_b": 261,
+      "a_features": [
+        "camelCase_properties",
+        "animations"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\(procurement)\\purchase-orders\\[id]\\POForm.tsx",
+      "status": "MODIFIED",
+      "lines_a": 475,
+      "lines_b": 477,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\admin\\mail-settings\\MailSettingsClient.tsx",
+      "status": "ADDED_IN_B",
+      "lines_a": 0,
+      "lines_b": 394,
+      "a_features": [],
+      "b_features": [
+        "animations"
+      ],
+      "verdict": "NEW WORK (Added in active branch, not in backup)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\admin\\mail-settings\\page.tsx",
+      "status": "ADDED_IN_B",
+      "lines_a": 0,
+      "lines_b": 5,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "NEW WORK (Added in active branch, not in backup)"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\admin\\restaurant-profile\\ProfileFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 302,
+      "lines_b": 302,
+      "a_features": [
+        "animations"
+      ],
+      "b_features": [
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\admin\\roles\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 40,
+      "lines_b": 40,
+      "a_features": [
+        "animations"
+      ],
+      "b_features": [
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\communications\\email-outbox\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 31,
+      "lines_b": 31,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\communications\\notifications\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 34,
+      "lines_b": 34,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\communications\\notifications\\settings\\NotificationSettingsClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 117,
+      "lines_b": 141,
+      "a_features": [
+        "animations"
+      ],
+      "b_features": [
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\communications\\notifications\\templates\\[id]\\TemplateEditorClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 225,
+      "lines_b": 227,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\inventory\\expired-override\\ExpiredOverrideClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 160,
+      "lines_b": 160,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\inventory\\lots\\LotBalanceClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 251,
+      "lines_b": 251,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\inventory\\transfers\\hub\\TransferHubClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 215,
+      "lines_b": 215,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\barcodes\\BarcodeFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 306,
+      "lines_b": 306,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "scan_mode"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "scan_mode"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\barcodes\\mapping\\BarcodeMappingClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 377,
+      "lines_b": 377,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\branches\\BranchListClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 209,
+      "lines_b": 209,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\categories\\CategoryFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 233,
+      "lines_b": 233,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\currencies\\CurrencyFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 321,
+      "lines_b": 321,
+      "a_features": [
+        "snakeCase_properties",
+        "animations"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\currencies\\[id]\\fx-rates\\FXRatesClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 219,
+      "lines_b": 219,
+      "a_features": [
+        "snakeCase_properties",
+        "animations"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\items\\ItemFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 516,
+      "lines_b": 516,
+      "a_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "scan_mode",
+        "rbac_check"
+      ],
+      "b_features": [
+        "camelCase_properties",
+        "snakeCase_properties",
+        "animations",
+        "scan_mode",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\suppliers\\SupplierFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 329,
+      "lines_b": 329,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\warehouses\\WarehouseFormClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 363,
+      "lines_b": 363,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(app)\\master-data\\warehouses\\WarehouseListClient.tsx",
+      "status": "MODIFIED",
+      "lines_a": 208,
+      "lines_b": 208,
+      "a_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "b_features": [
+        "snakeCase_properties",
+        "animations",
+        "rbac_check"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(auth)\\forgot-password\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 192,
+      "lines_b": 224,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(auth)\\login\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 225,
+      "lines_b": 322,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\(auth)\\reset-password\\page.tsx",
+      "status": "MODIFIED",
+      "lines_a": 247,
+      "lines_b": 266,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\layout.tsx",
+      "status": "MODIFIED",
+      "lines_a": 95,
+      "lines_b": 95,
+      "a_features": [],
+      "b_features": [],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "[locale]\\not-found.tsx",
+      "status": "MODIFIED",
+      "lines_a": 59,
+      "lines_b": 59,
+      "a_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "b_features": [
+        "animations",
+        "glassmorphism"
+      ],
+      "verdict": "MINOR TEXT/STYLE DIFFS"
+    },
+    {
+      "rel_path": "globals.css",
+      "status": "MODIFIED",
+      "lines_a": 411,
+      "lines_b": 421,
+      "a_features": [
+        "animations"
+      ],
+      "b_features": [
+        "animations",
+        "audit_logging"
+      ],
+      "verdict": "ACTIVE CODE HAS EXCLUSIVE FEATURES: ['audit_logging']"
+    }
+  ]
+}

@@ -9,10 +9,10 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 const QUERY_KEY = ['categories'];
 
 const INITIAL_CATEGORIES: Category[] = [
- { id: 'CAT-001', name_en: 'Food & Beverage', name_ar: 'الأغذية والمشروبات' },
- { id: 'CAT-002', name_en: 'Kitchen Equipment', name_ar: 'معدات المطبخ' },
- { id: 'CAT-003', name_en: 'Cleaning Supplies', name_ar: 'مواد التنظيف' },
- { id: 'CAT-004', name_en: 'Packaging Materials', name_ar: 'مواد التغليف' },
+ { id: 'CAT-001', code: 'CAT-001', name_en: 'Food & Beverage', name_ar: 'الأغذية والمشروبات', is_referenced: true },
+ { id: 'CAT-002', code: 'CAT-002', name_en: 'Kitchen Equipment', name_ar: 'معدات المطبخ', is_referenced: true },
+ { id: 'CAT-003', code: 'CAT-003', name_en: 'Cleaning Supplies', name_ar: 'مواد التنظيف', is_referenced: false },
+ { id: 'CAT-004', code: 'CAT-004', name_en: 'Packaging Materials', name_ar: 'مواد التغليف', is_referenced: false },
 ];
 
 export function useCategories(filters?: { search?: string }) {
@@ -93,9 +93,24 @@ export function useCreateCategory() {
       const workPromise = (async () => {
         await new Promise(resolve => setTimeout(resolve, 600));
         
+        const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
+        const numbers = data
+          .map(c => {
+            const match = c.code?.match(/CAT-(\d+)/i);
+            return match ? parseInt(match[1], 10) : 0;
+          })
+          .filter(n => !isNaN(n));
+        const maxNum = numbers.length > 0 ? Math.max(...numbers) : 0;
+        const nextIndex = maxNum + 1;
+        const generatedCode = `CAT-${String(nextIndex).padStart(3, '0')}`;
+
         const newCategory: Category = {
-          id: `CAT- ${Math.floor(Math.random() * 1000)}`,
-          ...values
+          id: generatedCode,
+          code: generatedCode,
+          name_ar: values.name_ar,
+          name_en: values.name_en,
+          is_referenced: false,
+          version: values.version
         };
 
         queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => [...old, newCategory]);
@@ -177,10 +192,12 @@ export function useDeleteCategory() {
       const workPromise = (async () => {
         await new Promise(resolve => setTimeout(resolve, 600));
         
+        const data = queryClient.getQueryData<Category[]>(QUERY_KEY) || INITIAL_CATEGORIES;
+        const category = data.find(c => c.id === id);
+        
         // OPERATIONAL GUARD: Prevent deletion if linked to items
-        // MOCK: CAT-001 has linked items
-        if (id === 'CAT-001') {
-          throw new Error('GUARD_LINKED_ITEMS');
+        if (category?.is_referenced) {
+          throw new Error('delete_linked_items');
         }
 
         queryClient.setQueryData<Category[]>(QUERY_KEY, (old = INITIAL_CATEGORIES) => 

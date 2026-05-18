@@ -1,0 +1,63 @@
+## MODIFIED FILES AND VERDICTS
+
+| File Path | Status | Verdict | Backup Features | Active Features |
+|---|---|---|---|---|
+| `[locale]\(app)\(operations)\adjustments\AdjustmentListClient.tsx` | MODIFIED | ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations) | animations, audit_logging, rbac_check | animations, glassmorphism, audit_logging, rbac_check |
+| `[locale]\(app)\(operations)\adjustments\[id]\AdjustmentForm.tsx` | MODIFIED | ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency) | lockState, snakeCase_properties, animations, glassmorphism, audit_logging, scan_mode | idempotency, lockState, snakeCase_properties, animations, glassmorphism, audit_logging, scan_mode, audio_alerts |
+| `[locale]\(app)\(operations)\adjustments\new\AdjustmentCreateClient.tsx` | MODIFIED | BACKUP HAS VISUAL IMPROVEMENTS (Premium design lost in active) | lockState, camelCase_properties, animations, glassmorphism | lockState, snakeCase_properties, animations |
+| `[locale]\(app)\(operations)\issues\IssueListClient.tsx` | MODIFIED | ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations) | animations, rbac_check | animations, glassmorphism, rbac_check |
+| `[locale]\(app)\(operations)\issues\[id]\scan-mode\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | lockState, snakeCase_properties, animations, scan_mode | lockState, snakeCase_properties, animations, scan_mode |
+| `[locale]\(app)\(operations)\issues\new\issue-form.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | lockState, animations | lockState, animations |
+| `[locale]\(app)\(operations)\kitchen-requests\[id]\KitchenRequestForm.tsx` | MODIFIED | ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency) | lockState, animations | idempotency, lockState, animations, glassmorphism, audio_alerts |
+| `[locale]\(app)\(operations)\kitchen-requests\new\KitchenRequestFormClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations | snakeCase_properties, animations |
+| `[locale]\(app)\(operations)\stocktake\[id]\StocktakeForm.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | lockState, camelCase_properties, snakeCase_properties, animations, glassmorphism, audit_logging | lockState, snakeCase_properties, animations, glassmorphism, audit_logging |
+| `[locale]\(app)\(operations)\stocktake\[id]\StocktakeViewer.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations, glassmorphism, audit_logging | snakeCase_properties, animations, glassmorphism, audit_logging |
+| `[locale]\(app)\(operations)\stocktake\[id]\approve\StocktakeApproveClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations, glassmorphism, rbac_check | snakeCase_properties, animations, glassmorphism, rbac_check |
+| `[locale]\(app)\(operations)\stocktake\[id]\count\StocktakeCountClient.tsx` | MODIFIED | ACTIVE CODE IS LARGER (Active contains more complete/fixed logic) | virtualization_bug, camelCase_properties, snakeCase_properties, animations, glassmorphism, scan_mode, rbac_check | idempotency, lockState, virtualization_fix, snakeCase_properties, animations, glassmorphism, scan_mode, audio_alerts, rbac_check |
+| `[locale]\(app)\(operations)\stocktake\[id]\post\StocktakePostClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, animations, glassmorphism, rbac_check | snakeCase_properties, animations, glassmorphism, rbac_check |
+| `[locale]\(app)\(operations)\stocktake\[id]\start\StocktakeStartClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | lockState, camelCase_properties, animations, glassmorphism, rbac_check | lockState, snakeCase_properties, animations, glassmorphism, rbac_check |
+| `[locale]\(app)\(operations)\stocktake\[id]\variance\StocktakeVarianceClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations, glassmorphism, rbac_check | snakeCase_properties, animations, glassmorphism, rbac_check |
+| `[locale]\(app)\(operations)\stocktake\archive\StocktakeArchiveClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, audit_logging | animations, audit_logging |
+| `[locale]\(app)\(operations)\stocktake\new\stocktake-form.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | lockState, camelCase_properties, animations, audit_logging, rbac_check | lockState, snakeCase_properties, animations, audit_logging, rbac_check |
+| `[locale]\(app)\(operations)\transfers\TransferListClient.tsx` | MODIFIED | ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations) | animations, rbac_check | animations, glassmorphism, rbac_check |
+| `[locale]\(app)\(operations)\transfers\[id]\dispute\TransferDisputeClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, audit_logging | snakeCase_properties, animations, audit_logging |
+| `[locale]\(app)\(operations)\transfers\[id]\receive\TransferReceiveClient.tsx` | MODIFIED | ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency) | lockState, snakeCase_properties, animations, glassmorphism, scan_mode, rbac_check | idempotency, lockState, snakeCase_properties, animations, glassmorphism, scan_mode, audio_alerts, rbac_check |
+| `[locale]\(app)\(operations)\transfers\[id]\ship\TransferShipClient.tsx` | MODIFIED | ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency) | lockState, snakeCase_properties, animations, glassmorphism, scan_mode, rbac_check | idempotency, lockState, snakeCase_properties, animations, glassmorphism, scan_mode, audio_alerts, rbac_check |
+| `[locale]\(app)\(operations)\transfers\hub\TransferHubClient.tsx` | ADDED_IN_B | NEW WORK (Added in active branch, not in backup) |  | animations, glassmorphism |
+| `[locale]\(app)\(operations)\transfers\hub\page.tsx` | ADDED_IN_B | NEW WORK (Added in active branch, not in backup) |  |  |
+| `[locale]\(app)\(operations)\transfers\new\TransferNewClient.tsx` | MODIFIED | ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency) | lockState, camelCase_properties, snakeCase_properties, animations, glassmorphism, scan_mode | idempotency, lockState, snakeCase_properties, animations, glassmorphism, scan_mode, audio_alerts |
+| `[locale]\(app)\(operations)\yield-management\YieldManagementClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\(app)\(operations)\yield-management\new\YieldNewBatchClient.tsx` | ADDED_IN_B | NEW WORK (Added in active branch, not in backup) |  | animations |
+| `[locale]\(app)\(operations)\yield-management\new\page.tsx` | ADDED_IN_B | NEW WORK (Added in active branch, not in backup) |  |  |
+| `[locale]\(app)\(procurement)\goods-received\[id]\scan-mode\GRNScanClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations, glassmorphism, scan_mode | snakeCase_properties, animations, glassmorphism, scan_mode |
+| `[locale]\(app)\(procurement)\goods-received\[id]\scan-mode\LotEntryModal.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations | animations |
+| `[locale]\(app)\(procurement)\goods-received\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS |  |  |
+| `[locale]\(app)\(procurement)\landed-cost\LandedCostClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, animations | snakeCase_properties, animations |
+| `[locale]\(app)\(procurement)\purchase-orders\[id]\POForm.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations, glassmorphism | snakeCase_properties, animations, glassmorphism |
+| `[locale]\(app)\admin\mail-settings\MailSettingsClient.tsx` | ADDED_IN_B | NEW WORK (Added in active branch, not in backup) |  | animations |
+| `[locale]\(app)\admin\mail-settings\page.tsx` | ADDED_IN_B | NEW WORK (Added in active branch, not in backup) |  |  |
+| `[locale]\(app)\admin\restaurant-profile\ProfileFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations | animations |
+| `[locale]\(app)\admin\roles\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations | animations |
+| `[locale]\(app)\communications\email-outbox\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS |  |  |
+| `[locale]\(app)\communications\notifications\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS |  |  |
+| `[locale]\(app)\communications\notifications\settings\NotificationSettingsClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations | animations |
+| `[locale]\(app)\communications\notifications\templates\[id]\TemplateEditorClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, glassmorphism, rbac_check | snakeCase_properties, animations, glassmorphism, rbac_check |
+| `[locale]\(app)\inventory\expired-override\ExpiredOverrideClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\(app)\inventory\lots\LotBalanceClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\(app)\inventory\transfers\hub\TransferHubClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\(app)\master-data\barcodes\BarcodeFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, scan_mode | snakeCase_properties, animations, scan_mode |
+| `[locale]\(app)\master-data\barcodes\mapping\BarcodeMappingClient.tsx` | MODIFIED | BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties'] | camelCase_properties, snakeCase_properties, animations, glassmorphism | snakeCase_properties, animations, glassmorphism |
+| `[locale]\(app)\master-data\branches\BranchListClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, rbac_check | snakeCase_properties, animations, rbac_check |
+| `[locale]\(app)\master-data\categories\CategoryFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, rbac_check | snakeCase_properties, animations, rbac_check |
+| `[locale]\(app)\master-data\currencies\CurrencyFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations | snakeCase_properties, animations |
+| `[locale]\(app)\master-data\currencies\[id]\fx-rates\FXRatesClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations | snakeCase_properties, animations |
+| `[locale]\(app)\master-data\items\ItemFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | camelCase_properties, snakeCase_properties, animations, scan_mode, rbac_check | camelCase_properties, snakeCase_properties, animations, scan_mode, rbac_check |
+| `[locale]\(app)\master-data\suppliers\SupplierFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, rbac_check | snakeCase_properties, animations, rbac_check |
+| `[locale]\(app)\master-data\warehouses\WarehouseFormClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, rbac_check | snakeCase_properties, animations, rbac_check |
+| `[locale]\(app)\master-data\warehouses\WarehouseListClient.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | snakeCase_properties, animations, rbac_check | snakeCase_properties, animations, rbac_check |
+| `[locale]\(auth)\forgot-password\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\(auth)\login\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\(auth)\reset-password\page.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `[locale]\layout.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS |  |  |
+| `[locale]\not-found.tsx` | MODIFIED | MINOR TEXT/STYLE DIFFS | animations, glassmorphism | animations, glassmorphism |
+| `globals.css` | MODIFIED | ACTIVE CODE HAS EXCLUSIVE FEATURES: ['audit_logging'] | animations | animations, audit_logging |

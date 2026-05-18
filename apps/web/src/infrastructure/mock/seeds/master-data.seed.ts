@@ -26,8 +26,8 @@ export const initialSuppliers: Supplier[] = [
 ];
 
 export const initialCategories: Category[] = [
-  { id: 'cat-1', name_ar: 'لحوم', name_en: 'Meat' },
-  { id: 'cat-2', name_ar: 'خضار', name_en: 'Vegetables' }
+  { id: 'CAT-001', code: 'CAT-001', name_ar: 'الأغذية والمشروبات', name_en: 'Food & Beverage', is_referenced: true },
+  { id: 'CAT-002', code: 'CAT-002', name_ar: 'معدات المطبخ', name_en: 'Kitchen Equipment', is_referenced: true }
 ];
 
 export const initialUoMs: UoM[] = [
@@ -37,12 +37,12 @@ export const initialUoMs: UoM[] = [
 
 export const initialItems: Item[] = [
   { 
-    id: 'item-1', code: 'ITM-001', barcode: '000001', name_ar: 'لحم بقر', name_en: 'Beef', category_id: 'cat-1', 
+    id: 'item-1', code: 'ITM-001', barcode: '000001', name_ar: 'لحم بقر', name_en: 'Beef', category_id: 'CAT-001', 
     primary_uom: { id: 'uom-kg', code: 'KG', name_ar: 'كيلوجرام', name_en: 'Kilogram', is_active: true, created_at: '2026-01-01T00:00:00Z' }, 
     uom_conversions: [], track_lots: true, min_stock_level: 50, reorder_point: 100, is_active: true 
   },
   { 
-    id: 'item-2', code: 'ITM-002', barcode: '000002', name_ar: 'دجاج', name_en: 'Chicken', category_id: 'cat-1', 
+    id: 'item-2', code: 'ITM-002', barcode: '000002', name_ar: 'دجاج', name_en: 'Chicken', category_id: 'CAT-001', 
     primary_uom: { id: 'uom-ctn', code: 'CTN', name_ar: 'كرتون', name_en: 'Carton', is_active: true, created_at: '2026-01-01T00:00:00Z' }, 
     uom_conversions: [], track_lots: true, min_stock_level: 20, reorder_point: 50, is_active: true 
   }

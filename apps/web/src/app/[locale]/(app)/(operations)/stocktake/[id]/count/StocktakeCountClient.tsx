@@ -16,28 +16,27 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { PermissionGate } from "@/components/shared/PermissionGate";
-import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
-import { type DocumentStatus } from "@/core/workflow/document-engine";
 import { isStocktakeCounting } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { useAbortController } from "@/hooks/useAbortController";
+import { useWarehouseLock } from "@/hooks/useWarehouseLock";
+import { LockBanner } from "@/components/shared/LockBanner";
+import { audioAlerts } from "@/utils/audio";
 
 export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
   const baseRouter = useRouter();
-  const { user } = useAuth();
   const { router: guardedRouter } = useUnsavedChangesGuard(false);
   const abortController = useAbortController();
   const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
@@ -45,6 +44,11 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const updateCount = useUpdateItemCount();
   const completeCounting = useCompleteCounting();
+
+  const [idempotencyKey] = React.useState(() => crypto.randomUUID());
+
+  // Warehouse Lock State
+  const { data: lockState } = useWarehouseLock(session?.warehouseId || null);
 
   const [scanStatus, setScanStatus] = React.useState<"idle" | "success" | "error">("idle")
   const [statusMessage, setStatusMessage] = React.useState("")
@@ -104,7 +108,21 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
   const debouncedUpdate = useDebouncedCallback(
     (itemId: string, lineId: string, countedQty: number) => {
-      updateCount.mutate({ stocktakeId: id, itemId, lineId, countedQty, signal: abortController.signal })
+      if (lockState?.isLocked) {
+        audioAlerts.playScanBlocked();
+        toast.error(t('warehouse_locked_warning') || 'Warehouse is locked');
+        return;
+      }
+      updateCount.mutate({ 
+        stocktakeId: id, 
+        itemId, 
+        lineId, 
+        countedQty, 
+        signal: abortController.signal,
+        headers: {
+          'X-Idempotency-Key': idempotencyKey
+        }
+      })
     },
     800
   )
@@ -133,6 +151,11 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   }
 
   const handleScan = async (barcode: string) => {
+    if (lockState?.isLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_warning') || 'Warehouse is locked');
+      return;
+    }
     const index = items.findIndex((i) => i.barcode === barcode)
     if (index !== -1) {
       const item = items[index] as StocktakeItemVM
@@ -140,7 +163,16 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       const newQty = currentQty + 1
       
       setLocalCounts(prev => ({ ...prev, [item.id]: newQty }))
-      updateCount.mutate({ stocktakeId: id, itemId: item.itemId, lineId: item.id, countedQty: newQty, signal: abortController.signal })
+      updateCount.mutate({ 
+        stocktakeId: id, 
+        itemId: item.itemId, 
+        lineId: item.id, 
+        countedQty: newQty, 
+        signal: abortController.signal,
+        headers: {
+          'X-Idempotency-Key': idempotencyKey
+        }
+      })
       
       setScanStatus("success")
       setStatusMessage(`${item.itemName}: ${newQty}`)
@@ -163,7 +195,18 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   }
 
   const handleFinish = () => {
-    completeCounting.mutate({ id, signal: abortController.signal }, {
+    if (lockState?.isLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_warning') || 'Warehouse is locked');
+      return;
+    }
+    completeCounting.mutate({ 
+      id, 
+      signal: abortController.signal,
+      headers: {
+        'X-Idempotency-Key': idempotencyKey
+      }
+    }, {
       onSuccess: () => {
         toast.success(t('posted_success'))
         guardedRouter.push(`/stocktake/${id}/variance`, { skipGuard: true })
@@ -211,7 +254,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               onConfirm={handleFinish}
               trigger={
                 <Button 
-                  disabled={!hasCountedItems || completeCounting.isPending}
+                  disabled={!hasCountedItems || completeCounting.isPending || !!lockState?.isLocked}
                   className="primary-gradient shadow-lg shadow-primary/20"
                 >
                   {completeCounting.isPending && (
@@ -224,6 +267,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
           </div>
         </PageHeader>
 
+        <LockBanner lockState={lockState} />
+
         <div className="max-w-2xl mx-auto w-full">
           <ScanInput
             onScan={handleScan}
@@ -232,6 +277,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             placeholder={t('scan_barcode_to_count')}
             label={t('scan_session')}
             scannerMode={true}
+            readOnly={!!lockState?.isLocked}
           />
         </div>
 
@@ -264,6 +310,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                       key={item.id}
                       className={cn(
                         "transition-colors border-none group",
+                        virtualRow.index % 2 === 0 ? "bg-white/[0.01]" : "bg-white/[0.03]",
                         isFocused && "bg-primary/5 ring-1 ring-primary/20"
                       )}
                       style={{
@@ -291,6 +338,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                             type="number"
                             value={localCounts[item.id] ?? ''} 
                             onFocus={() => setFocusedRowIndex(virtualRow.index)}
+                            readOnly={!!lockState?.isLocked}
+                            disabled={completeCounting.isPending}
                             onChange={(e) => {
                               const val = parseFloat(e.target.value) || 0
                               setLocalCounts(prev => ({ ...prev, [item.id]: val }))
@@ -298,7 +347,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                             }}
                             className={cn(
                               "text-center font-mono font-semibold h-10 bg-surface-container-medium border-none focus-visible:ring-1 transition-all rounded-lg",
-                              isFocused ? "focus-visible:ring-primary" : "focus-visible:ring-primary/30"
+                              isFocused ? "focus-visible:ring-primary" : "focus-visible:ring-primary/30",
+                              !!lockState?.isLocked && "cursor-default opacity-80 select-all focus:ring-0 focus-visible:ring-0 grayscale-[0.2]"
                             )}
                             dir="ltr"
                           />

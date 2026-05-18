@@ -2,7 +2,8 @@
 import { Link, usePathname } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { usePermission } from '@/hooks/usePermission';
-import type { ResourceType } from '@/types/rbac';
+import { useAuth } from '@/providers/AuthProvider';
+import { PERMISSION_MATRIX, type ResourceType } from '@/types/rbac';
 import { 
   LayoutDashboard, 
   Truck, 
@@ -51,10 +52,31 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+function checkItemVisibility(item: NavItem, user: any, isLoading: boolean): boolean {
+  if (isLoading || !user) {
+    return false;
+  }
+
+  const normalizedRole = user.role ? (
+    user.role === 'ADMIN' ? 'admin' :
+    user.role === 'AUDITOR' ? 'auditor' :
+    ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk'
+  ) : 'clerk';
+
+  if (item.key === 'fx_rates' && normalizedRole === 'clerk') {
+    return false;
+  }
+
+  const roleKey = user.role as keyof typeof PERMISSION_MATRIX;
+  const allowed = PERMISSION_MATRIX[roleKey]?.[item.resource] ?? [];
+  return allowed.includes('view');
+}
+
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('common.sidebar');
   const tCommon = useTranslations('common');
+  const { user, isLoading } = useAuth();
 
   const groups: NavGroup[] = [
     {
@@ -133,6 +155,26 @@ export function Sidebar({ onClose }: SidebarProps) {
     }
   ];
 
+  if (isLoading) {
+    return (
+      <aside className="w-full bg-surface-container-low flex flex-col h-full animate-pulse select-none pointer-events-none">
+        <div className="p-4 flex items-center justify-between md:hidden mb-2">
+          <span className="font-bold text-muted-foreground/20">{tCommon('system.name')}</span>
+        </div>
+        <nav className="flex-1 py-4 flex flex-col gap-6 px-3">
+          {[1, 2, 3].map((g) => (
+            <div key={g} className="flex flex-col gap-2">
+              <div className="h-3 w-16 bg-muted-foreground/10 rounded ml-4 mb-2" />
+              {[1, 2].map((i) => (
+                <div key={i} className="h-10 w-full bg-muted-foreground/10 rounded-xl" />
+              ))}
+            </div>
+          ))}
+        </nav>
+      </aside>
+    );
+  }
+
   return (
     <aside className="w-full bg-surface-container-low flex flex-col h-full">
       <div className="p-4 flex items-center justify-between md:hidden mb-2">
@@ -144,8 +186,8 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       <nav className="flex-1 py-4 flex flex-col gap-6 px-3 overflow-y-auto custom-scrollbar">
         {groups.map((group) => {
-          const visibleItems = group.items.filter(_item => {
-            return true; 
+          const visibleItems = group.items.filter(item => {
+            return checkItemVisibility(item, user, isLoading);
           });
 
           if (visibleItems.length === 0) return null;
@@ -160,7 +202,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 </div>
               )}
               <div className="flex flex-col gap-1">
-                {group.items.map((item) => (
+                {visibleItems.map((item) => (
                   <SidebarLink key={item.key} item={item} pathname={pathname} t={t} onClick={onClose} />
                 ))}
               </div>
@@ -174,6 +216,19 @@ export function Sidebar({ onClose }: SidebarProps) {
 
 function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: string, t: (key: string) => string, onClick?: () => void }) {
   const canView = usePermission('view', item.resource);
+  const { user, isLoading } = useAuth();
+  
+  if (!isLoading) {
+    const normalizedRole = user?.role ? (
+      user.role === 'ADMIN' ? 'admin' :
+      user.role === 'AUDITOR' ? 'auditor' :
+      ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk'
+    ) : 'clerk';
+
+    if (item.key === 'fx_rates' && normalizedRole === 'clerk') {
+      return null;
+    }
+  }
   
   if (!canView) return null;
   

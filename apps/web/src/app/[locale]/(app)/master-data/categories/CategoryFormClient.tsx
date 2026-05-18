@@ -15,7 +15,7 @@ import {
 } from '@/features/categories/hooks/useCategories';
 import { CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
-import { Layers, Edit3, Trash2 } from 'lucide-react';
+import { Layers, Edit3, Trash2, AlertTriangle } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -51,14 +51,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   const { register, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
-    defaultValues: { name_ar: '', name_en: '', version: undefined },
+    defaultValues: { code: '', name_ar: '', name_en: '', version: undefined },
     disabled: isReadOnly,
   });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   useEffect(() => {
-    if (data) reset({ name_ar: data.name_ar, name_en: data.name_en, version: data.version });
+    if (data) reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en, version: data.version });
   }, [data, reset]);
 
   // 1. Loading State
@@ -87,11 +87,19 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   }
 
   const onSubmit = handleSubmit(async (values) => {
-    if (isReadOnly) return;
+    if (isReadOnly || data?.is_referenced) return;
     
     try {
       if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
+        // Only send editable fields (omit readonly category code, name_ar, and name_en if referenced)
+        const updateValues: Partial<CategoryFormValues> = {
+          version: values.version,
+        };
+        if (!data?.is_referenced) {
+          updateValues.name_ar = values.name_ar;
+          updateValues.name_en = values.name_en;
+        }
+        await update.mutateAsync({ id, values: updateValues as CategoryFormValues, signal: abortController.signal });
       } else {
         await create.mutateAsync({ values, signal: abortController.signal });
       }
@@ -120,7 +128,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
       isSaving={create.isPending || update.isPending}
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/categories')}
-      hideSave={isReadOnly}
+      hideSave={isReadOnly || data?.is_referenced === true}
       resource="master_data"
       saveAction={id ? 'edit' : 'create'}
       isDirty={isDirty}
@@ -132,8 +140,9 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
               <Button 
                 variant="ghost"
                 onClick={() => setDeleteConfirmOpen(true)}
-                className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all"
-                title={t('actions.delete')}
+                disabled={data?.is_referenced === true}
+                className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                title={data?.is_referenced ? tc('errors.delete_linked_items') : t('actions.delete')}
               >
                 <Trash2 className="w-5 h-5" />
               </Button>
@@ -155,6 +164,17 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
       }
     >
       <div className="space-y-8">
+        {data?.is_referenced && (
+          <div className="p-4 rounded-xl bg-status-error/5 border border-status-error/10 flex items-start gap-3 transition-all">
+            <AlertTriangle className="w-5 h-5 text-status-error shrink-0 mt-0.5" />
+            <div>
+              <p className="text-body-sm font-semibold text-status-error">
+                {tc('warnings.referenced_protection')}
+              </p>
+            </div>
+          </div>
+        )}
+
         <Card className="bg-surface-container-low border-none overflow-hidden">
           <CardContent className="p-8 space-y-8">
             {/* Section Header */}
@@ -171,6 +191,23 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Category Code (Read-Only System Generated) */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="cat-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+                  {tc('fields.code')}
+                </Label>
+                <Input
+                  id="cat-code"
+                  dir="ltr"
+                  value={id ? (data?.code || '') : tc('fields.code_auto')}
+                  readOnly
+                  className="font-mono font-bold bg-surface-container-high/50 cursor-not-allowed select-all border-dashed"
+                />
+                <p className="text-label-xs font-medium text-muted-foreground/50">
+                  {tc('fields.code_hint')}
+                </p>
+              </div>
+
               {/* Name EN */}
               <div className="space-y-2">
                 <Label htmlFor="cat-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
@@ -180,8 +217,8 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   id="cat-name-en"
                   dir="ltr"
                   {...register('name_en')}
-                  disabled={isReadOnly}
-                  className="font-semibold"
+                  readOnly={isReadOnly || data?.is_referenced === true}
+                  className={`font-semibold ${data?.is_referenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
                   placeholder={tc('placeholders.name_en')}
                 />
                 {errors.name_en && (
@@ -200,8 +237,8 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   id="cat-name-ar"
                   dir="rtl"
                   {...register('name_ar')}
-                  disabled={isReadOnly}
-                  className="font-semibold text-end"
+                  readOnly={isReadOnly || data?.is_referenced === true}
+                  className={`font-semibold text-end ${data?.is_referenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
                   placeholder={tc('placeholders.name_ar')}
                 />
                 {errors.name_ar && (

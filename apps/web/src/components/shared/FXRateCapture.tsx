@@ -71,6 +71,7 @@ export function FXRateCapture({ fromCurrencyCode, toCurrencyCode, defaultRate, o
  setRate(val === '' ? '' : Number(val));
  }}
  disabled={isLoading}
+ aria-label="Exchange Rate"
  className="flex-1 bg-surface-container-lowest border border-outline-low text-foreground rounded-xl px-4 py-3 focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 outline-none font-mono text-title-sm shadow-inner transition-all"
  />
  <span className="font-mono text-muted-foreground bg-surface-container-lowest px-4 py-3 rounded-xl border border-outline-low text-body-md">

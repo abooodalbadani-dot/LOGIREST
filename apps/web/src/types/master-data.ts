@@ -19,7 +19,7 @@ export interface Department {
 
 export interface UoM { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
 export interface UoMConversion { from_uom_id: string; to_uom_id: string; factor: number; }
-export interface Category { id: string; name_ar: string; name_en: string; version?: number; }
+export interface Category { id: string; code: string; name_ar: string; name_en: string; is_referenced?: boolean; version?: number; }
 export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; last_purchase_price?: number; is_active: boolean; version?: number; }
 export interface Lot { id: string; item_id: string; warehouse_id: string; lot_number: string; expiry_date: string | null; qty_available: number; is_expired: boolean; is_near_expiry: boolean; }
 export interface Supplier { id: string; code: string; name_ar: string; name_en: string; email?: string; phone?: string; tax_number?: string; currency_id: string; payment_terms: string; is_active: boolean; version?: number; }
@@ -59,7 +59,7 @@ export const UoMSchema = z.object({
 });
 
 export const CategorySchema = z.object({
- id: z.string(), name_ar: z.string(), name_en: z.string(), version: z.number().optional()
+ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(), is_referenced: z.boolean().optional(), version: z.number().optional()
 });
 
 export const UoMConversionSchema = z.object({
@@ -153,7 +153,9 @@ export const UoMFormSchema = z.object({
 });
 
 export const CategoryFormSchema = z.object({
+  code: z.string().optional(),
   name_ar: z.string().min(1), name_en: z.string().min(1),
+  is_referenced: z.boolean().optional(),
   version: z.number().optional()
 });
 

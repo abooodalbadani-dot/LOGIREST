@@ -1,0 +1,444 @@
+[
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\adjustments\\AdjustmentListClient.tsx",
+    "lost_count": 4,
+    "sample_losses": [
+      "<div className=\"flex flex-wrap items-center gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg\">",
+      "<SelectTrigger className=\"w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20\">",
+      "placeholder={t('search_placeholder') || 'Search Adjustment Documents...'} className=\"w-full bg-surface-container-highest/20 border border-outline-low/10 h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20\"",
+      "<Button className=\"h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-label-xs font-bold uppercase rounded-md transition-all border border-outline-low/10 group\">"
+    ],
+    "verdict": "ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\adjustments\\[id]\\AdjustmentForm.tsx",
+    "lost_count": 24,
+    "sample_losses": [
+      "abortController.signal",
+      "await createAdjustment.mutateAsync({ payload, signal: abortController.signal });",
+      "await updateAdjustment.mutateAsync({ id, payload, signal: abortController.signal });",
+      "if (!!lockState?.isLocked || !canEdit) return;",
+      "const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, abortController.signal);"
+    ],
+    "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\adjustments\\new\\AdjustmentCreateClient.tsx",
+    "lost_count": 75,
+    "sample_losses": [
+      "const AdjustmentFormSchema = z.object({",
+      "warehouse_id: z.string().min(1, 'Warehouse is required'),",
+      "item_id: z.string().min(1, 'Item is required'),",
+      "quantity: z.number().positive('Quantity must be greater than zero'),",
+      "reason_category: z.string().min(1, 'Reason category is required'),"
+    ],
+    "verdict": "BACKUP HAS VISUAL IMPROVEMENTS (Premium design lost in active)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\issues\\IssueListClient.tsx",
+    "lost_count": 13,
+    "sample_losses": [
+      "<div className=\"flex flex-col\">",
+      "<span className=\"text-label-xxs font-semibold text-muted-foreground/30 uppercase\">",
+      "{row.original.destination_department_id || '\u2014'}",
+      "<div className=\"flex flex-col items-start gap-0.5\">",
+      "className=\"text-label-xxs font-semibold text-muted-foreground/20 uppercase\""
+    ],
+    "verdict": "ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\issues\\[id]\\scan-mode\\page.tsx",
+    "lost_count": 7,
+    "sample_losses": [
+      "if (isLoading) return <div className=\"p-8 text-center\">Loading...</div>;",
+      "<span className=\"text-operational-cyan/80 text-label-sm font-mono uppercase italic\">Immersive Scan Mode</span>",
+      "<Button variant=\"outline\" size=\"sm\">Exit Scan Mode</Button>",
+      "placeholder=\"READY FOR BARCODE...\"",
+      "<div className=\"text-label-sm text-muted-foreground uppercase mb-1\">Quantity</div>"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\issues\\new\\issue-form.tsx",
+    "lost_count": 29,
+    "sample_losses": [
+      "itemId: z.string().min(1, t('validation.item_required')),",
+      "requestedQuantity: z.number().min(0.01, t('validation.qty_positive')),",
+      "allocatedQuantity: z.number(),",
+      "lots: z.array(z.custom<IssueLot>()),",
+      "warehouseId: z.string().min(1, t('validation.warehouse_required')),"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\kitchen-requests\\[id]\\KitchenRequestForm.tsx",
+    "lost_count": 24,
+    "sample_losses": [
+      "const [fulfillmentData, setFulfillmentData] = useState<{ itemId: string; fulfilledQuantity: number }[]>([]);",
+      "await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.APPROVED, version: request.version ?? 0 });",
+      "await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED, reason: trimmedReason, version: request.version ?? 0 });",
+      "await fulfillRequest.mutateAsync({ id, items: fulfillmentData, version: request.version ?? 0 });",
+      "itemId: item.item_id,"
+    ],
+    "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\kitchen-requests\\new\\KitchenRequestFormClient.tsx",
+    "lost_count": 33,
+    "sample_losses": [
+      "items: [{ itemId: '', quantity: 1, notes: '' }],",
+      "createRequest.mutate({ ...values, isDraft }, {",
+      "<div className=\"p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000\">",
+      "className=\"rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all\"",
+      "\"bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl h-11 px-8 text-label-xs font-semibold uppercase transition-all shadow-lg\""
+    ],
+    "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\count\\StocktakeCountClient.tsx",
+    "lost_count": 14,
+    "sample_losses": [
+      "import { Badge } from \"@/components/ui/badge\";",
+      "import { PostConfirmDialog } from \"@/components/shared/PostConfirmDialog\";",
+      "import { type DocumentStatus } from \"@/core/workflow/document-engine\";",
+      "const { user } = useAuth();",
+      "updateCount.mutate({ stocktakeId: id, itemId, lineId, countedQty, signal: abortController.signal })"
+    ],
+    "verdict": "ACTIVE CODE IS LARGER (Active contains more complete/fixed logic)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\post\\StocktakePostClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "postStocktake.mutate(id, {"
+    ],
+    "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\[id]\\start\\StocktakeStartClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "startStocktake.mutate(id, {"
+    ],
+    "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\stocktake\\archive\\StocktakeArchiveClient.tsx",
+    "lost_count": 2,
+    "sample_losses": [
+      "const { data, isLoading } = useStocktakeList({",
+      "collectionName=\"operations_stocktake_archive\""
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\transfers\\TransferListClient.tsx",
+    "lost_count": 6,
+    "sample_losses": [
+      "<div className=\"text-label-xxs font-semibold text-muted-foreground/40\" dir=\"ltr\">",
+      "<Button className=\"h-11 px-8 bg-cyan-600 hover:bg-cyan-500 text-white text-label-xs font-semibold uppercase rounded-md transition-all shadow-lg shadow-cyan-900/10\">",
+      "<div className=\"flex flex-wrap items-end gap-6 w-full py-6 px-8 bg-surface-container-low border border-outline-low/5 rounded-lg shadow-sm\">",
+      "<SelectTrigger className=\"w-full bg-surface-container-highest/40 border-none h-12 px-4 text-label-sm font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10\">",
+      "className=\"w-full bg-surface-container-highest/40 border-none h-12 ps-12 pe-4 text-label-sm font-semibold rounded-md transition-all group-hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10\""
+    ],
+    "verdict": "ACTIVE CODE HAS VISUAL IMPROVEMENTS (Premium styles/animations)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\transfers\\[id]\\receive\\TransferReceiveClient.tsx",
+    "lost_count": 9,
+    "sample_losses": [
+      "import { useState, useMemo, useEffect } from 'react';",
+      "import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';",
+      "<DocumentLockWrapper isLocked={false}>",
+      "disabled={!hasVariance}",
+      ": 'border-white/5 opacity-40 cursor-not-allowed'"
+    ],
+    "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\transfers\\[id]\\ship\\TransferShipClient.tsx",
+    "lost_count": 14,
+    "sample_losses": [
+      "import { useState, useCallback } from 'react';",
+      "const { data: transfer, isLoading } = useTransfer(id);",
+      "const shipTransfer = useShipTransfer();",
+      "}, [transfer, t, locale]);",
+      "{ id, version: transfer.version || 1 },"
+    ],
+    "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\transfers\\new\\TransferNewClient.tsx",
+    "lost_count": 9,
+    "sample_losses": [
+      "import { useState } from 'react';",
+      "const item = items?.find(i => i.sku === barcode);",
+      "if (!item) return;",
+      "primary_uom: { code: item.uom }",
+      "uom_id: item.uom"
+    ],
+    "verdict": "ACTIVE CODE IS FUNCTIONALLY SUPERIOR (Has Lock States & Idempotency)"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(operations)\\yield-management\\YieldManagementClient.tsx",
+    "lost_count": 18,
+    "sample_losses": [
+      "recipe_name: 'Sous-vide Ribeye Prep',",
+      "category: 'Protein',",
+      "recipe_name: 'Fresh Pasta Dough',",
+      "category: 'Starch',",
+      "recipe_name: 'Trimmed Asparagus',"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(procurement)\\goods-received\\[id]\\scan-mode\\GRNScanClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "const item = items?.find(i => i.sku === barcode || i.id === barcode)"
+    ],
+    "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(procurement)\\goods-received\\[id]\\scan-mode\\LotEntryModal.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "placeholder=\"e.g. LOT-2024-001\""
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\(procurement)\\purchase-orders\\[id]\\POForm.tsx",
+    "lost_count": 2,
+    "sample_losses": [
+      "await updateMutation.mutateAsync({ ...values, version: initialData.version || 1 });",
+      "const result = await createMutation.mutateAsync(values);"
+    ],
+    "verdict": "BACKUP HAS EXCLUSIVE FEATURES: ['camelCase_properties']"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\admin\\restaurant-profile\\ProfileFormClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "await updateProfile(data);"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\admin\\roles\\page.tsx",
+    "lost_count": 2,
+    "sample_losses": [
+      "title: `${t('roles')} | LogiRest`,",
+      "title={t('roles')}"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\communications\\email-outbox\\page.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "description=\"Track sent emails and notification history\""
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\communications\\notifications\\page.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "description=\"System alerts, low-stock warnings, and operational events\""
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\communications\\notifications\\settings\\NotificationSettingsClient.tsx",
+    "lost_count": 4,
+    "sample_losses": [
+      "<Switch defaultChecked />",
+      "<Switch defaultChecked />",
+      "<Switch defaultChecked />",
+      "<Switch defaultChecked />"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\communications\\notifications\\templates\\[id]\\TemplateEditorClient.tsx",
+    "lost_count": 8,
+    "sample_losses": [
+      "{updateMutation.isPending ? '...' : t('subject_ar').includes('\u0639\u0631\u0628\u064a') ? '\u062d\u0641\u0638 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a' : 'Save Changes'}",
+      "{t('retry') === '\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629' ? '\u0625\u0644\u063a\u0627\u0621' : 'Cancel'}",
+      "{t('code')}: <span className=\"font-mono text-foreground\">{data?.code}</span>",
+      "<span className=\"text-label-xs font-semibold uppercase text-foreground/80\">{t('preview')}</span>",
+      "<span className=\"px-2 py-0.5 rounded bg-operational-cyan/10 text-operational-cyan text-label-xxs font-semibold uppercase border border-operational-cyan/20\">Live View</span>"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\inventory\\expired-override\\ExpiredOverrideClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "overridden_by: 'Ahmed Manager',"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\inventory\\lots\\LotBalanceClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "{ id: '1', date: '2024-05-15T10:00:00Z', type: 'IN', qty: 500, balance: 500, reference: 'PO-2024-0012', user: '\u0623\u062d\u0645\u062f \u0645\u062d\u0645\u0648\u062f' },"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\inventory\\transfers\\hub\\TransferHubClient.tsx",
+    "lost_count": 3,
+    "sample_losses": [
+      "header: 'Route',",
+      "<h3 className=\"text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest\">Active Movement Registry</h3>",
+      "<span className=\"text-[10px] font-bold uppercase opacity-50\">67% Capacity Utilization</span>"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\barcodes\\BarcodeFormClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "await create.mutateAsync(values);"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\branches\\BranchListClient.tsx",
+    "lost_count": 2,
+    "sample_losses": [
+      "const [_page, setPage] = useState(1);",
+      "], [tc, t, locale, router]);"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\categories\\CategoryFormClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "await create.mutateAsync({ ...values, signal: abortController.signal });"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\currencies\\CurrencyFormClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "await create.mutateAsync({ ...values, signal: abortController.signal });"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\currencies\\[id]\\fx-rates\\FXRatesClient.tsx",
+    "lost_count": 1,
+    "sample_losses": [
+      "await create.mutateAsync(values);"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\items\\ItemFormClient.tsx",
+    "lost_count": 7,
+    "sample_losses": [
+      "} catch (_error) {",
+      "{errors.code && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.code.message as any)}</p>}",
+      "{errors.barcode && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.barcode.message as any)}</p>}",
+      "{errors.name_en && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.name_en.message as any)}</p>}",
+      "{errors.name_ar && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.name_ar.message as any)}</p>}"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\suppliers\\SupplierFormClient.tsx",
+    "lost_count": 4,
+    "sample_losses": [
+      "{errors.code && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.code.message as any)}</p>}",
+      "{errors.name_en && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.name_en.message as any)}</p>}",
+      "{errors.name_ar && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.name_ar.message as any)}</p>}",
+      "{errors.currency_id && <p className=\"text-label-xs font-semibold text-status-error uppercase\">{tv(errors.currency_id.message as any)}</p>}"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\warehouses\\WarehouseFormClient.tsx",
+    "lost_count": 3,
+    "sample_losses": [
+      "defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'MAIN', is_active: true, version: undefined },",
+      "{(['MAIN','DRY','COLD','VIRTUAL'] as const).map((ty) => (",
+      "{tw(`types.${ty}` as any)}"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(app)\\master-data\\warehouses\\WarehouseListClient.tsx",
+    "lost_count": 5,
+    "sample_losses": [
+      "MAIN: { label: t('types.MAIN'), color: 'text-primary', shadow: 'shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]' },",
+      "COLD: { label: t('types.COLD'), color: 'text-operational-cyan', shadow: 'shadow-[0_0_8px_rgba(var(--cyan-rgb),0.4)]' },",
+      "DRY: { label: t('types.DRY'), color: 'text-operational-orange', shadow: 'shadow-[0_0_8px_rgba(var(--orange-rgb),0.4)]' },",
+      "physical: warehouses.filter(w => w.type === 'MAIN' || w.type === 'COLD').length,",
+      "], [tc, t, locale, router, WAREHOUSE_TYPE_STYLES]);"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(auth)\\forgot-password\\page.tsx",
+    "lost_count": 69,
+    "sample_losses": [
+      "import { Link, useRouter } from '@/i18n/navigation';",
+      "UtensilsCrossed,",
+      "import { Button } from '@/components/ui/button';",
+      "import { Input } from '@/components/ui/input';",
+      "} from '@/components/ui/form';"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(auth)\\login\\page.tsx",
+    "lost_count": 73,
+    "sample_losses": [
+      "import { Loader2, AlertCircle, UtensilsCrossed, ShieldCheck, BadgeCheck, Key, EyeOff, LogIn } from 'lucide-react';",
+      "console.log(`[LoginPage] hero_title: ${t('login.hero_title')}`);",
+      "<div className=\"flex w-full items-center justify-center min-h-screen bg-background\">",
+      "<Loader2 className=\"w-8 h-8 animate-spin text-operational-cyan\" />",
+      "<div className=\"flex w-full min-h-screen lg:h-screen lg:overflow-hidden bg-background\">"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\(auth)\\reset-password\\page.tsx",
+    "lost_count": 85,
+    "sample_losses": [
+      "import { Link, useRouter } from '@/i18n/navigation';",
+      "import { useParams, useSearchParams } from 'next/navigation';",
+      "UtensilsCrossed,",
+      "import { Button } from '@/components/ui/button';",
+      "import { Input } from '@/components/ui/input';"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\layout.tsx",
+    "lost_count": 2,
+    "sample_losses": [
+      "<html lang={locale} dir={direction} className={theme} suppressHydrationWarning>",
+      "<body className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${cairo.variable}`}>"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  },
+  {
+    "rel_path": "[locale]\\not-found.tsx",
+    "lost_count": 6,
+    "sample_losses": [
+      "<h3 className=\"text-label-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/40\">Our Mission</h3>",
+      "&quot;At LogiRest, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.&quot;",
+      "<h3 className=\"text-label-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/40\">Trusted By Industry Leaders</h3>",
+      "<span className=\"text-headline-xs font-black tracking-tighter\">GLOBAL_KITCHEN</span>",
+      "<span className=\"text-headline-xs font-black tracking-tighter\">RESTO_PRO</span>"
+    ],
+    "verdict": "MINOR TEXT/STYLE DIFFS"
+  }
+]

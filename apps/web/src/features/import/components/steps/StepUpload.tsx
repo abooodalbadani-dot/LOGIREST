@@ -107,6 +107,7 @@ export function StepUpload({ wizard, locale }: StepUploadProps) {
  ref={fileInputRef} 
  className="hidden" 
  accept=".xlsx"
+ aria-label={t('click_to_upload') || "Upload XLSX file"}
  onChange={onFileChange}
  />
  </div>

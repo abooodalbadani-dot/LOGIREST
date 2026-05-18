@@ -39,7 +39,8 @@
       "generic": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.",
       "title": "فشل الإجراء",
       "not_found_title": "السجل غير موجود",
-      "not_found_message": "السجل الذي تبحث عنه غير موجود أو قد يكون تم حذفه."
+      "not_found_message": "السجل الذي تبحث عنه غير موجود أو قد يكون تم حذفه.",
+      "unauthorized": "ليس لديك صلاحية للوصول إلى هذه الصفحة."
     },
     "branding": {
       "logo_alt": "شعار لوجي ريست",
@@ -79,7 +80,7 @@
     "history": "السجل",
     "back": "رجوع",
     "recipe": "الوصفة / الصنف",
-    "search_placeholder": "بحث...",
+    "search_placeholder": "البحث في الجلسات...",
     "back_to_list": "العودة للقائمة",
     "barcode_scanner": "ماسح الباركود",
     "id": "المعرف",
@@ -549,7 +550,6 @@
     "saved_success": "تم الحفظ بنجاح.",
     "scope": "النطاق",
     "search_categories_placeholder": "تصفية الفئات بالاسم...",
-    "search_placeholder": "البحث في الجلسات...",
     "select_base_unit": "— اختر الوحدة الأساسية —",
     "sku_definition_protocol": "بروتوكول تعريف SKU",
     "source_unit": "الوحدة المصدر",
@@ -623,11 +623,17 @@
         "delete_linked_items": "لا يمكن حذف التصنيف مع وجود أصناف مخزنية نشطة."
       },
       "fields": {
+        "code": "رمز الفئة",
+        "code_auto": "CAT-XXX (توليد تلقائي)",
+        "code_hint": "رمز الفئة التسلسلي المولد تلقائياً (للقراءة فقط)",
         "name_ar": "اسم التصنيف (AR)",
         "name_en": "اسم التصنيف (EN)"
       },
       "title": "تصنيف الأصناف",
-      "updated_success": "تم تحديث التصنيف"
+      "updated_success": "تم تحديث التصنيف",
+      "warnings": {
+        "referenced_protection": "هذه الفئة مستخدمة في مستندات تشغيلية نشطة. تم قفل بعض الحقول للحفاظ على اتساق السجلات المخزنية."
+      }
     },
     "changes": "التغييرات",
     "create_user": "إنشاء مستخدم",
@@ -1216,7 +1222,8 @@
     "aria": {
       "kpi_grid": "شبكة مؤشرات الأداء",
       "operational_monitoring": "المراقبة التشغيلية"
-    }
+    },
+    "error_loading": "فشل في تحميل إحصائيات لوحة التحكم"
   },
   "inventory": {
     "balance": {
@@ -2552,7 +2559,7 @@
       "posted": "مرحل",
       "posted_at": "تاريخ الترحيل",
       "posted_by": "رحل بواسطة",
-      "posted_success": "تم ترحيل صرف المخزون بنجاح.",
+      "posted_success": "تم ترحيل سند الصرف بنجاح",
       "protocol_validations": "اكتملت عمليات التحقق من البروتوكول",
       "qty": "الكمية",
       "redefine_batches": "إعادة تعريف الدفعات",
@@ -2595,7 +2602,8 @@
         "allocated_status": "تم التخصيص ✓",
         "pending_lots_status": "دفعات معلقة",
         "loading": "جاري التحميل...",
-        "qty": "الكمية"
+        "qty": "الكمية",
+        "locked_warning": "وضع المسح معطل — المستند مقفل بالفعل"
       },
       "validation": {
         "warehouse_locked": "المستودع مقفل بسبب جرد نشط",
@@ -2613,8 +2621,7 @@
         "warehouse_locked": "المستودع المصدر مقفل"
       },
       "created_success": "تم إنشاء سند الصرف بنجاح",
-      "updated_success": "تم تحديث سند الصرف بنجاح",
-      "posted_success": "تم ترحيل سند الصرف بنجاح"
+      "updated_success": "تم تحديث سند الصرف بنجاح"
     },
     "expired_override": {
       "title": "منتج منتهي الصلاحية",
@@ -3064,6 +3071,11 @@
       "scan_log": "سجل المسح التشغيلي",
       "scan_mode": "بروتوكول المسح نشط",
       "scan_mode_sub": "طبقة الاستحواذ التشغيلي عالية الأداء",
+      "inspect_scan_registers": "فحص سجل الباركود",
+      "read_only_scan_registry": "سجل فحص للقراءة فقط",
+      "scan_registry_locked_desc": "تم إلغاء تفعيل المسح لأن هذا المستند قد تم ترحيله بالفعل.",
+      "read_only_badge": "عرض للقراءة فقط - سجل مقفل",
+      "back_to_detail": "العودة للتفاصيل",
       "errors": {
         "no_currencies_available": "لا توجد عملات متاحة للاختيار."
       },

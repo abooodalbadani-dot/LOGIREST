@@ -108,7 +108,7 @@ async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<Purc
 export async function getMockResponse(method: string, path: string, body?: unknown): Promise<unknown> {
   const normalizedPath = path.split('?')[0];
   const searchParams = new URLSearchParams(path.split('?')[1] || '');
-  
+
   // --- Master Data Routes ---
   if (normalizedPath === '/branches') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.branches.findAll());
@@ -240,12 +240,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const nextStatus = getNextStatusV2('ISSUE', doc.status, action as DocumentAction);
       if (nextStatus) {
         const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
-        
+
         // Inventory Manifestation on POST
         if (action === 'POST') {
           updated.posted_at = new Date().toISOString();
           updated.posted_by = 'user-1';
-          
+
           for (const line of doc.lines) {
             // Decement from lots
             for (const allocation of line.lot_allocations) {
@@ -268,7 +268,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
             }
           }
         }
-        
+
         return db.issues.save(updated);
       }
     }
@@ -292,9 +292,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const action = parts[4].toUpperCase();
       const nextStatus = getNextStatusV2('TRANSFER', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated: Transfer = { 
-          ...doc, 
-          status: nextStatus, 
+        const updated: Transfer = {
+          ...doc,
+          status: nextStatus,
           transfer_status: nextStatus as TransferStatus,
           updated_at: new Date().toISOString(),
           version: (doc.version || 0) + 1
@@ -305,7 +305,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         if (action === 'POST') {
           updated.posted_at = new Date().toISOString();
           updated.posted_by = 'user-1';
-          
+
           for (const line of doc.lines) {
             const sourceLot = await db.lots.findById(line.lot_id || '');
             if (sourceLot) {
@@ -326,9 +326,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
               // 2. Increase in destination
               const allLots = await db.lots.findAll();
-              const destLot = allLots.find(l => 
-                l?.warehouse_id === doc.to_warehouse_id && 
-                l?.item_id === line.item_id && 
+              const destLot = allLots.find(l =>
+                l?.warehouse_id === doc.to_warehouse_id &&
+                l?.item_id === line.item_id &&
                 l?.lot_number === sourceLot.lot_number
               );
 
@@ -411,7 +411,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       // Snapshot Freeze: Capture current inventory levels from db.lots
       const warehouseLots = await db.lots.findAll();
       const warehouseItems = warehouseLots.filter(l => l?.warehouse_id === (body as HydrationBody)?.warehouse_id);
-      
+
       // Group by item to get total quantity if there are multiple lots
       const itemTotals = warehouseItems.reduce((acc, lot) => {
         if (!acc[lot.item_id]) acc[lot.item_id] = 0;
@@ -421,7 +421,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       // Get item details
       const allItems = await db.items.findAll();
-      
+
       const stocktakeItems = Object.entries(itemTotals).map(([itemId, qty], idx) => {
         const item = allItems.find(i => i.id === itemId);
         return {
@@ -452,7 +452,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   if (normalizedPath.startsWith('/stocktake/sessions/')) {
     const parts = normalizedPath.split('/');
     const id = parts[3]; // /stocktake/sessions/:id
-    
+
     // Check if it's an item update: /stocktake/sessions/:id/items/:lineId
     if (parts.length === 6 && parts[4] === 'items') {
       const lineId = parts[5];
@@ -589,12 +589,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const nextStatus = getNextStatusV2('ADJUSTMENT', doc.status, action as DocumentAction);
       if (nextStatus) {
         const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
-        
+
         // Inventory Manifestation on POST
         if (action === 'POST') {
           updated.posted_at = updated.updated_at;
           updated.posted_by = 'user-1';
-          
+
           for (const line of doc.lines) {
             const lot = await db.lots.findById(line.lot_id || '');
             if (lot) {
@@ -615,7 +615,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
             }
           }
         }
-        
+
         return db.adjustments.save(updated);
       }
     }
@@ -701,12 +701,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const nextStatus = getNextStatusV2('GRN', doc.status, action as DocumentAction);
       if (nextStatus) {
         const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
-        
+
         // Inventory Manifestation on POST
         if (action === 'POST') {
           updated.posted_at = updated.updated_at;
           updated.posted_by = 'user-1';
-          
+
           for (const line of doc.lines) {
             const lot = await db.lots.findById(line.lot_id || '');
             if (lot) {
@@ -749,7 +749,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
             }
           }
         }
-        
+
         return db.grn.save(updated);
       }
     }

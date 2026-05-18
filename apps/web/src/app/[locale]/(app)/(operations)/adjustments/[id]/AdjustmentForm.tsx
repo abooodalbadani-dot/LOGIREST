@@ -47,6 +47,7 @@ import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { formatQuantity } from '@/utils/currency';
+import { audioAlerts } from '@/utils/audio';
 
 const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'] as const;
 
@@ -85,6 +86,7 @@ export function AdjustmentForm({
   const [reason, setReason] = useState<string>(document?.reason || 'DAMAGE');
   const [notes, setNotes] = useState(document?.notes || '');
   const [lines, setLines] = useState<AdjustmentLine[]>(document?.lines || []);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   
   const canEdit = !isLocked || isNew;
   
@@ -105,6 +107,7 @@ export function AdjustmentForm({
     setReason(document.reason);
     setNotes(document.notes ?? '');
     setLines(document.lines);
+    setIdempotencyKey(crypto.randomUUID());
   }
 
   // Refresh stock levels when warehouse changes
@@ -164,12 +167,14 @@ export function AdjustmentForm({
         }))
       };
 
+      const headers = { 'X-Idempotency-Key': idempotencyKey };
+
       if (isNew) {
-        await createAdjustment.mutateAsync({ payload, signal: abortController.signal });
+        await createAdjustment.mutateAsync({ payload, signal: abortController.signal, headers });
         toast.success(t('create_success'));
         router.push(`/adjustments`);
       } else {
-        await updateAdjustment.mutateAsync({ id, payload, signal: abortController.signal });
+        await updateAdjustment.mutateAsync({ id, payload, signal: abortController.signal, headers });
         toast.success(t('update_success'));
       }
     } catch (e) {
@@ -230,7 +235,12 @@ export function AdjustmentForm({
   };
 
   const handleScan = async (barcode: string) => {
-    if (!!lockState?.isLocked || !canEdit) return;
+    if (!!lockState?.isLocked || !canEdit) {
+      audioAlerts.playScanBlocked();
+      setScanStatus("error");
+      setStatusMessage(t('warehouse_locked_title') || "Warehouse is locked. Scan blocked.");
+      return;
+    }
     
     const resetAfterDelay = () => {
       setTimeout(() => {
@@ -354,6 +364,19 @@ export function AdjustmentForm({
           isLocked={isLocked} 
         />
 
+        {lockState?.isLocked && (
+          <div 
+            aria-live="assertive"
+            className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl flex items-center gap-3 animate-pulse"
+          >
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-label-sm font-bold uppercase">{t('warehouse_locked_title') || "Warehouse Locked"}</p>
+              <p className="text-body-xs font-semibold mt-0.5">{t('warehouse_locked_desc') || "This warehouse is locked for stocktake or system adjustments. All edits and scans are blocked."}</p>
+            </div>
+          </div>
+        )}
+
         <DocumentLockWrapper isLocked={isLocked}>
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -402,9 +425,12 @@ export function AdjustmentForm({
                 <Textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  disabled={!canEdit || !!lockState?.isLocked}
+                  readOnly={!canEdit || !!lockState?.isLocked}
                   placeholder={t('notes_placeholder')}
-                  className="bg-surface-container-low border-none rounded-lg h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all"
+                  className={cn(
+                    "bg-surface-container-low border-none rounded-lg h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none transition-all",
+                    (!canEdit || !!lockState?.isLocked) ? "cursor-default opacity-85 select-all focus:ring-0 animate-pulse-slow" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
+                  )}
                 />
               </div>
             </div>
@@ -419,7 +445,7 @@ export function AdjustmentForm({
                 <ScanInput 
                   onScan={handleScan}
                   placeholder={t('scan_placeholder')}
-                  disabled={!!lockState?.isLocked}
+                  readOnly={!!lockState?.isLocked}
                   scanStatus={scanStatus}
                   statusMessage={statusMessage}
                 />
@@ -438,12 +464,12 @@ export function AdjustmentForm({
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-surface-container-low/50">
-                        <th className="px-8 h-14 text-start text-label-xs font-semibold uppercase text-muted-foreground/60">{tc('item')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('direction')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_before')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_adjusted')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_after')}</th>
-                        {canEdit && <th className="px-8 h-14 text-end"></th>}
+                        <th className="px-3 h-10 text-start text-label-xs font-semibold uppercase text-muted-foreground/60">{tc('item')}</th>
+                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('direction')}</th>
+                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_before')}</th>
+                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_adjusted')}</th>
+                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_after')}</th>
+                        {canEdit && <th className="px-3 h-10 text-end"></th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y-0">
@@ -459,19 +485,22 @@ export function AdjustmentForm({
                       )}
                       {lines.map((line) => (
                         <tr key={line.id} className="group even:bg-surface-container-low/30 hover:bg-surface-container-high/20 transition-all border-none">
-                          <td className="px-8 py-6">
+                          <td className="px-3 py-1">
                             <div className="flex flex-col min-w-0">
                               <span className="text-body-md font-bold truncate">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</span>
                               <span className="text-label-xs font-mono text-primary/40 uppercase mt-1">{line.item.code}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-6 text-center">
+                          <td className="px-3 py-1 text-center">
                             <Select
                               value={line.direction}
                               onValueChange={(val) => updateLine(line.id, { direction: val as 'INCREASE' | 'DECREASE' })}
-                              disabled={!canEdit}
+                              disabled={!canEdit || !!lockState?.isLocked}
                             >
-                              <SelectTrigger className="bg-surface-container-low border-none h-10 w-32 mx-auto rounded-lg font-semibold text-label-xs uppercase focus:ring-1 focus:ring-primary-fixed-dim/10">
+                              <SelectTrigger 
+                                tabIndex={0}
+                                className="bg-surface-container-low border-none h-10 w-32 mx-auto rounded-lg font-semibold text-label-xs uppercase focus:ring-1 focus:ring-primary-fixed-dim/10"
+                              >
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
@@ -480,27 +509,31 @@ export function AdjustmentForm({
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="px-6 py-6 text-center tabular-nums">
+                          <td className="px-3 py-1 text-center tabular-nums">
                             <div className="flex flex-col items-center gap-0.5">
                               <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-6 text-center tabular-nums">
+                          <td className="px-3 py-1 text-center tabular-nums">
                             <div className="flex flex-col items-center gap-0.5">
                               <input 
                                 type="number"
                                 value={line.qty_adjusted}
                                 onChange={e => updateLine(line.id, { qty_adjusted: Number(e.target.value) })}
-                                disabled={!canEdit}
-                                className="bg-surface-container-low border-none h-10 w-24 text-center rounded-lg font-semibold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10"
+                                readOnly={!canEdit || !!lockState?.isLocked}
+                                className={cn(
+                                  "bg-surface-container-low border-none h-10 w-24 text-center rounded-lg font-semibold text-body-md transition-all",
+                                  (!canEdit || !!lockState?.isLocked) ? "cursor-default opacity-80 select-all focus:ring-0" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
+                                )}
                                 step="0.001"
                                 min="0"
+                                tabIndex={0}
                               />
                               <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-6 text-center tabular-nums">
+                          <td className="px-3 py-1 text-center tabular-nums">
                             <div className="flex flex-col items-center gap-0.5">
                               <span className={cn(
                                 "text-body-md font-bold",
@@ -512,11 +545,12 @@ export function AdjustmentForm({
                             </div>
                           </td>
                           {canEdit && (
-                            <td className="px-8 py-6 text-end">
+                            <td className="px-3 py-1 text-end">
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => removeLine(line.id)}
+                                disabled={!!lockState?.isLocked}
                                 className="h-8 w-8 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -597,7 +631,7 @@ export function AdjustmentForm({
           onCancel={() => router.push(`/adjustments`)}
           onSubmit={handleSaveDraft}
           isSaving={createAdjustment.isPending || updateAdjustment.isPending}
-          isLocked={isLocked}
+          isLocked={isLocked || !!lockState?.isLocked}
           isDirty={lines.length > 0}
           isValid={lines.length > 0 && notes.trim().length >= 10}
           actions={

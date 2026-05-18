@@ -53,6 +53,10 @@ import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { KITCHEN_REQUEST_STATUS, KitchenRequestStatus } from '@/contracts/statuses';
 import { formatDate } from '@/utils/currency';
+import { useWarehouseLock } from '@/hooks/useWarehouseLock';
+import { LockBanner } from '@/components/shared/LockBanner';
+import { audioAlerts } from '@/utils/audio';
+import { toast } from '@/hooks/use-toast';
 
 interface KitchenRequestFormProps {
   request: KitchenRequestDetail;
@@ -75,6 +79,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
   const [fulfillmentData, setFulfillmentData] = useState<{ item_id: string; fulfilled_quantity: number }[]>([]);
 
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const { data: warehouseLockState } = useWarehouseLock(request.warehouse_id || null);
+  const isWriteBlocked = updateStatus.isPending || fulfillRequest.isPending || !!warehouseLockState?.isLocked;
+
   const history = useMemo((): StatusTimelineEntry[] => {
     const h: StatusTimelineEntry[] = [
       { status: 'draft' as Status, at: request.created_at, by: request.requested_by }
@@ -95,18 +103,39 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   }, [request, user?.role]);
 
   const handleApprove = async () => {
+    if (warehouseLockState?.isLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_cannot_mutate') || 'Warehouse is locked. Cannot perform this action.');
+      return;
+    }
     try {
-      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.APPROVED, version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ 
+        id, 
+        status: KITCHEN_REQUEST_STATUS.APPROVED, 
+        version: request.version ?? 0,
+        headers: { 'X-Idempotency-Key': idempotencyKey }
+      });
     } catch (error) {
       console.error('Failed to approve request', error);
     }
   };
 
   const handleReject = async () => {
+    if (warehouseLockState?.isLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_cannot_mutate') || 'Warehouse is locked. Cannot perform this action.');
+      return;
+    }
     const trimmedReason = rejectionReason.trim();
     if (trimmedReason.length < 15) return;
     try {
-      await updateStatus.mutateAsync({ id, status: KITCHEN_REQUEST_STATUS.CANCELLED, reason: trimmedReason, version: request.version ?? 0 });
+      await updateStatus.mutateAsync({ 
+        id, 
+        status: KITCHEN_REQUEST_STATUS.CANCELLED, 
+        reason: trimmedReason, 
+        version: request.version ?? 0,
+        headers: { 'X-Idempotency-Key': idempotencyKey }
+      });
       setRejectDialogOpen(false);
     } catch (error) {
       console.error('Failed to reject request', error);
@@ -114,8 +143,18 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   };
 
   const handleFulfill = async () => {
+    if (warehouseLockState?.isLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_cannot_mutate') || 'Warehouse is locked. Cannot perform this action.');
+      return;
+    }
     try {
-      await fulfillRequest.mutateAsync({ id, items: fulfillmentData, version: request.version ?? 0 });
+      await fulfillRequest.mutateAsync({ 
+        id, 
+        items: fulfillmentData, 
+        version: request.version ?? 0,
+        headers: { 'X-Idempotency-Key': idempotencyKey }
+      });
       setFulfillDialogOpen(false);
     } catch (error) {
       console.error('Failed to fulfill request', error);
@@ -142,7 +181,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="REJECT" role={user?.role || 'WH_KEEPER'}>
         <Button 
           variant="outline" 
-          disabled={isPending}
+          disabled={isWriteBlocked}
           className="rounded-2xl border-red-500/30 text-red-500 hover:bg-red-500/5 h-14 px-8 text-label-xs font-black uppercase tracking-widest transition-all"
           onClick={() => setRejectDialogOpen(true)}
         >
@@ -152,7 +191,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
         <Button 
-          disabled={isPending}
+          disabled={isWriteBlocked}
           className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-10 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none"
           onClick={handleApprove}
         >
@@ -162,7 +201,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role || 'WH_KEEPER'}>
         <Button 
-          disabled={isPending}
+          disabled={isWriteBlocked}
           className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
           onClick={openFulfillDialog}
         >
@@ -208,12 +247,13 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           className="space-y-10"
         >
           <DocumentLockBanner isLocked={isDocLocked} status={status} />
+          <LockBanner lockState={warehouseLockState} />
 
           <DocumentLockWrapper isLocked={isDocLocked && status !== KITCHEN_REQUEST_STATUS.SUBMITTED}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Column: Details and Items */}
               <div className="lg:col-span-8 space-y-8">
-                <div className="bg-surface-container-lowest p-8 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-surface-container-lowest p-5 px-6 rounded-lg border border-surface-container-high/20 grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-1">
                     <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
                       <Building2 className="w-3.5 h-3.5" />
@@ -256,7 +296,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-lg border border-surface-container-high/20 overflow-hidden">
-                  <div className="p-8 border-b border-surface-container-high/50 flex justify-between items-center">
+                  <div className="p-5 px-6 border-b border-surface-container-high/50 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="w-1.5 h-6 bg-cyan-500 rounded-full" />
                       <h3 className="text-label-sm font-semibold uppercase">{t('items')}</h3>
@@ -269,41 +309,47 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                     <table className="w-full text-left rtl:text-right border-collapse">
                       <thead>
                         <tr className="bg-surface-container-high/30">
-                          <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('item')}</th>
-                          <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{tCommon('quantity')}</th>
+                          <th className="px-6 py-3 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('item')}</th>
+                          <th className="px-6 py-3 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{tCommon('quantity')}</th>
                           <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="INTERNAL_MOVEMENT" role={user?.role || 'WH_KEEPER'}>
-                            <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{t('fulfilled')}</th>
+                            <th className="px-6 py-3 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{t('fulfilled')}</th>
                           </ActionGuard>
-                          <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</th>
+                          <th className="px-6 py-3 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-container-high/30">
-                        {request.items.map((item: KitchenRequestItem) => (
-                          <tr key={item.id} className="group hover:bg-surface-container-medium/30 transition-all">
-                            <td className="px-8 py-6">
+                        {request.items.map((item: KitchenRequestItem, idx: number) => (
+                          <tr 
+                            key={item.id} 
+                            className={cn(
+                              "group hover:bg-surface-container-medium/30 transition-all",
+                              idx % 2 === 0 ? "bg-white/[0.01]" : "bg-white/[0.03]"
+                            )}
+                          >
+                            <td className="px-6 py-3.5">
                               <div className="flex flex-col">
                                 <span className="text-label-sm font-bold text-foreground">{item.item_name}</span>
                                 <span className="text-label-xxs font-mono text-muted-foreground/40 mt-1 uppercase">ID: {item.item_id}</span>
                               </div>
                             </td>
-                            <td className="px-8 py-6 text-center">
+                            <td className="px-6 py-3.5 text-center">
                               <div className="flex flex-col items-center gap-0.5">
                                 <span className="text-body-md font-semibold text-cyan-500 tabular-nums">{item.quantity}</span>
                                 <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
                               </div>
                             </td>
-                              <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="INTERNAL_MOVEMENT" role={user?.role || 'WH_KEEPER'}>
-                                <td className="px-8 py-6 text-center">
-                                  <div className="flex flex-col items-center gap-0.5">
-                                    <span className={cn(
-                                      "text-body-md font-semibold tabular-nums",
-                                      (item.fulfilled_quantity || 0) < item.quantity ? "text-amber-500" : "text-emerald-500"
-                                    )}>{item.fulfilled_quantity || 0}</span>
-                                    <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
-                                  </div>
-                                </td>
-                              </ActionGuard>
-                            <td className="px-8 py-6">
+                            <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="INTERNAL_MOVEMENT" role={user?.role || 'WH_KEEPER'}>
+                              <td className="px-6 py-3.5 text-center">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <span className={cn(
+                                    "text-body-md font-semibold tabular-nums",
+                                    (item.fulfilled_quantity || 0) < item.quantity ? "text-amber-500" : "text-emerald-500"
+                                  )}>{item.fulfilled_quantity || 0}</span>
+                                  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
+                                </div>
+                              </td>
+                            </ActionGuard>
+                            <td className="px-6 py-3.5">
                               <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
                                 {item.notes || '—'}
                               </p>
@@ -355,7 +401,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         variant="destructive"
         icon="reject"
         confirmText={t('confirm_rejection')}
-        disabled={rejectionReason.trim().length < 15}
+        disabled={rejectionReason.trim().length < 15 || isWriteBlocked}
       >
         <div className="space-y-4">
           <label className="text-label-xs font-bold text-muted-foreground/40 uppercase ms-1">
@@ -363,6 +409,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           </label>
           <Textarea 
             placeholder={t('rejection_reason_placeholder')}
+            disabled={isWriteBlocked}
+            aria-label={t('rejection_reason_label')}
             className="bg-surface-container-high/40 border-none rounded-2xl p-5 text-body-md font-medium min-h-[120px] focus:ring-1 focus:ring-operational-cyan/30 resize-none transition-all"
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
@@ -387,6 +435,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         variant="default"
         icon="info"
         confirmText={t('post_fulfillment')}
+        disabled={isWriteBlocked}
         className="max-w-2xl"
       >
         <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
@@ -402,6 +451,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   type="number"
                   step="0.01"
                   dir="ltr"
+                  disabled={isWriteBlocked}
+                  aria-label={t('fulfilling') + " " + item.item_name}
                   className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30"
                   value={fulfillmentData.find(f => f.item_id === item.item_id)?.fulfilled_quantity || 0}
                   onChange={(e) => {

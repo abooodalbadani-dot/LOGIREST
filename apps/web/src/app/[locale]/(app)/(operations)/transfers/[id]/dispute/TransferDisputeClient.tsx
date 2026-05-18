@@ -71,7 +71,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
 
       {/* Mediation Summary Card */}
       <div className="p-8 bg-surface-container-low rounded-lg border border-outline-low relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-amber-500/50 via-amber-500/10 to-transparent" />
+        <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${locale === 'ar' ? 'from-transparent via-amber-500/10 to-amber-500/50' : 'from-amber-500/50 via-amber-500/10 to-transparent'}`} />
         <div className="flex items-start gap-6">
           <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shrink-0">
             <AlertTriangle className="w-7 h-7 text-amber-500" />
@@ -137,7 +137,10 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
                 header: t('resolution_action') || 'Resolution Action',
                 cell: () => (
                   <div className="flex justify-center px-4 min-w-[200px]">
-                    <select className="w-full bg-surface-container-highest/20 border border-outline-low h-10 px-4 text-label-xs font-bold uppercase rounded-md outline-none focus:ring-1 focus:ring-operational-cyan transition-all">
+                    <select
+                      aria-label={t('resolution_action') || 'Resolution Action'}
+                      className="w-full bg-surface-container-highest/20 border border-outline-low h-10 px-4 text-label-xs font-bold uppercase rounded-md outline-none focus:ring-1 focus:ring-operational-cyan transition-all"
+                    >
                       <option>{t('action_accept_received') || 'Accept Received Qty'}</option>
                       <option>{t('action_claim_vendor') || 'Claim Against Shipper'}</option>
                       <option>{t('action_write_off') || 'Write-off Loss'}</option>

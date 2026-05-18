@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft } from 'lucide-react';
+import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -58,13 +58,19 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const [scanError, setScanError] = useState('');
   const [requestedBy, setRequestedBy] = useState(() => issue?.requested_by ?? '');
 
-  const idempotencyKeyRef = useRef<string | null>(null);
+  const lastResetId = useRef<string | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
-    if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = crypto.randomUUID();
+    if (issue && issue.id !== lastResetId.current) {
+      lastResetId.current = issue.id;
+      setLines((issue.lines || []) as unknown as LineItem[]);
+      setDestinationId(issue.destination_dept_id ?? '');
+      setNotes(issue.notes || '');
+      setRequestedBy(issue.requested_by ?? '');
+      setIdempotencyKey(crypto.randomUUID());
     }
-  }, []);
+  }, [issue]);
 
   // Unsaved Changes Guard
   const isDirty = useMemo(() => {
@@ -274,7 +280,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         version: issue.version,
         signal: abortController.signal,
         headers: {
-          'X-Idempotency-Key': idempotencyKeyRef.current || ''
+          'X-Idempotency-Key': idempotencyKey
         }
       });
       setIsPostDialogOpen(false);
@@ -563,6 +569,19 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           isPending={isPostPending}
           submitLabel={t('post_issue')}
           canSubmit={lines.length > 0 && !!destinationId}
+          actions={
+            !effectiveIsLocked && !isNew && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => guardedRouter.push(`/issues/${id}/scan-mode`)}
+                className="h-8 md:h-10 px-3 md:px-5 rounded-full text-[10px] md:text-label-sm font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all group flex items-center gap-2 shrink-0 border-none"
+              >
+                <Scan className="w-4 h-4 md:w-5 md:h-5 opacity-50 transition-transform group-hover:scale-110" />
+                <span className="hidden md:inline">{t('scan_mode.breadcrumb_scan')}</span>
+              </Button>
+            )
+          }
         />
       </form>
 

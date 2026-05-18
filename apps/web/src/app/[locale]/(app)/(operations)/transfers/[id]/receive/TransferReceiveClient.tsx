@@ -45,13 +45,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
-  const idempotencyKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = crypto.randomUUID();
-    }
-  }, []);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
   const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
@@ -67,6 +61,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       ...l, 
       _receivedQty: l.shipped_qty ?? l.qty 
     })));
+    setIdempotencyKey(crypto.randomUUID());
   }
 
   const hasVariance = lines.some(l => (l._receivedQty ?? 0) !== (l.shipped_qty ?? l.qty));
@@ -156,7 +151,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       },
       signal: abortController.signal,
       headers: {
-        'X-Idempotency-Key': idempotencyKeyRef.current || ''
+        'X-Idempotency-Key': idempotencyKey
       }
     }, {
       onSuccess: () => {
@@ -238,7 +233,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-surface-container-low/50 rounded-3xl border border-white/5 p-8 space-y-6 relative overflow-hidden h-full">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500/50 to-transparent" />
+              <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-emerald-500/50 to-transparent`} />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('destination')}</span>

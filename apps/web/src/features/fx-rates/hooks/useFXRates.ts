@@ -9,33 +9,33 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 const QUERY_KEY = ['fx_rates'];
 
 const INITIAL_FX_RATES: FXRate[] = [
- {
- id: 'FX-001',
- from_currency_id: 'CUR-USD',
- to_currency_id: 'CUR-SAR',
- rate: 3.750000,
- effective_date: '2024-01-01',
- is_active: true,
- created_at: '2024-01-01T08:00:00Z'
- },
- {
- id: 'FX-002',
- from_currency_id: 'CUR-USD',
- to_currency_id: 'CUR-SAR',
- rate: 3.751000,
- effective_date: '2024-02-01',
- is_active: true,
- created_at: '2024-02-01T09:00:00Z'
- },
- {
- id: 'FX-003',
- from_currency_id: 'CUR-EUR',
- to_currency_id: 'CUR-SAR',
- rate: 4.120000,
- effective_date: '2024-03-01',
- is_active: true,
- created_at: '2024-03-01T10:00:00Z'
- }
+  {
+    id: 'FX-001',
+    from_currency_id: 'CUR-USD',
+    to_currency_id: 'CUR-SAR',
+    rate: 3.750000,
+    effective_date: '2024-01-01',
+    is_active: true,
+    created_at: '2024-01-01T08:00:00Z'
+  },
+  {
+    id: 'FX-002',
+    from_currency_id: 'CUR-USD',
+    to_currency_id: 'CUR-SAR',
+    rate: 3.751000,
+    effective_date: '2024-02-01',
+    is_active: true,
+    created_at: '2024-02-01T09:00:00Z'
+  },
+  {
+    id: 'FX-003',
+    from_currency_id: 'CUR-EUR',
+    to_currency_id: 'CUR-SAR',
+    rate: 4.120000,
+    effective_date: '2024-03-01',
+    is_active: true,
+    created_at: '2024-03-01T10:00:00Z'
+  }
 ];
 
 // Helper to normalize dates for comparison (YMD only)
@@ -55,7 +55,7 @@ export function useFXRates() {
           reject(new Error('AbortError'));
         });
       });
-      
+
       let data = queryClient.getQueryData<FXRate[]>(QUERY_KEY);
       if (!data) {
         data = INITIAL_FX_RATES;
@@ -90,7 +90,7 @@ export function useFXRate(id: string | null) {
           reject(new Error('AbortError'));
         });
       });
-      
+
       const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
       return data.find(f => f.id === id) || null;
     },
@@ -111,13 +111,13 @@ export function useCreateFXRate() {
 
       const workPromise = (async () => {
         await new Promise(resolve => setTimeout(resolve, 800));
-        
+
         const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
-        
+
         // UNIQUE CONSTRAINT: (from + to + date)
-        const exists = data.some(f => 
-          f.from_currency_id === values.from_currency_id && 
-          f.to_currency_id === values.to_currency_id && 
+        const exists = data.some(f =>
+          f.from_currency_id === values.from_currency_id &&
+          f.to_currency_id === values.to_currency_id &&
           normalizeDate(f.effective_date) === normalizeDate(values.effective_date)
         );
 
@@ -165,7 +165,7 @@ export function useUpdateFXRate(options?: { onConflict?: () => void }) {
 
       const workPromise = (async () => {
         await new Promise(resolve => setTimeout(resolve, 800));
-        
+
         const data = queryClient.getQueryData<FXRate[]>(QUERY_KEY) || INITIAL_FX_RATES;
         const rate = data.find(f => f.id === id);
         if (!rate) throw new Error('Rate not found');
@@ -177,16 +177,16 @@ export function useUpdateFXRate(options?: { onConflict?: () => void }) {
         }
 
         // DEACTIVATION / EDIT GUARD: Check GRN cache (Simulated usage)
-        const isUsedInPostedDoc = id === 'FX-001'; 
+        const isUsedInPostedDoc = id === 'FX-001';
 
         if (isUsedInPostedDoc) {
           if (values.is_active === false && rate.is_active === true) {
             throw new Error('cannot_deactivate_rate_in_use');
           }
-          
+
           if (
-            values.from_currency_id !== rate.from_currency_id || 
-            values.to_currency_id !== rate.to_currency_id || 
+            values.from_currency_id !== rate.from_currency_id ||
+            values.to_currency_id !== rate.to_currency_id ||
             normalizeDate(values.effective_date) !== normalizeDate(rate.effective_date) ||
             values.rate !== rate.rate
           ) {
@@ -195,14 +195,14 @@ export function useUpdateFXRate(options?: { onConflict?: () => void }) {
         }
 
         if (
-          values.from_currency_id !== rate.from_currency_id || 
-          values.to_currency_id !== rate.to_currency_id || 
+          values.from_currency_id !== rate.from_currency_id ||
+          values.to_currency_id !== rate.to_currency_id ||
           normalizeDate(values.effective_date) !== normalizeDate(rate.effective_date)
         ) {
-          const exists = data.some(f => 
+          const exists = data.some(f =>
             f.id !== id &&
-            f.from_currency_id === values.from_currency_id && 
-            f.to_currency_id === values.to_currency_id && 
+            f.from_currency_id === values.from_currency_id &&
+            f.to_currency_id === values.to_currency_id &&
             normalizeDate(f.effective_date) === normalizeDate(values.effective_date)
           );
           if (exists) throw new Error('cannot_duplicate_rate');
@@ -210,7 +210,7 @@ export function useUpdateFXRate(options?: { onConflict?: () => void }) {
 
         const updatedRate: FXRate = { ...rate, ...values, version: (rate.version ?? 0) + 1 };
 
-        queryClient.setQueryData<FXRate[]>(QUERY_KEY, (old = INITIAL_FX_RATES) => 
+        queryClient.setQueryData<FXRate[]>(QUERY_KEY, (old = INITIAL_FX_RATES) =>
           old.map(f => f.id === id ? updatedRate : f)
         );
 

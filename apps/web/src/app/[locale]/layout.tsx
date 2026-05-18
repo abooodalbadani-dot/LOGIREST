@@ -3,7 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
-import { SessionTimeoutModal } from '@/components/shared/SessionTimeoutModal';
+
 import { WarehouseScopeProvider } from '@/providers/WarehouseScopeProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { cookies } from 'next/headers';
@@ -78,7 +78,6 @@ export default async function LocaleLayout({
                           <ErrorProvider>
                             {children}
                           </ErrorProvider>
-                          <SessionTimeoutModal />
                           <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
                         </ErrorBoundary>
                       </WarehouseScopeProvider>

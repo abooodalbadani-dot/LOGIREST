@@ -58,6 +58,7 @@ export function LotRow({
  max={lot.qty_available}
  value={allocatedQty || ''} onChange={(e) => onQtyChange(Number(e.target.value))}
  disabled={inputDisabled}
+ aria-label="Allocate Quantity"
  className="w-20 bg-surface-container-high border text-foreground rounded-lg p-1 text-center font-mono focus:border-operational-cyan outline-none disabled:opacity-50"
  />
  </div>

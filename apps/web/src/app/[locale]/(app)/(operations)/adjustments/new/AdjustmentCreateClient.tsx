@@ -157,6 +157,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       >
         {/* Core Settings Panel */}
         <div className="bg-surface-container-lowest p-8 rounded-2xl space-y-6 relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+          {/* Premium Locale-Mirrored Gradient Accent */}
+          <div className={cn(
+            "absolute top-0 left-0 right-0 h-[2px] from-operational-cyan/30 via-operational-cyan/5 to-transparent pointer-events-none",
+            locale === 'ar' ? "bg-gradient-to-l" : "bg-gradient-to-r"
+          )} />
           <div className="flex items-center gap-3 mb-2">
             <div className="w-1 h-5 bg-operational-cyan/20 rounded-full group-hover:bg-operational-cyan/40 transition-colors" />
             <h3 className={cn("text-label-xs font-display font-semibold uppercase text-tertiary/40 group-hover:text-tertiary transition-colors")}>
@@ -243,6 +248,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
         {/* Item Calibration Panel */}
         <div className="bg-surface-container-lowest p-8 rounded-2xl space-y-6 relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+          {/* Premium Locale-Mirrored Gradient Accent */}
+          <div className={cn(
+            "absolute top-0 left-0 right-0 h-[2px] from-operational-cyan/30 via-operational-cyan/5 to-transparent pointer-events-none",
+            locale === 'ar' ? "bg-gradient-to-l" : "bg-gradient-to-r"
+          )} />
           <div className="flex items-center gap-3 mb-2">
             <div className="w-1 h-5 bg-operational-cyan/20 rounded-full group-hover:bg-operational-cyan/40 transition-colors" />
             <h3 className={cn("text-label-xs font-display font-semibold uppercase text-tertiary/40 group-hover:text-tertiary transition-colors")}>

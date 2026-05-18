@@ -43,13 +43,15 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
-  const idempotencyKeyRef = useRef<string | null>(null);
+  const lastResetId = useRef<string | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
-    if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = crypto.randomUUID();
+    if (transfer && transfer.id !== lastResetId.current) {
+      lastResetId.current = transfer.id;
+      setIdempotencyKey(crypto.randomUUID());
     }
-  }, []);
+  }, [transfer]);
 
   const isDirty = Object.keys(scannedLines).length > 0;
   const { router } = useUnsavedChangesGuard(isDirty);
@@ -117,7 +119,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
         version: transfer.version || 1,
         signal: abortController.signal,
         headers: {
-          'X-Idempotency-Key': idempotencyKeyRef.current || ''
+          'X-Idempotency-Key': idempotencyKey
         }
       },
       {
@@ -207,7 +209,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
               <div className="bg-surface-container-low/50 rounded-3xl border border-white/5 p-8 space-y-8 relative overflow-hidden h-full">
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500/50 to-transparent" />
+                <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 to-transparent`} />
                 
                 <div className="space-y-6">
                   <div className="space-y-1">

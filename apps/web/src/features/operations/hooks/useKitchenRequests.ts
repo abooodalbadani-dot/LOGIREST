@@ -64,8 +64,8 @@ export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => voi
   const queryClient = useQueryClient();
    return useSafeMutation({
      onConflict: options?.onConflict,
-      mutationFn: ({ id, status, reason, version, signal }: { id: string; status: string; reason?: string; version: number; signal?: AbortSignal }) =>
-        apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason, version }, { signal }),
+      mutationFn: ({ id, status, reason, version, headers, signal }: { id: string; status: string; reason?: string; version: number; headers?: Record<string, string>; signal?: AbortSignal }) =>
+        apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason, version }, { headers, signal }),
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
@@ -80,8 +80,8 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
   const queryClient = useQueryClient();
    return useSafeMutation({
      onConflict: options?.onConflict,
-      mutationFn: ({ id, items, version, signal }: { id: string; items: { item_id: string; fulfilled_quantity: number }[]; version: number; signal?: AbortSignal }) =>
-        apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items, version }, { signal }),
+      mutationFn: ({ id, items, version, headers, signal }: { id: string; items: { item_id: string; fulfilled_quantity: number }[]; version: number; headers?: Record<string, string>; signal?: AbortSignal }) =>
+        apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { items, version }, { headers, signal }),
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
@@ -91,4 +91,3 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
   },
   });
 }
-

@@ -73,6 +73,7 @@ export function Step1Upload({ wizard, locale: _locale }: Step1UploadProps) {
 
  <input 
  type="file" 
+ aria-label={t('drop_file') || "Upload File"}
  className="absolute inset-0 opacity-0 cursor-pointer" 
  accept=".xlsx,.xls"
  onChange={(e) => {

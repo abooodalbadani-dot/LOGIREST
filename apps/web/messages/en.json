@@ -49,7 +49,8 @@
       "generic": "An unexpected error occurred. Please try again or contact support.",
       "title": "Error Encountered",
       "not_found_title": "Record Not Found",
-      "not_found_message": "The record you are looking for does not exist or may have been deleted."
+      "not_found_message": "The record you are looking for does not exist or may have been deleted.",
+      "unauthorized": "You do not have permission to access this page."
     },
     "ui": {
       "toggle_theme": "Toggle Theme",
@@ -67,7 +68,7 @@
     "history": "History",
     "back": "Back",
     "recipe": "Recipe / Item",
-    "search_placeholder": "Search...",
+    "search_placeholder": "Search registry...",
     "back_to_list": "Back to List",
     "purchasing": "Purchasing",
     "purchase_orders": "Purchase Orders",
@@ -101,7 +102,7 @@
       "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
       "placeholders": {
         "code": "UNIT",
-        "name_ar": "\u0627\u0633\u0645 \u0627\u0644\u0648\u062d\u062f\u0629",
+        "name_ar": "اسم الوحدة",
         "name_en": "Unit Name"
       },
       "registry_sync": "Registry Sync",
@@ -179,7 +180,7 @@
     "created_at": "Created At",
     "updated_at": "Updated At",
     "updated_by": "Updated By",
-    "dash": "\u2014",
+    "dash": "—",
     "datatable": {
       "export_csv": "Export CSV",
       "no_records": "No Data",
@@ -445,8 +446,8 @@
     "warehouse": "Warehouse",
     "fefo": {
       "override_reason": "Override reason",
-      "expired_warning": "Warning: This item is expired \u2014 usage reason must be provided",
-      "expired_status": "\u26d4 Expired",
+      "expired_warning": "Warning: This item is expired — usage reason must be provided",
+      "expired_status": "⛔ Expired",
       "required_commitment": "Required Commitment",
       "units": "Units",
       "allocated_status": "Allocated Status",
@@ -538,14 +539,14 @@
     "no_categories_desc": "Group your items into logical categories for better organization.",
     "no_categories_title": "No Categories Found",
     "not_set": "Not Set",
-    "null_select": "\u2014 NULL SELECT \u2014",
+    "null_select": "— NULL SELECT —",
     "operational_availability": "Operational Availability",
     "operational_compliance": "Operational Compliance",
     "operational_details": "Operational Details",
     "operational_details_desc": "Management and financial mapping",
     "optimal": "Optimal",
     "placeholder_sku": "SKU-000-000",
-    "select_none": "\u2014",
+    "select_none": "—",
     "precision": "Precision",
     "quick_tips": "Quick Tips",
     "hardware_usage": "Hardware Usage & Guidelines",
@@ -556,8 +557,7 @@
     "saved_success": "Saved successfully.",
     "scope": "Scope",
     "search_categories_placeholder": "Filter categories by name...",
-    "search_placeholder": "Search registry...",
-    "select_base_unit": "\u2014 SELECT BASE UNIT \u2014",
+    "select_base_unit": "— SELECT BASE UNIT —",
     "sku_definition_protocol": "SKU Definition Protocol",
     "source_unit": "SOURCE UNIT",
     "status_description": "Control the visibility and operational availability of this unit.",
@@ -623,11 +623,17 @@
         "delete_linked_items": "Cannot delete category with active inventory items."
       },
       "fields": {
+        "code": "Category Code",
+        "code_auto": "CAT-XXX (System Generated)",
+        "code_hint": "System-generated sequential category identifier (Read-Only)",
         "name_ar": "Category Name (AR)",
         "name_en": "Category Name (EN)"
       },
       "title": "Item Categories",
-      "updated_success": "Category updated successfully"
+      "updated_success": "Category updated successfully",
+      "warnings": {
+        "referenced_protection": "This category is referenced in active operational documents. Certain fields are protected to maintain ledger consistency."
+      }
     },
     "changes": "Changes",
     "create_user": "Create User",
@@ -1216,7 +1222,8 @@
     "aria": {
       "kpi_grid": "KPI Grid",
       "operational_monitoring": "Operational Monitoring"
-    }
+    },
+    "error_loading": "Failed to load dashboard statistics"
   },
   "inventory": {
     "balance": {
@@ -1437,7 +1444,7 @@
       "layers": "Layers",
       "mapping_status": "Mapping Status",
       "placeholders": {
-        "name_ar": "\u0645\u062b\u0627\u0644: \u0645\u0648\u0627\u062f \u062e\u0627\u0645",
+        "name_ar": "مثال: مواد خام",
         "name_en": "e.g. Raw Materials"
       },
       "search_placeholder": "Filter categories by name or code...",
@@ -1690,7 +1697,7 @@
       "success_description": "Successfully synchronized {count} records with the Master Data Hub.",
       "success_title": "Import Successful",
       "title": "Bulk Import",
-      "upload_hint": "XLSX ONLY \u2022 MAX 20MB",
+      "upload_hint": "XLSX ONLY • MAX 20MB",
       "total_records": "Manifest Rows",
       "try_again": "Re-initialize",
       "uoms": "Units of Measure",
@@ -1843,7 +1850,7 @@
       "phone": "Phone Number",
       "code_placeholder": "e.g. V-001",
       "name_en_placeholder": "Global Distributors",
-      "name_ar_placeholder": "\u0627\u0644\u0645\u0648\u0632\u0639\u0648\u0646 \u0627\u0644\u0639\u0627\u0644\u0645\u064a\u0648\u0646",
+      "name_ar_placeholder": "الموزعون العالميون",
       "contact_person_placeholder": "John Doe",
       "phone_placeholder": "+966 50 000 0000",
       "email_placeholder": "vendor@example.com",
@@ -1922,7 +1929,7 @@
         "type": "Storage Type"
       },
       "name_ar": "Name (AR)",
-      "name_ar_placeholder": "\u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639 \u0627\u0644\u0631\u0626\u064a\u0633\u064a",
+      "name_ar_placeholder": "المستودع الرئيسي",
       "name_en": "Name (EN)",
       "name_en_placeholder": "Main Warehouse",
       "operational_status": "Operational Status",
@@ -1965,7 +1972,7 @@
     },
     "common": {
       "code": "Code",
-      "select_none": "\u2014",
+      "select_none": "—",
       "status_label": "Status",
       "operational_availability": "Operational Availability",
       "active": "Active",
@@ -2010,7 +2017,7 @@
       "precision_description": "Units are calibrated for enterprise-grade inventory accuracy and financial reconciliation.",
       "placeholders": {
         "code": "UNIT",
-        "name_ar": "\u0627\u0633\u0645 \u0627\u0644\u0648\u062d\u062f\u0629",
+        "name_ar": "اسم الوحدة",
         "name_en": "Unit Name"
       },
       "registry_sync": "Registry Sync",
@@ -2279,7 +2286,7 @@
       },
       "placeholders": {
         "sku": "E.G. ITEM-9902",
-        "name_ar": "\u0623\u0631\u0632 \u0628\u0633\u0645\u062a\u064a 5 \u0643\u062c\u0645",
+        "name_ar": "أرز بسمتي 5 كجم",
         "name_en": "Basmati Rice 5kg",
         "select_category": "Select Category",
         "select_uom": "Select UoM"
@@ -2514,7 +2521,7 @@
       "empty_manifest": "Manifest empty. Awaiting component enrollment.",
       "enroll_component": "Enroll Component",
       "entries": "Entries",
-      "expired_status": "\u26d4 Expired",
+      "expired_status": "⛔ Expired",
       "expiry": "Expiry",
       "fefo_allocator_title": "Allocate Lots",
       "fefo_drawer_title": "Lot Allocation (FEFO)",
@@ -2552,7 +2559,7 @@
       "posted": "Posted",
       "posted_at": "Posted At",
       "posted_by": "Posted By",
-      "posted_success": "Stock Issue posted successfully.",
+      "posted_success": "Stock Issue posted successfully",
       "protocol_validations": "Protocol Validations Complete",
       "qty": "Quantity",
       "redefine_batches": "Redefine Batches",
@@ -2584,7 +2591,7 @@
         "scanned_items_count": "Scanned Items ({count})",
         "undo": "Undo",
         "empty_state": "No items scanned yet.",
-        "expired_warning": "Expired \u2014 Override Allowed",
+        "expired_warning": "Expired — Override Allowed",
         "expiry_label": "Exp: {date}",
         "breadcrumb_operations": "Operations",
         "breadcrumb_issues": "Stock Issues",
@@ -2592,10 +2599,11 @@
         "exit_mode": "Exit Scan Mode",
         "ready_for_barcode": "READY FOR BARCODE...",
         "awaiting_first_scan": "Awaiting First Scan",
-        "allocated_status": "ALLOCATED \u2713",
+        "allocated_status": "ALLOCATED ✓",
         "pending_lots_status": "PENDING LOTS",
         "loading": "Loading...",
-        "qty": "Quantity"
+        "qty": "Quantity",
+        "locked_warning": "Scan Mode Disabled — Document is already locked"
       },
       "validation": {
         "warehouse_locked": "Warehouse is locked due to an active stocktake.",
@@ -2613,8 +2621,7 @@
         "warehouse_locked": "Source warehouse is locked"
       },
       "created_success": "Stock Issue created successfully",
-      "updated_success": "Stock Issue updated successfully",
-      "posted_success": "Stock Issue posted successfully"
+      "updated_success": "Stock Issue updated successfully"
     },
     "expired_override": {
       "title": "Expired Product",
@@ -3045,7 +3052,7 @@
       "operational_status": "Operational Status",
       "order_reference": "Order Reference",
       "partner_identity": "Partner Identity",
-      "pending_label": "\u2014 PENDING \u2014",
+      "pending_label": "— PENDING —",
       "pending_po": "Pending PO Commitment",
       "pending_posting": "Pending Posting",
       "post_confirm_desc": "After posting, the GRN cannot be edited. Ensure all quantities and costs are correct.",
@@ -3064,6 +3071,11 @@
       "scan_log": "Operational Scan History",
       "scan_mode": "Scanning Protocol Active",
       "scan_mode_sub": "High-performance operational acquisition layer",
+      "inspect_scan_registers": "Inspect Scan Registers",
+      "read_only_scan_registry": "Read-Only Scan Register",
+      "scan_registry_locked_desc": "Scanning is disabled because this document has been posted.",
+      "read_only_badge": "Read-Only View - Registry Locked",
+      "back_to_detail": "Back to Detail",
       "errors": {
         "no_currencies_available": "No currencies available for FX selection."
       },
@@ -3525,7 +3537,7 @@
   "fefo": {
     "warning": "Warning: This product is expired",
     "require_reason": "You must enter an override reason",
-    "override_warning": "Warning: This product is expired \u2014 you must enter an override reason",
+    "override_warning": "Warning: This product is expired — you must enter an override reason",
     "reason_placeholder": "Override reason"
   },
   "profile_page": {

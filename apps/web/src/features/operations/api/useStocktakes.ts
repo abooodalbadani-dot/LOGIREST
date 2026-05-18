@@ -74,8 +74,8 @@ export function useCompleteCounting(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => 
-      apiClient.post(`/stocktake/sessions/${id}/submit`, StocktakeSessionSchema, null, { signal }),
+    mutationFn: ({ id, signal, headers }: { id: string; signal?: AbortSignal; headers?: Record<string, string> }) => 
+      apiClient.post(`/stocktake/sessions/${id}/submit`, StocktakeSessionSchema, null, { signal, headers }),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
@@ -100,11 +100,11 @@ export function useUpdateItemCount(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ stocktakeId, itemId: _itemId, lineId, countedQty, varianceReason, signal }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string; signal?: AbortSignal }) => 
+    mutationFn: ({ stocktakeId, itemId: _itemId, lineId, countedQty, varianceReason, signal, headers }: { stocktakeId: string; itemId: string; lineId: string; countedQty: number; varianceReason?: string; signal?: AbortSignal; headers?: Record<string, string> }) => 
       apiClient.put(`/stocktake/sessions/${stocktakeId}/items/${lineId}`, StocktakeItemSchema, { 
         counted_qty: countedQty, 
         variance_reason: varianceReason 
-      }, { signal }),
+      }, { signal, headers }),
     onSuccess: (_, { stocktakeId }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes', stocktakeId] });
     },

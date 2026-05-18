@@ -60,13 +60,7 @@ export function TransferNewClient() {
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<NewTransferLine[]>([]);
 
-  const idempotencyKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = crypto.randomUUID();
-    }
-  }, []);
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   // Unsaved changes guard
   const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
@@ -135,7 +129,7 @@ export function TransferNewClient() {
       },
       signal: abortController.signal,
       headers: {
-        'X-Idempotency-Key': idempotencyKeyRef.current || ''
+        'X-Idempotency-Key': idempotencyKey
       }
     }, {
       onSuccess: () => {
@@ -180,7 +174,7 @@ export function TransferNewClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-8">
           <div className="bg-surface-container-low/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
+            <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
             
             <div className="flex items-center gap-3 mb-6">
               <Warehouse className="w-4 h-4 text-cyan-500" />
@@ -257,7 +251,7 @@ export function TransferNewClient() {
 
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-surface-container-low/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-emerald-500/50 via-emerald-500/20 to-transparent" />
+            <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-emerald-500/50 via-emerald-500/20 to-transparent`} />
             
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">

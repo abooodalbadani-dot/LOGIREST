@@ -172,9 +172,9 @@ export default function LoginPage() {
                                 className="object-contain"
                             />
                         </div>
-                        <h1 className="text-display-xs font-black text-[#02617c] tracking-tighter text-center">
+                        <h2 className="text-display-xs font-black text-[#02617c] tracking-tighter text-center">
                             {t('login.hero_title')}
-                        </h1>
+                        </h2>
                         <div className="mt-1 px-1.5 py-0.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded text-[8px] font-mono text-black/40 dark:text-white/40 uppercase">
                             {t('login.version')}
                         </div>
