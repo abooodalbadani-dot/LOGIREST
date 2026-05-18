@@ -21,6 +21,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Link } from '@/i18n/navigation';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
+import { useLocale } from '@/hooks/useLocale';
 import type { Transfer } from '@/types/documents';
 
 interface TransferFormProps {
@@ -35,6 +36,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
   const tCommon = useTranslations('common');
   const router = useRouter();
   const { user } = useAuth();
+  const { gradientClass } = useLocale();
 
   // Dual warehouse lock
   const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
@@ -110,7 +112,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-surface-container-low/50 p-8 rounded-2xl relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
+              <div className={`absolute top-0 inset-x-0 h-1 ${gradientClass} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
 
               <div className="space-y-2">
                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>

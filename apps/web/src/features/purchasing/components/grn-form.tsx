@@ -16,7 +16,8 @@ import {
   Wallet,
   PackageSearch,
   MessageSquare,
-  Send
+  Send,
+  Scan
 } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
@@ -270,6 +271,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               {isNew ? t('new_manifest_sub') : t('detail_sub')}
             </p>
           </div>
+          {!isNew && (
+            <Button
+              type="button"
+              onClick={() => router.push(`/goods-received/${id}/scan-mode`)}
+              variant="outline"
+              className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
+            >
+              <Scan className="w-4 h-4" />
+              {t('scan_mode')}
+            </Button>
+          )}
         </div>
 
         <DocumentLockWrapper isLocked={isLocked || isWarehouseLocked}>

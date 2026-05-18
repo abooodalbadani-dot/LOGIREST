@@ -2,7 +2,7 @@
 import { Link, usePathname } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { usePermission } from '@/hooks/usePermission';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, type AuthUser } from '@/providers/AuthProvider';
 import { PERMISSION_MATRIX, type ResourceType } from '@/types/rbac';
 import { 
   LayoutDashboard, 
@@ -52,7 +52,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-function checkItemVisibility(item: NavItem, user: any, isLoading: boolean): boolean {
+function checkItemVisibility(item: NavItem, user: AuthUser | null, isLoading: boolean): boolean {
   if (isLoading || !user) {
     return false;
   }
@@ -130,7 +130,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'departments', href: '/master-data/departments', resource: 'master_data_departments', labelKey: 'departments', icon: Building2 },
         { key: 'barcodes', href: '/master-data/barcodes', resource: 'master_data', labelKey: 'barcodes', icon: Barcode },
         { key: 'currencies', href: '/master-data/currencies', resource: 'master_data', labelKey: 'currencies', icon: Coins },
-        { key: 'fx_rates', href: '/master-data/fx-rates', resource: 'master_data', labelKey: 'fx_rates', icon: TrendingUp },
+        { key: 'fx_rates', href: '/master-data/fx-rates', resource: 'master_data_fx_rates', labelKey: 'fx_rates', icon: TrendingUp },
         { key: 'branches', href: '/master-data/branches', resource: 'master_data', labelKey: 'branches', icon: Building2 },
         { key: 'import', href: '/master-data/import', resource: 'master_data', labelKey: 'import', icon: Database },
       ]
@@ -148,9 +148,11 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { key: 'users', href: '/admin/users', resource: 'admin', labelKey: 'users', icon: ShieldCheck },
         { key: 'roles', href: '/admin/roles', resource: 'admin', labelKey: 'roles', icon: Shield },
+        { key: 'roles_matrix', href: '/admin/roles/matrix', resource: 'admin', labelKey: 'roles_matrix', icon: Shield },
         { key: 'settings', href: '/admin/settings', resource: 'admin', labelKey: 'settings', icon: Sliders },
-        { key: 'audit', href: '/admin/audit-logs', resource: 'admin', labelKey: 'audit_log', icon: History },
+        { key: 'mail_settings', href: '/admin/mail-settings', resource: 'admin', labelKey: 'mail_settings', icon: Sliders },
         { key: 'restaurant_profile', href: '/admin/restaurant-profile', resource: 'admin', labelKey: 'restaurant_profile', icon: Store },
+        { key: 'audit', href: '/admin/audit-logs', resource: 'admin', labelKey: 'audit_log', icon: History },
       ]
     }
   ];

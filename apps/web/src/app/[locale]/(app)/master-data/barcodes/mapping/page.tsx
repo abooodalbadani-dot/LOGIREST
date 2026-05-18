@@ -1,9 +1,10 @@
 import { BarcodeMappingClient } from './BarcodeMappingClient';
 
 export default async function BarcodeMappingPage({
-  params: { locale }
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   return <BarcodeMappingClient locale={locale} />;
 }

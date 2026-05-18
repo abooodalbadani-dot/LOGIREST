@@ -59,6 +59,7 @@ export function FXRateFormClient({
   const update = useUpdateFXRate({ onConflict: conflict.triggerConflict });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -107,7 +108,6 @@ export function FXRateFormClient({
   const { register, handleSubmit, reset, control, formState: { errors, isDirty, isValid } } =
     useForm<FXRateFormValues>({
       resolver: zodResolver(FXRateFormSchema),
-      disabled: isReadOnly,
       defaultValues: { 
         from_currency_id: '',
         to_currency_id: '',
@@ -178,7 +178,7 @@ export function FXRateFormClient({
     }
   });
 
-  const displayTitle = isReadOnlyProp || normalizedRole === 'auditor' ? viewTitle : (id ? editTitle : createTitle);
+  const displayTitle = (isReadOnlyProp || normalizedRole === 'auditor') ? (viewTitle || t('view_title') || editTitle) : (id ? editTitle : createTitle);
 
   return (
     <>
@@ -298,9 +298,9 @@ export function FXRateFormClient({
                       step="0.000001"
                       placeholder={t('placeholders.rate')}
                       dir="ltr" 
-                      disabled={isReadOnly}
+                      readOnly={isReadOnly}
                       {...register('rate', { valueAsNumber: true })} 
-                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm disabled:opacity-70"
+                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default"
                     />
                   </div>
                   {errors.rate && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.rate.message as Parameters<typeof t>[0])}</p>}
@@ -317,9 +317,9 @@ export function FXRateFormClient({
                       id="fx-date" 
                       type="date"
                       dir="ltr" 
-                      disabled={isReadOnly}
+                      readOnly={isReadOnly}
                       {...register('effective_date')} 
-                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm disabled:opacity-70"
+                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default"
                     />
                   </div>
                   {errors.effective_date && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.effective_date.message as Parameters<typeof t>[0])}</p>}

@@ -380,8 +380,21 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                       <div className="w-1 h-6 bg-primary/20 rounded-full" />
                       <h3 className="text-label-xs font-semibold uppercase text-primary/30">{t('line_items')}</h3>
                     </div>
-                    <div className="px-4 py-2 bg-surface-container-low rounded-xl text-label-xs font-mono text-primary/40">
-                      {lines.length} {t('entries').toUpperCase()}
+                    <div className="flex items-center gap-3">
+                      {!isNew && !effectiveIsLocked && (
+                        <Button
+                          type="button"
+                          onClick={() => guardedRouter.push(`/issues/${id}/scan-mode`)}
+                          variant="outline"
+                          className="h-10 px-6 text-label-xs font-semibold uppercase rounded-lg border-primary/20 text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
+                        >
+                          <Scan className="w-4 h-4" />
+                          {t('scan_mode.breadcrumb_scan')}
+                        </Button>
+                      )}
+                      <div className="px-4 py-2 bg-surface-container-low rounded-xl text-label-xs font-mono text-primary/40">
+                        {lines.length} {t('entries').toUpperCase()}
+                      </div>
                     </div>
                   </div>
                   <DocumentLineItemTable 

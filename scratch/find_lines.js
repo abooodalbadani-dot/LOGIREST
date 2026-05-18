@@ -1,25 +1,32 @@
 const fs = require('fs');
 
-function findKeys(filepath) {
-  const content = fs.readFileSync(filepath, 'utf8');
-  const lines = content.split(/\r?\n/);
-  console.log(`=== File: ${filepath} ===`);
-  let operationsStart = -1;
-  let issueStart = -1;
-  let issueEnd = -1;
+function findLines(lang) {
+  const filePath = `apps/web/messages/${lang}.json`;
+  const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+  
+  let commonStart = -1;
+  let fieldsStart = -1;
+  let inCommon = false;
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.includes('"operations": {')) {
-      operationsStart = i + 1;
-      console.log(`"operations": { found at line ${operationsStart}`);
+    if (line.includes('"common": {')) {
+      commonStart = i + 1;
+      inCommon = true;
     }
-    if (operationsStart !== -1 && line.includes('"issue": {')) {
-      issueStart = i + 1;
-      console.log(`"issue": { found at line ${issueStart}`);
+    if (inCommon && line.includes('"fields": {')) {
+      fieldsStart = i + 1;
+      break;
+    }
+  }
+  
+  console.log(`${lang}.json: "common" starts at line ${commonStart}, nested "fields" starts at line ${fieldsStart}`);
+  if (fieldsStart !== -1) {
+    for (let j = fieldsStart - 1; j < fieldsStart + 10; j++) {
+      console.log(`  ${j+1}: ${lines[j]}`);
     }
   }
 }
 
-findKeys('apps/web/messages/en.json');
-findKeys('apps/web/messages/ar.json');
+findLines('en');
+findLines('ar');

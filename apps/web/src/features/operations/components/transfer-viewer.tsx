@@ -10,6 +10,7 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
+import { useLocale } from '@/hooks/useLocale';
 import { TRANSFER_STATUS } from '@/contracts/statuses';
 import type { Transfer } from '@/types/documents';
 
@@ -22,6 +23,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const { gradientClass } = useLocale();
 
   const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
 
@@ -70,7 +72,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-surface-container-low/50 p-8 rounded-2xl relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-e from-cyan-500/50 via-cyan-500/20 to-transparent" />
+        <div className={`absolute top-0 inset-x-0 h-1 ${gradientClass} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
 
         <div className="space-y-2">
           <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>

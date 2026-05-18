@@ -33,7 +33,7 @@ interface AuditLogEntry {
   user_name?: string;
 }
 
-interface GRNViewerDocument extends Omit<GRN, 'lines'> {
+export interface GRNViewerDocument extends Omit<GRN, 'lines'> {
   supplier_name?: string;
   po_number?: string | null;
   audit_log?: AuditLogEntry[];

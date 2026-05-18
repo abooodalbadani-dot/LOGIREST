@@ -1,12 +1,13 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
 
 import { GRNForm } from '@/features/purchasing/components/grn-form';
+import { GRNViewer, type GRNViewerDocument } from './GRNViewer';
 import { Button } from '@/components/ui/button';
 import { Send, Scan } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
@@ -27,6 +28,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
  */
 export function GRNDetailClient({ id }: GRNDetailClientProps) {
   const t = useTranslations('procurement.grn');
+  const locale = useLocale() as 'ar' | 'en';
   const router = useRouter();
   const { user } = useAuth();
   
@@ -72,6 +74,23 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
         </ActionGuard>
       </div>
   );
+
+  if (isLocked) {
+    return (
+      <>
+        <GRNViewer 
+          document={grn as unknown as GRNViewerDocument} 
+          locale={locale} 
+          actions={actions}
+        />
+        <ConflictDialog 
+          open={open}
+          onReload={handleReload}
+          onClose={handleClose}
+        />
+      </>
+    );
+  }
 
   return (
     <>

@@ -52,7 +52,7 @@ import {
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { KITCHEN_REQUEST_STATUS, KitchenRequestStatus } from '@/contracts/statuses';
-import { formatDate } from '@/utils/currency';
+import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { audioAlerts } from '@/utils/audio';
@@ -79,7 +79,6 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
   const [fulfillmentData, setFulfillmentData] = useState<{ item_id: string; fulfilled_quantity: number }[]>([]);
 
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const { data: warehouseLockState } = useWarehouseLock(request.warehouse_id || null);
   const isWriteBlocked = updateStatus.isPending || fulfillRequest.isPending || !!warehouseLockState?.isLocked;
 
@@ -113,7 +112,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         id, 
         status: KITCHEN_REQUEST_STATUS.APPROVED, 
         version: request.version ?? 0,
-        headers: { 'X-Idempotency-Key': idempotencyKey }
+        headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
     } catch (error) {
       console.error('Failed to approve request', error);
@@ -134,7 +133,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         status: KITCHEN_REQUEST_STATUS.CANCELLED, 
         reason: trimmedReason, 
         version: request.version ?? 0,
-        headers: { 'X-Idempotency-Key': idempotencyKey }
+        headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
       setRejectDialogOpen(false);
     } catch (error) {
@@ -153,7 +152,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         id, 
         items: fulfillmentData, 
         version: request.version ?? 0,
-        headers: { 'X-Idempotency-Key': idempotencyKey }
+        headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
       setFulfillDialogOpen(false);
     } catch (error) {
@@ -234,7 +233,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   <StatusBadge status={request.status} />
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
-                    {formatDate(request.created_at, locale)}
+                    <ClientOnlyTime date={request.created_at} mode="date" locale={locale} className="tabular-nums" />
                   </span>
                 </div>
               </div>

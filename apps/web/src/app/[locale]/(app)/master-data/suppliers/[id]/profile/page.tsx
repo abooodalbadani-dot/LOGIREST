@@ -3,10 +3,11 @@ import { SupplierProfileClient } from './SupplierProfileClient';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 export default async function SupplierProfilePage({
-  params: { locale, id }
+  params,
 }: {
-  params: { locale: string; id: string };
+  params: Promise<{ locale: string; id: string }>;
 }) {
+  const { locale, id } = await params;
   setRequestLocale(locale);
   
   return (

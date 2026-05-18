@@ -55,7 +55,7 @@ export function CategoryListClient() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
           <PermissionGate action="view" resource="master_data">
             <Button
               variant="ghost"
@@ -67,6 +67,19 @@ export function CategoryListClient() {
               }}
             >
               {t('view')}
+            </Button>
+          </PermissionGate>
+          <PermissionGate action="edit" resource="master_data">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-label-xs font-bold uppercase text-status-warning hover:bg-status-warning/10 h-9 px-4 rounded-xl transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/master-data/categories/${row.original.id}/edit`);
+              }}
+            >
+              {t('edit')}
             </Button>
           </PermissionGate>
         </div>

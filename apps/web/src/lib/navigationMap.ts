@@ -85,7 +85,7 @@ export const navigationMap: NavGroup[] = [
       { key: 'uom', href: '/master-data/units-of-measure', resource: 'master_data', labelKey: 'uom', icon: Ruler },
       { key: 'barcodes', href: '/master-data/barcodes', resource: 'master_data', labelKey: 'barcodes', icon: Barcode },
       { key: 'currencies', href: '/master-data/currencies', resource: 'master_data', labelKey: 'currencies', icon: Coins },
-      { key: 'fx_rates', href: '/master-data/fx-rates', resource: 'master_data', labelKey: 'fx_rates', icon: TrendingUp },
+      { key: 'fx_rates', href: '/master-data/fx-rates', resource: 'master_data_fx_rates', labelKey: 'fx_rates', icon: TrendingUp },
       { key: 'branches', href: '/master-data/branches', resource: 'master_data', labelKey: 'branches', icon: Building2 },
     ]
   },

@@ -7,11 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { useCurrency, useCreateCurrency, useUpdateCurrency } from '@/features/currencies/hooks/useCurrencies';
 import { CurrencyFormSchema, type CurrencyFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
-import { Landmark, Type, Coins, Activity, ShieldCheck } from 'lucide-react';
+import { Landmark, Type, Coins, Activity, ShieldCheck, TrendingUp } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
@@ -129,6 +130,19 @@ export function CurrencyFormClient({
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
+      headerActions={
+        id ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => guardedRouter.push(`/master-data/currencies/${id}/fx-rates`)}
+            className="rounded-xl border-surface-variant/20 bg-surface-container-low hover:bg-operational-cyan/10 hover:text-operational-cyan transition-all text-label-xs font-semibold uppercase h-11 px-6 shadow-sm flex items-center gap-2"
+          >
+            <TrendingUp className="w-4 h-4 text-cyan-500" />
+            <span>{`${t('fx_rates_for')} ${currency?.code || ''}`}</span>
+          </Button>
+        ) : undefined
+      }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">

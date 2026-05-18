@@ -40,6 +40,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
   const rates = data || [];
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -146,29 +147,30 @@ export function FXRateListClient({ locale }: { locale: string }) {
       }
     ];
 
-    if (normalizedRole !== 'auditor') {
-      baseCols.push({
-        id: 'actions',
-        header: '',
-        cell: ({ row }) => (
+    baseCols.push({
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => {
+        const isAuditor = normalizedRole === 'auditor';
+        return (
           <div className="flex justify-end">
-            <PermissionGate action="edit" resource="master_data">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/master-data/fx-rates/${row.original.id}/edit`);
-                }}
-              >
-                {t('edit')}
-              </Button>
-            </PermissionGate>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isAuditor}
+              className="text-label-xs font-bold uppercase text-operational-cyan hover:bg-operational-cyan/10 h-9 px-4 rounded-xl transition-all disabled:opacity-50 disabled:pointer-events-none"
+              onClick={(e) => {
+                if (isAuditor) return;
+                e.stopPropagation();
+                router.push(`/master-data/fx-rates/${row.original.id}/edit`);
+              }}
+            >
+              {t('edit')}
+            </Button>
           </div>
-        )
-      });
-    }
+        );
+      }
+    });
 
     return baseCols;
   }, [t, tfx, router, currencies, locale, normalizedRole]);
@@ -195,7 +197,12 @@ export function FXRateListClient({ locale }: { locale: string }) {
           title={tfx('title')} 
           description={tfx('description')}
           actions={
-            normalizedRole !== 'auditor' && (
+            normalizedRole === 'auditor' ? (
+              <Button disabled className="h-11 px-8 bg-operational-cyan text-white text-label-xs font-bold uppercase rounded-xl opacity-50 cursor-not-allowed">
+                <Plus className="w-3.5 h-3.5 me-2" />
+                {t('create_new')}
+              </Button>
+            ) : (
               <PermissionGate action="create" resource="master_data">
                 <Link href={`/master-data/fx-rates/new`}>
                   <Button className="h-11 px-8 bg-operational-cyan hover:bg-operational-cyan/90 text-white text-label-xs font-bold uppercase rounded-xl transition-all shadow-lg shadow-operational-cyan/20">

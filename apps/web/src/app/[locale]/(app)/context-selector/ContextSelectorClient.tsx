@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLocale } from '@/hooks/useLocale';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { useState } from 'react';
 export function ContextSelectorClient({ locale }: { locale: string }) {
  const t = useTranslations('context_selector');
  const router = useRouter();
+ const { gradientClass } = useLocale();
   const { user: _user, activeScope, setActiveScope } = useAuth();
  
  const { data: branchesData } = useBranches();
@@ -51,7 +53,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  <Globe className="w-3.5 h-3.5 text-operational-cyan" />
  <span className="text-label-xs font-semibold uppercase text-operational-cyan">{t('environment')}</span>
  </div>
- <h1 className="text-headline-lg font-semibold uppercase italic bg-gradient-to-e from-foreground to-foreground/40 bg-clip-text text-transparent">
+ <h1 className={cn("text-headline-lg font-semibold uppercase italic bg-clip-text text-transparent", gradientClass, "from-foreground to-foreground/40")}>
  {t('title')}
  </h1>
  <p className="text-muted-foreground/60 text-body-md font-medium uppercase max-w-md mx-auto leading-relaxed">

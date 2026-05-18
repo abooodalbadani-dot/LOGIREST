@@ -165,6 +165,7 @@ export const PERMISSION_MATRIX: Partial<Record<UserRole, Partial<Record<Resource
  stocktake: ['view'],
  inventory: ['view', 'export'],
  reports: ['view', 'export'],
+ master_data_fx_rates: ['view'],
  },
  WH_KEEPER: {
   grn: ['view', 'create', 'edit'],

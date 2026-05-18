@@ -103,7 +103,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   };
 
   return (
-    <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {createAdjustment.error && (
         <div 
           role="alert"
@@ -156,10 +156,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         aria-busy={createAdjustment.isPending}
       >
         {/* Core Settings Panel */}
-        <div className="bg-surface-container-lowest p-8 rounded-2xl space-y-6 relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+        <div className="bg-surface-container-low/50 backdrop-blur-md p-8 rounded-[2rem] space-y-6 relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
           {/* Premium Locale-Mirrored Gradient Accent */}
           <div className={cn(
-            "absolute top-0 left-0 right-0 h-[2px] from-operational-cyan/30 via-operational-cyan/5 to-transparent pointer-events-none",
+            "absolute top-0 left-0 right-0 h-1 from-cyan-500/50 via-cyan-500/20 to-transparent pointer-events-none",
             locale === 'ar' ? "bg-gradient-to-l" : "bg-gradient-to-r"
           )} />
           <div className="flex items-center gap-3 mb-2">
@@ -247,10 +247,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         </div>
 
         {/* Item Calibration Panel */}
-        <div className="bg-surface-container-lowest p-8 rounded-2xl space-y-6 relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+        <div className="bg-surface-container-low/50 backdrop-blur-md p-8 rounded-[2rem] space-y-6 relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
           {/* Premium Locale-Mirrored Gradient Accent */}
           <div className={cn(
-            "absolute top-0 left-0 right-0 h-[2px] from-operational-cyan/30 via-operational-cyan/5 to-transparent pointer-events-none",
+            "absolute top-0 left-0 right-0 h-1 from-emerald-500/50 via-emerald-500/20 to-transparent pointer-events-none",
             locale === 'ar' ? "bg-gradient-to-l" : "bg-gradient-to-r"
           )} />
           <div className="flex items-center gap-3 mb-2">

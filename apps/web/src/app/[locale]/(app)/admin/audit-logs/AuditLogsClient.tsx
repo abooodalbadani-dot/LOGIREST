@@ -61,7 +61,7 @@ export function AuditLogsClient() {
  );
  };
 
- const columns: ColumnDef<AuditLogRow, unknown>[] = [
+ const columns = useMemo((): ColumnDef<AuditLogRow, unknown>[] => [
  {
  accessorKey: 'entity_type',
  header: t('entity_type'),
@@ -127,7 +127,7 @@ export function AuditLogsClient() {
  </div>
  ),
  },
- ];
+ ], [t, tc, locale, expandedId]);
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
