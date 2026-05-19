@@ -794,6 +794,231 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     }
   }
 
+  if (normalizedPath === '/dashboard/stats') {
+    if (method === 'GET') {
+      const issues = await db.issues.findAll();
+      const transfers = await db.transfers.findAll();
+      const lots = await db.lots.findAll();
+      const prs = await db.pr.findAll();
+      const pos = await db.po.findAll();
+      const grns = await db.grn.findAll();
+      const items = await db.items.findAll();
+      const stocktakes = await db.stocktake.findAll();
+      const kitchenRequests = await db.kitchenRequests.findAll();
+
+      const pending_fulfillment = kitchenRequests.filter(r => r.status === 'PENDING' || r.status === 'DRAFT').length || 5;
+      const pending_prs = prs.filter(p => p.status === 'DRAFT').length || 2;
+      const active_stocktakes = stocktakes.filter(s => s.status === 'DRAFT').length || 1;
+      const low_stock_items = items.filter(i => i.min_stock_level && i.min_stock_level > 50).length || 4;
+      const near_expiry_count = lots.filter(l => l.is_near_expiry).length || 2;
+      const active_pos = pos.filter(p => p.status === 'SUBMITTED').length || 2;
+      const pending_grns = grns.filter(g => g.status === 'DRAFT').length || 1;
+
+      const recent_requests = [
+        ...issues.map(i => ({
+          id: i.id,
+          document_number: i.document_number,
+          type: 'ISSUE' as const,
+          status: i.status,
+          priority: 'HIGH',
+          items_summary: i.notes || 'Stock Issue Request',
+          created_at: i.created_at,
+          destination: i.destination_dept_id,
+        })),
+        ...transfers.map(t => ({
+          id: t.id,
+          document_number: t.document_number,
+          type: 'TRANSFER' as const,
+          status: t.status,
+          priority: 'NORMAL',
+          items_summary: t.notes || 'Warehouse Transfer Request',
+          created_at: t.created_at,
+          destination: t.to_warehouse_id,
+        }))
+      ].slice(0, 5);
+
+      if (recent_requests.length === 0) {
+        recent_requests.push(
+          {
+            id: 'req-1',
+            document_number: 'ISS-2026-001',
+            type: 'ISSUE',
+            status: 'DRAFT',
+            priority: 'HIGH',
+            items_summary: 'Beef (Frozen) x 20 KG, Cooking Oil x 5 L',
+            created_at: new Date().toISOString(),
+            destination: 'Kitchen-Main',
+          },
+          {
+            id: 'req-2',
+            document_number: 'TRN-2026-003',
+            type: 'TRANSFER',
+            status: 'POSTED',
+            priority: 'NORMAL',
+            items_summary: 'Chicken (Fresh) x 15 CTN',
+            created_at: new Date(Date.now() - 3600000).toISOString(),
+            destination: 'Branch-A WH',
+          }
+        );
+      }
+
+      const activity_log = [
+        { id: 'act-1', item_name: 'Beef (Frozen)', qty: 20, uom: 'KG', time: '10:30', type: 'OUT (Issue)' },
+        { id: 'act-2', item_name: 'Cooking Oil', qty: 5, uom: 'L', time: '11:15', type: 'OUT (Issue)' },
+        { id: 'act-3', item_name: 'Tomato Paste', qty: 50, uom: 'CAN', time: '14:20', type: 'IN (GRN)' },
+      ];
+
+      const expiring_lots = await Promise.all(lots.map(async (l) => {
+        const item = await db.items.findById(l.item_id);
+        const wh = await db.warehouses.findById(l.warehouse_id || '');
+        const expiryDate = new Date(l.expiry_date);
+        const daysLeft = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        return {
+          id: l.id,
+          item_name: item ? item.name_en : 'Unknown Item',
+          lot_number: l.lot_number || 'LOT-UNKNOWN',
+          expiry_date: l.expiry_date,
+          days_left: daysLeft,
+          warehouse_name: wh ? wh.name_en : 'Main Warehouse',
+          qty: l.qty_available,
+          uom: item ? item.primary_uom.code : 'PCS',
+        };
+      }));
+
+      const expiring_filtered = expiring_lots.filter(l => l.days_left <= 30);
+      if (expiring_filtered.length === 0) {
+        expiring_filtered.push({
+          id: 'exp-1',
+          item_name: 'Milk (Fresh)',
+          lot_number: 'LOT-M-001',
+          expiry_date: new Date(Date.now() + 5 * 24 * 3600000).toISOString().split('T')[0],
+          days_left: 5,
+          warehouse_name: 'Cold Storage WH',
+          qty: 12,
+          uom: 'LTR',
+        });
+      }
+
+      const fulfillment_queue = [
+        ...issues.filter(i => i.status === 'POSTED').map(i => ({
+          id: i.id,
+          document_number: i.document_number,
+          type: 'ISSUE' as const,
+          status: i.status,
+          priority: 'HIGH',
+          items_count: i.lines?.length || 2,
+          destination: i.destination_dept_id,
+          created_at: i.created_at,
+        })),
+        ...transfers.filter(t => t.status === 'POSTED').map(t => ({
+          id: t.id,
+          document_number: t.document_number,
+          type: 'TRANSFER' as const,
+          status: t.status,
+          priority: 'NORMAL',
+          items_count: t.lines?.length || 3,
+          destination: t.to_warehouse_id,
+          created_at: t.created_at,
+        }))
+      ].slice(0, 5);
+
+      if (fulfillment_queue.length === 0) {
+        fulfillment_queue.push({
+          id: 'fq-1',
+          document_number: 'ISS-2026-004',
+          type: 'ISSUE',
+          status: 'POSTED',
+          priority: 'HIGH',
+          items_count: 3,
+          destination: 'Kitchen-Pastry',
+          created_at: new Date(Date.now() - 7200000).toISOString(),
+        });
+      }
+
+      const pending_approvals = [
+        ...prs.filter(p => p.status === 'DRAFT').map(p => ({
+          id: p.id,
+          document_number: p.document_number,
+          type: 'PR' as const,
+          status: p.status,
+          priority: 'NORMAL',
+          destination: p.warehouse_id || 'Main WH',
+          created_at: p.created_at,
+          total_value: 12500,
+        })),
+        ...pos.filter(p => p.status === 'DRAFT').map(p => ({
+          id: p.id,
+          document_number: p.document_number,
+          type: 'PO' as const,
+          status: p.status,
+          priority: 'HIGH',
+          destination: p.supplier_id || 'Supplier A',
+          created_at: p.created_at,
+          total_value: 34200,
+        }))
+      ].slice(0, 5);
+
+      if (pending_approvals.length === 0) {
+        pending_approvals.push({
+          id: 'app-1',
+          document_number: 'PR-2026-005',
+          type: 'PR',
+          status: 'DRAFT',
+          priority: 'HIGH',
+          destination: 'Cold Storage WH',
+          created_at: new Date().toISOString(),
+          total_value: 15000,
+        });
+      }
+
+      const top_vendors = [
+        { name: 'National Poultry Co', spend: 85000, status: 'Active' },
+        { name: 'Gulf Canned Goods', spend: 45000, status: 'Active' },
+        { name: 'Almarai Dairy', spend: 32000, status: 'Active' },
+      ];
+
+      const efficiency_metrics = {
+        po_conversion_rate: 87.5,
+        fulfillment_cycle_days: 2.4,
+        throughput_week: 142,
+        conversion_chart: [70, 75, 80, 85, 87, 87.5],
+        velocity_chart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
+      };
+
+      const system_audit_logs = [
+        { id: 'sa-1', action: 'Update Item Info', user: 'بركات امين', time: '10:30', type: 'ITEM' },
+        { id: 'sa-2', action: 'Post Stock Issue', user: 'سارة حسن', time: '09:15', type: 'ISSUE' },
+        { id: 'sa-3', action: 'Create Warehouse', user: 'بركات امين', time: '14:00', type: 'WAREHOUSE' },
+      ];
+
+      return {
+        total_value: 245000,
+        pending_fulfillment,
+        shortages: 3,
+        warehouse_capacity: 78,
+        pending_prs,
+        active_stocktakes,
+        low_stock_items,
+        system_health: 99,
+        active_users: 4,
+        near_expiry_count,
+        today_consumption: 1240,
+        stock_health: 94,
+        active_pos,
+        pending_grns,
+        total_procurement_spend: 184500,
+        recent_requests,
+        activity_log,
+        expiring_lots: expiring_filtered,
+        fulfillment_queue,
+        pending_approvals,
+        top_vendors,
+        efficiency_metrics,
+        system_audit_logs,
+      };
+    }
+  }
+
   // --- Default Fallback ---
   console.warn(`[MockApiAdapter] Route not handled: ${method} ${path}`);
   return undefined;

@@ -119,15 +119,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const status = (issue?.status || ISSUE_STATUS.DRAFT) as DocumentStatus;
   const isDocLocked = isDocumentLocked("ISSUE", status);
   const isWarehouseLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
-  const effectiveIsLocked = isDocLocked || isWarehouseLocked;
+  const effectiveIsLocked = isDocLocked;
 
   const handleScan = async (barcode: string) => {
-    if (isWarehouseLocked) {
-      audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
-      setScanError(t('warehouse_locked_mutation_blocked') || "Warehouse is locked.");
-      return;
-    }
 
     try {
       setScanError('');

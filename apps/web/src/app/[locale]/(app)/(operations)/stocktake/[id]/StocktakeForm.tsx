@@ -89,6 +89,9 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
           status={session.status} 
           isLocked={isLocked} 
         />
+        {lockState?.isLocked && (
+          <LockBanner lockState={lockState} />
+        )}
 
         {/* Form Content Wrapper with Visual Locking */}
         <div className={cn(

@@ -10,7 +10,9 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
   const signal = options?.signal;
   const customHeaders = options?.headers;
   
-  if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' || 
+    (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_MOCKS !== 'false');
+  if (useMocks) {
     const { getMockResponse } = await import('./mocks/index');
     const mockData = await getMockResponse(method, path, body);
     if (mockData !== undefined) {

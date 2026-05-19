@@ -47,7 +47,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
 
   const transferStatus = (transfer?.transfer_status || TRANSFER_STATUS.DRAFT) as DocumentStatus;
   const isLocked = transferStatus !== TRANSFER_STATUS.DRAFT;
-  const isLockedState = isEitherLocked || isLocked;
+  const isLockedState = isLocked;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -224,37 +224,35 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
           actions={
             <PermissionGate action="post" resource="transfer">
               <div className="flex items-center gap-2">
-                {transferStatus === TRANSFER_STATUS.DRAFT && (
-                  <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role || 'WH_KEEPER'}>
-                    <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
-                      <Link href={`/transfers/${id}/ship`}>
-                        <Button
-                          disabled={isEitherLocked}
-                          className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-lg shadow-cyan-900/20 active:scale-95"
-                        >
-                          <Truck className="w-4 h-4 md:w-5 md:h-5 me-2" />
-                          {t('ship')}
-                        </Button>
-                      </Link>
-                    </div>
-                  </ActionGuard>
-                )}
+          {transferStatus === TRANSFER_STATUS.DRAFT && (
+            <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role || 'WH_KEEPER'}>
+              <div>
+                <Link href={`/transfers/${id}/ship`}>
+                  <Button
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-lg shadow-cyan-900/20 active:scale-95"
+                  >
+                    <Truck className="w-4 h-4 md:w-5 md:h-5 me-2" />
+                    {t('ship')}
+                  </Button>
+                </Link>
+              </div>
+            </ActionGuard>
+          )}
 
-                {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
-                  <ActionGuard documentType="TRANSFER" status={transferStatus} action="RECEIVE" role={user?.role || 'WH_KEEPER'}>
-                    <div title={isEitherLocked ? tCommon('warehouse_locked') : undefined}>
-                      <Link href={`/transfers/${id}/receive`}>
-                        <Button
-                          disabled={isEitherLocked}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
-                        >
-                          <PackageCheck className="w-4 h-4 md:w-5 md:h-5 me-2" />
-                          {t('confirm_receipt')}
-                        </Button>
-                      </Link>
-                    </div>
-                  </ActionGuard>
-                )}
+          {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
+            <ActionGuard documentType="TRANSFER" status={transferStatus} action="RECEIVE" role={user?.role || 'WH_KEEPER'}>
+              <div>
+                <Link href={`/transfers/${id}/receive`}>
+                  <Button
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-full h-10 md:h-12 px-4 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-wide transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
+                  >
+                    <PackageCheck className="w-4 h-4 md:w-5 md:h-5 me-2" />
+                    {t('confirm_receipt')}
+                  </Button>
+                </Link>
+              </div>
+            </ActionGuard>
+          )}
               </div>
             </PermissionGate>
           }

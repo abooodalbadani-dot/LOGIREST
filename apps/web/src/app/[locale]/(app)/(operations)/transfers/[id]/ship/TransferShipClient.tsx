@@ -60,15 +60,13 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
   const isEitherLocked = (fromLockState?.isLocked || toLockState?.isLocked) ?? false;
   const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
-  const isLockedState = isEitherLocked || isWorkflowLocked;
+  const isLockedState = isWorkflowLocked;
 
   const handleScan = useCallback((barcode: string) => {
     if (isLockedState) {
       audioAlerts.playScanBlocked();
       setScanStatus('error');
-      const msg = isEitherLocked 
-        ? (t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.")
-        : (t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.");
+      const msg = t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.";
       setStatusMessage(msg);
       toast.error(msg);
       setTimeout(() => setScanStatus('idle'), 2000);
@@ -107,11 +105,6 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
 
   const handleShip = () => {
     if (!transfer) return;
-    if (isEitherLocked) {
-      audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Action mutation blocked.");
-      return;
-    }
 
     shipTransfer.mutate(
       { 

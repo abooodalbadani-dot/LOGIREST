@@ -108,11 +108,6 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
   const debouncedUpdate = useDebouncedCallback(
     (itemId: string, lineId: string, countedQty: number) => {
-      if (lockState?.isLocked) {
-        audioAlerts.playScanBlocked();
-        toast.error(t('warehouse_locked_warning') || 'Warehouse is locked');
-        return;
-      }
       updateCount.mutate({ 
         stocktakeId: id, 
         itemId, 
@@ -151,11 +146,6 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   }
 
   const handleScan = async (barcode: string) => {
-    if (lockState?.isLocked) {
-      audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_warning') || 'Warehouse is locked');
-      return;
-    }
     const index = items.findIndex((i) => i.barcode === barcode)
     if (index !== -1) {
       const item = items[index] as StocktakeItemVM
@@ -195,11 +185,6 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   }
 
   const handleFinish = () => {
-    if (lockState?.isLocked) {
-      audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_warning') || 'Warehouse is locked');
-      return;
-    }
     completeCounting.mutate({ 
       id, 
       signal: abortController.signal,
@@ -254,7 +239,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               onConfirm={handleFinish}
               trigger={
                 <Button 
-                  disabled={!hasCountedItems || completeCounting.isPending || !!lockState?.isLocked}
+                  disabled={!hasCountedItems || completeCounting.isPending}
                   className="primary-gradient shadow-lg shadow-primary/20"
                 >
                   {completeCounting.isPending && (
@@ -277,7 +262,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             placeholder={t('scan_barcode_to_count')}
             label={t('scan_session')}
             scannerMode={true}
-            readOnly={!!lockState?.isLocked}
+            readOnly={false}
           />
         </div>
 
@@ -338,7 +323,6 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                             type="number"
                             value={localCounts[item.id] ?? ''} 
                             onFocus={() => setFocusedRowIndex(virtualRow.index)}
-                            readOnly={!!lockState?.isLocked}
                             disabled={completeCounting.isPending}
                             onChange={(e) => {
                               const val = parseFloat(e.target.value) || 0
@@ -347,8 +331,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
                             }}
                             className={cn(
                               "text-center font-mono font-semibold h-10 bg-surface-container-medium border-none focus-visible:ring-1 transition-all rounded-lg",
-                              isFocused ? "focus-visible:ring-primary" : "focus-visible:ring-primary/30",
-                              !!lockState?.isLocked && "cursor-default opacity-80 select-all focus:ring-0 focus-visible:ring-0 grayscale-[0.2]"
+                              isFocused ? "focus-visible:ring-primary" : "focus-visible:ring-primary/30"
                             )}
                             dir="ltr"
                           />

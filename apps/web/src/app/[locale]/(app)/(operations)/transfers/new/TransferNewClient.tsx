@@ -21,6 +21,7 @@ import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
@@ -72,12 +73,6 @@ export function TransferNewClient() {
   const isEitherLocked = !!fromLockState?.isLocked || !!toLockState?.isLocked;
 
   const handleAddItem = (barcode: string) => {
-    if (isEitherLocked) {
-      audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
-      return;
-    }
-
     const item = items?.find(i => i.barcode === barcode || i.code === barcode);
     if (!item) {
       audioAlerts.playScanInvalid();
@@ -110,11 +105,6 @@ export function TransferNewClient() {
 
   const handleSave = () => {
     if (!fromWarehouseId || !toWarehouseId || lines.length === 0) return;
-    if (isEitherLocked) {
-      audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Action mutation blocked.");
-      return;
-    }
     
     createTransfer.mutate({
       payload: {
@@ -191,7 +181,6 @@ export function TransferNewClient() {
                 <Select
                   value={fromWarehouseId}
                   onValueChange={(val) => setFromWarehouseId(val || '')}
-                  disabled={isEitherLocked}
                 >
                   <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
                     <SelectValue placeholder={t('select_warehouse')} />
@@ -213,7 +202,6 @@ export function TransferNewClient() {
                 <Select
                   value={toWarehouseId}
                   onValueChange={(val) => setToWarehouseId(val || '')}
-                  disabled={isEitherLocked}
                 >
                   <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
                     <SelectValue placeholder={t('select_warehouse')} />
@@ -240,7 +228,6 @@ export function TransferNewClient() {
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  disabled={isEitherLocked}
                   placeholder={t('notes_placeholder')}
                   className="w-full bg-surface-container-highest/40 border border-white/5 rounded-2xl p-4 font-medium text-body-md focus:ring-2 focus:ring-cyan-500/30 transition-all outline-none resize-none min-h-[120px] hover:bg-surface-container-highest/60"
                 />
@@ -268,21 +255,36 @@ export function TransferNewClient() {
               </div>
             </div>
 
-            <div className="mb-8">
-              <ScanInput 
-                onScan={handleAddItem}
-                placeholder={t('scan_item_placeholder')} 
-                className="max-w-md mx-auto"
-                scannerMode={true}
-                size="lg"
-              />
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <div className="space-y-2">
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">
+                  {locale === 'ar' ? 'مسح الباركود' : 'Barcode Scanner'}
+                </label>
+                <ScanInput 
+                  onScan={handleAddItem}
+                  placeholder={t('scan_item_placeholder')} 
+                  className="w-full"
+                  scannerMode={true}
+                  size="lg"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">
+                  {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
+                </label>
+                <SmartCombobox
+                  items={items || []}
+                  onSelect={(item) => handleAddItem(item.code)}
+                  placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
+                />
+              </div>
             </div>
 
             <div className="bg-surface-container-low/30 rounded-[2rem] border border-white/5 overflow-hidden">
               <DocumentLineItemTable
                 lines={lines}
                 locale={locale}
-                isReadOnly={isEitherLocked}
+                isReadOnly={false}
                 onRemoveLine={(id) => setLines(prev => prev.filter(l => l.id !== id))}
                 hideLotColumns={true}
                 dense={true}
@@ -299,7 +301,6 @@ export function TransferNewClient() {
                       min="0.001"
                       step="0.001"
                       value={line.qty}
-                      disabled={isEitherLocked}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
@@ -319,8 +320,8 @@ export function TransferNewClient() {
         onSubmit={handleSave}
         isSaving={createTransfer.isPending}
         isDirty={isDirty}
-        isValid={isValid && !isEitherLocked}
-        isLocked={isEitherLocked}
+        isValid={isValid}
+        isLocked={false}
         saveLabel={t('save_transfer')}
       />
     </form>

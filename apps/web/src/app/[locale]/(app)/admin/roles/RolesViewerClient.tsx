@@ -186,7 +186,7 @@ export function RolesViewerClient() {
                         </span>
                       </td>
                       {ROLES.map((role) => (
-                        <td key={`${role}-${resource}`} className="p-0 border-none">
+                        <td key={`${role}-${resource}`} className="p-0 border-none" colSpan={ACTIONS.length}>
                           <div className="grid grid-cols-6 h-full min-h-[64px]">
                             {ACTIONS.map((action) => {
                               const allowed = (PERMISSION_MATRIX[role]?.[resource] ?? []).includes(action);

@@ -193,22 +193,12 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
           >
             <Button
               onClick={() => setConfirmOpen(true)}
-              disabled={startStocktake.isPending || isAlreadyLocked || lockLoading}
-              className={cn(
-                "w-full h-20 rounded-[1.5rem] text-white transition-all group overflow-hidden relative",
-                isAlreadyLocked 
-                ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50" 
-                : "bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)]"
-              )}
+              disabled={startStocktake.isPending || lockLoading}
+              className="w-full h-20 rounded-[1.5rem] text-white bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)] transition-all group overflow-hidden relative"
             >
               <div className="relative z-10 flex items-center justify-center gap-4">
                 {startStocktake.isPending ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
-                ) : isAlreadyLocked ? (
-                  <>
-                    <Lock className="w-6 h-6" />
-                    <span className="text-body-md font-semibold uppercase">{common('locked')}</span>
-                  </>
                 ) : (
                   <>
                     <Play className="w-6 h-6 fill-current" />
@@ -216,9 +206,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
                   </>
                 )}
               </div>
-              {!isAlreadyLocked && (
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             </Button>
           </ActionGuard>
  </div>

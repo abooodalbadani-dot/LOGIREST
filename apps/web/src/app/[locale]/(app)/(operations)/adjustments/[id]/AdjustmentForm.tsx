@@ -195,7 +195,6 @@ export function AdjustmentForm({
   };
 
   const handleApprove = async () => {
-    if (!!lockState?.isLocked) return;
     try {
       await approveAdjustment.mutateAsync({ version: document?.version || 0, signal: abortController.signal });
       toast.success(t('approve_success'));
@@ -224,7 +223,6 @@ export function AdjustmentForm({
   };
 
   const handlePost = async () => {
-    if (!!lockState?.isLocked) return;
     try {
       await postAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
       setPostDialogOpen(false);
@@ -235,7 +233,7 @@ export function AdjustmentForm({
   };
 
   const handleScan = async (barcode: string) => {
-    if (!!lockState?.isLocked || !canEdit) {
+    if (!canEdit) {
       audioAlerts.playScanBlocked();
       setScanStatus("error");
       setStatusMessage(t('warehouse_locked_title') || "Warehouse is locked. Scan blocked.");
@@ -313,12 +311,12 @@ export function AdjustmentForm({
   };
 
   const removeLine = (id: string) => {
-    if (!!lockState?.isLocked || !canEdit) return;
+    if (!canEdit) return;
     setLines(prev => prev.filter(l => l.id !== id));
   };
 
   const updateLine = (id: string, updates: Partial<AdjustmentLine>) => {
-    if (!!lockState?.isLocked || !canEdit) return;
+    if (!canEdit) return;
     setLines(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
   };
 
@@ -372,7 +370,7 @@ export function AdjustmentForm({
             <AlertCircle className="w-5 h-5 shrink-0" />
             <div className="flex-1">
               <p className="text-label-sm font-bold uppercase">{t('warehouse_locked_title') || "Warehouse Locked"}</p>
-              <p className="text-body-xs font-semibold mt-0.5">{t('warehouse_locked_desc') || "This warehouse is locked for stocktake or system adjustments. All edits and scans are blocked."}</p>
+              <p className="text-body-xs font-semibold mt-0.5">{t('warehouse_locked_warn_desc') || "This warehouse is locked for stocktake or system adjustments. Edits and scans are permitted with caution."}</p>
             </div>
           </div>
         )}
@@ -389,7 +387,7 @@ export function AdjustmentForm({
                   <Select 
                     value={warehouseId} 
                     onValueChange={(val) => setWarehouseId(val || '')}
-                    disabled={!canEdit || !!lockState?.isLocked}
+                    disabled={!canEdit}
                   >
                     <SelectTrigger className="bg-surface-container-low border-none h-12 rounded-lg font-bold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10">
                       <SelectValue />
@@ -406,7 +404,7 @@ export function AdjustmentForm({
                   <Select 
                     value={reason} 
                     onValueChange={(val) => setReason(val || '')}
-                    disabled={!canEdit || !!lockState?.isLocked}
+                    disabled={!canEdit}
                   >
                     <SelectTrigger className="bg-surface-container-low border-none h-12 rounded-lg font-bold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10">
                       <SelectValue />
@@ -425,11 +423,11 @@ export function AdjustmentForm({
                 <Textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  readOnly={!canEdit || !!lockState?.isLocked}
+                  readOnly={!canEdit}
                   placeholder={t('notes_placeholder')}
                   className={cn(
                     "bg-surface-container-low border-none rounded-lg h-[calc(6rem+3rem+1rem)] p-4 text-body-md resize-none transition-all",
-                    (!canEdit || !!lockState?.isLocked) ? "cursor-default opacity-85 select-all focus:ring-0 animate-pulse-slow" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
+                    (!canEdit) ? "cursor-default opacity-85 select-all focus:ring-0 animate-pulse-slow" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
                   )}
                 />
               </div>
@@ -445,7 +443,6 @@ export function AdjustmentForm({
                 <ScanInput 
                   onScan={handleScan}
                   placeholder={t('scan_placeholder')}
-                  readOnly={!!lockState?.isLocked}
                   scanStatus={scanStatus}
                   statusMessage={statusMessage}
                 />
@@ -495,7 +492,7 @@ export function AdjustmentForm({
                             <Select
                               value={line.direction}
                               onValueChange={(val) => updateLine(line.id, { direction: val as 'INCREASE' | 'DECREASE' })}
-                              disabled={!canEdit || !!lockState?.isLocked}
+                              disabled={!canEdit}
                             >
                               <SelectTrigger 
                                 tabIndex={0}
@@ -524,7 +521,7 @@ export function AdjustmentForm({
                                 readOnly={!canEdit || !!lockState?.isLocked}
                                 className={cn(
                                   "bg-surface-container-low border-none h-10 w-24 text-center rounded-lg font-semibold text-body-md transition-all",
-                                  (!canEdit || !!lockState?.isLocked) ? "cursor-default opacity-80 select-all focus:ring-0" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
+                                  (!canEdit) ? "cursor-default opacity-80 select-all focus:ring-0" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
                                 )}
                                 step="0.001"
                                 min="0"
@@ -550,7 +547,6 @@ export function AdjustmentForm({
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => removeLine(line.id)}
-                                disabled={!!lockState?.isLocked}
                                 className="h-8 w-8 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -631,7 +627,7 @@ export function AdjustmentForm({
           onCancel={() => router.push(`/adjustments`)}
           onSubmit={handleSaveDraft}
           isSaving={createAdjustment.isPending || updateAdjustment.isPending}
-          isLocked={isLocked || !!lockState?.isLocked}
+          isLocked={isLocked}
           isDirty={lines.length > 0}
           isValid={lines.length > 0 && notes.trim().length >= 10}
           actions={
