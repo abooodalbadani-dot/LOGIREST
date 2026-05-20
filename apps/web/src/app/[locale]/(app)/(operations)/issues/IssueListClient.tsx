@@ -16,7 +16,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Filter, Search, ArrowUpRight, LayoutGrid, List as ListIcon, Activity, FileText, ClipboardCheck } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 
 import { Input } from '@/components/ui/input';
 import { isIssueDraft, isIssuePosted } from '@/domain/status-guards';
@@ -29,6 +29,23 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const statusItems = React.useMemo(() => {
+    const allItem = {
+      id: 'ALL',
+      name_en: tc('statuses.all') || 'All Statuses',
+      name_ar: tc('statuses.all') || 'كل الحالات',
+    };
+    const statuses = Object.values(ISSUE_STATUS).map((value) => {
+      const config = getStatusConfig(value, ISSUE_STATUS_UI);
+      return {
+        id: value,
+        name_en: tc(config.labelKey) || value,
+        name_ar: tc(config.labelKey) || value,
+      };
+    });
+    return [allItem, ...statuses];
+  }, [tc]);
 
   const { data, isLoading } = useIssueList({
     status: initialStatus,
@@ -209,25 +226,13 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           <div className="flex items-center gap-4">
             <div className="w-px h-10 bg-surface-container-high/50 mx-2" />
             <div className="flex items-center gap-2">
-              <Select
+              <SmartCombobox
+                items={statusItems}
                 value={initialStatus || 'ALL'}
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger className="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap">
-                  <SelectValue placeholder={tc('statuses.all')} />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
-                  <SelectItem value="ALL" className="text-label-xs font-bold uppercase">{tc('statuses.all')}</SelectItem>
-                  {Object.values(ISSUE_STATUS).map((value) => {
-                    const config = getStatusConfig(value, ISSUE_STATUS_UI);
-                    return (
-                      <SelectItem key={value} value={value} className="text-label-xs font-bold uppercase">
-                        {tc(config.labelKey)}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                onSelect={(item) => handleStatusChange(item.id)}
+                placeholder={tc('statuses.all') || "All Statuses"}
+                triggerClassName="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap"
+              />
 
               <Button variant="outline" className="h-14 px-6 bg-surface-container-high/50 hover:bg-surface-container-high border-none rounded-md shadow-inner shadow-black/5">
                 <Filter className="w-4 h-4 text-muted-foreground/60" />

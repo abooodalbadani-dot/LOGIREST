@@ -40,13 +40,13 @@ export interface KitchenRequest {
 export const KitchenRequestItemSchema = z.object({
   item_id: z.string().min(1, 'required'),
   quantity: z.number().positive('must_be_positive'),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.literal('')),
 });
 
 export const KitchenRequestSchema = z.object({
   department_id: z.string().min(1, 'required'),
   warehouse_id: z.string().min(1, 'required'),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.literal('')),
   items: z.array(KitchenRequestItemSchema).min(1, 'min_one_item'),
 });
 

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -27,7 +27,7 @@ export function GRNListClient({
  initialStatus,
  initialPage,
  locale,
-}: {
+ }: {
  initialStatus?: string;
  initialPage: number;
  locale: 'ar' | 'en';
@@ -40,6 +40,12 @@ export function GRNListClient({
  const [page, setPage] = useState(initialPage);
  const [search, setSearch] = useState('');
  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const statusItems = useMemo(() => [
+    { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
+    { id: GRN_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
+    { id: GRN_STATUS.POSTED, name_en: tc('statuses.posted'), name_ar: tc('statuses.posted') },
+  ], [tc]);
 
  // Debounce search input
  useEffect(() => {
@@ -206,19 +212,13 @@ export function GRNListClient({
               <div className="flex flex-wrap items-end gap-8 w-full py-6 px-8 bg-surface-container-low border-b border-surface-variant/10">
                 <div className="flex flex-col gap-3 min-w-[240px] flex-1">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_filtering')}</label>
-                  <Select
-                    value={status || 'ALL'} 
-                    onValueChange={(val) => { setStatus(val === 'ALL' ? undefined : (val ?? undefined)); setPage(1); }}
-                  >
-                    <SelectTrigger className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 px-4 text-label-xs font-semibold uppercase focus:ring-cyan-500/10 rounded-md">
-                      <SelectValue placeholder={tc('statuses.all')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-surface-container-high border-surface-variant/5 rounded-md">
-                      <SelectItem value="ALL" className="text-label-xs font-semibold uppercase">{tc('statuses.all')}</SelectItem>
-                      <SelectItem value={GRN_STATUS.DRAFT} className="text-label-xs font-semibold uppercase">{tc('statuses.draft')}</SelectItem>
-                      <SelectItem value={GRN_STATUS.POSTED} className="text-label-xs font-semibold uppercase">{tc('statuses.posted')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SmartCombobox
+                    items={statusItems}
+                    value={status || 'ALL'}
+                    onSelect={(item) => { setStatus(item.id === 'ALL' ? undefined : item.id); setPage(1); }}
+                    placeholder={tc('statuses.all')}
+                    className="w-full bg-surface-container-highest/20 border-surface-variant/5 h-12 px-4 text-label-xs font-semibold uppercase focus:ring-cyan-500/10 rounded-md"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-3 min-w-[300px] flex-[2]">

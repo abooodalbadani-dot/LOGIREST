@@ -50,6 +50,10 @@ interface DocumentLineItemTableProps<T extends LineItem = LineItem> {
   enableVirtualization?: boolean;
   /** Maximum height of the scrollable container. Default: '480px'. */
   maxHeight?: string;
+  /** Expose internal virtualizer instance to parent */
+  virtualizerRef?: React.MutableRefObject<unknown>;
+  /** Apply custom classes to table rows based on line state */
+  rowClassName?: (line: T, index: number) => string;
 }
 
 
@@ -65,6 +69,8 @@ export function DocumentLineItemTable<T extends LineItem>({
   dense = false,
   enableVirtualization = true,
   maxHeight = '480px',
+  virtualizerRef,
+  rowClassName,
 }: DocumentLineItemTableProps<T>) {
   const t = useTranslations('common.table_headers');
   const tc = useTranslations('common');
@@ -79,6 +85,10 @@ export function DocumentLineItemTable<T extends LineItem>({
     overscan: 10,
     enabled: enableVirtualization,
   });
+
+  if (virtualizerRef) {
+    virtualizerRef.current = rowVirtualizer;
+  }
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalSize = rowVirtualizer.getTotalSize();
@@ -152,7 +162,8 @@ export function DocumentLineItemTable<T extends LineItem>({
                     className={cn(
                       "group transition-all hover:bg-primary/[0.04]",
                       dense ? "border-none" : "border-b",
-                      idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/30"
+                      idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/30",
+                      rowClassName?.(line, idx)
                     )}
                     style={{ height: `${dense ? 48 : 64}px` }}
                   >
@@ -229,7 +240,8 @@ export function DocumentLineItemTable<T extends LineItem>({
                 className={cn(
                   "group transition-all hover:bg-primary/[0.04]",
                   dense ? "border-none" : "border-b",
-                  idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/30"
+                  idx % 2 === 0 ? "bg-surface-container-lowest" : "bg-surface-container-low/30",
+                  rowClassName?.(line, idx)
                 )}
               >
                 <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>

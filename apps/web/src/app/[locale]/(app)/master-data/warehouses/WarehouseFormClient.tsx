@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useTranslations, useLocale } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -10,17 +10,10 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import {
- Select,
- SelectContent,
- SelectItem,
- SelectTrigger,
- SelectValue,
-} from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
  useWarehouse,
@@ -75,6 +68,22 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
+
+  const branchItems = useMemo(() => {
+    return branches.map((b) => ({
+      id: b.id,
+      name_en: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
+      name_ar: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
+    }));
+  }, [branches, locale]);
+
+  const typeItems = useMemo(() => {
+    return (['main','dry','cold','virtual','transit'] as const).map((ty) => ({
+      id: ty,
+      name_en: tw(`types.${ty.toLowerCase() as 'main' | 'dry' | 'cold' | 'virtual' | 'transit'}`),
+      name_ar: tw(`types.${ty.toLowerCase() as 'main' | 'dry' | 'cold' | 'virtual' | 'transit'}`),
+    }));
+  }, [tw]);
 
   useEffect(() => {
     if (data) {
@@ -155,16 +164,23 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
       headerActions={
         id && !isReadOnly && (
           <PermissionGate action="delete" resource="master_data_warehouses">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isSaving}
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {data?.has_stock && (
+                <span className="text-[10px] uppercase font-bold text-status-warning bg-status-warning/10 px-2 py-1 rounded">
+                  {tw('contains_stock_warning', { defaultValue: 'Contains Stock' })}
+                </span>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSaving || data?.has_stock}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </div>
           </PermissionGate>
         )
       }
@@ -194,22 +210,14 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                     name="branch_id"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value} 
-                        onValueChange={field.onChange}
+                      <SmartCombobox
                         disabled={isReadOnly}
-                      >
-                        <SelectTrigger id="wh-branch">
-                          <SelectValue placeholder={t('null_select')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {branches.map((b) => (
-                            <SelectItem key={b.id} value={b.id} className="font-semibold text-label-sm uppercase">
-                              {b.code} — {locale === 'ar' ? b.name_ar : b.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        items={branchItems}
+                        placeholder={t('null_select')}
+                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                      />
                     )}
                   />
                   {errors.branch_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.branch_id.message}`)}</p>}
@@ -284,22 +292,13 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                   name="type"
                   control={control}
                   render={({ field }) => (
-                    <Select 
-                      value={field.value} 
-                      onValueChange={field.onChange}
+                    <SmartCombobox
                       disabled={isReadOnly}
-                    >
-                      <SelectTrigger id="wh-type">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(['main','dry','cold','virtual','transit'] as const).map((ty) => (
-                          <SelectItem key={ty} value={ty} className="font-semibold text-label-sm uppercase">
-                            {tw(`types.${ty.toLowerCase() as 'main' | 'dry' | 'cold' | 'virtual' | 'transit'}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      value={field.value}
+                      onSelect={(item) => field.onChange(item.id)}
+                      items={typeItems}
+                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                    />
                   )}
                 />
               </div>

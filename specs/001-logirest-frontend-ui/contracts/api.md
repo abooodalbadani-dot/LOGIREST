@@ -11,7 +11,7 @@
 ## Base URL
 
 ```
-Development:  NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+Development:  NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
 Production:   [TBD by backend team]
 ```
 

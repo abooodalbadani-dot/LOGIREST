@@ -34,6 +34,8 @@ import { ISSUE_STATUS } from '@/contracts/statuses';
 import { useAbortController } from '@/hooks/useAbortController';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { SmartCombobox, ComboboxItem } from '@/components/shared/SmartCombobox';
+import { useItems } from '@/features/items/api/useItems';
 
 interface IssueFormProps {
   issue?: StockIssue;
@@ -50,6 +52,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   
   const postIssue = usePostIssue(id, { onConflict });
   const isPostPending = postIssue.isPending;
+
+  const { data: items = [] } = useItems();
 
   const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []) as unknown as LineItem[]);
   const [destinationId, setDestinationId] = useState(() => issue?.destination_dept_id ?? '');
@@ -356,6 +360,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         }}
                         size="lg"
                         scannerMode={true}
+                        items={items}
                       />
 
                       {scanError && (
@@ -483,22 +488,18 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                           <ArrowRight className={cn("w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity", locale === 'ar' ? "rotate-180" : "")} />
                           <label className="text-label-xs font-semibold uppercase text-muted-foreground/60">{t('destination')}</label>
                         </div>
-                        <Select 
-                          value={destinationId} 
-                          onValueChange={(val) => setDestinationId(val || '')} 
+                        <SmartCombobox
+                          items={departments.map((dept) => ({
+                            id: dept.id,
+                            name_en: dept.name_en,
+                            name_ar: dept.name_ar,
+                          }))}
+                          value={destinationId}
+                          onSelect={(item: ComboboxItem) => setDestinationId(item.id as string)}
                           disabled={effectiveIsLocked}
-                        >
-                          <SelectTrigger className="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10">
-                            <SelectValue placeholder={t('select_department')} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                            {departments.map((dept) => (
-                              <SelectItem key={dept.id} value={dept.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
-                                {locale === 'ar' ? dept.name_ar : dept.name_en}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          placeholder={t('select_department')}
+                          triggerClassName="w-full h-12 bg-surface-container-highest border-none rounded-xl px-4 font-bold text-label-sm transition-all shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10"
+                        />
                       </div>
 
                       <div className="space-y-3 group">

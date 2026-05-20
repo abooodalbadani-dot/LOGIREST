@@ -13,7 +13,7 @@ import { useFXRate, useCreateFXRate, useUpdateFXRate } from '@/features/fx-rates
 import { useCurrencies } from '@/features/currencies/hooks/useCurrencies';
 import { FXRateFormSchema, type FXRateFormValues, type Currency } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ArrowRightLeft, Calendar, TrendingUp, Info, ShieldCheck, Activity } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -69,6 +69,26 @@ export function FXRateFormClient({
            user.role === 'AUDITOR' ? 'auditor' :
            ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk';
   }, [user, authLoading]);
+
+  const activeCurrencies = useMemo(() => {
+    return (currencies || []).filter((c: Currency) => c.is_active);
+  }, [currencies]);
+
+  const fromCurrencyItems = useMemo(() => {
+    return activeCurrencies.map((c: Currency) => ({
+      id: c.id,
+      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+    }));
+  }, [activeCurrencies, locale]);
+
+  const toCurrencyItems = useMemo(() => {
+    return activeCurrencies.map((c: Currency) => ({
+      id: c.id,
+      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+    }));
+  }, [activeCurrencies, locale]);
 
   const getUnauthorizedMessage = () => {
     try {
@@ -226,25 +246,14 @@ export function FXRateFormClient({
                     name="from_currency_id"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value} 
-                        onValueChange={field.onChange}
+                      <SmartCombobox
                         disabled={isReadOnly}
-                      >
-                        <SelectTrigger className="disabled:opacity-70">
-                          <SelectValue placeholder={t('fields.from_currency_id')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(currencies || []).filter((c: Currency) => c.is_active).map((c: Currency) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              <span dir="ltr" className="font-mono font-bold text-cyan-500">{c.code}</span>
-                              <span className="text-label-xs opacity-60">
-                                {locale === 'ar' ? c.name_ar : c.name_en}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        items={fromCurrencyItems}
+                        placeholder={t('fields.from_currency_id')}
+                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                      />
                     )}
                   />
                   {errors.from_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.from_currency_id.message as Parameters<typeof t>[0])}</p>}
@@ -259,25 +268,14 @@ export function FXRateFormClient({
                     name="to_currency_id"
                     control={control}
                     render={({ field }) => (
-                      <Select 
-                        value={field.value} 
-                        onValueChange={field.onChange}
+                      <SmartCombobox
                         disabled={isReadOnly}
-                      >
-                        <SelectTrigger className="disabled:opacity-70">
-                          <SelectValue placeholder={t('fields.to_currency_id')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(currencies || []).filter((c: Currency) => c.is_active).map((c: Currency) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              <span dir="ltr" className="font-mono font-bold text-amber-500">{c.code}</span>
-                              <span className="text-label-xs opacity-60">
-                                {locale === 'ar' ? c.name_ar : c.name_en}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        items={toCurrencyItems}
+                        placeholder={t('fields.to_currency_id')}
+                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                      />
                     )}
                   />
                   {errors.to_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.to_currency_id.message as Parameters<typeof t>[0])}</p>}

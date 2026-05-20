@@ -5,10 +5,12 @@ import { useTranslations } from 'next-intl';
 import { Scan, Camera, X, CheckCircle2, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export default function ScannerClient() {
   const t = useTranslations('operational.inventory');
   const router = useRouter();
+  const { playSound } = useAudioFeedback();
   const [result, setResult] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('scanning');
   const [isPending, startTransition] = useTransition();
@@ -19,10 +21,11 @@ export default function ScannerClient() {
         // Mock scan logic
         setResult('LOT-2024-9942');
         setStatus('success');
+        playSound('scan');
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [status]);
+  }, [status, playSound]);
 
   const resetScanner = () => {
     setResult(null);

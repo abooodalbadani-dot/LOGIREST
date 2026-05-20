@@ -17,6 +17,8 @@ export const AuthUserSchema = z.object({
  status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
  language: z.enum(['ar', 'en']).default('en'),
  created_at: z.string().optional(),
+ avatar_url: z.string().optional().nullable(),
+ phone: z.string().optional().nullable(),
 });
 
 export const ForgotPasswordSchema = z.object({

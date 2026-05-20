@@ -9,7 +9,7 @@ const UpdatePRPayloadSchema = z.object({
   version: z.number(),
   department_id: z.string().optional(),
   expected_date: z.string().optional(),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.literal('')),
   lines: z.array(z.object({
     id: z.string().optional(), // For existing lines
     item_id: z.string(),

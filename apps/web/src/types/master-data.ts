@@ -20,7 +20,7 @@ export interface Department {
 export interface UoM { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
 export interface UoMConversion { from_uom_id: string; to_uom_id: string; factor: number; }
 export interface Category { id: string; code: string; name_ar: string; name_en: string; is_referenced?: boolean; version?: number; }
-export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; last_purchase_price?: number; is_active: boolean; version?: number; }
+export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; last_purchase_price?: number; is_active: boolean; version?: number; has_transactions?: boolean; }
 export interface Lot { id: string; item_id: string; warehouse_id: string; lot_number: string; expiry_date: string | null; qty_available: number; is_expired: boolean; is_near_expiry: boolean; }
 export interface Supplier { id: string; code: string; name_ar: string; name_en: string; email?: string; phone?: string; tax_number?: string; currency_id: string; payment_terms: string; is_active: boolean; version?: number; }
 export interface Currency { id: string; code: string; name_ar: string; name_en: string; symbol?: string; is_base_currency: boolean; is_active: boolean; created_at: string; version?: number; }

@@ -1,0 +1,87 @@
+# Engineering Tasks
+
+This document contains the granular engineering tasks required to execute the enterprise frontend audit implementation plan.
+
+## Phase 1: Critical Operational Safety & Production Blockers
+
+- [x] **Global Navigation & Redirection**
+  - [x] Add `router.push()` / `navigate()` to `Adjustments Create` upon successful POST mutation.
+  - [x] Add `router.push()` to `Stocktake Setup` upon successful POST mutation.
+  - [x] Add `router.push()` to `GRN Create` upon successful POST mutation.
+  - [x] Add `router.push()` to `PO Setup` upon successful POST mutation.
+  - [x] Add `router.push()` to `Purchase Request Setup` upon successful POST mutation.
+  - [x] Add `router.push()` to `Kitchen Request Setup` upon successful POST mutation.
+  - [x] Add `router.push()` to `Transfer Setup` upon successful POST mutation.
+- [x] **Operational & Data Locking Enforcement**
+  - [ ] *Backend*: Return `400 Bad Request` if attempting to update base currency while transaction records exist.
+  - [x] *Frontend*: Disable the base currency input in Global Settings if transactions exist.
+  - [ ] *Backend*: Prevent `is_lot_tracked` modification on Items if the item has existing ledger transactions.
+  - [x] *Frontend*: Disable the `lot-tracked` toggle on the Items Edit form based on historical data presence.
+  - [ ] *Backend*: Wrap `POST /procurement/grns/:id/post` and `POST /stocktake/sessions/:id/post` in strictly isolated database transactions to prevent race conditions.
+  - [ ] *Backend*: Prevent `DELETE` on Warehouses if stock quantities > 0.
+  - [x] *Frontend*: Disable Warehouse delete button and show warning if warehouse contains stock.
+- [x] **Core Warehouse Execution (Scanning & Offline Support)**
+  - [x] *Frontend*: Refactor `ScanInput` in Stocktake Count and Wedge Scan modes. Implement a robust focus-trap or automatic refocusing listener (e.g., listening to `window.blur` or custom focus managers) instead of using `setTimeout`.
+  - [x] *Frontend*: Implement `useNetworkStatus` hook to detect offline state.
+  - [x] *Frontend*: Render a high-visibility "Offline/Connected" banner on Stocktake Count, disabling inputs and pausing autosave queues when disconnected.
+- [x] **Critical UX Workflows**
+  - [x] *Frontend*: Build an inline "Create Lot" dialog/modal accessible from `AdjustmentCreateClient` when direction is `INCREASE`.
+  - [ ] *Frontend*: Add a `@media print` CSS block or dedicated Print View component for `Adjustment Detail` to render as an official warehouse voucher.
+  - [ ] *Frontend*: Add an API call to count eligible items during `Stocktake Setup` and display "You are about to snapshot X items" before form submission.
+  - [x] *Frontend*: Add a "Receive All" button in the Inter-Warehouse Transfers Receive screen that populates the `receivedQty` with the `shippedQty` for all lines.
+  - [ ] *Frontend*: Implement a "Auto-pick FIFO" button on Kitchen Request Detail and Transfer Setup screens that automatically selects the earliest expiring lots with available quantity.
+  - [ ] *Frontend*: Integrate an unsaved changes guard (`Prompt` or custom dialog) into the RBAC Access Control Matrix page.
+
+## Phase 2: High-Priority Workflow & Data Accuracy Enhancements
+
+- [ ] **Real-Time Data & Status Updates**
+  - [ ] *Frontend*: Set `refetchInterval: 60000` (1 min) on queries powering the Operations Dashboard KPI cards.
+  - [ ] *Frontend*: Set `refetchInterval: 10000` (10 sec) on the Stocktake Master View active counts query.
+  - [ ] *Frontend*: Add polling (or WebSocket listener) to the Kitchen Requests Queue and trigger a success/alert chime when a new item arrives.
+- [ ] **Validation & Stock Safeguards**
+  - [ ] *Backend*: Add validation to `POST /stocktake/sessions/:id/start` to reject if unposted GRNs or Issues exist for the target warehouse.
+  - [ ] *Frontend*: Display the specific error message ("Resolve pending documents first") if stocktake start fails.
+  - [ ] *Backend*: Strictly validate that actions executed by a user match their assigned warehouse restrictions.
+  - [ ] *Frontend*: Pre-filter all warehouse selection dropdowns based on the user's assigned warehouse IDs.
+  - [ ] *Backend*: Add a `category` or `group` field (Mass, Volume, Unit) to the UOM entity and restrict cross-group conversion factors.
+  - [ ] *Frontend*: Provide UOM group selections in the UOM creation UI and validate conversions.
+  - [ ] *Frontend*: Fetch and display item min/max threshold levels inline in the Purchase Request line items table.
+  - [ ] *Frontend*: Catch `409 Conflict` errors during Purchase Request edits and display a modal offering to refresh the latest version from the server.
+- [ ] **Bulk Actions & UX Efficiency**
+  - [ ] *Frontend*: Add a "Clear All Filters" reset button to the Adjustments List.
+  - [ ] *Frontend*: Add row-selection checkboxes to the Adjustments List and a bulk action menu to approve/post multiple items at once.
+  - [ ] *Frontend*: Compute and render a progress bar (`Counted Items / Total Items * 100`) on the Stocktake List table.
+  - [ ] *Frontend*: Add a "Show Discrepancies Only" toggle to the Stocktake Variance Grid.
+  - [ ] *Frontend*: Add a "Request Partial Recount" button in Variance Grid that creates a sub-session for mismatched items.
+  - [ ] *Frontend*: Conditionally style the Expected Date field in red on the PO List if `date < now` and `status !== FULFILLED`.
+  - [ ] *Frontend*: Add sorting controls (Date, Supplier Code) to the GRN List API queries and table headers.
+  - [ ] *Frontend*: Add an "Import from PR" button in PO Setup that opens a modal of approved PR lines to append to the PO form.
+  - [ ] *Frontend*: Fetch and display department budget consumption metrics on the PO Approval screen.
+  - [ ] *Frontend*: Add a prominent warning banner for Transfers with `status === IN_TRANSIT` where the dispatch date is older than 3 days.
+
+## Phase 3: Medium-Priority Polish & Extended Features
+
+- [ ] **Validation & Quality Checks**
+  - [ ] *Frontend*: Add debounced API validation to the barcode mapping input to check for global uniqueness before submission.
+  - [ ] *Frontend*: Pass the scanned/missing barcode string as a prop to the Custom Item Creation modal and auto-fill the field.
+  - [ ] *Backend*: Enforce a duplicate check (e.g., identical name or barcode) upon Custom Item creation and return an explicit error.
+  - [ ] *Frontend*: Add a visual warning (amber highlight) in GRN Scan mode if the `scannedQty` exceeds the `expectedPoQty`.
+- [ ] **Export & Integrations**
+  - [ ] *Backend*: Create a CSV export endpoint for historical Stocktake Variances.
+  - [ ] *Frontend*: Wire up an "Export Audit" button in the Stocktake Archive to download the CSV.
+  - [ ] *Frontend*: Add a Print view layout (using `@media print`) for Purchase Requests.
+  - [ ] *Backend*: Create an endpoint to dispatch a PO PDF via email.
+  - [ ] *Frontend*: Add an "Email PO" action button on the PO Detail view.
+- [ ] **Workflow Streamlining**
+  - [ ] *Backend*: Add file attachment support to the Transfer Dispute endpoint.
+  - [ ] *Frontend*: Add a file upload dropzone to the Transfer Dispute form.
+  - [ ] *Frontend*: Add a "Generate PO" button on the PR Approval screen that redirects to `/purchase-orders/new` with the PR ID pre-loaded via URL params or state.
+
+## Phase 4: Low-Priority Technical Debt
+
+- [ ] **Dynamic Reason Codes**
+  - [ ] *Backend*: Create a master data table and GET endpoint for `/operations/stocktake/variance-reasons`.
+  - [ ] *Frontend*: Replace the hardcoded variance reason codes with the dynamic API list.
+- [ ] **Approval Thresholds**
+  - [ ] *Backend*: Implement tiered approval thresholds (e.g., Variance > $10,000 requires `ADMIN` approval instead of `INV_MGR`).
+  - [ ] *Frontend*: Reflect required approval tiers in the UI if variance exceeds thresholds.

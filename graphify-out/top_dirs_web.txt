@@ -1,0 +1,6 @@
+Top 5 subdirectories by file count:
+  E:\Kitchen‑Store Inventory System\apps\web: 68 files
+  E:\Kitchen‑Store Inventory System\apps\web\src\components\shared: 37 files
+  E:\Kitchen‑Store Inventory System\apps\web\src\components\ui: 32 files
+  E:\Kitchen‑Store Inventory System\apps\web\src\features\operations\hooks: 28 files
+  E:\Kitchen‑Store Inventory System\apps\web\src\features\purchasing\hooks: 25 files

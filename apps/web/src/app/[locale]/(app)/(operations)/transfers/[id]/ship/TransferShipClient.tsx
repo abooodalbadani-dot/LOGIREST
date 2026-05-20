@@ -19,7 +19,7 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useAuth } from '@/providers/AuthProvider';
-import { AlertCircle, Truck, ArrowLeft, Printer } from 'lucide-react';
+import { AlertCircle, Truck, ArrowLeft, Printer, RefreshCw } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -56,17 +56,34 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const isDirty = Object.keys(scannedLines).length > 0;
   const { router } = useUnsavedChangesGuard(isDirty);
 
-  const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
-  const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
-  const isEitherLocked = (fromLockState?.isLocked || toLockState?.isLocked) ?? false;
+  const { data: fromLockState, isError: isLockError, refetch: refetchLock } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
+  const isWarehouseLocked = !!fromLockState?.isLocked;
   const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
-  const isLockedState = isWorkflowLocked;
+  const isMutationBlocked = isWarehouseLocked || isWorkflowLocked || isLockError;
+
+  useEffect(() => {
+    if (isLockError) {
+      const handle = setTimeout(() => {
+        setConfirmDialogOpen(false);
+      }, 0);
+      return () => clearTimeout(handle);
+    }
+  }, [isLockError]);
 
   const handleScan = useCallback((barcode: string) => {
-    if (isLockedState) {
+    if (isMutationBlocked) {
       audioAlerts.playScanBlocked();
       setScanStatus('error');
-      const msg = t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.";
+      
+      let msg = "";
+      if (isLockError) {
+        msg = t('warehouse_lock_check_failed_desc') || "Could not verify warehouse lock status. Actions are locked for safety.";
+      } else if (isWarehouseLocked) {
+        msg = t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.";
+      } else {
+        msg = t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.";
+      }
+
       setStatusMessage(msg);
       toast.error(msg);
       setTimeout(() => setScanStatus('idle'), 2000);
@@ -101,7 +118,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       toast.error(t('scan_error'));
       setTimeout(() => setScanStatus('idle'), 2000);
     }
-  }, [transfer, scannedLines, isEitherLocked, t, locale]);
+  }, [transfer, scannedLines, isMutationBlocked, isWarehouseLocked, isLockError, t, locale]);
 
   const handleShip = () => {
     if (!transfer) return;
@@ -188,14 +205,37 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       >
         <DocumentLockBanner 
           status={transfer.transfer_status as DocumentStatus} 
-          isLocked={isLockedState} 
+          isLocked={isWorkflowLocked} 
         />
 
-        <DocumentLockWrapper isLocked={isLockedState}>
           <div className="space-y-4">
             {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
-            {toLockState?.isLocked && toLockState.sessionId !== fromLockState?.sessionId && (
-              <LockBanner lockState={toLockState} />
+            {isLockError && (
+              <div className="bg-status-error/10 border border-status-error/30 rounded-2xl p-5 flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-200 backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                  <div className="flex shrink-0 items-center justify-center h-12 w-12 rounded-xl bg-status-error/20 text-status-error">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-status-error uppercase text-label-xs">
+                      {t('warehouse_lock_check_failed') || "Lock Check Failed"}
+                    </span>
+                    <span className="text-status-error/80 text-label-sm font-medium leading-relaxed">
+                      {t('warehouse_lock_check_failed_desc') || "Could not verify warehouse lock status. Actions are locked for safety."}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchLock()}
+                  className="bg-status-error/20 hover:bg-status-error/30 border-status-error/30 text-status-error hover:text-status-error rounded-xl gap-2 font-semibold text-label-xs uppercase transition-all shrink-0"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  {tCommon('retry') || "Retry"}
+                </Button>
+              </div>
             )}
           </div>
 
@@ -282,19 +322,18 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
               </div>
             </div>
           </div>
-        </DocumentLockWrapper>
 
         <FormFooter 
           onCancel={() => router.push(`/transfers/${id}`, { skipGuard: true })}
           onSubmit={handleShip}
           isSaving={shipTransfer.isPending}
-          isLocked={isLockedState}
+          isLocked={isWorkflowLocked}
           isDirty={isDirty}
           isValid={allScanned}
           actions={
             <PermissionGate action="post" resource="transfer">
               <Button
-                disabled={isLockedState || shipTransfer.isPending || !allScanned}
+                disabled={isMutationBlocked || shipTransfer.isPending || !allScanned}
                 onClick={() => setConfirmDialogOpen(true)}
                 className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
               >

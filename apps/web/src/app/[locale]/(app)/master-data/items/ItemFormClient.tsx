@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,13 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
@@ -89,6 +83,33 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       });
     }
   }, [data, reset]);
+
+  const categoryItems = useMemo(() => {
+    const list = categories?.data?.map((c: Category) => ({
+      id: c.id,
+      name_en: c.name_en,
+      name_ar: c.name_ar,
+    })) || [];
+    return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
+  }, [categories?.data, tm]);
+
+  const uomItems = useMemo(() => {
+    const list = uoms?.data?.map((u) => ({
+      id: u.id,
+      name_en: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
+      name_ar: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
+    })) || [];
+    return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
+  }, [uoms?.data, locale, tm]);
+
+  const uomShortItems = useMemo(() => {
+    const list = uoms?.data?.map((u) => ({
+      id: u.id,
+      name_en: u.code,
+      name_ar: u.code,
+    })) || [];
+    return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
+  }, [uoms?.data, tm]);
 
   const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
@@ -273,19 +294,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       name="category_id"
                       control={control}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
-                          <SelectTrigger id="item-category">
-                            <SelectValue placeholder={tm('select_none')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">{tm('select_none')}</SelectItem>
-                            {categories?.data?.map((c: Category) => (
-                              <SelectItem key={c.id} value={c.id} className="uppercase font-semibold text-label-sm">
-                                {locale === 'ar' ? c.name_ar : c.name_en}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                         <SmartCombobox
+                           disabled={isReadOnly}
+                           value={field.value ?? ''}
+                           onSelect={(item) => field.onChange(item.id)}
+                           items={categoryItems}
+                           placeholder={tm('select_none')}
+                           className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                         />
                       )}
                     />
                     {errors.category_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.category_id.message as never)}</p>}
@@ -297,19 +313,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       name="primary_uom_id"
                       control={control}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
-                          <SelectTrigger id="primary-uom">
-                            <SelectValue placeholder={tm('select_none')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">{tm('select_none')}</SelectItem>
-                            {uoms?.data?.map((u) => (
-                              <SelectItem key={u.id} value={u.id} className="uppercase font-semibold text-label-sm">
-                                {u.code} — {locale === 'ar' ? u.name_ar : u.name_en}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                         <SmartCombobox
+                           disabled={isReadOnly}
+                           value={field.value ?? ''}
+                           onSelect={(item) => field.onChange(item.id)}
+                           items={uomItems}
+                           placeholder={tm('select_none')}
+                           className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                         />
                       )}
                     />
                     {errors.primary_uom_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primary_uom_id.message as never)}</p>}
@@ -356,19 +367,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                               name={`uom_conversions.${idx}.from_uom_id`}
                               control={control}
                               render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
-                                  <SelectTrigger id={`uom-from-${idx}`}>
-                                    <SelectValue placeholder={tm('select_none')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="">{tm('select_none')}</SelectItem>
-                                    {uoms?.data?.map((u) => (
-                                      <SelectItem key={u.id} value={u.id} className="font-semibold uppercase text-label-sm">
-                                        {u.code}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                 <SmartCombobox
+                                   disabled={isReadOnly}
+                                   value={field.value ?? ''}
+                                   onSelect={(item) => field.onChange(item.id)}
+                                   items={uomShortItems}
+                                   placeholder={tm('select_none')}
+                                   className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+                                 />
                               )}
                             />
                           </div>
@@ -378,19 +384,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                               name={`uom_conversions.${idx}.to_uom_id`}
                               control={control}
                               render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
-                                  <SelectTrigger id={`uom-to-${idx}`}>
-                                    <SelectValue placeholder={tm('select_none')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="">{tm('select_none')}</SelectItem>
-                                    {uoms?.data?.map((u) => (
-                                      <SelectItem key={u.id} value={u.id} className="font-semibold uppercase text-label-sm">
-                                        {u.code}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                 <SmartCombobox
+                                   disabled={isReadOnly}
+                                   value={field.value ?? ''}
+                                   onSelect={(item) => field.onChange(item.id)}
+                                   items={uomShortItems}
+                                   placeholder={tm('select_none')}
+                                   className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+                                 />
                               )}
                             />
                           </div>
@@ -450,8 +451,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     </div>
                     <Switch 
                       checked={trackLots} 
-                      onCheckedChange={(v) => !isReadOnly && setValue('track_lots', v)} 
-                      disabled={isReadOnly}
+                      onCheckedChange={(v) => !isReadOnly && !data?.has_transactions && setValue('track_lots', v)} 
+                      disabled={isReadOnly || data?.has_transactions}
                       className="data-[state=checked]:bg-status-active" 
                     />
                   </div>

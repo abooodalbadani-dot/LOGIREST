@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { formatCurrency } from '@/utils/currency';
 import { type PODetail, type POLine, type AuditLog } from '@/features/purchasing/hooks/usePO';
+import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
 interface POViewerProps {
   document: PODetail;
@@ -34,6 +35,57 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
     at: log.created_at,
     by: log.user_name || tCommon('system')
   })) || [];
+
+  interface MappedPOLine {
+    id: string;
+    item: {
+      id: string;
+      code: string;
+      name_ar: string;
+      name_en: string;
+      primary_uom: { code: string };
+    };
+    qty: number;
+    uom_id: string;
+    unit_cost: number;
+  }
+
+  const documentLines = document?.lines;
+  const mappedLines = React.useMemo(() => {
+    return documentLines?.map((line: POLine, idx: number) => ({
+      id: line.item_id || String(idx),
+      item: {
+        id: line.item_id || '',
+        code: line.item_sku || line.item_id || '',
+        name_ar: line.item_name || '',
+        name_en: line.item_name || '',
+        primary_uom: { code: line.uom_id || 'EA' }
+      },
+      qty: line.quantity ?? line.qty ?? 0,
+      uom_id: line.uom_id || 'EA',
+      unit_cost: line.unit_price ?? line.unit_cost_foreign ?? 0
+    })) || [];
+  }, [documentLines]);
+
+  const currencyId = document?.currency_id;
+  const extraColumns = React.useMemo(() => [
+    {
+      header: t('unit_price'),
+      cell: (line: MappedPOLine) => (
+        <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">
+          {line.unit_cost}
+        </span>
+      )
+    },
+    {
+      header: tCommon('subtotal') || 'Subtotal',
+      cell: (line: MappedPOLine) => (
+        <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
+          {formatCurrency((line.qty || 0) * (line.unit_cost || 0), currencyId, locale)}
+        </span>
+      )
+    }
+  ], [t, tCommon, currencyId, locale]);
 
   return (
     <div className="space-y-10 w-full bg-surface-container-low min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
@@ -102,42 +154,13 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
               </div>
             </div>
 
-            <Card className="bg-surface-container-lowest rounded-[2rem] overflow-hidden border border-surface-variant/5 shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-start border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low/50 border-b border-outline-variant/50">
-                      <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-start h-10">{tCommon('item')}</th>
-                      <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-end h-10">{tCommon('quantity')}</th>
-                      <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-end h-10">{t('unit_price')}</th>
-                      <th className="px-6 py-4 text-label-xs font-semibold uppercase text-muted-foreground/50 text-end h-10">{t('subtotal')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-outline-variant/30">
-                    {document?.lines?.map((line: POLine, idx: number) => (
-                      <tr key={idx} className="hover:bg-surface-container-low/50 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-label-xs font-bold text-primary uppercase">{line.item_sku || line.item_id}</span>
-                            <span className="text-body-md font-bold text-foreground group-hover:text-primary transition-colors">{line.item_name || tCommon('not_available')}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-end">
-                          <span dir="ltr" className="font-mono text-label-sm font-bold text-foreground/80">{line.quantity || line.qty} {line.uom_id}</span>
-                        </td>
-                        <td className="px-6 py-4 text-end">
-                          <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">{line.unit_price || line.unit_cost_foreign}</span>
-                        </td>
-                        <td className="px-6 py-4 text-end">
-                          <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
-                            {formatCurrency((line.quantity || line.qty || 0) * (line.unit_price || line.unit_cost_foreign || 0), document?.currency_id, locale)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <Card className="bg-surface-container-lowest rounded-[2rem] overflow-hidden border border-surface-variant/5 shadow-sm p-1">
+              <DocumentLineItemTable
+                lines={mappedLines}
+                isReadOnly={true}
+                hideLotColumns={true}
+                extraColumns={extraColumns}
+              />
 
               <div className="p-8 bg-surface-container-low/30 border-t border-outline-variant/50 flex justify-end">
                 <div className="flex items-center gap-10">

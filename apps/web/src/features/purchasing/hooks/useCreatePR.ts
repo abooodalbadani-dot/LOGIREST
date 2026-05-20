@@ -8,7 +8,7 @@ import { PRDetailSchema } from './usePR';
 const CreatePRPayloadSchema = z.object({
  department_id: z.string(),
  expected_date: z.string(),
- notes: z.string().optional(),
+ notes: z.string().optional().or(z.literal('')),
  lines: z.array(z.object({
  item_id: z.string(),
  req_qty: z.number().positive(),

@@ -31,15 +31,10 @@ import {
  FormLabel, 
  FormMessage 
 } from "@/components/ui/form";
-import { 
- Select, 
- SelectContent, 
- SelectItem, 
- SelectTrigger, 
- SelectValue 
-} from "@/components/ui/select";
+import { SmartCombobox } from "@/components/shared/SmartCombobox";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useCreateStocktake } from "@/features/operations/api/useStocktakes";
+import { useInventoryBalance } from "@/features/inventory/hooks/useInventoryBalance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
@@ -59,6 +54,12 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
   const createStocktake = useCreateStocktake();
 
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { data: inventoryBalances, isLoading: isBalanceLoading } = useInventoryBalance(
+    watchedWarehouse ? { warehouse_id: watchedWarehouse } : undefined,
+    { enabled: !!watchedWarehouse }
+  );
+  const eligibleItemCount = inventoryBalances?.data?.length ?? 0;
 
   const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
@@ -154,31 +155,26 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
  <FormField
  control={form.control}
- name="warehouseId"
- render={({ field }) => (
- <FormItem className="space-y-4">
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 px-1">
- <Warehouse className="w-3.5 h-3.5" />
- {tc('warehouse')}
- </FormLabel>
- <Select onValueChange={field.onChange} value={field.value}>
- <FormControl>
- <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
- <SelectValue placeholder={t('select_warehouse')} />
- </SelectTrigger>
- </FormControl>
- <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
- {warehouses?.map((wh) => (
- <SelectItem key={wh.id} value={wh.id} className="text-label-xs font-bold py-3">
-                  {locale === 'ar' ? wh.name_ar : wh.name_en}
- </SelectItem>
- ))}
- </SelectContent>
- </Select>
- <FormMessage className="text-label-xxs font-semibold uppercase px-1" />
- </FormItem>
- )}
- />
+  name="warehouseId"
+  render={({ field }) => (
+  <FormItem className="space-y-4">
+  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 px-1">
+  <Warehouse className="w-3.5 h-3.5" />
+  {tc('warehouse')}
+  </FormLabel>
+  <FormControl>
+    <SmartCombobox
+      items={warehouses || []}
+      value={field.value}
+      onSelect={(wh) => field.onChange(wh.id)}
+      placeholder={t('select_warehouse')}
+      triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+    />
+  </FormControl>
+  <FormMessage className="text-label-xxs font-semibold uppercase px-1" />
+  </FormItem>
+  )}
+  />
 
  <FormField
  control={form.control}

@@ -12,7 +12,7 @@ import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFil
 
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -34,6 +34,14 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const [supplier_id] = useState<string>('');
 
   const { data, isLoading } = usePOList({ status, supplier_id, page });
+
+  const statusItems = useMemo(() => [
+    { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
+    { id: PO_STATUS.DRAFT, name_en: tc('statuses.draft'), name_ar: tc('statuses.draft') },
+    { id: PO_STATUS.SUBMITTED, name_en: tc('statuses.submitted'), name_ar: tc('statuses.submitted') },
+    { id: PO_STATUS.APPROVED, name_en: tc('statuses.approved'), name_ar: tc('statuses.approved') },
+    { id: PO_STATUS.REJECTED, name_en: tc('statuses.rejected'), name_ar: tc('statuses.rejected') },
+  ], [tc]);
 
   const columns = useMemo<ColumnDef<POSummary, unknown>[]>(() => [
     {
@@ -196,24 +204,14 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  <div className="flex flex-wrap items-center gap-6 w-full py-6 px-8 border-b border-surface-variant/10">
  <div className="flex flex-col gap-2 min-w-[200px]">
  <label className="text-label-xxs font-semibold uppercase text-muted-foreground/60 ps-1">{tc('status_filtering')}</label>
- <Select
- value={status || 'ALL'} onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
- >
- <SelectTrigger className="w-full bg-surface-variant/10 border-none h-11 px-5 text-label-xs font-bold rounded-sm shadow-inner shadow-black/5">
- <div className="flex items-center gap-2">
- <ListFilter className="w-3.5 h-3.5 text-muted-foreground/60" />
- <SelectValue placeholder={tc('statuses.all')} />
- </div>
- </SelectTrigger>
-              <SelectContent className="bg-surface-container-highest border border-surface-variant/10 shadow-2xl rounded-sm">
-                <SelectItem value="ALL" className="text-label-xs font-bold">{tc('statuses.all')}</SelectItem>
-                <SelectItem value={PO_STATUS.DRAFT} className="text-label-xs font-bold">{tc('statuses.draft')}</SelectItem>
-                <SelectItem value={PO_STATUS.SUBMITTED} className="text-label-xs font-bold">{tc('statuses.submitted')}</SelectItem>
-                <SelectItem value={PO_STATUS.APPROVED} className="text-label-xs font-bold">{tc('statuses.approved')}</SelectItem>
-                <SelectItem value={PO_STATUS.REJECTED} className="text-label-xs font-bold">{tc('statuses.rejected')}</SelectItem>
-              </SelectContent>
- </Select>
- </div>
+   <SmartCombobox
+     items={statusItems}
+     value={status || 'ALL'}
+     onSelect={(item) => { setStatus(item.id === 'ALL' ? '' : item.id); setPage(1); }}
+     placeholder={tc('statuses.all')}
+     className="w-full bg-surface-variant/10 border-none h-11 px-5 text-label-xs font-bold rounded-sm shadow-inner shadow-black/5"
+   />
+  </div>
 
  <div className="flex flex-col gap-2 flex-1 min-w-[300px]">
  <label className="text-label-xxs font-semibold uppercase text-muted-foreground/60 ps-1">{tc('search')}</label>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2, Globe, Power, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'INV_MGR', 'APPROVER', 'WH_KEEPER', 'PROC_OFFICER', 'AUDITOR', 'VIEWER'];
 
@@ -91,6 +92,19 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
     if (!selectedWarehouses?.length) return [];
     return MOCK_DEPARTMENTS.filter(dep => selectedWarehouses.includes(dep.warehouse_id));
   }, [selectedWarehouses]);
+
+  const languageItems = useMemo(() => [
+    { id: 'en', name_en: t('lang_en'), name_ar: t('lang_en') },
+    { id: 'ar', name_en: t('lang_ar'), name_ar: t('lang_ar') },
+  ], [t]);
+
+  const roleItems = useMemo(() => {
+    return ALL_ROLES.map((r) => ({
+      id: r,
+      name_en: r,
+      name_ar: r,
+    }));
+  }, []);
 
   // Auto-reset dependent selections when parent changes
   useEffect(() => {
@@ -209,14 +223,20 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   <Label className="text-label-xs font-semibold uppercase text-text-muted flex items-center gap-2">
                     <Globe className="w-3 h-3" /> {t('language')}
                   </Label>
-                  <select
-                    {...register('language')}
-                    disabled={isAuditor}
-                    className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-label-sm font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50"
-                  >
-                    <option value="en">{t('lang_en')}</option>
-                    <option value="ar">{t('lang_ar')}</option>
-                  </select>
+                  <Controller
+                    name="language"
+                    control={control}
+                    render={({ field }) => (
+                       <SmartCombobox
+                         disabled={isAuditor}
+                         value={field.value}
+                         onSelect={(item) => field.onChange(item.id)}
+                         items={languageItems}
+                         placeholder={t('language')}
+                         className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+                       />
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -300,15 +320,20 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   <Label className="text-label-xs font-semibold uppercase text-text-muted">
                     {t('role')}
                   </Label>
-                  <select
-                    className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-label-sm font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none disabled:opacity-50"
-                    {...register('role')}
-                    disabled={isAuditor || isSelf || isLastAdmin}
-                  >
-                    {ALL_ROLES.map((role) => (
-                      <option key={role} value={role} className="bg-surface-container-low text-foreground">{role}</option>
-                    ))}
-                  </select>
+                  <Controller
+                    name="role"
+                    control={control}
+                    render={({ field }) => (
+                       <SmartCombobox
+                         disabled={isAuditor || isSelf || isLastAdmin}
+                         value={field.value}
+                         onSelect={(item) => field.onChange(item.id)}
+                         items={roleItems}
+                         placeholder={t('role')}
+                         className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+                       />
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-2">

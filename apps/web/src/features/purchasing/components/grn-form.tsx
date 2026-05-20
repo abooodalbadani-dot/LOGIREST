@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -77,6 +77,30 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { data: suppliers } = useSuppliers();
   const { data: warehouses } = useWarehouses();
   const { data: currencies } = useCurrencies();
+
+  const supplierItems = useMemo(() => {
+    return suppliers?.map(s => ({
+      id: s.id,
+      name_en: `${s.name_en} (${s.code})`,
+      name_ar: `${s.name_ar} (${s.code})`,
+    })) ?? [];
+  }, [suppliers]);
+
+  const warehouseItems = useMemo(() => {
+    return warehouses?.map(w => ({
+      id: w.id,
+      name_en: w.name_en,
+      name_ar: w.name_ar,
+    })) ?? [];
+  }, [warehouses]);
+
+  const currencyItems = useMemo(() => {
+    return currencies?.map(c => ({
+      id: c.code,
+      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+    })) ?? [];
+  }, [currencies, locale]);
 
   const createMutation = useCreateGRN({ onConflict });
   const updateMutation = useUpdateGRN(initialData?.id || '', { onConflict });
@@ -288,30 +312,26 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           <DocumentReadOnlyOverlay isPosted={isLocked || isWarehouseLocked}>
             <div className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
                   <Label htmlFor="supplier-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</Label>
                   <Controller
                     name="supplier_id"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked || isWarehouseLocked}>
-                        <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
-                          <SelectValue placeholder={tc('select_supplier')} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                          {suppliers?.map(s => (
-                            <SelectItem key={s.id} value={s.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
-                              {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SmartCombobox
+                        items={supplierItems}
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        placeholder={tc('select_supplier')}
+                        className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none"
+                        disabled={isLocked || isWarehouseLocked}
+                      />
                     )}
                   />
                   {errors.supplier_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
                 </div>
 
-                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
                   <div className="absolute top-0 end-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                     <Wallet className="w-12 h-12" />
                   </div>
@@ -320,18 +340,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                     name="currency_id"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked || isWarehouseLocked}>
-                        <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                          {currencies?.map(c => (
-                            <SelectItem key={c.id} value={c.code} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary font-mono">
-                              {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SmartCombobox
+                        items={currencyItems}
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        placeholder={tc('select_currency')}
+                        className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none"
+                        disabled={isLocked || isWarehouseLocked}
+                      />
                     )}
                   />
                   {errors.currency_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
@@ -353,24 +369,20 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   </div>
                 </div>
 
-                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
+                <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
                   <Label htmlFor="warehouse-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</Label>
                   <Controller
                     name="warehouse_id"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked || isWarehouseLocked}>
-                        <SelectTrigger className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none focus:ring-1 focus:ring-primary-fixed-dim/10 transition-all">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface-container-highest border-none rounded-xl shadow-2xl">
-                          {warehouses?.map(w => (
-                            <SelectItem key={w.id} value={w.id} className="text-label-sm font-bold focus:bg-primary/10 focus:text-primary">
-                              {locale === 'ar' ? w.name_ar : w.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SmartCombobox
+                        items={warehouseItems}
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        placeholder={tc('select_warehouse')}
+                        className="mt-2 h-12 bg-surface-container-low border-none rounded-xl px-4 font-semibold uppercase text-foreground shadow-none"
+                        disabled={isLocked || isWarehouseLocked}
+                      />
                     )}
                   />
                   {errors.warehouse_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouse_id.message}</span>}
@@ -406,17 +418,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   <ScanInput
                     onScan={handleScan}
                     scannerMode={true}
-                    disabled={isLocked}
-                    onManualTrigger={isLocked || isWarehouseLocked ? undefined : () => append({
-                      id: `new-${Date.now()}`,
-                      item: { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: 'EA', code: 'EA' } },
-                      lot: null,
-                      qty: 1,
-                      received_qty: 1,
-                      uom_id: 'EA',
-                      unit_cost_foreign: 0,
-                      unit_cost_base: 0
-                    })}
+                    disabled={isLocked || isWarehouseLocked}
+                    items={itemsData?.data || []}
                     placeholder={t('scan_placeholder')}
                     onError={(bc) => setScanError(t('no_item_found') + ': ' + bc)}
                     size="lg"

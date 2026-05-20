@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { 
  Plus, 
  PackageCheck, 
@@ -31,7 +31,13 @@ import { useCreateIssue } from "@/features/operations/api/useIssues";
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useDepartments } from "@/features/departments/hooks/useDepartments";
+import { useItems } from "@/features/items/api/useItems";
+import { type Item } from "@/features/items/types";
+import { SmartCombobox } from "@/components/shared/SmartCombobox";
+import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
+import { cn } from "@/lib/utils";
 
 const buildLineSchema = (t: (k: string) => string) => z.object({
   item_id: z.string().min(1, t('validation.item_required')),
@@ -50,14 +56,26 @@ const buildFormSchema = (t: (k: string) => string) => z.object({
 
 type IssueFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
+interface CustomLineItem extends LineItem {
+  qtyAllocated: number;
+  index: number;
+  selectedItem?: Item;
+}
+
 // Simulated locked warehouse IDs for demo
-const LOCKED_WAREHOUSES = new Set(["wh-locked-01"]);
+const LOCKED_WAREHOUSES = new Set(["wh-locked-01", "wh-3"]);
 
 export function IssueForm() {
   const t = useTranslations("operations.issue");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const { router, registerDirty } = useUnsavedChangesGuard();
   const createIssue = useCreateIssue();
+
+  const { data: warehouses } = useWarehouses();
+  const { data: deptData } = useDepartments();
+  const departments = deptData?.data || [];
+  const { data: items } = useItems();
 
  const [allocatorOpen, setAllocatorOpen] = useState(false);
  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
@@ -84,6 +102,114 @@ export function IssueForm() {
   control: form.control,
   name: "lines",
  });
+
+ const watchedLines = useWatch({
+  control: form.control,
+  name: "lines",
+ });
+
+  const tableLines = React.useMemo<CustomLineItem[]>(() => {
+    return fields.map((field, index) => {
+      const lineVal = watchedLines?.[index];
+      const selectedItem = items?.find(i => i.id === lineVal?.item_id);
+      return {
+        id: field.id,
+        item: {
+          id: lineVal?.item_id || '',
+          code: selectedItem?.barcode || selectedItem?.code || '',
+          name_ar: selectedItem?.name_ar || '',
+          name_en: selectedItem?.name_en || '',
+          primary_uom: {
+            code: selectedItem?.primary_uom?.code || '',
+          }
+        },
+        qty: lineVal?.requested_qty ?? 1,
+        uom_id: selectedItem?.primary_uom?.id || '',
+        lot_allocations: (lineVal?.lot_allocations || []).map(lot => ({
+          lot_id: lot.lot_number,
+          lot_number: lot.lot_number,
+          expiry_date: lot.expiry_date,
+          allocated_qty: lot.allocated_qty,
+        })),
+        qtyAllocated: lineVal?.qty ?? 0,
+        index,
+        selectedItem,
+      };
+    });
+  }, [fields, watchedLines, items]);
+
+  const extraColumns = React.useMemo<ExtraColumn<CustomLineItem>[]>(() => [
+    {
+      header: t('fulfillment_status'),
+      cell: (line: CustomLineItem) => {
+        const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
+        return (
+          <div className="flex justify-center">
+            <div className={cn(
+              "h-10 px-4 rounded-xl flex items-center justify-between gap-3 transition-all duration-300 font-mono text-label-xs font-bold",
+              isAllocated 
+                ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+                : "bg-surface-container-high/30 text-muted-foreground/60 border border-transparent"
+            )}>
+              <span>{line.qtyAllocated || 0} / {line.qty || 0}</span>
+              {isAllocated ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5 opacity-30" />}
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      header: tc('table_headers.actions') || 'Allocate',
+      cell: (line: CustomLineItem) => {
+        const isAllocated = (line.qtyAllocated ?? 0) >= (line.qty ?? 0);
+        const hasSelection = !!line.item.id;
+        return (
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant={isAllocated ? "outline" : "default"}
+              disabled={!hasSelection}
+              className={cn(
+                "h-10 px-4 rounded-xl text-label-xs font-semibold uppercase transition-all duration-300",
+                isAllocated 
+                  ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" 
+                  : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/10"
+              )}
+              onClick={() => handleOpenAllocator(line.index)}
+            >
+              {isAllocated ? t('redefine_batches') : t('sync_fefo')}
+              <ChevronRight className="ms-2 w-3.5 h-3.5" />
+            </Button>
+          </div>
+        );
+      }
+    }
+  ], [t, tc]);
+
+  const renderQty = React.useCallback((line: CustomLineItem) => (
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex justify-center">
+        <Input 
+          type="number"
+          step="0.01"
+          dir="ltr"
+          {...form.register(`lines.${line.index}.requested_qty`, { valueAsNumber: true })}
+          className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+        />
+      </div>
+      {form.formState.errors.lines?.[line.index]?.requested_qty && (
+        <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">
+          {t('validation.qty_positive')}
+        </p>
+      )}
+    </div>
+  ), [form, t]);
+
+  const renderUom = React.useCallback((line: CustomLineItem) => (
+    <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+      {line.selectedItem?.primary_uom?.code || '---'}
+    </span>
+  ), []);
 
  const watchedWarehouse = useWatch({
   control: form.control,
@@ -147,55 +273,51 @@ export function IssueForm() {
  )}
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
- <FormField<IssueFormValues, "warehouse_id">
- control={form.control}
- name="warehouse_id"
- render={({ field }) => (
- <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
- <Warehouse className="w-3.5 h-3.5" />
- {tc('warehouse')}
- </FormLabel>
- <Select onValueChange={field.onChange} value={field.value}>
- <FormControl>
- <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
- <SelectValue placeholder={t('select_department')} />
- </SelectTrigger>
- </FormControl>
- <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
- <SelectItem value="wh-01" className="text-label-xs font-bold">{tc('warehouses.main_hub')}</SelectItem>
- <SelectItem value="wh-locked-01" className="text-label-xs font-bold">{tc('warehouses.cold_storage_locked')}</SelectItem>
- </SelectContent>
- </Select>
- <FormMessage className="text-label-xxs font-semibold uppercase" />
- </FormItem>
- )}
- />
+  <FormField<IssueFormValues, "warehouse_id">
+  control={form.control}
+  name="warehouse_id"
+  render={({ field }) => (
+  <FormItem>
+  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+  <Warehouse className="w-3.5 h-3.5" />
+  {tc('warehouse')}
+  </FormLabel>
+  <FormControl>
+  <SmartCombobox
+  items={warehouses || []}
+  value={field.value}
+  onSelect={(item) => field.onChange(item.id)}
+  placeholder={tc('warehouse') || "Select Warehouse"}
+  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
+  />
+  </FormControl>
+  <FormMessage className="text-label-xxs font-semibold uppercase" />
+  </FormItem>
+  )}
+  />
 
- <FormField<IssueFormValues, "destination_dept_id">
- control={form.control}
- name="destination_dept_id"
- render={({ field }) => (
- <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
- <Building2 className="w-3.5 h-3.5" />
- {t('destination')}
- </FormLabel>
- <Select onValueChange={field.onChange} value={field.value}>
- <FormControl>
- <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20">
- <SelectValue placeholder={t('select_department')} />
- </SelectTrigger>
- </FormControl>
- <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
- <SelectItem value="dep-kitchen" className="text-label-xs font-bold">{tc('departments.culinary_lab')}</SelectItem>
- <SelectItem value="dep-pastry" className="text-label-xs font-bold">{tc('departments.pastry_desserts')}</SelectItem>
- </SelectContent>
- </Select>
- <FormMessage className="text-label-xxs font-semibold uppercase" />
- </FormItem>
- )}
- />
+  <FormField<IssueFormValues, "destination_dept_id">
+  control={form.control}
+  name="destination_dept_id"
+  render={({ field }) => (
+  <FormItem>
+  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
+  <Building2 className="w-3.5 h-3.5" />
+  {t('destination')}
+  </FormLabel>
+  <FormControl>
+  <SmartCombobox
+  items={departments}
+  value={field.value}
+  onSelect={(item) => field.onChange(item.id)}
+  placeholder={t('select_department')}
+  triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-label-xs font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 w-full"
+  />
+  </FormControl>
+  <FormMessage className="text-label-xxs font-semibold uppercase" />
+  </FormItem>
+  )}
+  />
 
  <FormField<IssueFormValues, "notes">
  control={form.control}
@@ -228,106 +350,55 @@ export function IssueForm() {
  <p className="text-label-xxs font-semibold text-muted-foreground/60/20 uppercase mt-1">{t('ledger_subtitle')}</p>
  </div>
  </div>
- <Button 
- type="button" 
- variant="outline" 
- size="sm" 
- className="h-12 px-8 border-cyan-500/30 text-cyan-500 bg-cyan-500/5 hover:bg-cyan-500 hover:text-white rounded-[1.25rem] text-label-xs font-semibold uppercase transition-all shadow-lg shadow-cyan-500/5"
- onClick={() => append({ item_id: "", requested_qty: 1, qty: 0, lot_allocations: [] })}
- >
- <Plus className="h-4 w-4 me-2" />
- {t('enroll_component')}
- </Button>
- </div>
-
- <div className="grid grid-cols-1 gap-5">
- {fields.length === 0 ? (
- <div className="py-24 text-center bg-surface-container-low rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
- <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
- <ListFilter className="w-10 h-10" />
- </div>
- <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">{t('empty_manifest')}</p>
- </div>
- ) : (
- fields.map((field, index) => {
- const isAllocated = (field.qty ?? 0) >= (field.requested_qty ?? 0);
- const hasSelection = !!field.item_id;
- 
- return (
- <div key={field.id} className={`grid grid-cols-1 lg:grid-cols-[1.5fr_1fr_1.5fr_1.5fr_auto] gap-4 md:gap-8 items-end p-5 md:p-8 rounded-[2.25rem] border transition-all duration-500 group ${isAllocated ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-lg shadow-emerald-500/5" : "bg-surface-container-low border-surface-container-high/20 hover:border-cyan-500/30 hover:bg-surface-container-medium shadow-xl shadow-black/5"}`}>
- 
-  <FormField<IssueFormValues, `lines.${number}.item_id`>
-  control={form.control}
-  name={`lines.${index}.item_id`}
-  render={({ field: inputField }) => (
-  <FormItem>
-  <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3">{t('item_label')}</FormLabel>
-  <FormControl>
-  <Input placeholder={t('sku_placeholder')} className="bg-surface-container-high/30 border-none h-12 px-5 text-label-xs font-semibold font-mono rounded-xl shadow-inner shadow-black/5 transition-all group-hover:bg-surface-container-highest/20" {...inputField} />
-  </FormControl>
-  <FormMessage className="text-label-xxs font-semibold" />
-  </FormItem>
-  )}
-  />
-
-  <FormField<IssueFormValues, `lines.${number}.requested_qty`>
-  control={form.control}
-  name={`lines.${index}.requested_qty`}
-  render={({ field: inputField }) => (
-  <FormItem>
-  <FormLabel className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40 mb-3 text-center block w-full">{t('request_qty')}</FormLabel>
-  <FormControl>
-  <Input 
-  type="number" 
-  min="0.01" 
-  step="0.01" 
-  dir="ltr"
-  className="bg-surface-container-high/30 border-none h-12 px-4 text-label-sm font-semibold text-center rounded-xl shadow-inner shadow-black/5"
-  {...inputField} 
-  onChange={(e) => inputField.onChange(e.target.valueAsNumber || 0)}
-  />
-  </FormControl>
-  <FormMessage />
-  </FormItem>
-  )}
-  />
-
-  <div className="flex flex-col items-center gap-1.5 pb-1">
-  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/60/40">{t('fulfillment_status')}</span>
-  <div className={`h-12 w-full rounded-xl flex items-center justify-between px-6 transition-all duration-500 ${isAllocated ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-surface-container-high/30 border border-surface-container-high/50 text-muted-foreground/60/20"}`}>
-  <span className="text-label-sm font-semibold tabular-nums">{field.qty || 0}</span>
-  {isAllocated ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4 opacity-30" />}
-  </div>
   </div>
 
- <div className="pb-1">
- <Button
- type="button"
- variant={isAllocated ? "outline" : "default"} disabled={!hasSelection}
- className={`w-full h-12 rounded-xl text-label-xs font-semibold uppercase transition-all duration-300 ${isAllocated ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500 hover:text-white" : "bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/10"}`}
- onClick={() => handleOpenAllocator(index)}
- >
- {isAllocated ? t('redefine_batches') : t('sync_fefo')}
- <ChevronRight className="ms-2 w-3.5 h-3.5" />
- </Button>
- </div>
+  <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
+    <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
+      {tc('select_item') || "Search Item"}
+    </label>
+    <SmartCombobox
+      items={items || []}
+      onSelect={(item) => {
+        const existingIndex = watchedLines?.findIndex(i => i?.item_id === item.id) ?? -1;
+        if (existingIndex !== -1) {
+          const currentQty = form.getValues(`lines.${existingIndex}.requested_qty`) || 0;
+          form.setValue(`lines.${existingIndex}.requested_qty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+        } else {
+          append({ item_id: item.id, requested_qty: 1, qty: 0, lot_allocations: [] });
+        }
+      }}
+      placeholder={tc('select_item') || "Search and Select Item"}
+    />
+  </div>
 
- <div className="pb-2">
- <Button 
- type="button" 
- variant="ghost" 
- size="icon" 
- className="w-10 h-10 rounded-xl text-muted-foreground/60/20 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20" 
- onClick={() => remove(index)}
- >
- <Trash2 className="w-4 h-4" />
- </Button>
- </div>
- </div>
- );
- })
- )}
- </div>
+  <div className="grid grid-cols-1 gap-5">
+  {fields.length === 0 ? (
+  <div className="py-24 text-center bg-surface-container-low rounded-[3rem] border-2 border-dashed border-surface-container-high/50 animate-in fade-in duration-500">
+  <div className="w-20 h-20 rounded-full bg-surface-container-high/30 flex items-center justify-center mx-auto mb-6 text-muted-foreground/60/20">
+  <ListFilter className="w-10 h-10" />
+  </div>
+  <p className="text-label-xs font-semibold text-muted-foreground/60/40 uppercase">{t('empty_manifest')}</p>
+  </div>
+  ) : (
+    <DocumentLineItemTable
+      lines={tableLines}
+      extraColumns={extraColumns}
+      onRemoveLine={(lineId) => {
+        const idx = tableLines.findIndex(l => l.id === lineId);
+        if (idx !== -1) remove(idx);
+      }}
+      renderQty={renderQty}
+      renderUom={renderUom}
+      hideLotColumns={true}
+      headers={{
+        code: tc('table_headers.code') || 'Code',
+        name: tc('table_headers.name') || 'Name',
+        qty: t('request_qty') || 'Requested Qty',
+        uom: tc('table_headers.uom') || 'UOM',
+      }}
+    />
+  )}
+  </div>
  </div>
 
  {/* Global Fulfillment Summary */}

@@ -413,6 +413,10 @@
     "sign_in": "دخول"
   },
   "common": {
+    "submission_failed": "فشل التقديم",
+    "error_generic": "حدث خطأ",
+    "no_item_found": "لم يتم العثور على الصنف",
+    "security_standard_desc": "جلسة تسجيل الدخول الخاصة بك مؤمنة بالتشفير القياسي وحماية النطاق للمؤسسات.",
     "actions": {
       "all_branches": "كل الفروع",
       "approve": "اعتماد",
@@ -444,6 +448,9 @@
     "active_metrics": "المقاييس النشطة",
     "active_partners": "الشركاء النشطون",
     "active_status": "حالة النشاط",
+    "add": "إضافة صنف",
+    "add_custom_item": "إنشاء صنف مخصص",
+    "add_custom_item_desc": "تحديد صنف مخصص مؤقت لهذا المستند.",
     "add_item": "إضافة صنف",
     "admins": "المسؤولين",
     "asset_metadata": "تكوين الأصول والبيانات الوصفية",
@@ -539,6 +546,7 @@
       "pastry_desserts": "المعجنات والحلويات"
     },
     "dialog": {
+      "cancel": "إلغاء",
       "close": "إغلاق"
     },
     "doc_number": "رقم المستند",
@@ -637,6 +645,7 @@
     "manager": "مدير الوحدة",
     "manifest_state": "حالة البيان",
     "manual_entry": "إدخال يدوي",
+    "scan_mode": "نمط المسح",
     "master_data": "البيانات الأساسية",
     "master_data_sync": "مزامنة البيانات الأساسية",
     "min_chars_required": "يجب إدخال {count} أحرف على الأقل",
@@ -736,6 +745,7 @@
     "search_placeholder": "البحث في الجلسات...",
     "secure_connection": "اتصال آمن",
     "select_base_unit": "— اختر الوحدة الأساسية —",
+    "select_currency": "اختر العملة",
     "select_date": "اختر التاريخ",
     "select_department": "اختر القسم...",
     "select_item": "اختر صنفاً...",
@@ -873,6 +883,7 @@
       "search": "بحث..."
     },
     "table_headers": {
+      "actions": "الإجراءات",
       "available": "متاح",
       "code": "الكود",
       "expiry": "تاريخ الانتهاء",
@@ -2190,6 +2201,10 @@
     "trusted_by": "موثوق من قبل قادة الصناعة"
   },
   "notifications": {
+    "templates_desc": "إدارة مشغلات نظام التنبيهات والقوالب الديناميكية.",
+    "actions": {
+      "create": "إنشاء قالب"
+    },
     "active": "نشط",
     "active_templates": "قوالب نشطة",
     "inactive": "غير نشط",
@@ -2467,6 +2482,11 @@
   },
   "operations": {
     "adjustment": {
+      "suggest_fifo": "اقتراح FIFO تلقائي",
+      "fifo_applied": "تم تطبيق اقتراحات FIFO بنجاح.",
+      "shortage_warning": "عجز جزئي: تعذر تخصيص {qty} وحدات لعدم كفاية المخزون.",
+      "fetching_lots": "جاري جلب الدفعات المتاحة...",
+      "select_warehouse_error": "يرجى تحديد مستودع أولاً.",
       "add_item": "إضافة صنف",
       "adjustments": "التسويات",
       "approve": "موافقة",
@@ -2549,6 +2569,7 @@
       "scan": {
         "not_found": "الصنف غير موجود"
       },
+      "scan_item_placeholder": "امسح باركود الصنف أو أدخل SKU...",
       "scan_placeholder": "امسح صنفاً...",
       "search_placeholder": "البحث في وثائق التعديل...",
       "status": "الحالة",

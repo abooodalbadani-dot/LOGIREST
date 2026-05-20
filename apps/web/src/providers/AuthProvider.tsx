@@ -8,12 +8,22 @@ import { apiClient } from '@/lib/api/client';
 export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR';
 export interface UserScope { branch_id: string | null; warehouse_id: string | null; department_id: string | null; }
 export interface ActiveScope { branchId: string | null; warehouseId: string | null; departmentId: string | null; }
-export interface AuthUser { id: string; name: string; email: string; role: UserRole; scopes: UserScope[]; locale?: 'ar' | 'en'; }
+export interface AuthUser { 
+  id: string; 
+  name: string; 
+  email: string; 
+  role: UserRole; 
+  scopes: UserScope[]; 
+  locale?: 'ar' | 'en'; 
+  avatar_url?: string | null;
+  phone?: string | null;
+}
 export interface AuthContextValue { 
   user: AuthUser | null; 
   token: string | null; 
   login: (email: string, password: string) => Promise<void>; 
   logout: () => void; 
+  updateUser: (updatedFields: Partial<AuthUser>) => void;
   isLoading: boolean;
   activeScope: ActiveScope;
   setActiveScope: (scope: ActiveScope) => void;
@@ -59,7 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Defer state updates to avoid synchronous cascading renders
         setTimeout(() => {
-          setUser(parsedUser);
+          let finalUser = parsedUser;
+          const storedOverrides = localStorage.getItem('logirest_user_overrides');
+          if (storedOverrides) {
+            try {
+              finalUser = { ...parsedUser, ...JSON.parse(storedOverrides) };
+            } catch (err) {
+              console.error('Failed to parse user overrides:', err);
+            }
+          }
+          setUser(finalUser);
           setToken(storedToken);
 
           if (storedScope) {
@@ -111,9 +130,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = (updatedFields: Partial<AuthUser>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('logirest_user_overrides', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem('logirest_token');
     localStorage.removeItem('logirest_active_scope');
+    localStorage.removeItem('logirest_user_overrides');
     // Remove cookie
     document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     
@@ -124,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, activeScope, setActiveScope }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isLoading, activeScope, setActiveScope }}>
       {children}
     </AuthContext.Provider>
   );

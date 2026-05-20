@@ -9,14 +9,14 @@ import { useRouter } from "@/i18n/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { mapToSessionVM, StocktakeItemVM } from "@/features/operations/mappers/stocktakeMapper";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DocumentLineItemTable } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { PermissionGate } from "@/components/shared/PermissionGate";
@@ -46,6 +46,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const completeCounting = useCompleteCounting();
 
   const [idempotencyKey] = React.useState(() => crypto.randomUUID());
+  const { isOnline } = useNetworkStatus();
 
   // Warehouse Lock State
   const { data: lockState } = useWarehouseLock(session?.warehouseId || null);
@@ -55,22 +56,38 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const [localCounts, setLocalCounts] = React.useState<Record<string, number>>({})
   const [focusedRowIndex, setFocusedRowIndex] = React.useState<number>(-1)
   
-  const parentRef = React.useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rowVirtualizerRef = React.useRef<any>(null)
   const inputRefs = React.useRef<Map<number, HTMLInputElement>>(new Map())
 
   const items = session?.items || []
 
-  const rowVirtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 88,
-    overscan: 10,
-  })
+  const tableLines = React.useMemo(() => {
+    return items.map((item) => ({
+      id: item.id,
+      item: {
+        id: item.itemId,
+        code: item.barcode || '',
+        name_en: item.itemName,
+        name_ar: item.itemName,
+        primary_uom: { code: item.uom }
+      },
+      qty: localCounts[item.id] ?? 0,
+      uom_id: '',
+      lot: item.lotNumber ? { lot_number: item.lotNumber, expiry_date: item.expiryDate || null } : null,
+      lotNumber: item.lotNumber,
+      expiryDate: item.expiryDate,
+      itemId: item.itemId,
+      uom: item.uom,
+      barcode: item.barcode,
+      itemName: item.itemName
+    }));
+  }, [items, localCounts]);
 
   // Synchronize focus when index changes
   React.useEffect(() => {
-    if (focusedRowIndex !== -1) {
-      rowVirtualizer.scrollToIndex(focusedRowIndex, { align: 'center' });
+    if (focusedRowIndex !== -1 && rowVirtualizerRef.current) {
+      rowVirtualizerRef.current.scrollToIndex(focusedRowIndex, { align: 'center' });
       // Small timeout to allow virtualization to render the row
       const timer = setTimeout(() => {
         const input = inputRefs.current.get(focusedRowIndex);
@@ -81,7 +98,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [focusedRowIndex, rowVirtualizer]);
+  }, [focusedRowIndex]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
@@ -108,6 +125,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
   const debouncedUpdate = useDebouncedCallback(
     (itemId: string, lineId: string, countedQty: number) => {
+      if (!isOnline) return;
       updateCount.mutate({ 
         stocktakeId: id, 
         itemId, 
@@ -146,6 +164,10 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   }
 
   const handleScan = async (barcode: string) => {
+    if (!isOnline) {
+      toast.error(t('offline_error', { defaultValue: 'Offline: Scanning disabled' }));
+      return;
+    }
     const index = items.findIndex((i) => i.barcode === barcode)
     if (index !== -1) {
       const item = items[index] as StocktakeItemVM
@@ -202,15 +224,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
     })
   }
 
-  const hasCountedItems = session.items.some((i) => (localCounts[i.id] || 0) > 0)
 
-  const virtualRows = rowVirtualizer.getVirtualItems();
-  const totalSize = rowVirtualizer.getTotalSize();
-  const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start || 0 : 0;
-  const paddingBottom =
-    virtualRows.length > 0
-      ? totalSize - (virtualRows[virtualRows.length - 1]?.end || 0)
-      : 0;
 
   return (
     <PermissionGate action="edit" resource="operations_stocktake">
@@ -239,7 +253,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               onConfirm={handleFinish}
               trigger={
                 <Button 
-                  disabled={!hasCountedItems || completeCounting.isPending}
+                  disabled={!items.some((i) => (localCounts[i.id] || 0) > 0) || completeCounting.isPending}
                   className="primary-gradient shadow-lg shadow-primary/20"
                 >
                   {completeCounting.isPending && (
@@ -252,6 +266,14 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
           </div>
         </PageHeader>
 
+        {!isOnline && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center justify-center gap-3">
+            <span className="text-destructive font-bold uppercase tracking-wider text-sm">
+              {t('offline_banner', { defaultValue: 'Offline Mode Active - Scanning and autosave paused' })}
+            </span>
+          </div>
+        )}
+
         <LockBanner lockState={lockState} />
 
         <div className="max-w-2xl mx-auto w-full">
@@ -262,99 +284,49 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             placeholder={t('scan_barcode_to_count')}
             label={t('scan_session')}
             scannerMode={true}
-            readOnly={false}
+            readOnly={!isOnline}
           />
         </div>
 
         <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
-          <div 
-            ref={parentRef}
-            className="rounded-3xl bg-white/[0.01] overflow-auto max-h-[600px] relative"
-          >
-            <Table>
-              <TableHeader className="bg-white/[0.02] sticky top-0 z-10">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 px-8 w-[40%]">{common('item')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 w-[30%]">{t('details')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12 w-[20%]">{t('counted_qty')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-end h-12 px-8 w-[10%]">{common('uom')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paddingTop > 0 && (
-                  <TableRow style={{ height: `${paddingTop}px` }} className="hover:bg-transparent border-none">
-                    <TableCell colSpan={4} className="p-0" />
-                  </TableRow>
-                )}
-                {virtualRows.map((virtualRow) => {
-                  const item = items[virtualRow.index];
-                  const isFocused = focusedRowIndex === virtualRow.index;
-
-                  return (
-                    <TableRow
-                      key={item.id}
-                      className={cn(
-                        "transition-colors border-none group",
-                        virtualRow.index % 2 === 0 ? "bg-white/[0.01]" : "bg-white/[0.03]",
-                        isFocused && "bg-primary/5 ring-1 ring-primary/20"
-                      )}
-                      style={{
-                        height: `${virtualRow.size}px`,
-                      }}
-                    >
-                        <TableCell className="px-8 py-6">
-                          <div className="flex flex-col gap-1">
-                            <span className="font-semibold text-foreground group-hover:text-primary transition-colors">{item.itemName}</span>
-                            <span className="text-label-xs font-semibold text-muted-foreground/40 font-mono" dir="ltr">{item.barcode}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-body-md font-mono font-semibold text-muted-foreground/60" dir="ltr">{item.lotNumber}</span>
-                            <span className="text-label-xs font-semibold text-muted-foreground/30 uppercase" dir="ltr">{item.expiryDate}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            ref={(el) => {
-                              if (el) inputRefs.current.set(virtualRow.index, el);
-                              else inputRefs.current.delete(virtualRow.index);
-                            }}
-                            type="number"
-                            value={localCounts[item.id] ?? ''} 
-                            onFocus={() => setFocusedRowIndex(virtualRow.index)}
-                            disabled={completeCounting.isPending}
-                            onChange={(e) => {
-                              const val = parseFloat(e.target.value) || 0
-                              setLocalCounts(prev => ({ ...prev, [item.id]: val }))
-                              debouncedUpdate(item.itemId, item.id, val)
-                            }}
-                            className={cn(
-                              "text-center font-mono font-semibold h-10 bg-surface-container-medium border-none focus-visible:ring-1 transition-all rounded-lg",
-                              isFocused ? "focus-visible:ring-primary" : "focus-visible:ring-primary/30"
-                            )}
-                            dir="ltr"
-                          />
-                        </TableCell>
-                        <TableCell className="text-end px-8 font-semibold text-label-xs text-muted-foreground/40 uppercase">
-                          {item.uom}
-                        </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {paddingBottom > 0 && (
-                  <TableRow style={{ height: `${paddingBottom}px` }} className="hover:bg-transparent border-none">
-                    <TableCell colSpan={4} className="p-0" />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            {items.length === 0 && (
-              <div className="h-32 flex items-center justify-center text-muted-foreground italic">
-                {t('no_items_counted')}
-              </div>
+          <DocumentLineItemTable
+            lines={tableLines}
+            locale={locale}
+            isReadOnly={false}
+            hideLotColumns={false}
+            enableVirtualization={true}
+            maxHeight="600px"
+            virtualizerRef={rowVirtualizerRef}
+            rowClassName={(line, index) => cn(
+              focusedRowIndex === index && "bg-primary/5 ring-1 ring-primary/20"
             )}
-          </div>
+            headers={{ qty: t('counted_qty') }}
+            renderQty={(line) => {
+              const index = tableLines.findIndex(l => l.id === line.id);
+              return (
+                <Input
+                  ref={(el) => {
+                    if (el) inputRefs.current.set(index, el);
+                    else inputRefs.current.delete(index);
+                  }}
+                  type="number"
+                  value={localCounts[line.id] ?? ''} 
+                  onFocus={() => setFocusedRowIndex(index)}
+                  disabled={completeCounting.isPending || !isOnline}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0
+                    setLocalCounts(prev => ({ ...prev, [line.id]: val }))
+                    debouncedUpdate(line.itemId, line.id, val)
+                  }}
+                  className={cn(
+                    "text-center font-mono font-semibold h-10 bg-surface-container-medium border-none focus-visible:ring-1 transition-all rounded-lg max-w-[120px] mx-auto",
+                    focusedRowIndex === index ? "focus-visible:ring-primary" : "focus-visible:ring-primary/30"
+                  )}
+                  dir="ltr"
+                />
+              );
+            }}
+          />
         </Card>
       </div>
     </PermissionGate>

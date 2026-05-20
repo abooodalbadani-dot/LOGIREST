@@ -413,6 +413,10 @@
     "sign_in": "Sign In"
   },
   "common": {
+    "submission_failed": "Submission failed",
+    "error_generic": "An error occurred",
+    "no_item_found": "Item not found",
+    "security_standard_desc": "Your login session is secured with standard encryption and enterprise scope protection.",
     "actions": {
       "all_branches": "All Branches",
       "approve": "Approve",
@@ -444,6 +448,9 @@
     "active_metrics": "Active Metrics",
     "active_partners": "Active Partners",
     "active_status": "Active Status",
+    "add": "Add Item",
+    "add_custom_item": "Create Custom Item",
+    "add_custom_item_desc": "Define a temporary custom item for this document.",
     "add_item": "Add Item",
     "admins": "Admins",
     "asset_metadata": "Asset Configuration & Metadata",
@@ -539,6 +546,7 @@
       "pastry_desserts": "Pastry & Desserts"
     },
     "dialog": {
+      "cancel": "Cancel",
       "close": "Close"
     },
     "doc_number": "Document No",
@@ -637,6 +645,7 @@
     "manager": "Manager",
     "manifest_state": "Manifest State",
     "manual_entry": "Manual Entry",
+    "scan_mode": "Scan Mode",
     "master_data": "Master Data",
     "master_data_sync": "Master Data Sync",
     "min_chars_required": "Minimum {count} characters required",
@@ -736,6 +745,7 @@
     "search_placeholder": "Search registry...",
     "secure_connection": "Secure Connection",
     "select_base_unit": "— SELECT BASE UNIT —",
+    "select_currency": "Select Currency",
     "select_date": "Select date",
     "select_department": "Select Department...",
     "select_item": "Select Item...",
@@ -873,6 +883,7 @@
       "search": "Search..."
     },
     "table_headers": {
+      "actions": "Actions",
       "available": "Available",
       "code": "Code",
       "expiry": "Expiry",
@@ -2190,6 +2201,10 @@
     "trusted_by": "Trusted By Industry Leaders"
   },
   "notifications": {
+    "templates_desc": "Manage notification system triggers and dynamic templates.",
+    "actions": {
+      "create": "Create Template"
+    },
     "active": "Active",
     "active_templates": "Active Templates",
     "inactive": "Inactive",
@@ -2467,6 +2482,11 @@
   },
   "operations": {
     "adjustment": {
+      "suggest_fifo": "Suggest FIFO",
+      "fifo_applied": "FIFO suggestions applied successfully.",
+      "shortage_warning": "Partial shortage: {qty} units could not be allocated due to insufficient stock.",
+      "fetching_lots": "Fetching available lots...",
+      "select_warehouse_error": "Please select a warehouse first.",
       "add_item": "Add Item",
       "adjustments": "Adjustments",
       "approve": "Approve",
@@ -2549,6 +2569,7 @@
       "scan": {
         "not_found": "Item not found"
       },
+      "scan_item_placeholder": "Scan item barcode or enter SKU...",
       "scan_placeholder": "Scan item barcode or enter code...",
       "search_placeholder": "Search Adjustment Documents...",
       "status": "Status",

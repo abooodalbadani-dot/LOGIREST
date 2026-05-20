@@ -18,6 +18,8 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
+import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { useMemo } from 'react';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { type KitchenRequestDetail, type KitchenRequestItem } from '@/features/operations/types/kitchen-request';
@@ -32,6 +34,24 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
   const t = useTranslations('operations.kitchen_request');
   const tCommon = useTranslations('common');
   const router = useRouter();
+
+  const tableLines = useMemo(() => {
+    return request.items.map((item) => ({
+      id: item.id,
+      item: {
+        id: item.item_id,
+        code: item.item_id,
+        name_en: item.item_name,
+        name_ar: item.item_name,
+        primary_uom: { code: item.uom }
+      },
+      qty: item.quantity,
+      fulfilledQty: item.fulfilled_quantity,
+      uom_id: '',
+      lot: null,
+      notes: item.notes,
+    }));
+  }, [request.items]);
 
   const history = [
     { status: 'draft' as Status, at: request.created_at, by: request.requested_by }
@@ -136,50 +156,47 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                   {request.items.length} {t('entries')}
                 </Badge>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left rtl:text-right border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-high/30">
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('item')}</th>
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{tCommon('quantity')}</th>
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60 text-center">{t('fulfilled')}</th>
-                      <th className="px-8 py-5 text-label-xs font-semibold uppercase text-muted-foreground/60">{tCommon('notes')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-container-high/30">
-                    {request.items.map((item: KitchenRequestItem) => (
-                      <tr key={item.id} className="group hover:bg-surface-container-medium/30 transition-all">
-                        <td className="px-8 py-6">
-                          <div className="flex flex-col">
-                            <span className="text-label-sm font-bold text-foreground">{item.item_name}</span>
-                            <span className="text-label-xxs font-mono text-muted-foreground/40 mt-1 uppercase">ID: {item.item_id}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6 text-center">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-body-md font-semibold text-cyan-500 tabular-nums">{item.quantity}</span>
-                            <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6 text-center">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className={cn(
-                              "text-body-md font-semibold tabular-nums",
-                              (item.fulfilled_quantity || 0) < item.quantity ? "text-amber-500" : "text-emerald-500"
-                            )}>{item.fulfilled_quantity || 0}</span>
-                            <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{item.uom}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
-                            {item.notes || '—'}
-                          </p>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DocumentLineItemTable
+                lines={tableLines}
+                locale={locale}
+                isReadOnly={true}
+                hideLotColumns={true}
+                headers={{
+                  code: tCommon('table_headers.code'),
+                  name: tCommon('table_headers.name'),
+                  qty: tCommon('table_headers.qty'),
+                  uom: tCommon('table_headers.uom'),
+                }}
+                renderQty={(line) => (
+                  <span className="text-body-md font-semibold text-cyan-500 tabular-nums">
+                    {line.qty}
+                  </span>
+                )}
+                renderUom={(line) => (
+                  <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
+                    {line.item.primary_uom?.code || '---'}
+                  </span>
+                )}
+                extraColumns={[
+                  {
+                    header: t('fulfilled') || 'Fulfilled',
+                    cell: (line) => (
+                      <span className={cn(
+                        "text-body-md font-semibold tabular-nums",
+                        (line.fulfilledQty || 0) < line.qty ? "text-amber-500" : "text-emerald-500"
+                      )}>{line.fulfilledQty || 0}</span>
+                    )
+                  },
+                  {
+                    header: tCommon('notes') || 'Notes',
+                    cell: (line) => (
+                      <p className="text-label-xs font-medium text-muted-foreground/60 max-w-[200px] line-clamp-2 italic">
+                        {line.notes || '—'}
+                      </p>
+                    )
+                  }
+                ]}
+              />
             </div>
           </div>
 

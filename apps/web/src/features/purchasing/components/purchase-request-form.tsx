@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox, type ComboboxItem } from '@/components/shared/SmartCombobox';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useCreatePR } from '@/features/purchasing/hooks/useCreatePR';
 import { useUpdatePR } from '@/features/purchasing/hooks/useUpdatePR';
@@ -101,6 +101,22 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const createPR = useCreatePR();
   const updatePR = useUpdatePR({ onConflict });
   const submitPR = useSubmitPR({ onConflict });
+
+  const departmentItems = React.useMemo(() => {
+    return warehouses?.data?.map((w: Warehouse) => ({
+      id: w.id,
+      name_en: w.name_en,
+      name_ar: w.name_ar,
+    })) ?? [];
+  }, [warehouses?.data]);
+
+  const comboboxItems = React.useMemo(() => {
+    return itemsData?.data?.map((i: Item) => ({
+      id: i.id,
+      name_en: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
+      name_ar: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
+    })) ?? [];
+  }, [itemsData?.data, locale]);
 
   const form = useForm<PurchaseRequestFormValues>({
     resolver: zodResolver(formSchema),
@@ -205,7 +221,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         toast.success(tc('save') + ' ' + tc('completed'));
       }
 
-      router.push('/purchase-requests', { skipGuard: true });
+      router.push(`/purchase-requests/${prId}`, { skipGuard: true });
     } catch (error) {
       console.error(error);
       toast.error(tc('error'));
@@ -339,20 +355,16 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                           <Package className="w-3 h-3" />
                           {t('department')}
                         </FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-surface-container-lowest border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30">
-                              <SelectValue placeholder={tc('select_warehouse')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-surface-container-low border-none rounded-xl">
-                            {warehouses?.data?.map((w: Warehouse) => (
-                              <SelectItem key={w.id} value={w.id} className="text-label-xs font-bold">
-                                {locale === 'ar' ? w.name_ar : w.name_en}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SmartCombobox
+                            items={departmentItems}
+                            value={field.value}
+                            onSelect={(item) => field.onChange(item.id)}
+                            placeholder={tc('select_warehouse')}
+                            className="bg-surface-container-lowest border-none h-11 rounded-xl text-label-xs font-semibold uppercase focus:ring-1 focus:ring-operational-cyan/30"
+                            disabled={isLocked}
+                          />
+                        </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>
                     )}
@@ -407,12 +419,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   {!isLocked && (
                     <ScanInput
                       onScan={handleScan}
-                      onManualTrigger={() => append({
-                        item_id: '',
-                        item: { id: '', code: '', name_ar: '', name_en: '', primary_uom: { code: 'EA' } },
-                        req_qty: 1,
-                        uom_id: 'EA'
-                      })}
+                      items={itemsData?.data as unknown as ComboboxItem[] || []}
                       placeholder={tc('select_item')}
                       size="lg"
                       label={t('scan_or_search')}
@@ -453,32 +460,25 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                           
                           return (
                             <div className="min-w-[200px]">
-                              <Select
-                                onValueChange={(val) => {
-                                  const item = itemsData?.data?.find((i: Item) => i.id === val);
-                                  form.setValue(`lines.${index}.item_id`, val || '');
-                                  form.setValue(`lines.${index}.item`, {
-                                    id: item?.id || '',
-                                    code: item?.code || '',
-                                    name_ar: item?.name_ar || '',
-                                    name_en: item?.name_en || '',
-                                    primary_uom: { code: item?.primary_uom?.code || 'EA' }
-                                  });
-                                  form.setValue(`lines.${index}.uom_id`, item?.primary_uom?.id || 'EA');
-                                }}
+                              <SmartCombobox
+                                items={comboboxItems}
                                 value={form.watch(`lines.${index}.item_id`)}
-                              >
-                                <SelectTrigger className="h-10 bg-surface-container-low border-none rounded-xl text-label-xs font-semibold uppercase">
-                                  <SelectValue placeholder={tc('select_item')} />
-                                </SelectTrigger>
-                                <SelectContent className="bg-surface-container-low border-none rounded-xl max-h-[300px]">
-                                  {itemsData?.data?.map((i: Item) => (
-                                    <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
-                                      {i.code} - {locale === 'ar' ? i.name_ar : i.name_en}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                onSelect={(item) => {
+                                  const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
+                                  form.setValue(`lines.${index}.item_id`, item.id);
+                                  form.setValue(`lines.${index}.item`, {
+                                    id: matchedItem?.id || '',
+                                    code: matchedItem?.code || '',
+                                    name_ar: matchedItem?.name_ar || '',
+                                    name_en: matchedItem?.name_en || '',
+                                    primary_uom: { code: matchedItem?.primary_uom?.code || 'EA' }
+                                  });
+                                  form.setValue(`lines.${index}.uom_id`, matchedItem?.primary_uom?.id || 'EA');
+                                }}
+                                placeholder={tc('select_item')}
+                                className="h-10 bg-surface-container-low border-none rounded-xl text-label-xs font-semibold uppercase"
+                                disabled={isLocked}
+                              />
                             </div>
                           );
                         }

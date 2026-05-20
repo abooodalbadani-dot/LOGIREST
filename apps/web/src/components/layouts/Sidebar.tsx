@@ -99,6 +99,9 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'stocktake', href: '/stocktake', resource: 'stocktake', labelKey: 'stocktake', icon: ClipboardCheck },
         { key: 'adjustment', href: '/adjustments', resource: 'adjustment', labelKey: 'adjustment', icon: Sliders },
         { key: 'kitchen_requests', href: '/kitchen-requests', resource: 'kitchen_requests', labelKey: 'kitchen_requests', icon: Store },
+        { key: 'scan_mode', href: '/inventory/scan-mode', resource: 'inventory', labelKey: 'scan_mode', icon: Barcode },
+        { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck },
+        { key: 'yield_management', href: '/yield-management', resource: 'inventory', labelKey: 'yield_management', icon: TrendingUp },
       ]
     },
     {
@@ -107,6 +110,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { key: 'pr', href: '/purchase-requests', resource: 'pr', labelKey: 'pr', icon: FileText },
         { key: 'po', href: '/purchase-orders', resource: 'po', labelKey: 'po', icon: ShoppingCart },
+        { key: 'landed_cost', href: '/landed-cost', resource: 'po', labelKey: 'landed_cost', icon: Coins },
       ]
     },
     {

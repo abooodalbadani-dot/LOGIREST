@@ -25,7 +25,7 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { MetricCard } from "@/components/ui/metric-card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DocumentLineItemTable, type LineItem } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PermissionGate } from "@/components/shared/PermissionGate";
@@ -40,6 +40,15 @@ import {
  DialogHeader,
  DialogTitle,
 } from "@/components/ui/dialog";
+
+interface StocktakeLineItem extends LineItem {
+  snapshotQty: number | null;
+  countedQty: number | null;
+  variance: number | null;
+  uom: string;
+  unitCost: number;
+  varianceReason: string;
+}
 
 export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
@@ -60,6 +69,29 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
   if (!session || !user) return false;
   return canPerformActionV2('STOCKTAKE', session.status as DocumentStatus, 'APPROVE', user.role);
  }, [session, user]);
+
+ const tableLines = React.useMemo((): StocktakeLineItem[] => {
+  if (!session) return [];
+  return session.items.map((item) => ({
+    id: item.id,
+    item: {
+      id: item.item_id,
+      code: item.barcode || '',
+      name_en: item.item_name,
+      name_ar: item.item_name,
+      primary_uom: { code: item.uom }
+    },
+    qty: item.counted_qty ?? 0,
+    uom_id: '',
+    lot: null,
+    snapshotQty: item.snapshot_qty,
+    countedQty: item.counted_qty,
+    variance: item.variance,
+    uom: item.uom,
+    unitCost: item.unit_cost,
+    varianceReason: item.variance_reason || '',
+  }));
+ }, [session?.items]);
 
  if (isLoading) return <LoadingSkeleton />
  if (error || !session) return <ErrorState onRetry={() => window.location.reload()} />
@@ -202,67 +234,73 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
 
  {/* Variance Table */}
  <Card className="bg-surface-container-low border-none shadow-none rounded-[2rem] overflow-hidden">
- <div className="p-8 bg-white/[0.01]">
- <h3 className="text-body-md font-semibold uppercase text-muted-foreground/40">
- {t('variance_details_table')}
- </h3>
- </div>
- <div className="overflow-x-auto">
- <Table>
- <TableHeader className="bg-white/[0.02]">
- <TableRow className="hover:bg-transparent border-none">
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 px-8 w-[25%]">{common('item')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('snapshot_qty')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('counted_qty')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('variance')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('total_value')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 px-8">{t('variance_reason')}</TableHead>
- </TableRow>
- </TableHeader>
- <TableBody>
- {session.items.map((item) => {
-  const variance = (item.counted_qty || 0) - (item.snapshot_qty ?? 0);
-  const varianceValue = variance * item.unit_cost;
- 
- return (
- <TableRow key={item.id} className="hover:bg-white/[0.01] transition-colors border-none group">
- <TableCell className="px-8 py-5">
- <div className="flex flex-col gap-0.5">
- <span className="font-bold text-foreground group-hover:text-primary transition-colors">{item.item_name}</span>
- <span className="text-label-xs font-semibold text-muted-foreground/30 font-mono" dir="ltr">{item.barcode}</span>
- </div>
- </TableCell>
- <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
- {formatNumber(item.snapshot_qty, locale, 3)} {item.uom}
- </TableCell>
- <TableCell className="text-center font-mono text-label-sm font-semibold text-foreground" dir="ltr">
- {formatNumber(item.counted_qty, locale, 3)} {item.uom}
- </TableCell>
- <TableCell className="text-center">
- <div className={cn(
- "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs",
- variance === 0 ? "bg-status-success/10 text-status-success" : 
- variance > 0 ? "bg-status-info/10 text-status-info" : "bg-status-error/10 text-status-error"
- )} dir="ltr">
- {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)}
- </div>
- </TableCell>
- <TableCell className="text-center font-mono text-label-sm font-semibold" dir="ltr">
- <span className={cn(varianceValue > 0 ? "text-status-info" : varianceValue < 0 ? "text-status-error" : "text-muted-foreground/40")}>
- {formatCurrency(varianceValue, currencyCode, locale)}
- </span>
- </TableCell>
- <TableCell className="px-8">
- <span className="text-label-sm text-muted-foreground/60 leading-relaxed">
- {item.variance_reason || "—"}
- </span>
- </TableCell>
- </TableRow>
- );
- })}
- </TableBody>
- </Table>
- </div>
+    <div className="p-8 bg-white/[0.01]">
+      <h3 className="text-body-md font-semibold uppercase text-muted-foreground/40">
+        {t('variance_details_table')}
+      </h3>
+    </div>
+    <DocumentLineItemTable
+      lines={tableLines}
+      locale={locale}
+      isReadOnly={true}
+      hideLotColumns={true}
+      headers={{ qty: t('counted_qty') }}
+      renderQty={(line) => (
+        <span className="font-mono text-label-sm font-semibold text-foreground">
+          {formatNumber(line.countedQty, locale, 3)}
+        </span>
+      )}
+      renderUom={(line) => (
+        <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+          {line.uom}
+        </span>
+      )}
+      extraColumns={[
+        {
+          header: t('snapshot_qty'),
+          cell: (line) => (
+            <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
+              {formatNumber(line.snapshotQty, locale, 3)} {line.uom}
+            </span>
+          )
+        },
+        {
+          header: t('variance'),
+          cell: (line) => {
+            const variance = line.variance ?? 0;
+            return (
+              <div className={cn(
+                "inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold text-label-xs",
+                variance === 0 ? "bg-status-success/10 text-status-success" : 
+                variance > 0 ? "bg-status-info/10 text-status-info" : "bg-status-error/10 text-status-error"
+              )} dir="ltr">
+                {variance > 0 ? '+' : ''}{formatNumber(variance, locale, 3)}
+              </div>
+            );
+          }
+        },
+        {
+          header: t('total_value'),
+          cell: (line) => {
+            const variance = line.variance ?? 0;
+            const varianceValue = variance * line.unitCost;
+            return (
+              <span className={cn("font-mono text-label-sm font-semibold", varianceValue > 0 ? "text-status-info" : varianceValue < 0 ? "text-status-error" : "text-muted-foreground/40")}>
+                {formatCurrency(varianceValue, currencyCode, locale)}
+              </span>
+            );
+          }
+        },
+        {
+          header: t('variance_reason'),
+          cell: (line) => (
+            <span className="text-label-sm text-muted-foreground/60 leading-relaxed block text-start min-w-[200px]">
+              {line.varianceReason || "—"}
+            </span>
+          )
+        }
+      ]}
+    />
  </Card>
 
  {/* Rejection Dialog */}

@@ -310,8 +310,9 @@ export function SettingsClient({ locale }: { locale: string }) {
                   <Select 
                     onValueChange={(val) => setValue('base_currency', val as string, { shouldDirty: true })}
                     value={watchedBaseCurrency}
+                    disabled={currentSettings?.has_transactions}
                   >
-                    <SelectTrigger className="h-14 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 font-bold transition-all hover:border-operational-cyan/20 text-sm focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan">
+                    <SelectTrigger className="h-14 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 font-bold transition-all hover:border-operational-cyan/20 text-sm focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan disabled:opacity-50 disabled:cursor-not-allowed">
                       <SelectValue placeholder={t('select_currency')} />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-container-lowest border border-outline-low rounded-xl max-h-60 backdrop-blur-xl">

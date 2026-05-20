@@ -18,7 +18,6 @@ import { useAbortController } from '@/hooks/useAbortController';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
 import { 
   CheckCircle, 
-  Trash2, 
   Package, 
   Send,
   XCircle, 
@@ -28,15 +27,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
+import { useItems } from '@/features/items/api/useItems';
+import { ArrowUp, ArrowDown } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
 import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
@@ -81,6 +77,8 @@ export function AdjustmentForm({
   const updateAdjustment = useUpdateAdjustment({ onConflict });
   const abortController = useAbortController();
 
+  const { data: items, isLoading: isLoadingItems } = useItems();
+
   const [warehouseId, setWarehouseId] = useState(document?.warehouse_id || 'wh-1');
   const { data: lockState } = useWarehouseLock(warehouseId);
   const [reason, setReason] = useState<string>(document?.reason || 'DAMAGE');
@@ -88,6 +86,19 @@ export function AdjustmentForm({
   const [lines, setLines] = useState<AdjustmentLine[]>(document?.lines || []);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   
+  const warehouseItems = useMemo(() => [
+    { id: 'wh-1', name_en: tc('warehouses.main') || 'Main Warehouse', name_ar: tc('warehouses.main') || 'المستودع الرئيسي' },
+    { id: 'wh-2', name_en: tc('warehouses.kitchen') || 'Kitchen Store', name_ar: tc('warehouses.kitchen') || 'مستودع المطبخ' },
+  ], [tc]);
+
+  const reasonItems = useMemo(() => {
+    return REASON_OPTIONS.map(opt => ({
+      id: opt,
+      name_en: t(`reason_${opt.toLowerCase()}`) || opt,
+      name_ar: t(`reason_${opt.toLowerCase()}`) || opt,
+    }));
+  }, [t]);
+
   const canEdit = !isLocked || isNew;
   
   // Dialog States
@@ -384,37 +395,26 @@ export function AdjustmentForm({
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('warehouse')}</label>
-                  <Select 
-                    value={warehouseId} 
-                    onValueChange={(val) => setWarehouseId(val || '')}
+                  <SmartCombobox
+                    items={warehouseItems}
+                    value={warehouseId}
+                    onSelect={(item) => setWarehouseId(item.id)}
+                    placeholder={tc('warehouse') || "Select Warehouse"}
                     disabled={!canEdit}
-                  >
-                    <SelectTrigger className="bg-surface-container-low border-none h-12 rounded-lg font-bold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                      <SelectItem value="wh-1" className="font-bold text-body-md">{tc('warehouses.main')}</SelectItem>
-                      <SelectItem value="wh-2" className="font-bold text-body-md">{tc('warehouses.kitchen')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    triggerClassName="bg-surface-container-low border-none h-12 rounded-lg font-bold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10 w-full animate-in fade-in duration-300"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('reason')}</label>
-                  <Select 
-                    value={reason} 
-                    onValueChange={(val) => setReason(val || '')}
+                  <SmartCombobox
+                    items={reasonItems}
+                    value={reason}
+                    onSelect={(item) => setReason(item.id)}
+                    placeholder={t('reason') || "Select Reason"}
                     disabled={!canEdit}
-                  >
-                    <SelectTrigger className="bg-surface-container-low border-none h-12 rounded-lg font-bold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                      {REASON_OPTIONS.map(opt => (
-                        <SelectItem key={opt} value={opt} className="font-bold text-body-md">{t(`reason_${opt.toLowerCase()}`)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    triggerClassName="bg-surface-container-low border-none h-12 rounded-lg font-bold text-body-md transition-all focus:ring-1 focus:ring-primary-fixed-dim/10 w-full animate-in fade-in duration-300"
+                  />
                 </div>
               </div>
 
@@ -433,19 +433,32 @@ export function AdjustmentForm({
               </div>
             </div>
 
-            {/* Item Scanning / Adding */}
+            {/* Input Bars (Scanning + Combobox) */}
             {canEdit && adjustmentStatus !== ADJUSTMENT_STATUS.POSTED && (
               <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
                 <div className="flex items-center gap-3">
                   <Package className="w-5 h-5 text-primary" />
                   <h3 className="text-label-sm font-semibold uppercase">{t('add_item')}</h3>
                 </div>
-                <ScanInput 
-                  onScan={handleScan}
-                  placeholder={t('scan_placeholder')}
-                  scanStatus={scanStatus}
-                  statusMessage={statusMessage}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 relative">
+                    <ScanInput 
+                      onScan={handleScan}
+                      placeholder={t('scan_placeholder')}
+                      scanStatus={scanStatus}
+                      statusMessage={statusMessage}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2 relative">
+                    <SmartCombobox
+                      items={items || []}
+                      onSelect={(item) => handleScan(item.code)}
+                      placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
+                      disabled={isLoadingItems || !canEdit}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -457,107 +470,96 @@ export function AdjustmentForm({
                   <h3 className="text-label-sm font-semibold uppercase">{tc('items')}</h3>
                 </div>
               </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-surface-container-low/50">
-                        <th className="px-3 h-10 text-start text-label-xs font-semibold uppercase text-muted-foreground/60">{tc('item')}</th>
-                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('direction')}</th>
-                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_before')}</th>
-                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_adjusted')}</th>
-                        <th className="px-3 h-10 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_after')}</th>
-                        {canEdit && <th className="px-3 h-10 text-end"></th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y-0">
-                      {lines.length === 0 && (
-                        <tr>
-                          <td colSpan={canEdit ? 6 : 5} className="px-8 py-20 text-center">
-                            <div className="flex flex-col items-center gap-4 opacity-20">
-                              <Package className="w-12 h-12" />
-                              <p className="text-label-sm font-semibold uppercase">{tc('no_items')}</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      {lines.map((line) => (
-                        <tr key={line.id} className="group even:bg-surface-container-low/30 hover:bg-surface-container-high/20 transition-all border-none">
-                          <td className="px-3 py-1">
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-body-md font-bold truncate">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</span>
-                              <span className="text-label-xs font-mono text-primary/40 uppercase mt-1">{line.item.code}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-1 text-center">
-                            <Select
-                              value={line.direction}
-                              onValueChange={(val) => updateLine(line.id, { direction: val as 'INCREASE' | 'DECREASE' })}
-                              disabled={!canEdit}
-                            >
-                              <SelectTrigger 
-                                tabIndex={0}
-                                className="bg-surface-container-low border-none h-10 w-32 mx-auto rounded-lg font-semibold text-label-xs uppercase focus:ring-1 focus:ring-primary-fixed-dim/10"
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-surface-container-highest border-none rounded-lg shadow-2xl">
-                                <SelectItem value="INCREASE" className="font-semibold text-label-xs uppercase text-emerald-500">{t('direction_increase')}</SelectItem>
-                                <SelectItem value="DECREASE" className="font-semibold text-label-xs uppercase text-red-500">{t('direction_decrease')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="px-3 py-1 text-center tabular-nums">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-1 text-center tabular-nums">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <input 
-                                type="number"
-                                value={line.qty_adjusted}
-                                onChange={e => updateLine(line.id, { qty_adjusted: Number(e.target.value) })}
-                                readOnly={!canEdit || !!lockState?.isLocked}
-                                className={cn(
-                                  "bg-surface-container-low border-none h-10 w-24 text-center rounded-lg font-semibold text-body-md transition-all",
-                                  (!canEdit) ? "cursor-default opacity-80 select-all focus:ring-0" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
-                                )}
-                                step="0.001"
-                                min="0"
-                                tabIndex={0}
-                              />
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-1 text-center tabular-nums">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className={cn(
-                                "text-body-md font-bold",
-                                (line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted) < 0 ? "text-red-500" : "text-foreground"
-                              )}>
-                                {formatQuantity(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted, locale as 'ar' | 'en')}
-                              </span>
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
-                            </div>
-                          </td>
-                          {canEdit && (
-                            <td className="px-3 py-1 text-end">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => removeLine(line.id)}
-                                className="h-8 w-8 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="bg-surface-container-low/30 rounded-[2rem] border border-white/5 mx-4 mb-4 overflow-hidden">
+                <DocumentLineItemTable
+                  lines={lines.map(l => ({ ...l, qty: l.qty_adjusted }))}
+                  locale={locale as 'ar' | 'en'}
+                  isReadOnly={!canEdit || !!lockState?.isLocked}
+                  onRemoveLine={(id) => removeLine(id)}
+                  hideLotColumns={true}
+                  dense={true}
+                  headers={{
+                    qty: t('qty_adjusted')
+                  }}
+                  renderQty={(line) => (
+                    <div className="flex justify-center">
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        value={line.qty}
+                        readOnly={!canEdit || !!lockState?.isLocked}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          updateLine(line.id, { qty_adjusted: val || 0 });
+                        }}
+                        className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+                      />
+                    </div>
+                  )}
+                  extraColumns={[
+                    {
+                      header: t('direction') || 'Direction',
+                      cell: (line: AdjustmentLine) => (
+                        <div className="flex justify-center bg-surface-container-low/40 rounded-lg p-0.5 h-9 w-36 mx-auto">
+                          <button
+                            type="button"
+                            disabled={!canEdit}
+                            onClick={() => updateLine(line.id, { direction: 'INCREASE' })}
+                            className={cn(
+                              "flex flex-1 items-center justify-center gap-1 rounded-md text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+                              line.direction === 'INCREASE'
+                                ? "bg-status-success/15 text-status-success shadow-sm"
+                                : "text-muted-foreground/30 hover:text-muted-foreground/60"
+                            )}
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                            {t('direction_increase')}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!canEdit}
+                            onClick={() => updateLine(line.id, { direction: 'DECREASE' })}
+                            className={cn(
+                              "flex flex-1 items-center justify-center gap-1 rounded-md text-[10px] font-bold uppercase transition-all active:scale-[0.95] disabled:opacity-50",
+                              line.direction === 'DECREASE'
+                                ? "bg-status-error/15 text-status-error shadow-sm"
+                                : "text-muted-foreground/30 hover:text-muted-foreground/60"
+                            )}
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                            {t('direction_decrease')}
+                          </button>
+                        </div>
+                      )
+                    },
+                    {
+                      header: t('qty_before') || 'Qty Before',
+                      cell: (line: AdjustmentLine) => (
+                        <div className="flex flex-col items-center gap-0.5 tabular-nums">
+                          <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
+                        </div>
+                      )
+                    },
+                    {
+                      header: t('qty_after') || 'Qty After',
+                      cell: (line: AdjustmentLine) => {
+                        const after = line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted;
+                        return (
+                          <div className="flex flex-col items-center gap-0.5 tabular-nums">
+                            <span className={cn(
+                              "text-body-md font-bold",
+                              after < 0 ? "text-red-500" : "text-foreground"
+                            )}>
+                              {formatQuantity(after, locale as 'ar' | 'en')}
+                            </span>
+                          </div>
+                        );
+                      }
+                    }
+                  ]}
+                />
+              </div>
             </div>
           </div>
 

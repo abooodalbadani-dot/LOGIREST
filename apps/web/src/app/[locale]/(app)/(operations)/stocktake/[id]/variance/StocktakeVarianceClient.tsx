@@ -27,13 +27,21 @@ import { formatQuantity, formatCurrency, formatNumber } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DocumentLineItemTable, type LineItem } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+
+interface StocktakeLineItem extends LineItem {
+  snapshotQty: number | null;
+  countedQty: number | null;
+  uom: string;
+  unitCost: number;
+  varianceReason: string;
+}
 
 export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
@@ -43,6 +51,28 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const session = rawSession ? mapToSessionVM(rawSession) : null;
  const { data: warehouses } = useWarehouses();
  const submitVariance = useSubmitVariance();
+
+ const tableLines = React.useMemo((): StocktakeLineItem[] => {
+  if (!session) return [];
+  return session.items.map((item) => ({
+    id: item.id,
+    item: {
+      id: item.itemId,
+      code: item.barcode || '',
+      name_en: item.itemName,
+      name_ar: item.itemName,
+      primary_uom: { code: item.uom }
+    },
+    qty: item.countedQty ?? 0,
+    uom_id: '',
+    lot: null,
+    snapshotQty: item.snapshotQty,
+    countedQty: item.countedQty,
+    uom: item.uom,
+    unitCost: item.unitCost,
+    varianceReason: item.varianceReason || '',
+  }));
+ }, [session]);
 
  const [reasons, setReasons] = React.useState<Record<string, string>>({})
 
@@ -189,91 +219,104 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  </div>
 
  <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
- <div className="rounded-3xl bg-white/[0.01] overflow-hidden">
- <Table>
- <TableHeader className="bg-white/[0.02]">
- <TableRow className="hover:bg-transparent border-none">
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 px-8 w-[25%]">{common('item')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('snapshot_qty')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('counted_qty')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('variance')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('variance_value')}</TableHead>
- <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 w-[30%]">{t('variance_reason')}</TableHead>
- </TableRow>
- </TableHeader>
- <TableBody>
- {session.items.map((item) => {
- const counted = item.countedQty || 0
- const variance = counted - (item.snapshotQty ?? 0)
- const varianceValue = variance * item.unitCost
- const hasVariance = variance !== 0
-  const reasonError = hasVariance && !isReasonValid(item.id, variance)
-
- return (
- <TableRow key={item.id} className={cn("transition-colors border-none group", hasVariance ? "bg-amber-500/[0.02] hover:bg-amber-500/[0.04]" : "hover:bg-white/[0.01]")}>
- <TableCell className="px-8 py-6">
- <div className="flex flex-col gap-1">
- <span className="font-bold text-foreground group-hover:text-primary transition-colors">{item.itemName}</span>
- <span className="text-label-xs font-semibold text-muted-foreground/40 font-mono" dir="ltr">{item.barcode}</span>
- </div>
- </TableCell>
-  <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
- {formatQuantity(item.snapshotQty, locale)} {item.uom}
- </TableCell>
- <TableCell className="text-center font-mono text-label-sm font-semibold text-foreground" dir="ltr">
- {formatQuantity(counted, locale)} {item.uom}
- </TableCell>
- <TableCell className="text-center">
- <div className={cn(
- "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono font-semibold text-label-xs",
- variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
- variance > 0 ? "bg-blue-500/10 text-blue-500" : 
- "bg-red-500/10 text-red-500"
- )} dir="ltr">
- {variance === 0 ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
- {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
- </div>
- </TableCell>
- <TableCell className="text-center">
- <div className={cn(
- "font-mono text-label-sm font-semibold",
- varianceValue === 0 ? "text-muted-foreground/40" : 
- varianceValue > 0 ? "text-blue-500" : "text-red-500"
- )} dir="ltr">
- {formatCurrency(varianceValue, currencyCode, locale)}
- </div>
- </TableCell>
- <TableCell>
- {hasVariance ? (
- <div className="space-y-1.5">
-                    <Textarea
-                      value={reasons[item.id] || ""} 
-                      onChange={(e) => handleReasonChange(item.id, e.target.value)}
-                      placeholder={t('mandatory_reason')}
-                      className={cn(
-                        "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
-                        reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
-                      )}
-                    />
- {reasonError && (
- <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
- {t('validation.variance_reason_min')}
- </p>
- )}
- </div>
- ) : (
- <div className="text-label-sm text-muted-foreground italic flex items-center gap-1.5 justify-center">
- <CheckCircle2 className="h-3.5 w-3.5 text-status-success" />
- {t('no_variance_recorded')}
- </div>
- )}
- </TableCell>
- </TableRow>
- )
- })}
- </TableBody>
- </Table>
- </div>
+    <DocumentLineItemTable
+      lines={tableLines}
+      locale={locale}
+      isReadOnly={true}
+      hideLotColumns={true}
+      headers={{ qty: t('counted_qty') }}
+      rowClassName={(line) => {
+        const variance = (line.countedQty || 0) - (line.snapshotQty ?? 0);
+        return variance !== 0 ? "bg-amber-500/[0.02] hover:bg-amber-500/[0.04]" : "";
+      }}
+      renderQty={(line) => (
+        <span className="font-mono text-label-sm font-semibold text-foreground">
+          {formatQuantity(line.countedQty, locale)}
+        </span>
+      )}
+      renderUom={(line) => (
+        <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+          {line.uom}
+        </span>
+      )}
+      extraColumns={[
+        {
+          header: t('snapshot_qty'),
+          cell: (line) => (
+            <span className="font-mono text-label-sm font-bold text-muted-foreground/60" dir="ltr">
+              {formatQuantity(line.snapshotQty, locale)} {line.uom}
+            </span>
+          )
+        },
+        {
+          header: t('variance'),
+          cell: (line) => {
+            const counted = line.countedQty || 0;
+            const variance = counted - (line.snapshotQty ?? 0);
+            return (
+              <div className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono font-semibold text-label-xs",
+                variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
+                variance > 0 ? "bg-blue-500/10 text-blue-500" : 
+                "bg-red-500/10 text-red-500"
+              )} dir="ltr">
+                {variance === 0 ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                {variance > 0 ? '+' : ''}{formatQuantity(variance, locale)}
+              </div>
+            );
+          }
+        },
+        {
+          header: t('variance_value'),
+          cell: (line) => {
+            const counted = line.countedQty || 0;
+            const variance = counted - (line.snapshotQty ?? 0);
+            const varianceValue = variance * line.unitCost;
+            return (
+              <div className={cn(
+                "font-mono text-label-sm font-semibold",
+                varianceValue === 0 ? "text-muted-foreground/40" : 
+                varianceValue > 0 ? "text-blue-500" : "text-red-500"
+              )} dir="ltr">
+                {formatCurrency(varianceValue, currencyCode, locale)}
+              </div>
+            );
+          }
+        },
+        {
+          header: t('variance_reason'),
+          cell: (line) => {
+            const counted = line.countedQty || 0;
+            const variance = counted - (line.snapshotQty ?? 0);
+            const hasVariance = variance !== 0;
+            const reasonError = hasVariance && !isReasonValid(line.id, variance);
+            return hasVariance ? (
+              <div className="space-y-1.5 text-start min-w-[200px]">
+                <Textarea
+                  value={reasons[line.id] || ""} 
+                  onChange={(e) => handleReasonChange(line.id, e.target.value)}
+                  placeholder={t('mandatory_reason')}
+                  className={cn(
+                    "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
+                    reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
+                  )}
+                />
+                {reasonError && (
+                  <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
+                    {t('validation.variance_reason_min')}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="text-label-sm text-muted-foreground italic flex items-center gap-1.5 justify-center">
+                <CheckCircle2 className="h-3.5 w-3.5 text-status-success" />
+                {t('no_variance_recorded')}
+              </div>
+            );
+          }
+        }
+      ]}
+    />
  </Card>
  </div>
  </PermissionGate>

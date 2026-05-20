@@ -9,18 +9,13 @@ import { z } from 'zod';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
-import { 
- Select, 
- SelectContent, 
- SelectItem, 
- SelectTrigger, 
- SelectValue 
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useCreateKitchenRequest } from '@/features/operations/hooks/useKitchenRequests';
 import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useItems } from '@/features/items/api/useItems';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
+import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { 
  Plus, 
  Trash2, 
@@ -29,7 +24,6 @@ import {
  Warehouse, 
  Building2, 
  FileText,
- Package,
  Calculator,
  ListFilter
 } from 'lucide-react';
@@ -48,7 +42,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const form = useForm<KitchenRequestFormValues>({
  resolver: zodResolver(KitchenRequestSchema),
  defaultValues: {
- items: [{ item_id: '', quantity: 1, notes: '' }],
+ items: [],
  }
  });
 
@@ -71,9 +65,9 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
     createRequest.mutate({ data: { ...values, isDraft } }, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         form.reset(values);
-        guardedRouter.push('/kitchen-requests', { skipGuard: true });
+        guardedRouter.push(`/kitchen-requests/${data.id}`, { skipGuard: true });
       }
     });
   };
@@ -94,6 +88,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
         actions={
           <div className="flex items-center gap-3">
             <Button 
+              type="button"
               variant="outline"
               onClick={form.handleSubmit((data) => onSubmit(data, true))} 
               disabled={createRequest.isPending}
@@ -103,6 +98,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
               {t('save_draft')}
             </Button>
             <Button 
+              type="button"
               onClick={form.handleSubmit((data) => onSubmit(data, false))} 
               disabled={createRequest.isPending}
               className={cn(
@@ -125,20 +121,13 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 <Building2 className="w-3.5 h-3.5" />
                 {t('department')}
               </label>
-              <Select
-                onValueChange={(val) => form.setValue('department_id', (val as string) || '', { shouldValidate: true })}
-              >
-                <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20">
-                  <SelectValue placeholder={tCommon('select_department')} />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-container-highest border-none shadow-2xl rounded-2xl">
-                  {departments?.data.map(d => (
-                    <SelectItem key={d.id} value={d.id} className="font-bold">
-                      {locale === 'ar' ? d.name_ar : d.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SmartCombobox
+                items={departments?.data || []}
+                value={form.watch('department_id')}
+                onSelect={(dept) => form.setValue('department_id', dept.id, { shouldValidate: true })}
+                placeholder={tCommon('select_department')}
+                triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
+              />
               {form.formState.errors.department_id && (
                 <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
               )}
@@ -149,20 +138,13 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 <Warehouse className="w-3.5 h-3.5" />
                 {t('warehouse')}
               </label>
-              <Select
-                onValueChange={(val) => form.setValue('warehouse_id', (val as string) || '', { shouldValidate: true })}
-              >
-                <SelectTrigger className="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20">
-                  <SelectValue placeholder={tCommon('select_warehouse')} />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-container-highest border-none shadow-2xl rounded-2xl">
-                  {warehouses?.map(w => (
-                    <SelectItem key={w.id} value={w.id} className="font-bold">
-                      {locale === 'ar' ? w.name_ar : w.name_en}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SmartCombobox
+                items={warehouses || []}
+                value={form.watch('warehouse_id')}
+                onSelect={(w) => form.setValue('warehouse_id', w.id, { shouldValidate: true })}
+                placeholder={tCommon('select_warehouse')}
+                triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
+              />
               {form.formState.errors.warehouse_id && (
                 <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
               )}
@@ -194,16 +176,26 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('specify_components')}</p>
               </div>
             </div>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm" 
-              className="h-10 px-6 border-primary/20 text-primary bg-primary/5 hover:bg-primary hover:text-white rounded-2xl text-label-xs font-semibold uppercase transition-all"
-              onClick={() => append({ item_id: '', quantity: 1, notes: '' })}
-            >
-              <Plus className="h-4 w-4 me-2" />
-              {tCommon('add_item')}
-            </Button>
+          </div>
+
+          {/* Search / Add Item Bar */}
+          <div className="mb-8 w-full max-w-xl mx-auto space-y-2">
+            <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1 block text-center whitespace-nowrap">
+              {tCommon('select_item')}
+            </label>
+            <SmartCombobox
+              items={items || []}
+              onSelect={(item: { id: string }) => {
+                const existingIndex = watchedItems?.findIndex(i => i?.item_id === item.id) ?? -1;
+                if (existingIndex !== -1) {
+                  const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
+                  form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+                } else {
+                  append({ item_id: item.id, quantity: 1, notes: '' });
+                }
+              }}
+              placeholder={tCommon('select_item')}
+            />
           </div>
 
           <div className="space-y-4">
@@ -213,74 +205,78 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('validation.items_required')}</p>
               </div>
             ) : (
-              fields.map((field, index) => {
-                const selectedItemId = watchedItems[index]?.item_id;
-                const selectedItem = items?.find(i => i.id === selectedItemId);
-                
-                return (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_2fr_auto] gap-4 items-end p-6 rounded-[2rem] bg-surface-container-low hover:bg-surface-container-high/40 transition-all group">
-                    <div className="space-y-2">
-                      <label className="text-label-xxs font-semibold uppercase text-muted-foreground/40 px-1">{tCommon('item')}</label>
-                      <Select
-                        defaultValue={field.item_id}
-                        onValueChange={(val) => form.setValue(`items.${index}.item_id`, val || '', { shouldValidate: true })}
-                      >
-                        <SelectTrigger className="bg-surface-container-high/30 border-none h-12 px-4 text-label-sm font-bold rounded-2xl focus:ring-2 focus:ring-primary/20">
-                          <SelectValue placeholder={tCommon('select_item')} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-surface-container-highest border-none shadow-2xl rounded-2xl">
-                          {items?.map(item => (
-                            <SelectItem key={item.id} value={item.id} className="font-bold">
-                              {locale === 'ar' ? item.name_ar : item.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {form.formState.errors.items?.[index]?.item_id && (
-                        <p className="text-label-xxs font-bold text-red-500 uppercase px-1">{t('validation.item_required')}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-label-xxs font-semibold uppercase text-muted-foreground/40 px-1 text-center block">{tCommon('quantity')}</label>
-                      <div className="relative group/input">
+              <div className="bg-surface-container-low/30 rounded-[2rem] border border-white/5 overflow-hidden">
+                <DocumentLineItemTable
+                  lines={fields.map((field, index) => {
+                    const selectedItemId = watchedItems?.[index]?.item_id;
+                    const selectedItem = items?.find(i => i.id === selectedItemId);
+                    return {
+                      id: field.id,
+                      item: {
+                        id: selectedItemId || '',
+                        code: selectedItem?.barcode || '',
+                        name_en: selectedItem?.name_en || '',
+                        name_ar: selectedItem?.name_ar || '',
+                        primary_uom: { code: selectedItem?.primary_uom?.code || '' }
+                      },
+                      qty: watchedItems?.[index]?.quantity ?? 1,
+                      uom_id: '',
+                      lot: null,
+                      index,
+                      selectedItem,
+                    };
+                  })}
+                  locale={locale}
+                  isReadOnly={false}
+                  onRemoveLine={(id) => {
+                    const idx = fields.findIndex(f => f.id === id);
+                    if (idx !== -1) remove(idx);
+                  }}
+                  hideLotColumns={true}
+                  dense={true}
+                  headers={{
+                    code: tCommon('table_headers.code'),
+                    name: tCommon('table_headers.name'),
+                    qty: tCommon('table_headers.qty'),
+                    uom: tCommon('table_headers.uom'),
+                  }}
+                  renderQty={(line) => (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex justify-center">
                         <Input 
                           type="number"
                           step="0.01"
                           dir="ltr"
-                          {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-                          className="bg-surface-container-high/30 border-none h-12 px-4 text-body-md font-semibold text-center rounded-2xl focus:ring-2 focus:ring-primary/20"
+                          {...form.register(`items.${line.index}.quantity`, { valueAsNumber: true })}
+                          className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
                         />
-                        <span className="absolute end-4 top-1/2 -translate-y-1/2 text-label-xxs font-semibold uppercase text-muted-foreground/30 group-focus-within/input:text-primary transition-colors">
-                          {selectedItem?.primary_uom?.code || '---'}
-                        </span>
                       </div>
-                      {form.formState.errors.items?.[index]?.quantity && (
-                        <p className="text-label-xxs font-bold text-red-500 uppercase text-center">{t('validation.qty_positive')}</p>
+                      {form.formState.errors.items?.[line.index]?.quantity && (
+                        <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">{t('validation.qty_positive')}</p>
                       )}
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-label-xxs font-semibold uppercase text-muted-foreground/40 px-1">{tCommon('notes')}</label>
-                      <Input 
-                        {...form.register(`items.${index}.notes`)}
-                        placeholder={t('line_notes_placeholder')}
-                        className="bg-surface-container-high/30 border-none h-12 px-5 text-label-sm font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-12 w-12 rounded-2xl text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/10 transition-all"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                );
-              })
+                  )}
+                  renderUom={(line) => (
+                    <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+                      {line.selectedItem?.primary_uom?.code || '---'}
+                    </span>
+                  )}
+                  extraColumns={[
+                    {
+                      header: tCommon('notes'),
+                      cell: (line) => (
+                        <div className="flex justify-center min-w-[200px]">
+                          <Input 
+                            {...form.register(`items.${line.index}.notes`)}
+                            placeholder={t('line_notes_placeholder')}
+                            className="w-full bg-surface-container-highest/60 border border-white/5 rounded-lg h-9 px-3 text-label-sm font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
+                          />
+                        </div>
+                      )
+                    }
+                  ]}
+                />
+              </div>
             )}
           </div>
         </div>

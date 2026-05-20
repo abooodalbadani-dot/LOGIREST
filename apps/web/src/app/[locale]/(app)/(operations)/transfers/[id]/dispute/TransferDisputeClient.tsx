@@ -2,10 +2,12 @@
 
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
+import { useMemo } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { AlertTriangle, CheckCircle, Scale, ArrowLeft, Info } from 'lucide-react';
 import { TransferLine, type TransferDetail } from '@/features/operations/hooks/useTransfer';
 
@@ -18,6 +20,12 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
   const router = useRouter();
+
+  const resolutionItems = useMemo(() => [
+    { id: 'ACCEPT_RECEIVED', name_en: t('action_accept_received') || 'Accept Received Qty', name_ar: t('action_accept_received') || 'Accept Received Qty' },
+    { id: 'CLAIM_VENDOR', name_en: t('action_claim_vendor') || 'Claim Against Shipper', name_ar: t('action_claim_vendor') || 'Claim Against Shipper' },
+    { id: 'WRITE_OFF', name_en: t('action_write_off') || 'Write-off Loss', name_ar: t('action_write_off') || 'Write-off Loss' },
+  ], [t]);
 
   // Filter lines that have variances
   const discrepantLines = transfer?.lines?.filter(line => 
@@ -135,16 +143,15 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
               },
               {
                 header: t('resolution_action') || 'Resolution Action',
-                cell: () => (
+                cell: (line: TransferLine) => (
                   <div className="flex justify-center px-4 min-w-[200px]">
-                    <select
-                      aria-label={t('resolution_action') || 'Resolution Action'}
-                      className="w-full bg-surface-container-highest/20 border border-outline-low h-10 px-4 text-label-xs font-bold uppercase rounded-md outline-none focus:ring-1 focus:ring-operational-cyan transition-all"
-                    >
-                      <option>{t('action_accept_received') || 'Accept Received Qty'}</option>
-                      <option>{t('action_claim_vendor') || 'Claim Against Shipper'}</option>
-                      <option>{t('action_write_off') || 'Write-off Loss'}</option>
-                    </select>
+                    <SmartCombobox
+                      items={resolutionItems}
+                      value="ACCEPT_RECEIVED"
+                      onSelect={() => {}}
+                      placeholder={t('resolution_action') || 'Resolution Action'}
+                      className="w-full bg-surface-container-highest/20 border border-outline-low h-10 px-4 text-label-xs font-bold uppercase rounded-md"
+                    />
                   </div>
                 ),
               },

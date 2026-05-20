@@ -6,13 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SmartCombobox, ComboboxItem } from "@/components/shared/SmartCombobox";
 import {
   FormControl,
   FormField,
@@ -66,6 +60,13 @@ export function PurchaseOrderLineItems({
     }
     prevFieldsLength.current = fields.length;
   }, [fields.length, virtualizer]);
+  const comboboxItems = React.useMemo(() => {
+    return itemsData?.data?.map((i: Item) => ({
+      id: i.id,
+      name_en: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
+      name_ar: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
+    })) ?? [];
+  }, [itemsData?.data, locale]);
 
   return (
     <div className="w-full space-y-4">
@@ -110,6 +111,7 @@ export function PurchaseOrderLineItems({
                   index={index}
                   form={form}
                   itemsData={itemsData}
+                  comboboxItems={comboboxItems}
                   isLocked={isLocked}
                   remove={remove}
                   update={update}
@@ -148,6 +150,7 @@ interface LineItemRowProps {
   index: number;
   form: UseFormReturn<PurchaseOrderFormValues>;
   itemsData: { data: Item[] } | undefined;
+  comboboxItems: ComboboxItem[];
   isLocked: boolean;
   remove: (index: number) => void;
   update: (index: number, value: PurchaseOrderFormValues['lines'][number]) => void;
@@ -161,6 +164,7 @@ function LineItemRow({
   index,
   form,
   itemsData,
+  comboboxItems,
   isLocked,
   remove,
   update,
@@ -188,46 +192,29 @@ function LineItemRow({
           name={`lines.${index}.item_id`}
           render={({ field: inputField }) => (
             <FormItem className="space-y-0 w-full">
-              <Select
-                onValueChange={(val) => {
-                  const item = itemsData?.data?.find((i: Item) => i.id === val);
-                  if (item) {
-                    update(index, {
-                      item_id: item.id,
-                      item_name: locale === 'ar' ? item.name_ar : item.name_en,
-                      item_code: item.code,
-                      uom_id: item.primary_uom?.id || 'PCS',
-                      unit_price: item.last_purchase_price || 0,
-                      quantity: rowValues.quantity || 1,
-                      notes: rowValues.notes || ''
-                    });
-                  }
-                }}
-                value={inputField.value}
-                disabled={isLocked}
-              >
-                <FormControl>
-                  <SelectTrigger className="bg-surface-container-high border border-white/20 h-11 w-full rounded-xl focus:ring-1 focus:ring-operational-cyan/50 text-body-sm font-bold uppercase overflow-hidden transition-all group-hover:bg-surface-container-highest group-hover:border-operational-cyan/30 shadow-sm relative">
-                    <SelectValue placeholder={tc('select_item')}>
-                      {rowValues.item_name || (inputField.value ? itemsData?.data?.find((i: Item) => i.id === inputField.value)?.name_ar : null)}
-                    </SelectValue>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="bg-surface-container-high border border-white/10 rounded-2xl max-h-[300px] shadow-2xl">
-                  {itemsData?.data?.map((i: Item) => (
-                    <SelectItem
-                      key={i.id}
-                      value={i.id}
-                      className="text-label-xs font-bold focus:bg-operational-cyan/10 focus:text-operational-cyan transition-colors"
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground">{locale === 'ar' ? i.name_ar : i.name_en}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono opacity-50 tracking-widest">{i.code}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <SmartCombobox
+                  items={comboboxItems}
+                  value={inputField.value}
+                  onSelect={(item) => {
+                    const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
+                    if (matchedItem) {
+                      update(index, {
+                        item_id: matchedItem.id,
+                        item_name: locale === 'ar' ? matchedItem.name_ar : matchedItem.name_en,
+                        item_code: matchedItem.code,
+                        uom_id: matchedItem.primary_uom?.id || 'PCS',
+                        unit_price: matchedItem.last_purchase_price || 0,
+                        quantity: rowValues.quantity || 1,
+                        notes: rowValues.notes || ''
+                      });
+                    }
+                  }}
+                  placeholder={tc('select_item')}
+                  className="h-11 w-full bg-surface-container-high border border-white/20 rounded-xl focus:ring-1 focus:ring-operational-cyan/50 text-body-sm font-bold uppercase transition-all group-hover:bg-surface-container-highest group-hover:border-operational-cyan/30 shadow-sm"
+                  disabled={isLocked}
+                />
+              </FormControl>
               <FormMessage className="text-[10px] mt-1" />
             </FormItem>
           )}

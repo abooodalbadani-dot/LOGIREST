@@ -4,15 +4,25 @@ import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
-const NotificationTemplateSchema = z.object({
- id: z.string(),
- code: z.string(),
- subject_ar: z.string(),
- subject_en: z.string(),
- body_ar: z.string(),
- body_en: z.string(),
- trigger_event: z.string(),
- is_active: z.boolean(),
+export const TemplateParameterSchema = z.object({
+  name: z.string(),
+  label_ar: z.string(),
+  label_en: z.string(),
+  sample_value: z.string(),
+});
+
+export type TemplateParameter = z.infer<typeof TemplateParameterSchema>;
+
+export const NotificationTemplateSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  subject_ar: z.string(),
+  subject_en: z.string(),
+  body_ar: z.string(),
+  body_en: z.string(),
+  trigger_event: z.string(),
+  is_active: z.boolean(),
+  allowed_parameters: z.array(TemplateParameterSchema).default([]),
 });
 
 export type NotificationTemplateRow = z.infer<typeof NotificationTemplateSchema>;

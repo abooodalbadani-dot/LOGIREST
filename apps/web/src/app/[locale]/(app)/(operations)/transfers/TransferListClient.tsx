@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { isTransferInTransit, isTransferPosted } from '@/domain/status-guards';
@@ -30,6 +30,23 @@ export function TransferListClient() {
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
+
+  const statusItems = useMemo(() => {
+    const allItem = {
+      id: 'ALL',
+      name_en: tCommon('statuses.all') || 'All Statuses',
+      name_ar: tCommon('statuses.all') || 'كل الحالات',
+    };
+    const statuses = Object.entries(TRANSFER_STATUS).map(([key, value]) => {
+      const config = getStatusConfig(value);
+      return {
+        id: value,
+        name_en: tCommon(config.labelKey) || value,
+        name_ar: tCommon(config.labelKey) || value,
+      };
+    });
+    return [allItem, ...statuses];
+  }, [tCommon]);
 
   const { data, isLoading } = useTransferList({ status, page });
 
@@ -199,22 +216,18 @@ export function TransferListClient() {
           filters={
             <div className="flex items-center gap-6 w-full py-6 px-8 bg-surface-container-low/50 border border-outline-low/10 rounded-xl ambient-shadow backdrop-blur-sm overflow-x-auto no-scrollbar">
               <div className="flex flex-col gap-2 min-w-[240px] flex-1">
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
-                <Select
-                  value={status || 'ALL'} onValueChange={(val) => { setStatus(val === 'ALL' ? '' : (val ?? '')); setPage(1); }}
-                >
-                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-label-sm font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10 shadow-inner shadow-black/5">
-                    <SelectValue placeholder={tCommon('statuses.all')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border-outline-low/10 rounded-md">
-                    <SelectItem value="ALL">{tCommon('statuses.all')}</SelectItem>
-                    {Object.entries(TRANSFER_STATUS).map(([key, value]) => (
-                      <SelectItem key={value} value={value}>
-                        {tCommon(getStatusConfig(value).labelKey)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <label htmlFor="status-select" className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{tCommon('status_label')}</label>
+                <SmartCombobox
+                  items={statusItems}
+                  value={status || 'ALL'}
+                  onSelect={(item) => {
+                    const nextStatus = item.id === 'ALL' ? '' : String(item.id);
+                    setStatus(nextStatus);
+                    setPage(1);
+                  }}
+                  placeholder={tCommon('statuses.all') || "All Statuses"}
+                  triggerClassName="w-full bg-surface-container-highest/40 border-none h-12 px-4 text-label-sm font-semibold rounded-md transition-all hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10 shadow-inner shadow-black/5"
+                />
               </div>
 
               <div className="flex flex-col gap-2 min-w-[300px] flex-[2]">

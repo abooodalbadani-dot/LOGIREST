@@ -17,7 +17,7 @@ import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse,
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { isStocktakeInProgress, isStocktakePosted } from '@/domain/status-guards';
 import { STOCKTAKE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
@@ -41,6 +41,23 @@ export function StocktakeListClient({
  const pathname = usePathname();
  const searchParams = useSearchParams();
  const tc = useTranslations('common');
+
+ const statusItems = useMemo(() => {
+   const allItem = {
+     id: 'ALL',
+     name_en: tc('statuses.all') || 'All Statuses',
+     name_ar: tc('statuses.all') || 'كل الحالات',
+   };
+   const statuses = Object.values(STOCKTAKE_STATUS).map((value) => {
+     const config = getStatusConfig(value, STOCKTAKE_STATUS_UI);
+     return {
+       id: value,
+       name_en: tc(config.labelKey) || value,
+       name_ar: tc(config.labelKey) || value,
+     };
+   });
+   return [allItem, ...statuses];
+ }, [tc]);
 
  const { data, isLoading } = useStocktakeList({
  status: initialStatus,
@@ -203,25 +220,13 @@ export function StocktakeListClient({
                 <Filter className="w-3 h-3 text-cyan-500/60" />
                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
               </div>
-              <Select
-                value={initialStatus || 'ALL'} 
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger className="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all">
-                  <SelectValue placeholder={tc('statuses.all')} />
-                </SelectTrigger>
-                 <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
-                   <SelectItem value="ALL" className="text-label-sm font-bold uppercase">{tc('statuses.all')}</SelectItem>
-                   {Object.values(STOCKTAKE_STATUS).map((value) => {
-                     const config = getStatusConfig(value, STOCKTAKE_STATUS_UI);
-                     return (
-                       <SelectItem key={value} value={value} className="text-label-sm font-bold uppercase">
-                         {tc(config.labelKey)}
-                       </SelectItem>
-                     );
-                   })}
-                 </SelectContent>
-              </Select>
+              <SmartCombobox
+                items={statusItems}
+                value={initialStatus || 'ALL'}
+                onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
+                placeholder={tc('statuses.all') || "All Statuses"}
+                triggerClassName="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all"
+              />
             </div>
 
             <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">

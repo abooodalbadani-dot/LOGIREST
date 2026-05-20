@@ -1,21 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
 import { useItems } from '@/features/items/api/useItems';
+import { type Item } from '@/features/items/types';
 import { useCreateTransfer } from '@/features/operations/hooks/useCreateTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
@@ -31,6 +25,8 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useAbortController } from '@/hooks/useAbortController';
+import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBalance';
+import { cn } from '@/lib/utils';
 
 interface NewTransferLine {
   id: string;
@@ -60,8 +56,32 @@ export function TransferNewClient() {
   const [toWarehouseId, setToWarehouseId] = useState('');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<NewTransferLine[]>([]);
-
   const [idempotencyKey] = useState(() => crypto.randomUUID());
+
+  // Inventory balance hook enabled when fromWarehouseId is active
+  const { data: inventoryBalances, isError: isBalanceError, isLoading: isBalanceLoading } = useInventoryBalance(
+    fromWarehouseId ? { warehouse_id: fromWarehouseId } : undefined,
+    { enabled: !!fromWarehouseId }
+  );
+
+  useEffect(() => {
+    if (isBalanceError) {
+      toast.error(locale === 'ar' ? 'تعذر تحميل الأرصدة، يرجى التحقق من الاتصال بالشبكة' : 'Failed to load balances, please check your network connection');
+    }
+  }, [isBalanceError, locale]);
+
+  // Filter out inactive items
+  const allItems = useMemo(() => (items || []).filter((item: Item) => item.is_active !== false), [items]);
+
+  // Memoize warehouses for SmartCombobox
+  const warehouseItems = useMemo(() => {
+    return (warehouses || []).map(w => ({
+      id: w.id,
+      name_en: w.name_en,
+      name_ar: w.name_ar,
+      code: w.code,
+    }));
+  }, [warehouses]);
 
   // Unsaved changes guard
   const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
@@ -73,16 +93,52 @@ export function TransferNewClient() {
   const isEitherLocked = !!fromLockState?.isLocked || !!toLockState?.isLocked;
 
   const handleAddItem = (barcode: string) => {
-    const item = items?.find(i => i.barcode === barcode || i.code === barcode);
+    if (!fromWarehouseId) {
+      audioAlerts.playScanInvalid();
+      toast.error(locale === 'ar' ? 'يرجى تحديد مستودع المصدر أولاً' : 'Please select the source warehouse first');
+      return;
+    }
+
+    const item = allItems?.find((i: Item) => i.barcode === barcode || i.code === barcode);
     if (!item) {
       audioAlerts.playScanInvalid();
-      toast.error(tCommon('no_item_found') || "Item not found.");
+      toast.error(`${tCommon('no_item_found') || "Item not found"}: "${barcode}"`);
+      return;
+    }
+
+    if (item.is_active === false) {
+      audioAlerts.playScanInvalid();
+      toast.error(locale === 'ar' ? `الصنف "${item.code}" غير نشط` : `Item "${item.code}" is inactive`);
+      return;
+    }
+
+    // Check available balance in cache
+    const balance = inventoryBalances?.data?.find(b => b.item_id === item.id);
+    const availableQty = balance ? balance.qty_available : 0;
+
+    if (availableQty <= 0) {
+      audioAlerts.playScanInvalid();
+      toast.error(locale === 'ar' 
+        ? `رصيد الصنف غير كافٍ في مستودع المصدر (الرصيد: 0)` 
+        : `Insufficient stock in source warehouse (Stock: 0)`
+      );
+      return;
+    }
+
+    const existing = lines.find(l => l.item_id === item.id);
+    const newQty = existing ? existing.qty + 1 : 1;
+    if (newQty > availableQty) {
+      audioAlerts.playScanInvalid();
+      toast.error(locale === 'ar'
+        ? `الكمية المدخلة تتجاوز الرصيد المتوفر (${availableQty})`
+        : `Quantity exceeds available stock (${availableQty})`
+      );
       return;
     }
 
     setLines(prev => {
-      const existing = prev.find(l => l.item_id === item.id);
-      if (existing) {
+      const existingLine = prev.find(l => l.item_id === item.id);
+      if (existingLine) {
         return prev.map(l => l.item_id === item.id ? { ...l, qty: l.qty + 1 } : l);
       }
       return [...prev, {
@@ -104,7 +160,8 @@ export function TransferNewClient() {
   };
 
   const handleSave = () => {
-    if (!fromWarehouseId || !toWarehouseId || lines.length === 0) return;
+    if (!fromWarehouseId || !toWarehouseId || lines.length === 0 || hasQuantityErrors) return;
+
     
     createTransfer.mutate({
       payload: {
@@ -122,13 +179,25 @@ export function TransferNewClient() {
         'X-Idempotency-Key': idempotencyKey
       }
     }, {
-      onSuccess: () => {
-        router.push(`/transfers`, { skipGuard: true });
+      onSuccess: (data) => {
+        router.push(`/transfers/${data.id}`, { skipGuard: true });
       }
     });
   };
 
-  const isValid = !!(fromWarehouseId && toWarehouseId && fromWarehouseId !== toWarehouseId && lines.length > 0);
+  const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
+    const balance = inventoryBalances.data.find(b => b.item_id === line.item_id);
+    const availableQty = balance ? balance.qty_available : 0;
+    return line.qty > availableQty || line.qty <= 0;
+  });
+
+  const isValid = !!(
+    fromWarehouseId && 
+    toWarehouseId && 
+    fromWarehouseId !== toWarehouseId && 
+    lines.length > 0 &&
+    !hasQuantityErrors
+  );
 
   if (isLoadingWarehouses || isLoadingItems) return <PageSkeleton />;
   if (errorWarehouses || errorItems) return <ErrorState onRetry={() => window.location.reload()} />;
@@ -163,8 +232,8 @@ export function TransferNewClient() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-8">
-          <div className="bg-surface-container-low/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-2xl">
-            <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
+          <div className="bg-surface-container-low/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl">
+            <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-cyan-500/50 via-cyan-500/20 to-transparent`} />
             
             <div className="flex items-center gap-3 mb-6">
               <Warehouse className="w-4 h-4 text-cyan-500" />
@@ -175,45 +244,44 @@ export function TransferNewClient() {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+                <label htmlFor="from-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
                   {t('from_warehouse')}
                 </label>
-                <Select
+                <SmartCombobox
+                  items={warehouseItems}
                   value={fromWarehouseId}
-                  onValueChange={(val) => setFromWarehouseId(val || '')}
-                >
-                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
-                    <SelectValue placeholder={t('select_warehouse')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
-                    {warehouses?.map((wh) => (
-                      <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
-                        {locale === 'ar' ? wh.name_ar : wh.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onSelect={(item) => {
+                    const value = item ? String(item.id) : '';
+                    if (value && value === toWarehouseId) {
+                      toast.error(t('warehouse_match_error'));
+                      setToWarehouseId('');
+                    }
+                    setFromWarehouseId(value);
+                    setLines([]); // Clear lines to prevent validation conflicts
+                  }}
+                  placeholder={t('select_warehouse') || 'Select warehouse...'}
+                  triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                />
               </div>
 
               <div className="space-y-2">
-                <label className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
+                <label htmlFor="to-warehouse-select" className="text-label-sm font-semibold uppercase text-muted-foreground/70 ms-1">
                   {t('to_warehouse')}
                 </label>
-                <Select
+                <SmartCombobox
+                  items={warehouseItems}
                   value={toWarehouseId}
-                  onValueChange={(val) => setToWarehouseId(val || '')}
-                >
-                  <SelectTrigger className="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all">
-                    <SelectValue placeholder={t('select_warehouse')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface-container-highest border border-surface-container-high/50 shadow-2xl rounded-2xl overflow-hidden">
-                    {warehouses?.map((wh) => (
-                      <SelectItem key={wh.id} value={wh.id} className="text-label-sm font-bold py-3 focus:bg-cyan-500/10 focus:text-cyan-400">
-                        {locale === 'ar' ? wh.name_ar : wh.name_en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onSelect={(item) => {
+                    const value = item ? String(item.id) : '';
+                    if (value && value === fromWarehouseId) {
+                      toast.error(t('warehouse_match_error'));
+                      return;
+                    }
+                    setToWarehouseId(value);
+                  }}
+                  placeholder={t('select_warehouse') || 'Select warehouse...'}
+                  triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                />
                 {fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId && (
                   <p className="text-label-xxs font-bold text-status-error uppercase px-1 mt-1">
                     {t('warehouse_match_error')}
@@ -237,8 +305,8 @@ export function TransferNewClient() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-surface-container-low/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-2xl">
-            <div className={`absolute top-0 inset-x-0 h-1 ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-emerald-500/50 via-emerald-500/20 to-transparent`} />
+          <div className="bg-surface-container-low/50 p-8 rounded-[2.5rem] border border-white/5 relative overflow-visible shadow-2xl">
+            <div className={`absolute top-0 inset-x-0 h-1 rounded-t-[2.5rem] ${locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'} from-emerald-500/50 via-emerald-500/20 to-transparent`} />
             
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -266,6 +334,7 @@ export function TransferNewClient() {
                   className="w-full"
                   scannerMode={true}
                   size="lg"
+                  disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
                 />
               </div>
               <div className="space-y-2">
@@ -273,9 +342,10 @@ export function TransferNewClient() {
                   {locale === 'ar' ? 'البحث عن صنف' : 'Search / Add Item'}
                 </label>
                 <SmartCombobox
-                  items={items || []}
+                  items={allItems}
                   onSelect={(item) => handleAddItem(item.code)}
                   placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
+                  disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
                 />
               </div>
             </div>
@@ -294,21 +364,34 @@ export function TransferNewClient() {
                   qty: tCommon('table_headers.qty'),
                   uom: tCommon('table_headers.uom'),
                 }}
-                renderQty={(line) => (
-                  <div className="flex justify-center">
-                    <input
-                      type="number"
-                      min="0.001"
-                      step="0.001"
-                      value={line.qty}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
-                      }}
-                      className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
-                    />
-                  </div>
-                )}
+                renderQty={(line) => {
+                  const balance = inventoryBalances?.data?.find(b => b.item_id === line.item_id);
+                  const availableQty = balance ? balance.qty_available : 0;
+                  const isExceeded = balance ? line.qty > availableQty : false;
+                  return (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex justify-center">
+                        <input
+                          type="number"
+                          min="0.001"
+                          step="0.001"
+                          value={line.qty}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val || 0 } : l));
+                          }}
+                          className={cn(
+                            "w-24 bg-surface-container-highest/60 border rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50",
+                            isExceeded ? "border-status-error focus:ring-status-error/30" : "border-white/5"
+                          )}
+                        />
+                      </div>
+                      <span className={cn("text-label-xxs font-semibold", isExceeded ? "text-status-error font-bold animate-pulse" : "text-muted-foreground")}>
+                        {locale === 'ar' ? `المتوفر: ${availableQty}` : `Available: ${availableQty}`}
+                      </span>
+                    </div>
+                  );
+                }}
               />
             </div>
           </div>
@@ -321,9 +404,10 @@ export function TransferNewClient() {
         isSaving={createTransfer.isPending}
         isDirty={isDirty}
         isValid={isValid}
-        isLocked={false}
+        isLocked={isEitherLocked}
         saveLabel={t('save_transfer')}
       />
+
     </form>
   );
 }

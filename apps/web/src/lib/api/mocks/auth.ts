@@ -17,7 +17,10 @@ export const authMocks: Record<string, unknown> = {
  'POST /auth/forgot-password': {
  message: 'Reset link sent successfully',
  },
- 'POST /auth/reset-password': {
- message: 'Password reset successfully',
- },
+  'POST /auth/reset-password': {
+    message: 'Password reset successfully',
+  },
+  'PUT /auth/profile': (body: unknown) => {
+    return body;
+  },
 };

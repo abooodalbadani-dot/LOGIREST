@@ -9,6 +9,7 @@ export const AdminSettingsSchema = z.object({
   locale_default: z.enum(['en', 'ar']),
   sender_name: z.string().min(1, 'Sender name is required'),
   reply_to_email: z.string().email('Invalid email address'),
+  has_transactions: z.boolean().optional(),
   mail_provider: z.enum(['smtp', 'ses']).optional(),
   smtp_host: z.string().optional(),
   smtp_port: z.number().optional(),

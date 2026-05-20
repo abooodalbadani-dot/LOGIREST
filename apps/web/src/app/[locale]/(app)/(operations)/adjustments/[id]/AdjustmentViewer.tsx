@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
@@ -20,6 +21,7 @@ import { formatQuantity } from '@/utils/currency';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
+import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
 interface AdjustmentViewerProps {
   document: AdjustmentDetail;
@@ -42,6 +44,65 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
     at: e.at,
     by: e.by
   })) || [];
+
+  interface MappedAdjustmentLine {
+    id: string;
+    item: AdjustmentLine['item'];
+    qty: number;
+    uom_id: string;
+    direction: AdjustmentLine['direction'];
+    qty_before: number;
+    qty_adjusted: number;
+  }
+
+  const documentLines = document?.lines;
+  const mappedLines = useMemo(() => {
+    return documentLines?.map((line: AdjustmentLine) => ({
+      id: line.id,
+      item: line.item,
+      qty: line.qty_adjusted,
+      uom_id: line.item.primary_uom.code,
+      direction: line.direction,
+      qty_before: line.qty_before,
+      qty_adjusted: line.qty_adjusted,
+    })) || [];
+  }, [documentLines]);
+
+  const extraColumns = useMemo(() => [
+    {
+      header: t('direction'),
+      cell: (line: MappedAdjustmentLine) => (
+        <div className={cn(
+          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase",
+          line.direction === 'INCREASE' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
+        )}>
+          {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+          {t(`direction_${line.direction.toLowerCase()}`)}
+        </div>
+      )
+    },
+    {
+      header: t('qty_before'),
+      cell: (line: MappedAdjustmentLine) => (
+        <span className="text-body-md font-bold text-muted-foreground/40">
+          {formatQuantity(line.qty_before, locale as 'ar' | 'en')}
+        </span>
+      )
+    },
+    {
+      header: t('qty_after'),
+      cell: (line: MappedAdjustmentLine) => {
+        const afterVal = line.direction === 'INCREASE' 
+          ? line.qty_before + line.qty_adjusted 
+          : line.qty_before - line.qty_adjusted;
+        return (
+          <span className={cn("text-body-md font-bold", afterVal < 0 ? "text-red-500" : "text-foreground")}>
+            {formatQuantity(afterVal, locale as 'ar' | 'en')}
+          </span>
+        );
+      }
+    }
+  ], [t, locale]);
 
   return (
     <div className="min-h-screen bg-surface-container-low">
@@ -112,65 +173,20 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                 </div>
               </div>
               <DocumentReadOnlyOverlay isPosted={true}>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-surface-container-low/50">
-                        <th className="px-8 h-14 text-start text-label-xs font-semibold uppercase text-muted-foreground/60">{tc('item')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('direction')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_before')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_adjusted')}</th>
-                        <th className="px-6 h-14 text-center text-label-xs font-semibold uppercase text-muted-foreground/60">{t('qty_after')}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y-0">
-                      {document.lines.map((line: AdjustmentLine) => (
-                        <tr key={line.id} className="group even:bg-surface-container-low/30 hover:bg-surface-container-high/20 transition-all border-none">
-                          <td className="px-8 py-6">
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-body-md font-bold truncate">{locale === 'ar' ? line.item.name_ar : line.item.name_en}</span>
-                              <span className="text-label-xs font-mono text-primary/40 uppercase mt-1">{line.item.code}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-6 text-center">
-                            <div className={cn(
-                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-xs font-semibold uppercase",
-                              line.direction === 'INCREASE' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
-                            )}>
-                              {line.direction === 'INCREASE' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                              {t(`direction_${line.direction.toLowerCase()}`)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-6 text-center tabular-nums">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-6 text-center tabular-nums">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
-                                {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qty_adjusted, locale as 'ar' | 'en')}
-                              </span>
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-6 text-center tabular-nums">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className={cn(
-                                "text-body-md font-bold",
-                                (line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted) < 0 ? "text-red-500" : "text-foreground"
-                              )}>
-                                {formatQuantity(line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted, locale as 'ar' | 'en')}
-                              </span>
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DocumentLineItemTable
+                  lines={mappedLines}
+                  isReadOnly={true}
+                  hideLotColumns={true}
+                  headers={{ qty: t('qty_adjusted') }}
+                  renderQty={(line) => (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
+                        {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qty_adjusted, locale as 'ar' | 'en')}
+                      </span>
+                    </div>
+                  )}
+                  extraColumns={extraColumns}
+                />
               </DocumentReadOnlyOverlay>
             </div>
           </div>

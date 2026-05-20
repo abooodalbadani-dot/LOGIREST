@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Link } from '@/i18n/navigation';
 import { motion } from 'framer-motion';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { 
   Save, 
   ArrowLeft, 
@@ -42,12 +43,14 @@ interface Props {
   locale: string;
 }
 
-export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
+export function TemplateEditorClient({ id, title, locale }: Props) {
   const t = useTranslations('notifications');
   const t_common = useTranslations('common');
   const tc = useTranslations('communications.templates.editor');
   const qc = useQueryClient();
-  const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm({
+  const { playSound } = useAudioFeedback();
+  
+  const { register, handleSubmit, reset, control, setValue, formState: { isDirty } } = useForm({
     defaultValues: {
       subject_ar: '',
       subject_en: '',
@@ -65,6 +68,90 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
     name: ['subject_ar', 'subject_en', 'body_ar', 'body_en']
   });
 
+  // State to track active field focus and cursor position range
+  const [activeField, setActiveField] = useState<'subject_ar' | 'subject_en' | 'body_ar' | 'body_en' | null>(null);
+  const [cursorPos, setCursorPos] = useState({ start: 0, end: 0 });
+
+  // Refs for each input to access raw DOM element selection APIs
+  const subjectArRefField = useRef<HTMLTextAreaElement | null>(null);
+  const bodyArRefField = useRef<HTMLTextAreaElement | null>(null);
+  const subjectEnRefField = useRef<HTMLInputElement | null>(null);
+  const bodyEnRefField = useRef<HTMLTextAreaElement | null>(null);
+
+  const refs = {
+    subject_ar: subjectArRefField,
+    body_ar: bodyArRefField,
+    subject_en: subjectEnRefField,
+    body_en: bodyEnRefField,
+  };
+
+  const updateSelection = (fieldName: 'subject_ar' | 'subject_en' | 'body_ar' | 'body_en') => {
+    const el = refs[fieldName].current;
+    if (el) {
+      setCursorPos({
+        start: el.selectionStart ?? 0,
+        end: el.selectionEnd ?? 0
+      });
+      setActiveField(fieldName);
+    }
+  };
+
+  const createTrackingProps = (fieldName: 'subject_ar' | 'subject_en' | 'body_ar' | 'body_en') => ({
+    onFocus: () => setActiveField(fieldName),
+    onKeyUp: () => updateSelection(fieldName),
+    onMouseUp: () => updateSelection(fieldName),
+    onSelect: () => updateSelection(fieldName),
+  });
+
+  const handleInjectTag = (tag: string) => {
+    if (!activeField) return;
+    const el = refs[activeField].current;
+    if (!el) return;
+
+    // Strict double braces format
+    const tagText = `{{${tag}}}`;
+    const currentValue = el.value || '';
+    const start = cursorPos.start;
+    const end = cursorPos.end;
+
+    const newValue = currentValue.substring(0, start) + tagText + currentValue.substring(end);
+
+    setValue(activeField, newValue, { shouldDirty: true, shouldValidate: true });
+    playSound('click');
+
+    setTimeout(() => {
+      el.focus();
+      const newCursorPos = start + tagText.length;
+      el.setSelectionRange(newCursorPos, newCursorPos);
+      setCursorPos({ start: newCursorPos, end: newCursorPos });
+    }, 10);
+  };
+
+  const { ref: subjectArRef, ...registerSubjectAr } = register('subject_ar');
+  const { ref: bodyArRef, ...registerBodyAr } = register('body_ar');
+  const { ref: subjectEnRef, ...registerSubjectEn } = register('subject_en');
+  const { ref: bodyEnRef, ...registerBodyEn } = register('body_en');
+
+  const setSubjectArRef = useCallback((el: HTMLTextAreaElement | null) => {
+    subjectArRef(el);
+    subjectArRefField.current = el;
+  }, [subjectArRef]);
+
+  const setBodyArRef = useCallback((el: HTMLTextAreaElement | null) => {
+    bodyArRef(el);
+    bodyArRefField.current = el;
+  }, [bodyArRef]);
+
+  const setSubjectEnRef = useCallback((el: HTMLInputElement | null) => {
+    subjectEnRef(el);
+    subjectEnRefField.current = el;
+  }, [subjectEnRef]);
+
+  const setBodyEnRef = useCallback((el: HTMLTextAreaElement | null) => {
+    bodyEnRef(el);
+    bodyEnRefField.current = el;
+  }, [bodyEnRef]);
+
   useEffect(() => {
     if (data) {
       reset({
@@ -79,8 +166,12 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
   const updateMutation = useMutation({
     mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
     onSuccess: () => {
+      playSound('success');
       qc.invalidateQueries({ queryKey: ['notifications/templates'] });
       guardedRouter.push('/communications/notifications/templates', { skipGuard: true });
+    },
+    onError: () => {
+      playSound('error');
     },
   });
 
@@ -104,8 +195,22 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
     );
   }
 
-  const subject = previewLang === 'ar' ? subjectAr : subjectEn;
-  const body = previewLang === 'ar' ? bodyAr : bodyEn;
+  const interpolate = (text: string, params: Array<{ name: string; sample_value: string }>) => {
+    if (!text) return '';
+    let result = text;
+    params.forEach(p => {
+      const regex = new RegExp(`\\{\\{\\s*${p.name}\\s*\\}\\}`, 'g');
+      result = result.replace(regex, p.sample_value);
+    });
+    return result;
+  };
+
+  const allowedParams = data?.allowed_parameters || [];
+  const rawSubject = previewLang === 'ar' ? subjectAr : subjectEn;
+  const rawBody = previewLang === 'ar' ? bodyAr : bodyEn;
+
+  const subject = interpolate(rawSubject, allowedParams);
+  const body = interpolate(rawBody, allowedParams);
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 relative">
@@ -148,6 +253,76 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
           
           {/* LEFT SIDE COLUMN: Editing Forms */}
           <div className="lg:col-span-7 space-y-6">
+
+            {/* Variables Toolbox Component */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 rounded-none bg-surface-container-low border border-white/10 space-y-4 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-operational-cyan" />
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-foreground">
+                    VARIABLES TOOLBOX / علامات المتغيرات
+                  </h3>
+                </div>
+                <span className="text-[9px] font-mono bg-white/5 border border-white/10 px-2 py-0.5 text-muted-foreground uppercase tracking-widest">
+                  {allowedParams.length} TOKENS
+                </span>
+              </div>
+
+              {allowedParams.length === 0 ? (
+                <p className="text-xs text-muted-foreground/60 italic leading-relaxed py-2">
+                  No dynamic parameters configured for this template.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {allowedParams.map((param) => {
+                      return (
+                        <button
+                          key={param.name}
+                          type="button"
+                          onClick={() => handleInjectTag(param.name)}
+                          disabled={!activeField}
+                          className={`group/btn px-3.5 py-2 rounded-none border font-mono text-[11px] transition-all duration-150 flex items-center gap-2 ${
+                            activeField
+                              ? 'bg-surface-container-lowest border-white/15 text-operational-cyan hover:border-operational-cyan hover:bg-operational-cyan hover:text-black active:scale-[0.98]'
+                              : 'bg-surface-container-lowest/30 border-white/5 text-muted-foreground/30 cursor-not-allowed'
+                          }`}
+                        >
+                          <span className="font-bold text-foreground/50 group-hover/btn:text-black/50 transition-colors">
+                            {"{"}
+                          </span>
+                          <span className="font-extrabold tracking-wide">
+                            {param.name}
+                          </span>
+                          <span className="font-bold text-foreground/50 group-hover/btn:text-black/50 transition-colors">
+                            {"}"}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/45 border-l border-white/10 pl-2 font-sans group-hover/btn:text-black/60 group-hover/btn:border-black/20 transition-colors max-w-[120px] truncate">
+                            {locale === 'ar' ? param.label_ar : param.label_en}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {!activeField ? (
+                    <div className="flex items-center gap-2 p-3 bg-neutral-900/50 dark:bg-black/50 border border-amber-500/20 text-amber-500 text-[9px] font-bold uppercase tracking-widest rounded-none">
+                      <span className="w-1.5 h-1.5 bg-amber-500 shrink-0" />
+                      SELECT ANY INPUT FIELD TO ENABLE VARIABLE INSERTION / اختر حقل إدخال بالأسفل لتفعيل إدراج المتغير
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-3 bg-neutral-900/50 dark:bg-black/50 border border-operational-cyan/20 text-operational-cyan text-[9px] font-bold uppercase tracking-widest rounded-none">
+                      <span className="w-1.5 h-1.5 bg-operational-cyan shrink-0 animate-pulse" />
+                      ACTIVE FIELD: <span className="font-mono text-foreground font-extrabold">{activeField.toUpperCase()}</span> — CLICK ANY VARIABLE BADGE TO INSERT AT CURSOR
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
             
             {/* Arabic inputs panel */}
             <motion.div
@@ -173,8 +348,10 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
                   <Textarea
                     id="subject-ar"
                     dir="rtl"
-                    {...register('subject_ar')}
-                    className="min-h-[60px] py-3.5 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
+                    {...registerSubjectAr}
+                    ref={setSubjectArRef}
+                    {...createTrackingProps('subject_ar')}
+                    className="min-h-[60px] py-3.5 bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
               </div>
@@ -187,8 +364,10 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
                   <Textarea
                     id="body-ar"
                     dir="rtl"
-                    {...register('body_ar')}
-                    className="min-h-[220px] py-4 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
+                    {...registerBodyAr}
+                    ref={setBodyArRef}
+                    {...createTrackingProps('body_ar')}
+                    className="min-h-[220px] py-4 bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
               </div>
@@ -219,8 +398,10 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
                   <Input
                     id="subject-en"
                     dir="ltr"
-                    {...register('subject_en')}
-                    className="h-14 font-semibold bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
+                    {...registerSubjectEn}
+                    ref={setSubjectEnRef}
+                    {...createTrackingProps('subject_en')}
+                    className="h-14 font-semibold bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
               </div>
@@ -233,8 +414,10 @@ export function TemplateEditorClient({ id, title, locale: _locale }: Props) {
                   <Textarea
                     id="body-en"
                     dir="ltr"
-                    {...register('body_en')}
-                    className="min-h-[220px] py-4 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
+                    {...registerBodyEn}
+                    ref={setBodyEnRef}
+                    {...createTrackingProps('body_en')}
+                    className="min-h-[220px] py-4 bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
               </div>

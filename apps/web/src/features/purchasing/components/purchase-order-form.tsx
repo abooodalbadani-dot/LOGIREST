@@ -12,6 +12,7 @@ import { ArrowRightLeft, Plus, Trash2, Package, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
+import { type ComboboxItem } from "@/components/shared/SmartCombobox";
 import { Item, ItemSchema } from "@/types/master-data";
 
 import { Button } from "@/components/ui/button";
@@ -24,13 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SmartCombobox } from "@/components/shared/SmartCombobox";
 import { useCreatePO } from "@/features/purchasing/hooks/useCreatePO";
 import { useUpdatePO } from "@/features/purchasing/hooks/useUpdatePO";
 import { PODetail } from "@/features/purchasing/hooks/usePO";
@@ -241,6 +236,30 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
   const baseCurrency = settings?.base_currency;
   const { data: fxRates } = useFXRates(currency, baseCurrency || 'SAR');
+
+  const supplierItems = React.useMemo(() => {
+    return suppliers?.map(s => ({
+      id: s.id,
+      name_en: `${s.name_en} (${s.code})`,
+      name_ar: `${s.name_ar} (${s.code})`,
+    })) ?? [];
+  }, [suppliers]);
+
+  const warehouseItems = React.useMemo(() => {
+    return warehouses?.map(w => ({
+      id: w.id,
+      name_en: w.name_en,
+      name_ar: w.name_ar,
+    })) ?? [];
+  }, [warehouses]);
+
+  const currencyItems = React.useMemo(() => {
+    return currencies?.map(c => ({
+      id: c.code,
+      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+    })) ?? [];
+  }, [currencies, locale]);
   
   React.useEffect(() => {
     if (fxRates?.[0]?.rate && !initialData) {
@@ -286,20 +305,16 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
-                        <FormControl>
-                          <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
-                            <SelectValue placeholder={t('select_supplier')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-surface-container-low border-none rounded-xl">
-                          {suppliers?.map(s => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {locale === 'ar' ? s.name_ar : s.name_en} ({s.code})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SmartCombobox
+                          items={supplierItems}
+                          value={field.value}
+                          onSelect={(item) => field.onChange(item.id)}
+                          placeholder={t('select_supplier')}
+                          className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-semibold uppercase"
+                          disabled={isLocked}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -339,20 +354,16 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('target_warehouse')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
-                        <FormControl>
-                          <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
-                            <SelectValue placeholder={t('select_warehouse')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-surface-container-low border-none rounded-xl">
-                          {warehouses?.map(w => (
-                            <SelectItem key={w.id} value={w.id}>
-                              {locale === 'ar' ? w.name_ar : w.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SmartCombobox
+                          items={warehouseItems}
+                          value={field.value}
+                          onSelect={(item) => field.onChange(item.id)}
+                          placeholder={t('select_warehouse')}
+                          className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-semibold uppercase"
+                          disabled={isLocked}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -366,20 +377,16 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier_currency')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
-                        <FormControl>
-                          <SelectTrigger className="bg-surface-container-low border-none font-mono h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
-                            <SelectValue placeholder={t('currency_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-surface-container-low border-none rounded-xl">
-                          {currencies?.map(c => (
-                            <SelectItem key={c.id} value={c.code}>
-                              {c.code} — {c[(`name_${locale}` as keyof typeof c)]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SmartCombobox
+                          items={currencyItems}
+                          value={field.value}
+                          onSelect={(item) => field.onChange(item.id)}
+                          placeholder={t('currency_placeholder')}
+                          className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30 text-label-xs font-semibold uppercase font-mono"
+                          disabled={isLocked}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -442,9 +449,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         onScan={handleScan}
                         scanStatus={scanStatus}
                         statusMessage={statusMessage}
-                        onManualTrigger={() => {
-                          prepend({ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" });
-                        }}
+                        items={itemsData?.data as unknown as ComboboxItem[] || []}
                         placeholder={tc('select_item')}
                         size="lg"
                         label={t('scan_or_search')}

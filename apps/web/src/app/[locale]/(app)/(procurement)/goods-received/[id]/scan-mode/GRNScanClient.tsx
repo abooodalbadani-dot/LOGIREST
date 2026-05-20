@@ -185,11 +185,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
               ) : (
                 <ScanInput
                   onScan={handleScan}
-                  onManualTrigger={() => {
-                    setScanStatus("idle");
-                    // Trigger a generic manual search if needed, but for now we'll just focus the input
-                    toast.info(common("manual_entry"));
-                  }}
+                  items={items || []}
                   scanStatus={scanStatus}
                   statusMessage={statusMessage}
                   isScanning={updateLine.isPending}

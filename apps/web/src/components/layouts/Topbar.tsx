@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
+import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useContextScope } from '@/hooks/useContextScope';
 import LocaleSwitcher from '../shared/LocaleSwitcher';
 import { ContextSelector } from '../shared/ContextSelector';
@@ -18,6 +19,7 @@ interface TopbarProps {
 
 export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
+  const { displayName, avatarUrl } = useUserProfile();
   const { branchName, warehouseName, isLoading } = useContextScope();
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -91,11 +93,15 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
               className="flex items-center gap-3 pe-2 md:pe-4 group"
             >
               <div className="hidden sm:flex flex-col items-end leading-tight text-end">
-                <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors">{user.name}</span>
+                <span className="text-body-md font-bold text-foreground group-hover:text-operational-cyan transition-colors">{displayName || user.name}</span>
                 <span className="text-label-xs text-operational-cyan font-semibold uppercase">{user.role}</span>
               </div>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-sm bg-surface-container-low flex items-center justify-center text-body-md font-semibold text-operational-cyan transition-all group-hover:bg-surface-container">
-                {user.name.charAt(0).toUpperCase()}
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-sm bg-surface-container-low flex items-center justify-center text-body-md font-semibold text-operational-cyan transition-all group-hover:bg-surface-container overflow-hidden">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName || user.name} className="w-full h-full object-cover" />
+                ) : (
+                  (displayName || user.name || '').charAt(0).toUpperCase()
+                )}
               </div>
             </Link>
             <button

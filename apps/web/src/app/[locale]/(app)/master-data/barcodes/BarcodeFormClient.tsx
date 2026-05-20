@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -8,13 +8,7 @@ import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
- Select,
- SelectContent,
- SelectItem,
- SelectTrigger,
- SelectValue,
-} from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Switch } from '@/components/ui/switch';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
@@ -65,6 +59,22 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const currentCode = useWatch({ control, name: 'code' });
+
+  const itemItems = useMemo(() => {
+    return items?.data?.map((i) => ({
+      id: i.id,
+      name_en: `${i.code} — ${locale === 'ar' ? i.name_ar : i.name_en}`,
+      name_ar: `${i.code} — ${locale === 'ar' ? i.name_ar : i.name_en}`,
+    })) || [];
+  }, [items?.data, locale]);
+
+  const uomItems = useMemo(() => {
+    return uoms?.data?.map((u) => ({
+      id: u.id,
+      name_en: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
+      name_ar: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
+    })) || [];
+  }, [uoms?.data, locale]);
 
  useEffect(() => {
  if (barcode) {
@@ -122,55 +132,47 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- <div className="space-y-2">
- <Label htmlFor="bc-item" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
- {tb('fields.item')}
- </Label>
- <Controller
- name="item_id"
- control={control}
- render={({ field }) => (
-  <Select disabled={isReadOnly} value={field.value} onValueChange={field.onChange}>
- <SelectTrigger id="bc-item" className="h-11 border-none bg-surface-container-high/40 hover:bg-surface-container-high transition-colors uppercase text-label-xs font-bold">
- <SelectValue placeholder="—" />
- </SelectTrigger>
- <SelectContent className="bg-surface-container-highest border-none">
- {items?.data?.map((i) => (
- <SelectItem key={i.id} value={i.id} className="font-semibold text-label-xs uppercase">
- {i.code} — {locale === 'ar' ? i.name_ar : i.name_en}
- </SelectItem>
- ))}
- </SelectContent>
- </Select>
- )}
- />
- {errors.item_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.item_id.message}</p>}
- </div>
+  <div className="space-y-2">
+  <Label htmlFor="bc-item" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+  {tb('fields.item')}
+  </Label>
+  <Controller
+  name="item_id"
+  control={control}
+  render={({ field }) => (
+     <SmartCombobox
+       disabled={isReadOnly}
+       value={field.value}
+       onSelect={(item) => field.onChange(item.id)}
+       items={itemItems}
+       placeholder="—"
+       className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+     />
+  )}
+  />
+  {errors.item_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.item_id.message}</p>}
+  </div>
 
- <div className="space-y-2">
- <Label htmlFor="bc-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
- {tb('fields.uom')}
- </Label>
- <Controller
- name="uom_id"
- control={control}
- render={({ field }) => (
-  <Select disabled={isReadOnly} value={field.value} onValueChange={field.onChange}>
- <SelectTrigger id="bc-uom" className="h-11 border-none bg-surface-container-high/40 hover:bg-surface-container-high transition-colors uppercase text-label-xs font-bold">
- <SelectValue placeholder="—" />
- </SelectTrigger>
- <SelectContent className="bg-surface-container-highest border-none">
- {uoms?.data?.map((u) => (
- <SelectItem key={u.id} value={u.id} className="font-semibold text-label-xs uppercase">
- {u.code} — {locale === 'ar' ? u.name_ar : u.name_en}
- </SelectItem>
- ))}
- </SelectContent>
- </Select>
- )}
- />
- {errors.uom_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.uom_id.message}</p>}
- </div>
+  <div className="space-y-2">
+  <Label htmlFor="bc-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+  {tb('fields.uom')}
+  </Label>
+  <Controller
+  name="uom_id"
+  control={control}
+  render={({ field }) => (
+     <SmartCombobox
+       disabled={isReadOnly}
+       value={field.value}
+       onSelect={(item) => field.onChange(item.id)}
+       items={uomItems}
+       placeholder="—"
+       className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+     />
+  )}
+  />
+  {errors.uom_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.uom_id.message}</p>}
+  </div>
 
  <div className="space-y-2">
  <Label htmlFor="bc-qty" className="text-label-xs font-semibold uppercase text-muted-foreground/70">

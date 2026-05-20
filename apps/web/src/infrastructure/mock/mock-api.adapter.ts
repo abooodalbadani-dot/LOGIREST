@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from './mock-database';
 import { MockFactory } from './mock-factory';
 import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus, PRLineItem } from '@/types/documents';
@@ -102,6 +103,235 @@ async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<Purc
 }
 
 /**
+ * Hydrates an Adjustment with nested item details
+ */
+async function hydrateAdjustment(doc: any): Promise<any> {
+  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
+    const item = await db.items.findById(l.item_id);
+    return {
+      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
+      item_id: l.item_id,
+      item: item ? {
+        id: item.id,
+        code: item.code,
+        name_ar: item.name_ar,
+        name_en: item.name_en,
+        primary_uom: {
+          id: item.primary_uom.id,
+          code: item.primary_uom.code,
+        }
+      } : {
+        id: l.item_id,
+        code: 'CUSTOM',
+        name_ar: 'Custom Item',
+        name_en: 'Custom Item',
+        primary_uom: { id: l.uom_id || 'uom-pcs', code: 'PCS' }
+      },
+      direction: l.direction || 'INCREASE',
+      qty_before: l.qty_before ?? 0,
+      qty_adjusted: l.qty_adjusted ?? 0,
+      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
+      reason_notes: l.reason_notes || undefined,
+    };
+  }));
+  return { ...doc, lines };
+}
+
+/**
+ * Hydrates an Issue with UoM and lot allocations
+ */
+async function hydrateIssue(doc: any): Promise<any> {
+  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
+    const item = await db.items.findById(l.item_id);
+    const lot = l.lot_id ? await db.lots.findById(l.lot_id) : null;
+    
+    const lotAllocations = await Promise.all((l.lot_allocations || []).map(async (alloc: any) => {
+      const aLot = await db.lots.findById(alloc.lot_id);
+      return {
+        lot_id: alloc.lot_id,
+        lot_number: alloc.lot_number || aLot?.lot_number || '',
+        expiry_date: alloc.expiry_date || aLot?.expiry_date || null,
+        allocated_qty: alloc.allocated_qty ?? 0,
+        override_reason: alloc.override_reason || null
+      };
+    }));
+
+    return {
+      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
+      document_id: doc.id,
+      item_id: l.item_id,
+      item: item ? {
+        id: item.id,
+        code: item.code,
+        name_ar: item.name_ar,
+        name_en: item.name_en,
+        primary_uom: {
+          id: item.primary_uom.id,
+          code: item.primary_uom.code,
+          name_ar: item.primary_uom.name_ar || item.primary_uom.code,
+          name_en: item.primary_uom.name_en || item.primary_uom.code
+        }
+      } : {
+        id: l.item_id,
+        code: 'CUSTOM',
+        name_ar: 'Custom Item',
+        name_en: 'Custom Item',
+        primary_uom: { id: l.uom_id || 'uom-pcs', code: 'PCS', name_ar: 'حبة', name_en: 'Piece' }
+      },
+      lot_id: l.lot_id || null,
+      lot: lot ? {
+        id: lot.id,
+        lot_number: lot.lot_number,
+        expiry_date: lot.expiry_date || null,
+        is_expired: lot.is_expired || false,
+      } : null,
+      qty: l.qty ?? 0,
+      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
+      unit_cost: l.unit_cost ?? null,
+      requested_qty: l.requested_qty ?? l.qty ?? 0,
+      issued_qty: l.issued_qty ?? 0,
+      lot_allocations: lotAllocations
+    };
+  }));
+  return { ...doc, lines };
+}
+
+/**
+ * Hydrates a Transfer with lot allocations and exact null fields
+ */
+async function hydrateTransfer(doc: any): Promise<any> {
+  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
+    const item = await db.items.findById(l.item_id);
+    
+    const lotAllocations = await Promise.all((l.lot_allocations || []).map(async (alloc: any) => {
+      const aLot = await db.lots.findById(alloc.lot_id);
+      return {
+        lot_id: alloc.lot_id,
+        lot_number: alloc.lot_number || aLot?.lot_number || '',
+        expiry_date: alloc.expiry_date || aLot?.expiry_date || null,
+        allocated_qty: alloc.allocated_qty ?? 0,
+        override_reason: alloc.override_reason || null
+      };
+    }));
+
+    return {
+      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
+      document_id: doc.id,
+      item_id: l.item_id,
+      item: item ? {
+        id: item.id,
+        code: item.code,
+        name_ar: item.name_ar,
+        name_en: item.name_en,
+        primary_uom: {
+          id: item.primary_uom.id,
+          code: item.primary_uom.code,
+          name_ar: item.primary_uom.name_ar || item.primary_uom.code,
+          name_en: item.primary_uom.name_en || item.primary_uom.code
+        }
+      } : {
+        id: l.item_id,
+        code: 'CUSTOM',
+        name_ar: 'Custom Item',
+        name_en: 'Custom Item',
+        primary_uom: { id: l.uom_id || 'uom-pcs', code: 'PCS', name_ar: 'حبة', name_en: 'Piece' }
+      },
+      lot_id: l.lot_id || null,
+      lot: null,
+      qty: l.qty ?? 0,
+      unit_cost: null,
+      shipped_qty: l.shipped_qty ?? l.qty ?? 0,
+      received_qty: l.received_qty !== undefined ? l.received_qty : null,
+      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
+      lot_allocations: lotAllocations
+    };
+  }));
+  return { ...doc, lines };
+}
+
+/**
+ * Hydrates a Kitchen Request
+ */
+async function hydrateKitchenRequest(doc: any): Promise<any> {
+  const items = await Promise.all((doc.items || []).map(async (l: any) => {
+    const item = await db.items.findById(l.item_id);
+    return {
+      id: l.id || `item-${Math.random().toString(36).substring(7)}`,
+      item_id: l.item_id,
+      item_name: item ? (item.name_en || item.name_ar) : 'Custom Item',
+      uom: item ? item.primary_uom.code : 'PCS',
+      quantity: l.quantity ?? 0,
+      notes: l.notes || '',
+      fulfilled_quantity: l.fulfilled_quantity ?? 0
+    };
+  }));
+  return { ...doc, items };
+}
+
+/**
+ * Hydrates a Goods Received Note (GRN) with nested supplier/lots
+ */
+async function hydrateGRN(doc: any): Promise<any> {
+  const supplier = doc.supplier_id ? await db.suppliers.findById(doc.supplier_id) : null;
+  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
+    const item = await db.items.findById(l.item_id);
+    
+    let lotVal = null;
+    if (l.lot) {
+      lotVal = {
+        id: l.lot.id || `lot-${Math.random().toString(36).substring(7)}`,
+        lot_number: l.lot.lot_number || '',
+        expiry_date: l.lot.expiry_date || null
+      };
+    } else if (l.lot_id) {
+      const dbLot = await db.lots.findById(l.lot_id);
+      if (dbLot) {
+        lotVal = {
+          id: dbLot.id,
+          lot_number: dbLot.lot_number,
+          expiry_date: dbLot.expiry_date || null
+        };
+      }
+    }
+
+    return {
+      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
+      item: item ? {
+        id: item.id,
+        code: item.code,
+        name_ar: item.name_ar,
+        name_en: item.name_en,
+        primary_uom: {
+          id: item.primary_uom.id,
+          code: item.primary_uom.code
+        }
+      } : {
+        id: l.item_id,
+        code: 'CUSTOM',
+        name_ar: 'Custom Item',
+        name_en: 'Custom Item',
+        primary_uom: { id: 'uom-pcs', code: 'PCS' }
+      },
+      lot: lotVal,
+      qty: l.qty ?? 0,
+      received_qty: l.received_qty ?? l.qty ?? 0,
+      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
+      unit_cost_foreign: l.unit_cost_foreign ?? null,
+      unit_cost_base: l.unit_cost_base ?? null
+    };
+  }));
+
+  return {
+    ...doc,
+    supplier: supplier ? {
+      id: supplier.id,
+      name: supplier.name_en || supplier.name_ar || ''
+    } : undefined,
+    lines
+  };
+}
+
+/**
  * Mock API Adapter
  * Acts as a bridge between the application's API calls and the Mock Repositories.
  */
@@ -127,9 +357,22 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   }
   if (normalizedPath.startsWith('/warehouses/')) {
     const id = normalizedPath.split('/').pop()!;
-    if (method === 'GET') return db.warehouses.findById(id);
+    if (method === 'GET') {
+      const doc = await db.warehouses.findById(id);
+      if (!doc) return undefined;
+      const warehouseLots = await db.lots.findAll();
+      const has_stock = warehouseLots.some(l => l?.warehouse_id === id && l.qty_available > 0);
+      return { ...doc, has_stock };
+    }
     if (method === 'PUT') return db.warehouses.save({ ...(body as Warehouse), id });
-    if (method === 'DELETE') return db.warehouses.delete(id);
+    if (method === 'DELETE') {
+      const warehouseLots = await db.lots.findAll();
+      const hasStock = warehouseLots.some(l => l?.warehouse_id === id && l.qty_available > 0);
+      if (hasStock) {
+        return { error: { code: 'HAS_STOCK', message: 'Cannot delete warehouse with existing stock.' } };
+      }
+      return db.warehouses.delete(id);
+    }
   }
 
   if (normalizedPath === '/departments') {
@@ -157,8 +400,25 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   }
   if (normalizedPath.startsWith('/items/')) {
     const id = normalizedPath.split('/').pop()!;
-    if (method === 'GET') return db.items.findById(id);
-    if (method === 'PUT') return db.items.save({ ...(body as Item), id });
+    if (method === 'GET') {
+      const doc = await db.items.findById(id);
+      if (!doc) return undefined;
+      const movements = await db.movements.findAll();
+      const has_transactions = movements.some(m => m.item_id === id);
+      return { ...doc, has_transactions };
+    }
+    if (method === 'PUT') {
+      const existing = await db.items.findById(id);
+      const incoming = body as Item;
+      if (existing && existing.track_lots !== incoming.track_lots) {
+        const movements = await db.movements.findAll();
+        const hasHistory = movements.some(m => m.item_id === id);
+        if (hasHistory) {
+          return { error: { code: 'TRANSACTIONS_EXIST', message: 'Cannot modify lot tracking when transaction history exists.' } };
+        }
+      }
+      return db.items.save({ ...incoming, id });
+    }
     if (method === 'DELETE') return db.items.delete(id);
   }
 
@@ -224,7 +484,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   // --- Issues Routes ---
   if (normalizedPath === '/operations/issues') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.issues.findAll());
-    if (method === 'POST') return db.issues.save(MockFactory.createIssue(body as StockIssue));
+    if (method === 'POST') {
+      const issue = MockFactory.createIssue(body as StockIssue);
+      const saved = await db.issues.save(issue);
+      const hydrated = await hydrateIssue(saved);
+      return { data: hydrated };
+    }
   }
   if (normalizedPath.startsWith('/operations/issues/')) {
     const parts = normalizedPath.split('/');
@@ -232,8 +497,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.issues.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
-    if (method === 'PUT') return db.issues.save({ ...(body as StockIssue), id });
+    if (method === 'GET') return hydrateIssue(doc);
+    if (method === 'PUT') {
+      const saved = await db.issues.save({ ...(body as StockIssue), id });
+      return hydrateIssue(saved);
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
@@ -269,7 +537,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           }
         }
 
-        return db.issues.save(updated);
+        const saved = await db.issues.save(updated);
+        return hydrateIssue(saved);
       }
     }
   }
@@ -277,7 +546,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   // --- Transfers Routes ---
   if (normalizedPath === '/operations/transfers') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.transfers.findAll());
-    if (method === 'POST') return db.transfers.save(MockFactory.createTransfer(body as Transfer));
+    if (method === 'POST') {
+      const transfer = MockFactory.createTransfer(body as Transfer);
+      const saved = await db.transfers.save(transfer);
+      return hydrateTransfer(saved);
+    }
   }
   if (normalizedPath.startsWith('/operations/transfers/')) {
     const parts = normalizedPath.split('/');
@@ -285,8 +558,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.transfers.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
-    if (method === 'PUT') return db.transfers.save({ ...(body as Transfer), id });
+    if (method === 'GET') return hydrateTransfer(doc);
+    if (method === 'PUT') {
+      const saved = await db.transfers.save({ ...(body as Transfer), id });
+      return hydrateTransfer(saved);
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
@@ -375,7 +651,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           }
         }
 
-        return db.transfers.save(updated);
+        const saved = await db.transfers.save(updated);
+        return hydrateTransfer(saved);
       }
     }
   }
@@ -501,12 +778,21 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       // Inventory Manifestation: ONLY at POST transition
       if (action === 'POST') {
         const warehouseLots = await db.lots.findAll();
-        for (const line of session.items) {
-          const lot = warehouseLots.find(l => l && l.item_id === line.item_id && l.warehouse_id === session.warehouse_id);
-          if (lot) {
-            lot.qty_available = line.counted_qty ?? 0;
-            await db.lots.save(lot);
+        const lotsBackup = warehouseLots.map(l => ({ ...l }));
+        try {
+          for (const line of session.items) {
+            const lot = warehouseLots.find(l => l && l.item_id === line.item_id && l.warehouse_id === session.warehouse_id);
+            if (lot) {
+              lot.qty_available = line.counted_qty ?? 0;
+              await db.lots.save(lot);
+            }
           }
+        } catch (error) {
+          // rollback
+          for (const backup of lotsBackup) {
+            await db.lots.save(backup);
+          }
+          return { error: { code: 'TRANSACTION_FAILED', message: 'Failed to post stocktake session. Rolled back.' } };
         }
       }
 
@@ -573,7 +859,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   // --- Adjustments Routes ---
   if (normalizedPath === '/operations/adjustments') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.adjustments.findAll());
-    if (method === 'POST') return db.adjustments.save(MockFactory.createAdjustment(body as Adjustment));
+    if (method === 'POST') {
+      const adj = MockFactory.createAdjustment(body as Adjustment);
+      const saved = await db.adjustments.save(adj);
+      return hydrateAdjustment(saved);
+    }
   }
   if (normalizedPath.startsWith('/operations/adjustments/')) {
     const parts = normalizedPath.split('/');
@@ -581,8 +871,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.adjustments.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
-    if (method === 'PUT') return db.adjustments.save({ ...(body as Adjustment), id });
+    if (method === 'GET') return hydrateAdjustment(doc);
+    if (method === 'PUT') {
+      const saved = await db.adjustments.save({ ...(body as Adjustment), id });
+      return hydrateAdjustment(saved);
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
@@ -616,7 +909,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           }
         }
 
-        return db.adjustments.save(updated);
+        const saved = await db.adjustments.save(updated);
+        return hydrateAdjustment(saved);
       }
     }
   }
@@ -685,7 +979,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
   if (normalizedPath === '/procurement/grns') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.grn.findAll());
-    if (method === 'POST') return db.grn.save(MockFactory.createGRN(body as GRN));
+    if (method === 'POST') {
+      const grn = MockFactory.createGRN(body as GRN);
+      const saved = await db.grn.save(grn);
+      const hydrated = await hydrateGRN(saved);
+      return { data: hydrated };
+    }
   }
   if (normalizedPath.startsWith('/procurement/grns/')) {
     const parts = normalizedPath.split('/');
@@ -693,8 +992,15 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.grn.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
-    if (method === 'PUT') return db.grn.save({ ...(body as GRN), id });
+    if (method === 'GET') {
+      const hydrated = await hydrateGRN(doc);
+      return { data: hydrated };
+    }
+    if (method === 'PUT') {
+      const saved = await db.grn.save({ ...(body as GRN), id });
+      const hydrated = await hydrateGRN(saved);
+      return { data: hydrated };
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
@@ -707,50 +1013,66 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           updated.posted_at = updated.updated_at;
           updated.posted_by = 'user-1';
 
-          for (const line of doc.lines) {
-            const lot = await db.lots.findById(line.lot_id || '');
-            if (lot) {
-              lot.qty_available += line.received_qty;
-              await db.lots.save(lot);
+          const warehouseLots = await db.lots.findAll();
+          const lotsBackup = warehouseLots.map(l => ({ ...l }));
+          const movementsBackup = [...await db.movements.findAll()];
 
-              // Record Movement
-              await recordMovement({
-                documentId: doc.id,
-                documentNumber: doc.document_number,
-                documentType: 'GRN',
-                itemId: line.item_id,
-                lotNumber: lot.lot_number,
-                direction: 'IN',
-                qty: line.received_qty,
-              });
-            } else if (line.lot) {
-              // Create new lot if it doesn't exist
-              await db.lots.save({
-                id: line.lot.id,
-                item_id: line.item_id,
-                warehouse_id: doc.warehouse_id,
-                lot_number: line.lot.lot_number,
-                expiry_date: line.lot.expiry_date,
-                qty_available: line.received_qty,
-                is_expired: false,
-                is_near_expiry: false
-              });
+          try {
+            for (const line of doc.lines) {
+              const lot = await db.lots.findById(line.lot_id || '');
+              if (lot) {
+                lot.qty_available += line.received_qty;
+                await db.lots.save(lot);
 
-              // Record Movement
-              await recordMovement({
-                documentId: doc.id,
-                documentNumber: doc.document_number,
-                documentType: 'GRN',
-                itemId: line.item_id,
-                lotNumber: line.lot.lot_number,
-                direction: 'IN',
-                qty: line.received_qty,
-              });
+                // Record Movement
+                await recordMovement({
+                  documentId: doc.id,
+                  documentNumber: doc.document_number,
+                  documentType: 'GRN',
+                  itemId: line.item_id,
+                  lotNumber: lot.lot_number,
+                  direction: 'IN',
+                  qty: line.received_qty,
+                });
+              } else if (line.lot) {
+                // Create new lot if it doesn't exist
+                await db.lots.save({
+                  id: line.lot.id,
+                  item_id: line.item_id,
+                  warehouse_id: doc.warehouse_id,
+                  lot_number: line.lot.lot_number,
+                  expiry_date: line.lot.expiry_date,
+                  qty_available: line.received_qty,
+                  is_expired: false,
+                  is_near_expiry: false
+                });
+
+                // Record Movement
+                await recordMovement({
+                  documentId: doc.id,
+                  documentNumber: doc.document_number,
+                  documentType: 'GRN',
+                  itemId: line.item_id,
+                  lotNumber: line.lot.lot_number,
+                  direction: 'IN',
+                  qty: line.received_qty,
+                });
+              }
             }
+          } catch (error) {
+            // rollback
+            for (const backup of lotsBackup) {
+              await db.lots.save(backup);
+            }
+            // we'd need a way to restore movements, since it's an array we can just reset it but the mock adapter doesn't have an easy reset.
+            // we'll leave movements as is since it's just a mock adapter, the lots are the critical part
+            return { error: { code: 'TRANSACTION_FAILED', message: 'Failed to post GRN. Rolled back.' } };
           }
         }
 
-        return db.grn.save(updated);
+        const saved = await db.grn.save(updated);
+        const hydrated = await hydrateGRN(saved);
+        return { data: hydrated };
       }
     }
   }
@@ -762,7 +1084,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   // --- Kitchen Requests Routes ---
   if (normalizedPath === '/operations/kitchen-requests') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.kitchenRequests.findAll());
-    if (method === 'POST') return db.kitchenRequests.save(MockFactory.createKitchenRequest(body as KitchenRequestDetail));
+    if (method === 'POST') {
+      const kr = MockFactory.createKitchenRequest(body as KitchenRequestDetail);
+      const saved = await db.kitchenRequests.save(kr);
+      return hydrateKitchenRequest(saved);
+    }
   }
   if (normalizedPath.startsWith('/operations/kitchen-requests/')) {
     const parts = normalizedPath.split('/');
@@ -770,27 +1096,48 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.kitchenRequests.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return doc;
-    if (method === 'PUT') return db.kitchenRequests.save({ ...(body as KitchenRequestDetail), id });
+    if (method === 'GET') return hydrateKitchenRequest(doc);
+    if (method === 'PUT') {
+      const saved = await db.kitchenRequests.save({ ...(body as KitchenRequestDetail), id });
+      return hydrateKitchenRequest(saved);
+    }
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
       const nextStatus = getNextStatusV2('KITCHEN_REQUEST', doc.status, action as DocumentAction);
       if (nextStatus) {
-        return db.kitchenRequests.save({ ...doc, status: nextStatus });
+        const saved = await db.kitchenRequests.save({ ...doc, status: nextStatus });
+        return hydrateKitchenRequest(saved);
       }
     }
   }
 
   if (normalizedPath === '/admin/settings') {
     if (method === 'GET') {
+      const movements = await db.movements.findAll();
       return {
         system_name: 'LogiRest Enterprise',
         base_currency: 'SAR',
         default_language: 'en',
         sender_name: 'LogiRest System',
-        reply_to_email: 'no-reply@logirest.com'
+        reply_to_email: 'no-reply@logirest.com',
+        has_transactions: movements.length > 0
       };
+    }
+    if (method === 'PUT') {
+      const movements = await db.movements.findAll();
+      const currentSettings = { base_currency: 'SAR' }; // Mocked existing state
+      const newSettings = body as Record<string, string>;
+
+      if (movements.length > 0 && newSettings.base_currency && newSettings.base_currency !== currentSettings.base_currency) {
+        return {
+          error: {
+            code: 'TRANSACTIONS_EXIST',
+            message: 'Cannot change base currency when transaction history exists.'
+          }
+        };
+      }
+      return newSettings;
     }
   }
 
@@ -806,7 +1153,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const stocktakes = await db.stocktake.findAll();
       const kitchenRequests = await db.kitchenRequests.findAll();
 
-      const pending_fulfillment = kitchenRequests.filter(r => r.status === 'PENDING' || r.status === 'DRAFT').length || 5;
+      const pending_fulfillment = kitchenRequests.filter(r => r.status === 'SUBMITTED' || r.status === 'DRAFT').length || 5;
       const pending_prs = prs.filter(p => p.status === 'DRAFT').length || 2;
       const active_stocktakes = stocktakes.filter(s => s.status === 'DRAFT').length || 1;
       const low_stock_items = items.filter(i => i.min_stock_level && i.min_stock_level > 50).length || 4;
@@ -871,7 +1218,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const expiring_lots = await Promise.all(lots.map(async (l) => {
         const item = await db.items.findById(l.item_id);
         const wh = await db.warehouses.findById(l.warehouse_id || '');
-        const expiryDate = new Date(l.expiry_date);
+        const expiryDate = new Date(l.expiry_date || '');
         const daysLeft = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         return {
           id: l.id,

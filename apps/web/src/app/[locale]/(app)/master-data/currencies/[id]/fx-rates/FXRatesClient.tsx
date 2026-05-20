@@ -1,8 +1,9 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 import { Lock, TrendingUp, History, PlusCircle, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { formatRate } from '@/utils/currency';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Card, CardContent } from '@/components/ui/card';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 
 interface Props { currencyId: string; locale: 'ar' | 'en'; }
 
@@ -34,17 +36,28 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  // Fetch all currencies for the "To" selector
  const { data: currencies } = useMasterDataList('currencies', CurrencySchema);
 
- const create = useMasterDataCreate('currencies/fx-rates', FXRateSchema);
+  const create = useMasterDataCreate('currencies/fx-rates', FXRateSchema);
 
- const { register, handleSubmit, reset, formState: { errors } } = useForm<FXRateFormValues>({
- resolver: zodResolver(FXRateFormSchema),
- defaultValues: {
- from_currency_id: currencyId,
- to_currency_id: '',
- rate: 0,
- effective_date: new Date().toISOString().substring(0, 10),
- },
- });
+   const toCurrencyItems = useMemo(() => {
+    const list = currencies?.data
+      ?.filter((c) => c.id !== currencyId)
+      .map((c) => ({
+        id: c.id,
+        name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+        name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      })) || [];
+    return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
+  }, [currencies?.data, currencyId, locale]);
+
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FXRateFormValues>({
+    resolver: zodResolver(FXRateFormSchema),
+    defaultValues: {
+      from_currency_id: currencyId,
+      to_currency_id: '',
+      rate: 0,
+      effective_date: new Date().toISOString().substring(0, 10),
+    },
+  });
 
  const onSubmit = handleSubmit(async (values) => {
      await create.mutateAsync({ body: values });
@@ -152,27 +165,26 @@ export function FXRatesClient({ currencyId, locale }: Props) {
 
  <Card className="bg-surface-container-highest/10 border-outline-low rounded-sm shadow-none">
  <CardContent className="p-6 space-y-6">
- {/* To currency */}
- <div className="space-y-2">
- <Label className="text-label-xs font-semibold uppercase text-text-muted">
- {t('to_currency')}
- </Label>
- <select 
- id="fx-to" 
- {...register('to_currency_id')}
- className="h-11 px-4 bg-surface-container-highest/30 border border-outline-low rounded-sm w-full text-body-md focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none"
- >
- <option value="">—</option>
- {currencies?.data
- ?.filter((c) => c.id !== currencyId)
- .map((c) => (
- <option key={c.id} value={c.id} className="bg-surface-container-low text-foreground">
- {c.code} — {c.name_en}
- </option>
- ))}
- </select>
- {errors.to_currency_id && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.to_currency_id.message}</p>}
- </div>
+  {/* To currency */}
+  <div className="space-y-2">
+  <Label className="text-label-xs font-semibold uppercase text-text-muted">
+  {t('to_currency')}
+  </Label>
+  <Controller
+    name="to_currency_id"
+    control={control}
+    render={({ field }) => (
+       <SmartCombobox
+         value={field.value}
+         onSelect={(item) => field.onChange(item.id)}
+         items={toCurrencyItems}
+         placeholder="—"
+         className="w-full bg-surface-container-highest/30 border border-outline-low text-label-xs font-bold"
+       />
+    )}
+  />
+  {errors.to_currency_id && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.to_currency_id.message}</p>}
+  </div>
 
  {/* Rate */}
  <div className="space-y-2">

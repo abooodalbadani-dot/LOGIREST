@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,13 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAbortController } from '@/hooks/useAbortController';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '@/features/suppliers/hooks/useSuppliers';
 import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
 import { useCurrencies, type Currency } from '@/features/purchasing/hooks/useCurrencies';
@@ -67,6 +61,15 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'is_active' });
+
+  const currencyItems = useMemo(() => {
+    const list = currencies?.map((c: Currency) => ({
+      id: c.id,
+      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+    })) || [];
+    return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
+  }, [currencies, locale]);
 
   useEffect(() => {
     if (data) {
@@ -240,19 +243,14 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                     name="currency_id"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
-                        <SelectTrigger id="sup-currency">
-                          <SelectValue placeholder="—" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">—</SelectItem>
-                          {currencies?.map((c: Currency) => (
-                            <SelectItem key={c.id} value={c.id} className="font-semibold text-label-sm uppercase">
-                              {c.code} — {locale === 'ar' ? c.name_ar : c.name_en}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SmartCombobox
+                        disabled={isReadOnly}
+                        value={field.value}
+                        onSelect={(item) => field.onChange(item.id)}
+                        items={currencyItems}
+                        placeholder="—"
+                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                      />
                     )}
                   />
                   {errors.currency_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as never)}</p>}

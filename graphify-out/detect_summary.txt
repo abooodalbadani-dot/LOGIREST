@@ -1,0 +1,4 @@
+Corpus: 673 files · ~1254893 words
+  code: 605 files
+  document: 54 files
+  image: 14 files

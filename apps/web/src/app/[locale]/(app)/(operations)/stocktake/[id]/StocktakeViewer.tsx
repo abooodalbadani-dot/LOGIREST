@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DocumentLineItemTable } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { StatusTimeline, Status } from "@/components/shared/StatusTimeline";
 import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
@@ -37,6 +37,26 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   const { data: warehouses } = useWarehouses();
   const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
+
+  const tableLines = React.useMemo(() => {
+    return session.items.map((item) => ({
+      id: item.id,
+      item: {
+        id: item.item_id,
+        code: item.barcode || '',
+        name_en: item.item_name,
+        name_ar: item.item_name,
+        primary_uom: { code: item.uom }
+      },
+      qty: item.counted_qty ?? 0,
+      uom_id: '',
+      lot: null,
+      snapshotQty: item.snapshot_qty,
+      countedQty: item.counted_qty,
+      variance: item.variance,
+      uom: item.uom,
+    }));
+  }, [session.items]);
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
@@ -115,71 +135,70 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
               <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('items_to_audit')}</p>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 h-12 px-6">{common('item')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('snapshot_qty')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('counted_qty')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-center h-12">{t('variance')}</TableHead>
-                  <TableHead className="text-label-xs font-semibold uppercase text-muted-foreground/40 text-end h-12 px-6">{common('status_label')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {session.items.map((item: StocktakeItem) => {
-                  const hasCounted = item.counted_qty !== null
-                  const variance = item.variance ?? 0
-                  
-                  return (
-                    <TableRow key={item.id} className="hover:bg-surface-container-low/50 transition-colors border-none group">
-                      <TableCell className="px-6 py-4">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-bold text-body-md text-foreground group-hover:text-primary transition-colors">{item.item_name}</span>
-                          <span className="text-label-xs font-medium text-muted-foreground/50 font-mono" dir="ltr">{item.barcode}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center font-mono text-label-sm font-bold text-muted-foreground/60">
-                        {item.snapshot_qty !== null ? `${item.snapshot_qty} ${item.uom}` : common('dash')}
-                      </TableCell>
-                      <TableCell className="text-center font-mono text-label-sm font-bold text-foreground">
-                        {hasCounted ? `${item.counted_qty} ${item.uom}` : common('dash')}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {hasCounted && item.snapshot_qty !== null ? (
-                          <div className={cn(
-                            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
-                            variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
-                            variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
-                          )} dir="ltr">
-                            {variance > 0 ? '+' : ''}{variance}
-                          </div>
-                        ) : common('dash')}
-                      </TableCell>
-                      <TableCell className="text-end px-6">
-                        {hasCounted ? (
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none text-label-xxs font-semibold uppercase h-6">
-                            {common('completed')}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
-                            {common('pending')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-                {session.items.length === 0 && (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground/40 text-label-xs font-semibold uppercase italic">
-                      {t('no_items_in_manifest')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <DocumentLineItemTable
+            lines={tableLines}
+            locale={locale}
+            isReadOnly={true}
+            hideLotColumns={true}
+            headers={{ qty: t('counted_qty') }}
+            renderQty={(line) => (
+              line.countedQty !== null ? (
+                <span className="font-mono text-label-sm font-bold text-foreground">
+                  {line.countedQty}
+                </span>
+              ) : (
+                <span className="text-muted-foreground/30">—</span>
+              )
+            )}
+            renderUom={(line) => (
+              <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
+                {line.uom}
+              </span>
+            )}
+            extraColumns={[
+              {
+                header: t('snapshot_qty'),
+                cell: (line) => (
+                  <span className="font-mono text-label-sm font-bold text-muted-foreground/60">
+                    {line.snapshotQty !== null ? line.snapshotQty : common('dash')}
+                  </span>
+                )
+              },
+              {
+                header: t('variance'),
+                cell: (line) => {
+                  const hasCounted = line.countedQty !== null;
+                  const variance = line.variance ?? 0;
+                  return hasCounted && line.snapshotQty !== null ? (
+                    <div className={cn(
+                      "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xl text-label-xs font-bold",
+                      variance === 0 ? "bg-emerald-500/10 text-emerald-500" : 
+                      variance > 0 ? "bg-blue-500/10 text-blue-500" : "bg-red-500/10 text-red-500"
+                    )} dir="ltr">
+                      {variance > 0 ? '+' : ''}{variance}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground/30">—</span>
+                  );
+                }
+              },
+              {
+                header: common('status_label'),
+                cell: (line) => {
+                  const hasCounted = line.countedQty !== null;
+                  return hasCounted ? (
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none text-label-xxs font-semibold uppercase h-6">
+                      {common('completed')}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-surface-container-highest text-muted-foreground/60 border-none text-label-xxs font-semibold uppercase h-6">
+                      {common('pending')}
+                    </Badge>
+                  );
+                }
+              }
+            ]}
+          />
         </Card>
         
         {/* Status Timeline */}

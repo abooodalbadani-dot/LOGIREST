@@ -13,7 +13,7 @@ const LotAllocationSchema = z.object({
 const CreateTransferPayloadSchema = z.object({
  from_warehouse_id: z.string(),
  to_warehouse_id: z.string(),
- notes: z.string().optional(),
+ notes: z.string().optional().or(z.literal('')),
  lines: z.array(z.object({
  item_id: z.string(),
  qty: z.number().positive(),

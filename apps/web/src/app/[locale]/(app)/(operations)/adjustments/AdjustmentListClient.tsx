@@ -15,7 +15,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { isAdjustmentPending } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
@@ -39,6 +39,22 @@ export function AdjustmentListClient() {
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
+
+  const statusItems = useMemo(() => {
+    const allItem = {
+      id: 'ALL',
+      name_en: tCommon('statuses.all') || 'All Statuses',
+      name_ar: tCommon('statuses.all') || 'كل الحالات',
+    };
+    const statuses = Object.entries(ADJUSTMENT_STATUS_UI)
+      .filter(([key]) => Object.values(ADJUSTMENT_STATUS).includes(key as AdjustmentStatus))
+      .map(([key, config]) => ({
+        id: key,
+        name_en: tCommon(config.labelKey) || key,
+        name_ar: tCommon(config.labelKey) || key,
+      }));
+    return [allItem, ...statuses];
+  }, [tCommon]);
 
   const { data, isLoading } = useAdjustmentList({ status, page });
 
@@ -220,25 +236,17 @@ export function AdjustmentListClient() {
           <div className="flex items-center gap-6 w-full py-6 px-8 bg-surface-container-low/50 border border-outline-low/10 rounded-xl ambient-shadow backdrop-blur-sm overflow-x-auto no-scrollbar">
             <div className="flex flex-col gap-2.5 min-w-[240px] flex-1">
               <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('status_label')}</label>
-              <Select
-                value={status || 'ALL'} onValueChange={(val: string | null) => {
-                  const nextStatus = val === 'ALL' || !val ? '' : val;
+              <SmartCombobox
+                items={statusItems}
+                value={status || 'ALL'}
+                onSelect={(item) => {
+                  const nextStatus = item.id === 'ALL' ? '' : item.id;
                   setStatus(nextStatus);
                   setPage(1);
                 }}
-              >
-                <SelectTrigger className="w-full bg-surface-container-highest/20 border-none h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 shadow-inner shadow-black/5">
-                  <SelectValue placeholder={tCommon('statuses.all')} />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-container-high border-outline-low/10 rounded-xl shadow-2xl">
-                  <SelectItem value="ALL" className="text-label-xs font-bold uppercase">{tCommon('statuses.all')}</SelectItem>
-                  {Object.entries(ADJUSTMENT_STATUS_UI).filter(([key]) => Object.values(ADJUSTMENT_STATUS).includes(key as AdjustmentStatus)).map(([key, config]) => (
-                    <SelectItem key={key} value={key} className="text-label-xs font-bold uppercase">
-                      {tCommon(config.labelKey)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={tCommon('statuses.all') || "All Statuses"}
+                triggerClassName="w-full bg-surface-container-highest/20 border-none h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 shadow-inner shadow-black/5"
+              />
             </div>
 
             <div className="flex flex-col gap-2.5 min-w-[300px] flex-[2]">

@@ -15,7 +15,7 @@ import { useTransfer, TransferLine } from '@/features/operations/hooks/useTransf
 import { useReceiveTransfer } from '@/features/operations/hooks/useReceiveTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { PackageCheck, ArrowLeft, AlertCircle, Info } from 'lucide-react';
+import { PackageCheck, ArrowLeft, AlertCircle, Info, RefreshCw } from 'lucide-react';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { cn } from '@/lib/utils';
 import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
@@ -47,11 +47,19 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
-  const { data: fromLockState } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
-  const { data: toLockState } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
-  const isEitherLocked = (fromLockState?.isLocked || toLockState?.isLocked) ?? false;
+  const { data: toLockState, isError: isLockError, refetch: refetchLock } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
+  const isWarehouseLocked = !!toLockState?.isLocked;
   const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
-  const isLockedState = isEitherLocked || isWorkflowLocked;
+  const isMutationBlocked = isWarehouseLocked || isWorkflowLocked || isLockError;
+
+  useEffect(() => {
+    if (isLockError) {
+      const handle = setTimeout(() => {
+        setConfirmDialogOpen(false);
+      }, 0);
+      return () => clearTimeout(handle);
+    }
+  }, [isLockError]);
 
   const [prevTransferId, setPrevTransferId] = useState<string | null>(null);
   
@@ -85,12 +93,19 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   const { router, registerDirty } = useUnsavedChangesGuard(isDirty);
 
   const handleScan = useCallback((barcode: string) => {
-    if (isLockedState) {
+    if (isMutationBlocked) {
       audioAlerts.playScanBlocked();
       setScanStatus('error');
-      const msg = isEitherLocked 
-        ? (t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.")
-        : (t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.");
+      
+      let msg = "";
+      if (isLockError) {
+        msg = t('warehouse_lock_check_failed_desc') || "Could not verify warehouse lock status. Actions are locked for safety.";
+      } else if (isWarehouseLocked) {
+        msg = t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.";
+      } else {
+        msg = t('document_locked_mutation_blocked') || "Document is locked. Scan mutation blocked.";
+      }
+
       setStatusMessage(msg);
       toast.error(msg);
       setTimeout(() => setScanStatus('idle'), 2000);
@@ -127,13 +142,19 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       toast.error(t('scan_error'));
       setTimeout(() => setScanStatus('idle'), 2000);
     }
-  }, [lines, isLockedState, isEitherLocked, t, locale]);
+  }, [lines, isMutationBlocked, isWarehouseLocked, isLockError, t, locale]);
+
+  const handleReceiveAll = () => {
+    if (isMutationBlocked) return;
+    setLines(prev => prev.map(l => ({ ...l, _receivedQty: l.shipped_qty ?? l.qty })));
+    toast.success(t('receive_all_success') || 'All lines marked as received.');
+  };
 
   const handleReceive = () => {
     if (!transfer) return;
-    if (isLockedState) {
+    if (isMutationBlocked) {
       audioAlerts.playScanBlocked();
-      toast.error(t('warehouse_locked_mutation_blocked') || "Warehouse is locked. Action mutation blocked.");
+      toast.error(isWarehouseLocked ? t('warehouse_locked_mutation_blocked') : t('document_locked_mutation_blocked'));
       return;
     }
 
@@ -209,13 +230,38 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
       <div className="space-y-4">
         <DocumentLockBanner 
-          isLocked={isLockedState}
+          isLocked={isWorkflowLocked}
           status={transfer.transfer_status as DocumentStatus}
         />
         
-        {fromLockState?.isLocked && <LockBanner lockState={fromLockState} />}
-        {toLockState?.isLocked && toLockState.sessionId !== fromLockState?.sessionId && (
-          <LockBanner lockState={toLockState} />
+        {toLockState?.isLocked && <LockBanner lockState={toLockState} />}
+
+        {isLockError && (
+          <div className="bg-status-error/10 border border-status-error/30 rounded-2xl p-5 flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-200 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <div className="flex shrink-0 items-center justify-center h-12 w-12 rounded-xl bg-status-error/20 text-status-error">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-status-error uppercase text-label-xs">
+                  {t('warehouse_lock_check_failed') || "Lock Check Failed"}
+                </span>
+                <span className="text-status-error/80 text-label-sm font-medium leading-relaxed">
+                  {t('warehouse_lock_check_failed_desc') || "Could not verify warehouse lock status. Actions are locked for safety."}
+                </span>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => refetchLock()}
+              className="bg-status-error/20 hover:bg-status-error/30 border-status-error/30 text-status-error hover:text-status-error rounded-xl gap-2 font-semibold text-label-xs uppercase transition-all shrink-0"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {tCommon('retry') || "Retry"}
+            </Button>
+          </div>
         )}
         
         {hasVariance && (
@@ -229,7 +275,6 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
         )}
       </div>
 
-      <DocumentLockWrapper isLocked={isLockedState}>
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-surface-container-low/50 rounded-3xl border border-white/5 p-8 space-y-6 relative overflow-hidden h-full">
@@ -274,14 +319,14 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
               <textarea
                 value={varianceReason}
                 onChange={e => setVarianceReason(e.target.value)}
-                disabled={!hasVariance || isLockedState}
+                disabled={!hasVariance || isMutationBlocked}
                 placeholder={t('variance_reason_placeholder')}
                 className={cn(
                   "w-full bg-surface-container-highest/40 border rounded-2xl p-4 font-medium text-body-md focus:ring-2 transition-all outline-none resize-none min-h-[140px]",
                   hasVariance 
                     ? 'border-status-warning/20 focus:ring-status-warning/30 hover:bg-surface-container-highest/60' 
                     : 'border-white/5 opacity-40 cursor-not-allowed',
-                  isLockedState ? 'opacity-40 cursor-not-allowed' : ''
+                  isMutationBlocked ? 'opacity-40 cursor-not-allowed' : ''
                 )}
               />
               {!isVarianceValid && hasVariance && (
@@ -300,9 +345,23 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                 <div className="h-4 w-px bg-white/10" />
                 <span className="text-label-xs font-bold text-muted-foreground/60">{lines.length} {tCommon('items')}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-label-xxs font-semibold uppercase text-emerald-500">{t('scan_mode')}</span>
+              <div className="flex items-center gap-4">
+                {!isMutationBlocked && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReceiveAll}
+                    className="h-8 px-4 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400 font-semibold text-label-xs uppercase transition-all"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 me-2" />
+                    {t('receive_all') || 'Receive All'}
+                  </Button>
+                )}
+                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-label-xxs font-semibold uppercase text-emerald-500">{t('scan_mode')}</span>
+                </div>
               </div>
             </div>
 
@@ -321,7 +380,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
             <DocumentLineItemTable
               lines={lines}
               locale={locale}
-              isReadOnly={isLockedState}
+              isReadOnly={isMutationBlocked}
               dense={true}
               onRemoveLine={() => {}}
               hideLotColumns={true}
@@ -349,10 +408,10 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                       <input
                         type="number"
                         dir="ltr"
-                        disabled={isLockedState}
+                        disabled={isMutationBlocked}
                         className={cn(
                           "w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all",
-                          isLockedState ? 'opacity-40 cursor-not-allowed' : '',
+                          isMutationBlocked ? 'opacity-40 cursor-not-allowed' : '',
                           (line._receivedQty ?? 0) !== (line.shipped_qty ?? line.qty) 
                             ? 'text-status-warning border-status-warning/40 focus:ring-status-warning/30 shadow-[0_0_15px_rgba(255,152,0,0.1)]' 
                             : 'text-emerald-500 border-emerald-500/20 focus:ring-emerald-500/30'
@@ -372,7 +431,6 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
             />
           </div>
         </div>
-      </DocumentLockWrapper>
 
       <FormFooter
         onCancel={() => router.push(`/transfers/${id}`, { skipGuard: true })}
@@ -380,7 +438,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
           <PermissionGate action="post" resource="transfer">
             <Button
               type="submit"
-              disabled={isLockedState || receiveTransfer.isPending || !isVarianceValid}
+              disabled={isMutationBlocked || receiveTransfer.isPending || !isVarianceValid}
               className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none min-w-[240px]"
             >
               <PackageCheck className="w-5 h-5 me-3" />

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useEffect, useMemo } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,13 +18,7 @@ import { Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
- Select,
- SelectContent,
- SelectItem,
- SelectTrigger,
- SelectValue,
-} from '@/components/ui/select';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Card, CardContent } from '@/components/ui/card';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -50,6 +44,7 @@ interface Props {
 export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const td = useTranslations('master_data.departments');
+  const locale = useLocale();
   const abortController = useAbortController();
   
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<DepartmentFormValues>({
@@ -96,6 +91,22 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
 
  // Filter warehouses based on selected branch
  const filteredWarehouses = warehouses.filter(w => !selectedBranchId || w.branch_id === selectedBranchId);
+
+   const branchItems = useMemo(() => {
+    return branches.map((b) => ({
+      id: b.id,
+      name_en: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
+      name_ar: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
+    }));
+  }, [branches, locale]);
+
+  const warehouseItems = useMemo(() => {
+    return filteredWarehouses.map((w) => ({
+      id: w.id,
+      name_en: `${w.code} — ${locale === 'ar' ? w.name_ar : w.name_en}`,
+      name_ar: `${w.code} — ${locale === 'ar' ? w.name_ar : w.name_en}`,
+    }));
+  }, [filteredWarehouses, locale]);
 
   const onSubmit = handleSubmit(async (values) => {
     if (isReadOnly) return;
@@ -197,63 +208,47 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  {/* Branch Select */}
- <div className="space-y-2">
- <Label htmlFor="dept-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.branch')}</Label>
- <Controller
- name="branch_id"
- control={control}
- render={({ field }) => (
-                <Select 
-                  value={field.value ?? ''} 
-                  onValueChange={(val) => {
-                    field.onChange(val);
-                    setValue('warehouse_id', ''); // Reset warehouse when branch changes
-                  }}
-                  disabled={isReadOnly}
-                >
- <SelectTrigger id="dept-branch">
-  <SelectValue placeholder={t('null_select')} />
- </SelectTrigger>
- <SelectContent>
- {branches.map((b) => (
- <SelectItem key={b.id} value={b.id} className="font-semibold text-label-sm uppercase">
- {b.code} — {b.name_en}
- </SelectItem>
- ))}
- </SelectContent>
- </Select>
- )}
- />
- {errors.branch_id && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.branch_id.message}`)}</p>}
- </div>
+  <div className="space-y-2">
+  <Label htmlFor="dept-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.branch')}</Label>
+  <Controller
+  name="branch_id"
+  control={control}
+  render={({ field }) => (
+    <SmartCombobox
+      disabled={isReadOnly}
+      value={field.value ?? ''}
+      onSelect={(item) => {
+        field.onChange(item.id);
+        setValue('warehouse_id', ''); // Reset warehouse when branch changes
+      }}
+      items={branchItems}
+      placeholder={t('null_select')}
+      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+    />
+  )}
+  />
+  {errors.branch_id && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.branch_id.message}`)}</p>}
+  </div>
 
  {/* Warehouse Select */}
- <div className="space-y-2">
- <Label htmlFor="dept-warehouse" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.warehouse')}</Label>
- <Controller
- name="warehouse_id"
- control={control}
- render={({ field }) => (
-                    <Select 
-                      value={field.value ?? ''} 
-                      onValueChange={field.onChange} 
-                      disabled={isReadOnly || !selectedBranchId}
-                    >
- <SelectTrigger id="dept-warehouse">
-  <SelectValue placeholder={t('null_select')} />
- </SelectTrigger>
- <SelectContent>
- {filteredWarehouses.map((w) => (
- <SelectItem key={w.id} value={w.id} className="font-semibold text-label-sm uppercase">
- {w.code} — {w.name_en}
- </SelectItem>
- ))}
- </SelectContent>
- </Select>
- )}
- />
- {errors.warehouse_id && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.warehouse_id.message}`)}</p>}
- </div>
+  <div className="space-y-2">
+  <Label htmlFor="dept-warehouse" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.warehouse')}</Label>
+  <Controller
+  name="warehouse_id"
+  control={control}
+  render={({ field }) => (
+    <SmartCombobox
+      disabled={isReadOnly || !selectedBranchId}
+      value={field.value ?? ''}
+      onSelect={(item) => field.onChange(item.id)}
+      items={warehouseItems}
+      placeholder={t('null_select')}
+      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+    />
+  )}
+  />
+  {errors.warehouse_id && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.warehouse_id.message}`)}</p>}
+  </div>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -321,16 +321,11 @@
   }
 
   /* Operational Focus Accessibility */
-  :focus-visible {
+  :focus-visible:not(input):not(textarea) {
     outline: none !important;
     box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary-container) !important;
     transition: box-shadow 0.14s ease-out;
     position: relative;
-  }
-
-  /* Disable external glow for inputs as they use internal background glow */
-  [data-slot="input"]:focus-visible {
-    box-shadow: none !important;
   }
 
   /* Typography Refinement Pass - Global Tags */

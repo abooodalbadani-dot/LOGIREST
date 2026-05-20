@@ -13,6 +13,9 @@ import { ConfirmationProvider } from '@/providers/ConfirmationProvider';
 import { ErrorProvider } from '@/providers/ErrorProvider';
 
 
+import { UserProfileProvider } from '@/providers/UserProfileProvider';
+
+
 import { ibmPlexSans, ibmPlexSansArabic, cairo, ibmPlexMono } from '@/lib/fonts';
 
 
@@ -72,15 +75,17 @@ export default async function LocaleLayout({
                 <ConflictProvider>
                   <ConfirmationProvider>
                     <AuthProvider>
-                      <WarehouseScopeProvider>
-                        <ErrorBoundary>
-                          <NetworkStatusBanner />
-                          <ErrorProvider>
-                            {children}
-                          </ErrorProvider>
-                          <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
-                        </ErrorBoundary>
-                      </WarehouseScopeProvider>
+                      <UserProfileProvider>
+                        <WarehouseScopeProvider>
+                          <ErrorBoundary>
+                            <NetworkStatusBanner />
+                            <ErrorProvider>
+                              {children}
+                            </ErrorProvider>
+                            <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
+                          </ErrorBoundary>
+                        </WarehouseScopeProvider>
+                      </UserProfileProvider>
                     </AuthProvider>
                   </ConfirmationProvider>
                 </ConflictProvider>

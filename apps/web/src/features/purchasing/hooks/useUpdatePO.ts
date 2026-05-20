@@ -13,13 +13,13 @@ const UpdatePOPayloadSchema = z.object({
   currency_code: z.string(),
   exchange_rate: z.number(),
   expected_date: z.string(),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.literal('')),
   lines: z.array(z.object({
     item_id: z.string(),
     quantity: z.number().positive(),
     unit_price: z.number().nonnegative(),
     uom_id: z.string(),
-    notes: z.string().optional()
+    notes: z.string().optional().or(z.literal(''))
   }))
 });
 
