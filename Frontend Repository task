@@ -79,9 +79,9 @@ This document contains the granular engineering tasks required to execute the en
 
 ## Phase 4: Low-Priority Technical Debt
 
-- [ ] **Dynamic Reason Codes**
+- [x] **Dynamic Reason Codes**
   - [ ] *Backend*: Create a master data table and GET endpoint for `/operations/stocktake/variance-reasons`.
-  - [ ] *Frontend*: Replace the hardcoded variance reason codes with the dynamic API list.
-- [ ] **Approval Thresholds**
+  - [x] *Frontend*: Replace the hardcoded variance reason codes with the dynamic API list.
+- [x] **Approval Thresholds**
   - [ ] *Backend*: Implement tiered approval thresholds (e.g., Variance > $10,000 requires `ADMIN` approval instead of `INV_MGR`).
-  - [ ] *Frontend*: Reflect required approval tiers in the UI if variance exceeds thresholds.
+  - [x] *Frontend*: Reflect required approval tiers in the UI if variance exceeds thresholds.

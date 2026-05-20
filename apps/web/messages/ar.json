@@ -1039,6 +1039,8 @@
       "document_locked": "المستند مقفل",
       "locked_description": "هذا المستند معتمد أو مغلق ولا يمكن تعديله."
     },
+    "clear_filters": "مسح الفلاتر",
+    "expiry_date": "تاريخ الانتهاء",
     "yes": "نعم"
   },
   "communications": {
@@ -2629,6 +2631,7 @@
         "reason_required": "فئة السبب مطلوبة",
         "warehouse_required": "المستودع مطلوب"
       },
+      "create_lot": "إنشاء دفعة جديدة",
       "warehouse": "المستودع"
     },
     "expired_override": {
@@ -3015,6 +3018,9 @@
       "warehouse_locked_banner": "المستودع مقفل بجلسة جرد نشطة: {sessionNumber}",
       "warehouse_locked_warning": "هذا المستودع يخضع حالياً لتسلسل تدقيق نشط.",
       "warehouse_selector": "اختر المستودع",
+      "export_audit": "تصدير التدقيق",
+      "elevated_approval_title": "مطلوب موافقة رفيعة المستوى",
+      "elevated_approval_desc": "تتجاوز تأثيرات الفروقات حد {threshold}. يمكن للمستخدمين من نوع ADMIN فقط الموافقة على هذه الجلسة.",
       "workflow_state": "حالة سير العمل"
     },
     "transfer": {
@@ -3337,6 +3343,8 @@
         "rejection_reason_min": "يجب أن يكون سبب الرفض 15 حرفاً على الأقل",
         "supplier_required": "المورد مطلوب"
       },
+      "import_from_pr": "استيراد من طلب شراء",
+      "import_lines": "استيراد البنود",
       "warning_irreversible": "سيؤدي هذا الإجراء إلى ترحيل الطلب إلى السجل ولا يمكن التراجع عنه."
     },
     "pr": {

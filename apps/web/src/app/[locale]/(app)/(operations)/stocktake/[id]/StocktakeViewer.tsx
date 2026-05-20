@@ -9,15 +9,14 @@ import {
   Warehouse, 
   User, 
   ClipboardList, 
-  History,
-  Printer,
-  ArrowLeft
+  History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DocumentLineItemTable } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
+import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
+import { StickyGlassHeader } from "@/components/shared/StickyGlassHeader";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { StatusTimeline, Status } from "@/components/shared/StatusTimeline";
 import { ClientOnlyTime } from "@/components/shared/ClientOnlyTime";
@@ -60,49 +59,31 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
-      {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-50 w-full glass-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex flex-col">
+      <StickyGlassHeader
+        onBack={() => router.back()}
+        title={
+          <div className="flex flex-col gap-0.5">
             <Breadcrumb
               items={[
                 { label: t('title'), href: `/stocktake` },
                 { label: session.session_name },
               ]}
             />
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-title-sm">
-                {session.session_name}
-              </h1>
-              <Badge variant="outline" className="h-6 px-2 text-label-xxs font-semibold uppercase bg-primary/5 text-primary border-none">
-                {t(`${session.status.toLowerCase()}_status`)}
-              </Badge>
-            </div>
+            <span>{session.session_name}</span>
           </div>
-
+        }
+        statusBadge={
+          <Badge variant="outline" className="h-6 px-2 text-label-xxs font-semibold uppercase bg-primary/5 text-primary border-none">
+            {t(`${session.status.toLowerCase()}_status`)}
+          </Badge>
+        }
+        actions={
           <div className="flex items-center gap-3">
             {actions}
-             <Button
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-xl"
-              onClick={() => window.print()}
-            >
-              <Printer className="w-4 h-4 me-2" />
-              {common('print')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-              className="h-9 rounded-xl text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 me-2" />
-              {common('back')}
-            </Button>
+            <DocumentExportMenu />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {/* Metadata Grid */}

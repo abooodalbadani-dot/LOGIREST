@@ -3,12 +3,10 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
 import { format } from 'date-fns';
 import { 
-  ArrowLeft, 
   ArrowUp, 
   ArrowDown, 
   History, 
@@ -19,6 +17,8 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { cn } from '@/lib/utils';
 import { formatQuantity } from '@/utils/currency';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
+import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -124,37 +124,27 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
           </div>
         </div>
       </div>
-      {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-40 w-full glass-header h-16 border-b border-outline-variant/10 px-6 lg:px-10 flex items-center justify-between gap-6 transition-all print:hidden">
-        <div className="flex items-center gap-4 overflow-hidden">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => router.back()} 
-            className="rounded-lg shrink-0 hover:bg-surface-container-high"
-          >
-            <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
-          </Button>
-          <div className="flex flex-col min-w-0">
-            <h1 className="text-title-lg font-semibold uppercase italic truncate">
-              {document?.document_number || '...'}
-            </h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <StatusBadge status={adjustmentStatus as BadgeStatus} />
-              <ClientOnlyTime 
-                date={document?.created_at} 
-                mode="date" 
-                locale={locale as 'ar' | 'en'}
-                className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {actions}
-        </div>
-      </div>
+      <StickyGlassHeader
+        title={<span className="italic">{document?.document_number || '...'}</span>}
+        statusBadge={
+          <>
+            <StatusBadge status={adjustmentStatus as BadgeStatus} />
+            <ClientOnlyTime 
+              date={document?.created_at} 
+              mode="date" 
+              locale={locale as 'ar' | 'en'}
+              className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
+            />
+          </>
+        }
+        actions={
+          <>
+            <DocumentExportMenu />
+            {actions}
+          </>
+        }
+        onBack={() => router.back()}
+      />
 
       {/* Main Content */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 print:max-w-full print:px-0 print:py-0 print:space-y-4 print:animate-none">

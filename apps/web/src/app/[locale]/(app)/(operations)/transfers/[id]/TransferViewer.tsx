@@ -7,7 +7,8 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
+import { Truck, PackageCheck, ArrowLeft } from 'lucide-react';
+import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine, type TransferDetail } from '@/features/operations/hooks/useTransfer';
 import { TRANSFER_STATUS } from '@/contracts/statuses';
@@ -55,15 +56,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
         actions={
           <div className="flex gap-4 items-center">
             <StatusBadge status={transferStatus as BadgeStatus} />
-            
-            <Button
-              variant="outline"
-              className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-              onClick={() => window.print()}
-            >
-              <Printer className="w-4 h-4 me-2" />
-              {tCommon('print')}
-            </Button>
+            <DocumentExportMenu />
           </div>
         }
       />

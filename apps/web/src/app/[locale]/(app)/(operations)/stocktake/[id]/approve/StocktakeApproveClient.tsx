@@ -42,6 +42,8 @@ import {
 } from "@/components/ui/dialog";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
+const APPROVAL_THRESHOLD = 10000;
+
 interface StocktakeLineItem extends LineItem {
   snapshotQty: number | null;
   countedQty: number | null;
@@ -66,13 +68,29 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
  const [rejectionReason, setRejectionReason] = React.useState("");
 
- // Access Control: Enforce role and workflow status via engine
- const canApprove = React.useMemo(() => {
-  if (!session || !user) return false;
-  return canPerformActionV2('STOCKTAKE', session.status as DocumentStatus, 'APPROVE', user.role);
- }, [session, user]);
+  // Calculations (must be before memos that consume them)
+  const itemsWithVariance = React.useMemo(() => !session ? [] : session.items.filter(item => (item.variance || 0) !== 0), [session?.items]);
+  const totalPositiveVariance = React.useMemo(() => !session ? 0 : session.items.reduce((acc, item) => {
+    const variance = item.variance || 0;
+    return variance > 0 ? acc + (variance * item.unit_cost) : acc;
+  }, 0), [session?.items]);
+  const totalNegativeVariance = React.useMemo(() => !session ? 0 : session.items.reduce((acc, item) => {
+    const variance = item.variance || 0;
+    return variance < 0 ? acc + (Math.abs(variance) * item.unit_cost) : acc;
+  }, 0), [session?.items]);
+  const netImpact = totalPositiveVariance - totalNegativeVariance;
+  const absoluteNetImpact = Math.abs(netImpact);
+  const elevatedApprovalRequired = absoluteNetImpact > APPROVAL_THRESHOLD;
 
- const tableLines = React.useMemo((): StocktakeLineItem[] => {
+  // Access Control: Enforce role and workflow status via engine
+  // When net variance exceeds threshold, only ADMIN may approve.
+  const canApprove = React.useMemo(() => {
+   if (!session || !user) return false;
+   if (elevatedApprovalRequired && user.role !== 'ADMIN') return false;
+   return canPerformActionV2('STOCKTAKE', session.status as DocumentStatus, 'APPROVE', user.role);
+  }, [session, user, elevatedApprovalRequired]);
+
+  const tableLines = React.useMemo((): StocktakeLineItem[] => {
   if (!session) return [];
   return session.items.map((item) => ({
     id: item.id,
@@ -103,21 +121,9 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
   return null;
  }
 
- const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
- const currencyCode = 'SAR'; // Base currency
-
- // Calculations
- const itemsWithVariance = session.items.filter(item => (item.variance || 0) !== 0);
- const totalPositiveVariance = session.items.reduce((acc, item) => {
- const variance = item.variance || 0;
- return variance > 0 ? acc + (variance * item.unit_cost) : acc;
- }, 0);
- const totalNegativeVariance = session.items.reduce((acc, item) => {
- const variance = item.variance || 0;
- return variance < 0 ? acc + (Math.abs(variance) * item.unit_cost) : acc;
- }, 0);
- const netImpact = totalPositiveVariance - totalNegativeVariance;
+  const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
+  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
+  const currencyCode = 'SAR'; // Base currency
 
  const handleApprove = () => {
   approveStocktake.mutate(
@@ -239,12 +245,26 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  </div>
 
  {/* Variance Table */}
- <Card className="bg-surface-container-low border-none shadow-none rounded-[2rem] overflow-hidden">
-    <div className="p-8 bg-white/[0.01]">
-      <h3 className="text-body-md font-semibold uppercase text-muted-foreground/40">
-        {t('variance_details_table')}
-      </h3>
+  {elevatedApprovalRequired && (
+    <div className="bg-status-warning/10 border border-status-warning/30 rounded-2xl p-5 flex items-start gap-4">
+      <AlertTriangle className="w-5 h-5 text-status-warning shrink-0 mt-0.5" />
+      <div className="space-y-1">
+        <p className="text-label-sm font-bold text-status-warning">
+          {t('elevated_approval_title') || 'Elevated Approval Required'}
+        </p>
+        <p className="text-label-xs text-muted-foreground">
+          {t('elevated_approval_desc', { threshold: formatCurrency(APPROVAL_THRESHOLD, currencyCode, locale) }) || `The net variance impact of ${formatCurrency(absoluteNetImpact, currencyCode, locale)} exceeds the ${formatCurrency(APPROVAL_THRESHOLD, currencyCode, locale)} threshold. Only ADMIN users can approve this session.`}
+        </p>
+      </div>
     </div>
+  )}
+
+  <Card className="bg-surface-container-low border-none shadow-none rounded-[2rem] overflow-hidden">
+     <div className="p-8 bg-white/[0.01]">
+       <h3 className="text-body-md font-semibold uppercase text-muted-foreground/40">
+         {t('variance_details_table')}
+       </h3>
+     </div>
     <DocumentLineItemTable
       lines={tableLines}
       locale={locale}

@@ -1039,6 +1039,8 @@
       "document_locked": "Document Locked",
       "locked_description": "This document is approved or closed and cannot be modified."
     },
+    "clear_filters": "Clear Filters",
+    "expiry_date": "Expiry Date",
     "yes": "Yes"
   },
   "communications": {
@@ -2629,6 +2631,7 @@
         "reason_required": "Reason category is required",
         "warehouse_required": "Warehouse is required"
       },
+      "create_lot": "Create New Lot",
       "warehouse": "Warehouse"
     },
     "expired_override": {
@@ -3015,6 +3018,9 @@
       "warehouse_locked_banner": "Warehouse locked by active stocktake: {sessionNumber}",
       "warehouse_locked_warning": "This warehouse is currently under an active audit sequence.",
       "warehouse_selector": "Select Warehouse",
+      "export_audit": "Export Audit",
+      "elevated_approval_title": "Elevated Approval Required",
+      "elevated_approval_desc": "The net variance impact exceeds the {threshold} threshold. Only ADMIN users can approve this session.",
       "workflow_state": "Workflow State"
     },
     "transfer": {
@@ -3337,6 +3343,8 @@
         "rejection_reason_min": "Rejection reason must be at least 15 characters",
         "supplier_required": "Supplier is required"
       },
+      "import_from_pr": "Import from Purchase Request",
+      "import_lines": "Import Lines",
       "warning_irreversible": "This action will post the order to the ledger and cannot be reversed."
     },
     "pr": {

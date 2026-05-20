@@ -1,5 +1,5 @@
 import { 
-  Branch, Warehouse, Department, UoM, Category, Item, Barcode, Currency, FXRate, Supplier, Lot 
+  Branch, Warehouse, Department, UoM, Category, Item, Barcode, Currency, FXRate, Supplier, Lot, VarianceReason 
 } from '@/types/master-data';
 
 export const initialBranches: Branch[] = [
@@ -60,6 +60,15 @@ export const initialCurrencies: Currency[] = [
 
 export const initialFXRates: FXRate[] = [
   { id: 'fx-1', from_currency_id: 'cur-usd', to_currency_id: 'cur-sar', rate: 3.75, effective_date: '2025-01-01T00:00:00Z', is_active: true, created_at: '2025-01-01T00:00:00Z' }
+];
+
+export const initialVarianceReasons: VarianceReason[] = [
+  { id: 'vr-damage', code: 'DAMAGE', name_ar: 'تلف', name_en: 'Damage', is_active: true },
+  { id: 'vr-expiry', code: 'EXPIRY', name_ar: 'انتهاء صلاحية', name_en: 'Expiry', is_active: true },
+  { id: 'vr-theft', code: 'THEFT', name_ar: 'سرقة', name_en: 'Theft', is_active: true },
+  { id: 'vr-counting-error', code: 'COUNTING_ERROR', name_ar: 'خطأ في العد', name_en: 'Counting Error', is_active: true },
+  { id: 'vr-correction', code: 'CORRECTION', name_ar: 'تصحيح', name_en: 'Correction', is_active: true },
+  { id: 'vr-other', code: 'OTHER', name_ar: 'أخرى', name_en: 'Other', is_active: true },
 ];
 
 export const initialLots: Lot[] = [

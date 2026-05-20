@@ -1162,6 +1162,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'GET') return MockFactory.wrapPagination(await db.fxRates.findAll());
   }
 
+  if (normalizedPath === '/master-data/variance-reasons' || normalizedPath === '/operations/stocktake/variance-reasons') {
+    if (method === 'GET') return MockFactory.wrapPagination(await db.varianceReasons.findAll());
+  }
+
   // --- Kitchen Requests Routes ---
   if (normalizedPath === '/operations/kitchen-requests') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.kitchenRequests.findAll());

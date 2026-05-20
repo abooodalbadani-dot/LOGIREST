@@ -16,6 +16,7 @@ import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { type ComboboxItem } from "@/components/shared/SmartCombobox";
 import { Item, ItemSchema } from "@/types/master-data";
 
+import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -324,7 +325,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">
                 {isLocked ? t('detail_title') : (mode === "edit" ? t('specification') : t('new_intent'))}
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <DocumentExportMenu />
                 <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">{/* i18n-ignore */}PO_ENGINE_V2</span>
                 {initialData?.document_number && (
                   <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight">

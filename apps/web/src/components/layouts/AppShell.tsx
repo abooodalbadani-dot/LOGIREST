@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-screen overflow-hidden bg-background">
             <div className="flex flex-1 flex-col overflow-hidden relative">
                 {isLocked && (
-                    <div className="bg-status-warning/10 px-4 py-1.5 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 z-[60]">
+                    <div className="bg-status-warning/10 px-4 py-1.5 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 z-[60] print:hidden">
                         <Lock className="w-3.5 h-3.5 text-status-warning" />
                         <span className="text-label-xs font-bold text-status-warning uppercase">
                             {t('warehouse_locked')}
@@ -26,13 +26,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                 )}
 
-                <Topbar locale={locale} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+                <div className="print:hidden">
+                    <Topbar locale={locale} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+                </div>
 
                 <div className="flex flex-1 overflow-hidden relative">
                     {/* Mobile Sidebar Overlay */}
                     <div
                         className={cn(
-                            "fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300",
+                            "fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 print:hidden",
                             isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                         )}
                         onClick={() => setIsSidebarOpen(false)}
@@ -40,14 +42,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
                     {/* Sidebar Wrapper */}
                     <div className={cn(
-                        "fixed inset-y-0 start-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto",
+                        "fixed inset-y-0 start-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 rtl:md:translate-x-0 md:z-auto print:hidden",
                         isSidebarOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0"
                     )}>
                         <Sidebar onClose={() => setIsSidebarOpen(false)} />
                     </div>
 
                     <main className={cn(
-                        "flex-1 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300",
+                        "flex-1 overflow-x-hidden overflow-y-auto bg-background transition-all duration-300 print:w-full print:m-0 print:p-0 print:col-span-full print:overflow-visible",
                         isLocked && 'pointer-events-none grayscale-[0.3] opacity-90'
                     )}>
                         <div className="w-full min-h-screen flex justify-center">
@@ -59,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {isLocked && (
-                    <div className="absolute inset-0 pointer-events-none border-[4px] border-status-warning/20 z-50 shadow-[inset_0_0_100px_rgba(245,158,11,0.05)]" />
+                    <div className="absolute inset-0 pointer-events-none border-[4px] border-status-warning/20 z-50 shadow-[inset_0_0_100px_rgba(245,158,11,0.05)] print:hidden" />
                 )}
             </div>
         </div>

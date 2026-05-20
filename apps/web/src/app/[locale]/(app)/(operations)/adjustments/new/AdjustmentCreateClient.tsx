@@ -9,6 +9,7 @@ import { useCreateAdjustment } from '@/features/operations/hooks/useCreateAdjust
 import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
 import { useItems } from '@/features/items/api/useItems';
 import { useUoMs } from '@/features/uoms/hooks/useUoMs';
+import { useVarianceReasons } from '@/features/operations/api/useVarianceReasons';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -30,8 +31,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-
-const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'] as const;
 
 function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen: boolean, onClose: () => void, onSave: (lotNumber: string, expiryDate?: string) => void, defaultItemName: string }) {
   const t = useTranslations('operations.adjustment');
@@ -109,6 +108,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const { data: warehouses } = useWarehouses();
   const { data: items, isLoading: isLoadingItems } = useItems();
   const { data: uomsResult } = useUoMs();
+  const { data: varianceReasonsData, isLoading: isLoadingReasons } = useVarianceReasons();
   const createAdjustment = useCreateAdjustment();
 
   const [warehouseId, setWarehouseId] = useState('');
@@ -262,13 +262,22 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     }));
   }, [warehouses]);
 
+  const fallbackReasons = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'];
   const reasonItems = useMemo(() => {
-    return REASON_OPTIONS.map(r => ({
+    const reasons = varianceReasonsData?.data;
+    if (reasons && reasons.length > 0) {
+      return reasons.map(r => ({
+        id: r.code,
+        name_en: r.name_en,
+        name_ar: r.name_ar,
+      }));
+    }
+    return fallbackReasons.map(r => ({
       id: r,
       name_en: t(`reasons.${r.toLowerCase()}`) || r,
       name_ar: t(`reasons.${r.toLowerCase()}`) || r,
     }));
-  }, [t]);
+  }, [t, varianceReasonsData]);
 
   const allItems = useMemo<ItemOption[]>(() => {
     const mappedItems: ItemOption[] = (items || []).map(i => ({

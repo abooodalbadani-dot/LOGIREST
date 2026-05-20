@@ -1,16 +1,16 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { Button } from '@/components/ui/button';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
+import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { Truck, PackageCheck, Printer, ArrowLeft } from 'lucide-react';
+import { Truck, PackageCheck } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useLocale } from '@/hooks/useLocale';
+import { useRouter } from '@/i18n/navigation';
 import { TRANSFER_STATUS } from '@/contracts/statuses';
 import type { Transfer } from '@/types/documents';
 
@@ -29,27 +29,21 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
-      <div className="flex items-center justify-between">
-        <Breadcrumb 
-          items={[
-            { label: tCommon('modules.operations'), href: `/transfers` },
-            { label: t('title'), href: `/transfers` },
-            { label: t('detail_title') }
-          ]} 
-        />
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="text-label-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-3 h-3 me-2" />
-          {tCommon('back')}
-        </Button>
-      </div>
-
-      <PageHeader
-        title={t('detail_title')}
-        description={
+      <StickyGlassHeader
+        onBack={() => router.back()}
+        title={
+          <div className="flex flex-col gap-0.5">
+            <Breadcrumb 
+              items={[
+                { label: tCommon('modules.operations'), href: `/transfers` },
+                { label: t('title'), href: `/transfers` },
+                { label: t('detail_title') }
+              ]} 
+            />
+            <span>{t('detail_title')}</span>
+          </div>
+        }
+        statusBadge={
           <div className="flex items-center gap-2">
             <span>{tCommon('doc_number')}</span>
             <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.document_number}</span>
@@ -58,15 +52,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
         actions={
           <div className="flex gap-4 items-center">
             <StatusBadge status={transferStatus as BadgeStatus} />
-            
-            <Button
-              variant="outline"
-              className="bg-surface-container-high rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-              onClick={() => window.print()}
-            >
-              <Printer className="w-4 h-4 me-2" />
-              {tCommon('print')}
-            </Button>
+            <DocumentExportMenu />
           </div>
         }
       />

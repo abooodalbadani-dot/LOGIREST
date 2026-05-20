@@ -2,7 +2,8 @@ import { db } from '../mock-database';
 import { 
   initialBranches, initialWarehouses, initialDepartments, 
   initialSuppliers, initialCategories, initialUoMs, 
-  initialItems, initialBarcodes, initialCurrencies, initialFXRates, initialLots 
+  initialItems, initialBarcodes, initialCurrencies, initialFXRates, initialLots,
+  initialVarianceReasons 
 } from './master-data.seed';
 import { initialIssues, initialStocktakeSessions } from './operations.seed';
 import { initialPRs, initialPOs, initialGRNs } from './purchasing.seed';
@@ -22,6 +23,7 @@ export async function seedDatabase() {
   await seedIfEmpty(db.currencies, initialCurrencies);
   await seedIfEmpty(db.fxRates, initialFXRates);
   await seedIfEmpty(db.lots, initialLots);
+  await seedIfEmpty(db.varianceReasons, initialVarianceReasons);
 
   // Operations
   await seedIfEmpty(db.issues, initialIssues);

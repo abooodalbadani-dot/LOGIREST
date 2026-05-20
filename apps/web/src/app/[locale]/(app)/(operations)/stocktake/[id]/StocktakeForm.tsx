@@ -26,6 +26,7 @@ import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { STOCKTAKE_STATUS } from "@/contracts/statuses";
 import { isStocktakeCounting, isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
+import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import { DocumentLockBanner } from "@/components/shared/DocumentLockBanner";
@@ -99,11 +100,11 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
               />
             </div>
           </div>
-
-
+          <div className="flex items-center gap-3">
+            <DocumentExportMenu />
+          </div>
         </div>
       </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         <DocumentLockBanner 
           status={session.status} 

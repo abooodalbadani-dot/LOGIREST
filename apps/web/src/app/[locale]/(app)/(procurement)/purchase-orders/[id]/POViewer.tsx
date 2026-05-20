@@ -9,6 +9,8 @@ import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline'
 import { User, Wallet, Warehouse, Clock, FileText, ArrowLeft, History, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
+import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { formatCurrency } from '@/utils/currency';
@@ -89,34 +91,33 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
 
   return (
     <div className="space-y-10 w-full bg-surface-container-low min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
-      {/* Structural Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-surface-container-lowest p-8 rounded-[2rem] border border-surface-variant/5 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-            <Package className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-title-lg font-semibold text-primary uppercase">{t('detail_title')}</h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-label-xs font-bold text-muted-foreground/40 uppercase">{tCommon('read_only_view')}</p>
-              <span className="text-muted-foreground/20">•</span>
-              <span className="font-mono text-label-xs font-semibold text-muted-foreground/60">
-                {document.document_number}
-              </span>
+      <StickyGlassHeader
+        title={
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <Package className="w-4 h-4" />
             </div>
+            {t('detail_title')}
           </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <StatusBadge status={document.status as BadgeStatus} />
-          {actions && (
-            <>
-              <div className="w-px h-8 bg-surface-variant/10 mx-1" />
-              {actions}
-            </>
-          )}
-        </div>
-      </div>
+        }
+        statusBadge={
+          <span className="font-mono text-label-xs font-semibold text-muted-foreground/60">
+            {tCommon('read_only_view')} • {document.document_number}
+          </span>
+        }
+        actions={
+          <div className="flex items-center gap-3">
+            <StatusBadge status={document.status as BadgeStatus} />
+            <DocumentExportMenu />
+            {actions && (
+              <>
+                <div className="w-px h-8 bg-surface-variant/10 mx-1" />
+                {actions}
+              </>
+            )}
+          </div>
+        }
+      />
 
       <DocumentReadOnlyOverlay isPosted={true}>
         <div className="space-y-10">

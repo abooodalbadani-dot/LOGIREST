@@ -30,7 +30,8 @@ import {
   SupplierSchema, Supplier,
   CurrencySchema, Currency,
   FXRateSchema, FXRate,
-  BarcodeSchema, Barcode
+  BarcodeSchema, Barcode,
+  VarianceReasonSchema, VarianceReason
 } from '@/types/master-data';
 import { KitchenRequestDetailSchema, KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
 import { InventoryMovementSchema, InventoryMovement } from '@/types/inventory';
@@ -50,6 +51,7 @@ export const supplierRepo = new GenericMockRepository<Supplier>(driver, 'mock_su
 export const currencyRepo = new GenericMockRepository<Currency>(driver, 'mock_currencies', CurrencySchema);
 export const fxRateRepo = new GenericMockRepository<FXRate>(driver, 'mock_fx_rates', FXRateSchema);
 export const barcodeRepo = new GenericMockRepository<Barcode>(driver, 'mock_barcodes', BarcodeSchema);
+export const varianceReasonRepo = new GenericMockRepository<VarianceReason>(driver, 'mock_variance_reasons', VarianceReasonSchema);
 
 // Operations Repositories
 export const stocktakeRepo = new GenericMockRepository<StocktakeSession>(driver, 'mock_stocktake_sessions', StocktakeSessionSchema);
@@ -76,6 +78,7 @@ export const db = {
   currencies: currencyRepo,
   fxRates: fxRateRepo,
   barcodes: barcodeRepo,
+  varianceReasons: varianceReasonRepo,
   stocktake: stocktakeRepo,
   issues: issueRepo,
   transfers: transferRepo,

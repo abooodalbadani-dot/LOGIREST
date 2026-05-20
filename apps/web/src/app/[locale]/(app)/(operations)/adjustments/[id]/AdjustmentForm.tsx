@@ -31,12 +31,14 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { useItems } from '@/features/items/api/useItems';
+import { useVarianceReasons } from '@/features/operations/api/useVarianceReasons';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
+import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { ADJUSTMENT_STATUS, type DocumentStatus } from '@/contracts/statuses';
 import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operations/hooks/useAdjustment';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
@@ -44,8 +46,6 @@ import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/Doc
 import { FormFooter } from '@/components/shared/FormFooter';
 import { formatQuantity } from '@/utils/currency';
 import { audioAlerts } from '@/utils/audio';
-
-const REASON_OPTIONS = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'] as const;
 
 interface AdjustmentFormProps {
   document?: AdjustmentDetail;
@@ -78,6 +78,7 @@ export function AdjustmentForm({
   const abortController = useAbortController();
 
   const { data: items, isLoading: isLoadingItems } = useItems();
+  const { data: varianceReasonsData } = useVarianceReasons();
 
   const [warehouseId, setWarehouseId] = useState(document?.warehouse_id || 'wh-1');
   const { data: lockState } = useWarehouseLock(warehouseId);
@@ -91,13 +92,22 @@ export function AdjustmentForm({
     { id: 'wh-2', name_en: tc('warehouses.kitchen') || 'Kitchen Store', name_ar: tc('warehouses.kitchen') || 'مستودع المطبخ' },
   ], [tc]);
 
+  const fallbackReasons = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'];
   const reasonItems = useMemo(() => {
-    return REASON_OPTIONS.map(opt => ({
+    const reasons = varianceReasonsData?.data;
+    if (reasons && reasons.length > 0) {
+      return reasons.map(r => ({
+        id: r.code,
+        name_en: r.name_en,
+        name_ar: r.name_ar,
+      }));
+    }
+    return fallbackReasons.map(opt => ({
       id: opt,
       name_en: t(`reason_${opt.toLowerCase()}`) || opt,
       name_ar: t(`reason_${opt.toLowerCase()}`) || opt,
     }));
-  }, [t]);
+  }, [t, varianceReasonsData]);
 
   const canEdit = !isLocked || isNew;
   
@@ -384,7 +394,9 @@ export function AdjustmentForm({
               </div>
             )}
           </div>
-          {/* Workflow specific actions moved to FormFooter */}
+          <div className="flex items-center gap-3">
+            <DocumentExportMenu />
+          </div>
         </div>
       </div>
 

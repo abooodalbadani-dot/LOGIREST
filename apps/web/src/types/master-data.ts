@@ -26,6 +26,7 @@ export interface Supplier { id: string; code: string; name_ar: string; name_en: 
 export interface Currency { id: string; code: string; name_ar: string; name_en: string; symbol?: string; is_base_currency: boolean; is_active: boolean; created_at: string; version?: number; }
 export interface FXRate { id: string; from_currency_id: string; to_currency_id: string; rate: number; effective_date: string; is_active: boolean; created_at: string; version?: number; }
 export interface Barcode { id: string; item_id: string; uom_id: string; code: string; default_qty: number; is_active: boolean; version?: number; }
+export interface VarianceReason { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; }
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -109,6 +110,14 @@ export const BarcodeSchema = z.object({
  default_qty: z.number(),
  is_active: z.boolean(),
  version: z.number().optional()
+});
+
+export const VarianceReasonSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  name_ar: z.string(),
+  name_en: z.string(),
+  is_active: z.boolean(),
 });
 
 // ─── Form Schemas (for RHF validation) ───────────────────────────────────────
