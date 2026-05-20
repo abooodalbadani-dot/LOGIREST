@@ -1,14 +1,16 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
-
+dont rename proxy.ts to middleware.ts because we use nextjs16 .
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\009-runtime-error-sweep\plan.md
+E:\Kitchen‑Store Inventory System\specs\010-phase-0-security-hardening\plan.md
 <!-- SPECKIT END -->
+
+
 
 # CRITICAL RULES - MUST FOLLOW
 
@@ -46,4 +48,4 @@ E:\Kitchen‑Store Inventory System\specs\009-runtime-error-sweep\plan.md
 ## UI DESIGN
 
 - Always follow the UI design system when creating or reviewing components or pages.
-- Design System: @DESIGN.md
+- Design System: @DESIGN.md , E:\Kitchen‑Store Inventory System\.impeccable\design.json

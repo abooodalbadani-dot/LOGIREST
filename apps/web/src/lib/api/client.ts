@@ -1,14 +1,53 @@
 import { ZodSchema } from 'zod';
 import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
+import { getTokenCookie } from './cookies';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
+let refreshPromise: Promise<boolean> | null = null;
+
+function dispatchExpiredEvent(): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('auth:expired'));
+}
+
+async function attemptRefresh(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) return true;
+      return false;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
 async function request<T>(method: string, path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('logirest_token') : null;
+  const token = typeof window !== 'undefined' ? getTokenCookie() : null;
   const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
   const signal = options?.signal;
   const customHeaders = options?.headers;
+
+  async function handleAuthError(): Promise<void> {
+    if (path === '/auth/login' || path === '/auth/refresh') return;
+    const refreshed = await attemptRefresh();
+    if (!refreshed) {
+      dispatchExpiredEvent();
+    }
+  }
+
+  const isAuthError = (e: Record<string, unknown>) =>
+    e.status === 401 || e.code === 'UNAUTHORIZED' || e.code === 'SESSION_EXPIRED';
   
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' || 
     (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_MOCKS !== 'false');
@@ -16,11 +55,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     const { getMockResponse } = await import('@/infrastructure/mock/mock-api.adapter');
     const mockData = await getMockResponse(method, path, body);
     if (mockData !== undefined) {
-      console.log(`[Mock API] ${method} ${path}`, mockData);
-      // Detect mock error responses and throw them as API errors
       if (mockData && typeof mockData === 'object' && 'error' in mockData) {
         const errorObj = (mockData as { error: Record<string, unknown> }).error;
-        // Handle mock 409 or version conflicts
         if (errorObj && typeof errorObj === 'object') {
           const e = errorObj as Record<string, unknown>;
           if (e.status === 409 || e.code === 'VERSION_CONFLICT') {
@@ -32,14 +68,18 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
               updatedAt: e.updated_at as string,
             });
           }
+          if (isAuthError(e)) {
+            await handleAuthError();
+            if (path !== '/auth/login' && path !== '/auth/refresh') {
+              return request(method, path, schema, body, options);
+            }
+          }
         }
         throw errorObj;
       }
       return schema.parse(mockData);
     }
   }
-
-  console.log(`[API Request] ${method} ${BASE}${path}`, { body });
 
   try {
     const res = await fetch(`${BASE}${path}`, {
@@ -53,8 +93,15 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
       },
       body: body ? JSON.stringify(body) : undefined,
     });
-    
-    console.log(`[API Response] ${method} ${path} - Status: ${res.status}`);
+
+    if (res.status === 401) {
+      await handleAuthError();
+      if (path !== '/auth/login' && path !== '/auth/refresh') {
+        return request(method, path, schema, body, options);
+      }
+      const err: ApiError = { code: 'UNAUTHORIZED', message: 'errors.unauthorized', field_errors: null };
+      throw err;
+    }
     
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
@@ -80,8 +127,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     return schema.parse(data);
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      // Re-throw so callers (like TanStack Query) know it was cancelled
-      throw error; 
+      throw error;
     }
     throw error;
   }

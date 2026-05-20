@@ -335,9 +335,110 @@ async function hydrateGRN(doc: any): Promise<any> {
  * Mock API Adapter
  * Acts as a bridge between the application's API calls and the Mock Repositories.
  */
+function base64UrlEncode(str: string): string {
+  return btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function createMockToken(user: Record<string, unknown>): string {
+  const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64UrlEncode(JSON.stringify({
+    sub: user.id,
+    name: user.name,
+    role: user.role,
+    exp: now + 86400,
+    iat: now,
+    user
+  }));
+  const signature = base64UrlEncode('mock-signature');
+  return `${header}.${payload}.${signature}`;
+}
+
+function decodeMockToken(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch {
+    return null;
+  }
+}
+
+function getTokenFromCookie(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)logirest_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function setCookie(name: string, value: string, maxAgeSeconds = 86400): void {
+  const isSecure = location.protocol === 'https:';
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+}
+
+function clearCookie(name: string): void {
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+}
+
+const MOCK_USERS = [
+  {
+    id: 'usr-12345',
+    name: 'Barakat Amin',
+    email: 'admin@kitchen.io',
+    role: 'ADMIN' as const,
+    locale: 'en' as const,
+    scopes: [{ branch_id: 'br-main', warehouse_id: 'wh-central', department_id: 'dept-kitchen' }],
+    notification_preferences: { lowStock: true, expiry: true, pendingApproval: true, poFinalized: false, security: true },
+  },
+  {
+    id: 'usr-67890',
+    name: 'Layla Hassan',
+    email: 'store@kitchen.io',
+    role: 'STORE_MGR' as const,
+    locale: 'ar' as const,
+    scopes: [{ branch_id: 'br-main', warehouse_id: 'wh-central', department_id: 'dept-kitchen' }],
+    notification_preferences: { lowStock: true, expiry: true, pendingApproval: true, poFinalized: false, security: true },
+  },
+];
+
+function findMockUser(email: string): Record<string, unknown> | undefined {
+  return MOCK_USERS.find(u => u.email === email) as unknown as Record<string, unknown> | undefined;
+}
+
 export async function getMockResponse(method: string, path: string, body?: unknown): Promise<unknown> {
   const normalizedPath = path.split('?')[0];
   const searchParams = new URLSearchParams(path.split('?')[1] || '');
+
+  // --- Auth Routes ---
+  if (normalizedPath === '/auth/login' && method === 'POST') {
+    const { email, password } = body as { email: string; password: string };
+    if (!email || !password) {
+      return { error: { status: 400, code: 'INVALID_CREDENTIALS', message: 'Email and password are required.' } };
+    }
+    const user = findMockUser(email);
+    if (!user) {
+      return { error: { status: 401, code: 'UNAUTHORIZED', message: 'Invalid email or password.' } };
+    }
+    const token = createMockToken(user);
+    setCookie('logirest_token', token, 86400);
+    return { user, token };
+  }
+
+  if (normalizedPath === '/auth/logout' && method === 'POST') {
+    clearCookie('logirest_token');
+    return { status: 'success', message: 'Logged out successfully' };
+  }
+
+  if (normalizedPath === '/auth/refresh' && method === 'POST') {
+    const token = getTokenFromCookie();
+    if (!token) {
+      return { error: { status: 401, code: 'SESSION_EXPIRED', message: 'Your session has expired. Please log in again.' } };
+    }
+    const decoded = decodeMockToken(token);
+    if (!decoded || !decoded.user) {
+      return { error: { status: 401, code: 'SESSION_EXPIRED', message: 'Your session has expired. Please log in again.' } };
+    }
+    const newToken = createMockToken(decoded.user as Record<string, unknown>);
+    setCookie('logirest_token', newToken, 86400);
+    return { status: 'success', expires_at: new Date(Date.now() + 86400000).toISOString() };
+  }
 
   // --- Master Data Routes ---
   if (normalizedPath === '/branches') {

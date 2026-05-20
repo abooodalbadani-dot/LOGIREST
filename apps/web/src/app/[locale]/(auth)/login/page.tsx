@@ -39,6 +39,8 @@ export default function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const redirected = useRef(false);
+    const expiredNotice = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reason') === 'expired'
+      ? t('session_expired') : null;
 
     // Redirect authenticated users to dashboard
     useEffect(() => {
@@ -258,6 +260,12 @@ export default function LoginPage() {
                             </button>
                         </div>
 
+                        {expiredNotice && (
+                            <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-status-warning/10 text-[11px] font-medium text-status-warning border border-status-warning/20 animate-in zoom-in-95 duration-300">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                {expiredNotice}
+                            </div>
+                        )}
                         {error && (
                             <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-status-error/10 text-[11px] font-medium text-status-error border border-status-error/20 animate-in zoom-in-95 duration-300">
                                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />

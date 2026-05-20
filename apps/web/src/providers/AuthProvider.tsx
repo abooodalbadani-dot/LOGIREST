@@ -4,6 +4,8 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { apiClient } from '@/lib/api/client';
+import { getTokenCookie, setTokenCookie, deleteTokenCookie } from '@/lib/api/cookies';
+import { AuthUserSchema } from '@/types/auth';
 
 export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR';
 export interface UserScope { branch_id: string | null; warehouse_id: string | null; department_id: string | null; }
@@ -38,8 +40,6 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-import { AuthUserSchema } from '@/types/auth';
-
 const LoginResponseSchema = z.object({
   user: AuthUserSchema,
   token: z.string()
@@ -59,22 +59,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Load auth state from localStorage on mount (Client Side Only)
-    const storedToken = localStorage.getItem('logirest_token');
+    const handleExpired = () => {
+      deleteTokenCookie();
+      setUser(null);
+      setToken(null);
+      setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
+      const currentPath = window.location.pathname + window.location.search;
+      const redirectPath = currentPath !== '/login' ? `&redirect=${encodeURIComponent(currentPath)}` : '';
+      router.replace(`/login?reason=expired${redirectPath}`);
+    };
+    window.addEventListener('auth:expired', handleExpired);
+    return () => window.removeEventListener('auth:expired', handleExpired);
+  }, [router]);
+
+  useEffect(() => {
+    const storedToken = getTokenCookie();
     const storedScope = localStorage.getItem('logirest_active_scope');
 
     if (storedToken) {
-      // Sync cookie if missing (for middleware)
-      if (!document.cookie.includes('logirest_token')) {
-        document.cookie = `logirest_token=${storedToken}; path=/; max-age=86400; SameSite=Lax`;
-      }
-
       try {
         const payloadStr = decodeURIComponent(escape(atob(storedToken.split('.')[1])));
         const payload = JSON.parse(payloadStr);
         const parsedUser = AuthUserSchema.parse(payload.user);
-        
-        // Defer state updates to avoid synchronous cascading renders
+
         setTimeout(() => {
           let finalUser = parsedUser;
           const storedOverrides = localStorage.getItem('logirest_user_overrides');
@@ -100,31 +107,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setIsLoading(false);
         }, 0);
-        return; // Skip the default setIsLoading(false) below
+        return;
       } catch (e) {
         console.error('Failed to restore auth session:', e);
-        localStorage.removeItem('logirest_token');
-        document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        deleteTokenCookie();
       }
     }
-    
+
     setTimeout(() => {
       setIsLoading(false);
     }, 0);
   }, []);
 
+  useEffect(() => {
+    if (!token) return;
+    try {
+      const payloadStr = decodeURIComponent(escape(atob(token.split('.')[1])));
+      const payload = JSON.parse(payloadStr);
+      const exp = payload.exp as number;
+      const now = Math.floor(Date.now() / 1000);
+      const timeUntilExpiry = (exp - now) * 1000;
+      const refreshAt = Math.max(timeUntilExpiry - 300000, 60000);
+      const timerId = setTimeout(async () => {
+        try {
+          await apiClient.post('/auth/refresh', z.object({}), {});
+        } catch {
+          // Refresh failed silently; 401 interceptor will handle
+        }
+      }, refreshAt);
+      return () => clearTimeout(timerId);
+    } catch {
+      // Invalid token, skip scheduling
+    }
+  }, [token]);
+
   const login = async (email: string, password: string) => {
     try {
       const data = await apiClient.post('/auth/login', LoginResponseSchema, { email, password });
-      
-      localStorage.setItem('logirest_token', data.token);
-      // Set cookie for middleware access
-      document.cookie = `logirest_token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
-      
+
+      setTokenCookie(data.token);
+
       const payloadStr = decodeURIComponent(escape(atob(data.token.split('.')[1])));
       const payload = JSON.parse(payloadStr);
       const parsedUser = AuthUserSchema.parse(payload.user);
-      
+
       setUser(parsedUser);
       setToken(data.token);
     } catch (err) {
@@ -146,13 +172,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const logout = () => {
-    localStorage.removeItem('logirest_token');
+  const logout = async () => {
+    try {
+      await apiClient.post('/auth/logout', z.object({}), {});
+    } catch {
+      // Proceed with client-side cleanup even if API call fails
+    }
+    deleteTokenCookie();
     localStorage.removeItem('logirest_active_scope');
     localStorage.removeItem('logirest_user_overrides');
-    // Remove cookie
-    document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    
+
     setUser(null);
     setToken(null);
     setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
