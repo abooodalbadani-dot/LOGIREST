@@ -4,18 +4,18 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { StocktakeSessionSchema } from '../types/stocktake';
 
-export function usePostStocktake(sessionId: string, warehouseId: string, options?: { onConflict?: () => void }) {
+export function usePostStocktake(options?: { onConflict?: () => void }) {
   const qc = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ version, signal }: { version: number; signal?: AbortSignal }) =>
+    mutationFn: ({ sessionId, warehouseId, version, signal }: { sessionId: string; warehouseId: string; version: number; signal?: AbortSignal }) =>
       apiClient.post(`/stocktake/sessions/${sessionId}/post`, StocktakeSessionSchema, { 
         version,
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE' 
       }, { signal }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['stocktake-sessions'] });
-      qc.invalidateQueries({ queryKey: ['stocktake-session', sessionId] });
+    onSuccess: (_, { sessionId, warehouseId }) => {
+      qc.invalidateQueries({ queryKey: ['stocktakes'] });
+      qc.invalidateQueries({ queryKey: ['stocktakes', sessionId] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock', warehouseId] });
     },
     onError: (error) => {

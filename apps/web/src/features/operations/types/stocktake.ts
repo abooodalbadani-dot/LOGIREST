@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { ALL_DOCUMENT_STATUSES, DocumentStatus } from '@/types/DocumentStatus';
+import { STOCKTAKE_STATUSES } from '@/types/documents';
 
-export type StocktakeStatus = DocumentStatus;
+export type StocktakeStatus = typeof STOCKTAKE_STATUSES[number];
 
 export const StocktakeItemSchema = z.object({
   id: z.string(),
@@ -24,7 +24,7 @@ export const StocktakeSessionSchema = z.object({
   session_name: z.string(),
   warehouse_id: z.string(),
   warehouse_name: z.string().optional(),
-  status: z.enum(ALL_DOCUMENT_STATUSES),
+  status: z.enum(STOCKTAKE_STATUSES),
   snapshot_at: z.string(),
   started_by: z.string(),
   started_at: z.string().optional(),

@@ -33,7 +33,7 @@ export function useCreatePO(options?: { onConflict?: () => void }) {
  apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload), { signal }).then(res => res.data),
 onSuccess: (data) => {
   // Seed the cache for the newly created PO
-  queryClient.setQueryData(['purchase-order', data.id], data);
+  queryClient.setQueryData(['purchase-orders', data.id], data);
   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
   },
   onError: (error: unknown) => {

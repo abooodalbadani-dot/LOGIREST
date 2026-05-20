@@ -39,7 +39,7 @@ export type StocktakeSession = z.infer<typeof StocktakeSessionSchema>;
 
 export function useStocktakeSession(id: string | null) {
   return useQuery({
-    queryKey: ['stocktake-session', id],
+    queryKey: ['stocktakes', id],
     queryFn: ({ signal }) => apiClient.get(`/stocktake/sessions/${id}`, StocktakeSessionSchema, { signal }),
     enabled: !!id,
     staleTime: 30_000,

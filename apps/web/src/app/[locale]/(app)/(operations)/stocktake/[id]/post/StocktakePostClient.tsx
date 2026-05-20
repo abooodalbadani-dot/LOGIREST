@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useStocktake, usePostStocktake } from "@/features/operations/api/useStocktakes";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useTranslations } from "next-intl";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard";
@@ -29,21 +29,24 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 
 export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
- const t = useTranslations('operations.stocktake')
- const common = useTranslations('common')
+  const t = useTranslations('operations.stocktake')
+  const common = useTranslations('common')
   const { router, setDirty } = useUnsavedChangesGuard()
- const { user } = useAuth();
- 
- const { data: rawSession, isLoading, error } = useStocktake(id);
+  const { user } = useAuth();
+  const { data: settings } = useAdminSettings();
+  const baseCurrency = settings?.base_currency || 'SAR';
+  
+  const { data: rawSession, isLoading, error } = useStocktake(id);
  const session = rawSession ? mapToSessionVM(rawSession) : null;
- const { data: warehouses } = useWarehouses();
+ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
  const postStocktake = usePostStocktake();
  const { playSound } = useAudioFeedback();
 
  const [confirmValue, setConfirmValue] = React.useState("");
- const confirmKeyword = t('confirm_keyword');
+  const confirmKeyword = t('confirm_keyword') || 'POST';
 
  // Unsaved changes guard
  React.useEffect(() => {
@@ -131,7 +134,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  <div className="p-5 bg-white/[0.02] rounded-2xl space-y-1">
  <span className="text-label-xs font-semibold uppercase text-muted-foreground/30">{t('net_financial_value')}</span>
  <p className={cn("text-title-sm font-semibold", netImpact >= 0 ? "text-status-success" : "text-status-error")} dir="ltr">
- {formatCurrency(netImpact, 'SAR', locale)}
+  {formatCurrency(netImpact, baseCurrency, locale)}
  </p>
  </div>
  </div>

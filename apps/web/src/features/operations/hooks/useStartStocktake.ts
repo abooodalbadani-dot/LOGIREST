@@ -12,7 +12,7 @@ export function useStartStocktake(options?: { onConflict?: () => void }) {
  mutationFn: ({ signal, ...body }: { warehouse_id: string; signal?: AbortSignal }) =>
  apiClient.post('/stocktake/sessions', StocktakeSessionSchema, body, { signal }),
  onSuccess: (data) => {
- qc.invalidateQueries({ queryKey: ['stocktake-sessions'] });
+ qc.invalidateQueries({ queryKey: ['stocktakes'] });
 qc.invalidateQueries({ queryKey: ['warehouse-lock', data.warehouse_id] });
   },
   onError: (error: unknown) => {

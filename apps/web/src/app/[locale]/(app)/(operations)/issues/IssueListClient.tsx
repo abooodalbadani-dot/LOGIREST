@@ -148,7 +148,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
     },
   ], [t, tc, router]);
 
-  const meta = data?.meta?.pagination;
+  const meta = data?.meta;
   const totalItemsCount = meta?.total || 0;
   const postedCount = data?.data?.filter(i => isIssuePosted(i.status)).length || 0;
   const draftCount = data?.data?.filter(i => isIssueDraft(i.status)).length || 0;
@@ -281,7 +281,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           }
           pagination={meta ? {
             page: meta.page,
-            pageSize: meta.pageSize,
+            pageSize: meta.page_size,
             total: meta.total,
             totalPages: meta.total_pages,
             onPageChange: handlePageChange

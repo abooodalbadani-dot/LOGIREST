@@ -55,7 +55,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  
  const isNew = id === 'new';
  const { data: issue, isLoading } = useIssue(isNew ? null : id);
- const postIssue = usePostIssue(id);
+  const postIssue = usePostIssue();
  
  const [lines, setLines] = useState<LineItem[]>([]);
  const [warehouseId, setWarehouseId] = useState('wh-1');
@@ -78,7 +78,13 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  if (issue) {
  // Synchronize internal state with fetched issue data
  // eslint-disable-next-line react-hooks/set-state-in-effect
- setLines((issue.lines || []) as unknown as LineItem[]);
+  setLines((issue.lines || []).map(l => ({
+    id: l.id,
+    item: l.item,
+    qty: l.qty,
+    uom_id: l.uom_id,
+    lot_allocations: l.lot_allocations,
+  })));
   
  setWarehouseId(issue.warehouse_id || 'wh-1');
  }
@@ -124,6 +130,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
   const handlePost = async () => {
     try {
       await postIssue.mutateAsync({ 
+        id,
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', 
         version: issue?.version || 0 
       });

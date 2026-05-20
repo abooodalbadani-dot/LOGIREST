@@ -15,12 +15,12 @@ export function useCancelPO(options?: { onConflict?: () => void }) {
       return apiClient.post(`/procurement/purchase-orders/${id}/cancel`, successSchema, { reason, version }, { signal });
     },
     onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['purchase-order', id], (old: PODetail | undefined) => {
+      queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
         if (!old) return old;
         return { ...old, status: PO_STATUS.CANCELLED };
       });
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
     },
     onError: (error) => {
       console.error('[useCancelPO] Failed to cancel PO:', error);

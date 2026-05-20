@@ -12,7 +12,7 @@ export function usePostPO(options?: { onConflict?: () => void }) {
       apiClient.post(`/procurement/purchase-orders/${id}/post`, successSchema, { version }, { signal }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
     },
     onError: (error) => {
       console.error('[usePostPO] Failed to post PO:', error);

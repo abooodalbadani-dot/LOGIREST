@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -47,7 +47,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
   const common = useTranslations('common')
   const router = useRouter();
   const { user } = useAuth();
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: lockState } = useWarehouseLock(session?.warehouseId ?? null);
 
   const status = session.status as DocumentStatus;

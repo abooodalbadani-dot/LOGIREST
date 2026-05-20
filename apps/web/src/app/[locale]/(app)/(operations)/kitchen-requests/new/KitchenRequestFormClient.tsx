@@ -11,9 +11,9 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCreateKitchenRequest } from '@/features/operations/hooks/useKitchenRequests';
-import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
-import { useItems } from '@/features/items/api/useItems';
+import { useItems } from '@/features/items/hooks/useItems';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { 
@@ -48,9 +48,9 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
  
- const { data: warehouses } = useWarehouses();
+ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
  const { data: departments } = useDepartments();
- const { data: items } = useItems();
+ const { data: itemsData } = useItems(); const items = itemsData?.data || [];
  const createRequest = useCreateKitchenRequest();
  
  const { fields, append, remove } = useFieldArray({

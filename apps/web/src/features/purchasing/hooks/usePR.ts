@@ -39,7 +39,7 @@ export type PRDetail = z.infer<typeof PRDetailSchema>;
 
 export function usePR(id: string | null) {
   return useQuery({
-    queryKey: ['purchase-request', id],
+    queryKey: ['purchase-requests', id],
     queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests/${id}`, z.object({ data: PRDetailSchema }), { signal }).then(res => res.data),
     enabled: !!id,
     staleTime: 60_000,

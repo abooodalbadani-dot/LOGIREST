@@ -21,6 +21,7 @@ const UpdateAdjustmentPayloadSchema = z.object({
     qty: z.number().positive(),
     uom_id: z.string(),
     direction: z.enum(['INCREASE', 'DECREASE']),
+    is_custom: z.boolean().optional(),
     lot_allocations: z.array(LotAllocationSchema).optional()
   })).optional()
 });
@@ -34,9 +35,9 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, payload, signal, headers }: { id: string; payload: UpdateAdjustmentPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
       apiClient.put(`/operations/adjustments/${id}`, AdjustmentDetailSchema, UpdateAdjustmentPayloadSchema.parse(payload), { signal, headers }),
     onSuccess: (data) => {
-      queryClient.setQueryData(['adjustment', data.id], data);
+      queryClient.setQueryData(['adjustments', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-      queryClient.invalidateQueries({ queryKey: ['adjustment', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['adjustments', data.id] });
     },
     onError: (error) => {
       console.error('[useUpdateAdjustment] Failed to update adjustment:', error);

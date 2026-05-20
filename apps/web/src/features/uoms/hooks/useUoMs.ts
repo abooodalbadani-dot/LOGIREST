@@ -28,7 +28,7 @@ export function useUoMs(filters?: { search?: string }) {
       const params = new URLSearchParams();
       if (filters?.search) params.append('search', filters.search);
 
-      return apiClient.get(`/uoms${params.toString() ? `?${params.toString()}` : ''}`, PaginatedUoMsSchema, { signal });
+      return apiClient.get(`/units-of-measure${params.toString() ? `?${params.toString()}` : ''}`, PaginatedUoMsSchema, { signal });
     },
     staleTime: 60_000,
   });
@@ -39,7 +39,7 @@ export function useUoM(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/uoms/${id}`, UoMSchema, { signal });
+      return apiClient.get(`/units-of-measure/${id}`, UoMSchema, { signal });
     },
     enabled: !!id,
   });
@@ -52,7 +52,7 @@ export function useCreateUoM() {
   return useMutation({
     mutationFn: (values: UoMFormValues & { signal?: AbortSignal }) => {
       const { signal, ...dataValues } = values;
-      return apiClient.post('/uoms', UoMSchema, {
+      return apiClient.post('/units-of-measure', UoMSchema, {
         ...dataValues,
         code: dataValues.code.toUpperCase()
       }, { signal });
@@ -76,7 +76,7 @@ export function useUpdateUoM(options?: { onConflict?: () => void }) {
     onConflict: options?.onConflict,
     meta: { suppressGlobalConflict: true },
     mutationFn: ({ id, values, signal }: { id: string; values: UoMFormValues; signal?: AbortSignal }) => {
-      return apiClient.put(`/uoms/${id}`, UoMSchema, {
+      return apiClient.put(`/units-of-measure/${id}`, UoMSchema, {
         ...values,
         code: values.code.toUpperCase()
       }, { signal });
@@ -99,7 +99,7 @@ export function useDeleteUoM() {
 
   return useMutation({
     mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
-      const url = version != null ? `/uoms/${id}?version=${version}` : `/uoms/${id}`;
+      const url = version != null ? `/units-of-measure/${id}?version=${version}` : `/units-of-measure/${id}`;
       return apiClient.del(url, z.unknown(), { signal });
     },
     onSuccess: () => {

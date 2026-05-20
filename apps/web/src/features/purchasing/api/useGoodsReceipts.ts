@@ -72,7 +72,7 @@ let nextId = 3;
 
 export function useGoodsReceipts() {
   return useQuery({
-    queryKey: ['goods-receipts'],
+    queryKey: ['grns'],
     queryFn: async ({ signal }) => {
       // Simulate network latency
       return new Promise<GoodsReceipt[]>((resolve, reject) => {
@@ -91,7 +91,7 @@ export function useGoodsReceipts() {
 
 export function useGoodsReceipt(id: string) {
   return useQuery({
-    queryKey: ['goods-receipts', id],
+    queryKey: ['grn', id],
     queryFn: async ({ signal }) => {
       return new Promise<GoodsReceipt>((resolve, reject) => {
         const timeout = setTimeout(() => {
@@ -142,7 +142,7 @@ export function useCreateGoodsReceipt() {
       return newGRN;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goods-receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['grns'] });
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Operation failed';
@@ -180,8 +180,8 @@ export function usePostGoodsReceipt() {
       return updatedGRN;
     },
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['goods-receipts'] });
-      queryClient.invalidateQueries({ queryKey: ['goods-receipts', id] });
+      queryClient.invalidateQueries({ queryKey: ['grns'] });
+      queryClient.invalidateQueries({ queryKey: ['grn', id] });
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'Operation failed';
@@ -206,8 +206,8 @@ export function useUpdateGRNLine(options?: { onConflict?: () => void }) {
       return { grnId, item };
     },
     onMutate: async ({ grnId, item }) => {
-      await queryClient.cancelQueries({ queryKey: ['goods-receipts', grnId] });
-      const previousGRN = queryClient.getQueryData<GoodsReceipt>(['goods-receipts', grnId]);
+      await queryClient.cancelQueries({ queryKey: ['grn', grnId] });
+      const previousGRN = queryClient.getQueryData<GoodsReceipt>(['grn', grnId]);
 
       if (previousGRN) {
         const newItems = [...previousGRN.items];
@@ -226,7 +226,7 @@ export function useUpdateGRNLine(options?: { onConflict?: () => void }) {
           });
         }
 
-        queryClient.setQueryData(['goods-receipts', grnId], {
+        queryClient.setQueryData(['grn', grnId], {
           ...previousGRN,
           items: newItems,
           updatedAt: new Date().toISOString()
@@ -237,11 +237,11 @@ export function useUpdateGRNLine(options?: { onConflict?: () => void }) {
     },
     onError: (err, { grnId }, context) => {
       if (context?.previousGRN) {
-        queryClient.setQueryData(['goods-receipts', grnId], context.previousGRN);
+        queryClient.setQueryData(['grn', grnId], context.previousGRN);
       }
     },
     onSettled: (data, error, { grnId }) => {
-      queryClient.invalidateQueries({ queryKey: ['goods-receipts', grnId] });
+      queryClient.invalidateQueries({ queryKey: ['grn', grnId] });
     },
   });
 }

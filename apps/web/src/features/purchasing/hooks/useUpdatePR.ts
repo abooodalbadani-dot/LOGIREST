@@ -29,10 +29,10 @@ export function useUpdatePR(options?: { onConflict?: () => void }) {
       apiClient.put(`/procurement/purchase-requests/${id}`, PRDetailSchema, UpdatePRPayloadSchema.parse(payload), { signal }),
     onSuccess: (data) => {
       // Update individual PR cache with the returned data
-      queryClient.setQueryData(['purchase-request', data.id], data);
+      queryClient.setQueryData(['purchase-requests', data.id], data);
       
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-request', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-requests', data.id] });
     },
     onError: (error) => {
       console.error('[useUpdatePR] Failed to update PR:', error);

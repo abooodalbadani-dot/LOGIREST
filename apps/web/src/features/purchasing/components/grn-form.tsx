@@ -35,7 +35,7 @@ import { type GRNDetail, LineItemSchema } from '@/features/purchasing/hooks/useG
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { GRN_STATUS } from '@/contracts/statuses';
 import { useSuppliers } from '@/features/purchasing/hooks/useSuppliers';
-import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useCreateGRN } from '@/features/purchasing/hooks/useCreateGRN';
 import { useUpdateGRN } from '@/features/purchasing/hooks/useUpdateGRN';
 import { CreateCustomItemDialog } from '@/components/shared/CreateCustomItemDialog';
@@ -79,7 +79,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { playSound } = useAudioFeedback()
 
   const { data: suppliers } = useSuppliers();
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: currencies } = useCurrencies();
 
   const supplierItems = useMemo(() => {
@@ -107,7 +107,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   }, [currencies, locale]);
 
   const createMutation = useCreateGRN({ onConflict });
-  const updateMutation = useUpdateGRN(initialData?.id || '', { onConflict });
+  const updateMutation = useUpdateGRN({ onConflict });
 
   const [scanError, setScanError] = useState('');
 
@@ -276,6 +276,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         router.push(`/goods-received/${result.id}`, { skipGuard: true });
       } else if (initialData) {
         await updateMutation.mutateAsync({
+          id: initialData.id,
           payload: {
             ...payload,
             version: initialData.version
@@ -495,7 +496,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
                 <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable<LineItem>
-                    lines={fields as unknown as LineItem[]}
+                    lines={fields.map(f => ({
+                      ...f,
+                      item: {
+                        id: f.item.id,
+                        code: f.item.code,
+                        name_ar: f.item.name_ar,
+                        name_en: f.item.name_en,
+                        primary_uom: { id: f.item.primary_uom.id, code: f.item.primary_uom.code },
+                      },
+                      lot: f.lot ? { id: f.lot.id, lot_number: f.lot.lot_number, expiry_date: f.lot.expiry_date } : null,
+                    }))}
                     isReadOnly={isLocked || isWarehouseLocked}
                     dense={true}
                     onRemoveLine={(id) => {

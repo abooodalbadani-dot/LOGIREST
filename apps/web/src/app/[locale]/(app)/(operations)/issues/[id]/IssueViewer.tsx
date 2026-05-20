@@ -40,7 +40,20 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
     timelineEntries.push({ status: 'posted' as Status, at: issue.posted_at, by: issue.posted_by ?? tCommon('system_user') });
   }
 
-  const lines = (issue.lines || []) as unknown as LineItem[];
+  const lines: LineItem[] = (issue.lines || []).map(l => ({
+    id: l.id,
+    item: {
+      id: l.item.id,
+      code: l.item.code,
+      name_ar: l.item.name_ar,
+      name_en: l.item.name_en,
+      primary_uom: { code: l.item.primary_uom.code },
+    },
+    lot: l.lot ? { lot_number: l.lot.lot_number, expiry_date: l.lot.expiry_date } : null,
+    qty: l.qty,
+    uom_id: l.uom_id,
+    lot_allocations: l.lot_allocations,
+  }));
 
   return (
     <div className="min-h-screen bg-surface-container-low">

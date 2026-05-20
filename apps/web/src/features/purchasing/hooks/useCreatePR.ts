@@ -28,7 +28,7 @@ export function useCreatePR(options?: { onConflict?: () => void }) {
     },
     onSuccess: (data) => {
       // Seed the cache for the newly created PR
-      queryClient.setQueryData(['purchase-request', data.id], data);
+      queryClient.setQueryData(['purchase-requests', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
     },
     onError: (error) => {

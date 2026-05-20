@@ -14,8 +14,8 @@ export function useCancelGRN(options?: { onConflict?: () => void }) {
       return apiClient.post(`/procurement/grns/${id}/cancel`, successSchema, { reason, version }, { signal });
     },
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['goods-receipts'] });
-      queryClient.invalidateQueries({ queryKey: ['goods-receipt', id] });
+      queryClient.invalidateQueries({ queryKey: ['grns'] });
+      queryClient.invalidateQueries({ queryKey: ['grn', id] });
       queryClient.invalidateQueries({ queryKey: ['grn', id] });
     },
     onError: (error) => {

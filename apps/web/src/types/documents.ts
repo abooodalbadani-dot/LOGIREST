@@ -1,7 +1,9 @@
 import { z } from 'zod';
-import { ALL_STATUSES as ALL_DOCUMENT_STATUSES, DocumentStatus, ALL_TRANSFER_STATUSES, TransferStatus } from '../contracts/statuses';
+import { ALL_STATUSES as ALL_DOCUMENT_STATUSES, DocumentStatus, ALL_TRANSFER_STATUSES, TransferStatus, ALL_STOCKTAKE_STATUSES as STOCKTAKE_STATUSES, StocktakeStatus } from '../contracts/statuses';
 
-export type { DocumentStatus, TransferStatus };
+export type { DocumentStatus, TransferStatus, StocktakeStatus };
+export { STOCKTAKE_STATUSES };
+export type DocumentStatusTypes = DocumentStatus;
 export type DocumentType = 'GRN'|'ISSUE'|'TRANSFER'|'ADJUSTMENT'|'PR'|'PO'|'STOCKTAKE'|'KITCHEN_REQUEST';
 
 export const BaseDocumentSchema = z.object({

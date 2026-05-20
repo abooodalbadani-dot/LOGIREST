@@ -18,7 +18,7 @@ export function useSubmitPO(options?: { onConflict?: () => void }) {
     },
     onSuccess: (_, { id }) => {
       // Simulate state transition in cache
-      queryClient.setQueryData(['purchase-order', id], (old: PODetail | undefined) => {
+      queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
         if (!old) return old;
         return { ...old, status: PO_STATUS.SUBMITTED };
       });

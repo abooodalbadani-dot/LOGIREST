@@ -32,7 +32,7 @@ import { useUpdatePO } from "@/features/purchasing/hooks/useUpdatePO";
 import { PODetail } from "@/features/purchasing/hooks/usePO";
 import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
 import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { formatCurrency } from "@/utils/currency";
@@ -72,7 +72,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  const tc = useTranslations("common");
  
   const createMutation = useCreatePO();
-  const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
+  const updateMutation = useUpdatePO({ onConflict });
   const { playSound } = useAudioFeedback();
 
   const form = useForm<PurchaseOrderFormValues>({
@@ -119,9 +119,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  async function onSubmit(values: PurchaseOrderFormValues) {
  try {
  if (mode === "edit" && initialData) {
-    await updateMutation.mutateAsync({ 
-     payload: { ...values, version: initialData.version || 1 } 
-   });
+     await updateMutation.mutateAsync({ 
+      id: initialData.id,
+      payload: { ...values, version: initialData.version || 1 } 
+    });
   playSound('success');
   toast.success(t("edit_success"));
  } else {
@@ -146,7 +147,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
 
  const { data: suppliers, isLoading: loadingSuppliers } = useSuppliers();
  const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
- const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
+  const { data: warehousesData, isLoading: loadingWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
 
  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
  const baseCurrency = settings?.base_currency;

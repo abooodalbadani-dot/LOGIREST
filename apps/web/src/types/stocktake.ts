@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ALL_DOCUMENT_STATUSES } from './DocumentStatus';
+import { STOCKTAKE_STATUSES } from './documents';
 
 import { StocktakeStatus } from '../contracts/statuses';
 
@@ -57,7 +57,7 @@ export const StocktakeSessionSchema = z.object({
   sessionName: z.string(),
   warehouseId: z.string(),
   warehouseName: z.string().optional(),
-  status: z.enum(ALL_DOCUMENT_STATUSES),
+  status: z.enum(STOCKTAKE_STATUSES),
   snapshotAt: z.string(),
   startedBy: z.string(),
   postedAt: z.string().nullable(),

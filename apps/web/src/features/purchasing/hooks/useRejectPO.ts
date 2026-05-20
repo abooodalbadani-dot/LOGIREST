@@ -16,13 +16,13 @@ export function useRejectPO(options?: { onConflict?: () => void }) {
     },
     onSuccess: (_, { id }) => {
       // Simulate state transition in cache
-      queryClient.setQueryData(['purchase-order', id], (old: PODetail | undefined) => {
+      queryClient.setQueryData(['purchase-orders', id], (old: PODetail | undefined) => {
         if (!old) return old;
         return { ...old, status: PO_STATUS.REJECTED };
       });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
     },
     onError: (error) => {
       console.error('[useRejectPO] Failed to reject PO:', error);

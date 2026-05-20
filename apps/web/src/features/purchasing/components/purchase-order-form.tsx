@@ -33,7 +33,7 @@ import { useUpdatePO } from "@/features/purchasing/hooks/useUpdatePO";
 import { PODetail } from "@/features/purchasing/hooks/usePO";
 import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
 import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { formatCurrency } from "@/utils/currency";
@@ -120,7 +120,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   }, [form.formState.isDirty, setDirty]);
   
   const createMutation = useCreatePO();
-  const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
+  const updateMutation = useUpdatePO({ onConflict });
   const { playSound } = useAudioFeedback();
 
   const { fields, append, prepend, remove, update } = useFieldArray({
@@ -221,6 +221,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     try {
       if (mode === "edit" && initialData) {
         await updateMutation.mutateAsync({ 
+          id: initialData.id,
           payload: { ...values, version: initialData.version ?? 0 } 
         });
         playSound('success');
@@ -247,7 +248,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
   const { data: suppliers, isLoading: loadingSuppliers } = useSuppliers();
   const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
-  const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
+  const { data: warehousesData, isLoading: loadingWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
 
   const [importDialogOpen, setImportDialogOpen] = React.useState(false);
   const [selectedPRId, setSelectedPRId] = React.useState<string | null>(null);
@@ -554,7 +555,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                         onScan={handleScan}
                         scanStatus={scanStatus}
                         statusMessage={statusMessage}
-                        items={itemsData?.data as unknown as ComboboxItem[] || []}
+                        items={itemsData?.data as ComboboxItem[] || []}
                         placeholder={tc('select_item')}
                         size="lg"
                         label={t('scan_or_search')}

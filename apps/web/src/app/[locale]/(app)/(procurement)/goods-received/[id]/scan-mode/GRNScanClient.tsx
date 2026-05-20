@@ -4,7 +4,7 @@ import * as React from "react"
 import { useTranslations } from "next-intl"
 import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesGuard"
 import { useGoodsReceipt, useUpdateGRNLine } from "@/features/purchasing/api/useGoodsReceipts"
-import { useItems } from "@/features/items/api/useItems"
+import { useItems } from "@/features/items/hooks/useItems"
 import { PackageSearch } from "lucide-react"
 import { toast } from "sonner"
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -42,7 +42,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
   const { playSound } = useAudioFeedback()
 
   const { data: grn, isLoading: isLoadingGRN, error: errorGRN } = useGoodsReceipt(id)
-  const { data: items, isLoading: isLoadingItems, error: errorItems } = useItems()
+  const { data: itemsData, isLoading: isLoadingItems, error: errorItems } = useItems(); const items = itemsData?.data || []
   const updateLine = useUpdateGRNLine()
 
   const [scanStatus, setScanStatus] = React.useState<"idle" | "success" | "error">("idle")

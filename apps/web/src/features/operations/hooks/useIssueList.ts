@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
+import { paginatedSchema } from '@/types/api';
 
 export const IssueSummarySchema = z.object({
   id: z.string(),
@@ -23,19 +24,8 @@ export function useIssueList({ status, page = 1 }: { status?: string; page?: num
       const qs = new URLSearchParams();
       if (status) qs.append('status', status);
       qs.append('page', page.toString());
-      
-      const res = await apiClient.get(`/operations/issues?${qs.toString()}`, z.object({
-        data: z.array(IssueSummarySchema),
-        meta: z.object({
-          pagination: z.object({
-            page: z.number(),
-            pageSize: z.number(),
-            total: z.number(),
-            total_pages: z.number()
-          })
-        })
-      }), { signal });
-      return res;
+
+      return apiClient.get(`/operations/issues?${qs.toString()}`, paginatedSchema(IssueSummarySchema), { signal });
     },
     placeholderData: keepPreviousData,
   });

@@ -40,7 +40,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   const { data: transfer, isLoading, error } = useTransfer(id);
   const { user } = useAuth();
   const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('transfer', id);
-  const receiveTransfer = useReceiveTransfer(id, { onConflict: triggerConflict });
+  const receiveTransfer = useReceiveTransfer({ onConflict: triggerConflict });
   const abortController = useAbortController();
   const { playSound } = useAudioFeedback();
 
@@ -191,6 +191,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     });
     
     receiveTransfer.mutate({
+      id,
       body: {
         version: transfer.version ?? 0,
         lines: receiveLines,

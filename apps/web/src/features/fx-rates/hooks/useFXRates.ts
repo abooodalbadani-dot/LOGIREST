@@ -25,7 +25,7 @@ export function useFXRates() {
     queryKey: QUERY_KEY,
     placeholderData: { data: [], meta: { total: 0, page: 1, page_size: 50, total_pages: 0 } },
     queryFn: ({ signal }) =>
-      apiClient.get('/fx-rates', PaginatedFXRatesSchema, { signal }),
+      apiClient.get('/currencies/fx-rates', PaginatedFXRatesSchema, { signal }),
     staleTime: 60_000,
   });
 }
@@ -35,7 +35,7 @@ export function useFXRate(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/fx-rates/${id}`, FXRateSchema, { signal });
+      return apiClient.get(`/currencies/fx-rates/${id}`, FXRateSchema, { signal });
     },
     enabled: !!id,
   });
@@ -47,7 +47,7 @@ export function useCreateFXRate() {
 
   return useMutation({
     mutationFn: ({ values, signal }: { values: FXRateFormValues; signal?: AbortSignal }) => {
-      return apiClient.post('/fx-rates', FXRateSchema, values, { signal });
+      return apiClient.post('/currencies/fx-rates', FXRateSchema, values, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -67,7 +67,7 @@ export function useUpdateFXRate(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, values, signal }: { id: string; values: FXRateFormValues; signal?: AbortSignal }) => {
-      return apiClient.put(`/fx-rates/${id}`, FXRateSchema, values, { signal });
+      return apiClient.put(`/currencies/fx-rates/${id}`, FXRateSchema, values, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

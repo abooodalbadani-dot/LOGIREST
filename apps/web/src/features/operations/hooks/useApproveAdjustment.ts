@@ -8,16 +8,16 @@ import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail } from './useAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 
-export function useApproveAdjustment(id: string, options?: { onConflict?: () => void }) {
+export function useApproveAdjustment(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const userName = user?.name || 'Unknown';
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ version, signal }: { version: number; signal?: AbortSignal }) =>
+    mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) =>
       apiClient.post(`/operations/adjustments/${id}/approve`, successSchema, { version }, { signal }),
-    onSuccess: () => {
-      queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
+    onSuccess: (_, { id }) => {
+      queryClient.setQueryData(['adjustments', id], (old: AdjustmentDetail | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -30,7 +30,7 @@ export function useApproveAdjustment(id: string, options?: { onConflict?: () => 
         };
       });
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-      queryClient.invalidateQueries({ queryKey: ['adjustment', id] });
+      queryClient.invalidateQueries({ queryKey: ['adjustments', id] });
     },
     onError: (error) => {
       console.error('Failed to approve adjustment:', error);

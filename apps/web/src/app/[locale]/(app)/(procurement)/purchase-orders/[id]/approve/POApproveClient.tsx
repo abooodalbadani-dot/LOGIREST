@@ -64,7 +64,7 @@ export function POApproveClient({ id }: Props) {
   }
 
   if (!po) {
-    return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['purchase-order', id] })} />;
+    return <ErrorState message={tc('not_found')} onRetry={() => queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] })} />;
   }
 
   const handleApprove = async () => {
@@ -81,7 +81,7 @@ export function POApproveClient({ id }: Props) {
   };
 
   const handleReject = async () => {
-    if (!comment || comment.length < 15) {
+    if (!comment || comment.trim().length < 15) {
       playSound('error');
       toast.error(t('approval.rejection_reason_min_chars'));
       return;
@@ -185,7 +185,7 @@ export function POApproveClient({ id }: Props) {
                 className="min-h-[120px] bg-surface-container-high/40 border-none rounded-2xl p-4 text-body-md font-medium focus:ring-1 focus:ring-operational-cyan/30 resize-none transition-all"
               />
               
-              {isRejecting && (!comment || comment.length < 15) && (
+              {isRejecting && (!comment || comment.trim().length < 15) && (
                 <div className="flex items-center gap-2 text-rose-400 p-4 bg-rose-400/5 rounded-2xl border border-rose-400/10">
                   <AlertCircle className="w-4 h-4" />
                   <p className="text-label-xs font-semibold uppercase">{t('approval.rejection_reason_min_chars')}</p>
@@ -240,7 +240,7 @@ export function POApproveClient({ id }: Props) {
                   <div className="space-y-4">
                     <Button
                       onClick={() => setRejectConfirmOpen(true)}
-                      disabled={!comment || comment.length < 15 || rejectMutation.isPending}
+                      disabled={!comment || comment.trim().length < 15 || rejectMutation.isPending}
                       className="w-full bg-red-500 text-white hover:bg-red-600 h-14 rounded-2xl font-black uppercase text-label-xs tracking-widest transition-all shadow-[0_8px_20px_rgba(239,68,68,0.2)]"
                     >
                       <XCircle className="w-5 h-5 me-3" />
@@ -293,7 +293,7 @@ export function POApproveClient({ id }: Props) {
         confirmText={t('approval.reject_po')}
         variant="destructive"
         icon="reject"
-        disabled={comment.length < 15}
+        disabled={comment.trim().length < 15}
       />
     </div>
   );

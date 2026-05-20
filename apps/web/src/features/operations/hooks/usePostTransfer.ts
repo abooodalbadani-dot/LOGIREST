@@ -12,7 +12,7 @@ export function usePostTransfer(options?: { onConflict?: () => void }) {
       apiClient.post(`/operations/transfers/${id}/post`, successSchema, { version }, { signal, headers }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
-      queryClient.invalidateQueries({ queryKey: ['transfer', id] });
+      queryClient.invalidateQueries({ queryKey: ['transfers', id] });
     },
     onError: (error) => {
       console.error('Failed to post transfer:', error);

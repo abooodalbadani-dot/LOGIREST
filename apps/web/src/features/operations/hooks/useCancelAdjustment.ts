@@ -18,7 +18,7 @@ export function useCancelAdjustment(options?: { onConflict?: () => void }) {
       return apiClient.post(`/operations/adjustments/${id}/cancel`, successSchema, { reason, version }, { signal });
     },
     onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
+      queryClient.setQueryData(['adjustments', id], (old: AdjustmentDetail | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -27,7 +27,7 @@ export function useCancelAdjustment(options?: { onConflict?: () => void }) {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-      queryClient.invalidateQueries({ queryKey: ['adjustment', id] });
+      queryClient.invalidateQueries({ queryKey: ['adjustments', id] });
     },
     onError: (error) => {
       console.error('[useCancelAdjustment] Failed to cancel adjustment:', error);

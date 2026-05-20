@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useStocktake, useSubmitVariance, useRecountItems } from "@/features/operations/api/useStocktakes";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { useTranslations } from "next-intl";
@@ -52,7 +52,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const baseRouter = useRouter()
  const { data: rawSession, isLoading, error } = useStocktake(id);
  const session = rawSession ? mapToSessionVM(rawSession) : null;
-const { data: warehouses } = useWarehouses();
+const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: settings } = useAdminSettings();
   const submitVariance = useSubmitVariance();
   const recountItems = useRecountItems();
@@ -343,18 +343,30 @@ const { data: warehouses } = useWarehouses();
               <div className="space-y-1.5 text-start min-w-[200px]">
                 <Textarea
                   value={reasons[line.id] || ""} 
-                  onChange={(e) => handleReasonChange(line.id, e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.slice(0, 500);
+                    handleReasonChange(line.id, val);
+                  }}
                   placeholder={t('mandatory_reason')}
+                  maxLength={500}
                   className={cn(
                     "min-h-[80px] text-body-md bg-surface-container-medium border-none resize-none transition-all rounded-xl focus-visible:ring-1 focus-visible:ring-primary/30",
                     reasonError ? "bg-amber-500/10 focus-visible:ring-amber-500/50" : ""
                   )}
                 />
-                {reasonError && (
-                  <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
-                    {t('validation.variance_reason_min')}
+                <div className="flex items-center justify-between">
+                  {reasonError && (
+                    <p className="text-label-xs text-amber-500 font-medium animate-in fade-in slide-in-from-top-1">
+                      {t('validation.variance_reason_min')}
+                    </p>
+                  )}
+                  <p className={cn(
+                    "text-label-xs font-bold ms-auto transition-colors",
+                    (reasons[line.id] || "").trim().length >= 10 ? "text-status-success" : "text-status-warning"
+                  )}>
+                    {(reasons[line.id] || "").trim().length} / 500
                   </p>
-                )}
+                </div>
               </div>
             ) : (
               <div className="text-label-sm text-muted-foreground italic flex items-center gap-1.5 justify-center">

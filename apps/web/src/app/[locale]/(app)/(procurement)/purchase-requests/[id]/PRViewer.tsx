@@ -9,6 +9,7 @@ import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { DocumentReadOnlyOverlay } from '@/components/shared/DocumentReadOnlyOverlay';
+import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
 
 interface PRViewerProps {
   document: PRDetail;
@@ -27,6 +28,11 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
   const t = useTranslations('procurement.pr');
   const tc = useTranslations('common');
   const router = useRouter();
+
+  const timelineEntries = [
+    { status: 'draft' as Status, at: document.created_at || '', by: document.created_by || tc('system') },
+    { status: document.status.toLowerCase() as Status, at: document.updated_at || document.created_at || '', by: tc('system') },
+  ];
 
   return (
     <div className="space-y-10 w-full bg-surface-container-low min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
@@ -141,21 +147,28 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
         </div>
       </DocumentReadOnlyOverlay>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-12 mt-12 border-t border-surface-variant/10 print:hidden">
-        <Button
-          variant="ghost"
-          type="button"
-          onClick={() => router.back()}
-          className="text-label-xs font-semibold uppercase text-muted-foreground/40 hover:text-foreground hover:bg-surface-container-high/50 h-12 px-8 rounded-xl transition-all"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 me-2" />
-          {tc('back')}
-        </Button>
+      {/* Footer / History */}
+      <div className="space-y-10">
+        {timelineEntries.length > 0 && (
+          <div className="bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-surface-variant/5 transition-all">
+            <div className="flex items-center gap-3 mb-10">
+              <History className="w-4 h-4 text-primary opacity-20" />
+              <h3 className="text-label-xs font-semibold uppercase text-primary/30">{tc('audit_trail')}</h3>
+            </div>
+            <StatusTimeline entries={timelineEntries} />
+          </div>
+        )}
 
-        <div className="flex items-center gap-3 text-label-xs font-bold text-muted-foreground/30 uppercase tracking-widest">
-           <History className="w-4 h-4" />
-           {t('audit_trail')}
+        <div className="flex items-center justify-between pt-12 mt-12 border-t border-surface-variant/10 print:hidden">
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={() => router.back()}
+            className="text-label-xs font-semibold uppercase text-muted-foreground/40 hover:text-foreground hover:bg-surface-container-high/50 h-12 px-8 rounded-xl transition-all"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 me-2" />
+            {tc('back')}
+          </Button>
         </div>
       </div>
     </div>

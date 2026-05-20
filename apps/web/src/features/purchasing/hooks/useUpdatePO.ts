@@ -26,17 +26,17 @@ const UpdatePOPayloadSchema = z.object({
 
 export type UpdatePOPayload = z.infer<typeof UpdatePOPayloadSchema>;
 
-export function useUpdatePO(id: string, options?: { onConflict?: () => void }) {
+export function useUpdatePO(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ payload, signal }: { payload: UpdatePOPayload; signal?: AbortSignal }) => 
+    mutationFn: ({ id, payload, signal }: { id: string; payload: UpdatePOPayload; signal?: AbortSignal }) => 
       apiClient.put(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), UpdatePOPayloadSchema.parse(payload), { signal }).then(res => res.data),
-    onSuccess: (data) => {
+    onSuccess: (data, { id }) => {
       // Update cache
-      queryClient.setQueryData(['purchase-order', id], data);
+      queryClient.setQueryData(['purchase-orders', id], data);
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
     },
     onError: (error) => {
       console.error('[useUpdatePO] Failed to update PO:', error);

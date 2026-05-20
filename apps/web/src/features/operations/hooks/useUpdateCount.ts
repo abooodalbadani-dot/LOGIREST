@@ -23,7 +23,7 @@ export function useUpdateCount(sessionId: string, options?: { onConflict?: () =>
     mutationFn: ({ countId, counted_qty, variance_reason, version, signal }: { countId: string; counted_qty: number; variance_reason?: string; version: number; signal?: AbortSignal }) =>
       apiClient.put(`/stocktake/sessions/${sessionId}/counts/${countId}`, CountSchema, { counted_qty, variance_reason, version }, { signal }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['stocktake-session', sessionId] });
+      qc.invalidateQueries({ queryKey: ['stocktakes', sessionId] });
     },
     onError: (error) => {
       console.error('Failed to update count:', error);

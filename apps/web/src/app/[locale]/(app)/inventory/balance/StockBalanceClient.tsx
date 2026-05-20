@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 
 import { Link, useRouter } from '@/i18n/navigation';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -42,6 +43,9 @@ export default function StockBalanceClient() {
   const currentLocale = useLocale();
   const router = useRouter();
   const isRtl = currentLocale === 'ar';
+
+  const { data: settings } = useAdminSettings();
+  const baseCurrency = settings?.base_currency || 'SAR';
 
   const [warehouseFilter] = useState('');
   const [searchFilter, setSearchFilter] = useState('');
@@ -217,7 +221,7 @@ export default function StockBalanceClient() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             label={t('total_value')}
-            value={formatCurrency(totalValue, 'SAR', currentLocale as 'ar' | 'en')}
+            value={formatCurrency(totalValue, baseCurrency, currentLocale as 'ar' | 'en')}
             icon={Wallet}
             color="emerald"
             trend={tc('currencies.sar_full')}

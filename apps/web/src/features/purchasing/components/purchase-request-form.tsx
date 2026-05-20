@@ -433,7 +433,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                   {!isLocked && (
                     <ScanInput
                       onScan={handleScan}
-                      items={itemsData?.data as unknown as ComboboxItem[] || []}
+                      items={itemsData?.data as ComboboxItem[] || []}
                       placeholder={tc('select_item')}
                       size="lg"
                       label={t('scan_or_search')}
@@ -452,9 +452,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     }}
                     renderQty={(line) => {
                       const index = fields.findIndex(f => f.id === line.id);
-                      const item = (line as unknown as Record<string, unknown>)?.item as Record<string, unknown> | undefined;
-                      const minStock = item?.min_stock_level as number | undefined;
-                      const reorderPt = item?.reorder_point as number | undefined;
+                      const formLine = fields[index];
+                      const minStock = formLine?.item?.min_stock_level;
+                      const reorderPt = formLine?.item?.reorder_point;
                       return (
                         <div className="flex flex-col items-center gap-0.5">
                           <input

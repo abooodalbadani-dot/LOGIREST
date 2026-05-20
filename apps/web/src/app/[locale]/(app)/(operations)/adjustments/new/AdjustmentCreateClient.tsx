@@ -6,8 +6,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateAdjustment } from '@/features/operations/hooks/useCreateAdjustment';
-import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
-import { useItems } from '@/features/items/api/useItems';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { useItems } from '@/features/items/hooks/useItems';
 import { useUoMs } from '@/features/uoms/hooks/useUoMs';
 import { useVarianceReasons } from '@/features/operations/api/useVarianceReasons';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -105,8 +105,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const tCommon = useTranslations('common');
   const abortController = useAbortController();
 
-  const { data: warehouses } = useWarehouses();
-  const { data: items, isLoading: isLoadingItems } = useItems();
+  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
+  const { data: itemsData, isLoading: isLoadingItems } = useItems(); const items = itemsData?.data || [];
   const { data: uomsResult } = useUoMs();
   const { data: varianceReasonsData, isLoading: isLoadingReasons } = useVarianceReasons();
   const createAdjustment = useCreateAdjustment();

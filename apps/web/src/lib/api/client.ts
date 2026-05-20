@@ -13,7 +13,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' || 
     (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_MOCKS !== 'false');
   if (useMocks) {
-    const { getMockResponse } = await import('./mocks/index');
+    const { getMockResponse } = await import('@/infrastructure/mock/mock-api.adapter');
     const mockData = await getMockResponse(method, path, body);
     if (mockData !== undefined) {
       console.log(`[Mock API] ${method} ${path}`, mockData);

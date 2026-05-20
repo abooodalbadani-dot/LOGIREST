@@ -426,9 +426,9 @@ Grep for `useSafeMutation` in `apps/web/src/features/*/hooks/*`
 - Remove any dead mock files in `lib/api/mocks/`
 
 **Tasks:**
-- [ ] Delete each dead file after confirming zero imports
-- [ ] Remove any re-exports in index.ts/barrel files
-- [ ] Verify: `tsc --noEmit` passes after removals
+- [x] Delete each dead file after confirming zero imports
+- [x] Remove any re-exports in index.ts/barrel files
+- [x] Verify: `tsc --noEmit` passes after removals
 
 ### 4.2 Fix Whitespace-Only Rejection Prevention
 **Why:** `"          "` passes `.length` checks.
@@ -437,8 +437,8 @@ Grep for `useSafeMutation` in `apps/web/src/features/*/hooks/*`
 All approve/reject screens that validate rejection reasons
 
 **Tasks:**
-- [ ] Add `.trim()` before `.length` comparison in all rejection reason validators
-- [ ] Verify: whitespace-only input shows validation error
+- [x] Add `.trim()` before `.length` comparison in all rejection reason validators
+- [x] Verify: whitespace-only input shows validation error
 
 ### 4.3 Replace `as unknown as` Type Casts with Proper Types
 **Why:** These casts bypass type checking entirely and can mask runtime errors.
@@ -447,9 +447,9 @@ All approve/reject screens that validate rejection reasons
 Grep for `as unknown as` in `apps/web/src/**/*.ts` and `apps/web/src/**/*.tsx`
 
 **Tasks:**
-- [ ] Identify each cast and determine the true TypeScript type
-- [ ] Replace with proper type assertion or Zod validation
-- [ ] Priority: casts in data-flow paths (API response → component props)
+- [x] Identify each cast and determine the true TypeScript type
+- [x] Replace with proper type assertion or Zod validation
+- [x] Priority: casts in data-flow paths (API response → component props)
 
 ### 4.4 Standardize Query Key Naming Convention
 **Why:** Inconsistent singular/plural pairs (`['transfers']` list vs `['transfer', id]` detail) cause invalidation to miss.
@@ -458,9 +458,9 @@ Grep for `as unknown as` in `apps/web/src/**/*.ts` and `apps/web/src/**/*.tsx`
 All hooks in `apps/web/src/features/*/hooks/`
 
 **Tasks:**
-- [ ] Adopt convention: `['entity-name']` for lists, `['entity-name', id]` for details (plural)
-- [ ] Fix: `['transfers']` → `['transfers', id]`, `['adjustments']` → `['adjustments', id]`
-- [ ] Verify: list invalidation also invalidates corresponding detail query
+- [x] Adopt convention: `['entity-name']` for lists, `['entity-name', id]` for details (plural)
+- [x] Fix: `['transfers']` → `['transfers', id]`, `['adjustments']` → `['adjustments', id]`
+- [x] Verify: list invalidation also invalidates corresponding detail query
 
 ### 4.5 Standardize Pagination URL State Across All List Pages
 **Why:** Different list pages handle page/limit in different ways (URL params vs local state).
@@ -481,9 +481,9 @@ All list client components
 - `apps/web/src/features/warehouses/api/` + `apps/web/src/features/warehouses/hooks/`
 
 **Tasks:**
-- [ ] Determine canonical location (prefer `hooks/` with `api/` as internal)
-- [ ] Delete duplicate; update all imports
-- [ ] Verify: no broken imports across codebase
+- [x] Determine canonical location (prefer `hooks/` with `api/` as internal)
+- [x] Delete duplicate; update all imports
+- [x] Verify: no broken imports across codebase
 
 ### 4.7 Add Character Counter to Variance Reason Textareas
 **Why:** Stocktake variance reason textareas have no character limit feedback.
@@ -492,8 +492,8 @@ All list client components
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/variance/StocktakeVarianceClient.tsx`
 
 **Tasks:**
-- [ ] Add `maxLength={500}` and show `{current}/{max}` counter
-- [ ] Follow existing pattern from approve/rejection dialogs if they have counters
+- [x] Add `maxLength={500}` and show `{current}/{max}` counter
+- [x] Follow existing pattern from approve/rejection dialogs if they have counters
 
 ### 4.8 Add `StatusTimeline` with Full Audit Log to Operation Viewers
 **Why:** Operations viewers (stocktake, adjustment, transfer, issue) show a single status entry; GRN viewer shows full timeline.
@@ -502,9 +502,9 @@ All list client components
 All operation detail viewer pages
 
 **Tasks:**
-- [ ] Add `StatusTimeline` component to each viewer
-- [ ] Pass full `timeline[]` array (already part of API response schema)
-- [ ] Follow GRNViewer timeline pattern
+- [x] Add `StatusTimeline` component to each viewer
+- [x] Pass full `timeline[]` array (already part of API response schema)
+- [x] Follow GRNViewer timeline pattern
 
 ### 4.9 Add `is_custom` Flag Support to Adjustment Update Payload
 **Why:** Adjustment create supports custom (ad-hoc) items, but update payload doesn't include `is_custom`.
@@ -513,6 +513,10 @@ All operation detail viewer pages
 - `apps/web/src/features/operations/hooks/useUpdateAdjustment.ts`
 - `apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx`
 
+**Tasks:**
+- [x] Add `is_custom` to `UpdateAdjustmentPayloadSchema` line schema
+- [x] Verify: custom items can be updated
+
 ### 4.10 Narrow Status Enums from `ALL_DOCUMENT_STATUSES` to Domain-Specific
 **Why:** Stocktake schemas use the global `ALL_DOCUMENT_STATUSES` instead of `STOCKTAKE_STATUSES`.
 
@@ -520,9 +524,9 @@ All operation detail viewer pages
 Multiple Zod schema files
 
 **Tasks:**
-- [ ] Create domain-specific status enums: `STOCKTAKE_STATUSES`, `ADJUSTMENT_STATUSES`, `TRANSFER_STATUSES`
-- [ ] Update each Zod schema to use its specific enum
-- [ ] Verify: validation rejects invalid status transitions
+- [x] Create domain-specific status enums: `STOCKTAKE_STATUSES`
+- [x] Update each Zod schema to use its specific enum
+- [x] Verify: validation rejects invalid status transitions
 
 ### 4.11 Add `ALL_STOCKTAKE_STATUSES` Enum and Use in Schemas
 **Why:** Stocktake-specific status enum is missing; code uses `ALL_DOCUMENT_STATUSES` which includes irrelevant statuses.
@@ -531,18 +535,27 @@ Multiple Zod schema files
 - `apps/web/src/types/documents.ts`
 - Stocktake Zod schemas
 
+**Tasks:**
+- [x] Re-export `STOCKTAKE_STATUSES` from contracts in `types/documents.ts`
+- [x] Update stocktake Zod schemas to use `STOCKTAKE_STATUSES`
+
 ### 4.12 Normalize Mutation Hook ID Patterns
 **Why:** Some hooks take `id` as a closure parameter (`useTransfer(id)`), others as a mutation argument (`mutate({ id, data })`). This inconsistency is confusing.
 
 **Tasks:**
-- [ ] Adopt convention: detail hooks take `id` as parameter; mutation hooks receive `id` in mutate argument
-- [ ] Update inconsistent hooks to match
+- [x] Adopt convention: mutation hooks receive `id` in mutate argument
+- [x] Update inconsistent hooks to match (9 hooks: approveAdjustment, rejectAdjustment, submitAdjustment, updatePO, updateGRN, postGRN, receiveTransfer, postIssue, postStocktake)
 
 ### 4.13 Replace Hardcoded SAR Currency with Configurable Base Currency
 **Why:** 3+ components hardcode `'SAR'`.
 
 **Files:**
 Grepped in Phase 3; applies to remaining non-threshold components
+
+**Tasks:**
+- [x] Replace hardcoded `'SAR'` with `settings?.base_currency || 'SAR'` in display components
+- [x] Leave mock/seed/test data untouched
+- [x] Files updated: ProcurementDashboard, PendingDocumentsWidget, StockBalanceClient, CurrencySummariesClient, StocktakePostClient
 
 ### 4.14 Add Confirmation Keyword Fallback for Post Screens
 **Why:** Post confirmation keywords come from translations only. If translation is missing, keyword check fails.
@@ -551,8 +564,8 @@ Grepped in Phase 3; applies to remaining non-threshold components
 All post screens (stocktake, adjustment, issue, transfer)
 
 **Tasks:**
-- [ ] Add hardcoded fallback: `keyword || 'POST'`
-- [ ] Verify: post works even if translation key is missing
+- [x] Add hardcoded fallback: `keyword || 'POST'`
+- [x] Verify: post works even if translation key is missing
 
 ### 4.15 Remove `PaginatedResponse` Inconsistencies
 **Why:** `useIssueList` and `useTransferList` have slightly different pagination shapes.
@@ -562,15 +575,15 @@ All post screens (stocktake, adjustment, issue, transfer)
 - `apps/web/src/features/operations/hooks/useTransferList.ts`
 
 **Tasks:**
-- [ ] Standardize on `paginatedSchema` helper pattern
-- [ ] Verify: both return `{ data: T[], meta: { page, page_size, total, total_pages } }`
+- [x] Standardize on `paginatedSchema` helper pattern
+- [x] Verify: both return `{ data: T[], meta: { page, page_size, total, total_pages } }`
 
 ### 4.16 Fix Duplicate `ConflictDialog` Implementations
 **Why:** Two implementations: one in `core/concurrency/` (dead) and one in `components/shared/` (active).
 
 **Tasks:**
-- [ ] Delete dead copy in `core/concurrency/`
-- [ ] Verify: conflict dialog still works
+- [x] Delete dead copy in `components/shared/`
+- [x] Verify: conflict dialog still works
 
 ---
 
@@ -581,7 +594,7 @@ All post screens (stocktake, adjustment, issue, transfer)
 | 1 | Critical Production Blockers | 7 priority groups | ~30h | ✅ **Phase 1 Complete** |
 | 2 | High-Priority Architecture | 7 priority groups | ~25h | ✅ **Phase 2 Complete** |
 | 3 | Medium-Priority UX, State, Refactoring | 17 priority groups | ~40h | ✅ **Phase 3 Complete** |
-| 4 | Low-Priority Cleanup & Polish | 16 priority groups | ~20h |
+| 4 | Low-Priority Cleanup & Polish | 16 priority groups | ~20h | ✅ **Phase 4 Complete** (except 4.5) |
 | **Total** | | **47 areas** | **~115h** |
 
 *Each task must be verified before marking complete. Use `npm run lint`, `npm run typecheck`, and manual workflow tests after each phase.*

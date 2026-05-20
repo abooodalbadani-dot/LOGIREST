@@ -7,10 +7,11 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { Truck, PackageCheck, ArrowLeft } from 'lucide-react';
+import { Truck, PackageCheck, ArrowLeft, History } from 'lucide-react';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine, type TransferDetail } from '@/features/operations/hooks/useTransfer';
+import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
 import { TRANSFER_STATUS } from '@/contracts/statuses';
 
 interface TransferViewerProps {
@@ -24,6 +25,14 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
   const router = useRouter();
 
   const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
+
+  const timelineEntries = [
+    { status: 'draft' as Status, at: transfer.created_at, by: transfer.created_by || tCommon('system') },
+    ...((transfer.transfer_status === 'IN_TRANSIT' || transfer.status === 'IN_TRANSIT' || transfer.status === 'RECEIVED' || transfer.status === 'POSTED') ? [{ status: 'in_transit' as Status, at: transfer.shipped_at || transfer.updated_at, by: transfer.created_by || tCommon('system') }] : []),
+    ...((transfer.status === 'RECEIVED' || transfer.status === 'POSTED') ? [{ status: 'posted' as Status, at: transfer.received_at || transfer.updated_at, by: transfer.created_by || tCommon('system') }] : []),
+    ...(transfer.status === 'POSTED' ? [{ status: 'posted' as Status, at: transfer.posted_at || transfer.updated_at, by: transfer.posted_by || tCommon('system') }] : []),
+    { status: transfer.status.toLowerCase() as Status, at: transfer.updated_at || transfer.created_at, by: tCommon('system') },
+  ];
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -159,6 +168,15 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
             },
           ]}
         />
+      </div>
+
+      {/* Audit Trail */}
+      <div className="bg-surface-container-lowest p-8 rounded-2xl border border-white/5 shadow-sm transition-all">
+        <div className="flex items-center gap-3 mb-10">
+          <History className="w-4 h-4 text-primary opacity-20" />
+          <h3 className="text-label-xs font-semibold uppercase text-primary/30">{tCommon('audit_trail')}</h3>
+        </div>
+        <StatusTimeline entries={timelineEntries} />
       </div>
     </div>
   );

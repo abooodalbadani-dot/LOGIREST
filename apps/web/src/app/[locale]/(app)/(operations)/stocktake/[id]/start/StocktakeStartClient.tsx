@@ -31,7 +31,7 @@ import { LockBanner } from "@/components/shared/LockBanner";
 import { useAuth } from "@/providers/AuthProvider";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { useStocktake, useStartStocktake, useBeginCounting } from "@/features/operations/api/useStocktakes";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { canStartStocktake } from "@/domain/status-guards";
@@ -50,7 +50,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
   const session = rawSession ? mapToSessionVM(rawSession) : null;
   
   const { user } = useAuth();
-  const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
+  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
   const startStocktake = useStartStocktake();
   const beginCounting = useBeginCounting();

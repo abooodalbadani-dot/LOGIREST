@@ -76,10 +76,50 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
   );
 
   if (isLocked) {
+    if (!grn) return null;
     return (
       <>
         <GRNViewer 
-          document={grn as unknown as GRNViewerDocument} 
+          document={{
+            ...grn,
+            status: grn.status as DocumentStatus,
+            created_at: grn.created_at ?? '',
+            created_by: grn.created_by ?? '',
+            updated_at: grn.updated_at ?? '',
+            fx_rate_captured_at: grn.fx_rate_captured_at ?? null,
+            type: 'GRN' as const,
+            branch_id: '',
+            posted_at: null,
+            posted_by: null,
+            supplier_name: grn.supplier?.name,
+            po_number: grn.po_number ?? null,
+            lines: grn.lines.map(l => ({
+              id: l.id,
+              document_id: '',
+              item_id: l.item.id,
+              item: {
+                id: l.item.id,
+                code: l.item.code,
+                name_ar: l.item.name_ar,
+                name_en: l.item.name_en,
+                primary_uom: {
+                  id: l.item.primary_uom.id,
+                  code: l.item.primary_uom.code,
+                  name_ar: '',
+                  name_en: '',
+                },
+              },
+              lot_id: l.lot?.id ?? null,
+              lot: l.lot ? { ...l.lot, is_expired: false } : null,
+              qty: l.qty,
+              uom_id: l.uom_id,
+              unit_cost: null,
+              po_qty: null,
+              received_qty: l.received_qty,
+              unit_cost_foreign: l.unit_cost_foreign ?? 0,
+              unit_cost_base: l.unit_cost_base ?? 0,
+            })),
+          }} 
           locale={locale} 
           actions={actions}
         />

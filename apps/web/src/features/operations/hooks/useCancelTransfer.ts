@@ -18,7 +18,7 @@ export function useCancelTransfer(options?: { onConflict?: () => void }) {
       return apiClient.post(`/operations/transfers/${id}/cancel`, successSchema, { reason, version }, { signal });
     },
     onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['transfer', id], (old: TransferDetail | undefined) => {
+      queryClient.setQueryData(['transfers', id], (old: TransferDetail | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -27,7 +27,7 @@ export function useCancelTransfer(options?: { onConflict?: () => void }) {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
-      queryClient.invalidateQueries({ queryKey: ['transfer', id] });
+      queryClient.invalidateQueries({ queryKey: ['transfers', id] });
     },
     onError: (error) => {
       console.error('[useCancelTransfer] Failed to cancel transfer:', error);

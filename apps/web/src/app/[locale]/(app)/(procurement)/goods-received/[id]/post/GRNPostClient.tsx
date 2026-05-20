@@ -61,7 +61,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
   const fxRate = useWatch({ control: form.control, name: 'fx_rate' });
   const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
-  const postMutation = usePostGRN(id);
+  const postMutation = usePostGRN();
 
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
   const baseCurrency = settings?.base_currency;
@@ -113,6 +113,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
 
   const handlePost = () => {
     postMutation.mutate({
+      id,
       fx_rate: fxRate,
       confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
       version: grn?.version || 1
@@ -168,7 +169,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
             requiresTextConfirmation={true}
             onConfirm={handlePost}
             isLoading={postMutation.isPending}
-            confirmKeyword={t('confirm_keyword')}
+            confirmKeyword={t('confirm_keyword') || 'POST'}
           >
             <Button 
               disabled={postMutation.isPending || fxRate <= 0 || grn.lines.length === 0 || !baseCurrency}

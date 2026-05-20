@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useStocktake, useUpdateItemCount, useCompleteCounting } from "@/features/operations/api/useStocktakes";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useTranslations } from "next-intl";
 import { useDebouncedCallback } from "use-debounce";
 import { useRouter } from "@/i18n/navigation";
@@ -42,7 +42,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const abortController = useAbortController();
   const { data: rawSession, isLoading: sessionLoading, error: sessionError } = useStocktake(id);
   const session = rawSession ? mapToSessionVM(rawSession) : null;
-  const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
+  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const updateCount = useUpdateItemCount();
   const completeCounting = useCompleteCounting();
   const { playSound } = useAudioFeedback();

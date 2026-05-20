@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { 
@@ -33,7 +33,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   const common = useTranslations('common')
   const router = useRouter()
   
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
 

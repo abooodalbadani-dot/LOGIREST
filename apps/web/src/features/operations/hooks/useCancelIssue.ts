@@ -17,7 +17,7 @@ export function useCancelIssue(options?: { onConflict?: () => void }) {
       return apiClient.post(`/operations/issues/${id}/cancel`, successSchema, { reason, version }, { signal });
     },
     onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['issue', id], (old: Record<string, unknown> | undefined) => {
+      queryClient.setQueryData(['issues', id], (old: Record<string, unknown> | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -26,7 +26,7 @@ export function useCancelIssue(options?: { onConflict?: () => void }) {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['issues'] });
-      queryClient.invalidateQueries({ queryKey: ['issue', id] });
+      queryClient.invalidateQueries({ queryKey: ['issues', id] });
     },
     onError: (error) => {
       console.error('[useCancelIssue] Failed to cancel issue:', error);

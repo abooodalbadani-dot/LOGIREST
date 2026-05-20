@@ -15,12 +15,12 @@ export function useCancelPR(options?: { onConflict?: () => void }) {
       return apiClient.post(`/procurement/purchase-requests/${id}/cancel`, successSchema, { reason, version }, { signal });
     },
     onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {
+      queryClient.setQueryData(['purchase-requests', id], (old: PRDetail | undefined) => {
         if (!old) return old;
         return { ...old, status: PR_STATUS.CANCELLED };
       });
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-request', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-requests', id] });
     },
     onError: (error) => {
       console.error('[useCancelPR] Failed to cancel PR:', error);

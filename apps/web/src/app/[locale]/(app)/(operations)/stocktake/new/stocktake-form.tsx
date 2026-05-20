@@ -32,7 +32,7 @@ import {
  FormMessage 
 } from "@/components/ui/form";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useCreateStocktake } from "@/features/operations/api/useStocktakes";
 import { useInventoryBalance } from "@/features/inventory/hooks/useInventoryBalance";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,7 +52,7 @@ type StocktakeFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations("operations.stocktake");
   const tc = useTranslations("common");
-  const { data: warehouses, isLoading: warehousesLoading } = useWarehouses();
+  const { data: warehousesData, isLoading: warehousesLoading } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { user } = useAuth();
   const createStocktake = useCreateStocktake();
   const { playSound } = useAudioFeedback();

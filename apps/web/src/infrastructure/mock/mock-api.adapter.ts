@@ -2,7 +2,7 @@
 import { db } from './mock-database';
 import { MockFactory } from './mock-factory';
 import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus, PRLineItem } from '@/types/documents';
-import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency, Lot } from '@/types/master-data';
+import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency, Lot, Barcode, FXRate } from '@/types/master-data';
 import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
 
@@ -505,6 +505,17 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'DELETE') return db.currencies.delete(id);
   }
 
+  if (normalizedPath === '/barcodes') {
+    if (method === 'GET') return MockFactory.wrapPagination(await db.barcodes.findAll());
+    if (method === 'POST') return db.barcodes.save(body as Barcode);
+  }
+  if (normalizedPath.startsWith('/barcodes/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.barcodes.findById(id);
+    if (method === 'PUT') return db.barcodes.save({ ...(body as Barcode), id });
+    if (method === 'DELETE') return db.barcodes.delete(id);
+  }
+
   // --- Issues Routes ---
   if (normalizedPath === '/operations/issues') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.issues.findAll());
@@ -865,7 +876,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         posted_by: nextStatus === STOCKTAKE_STATUS.POSTED ? 'user-1' : session.posted_by,
       };
 
-      return db.stocktake.save(updated);
+      return db.stocktake.save(updated as StocktakeSession);
     }
 
     // Standard GET/PUT
@@ -1178,6 +1189,13 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
   if (normalizedPath === '/currencies/fx-rates') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.fxRates.findAll());
+    if (method === 'POST') return db.fxRates.save(body as FXRate);
+  }
+  if (normalizedPath.startsWith('/currencies/fx-rates/')) {
+    const id = normalizedPath.split('/').pop()!;
+    if (method === 'GET') return db.fxRates.findById(id);
+    if (method === 'PUT') return db.fxRates.save({ ...(body as FXRate), id });
+    if (method === 'DELETE') return db.fxRates.delete(id);
   }
 
   if (normalizedPath === '/master-data/variance-reasons' || normalizedPath === '/operations/stocktake/variance-reasons') {

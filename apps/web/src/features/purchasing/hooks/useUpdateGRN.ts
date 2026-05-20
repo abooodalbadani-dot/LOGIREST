@@ -24,13 +24,13 @@ const UpdateGRNPayloadSchema = z.object({
 
 export type UpdateGRNPayload = z.infer<typeof UpdateGRNPayloadSchema>;
 
-export function useUpdateGRN(id: string, options?: { onConflict?: () => void }) {
+export function useUpdateGRN(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ payload, signal, headers }: { payload: UpdateGRNPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
+    mutationFn: ({ id, payload, signal, headers }: { id: string; payload: UpdateGRNPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
       apiClient.put(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), UpdateGRNPayloadSchema.parse(payload), { signal, headers }).then(res => res.data),
-    onSuccess: (data) => {
+    onSuccess: (data, { id }) => {
       queryClient.setQueryData(['grn', id], data);
       queryClient.invalidateQueries({ queryKey: ['grns'] });
       queryClient.invalidateQueries({ queryKey: ['grn', id] });

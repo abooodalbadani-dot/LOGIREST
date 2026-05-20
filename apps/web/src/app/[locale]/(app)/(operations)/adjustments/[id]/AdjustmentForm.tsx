@@ -31,7 +31,7 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
-import { useItems } from '@/features/items/api/useItems';
+import { useItems } from '@/features/items/hooks/useItems';
 import { useVarianceReasons } from '@/features/operations/api/useVarianceReasons';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { ArrowUp, ArrowDown } from 'lucide-react';
@@ -72,15 +72,15 @@ export function AdjustmentForm({
   const adjustmentStatus = (document?.status as DocumentStatus) ?? ADJUSTMENT_STATUS.DRAFT;
 
   const createAdjustment = useCreateAdjustment();
-  const submitAdjustment = useSubmitAdjustment(id, { onConflict });
-  const approveAdjustment = useApproveAdjustment(id, { onConflict });
-  const rejectAdjustment = useRejectAdjustment(id, { onConflict });
+  const submitAdjustment = useSubmitAdjustment({ onConflict });
+  const approveAdjustment = useApproveAdjustment({ onConflict });
+  const rejectAdjustment = useRejectAdjustment({ onConflict });
   const postAdjustment = usePostAdjustment({ onConflict });
   const updateAdjustment = useUpdateAdjustment({ onConflict });
   const cancelAdjustment = useCancelAdjustment({ onConflict });
   const abortController = useAbortController();
 
-  const { data: items, isLoading: isLoadingItems } = useItems();
+  const { data: itemsData, isLoading: isLoadingItems } = useItems(); const items = itemsData?.data || [];
   const { data: varianceReasonsData } = useVarianceReasons();
   const { data: warehousesData } = useWarehouses();
   const warehouses = warehousesData?.data || [];
@@ -213,7 +213,7 @@ export function AdjustmentForm({
 
   const handleSubmit = async () => {
     try {
-      await submitAdjustment.mutateAsync({ version: document?.version || 0, signal: abortController.signal });
+      await submitAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
       toast.success(t('submit_success'));
       setSubmitDialogOpen(false);
     } catch (e) {
@@ -224,7 +224,7 @@ export function AdjustmentForm({
 
   const handleApprove = async () => {
     try {
-      await approveAdjustment.mutateAsync({ version: document?.version || 0, signal: abortController.signal });
+      await approveAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
       toast.success(t('approve_success'));
       setApproveDialogOpen(false);
     } catch (e) {
@@ -238,6 +238,7 @@ export function AdjustmentForm({
     if (trimmedComment.length < 15) return;
     try {
       await rejectAdjustment.mutateAsync({ 
+        id,
         version: document?.version || 0, 
         reject: trimmedComment,
         signal: abortController.signal 

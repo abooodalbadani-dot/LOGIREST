@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
@@ -27,7 +28,9 @@ export function ProcurementDashboard() {
   const tc = useTranslations('common');
   const { locale } = useLocale();
   
+  const { data: settings } = useAdminSettings();
   const { data: stats, isLoading, error } = useDashboardStats();
+  const baseCurrency = settings?.base_currency || 'SAR';
 
   if (isLoading) return <PageSkeleton />;
   if (error || !stats) return <div className="p-8 text-status-error uppercase font-bold">{t('error_loading')}</div>;
@@ -93,7 +96,7 @@ export function ProcurementDashboard() {
         />
         <KPICard
           title={t('procurement.monthly_spend')}
-          value={formatCurrency(stats.total_procurement_spend, 'SAR', locale as 'ar' | 'en')}
+          value={formatCurrency(stats.total_procurement_spend, baseCurrency, locale as 'ar' | 'en')}
           icon={TrendingUp}
           accent="cyan"
           description={t('procurement.approved_budget')}
@@ -134,7 +137,7 @@ export function ProcurementDashboard() {
                           </Badge>
                         </div>
                         <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
-                          {formatCurrency(doc.total_value || 0, 'SAR', locale as 'ar' | 'en')} • {t('procurement.purchase_request')}
+                          {formatCurrency(doc.total_value || 0, baseCurrency, locale as 'ar' | 'en')} • {t('procurement.purchase_request')}
                         </p>
                       </div>
                     </div>
@@ -171,7 +174,7 @@ export function ProcurementDashboard() {
                     <span className="text-label-xs font-semibold text-foreground group-hover/item:text-operational-cyan transition-colors uppercase">{vendor.name}</span>
                     <span className="text-label-xxs font-semibold px-3 py-1 rounded-lg bg-surface-container-high/40 text-muted-foreground uppercase">{vendor.status}</span>
                   </div>
-                  <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{tc('monthly_spend')}: {formatCurrency(vendor.spend, 'SAR', locale as 'ar' | 'en')}</span>
+                  <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{tc('monthly_spend')}: {formatCurrency(vendor.spend, baseCurrency, locale as 'ar' | 'en')}</span>
                 </div>
               ))}
               <PermissionGate action="view" resource="master_data_suppliers">

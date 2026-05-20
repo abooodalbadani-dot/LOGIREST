@@ -7,8 +7,8 @@ import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
-import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
-import { useItems } from '@/features/items/api/useItems';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { useItems } from '@/features/items/hooks/useItems';
 import { type Item } from '@/features/items/types';
 import { useCreateTransfer } from '@/features/operations/hooks/useCreateTransfer';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -53,8 +53,8 @@ export function TransferNewClient() {
   const tCommon = useTranslations('common');
   const abortController = useAbortController();
   const { user } = useAuth();
-  const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
-  const { data: items, isLoading: isLoadingItems, error: errorItems } = useItems();
+  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
+  const { data: itemsData, isLoading: isLoadingItems, error: errorItems } = useItems(); const items = itemsData?.data || [];
   const createTransfer = useCreateTransfer();
   const { playSound } = useAudioFeedback();
 

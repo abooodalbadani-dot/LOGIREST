@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useStocktake, useApproveStocktake, useRejectStocktake } from "@/features/operations/api/useStocktakes";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -62,7 +62,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  const { user } = useAuth();
  
  const { data: session, isLoading, error } = useStocktake(id);
-const { data: warehouses } = useWarehouses();
+const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: settings } = useAdminSettings();
   const approveStocktake = useApproveStocktake();
  const rejectStocktake = useRejectStocktake();
@@ -357,9 +357,9 @@ const { data: warehouses } = useWarehouses();
  />
  <p className={cn(
  "text-label-xs font-bold transition-colors",
- rejectionReason.length < 15 ? "text-status-warning" : "text-status-success"
+  rejectionReason.trim().length < 15 ? "text-status-warning" : "text-status-success"
  )}>
- {rejectionReason.length} / 15 {common('characters')}
+  {rejectionReason.trim().length} / 15 {common('characters')}
  </p>
  </div>
 
@@ -369,7 +369,7 @@ const { data: warehouses } = useWarehouses();
  </Button>
  <Button 
  onClick={handleReject} 
- disabled={rejectionReason.length < 15 || rejectStocktake.isPending}
+  disabled={rejectionReason.trim().length < 15 || rejectStocktake.isPending}
  className="bg-status-error hover:bg-status-error/90 text-white rounded-xl px-8"
  >
  {t('confirm_rejection')}

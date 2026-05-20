@@ -4,18 +4,18 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
-export function usePostIssue(id: string, options?: { onConflict?: () => void }) {
+export function usePostIssue(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (data: { confirmation: 'ACKNOWLEDGE_IRREVERSIBLE'; version: number; signal?: AbortSignal; headers?: Record<string, string> }) => {
-      const { signal, headers, ...payload } = data;
+    mutationFn: (data: { id: string; confirmation: 'ACKNOWLEDGE_IRREVERSIBLE'; version: number; signal?: AbortSignal; headers?: Record<string, string> }) => {
+      const { signal, headers, id, ...payload } = data;
       return apiClient.post(`/operations/issues/${id}/post`, successSchema, payload, { signal, headers });
     },
-    onSuccess: () => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['issues'] });
-      queryClient.invalidateQueries({ queryKey: ['issue', id] });
+      queryClient.invalidateQueries({ queryKey: ['issues', id] });
     },
     onError: (error) => {
       if (error instanceof Error && error.message === 'Aborted') return;

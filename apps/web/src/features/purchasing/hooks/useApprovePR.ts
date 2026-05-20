@@ -13,13 +13,13 @@ export function useApprovePR(options?: { onConflict?: () => void }) {
       apiClient.post(`/procurement/purchase-requests/${id}/approve`, successSchema, { version }, { signal }),
     onSuccess: (_, { id }) => {
       // Simulate state transition in cache
-      queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {
+      queryClient.setQueryData(['purchase-requests', id], (old: PRDetail | undefined) => {
         if (!old) return old;
         return { ...old, status: PR_STATUS.APPROVED };
       });
 
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-request', id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-requests', id] });
     },
     onError: (error) => {
       console.error('[useApprovePR] Failed to approve PR:', error);

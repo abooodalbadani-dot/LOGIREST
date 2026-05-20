@@ -28,7 +28,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
 import { useAuth } from '@/providers/AuthProvider';
-import type { LotAllocation, StockIssue } from '@/types/documents';
+import type { LotAllocation, StockIssue, IssueLineItem } from '@/types/documents';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import { ISSUE_STATUS } from '@/contracts/statuses';
@@ -36,7 +36,7 @@ import { useAbortController } from '@/hooks/useAbortController';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { SmartCombobox, ComboboxItem } from '@/components/shared/SmartCombobox';
-import { useItems } from '@/features/items/api/useItems';
+import { useItems } from '@/features/items/hooks/useItems';
 
 interface IssueFormProps {
   issue?: StockIssue;
@@ -51,13 +51,28 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const { user } = useAuth();
   const abortController = useAbortController();
   
-  const postIssue = usePostIssue(id, { onConflict });
+  const postIssue = usePostIssue({ onConflict });
   const isPostPending = postIssue.isPending;
   const { playSound } = useAudioFeedback();
 
-  const { data: items = [] } = useItems();
+  const { data: itemsData } = useItems(); const items = itemsData?.data || [];
 
-  const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []) as unknown as LineItem[]);
+  const toLineItem = (l: IssueLineItem): LineItem => ({
+    id: l.id,
+    item: {
+      id: l.item.id,
+      code: l.item.code,
+      name_ar: l.item.name_ar,
+      name_en: l.item.name_en,
+      primary_uom: { code: l.item.primary_uom.code },
+    },
+    lot: l.lot ? { lot_number: l.lot.lot_number, expiry_date: l.lot.expiry_date } : null,
+    qty: l.qty,
+    uom_id: l.uom_id,
+    lot_allocations: l.lot_allocations,
+  });
+
+  const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []).map(toLineItem));
   const [destinationId, setDestinationId] = useState(() => issue?.destination_dept_id ?? '');
   const [warehouseId] = useState(() => issue?.warehouse_id || 'wh-1');
   const [notes, setNotes] = useState(() => issue?.notes || '');
@@ -70,7 +85,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   useEffect(() => {
     if (issue && issue.id !== lastResetId.current) {
       lastResetId.current = issue.id;
-      setLines((issue.lines || []) as unknown as LineItem[]);
+      setLines((issue.lines || []).map(toLineItem));
       setDestinationId(issue.destination_dept_id ?? '');
       setNotes(issue.notes || '');
       setRequestedBy(issue.requested_by ?? '');
@@ -279,6 +294,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     if (!issue) return;
     try {
       await postIssue.mutateAsync({ 
+        id,
         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
         version: issue.version,
         signal: abortController.signal,

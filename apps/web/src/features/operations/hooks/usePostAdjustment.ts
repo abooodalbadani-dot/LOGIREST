@@ -18,7 +18,7 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) => 
       apiClient.post(`/operations/adjustments/${id}/post`, successSchema, { version }, { signal }),
     onSuccess: (_, { id }) => {
-      queryClient.setQueryData(['adjustment', id], (old: AdjustmentDetail | undefined) => {
+      queryClient.setQueryData(['adjustments', id], (old: AdjustmentDetail | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -31,7 +31,7 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
-      queryClient.invalidateQueries({ queryKey: ['adjustment', id] });
+      queryClient.invalidateQueries({ queryKey: ['adjustments', id] });
     },
     onError: (error) => {
       console.error('Failed to post adjustment:', error);

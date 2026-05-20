@@ -61,7 +61,7 @@ export type AdjustmentLine = z.infer<typeof AdjustmentLineSchema>;
 
 export function useAdjustment(id: string | null) {
   return useQuery({
-    queryKey: ['adjustment', id],
+    queryKey: ['adjustments', id],
     queryFn: ({ signal }) => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema, { signal }),
     enabled: !!id,
     staleTime: 60_000,

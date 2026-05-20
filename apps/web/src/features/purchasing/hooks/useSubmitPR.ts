@@ -18,7 +18,7 @@ export function useSubmitPR(options?: { onConflict?: () => void }) {
     },
     onSuccess: (_, { id }) => {
       // Simulate state transition in cache
-      queryClient.setQueryData(['purchase-request', id], (old: PRDetail | undefined) => {
+      queryClient.setQueryData(['purchase-requests', id], (old: PRDetail | undefined) => {
         if (!old) return old;
         return { ...old, status: PR_STATUS.SUBMITTED };
       });

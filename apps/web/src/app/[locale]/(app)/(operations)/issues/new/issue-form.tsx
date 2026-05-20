@@ -31,9 +31,9 @@ import { useCreateIssue, type CreateIssuePayload } from "@/features/operations/h
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
-import { useItems } from "@/features/items/api/useItems";
+import { useItems } from "@/features/items/hooks/useItems";
 import { useLotsByItem } from "@/features/operations/hooks/useLotsByItem";
 import { type Item } from "@/features/items/types";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
@@ -75,10 +75,10 @@ export function IssueForm() {
   const createIssue = useCreateIssue();
   const { playSound } = useAudioFeedback();
 
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: deptData } = useDepartments();
   const departments = deptData?.data || [];
-  const { data: items } = useItems();
+  const { data: itemsData } = useItems(); const items = itemsData?.data || [];
 
   const [allocatorOpen, setAllocatorOpen] = useState(false);
   const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
