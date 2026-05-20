@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { PrecisionTable } from '@/components/shared/PrecisionTable';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -17,120 +17,64 @@ import {
   FileCheck
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
-
-interface TransferItem {
-  id: string;
-  doc_number: string;
-  source: string;
-  target: string;
-  date: string;
-  items_count: number;
-  status: 'PENDING' | 'IN_TRANSIT' | 'COMPLETED';
-}
-
-const MOCK_TRANSFERS: TransferItem[] = [
-  {
-    id: '1',
-    doc_number: 'TR-2024-001',
-    source: 'Main Warehouse',
-    target: 'Downtown Kitchen',
-    date: '2024-05-12',
-    items_count: 12,
-    status: 'IN_TRANSIT'
-  },
-  {
-    id: '2',
-    doc_number: 'TR-2024-002',
-    source: 'Cold Storage',
-    target: 'East Branch',
-    date: '2024-05-12',
-    items_count: 5,
-    status: 'PENDING'
-  },
-  {
-    id: '3',
-    doc_number: 'TR-2024-003',
-    source: 'Main Warehouse',
-    target: 'West Branch',
-    date: '2024-05-11',
-    items_count: 24,
-    status: 'COMPLETED'
-  },
-  {
-    id: '4',
-    doc_number: 'TR-2024-004',
-    source: 'Suppliers Hub',
-    target: 'Main Warehouse',
-    date: '2024-05-11',
-    items_count: 8,
-    status: 'COMPLETED'
-  }
-];
+import { useTransferList, type TransferSummary } from '@/features/operations/hooks/useTransferList';
 
 export function TransferHubClient() {
   const t = useTranslations('transfers');
   const tc = useTranslations('common');
   
-  const [transfers] = useState<TransferItem[]>(MOCK_TRANSFERS);
+  const { data: transfersData } = useTransferList();
+  const transfers = transfersData?.data || [];
 
   const stats = useMemo(() => {
-    const pending = transfers.filter(x => x.status === 'PENDING').length;
-    const transit = transfers.filter(x => x.status === 'IN_TRANSIT').length;
-    const completed = transfers.filter(x => x.status === 'COMPLETED' && x.date === '2024-05-12').length;
+    const pending = transfers.filter(x => x.transfer_status === 'PENDING').length;
+    const transit = transfers.filter(x => x.transfer_status === 'IN_TRANSIT').length;
+    const completed = transfers.filter(x => x.transfer_status === 'COMPLETED').length;
     
     return {
       pending,
       transit,
       completed,
-      efficiency: 94.5
+      efficiency: completed > 0 ? Math.round((completed / Math.max(transfers.length, 1)) * 100) : 0
     };
   }, [transfers]);
 
-  const columns: ColumnDef<TransferItem, unknown>[] = [
+  const columns: ColumnDef<TransferSummary, unknown>[] = [
     {
-      accessorKey: 'doc_number',
+      accessorKey: 'document_number',
       header: t('doc_number'),
-      cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-primary">{row.original.doc_number}</span>,
+      cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-primary">{row.original.document_number}</span>,
     },
     {
       id: 'route',
       header: t('route'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3 text-sm font-medium">
-          <span className="text-muted-foreground">{row.original.source}</span>
+          <span className="text-muted-foreground">{row.original.from_warehouse_id}</span>
           <ArrowRight className="w-3 h-3 opacity-30" />
-          <span className="text-foreground">{row.original.target}</span>
+          <span className="text-foreground">{row.original.to_warehouse_id}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'date',
+      accessorKey: 'created_at',
       header: t('transfer_date'),
-      cell: ({ row }) => <span className="tabular-nums opacity-70">{row.original.date}</span>,
+      cell: ({ row }) => <span className="tabular-nums opacity-70">{row.original.created_at?.split('T')[0]}</span>,
     },
     {
-      accessorKey: 'items_count',
-      header: t('items_count'),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <span className="font-bold">{row.original.items_count}</span>
-          <span className="text-[10px] text-muted-foreground uppercase">{tc('items')}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'status',
+      id: 'status',
       header: t('status'),
       cell: ({ row }) => {
-        const s = row.original.status;
+        const s = row.original.transfer_status;
         const colors = {
           PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
           IN_TRANSIT: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
           COMPLETED: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
         };
+        const colorClass = colors[s as keyof typeof colors] || 'bg-muted/10 text-muted-foreground';
         return (
-          <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-sm border ${colors[s]}`}>
-            {t(s.toLowerCase() as 'pending' | 'in_transit' | 'completed')}
+          <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-sm border ${colorClass}`}>
+            {t(s?.toLowerCase() as 'pending' | 'in_transit' | 'completed')}
           </span>
         );
       },
@@ -143,7 +87,7 @@ export function TransferHubClient() {
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-white/5">
             <Eye className="w-4 h-4 opacity-50" />
           </Button>
-          {row.original.status !== 'COMPLETED' && (
+          {row.original.transfer_status !== 'COMPLETED' && (
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-emerald-500/10 hover:text-emerald-500">
               <FileCheck className="w-4 h-4" />
             </Button>
@@ -201,7 +145,6 @@ export function TransferHubClient() {
              <div className="h-2 w-32 bg-white/5 rounded-full overflow-hidden self-center">
                 <div className="h-full bg-primary w-2/3" />
              </div>
-             <span className="text-[10px] font-bold uppercase opacity-50">{t('capacity_utilization', { percent: 67 })}</span>
           </div>
         </div>
         <PrecisionTable 

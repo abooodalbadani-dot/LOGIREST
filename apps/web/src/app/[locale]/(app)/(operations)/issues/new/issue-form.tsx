@@ -27,15 +27,17 @@ import { Input } from "@/components/ui/input";
 import { LockBanner } from "@/components/ui/lock-banner";
 import { FEFOLotAllocator } from "@/components/ui/fefo-lot-allocator";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
-import { useCreateIssue } from "@/features/operations/api/useIssues";
+import { useCreateIssue } from "@/features/operations/hooks/useCreateIssue";
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useDepartments } from "@/features/departments/hooks/useDepartments";
 import { useItems } from "@/features/items/api/useItems";
+import { useLotsByItem } from "@/features/operations/hooks/useLotsByItem";
 import { type Item } from "@/features/items/types";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
+import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { cn } from "@/lib/utils";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -63,8 +65,7 @@ interface CustomLineItem extends LineItem {
   selectedItem?: Item;
 }
 
-// Simulated locked warehouse IDs for demo
-const LOCKED_WAREHOUSES = new Set(["wh-locked-01", "wh-3"]);
+
 
 export function IssueForm() {
   const t = useTranslations("operations.issue");
@@ -79,13 +80,13 @@ export function IssueForm() {
   const departments = deptData?.data || [];
   const { data: items } = useItems();
 
- const [allocatorOpen, setAllocatorOpen] = useState(false);
- const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
- const [confirmOpen, setConfirmOpen] = useState(false);
+  const [allocatorOpen, setAllocatorOpen] = useState(false);
+  const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
- const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
+  const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
- const form = useForm<IssueFormValues>({
+  const form = useForm<IssueFormValues>({
   resolver: zodResolver(formSchema),
   defaultValues: {
     warehouse_id: "",
@@ -105,10 +106,17 @@ export function IssueForm() {
   name: "lines",
  });
 
- const watchedLines = useWatch({
-  control: form.control,
-  name: "lines",
- });
+  const watchedLines = useWatch({
+   control: form.control,
+   name: "lines",
+  });
+
+  const watchedWarehouse = useWatch({ control: form.control, name: "warehouse_id" });
+  const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.item_id : undefined;
+  const { data: availableLots } = useLotsByItem({
+    item_id: activeItemId,
+    warehouse_id: watchedWarehouse,
+  });
 
   const tableLines = React.useMemo<CustomLineItem[]>(() => {
     return fields.map((field, index) => {
@@ -213,11 +221,8 @@ export function IssueForm() {
     </span>
   ), []);
 
- const watchedWarehouse = useWatch({
-  control: form.control,
-  name: "warehouse_id",
- });
- const isWarehouseLocked = LOCKED_WAREHOUSES.has(watchedWarehouse);
+ const { data: lockState } = useWarehouseLock(watchedWarehouse || null);
+ const isWarehouseLocked = lockState?.isLocked ?? false;
 
  const handleOpenAllocator = (index: number) => {
  setActiveLineIndex(index);
@@ -443,13 +448,14 @@ export function IssueForm() {
 
   {/* FEFO Allocator Overlay */}
   {activeLineIndex !== null && (
-  <FEFOLotAllocator
-  isOpen={allocatorOpen}
-  onClose={() => setAllocatorOpen(false)}
-  itemId={fields[activeLineIndex].item_id}
-  requestedQty={fields[activeLineIndex].requested_qty || 1}
-  onAllocate={handleAllocate}
-  />
+   <FEFOLotAllocator
+   isOpen={allocatorOpen}
+   onClose={() => setAllocatorOpen(false)}
+   itemId={fields[activeLineIndex].item_id}
+   requestedQty={fields[activeLineIndex].requested_qty || 1}
+   onAllocate={handleAllocate}
+   lots={availableLots?.map(l => ({ lot_number: l.lot_number, expiry_date: l.expiry_date ?? '', allocated_qty: 0, availableQty: l.qty_available, is_expired: l.is_expired }))}
+   />
   )}
 
  {/* Posting Confirmation Sequence */}

@@ -8,8 +8,8 @@ export function useShipTransfer(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: ({ id, version, signal, headers }: { id: string; version: number; signal?: AbortSignal; headers?: Record<string, string> }) =>
-      apiClient.post(`/operations/transfers/${id}/ship`, successSchema, { version }, { signal, headers }),
+    mutationFn: ({ id, version, signal, headers, lines }: { id: string; version: number; signal?: AbortSignal; headers?: Record<string, string>; lines?: Array<{ line_id: string; scanned_qty: number }> }) =>
+      apiClient.post(`/operations/transfers/${id}/ship`, successSchema, { version, lines }, { signal, headers }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transfer', id] });

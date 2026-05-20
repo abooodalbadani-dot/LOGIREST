@@ -20,71 +20,16 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
-
-interface YieldItem {
-  id: string;
-  recipe_name: string;
-  category: string;
-  input_qty: number;
-  output_qty: number;
-  waste_qty: number;
-  yield_pct: number;
-  standard_yield: number;
-  efficiency: number;
-}
-
-const MOCK_YIELD_DATA: YieldItem[] = [
-  {
-    id: '1',
-    recipe_name: 'mock.recipes.ribeye',
-    category: 'mock.categories.protein',
-    input_qty: 25.0,
-    output_qty: 18.5,
-    waste_qty: 6.5,
-    yield_pct: 74,
-    standard_yield: 75,
-    efficiency: 98.6
-  },
-  {
-    id: '2',
-    recipe_name: 'mock.recipes.pasta',
-    category: 'mock.categories.starch',
-    input_qty: 10.0,
-    output_qty: 9.8,
-    waste_qty: 0.2,
-    yield_pct: 98,
-    standard_yield: 97,
-    efficiency: 101.0
-  },
-  {
-    id: '3',
-    recipe_name: 'mock.recipes.asparagus',
-    category: 'mock.categories.vegetable',
-    input_qty: 15.0,
-    output_qty: 11.2,
-    waste_qty: 3.8,
-    yield_pct: 74.6,
-    standard_yield: 80,
-    efficiency: 93.2
-  },
-  {
-    id: '4',
-    recipe_name: 'mock.recipes.puree',
-    category: 'mock.categories.prep',
-    input_qty: 5.0,
-    output_qty: 3.2,
-    waste_qty: 1.8,
-    yield_pct: 64,
-    standard_yield: 65,
-    efficiency: 98.4
-  }
-];
+import { useYieldList } from '@/features/operations/hooks/useYieldList';
+import { type YieldBatch } from '@/features/operations/hooks/useYield';
 
 export function YieldManagementClient() {
   const t = useTranslations('yield_management');
   const tc = useTranslations('common');
   
-  const [data, setData] = useState<YieldItem[]>(MOCK_YIELD_DATA);
+  const { data: yieldData, isLoading } = useYieldList();
+  const data = yieldData || [];
+  
   const [activeForm, setActiveForm] = useState({
     input: 0,
     output: 0,
@@ -92,6 +37,9 @@ export function YieldManagementClient() {
   });
 
   const stats = useMemo(() => {
+    if (data.length === 0) {
+      return { avgYield: 0, totalWaste: 0, avgEfficiency: 0, productionRuns: 0 };
+    }
     const avgYield = data.reduce((acc, item) => acc + item.yield_pct, 0) / data.length;
     const totalWaste = data.reduce((acc, item) => acc + item.waste_qty, 0);
     const avgEfficiency = data.reduce((acc, item) => acc + item.efficiency, 0) / data.length;
@@ -100,18 +48,32 @@ export function YieldManagementClient() {
       avgYield,
       totalWaste,
       avgEfficiency,
-      productionRuns: 124
+      productionRuns: data.length
     };
   }, [data]);
 
-  const columns: ColumnDef<YieldItem, unknown>[] = [
+  const bottlenecks = useMemo(() => {
+    return data
+      .filter(item => item.efficiency < 100)
+      .sort((a, b) => a.efficiency - b.efficiency)
+      .slice(0, 3);
+  }, [data]);
+
+  const topPerformers = useMemo(() => {
+    return data
+      .filter(item => item.efficiency >= 100)
+      .sort((a, b) => b.efficiency - a.efficiency)
+      .slice(0, 3);
+  }, [data]);
+
+  const columns: ColumnDef<YieldBatch, unknown>[] = [
     {
       accessorKey: 'recipe_name',
       header: tc('name'),
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-foreground">{t(row.original.recipe_name as Parameters<typeof t>[0])}</span>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{t(row.original.category as Parameters<typeof t>[0])}</span>
+          <span className="font-semibold text-foreground">{row.original.recipe_name}</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.original.category}</span>
         </div>
       ),
     },
@@ -181,13 +143,13 @@ export function YieldManagementClient() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <MetricCard
           label={t('yield_percentage')}
-          value={`${stats.avgYield.toFixed(1)}%`}
+          value={stats.productionRuns > 0 ? `${stats.avgYield.toFixed(1)}%` : '-'}
           icon={TrendingUp}
           color="emerald"
         />
         <MetricCard
           label={t('efficiency_score')}
-          value={`${stats.avgEfficiency.toFixed(1)}%`}
+          value={stats.productionRuns > 0 ? `${stats.avgEfficiency.toFixed(1)}%` : '-'}
           icon={Scale}
           color="cyan"
         />
@@ -199,7 +161,7 @@ export function YieldManagementClient() {
         />
         <MetricCard
           label={t('waste_qty')}
-          value={`${stats.totalWaste.toFixed(1)} kg`}
+          value={stats.productionRuns > 0 ? `${stats.totalWaste.toFixed(1)} kg` : '-'}
           icon={Trash2}
           color="rose"
         />
@@ -208,44 +170,45 @@ export function YieldManagementClient() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Quick Insights & Analysis */}
         <div className="lg:col-span-1 space-y-8">
-          <div className="p-6 rounded-sm bg-surface-container-low border border-white/5 shadow-xl space-y-6">
-            <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              {t('bottlenecks')}
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-rose-500/5 rounded-sm border border-rose-500/10">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold">{t('mock.recipes.asparagus')}</span>
-                  <span className="text-[10px] text-rose-400">{t('vs_standard', { value: '-5.4%' })}</span>
-                </div>
-                <ArrowDownRight className="w-4 h-4 text-rose-400" />
-              </div>
-              <div className="flex items-center justify-between p-3 bg-amber-500/5 rounded-sm border border-amber-500/10">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold">{t('mock.recipes.puree')}</span>
-                  <span className="text-[10px] text-amber-400">{t('vs_standard', { value: '-1.0%' })}</span>
-                </div>
-                <ArrowDownRight className="w-4 h-4 text-amber-400" />
+          {bottlenecks.length > 0 && (
+            <div className="p-6 rounded-sm bg-surface-container-low border border-white/5 shadow-xl space-y-6">
+              <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                {t('bottlenecks')}
+              </h3>
+              <div className="space-y-4">
+                {bottlenecks.map(item => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-rose-500/5 rounded-sm border border-rose-500/10">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">{item.recipe_name}</span>
+                      <span className="text-[10px] text-rose-400">{t('vs_standard', { value: `${(item.efficiency - 100).toFixed(1)}%` })}</span>
+                    </div>
+                    <ArrowDownRight className="w-4 h-4 text-rose-400" />
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="p-6 rounded-sm bg-surface-container-low border border-white/5 shadow-xl space-y-6">
-            <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-              {t('top_performers')}
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-emerald-500/5 rounded-sm border border-emerald-500/10">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold">{t('mock.recipes.pasta')}</span>
-                  <span className="text-[10px] text-emerald-400">{t('vs_standard', { value: '+4.0%' })}</span>
-                </div>
-                <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+          {topPerformers.length > 0 && (
+            <div className="p-6 rounded-sm bg-surface-container-low border border-white/5 shadow-xl space-y-6">
+              <h3 className="text-label-xs font-bold uppercase text-muted-foreground/50 tracking-widest flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                {t('top_performers')}
+              </h3>
+              <div className="space-y-4">
+                {topPerformers.map(item => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-emerald-500/5 rounded-sm border border-emerald-500/10">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">{item.recipe_name}</span>
+                      <span className="text-[10px] text-emerald-400">{t('vs_standard', { value: `+${(item.efficiency - 100).toFixed(1)}%` })}</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Performance Table */}

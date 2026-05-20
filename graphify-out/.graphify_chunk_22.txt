@@ -1,0 +1,8 @@
+E:\Kitchen‑Store Inventory System\apps\web\src\types\stocktake.ts
+E:\Kitchen‑Store Inventory System\apps\web\src\utils\audio.ts
+E:\Kitchen‑Store Inventory System\apps\web\src\utils\currency.ts
+E:\Kitchen‑Store Inventory System\apps\web\src\utils\export.ts
+E:\Kitchen‑Store Inventory System\apps\web\src\utils\fefo.ts
+E:\Kitchen‑Store Inventory System\apps\web\src\utils\path.ts
+E:\Kitchen‑Store Inventory System\apps\web\src\app\favicon.svg
+E:\Kitchen‑Store Inventory System\apps\web\src\app\icon.svg

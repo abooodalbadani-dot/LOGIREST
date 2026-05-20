@@ -6,9 +6,12 @@ import { successSchema } from '@/types/api';
 
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail } from './useAdjustment';
+import { useAuth } from '@/providers/AuthProvider';
 
 export function usePostAdjustment(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const userName = user?.name || 'Unknown';
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, version, signal }: { id: string; version: number; signal?: AbortSignal }) => 
@@ -22,7 +25,7 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
           posted_at: new Date().toISOString(),
           timeline: [
             ...(old.timeline || []),
-            { status: ADJUSTMENT_STATUS.POSTED, at: new Date().toISOString(), by: 'Current User' }
+            { status: ADJUSTMENT_STATUS.POSTED, at: new Date().toISOString(), by: userName }
           ]
         };
       });

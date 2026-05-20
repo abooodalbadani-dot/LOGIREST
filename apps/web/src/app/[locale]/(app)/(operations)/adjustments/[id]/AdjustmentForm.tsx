@@ -32,6 +32,7 @@ import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { useItems } from '@/features/items/api/useItems';
 import { useVarianceReasons } from '@/features/operations/api/useVarianceReasons';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { z } from 'zod';
@@ -79,18 +80,19 @@ export function AdjustmentForm({
 
   const { data: items, isLoading: isLoadingItems } = useItems();
   const { data: varianceReasonsData } = useVarianceReasons();
+  const { data: warehousesData } = useWarehouses();
+  const warehouses = warehousesData?.data || [];
 
-  const [warehouseId, setWarehouseId] = useState(document?.warehouse_id || 'wh-1');
+  const [warehouseId, setWarehouseId] = useState(document?.warehouse_id || (warehouses.length > 0 ? warehouses[0].id : ''));
   const { data: lockState } = useWarehouseLock(warehouseId);
   const [reason, setReason] = useState<string>(document?.reason || 'DAMAGE');
   const [notes, setNotes] = useState(document?.notes || '');
   const [lines, setLines] = useState<AdjustmentLine[]>(document?.lines || []);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   
-  const warehouseItems = useMemo(() => [
-    { id: 'wh-1', name_en: tc('warehouses.main') || 'Main Warehouse', name_ar: tc('warehouses.main') || 'المستودع الرئيسي' },
-    { id: 'wh-2', name_en: tc('warehouses.kitchen') || 'Kitchen Store', name_ar: tc('warehouses.kitchen') || 'مستودع المطبخ' },
-  ], [tc]);
+  const warehouseItems = useMemo(() => 
+    warehouses.map(w => ({ id: w.id, name_en: w.name_en, name_ar: w.name_ar })),
+  [warehouses]);
 
   const fallbackReasons = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'];
   const reasonItems = useMemo(() => {

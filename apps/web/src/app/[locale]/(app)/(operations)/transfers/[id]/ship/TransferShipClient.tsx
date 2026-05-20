@@ -125,6 +125,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const handleShip = () => {
     if (!transfer) return;
 
+    const scanLines = Object.entries(scannedLines).map(([line_id, scanned_qty]) => ({ line_id, scanned_qty }));
     shipTransfer.mutate(
       { 
         id, 
@@ -132,7 +133,8 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
         signal: abortController.signal,
         headers: {
           'X-Idempotency-Key': idempotencyKey
-        }
+        },
+        lines: scanLines
       },
       {
         onSuccess: () => {

@@ -16,25 +16,11 @@ import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2, Globe, 
 import { Card, CardContent } from '@/components/ui/card';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { useBranches } from '@/features/branches/hooks/useBranches';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { useDepartments } from '@/features/departments/hooks/useDepartments';
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'INV_MGR', 'APPROVER', 'WH_KEEPER', 'PROC_OFFICER', 'AUDITOR', 'VIEWER'];
-
-const MOCK_BRANCHES = [
-  { id: 'br-1', name_ar: 'الفرع الرئيسي', name_en: 'Main Branch' },
-  { id: 'br-2', name_ar: 'فرع الشمال', name_en: 'North Branch' },
-];
-
-const MOCK_WAREHOUSES = [
-  { id: 'wh-1', branch_id: 'br-1', name_ar: 'المستودع الرئيسي', name_en: 'Main Warehouse' },
-  { id: 'wh-2', branch_id: 'br-1', name_ar: 'المستودع الثانوي', name_en: 'Secondary Warehouse' },
-  { id: 'wh-3', branch_id: 'br-2', name_ar: 'لوجستيات الشمال', name_en: 'North Logistics' },
-];
-
-const MOCK_DEPARTMENTS = [
-  { id: 'dep-1', warehouse_id: 'wh-1', name_ar: 'المطبخ', name_en: 'Kitchen' },
-  { id: 'dep-2', warehouse_id: 'wh-1', name_ar: 'المخزن', name_en: 'Store' },
-  { id: 'dep-3', warehouse_id: 'wh-3', name_ar: 'التوزيع', name_en: 'Distribution' },
-];
 
 interface Props {
   id: string | null;
@@ -51,6 +37,12 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   const { user: currentUser } = useAuth();
   const { createUser, updateUser, isLastActiveAdmin } = useAdminUserMutations();
   const { playSound } = useAudioFeedback();
+  const { data: branchesData } = useBranches();
+  const { data: warehousesData } = useWarehouses();
+  const { data: departmentsData } = useDepartments();
+  const branches = branchesData?.data || [];
+  const warehouses = warehousesData?.data || [];
+  const departments = departmentsData?.data || [];
 
   const isSelf = currentUser?.id === id;
   const isAuditor = currentUser?.role === 'AUDITOR' || isReadOnly;
@@ -86,14 +78,14 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   // Cascading Logic: Warehouses depend on Branches
   const filteredWarehouses = useMemo(() => {
     if (!selectedBranches?.length) return [];
-    return MOCK_WAREHOUSES.filter(wh => selectedBranches.includes(wh.branch_id));
-  }, [selectedBranches]);
+    return warehouses.filter(wh => selectedBranches.includes(wh.branch_id));
+  }, [selectedBranches, warehouses]);
 
   // Cascading Logic: Departments depend on Warehouses
   const filteredDepartments = useMemo(() => {
     if (!selectedWarehouses?.length) return [];
-    return MOCK_DEPARTMENTS.filter(dep => selectedWarehouses.includes(dep.warehouse_id));
-  }, [selectedWarehouses]);
+    return departments.filter(dep => selectedWarehouses.includes(dep.warehouse_id));
+  }, [selectedWarehouses, departments]);
 
   const languageItems = useMemo(() => [
     { id: 'en', name_en: t('lang_en'), name_ar: t('lang_en') },
@@ -261,7 +253,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                 <MultiSelect
                   label={t('branch_scope')}
                   icon={<Building2 className="w-3 h-3" />}
-                  options={MOCK_BRANCHES.map(b => ({ id: b.id, label: locale === 'ar' ? b.name_ar : b.name_en }))}
+                  options={branches.map(b => ({ id: b.id, label: locale === 'ar' ? b.name_ar : b.name_en }))}
                   selected={selectedBranches}
                   onChange={(v) => setValue('branch_ids', v)}
                   disabled={isAuditor || isSelf}

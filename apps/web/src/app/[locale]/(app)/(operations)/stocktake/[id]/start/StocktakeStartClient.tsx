@@ -30,7 +30,7 @@ import { LockBanner } from "@/components/shared/LockBanner";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
-import { useStocktake, useStartStocktake } from "@/features/operations/api/useStocktakes";
+import { useStocktake, useStartStocktake, useBeginCounting } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
@@ -53,6 +53,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
   const startStocktake = useStartStocktake();
+  const beginCounting = useBeginCounting();
   const { playSound } = useAudioFeedback();
   
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -75,8 +76,16 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
   const handleStart = () => {
     startStocktake.mutate({ id }, {
       onSuccess: () => {
-        playSound('success');
-        router.push(`/stocktake/${id}/count`, { skipGuard: true });
+        beginCounting.mutate({ id }, {
+          onSuccess: () => {
+            playSound('success');
+            router.push(`/stocktake/${id}/count`, { skipGuard: true });
+          },
+          onError: () => {
+            playSound('error');
+            toast.error(t('errors.failed_to_begin_counting'));
+          }
+        });
       },
       onError: (error: unknown) => {
         playSound('error');
@@ -203,11 +212,11 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
           >
             <Button
               onClick={() => setConfirmOpen(true)}
-              disabled={startStocktake.isPending || lockLoading}
+              disabled={startStocktake.isPending || beginCounting.isPending || lockLoading}
               className="w-full h-20 rounded-[1.5rem] text-white bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:shadow-[0_0_50px_rgba(6,182,212,0.5)] transition-all group overflow-hidden relative"
             >
               <div className="relative z-10 flex items-center justify-center gap-4">
-                {startStocktake.isPending ? (
+                {startStocktake.isPending || beginCounting.isPending ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
                   <>

@@ -16,6 +16,10 @@ export default async function GoodsReceivedScanPage(props: { params: Promise<{ l
  const params = await props.params;
  setRequestLocale(params.locale);
 
+ if (process.env.NODE_ENV !== 'development') {
+  return null;
+ }
+
  return (
  <ProtectedRoute requiredAction="update" requiredResource="grn">
  <GRNScanClient id={params.id} locale={params.locale as 'ar' | 'en'} />

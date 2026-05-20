@@ -10,23 +10,10 @@ import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 
-// Mock available lots per item — sorted by expiry ASC (FEFO rule)
-const MOCK_AVAILABLE_LOTS: Record<string, (IssueLot & { availableQty: number })[]> = {
-  'item-oil': [
-    { lot_number: 'LOT-O01', expiry_date: '2024-11-01', allocated_qty: 0, availableQty: 20, is_expired: true },
-    { lot_number: 'LOT-O02', expiry_date: '2025-08-01', allocated_qty: 0, availableQty: 50 }
-  ],
-  'item-salt': [
-    { lot_number: 'LOT-S01', expiry_date: '2025-06-01', allocated_qty: 0, availableQty: 100 }
-  ],
-  'item-tomato': [
-    { lot_number: 'LOT-T01', expiry_date: '2024-12-31', allocated_qty: 0, availableQty: 15 }
-  ],
-  'item-cheese': [
-    { lot_number: 'LOT-C01', expiry_date: '2023-01-01', allocated_qty: 0, availableQty: 5, is_expired: true },
-    { lot_number: 'LOT-C02', expiry_date: '2025-09-15', allocated_qty: 0, availableQty: 30 }
-  ],
-};
+interface AvailableLot extends IssueLot {
+  availableQty: number;
+  is_expired?: boolean;
+}
 
 interface FEFOLotAllocatorProps {
   isOpen: boolean;
@@ -34,11 +21,12 @@ interface FEFOLotAllocatorProps {
   itemId: string;
   requestedQty: number;
   onAllocate: (lots: IssueLot[]) => void;
+  lots?: AvailableLot[];
 }
 
-export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllocate }: FEFOLotAllocatorProps) {
+export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllocate, lots }: FEFOLotAllocatorProps) {
   const t = useTranslations("common.fefo");
-  const availableLots = MOCK_AVAILABLE_LOTS[itemId] ?? [];
+  const availableLots = lots ?? [];
   const [allocations, setAllocations] = useState<Record<string, number>>({});
 
   const { now, nearExpiryThreshold } = React.useMemo(() => {

@@ -22,6 +22,7 @@ import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 
 interface AdjustmentViewerProps {
   document: AdjustmentDetail;
@@ -36,6 +37,12 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   const tc = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
+
+  const { data: warehousesData } = useWarehouses();
+  const warehouses = warehousesData?.data || [];
+  const warehouseName = document?.warehouse_id
+    ? warehouses.find(w => w.id === document.warehouse_id)
+    : null;
 
   const adjustmentStatus = document?.status ?? ADJUSTMENT_STATUS.DRAFT;
   
@@ -155,7 +162,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('warehouse')}</label>
-                  <p className="font-bold text-body-md bg-surface-container-low p-3 rounded-lg uppercase italic">{document.warehouse_id === 'wh-1' ? tc('warehouses.main') : tc('warehouses.kitchen')}</p>
+                  <p className="font-bold text-body-md bg-surface-container-low p-3 rounded-lg uppercase italic">{warehouseName ? (locale === 'ar' ? warehouseName.name_ar : warehouseName.name_en) : document.warehouse_id}</p>
                 </div>
 
                 <div className="space-y-1.5">
