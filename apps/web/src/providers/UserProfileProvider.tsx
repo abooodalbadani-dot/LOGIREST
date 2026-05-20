@@ -1,22 +1,40 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { apiClient } from '@/lib/api/client';
 import { AuthUserSchema } from '@/types/auth';
+import { z } from 'zod';
 
 interface UserProfileContextType {
   avatarUrl: string | null;
   displayName: string;
   themePreferences: 'light' | 'dark';
-  updateProfile: (fields: { 
-    displayName?: string; 
-    avatarUrl?: string | null; 
+  notificationPreferences: {
+    lowStock: boolean;
+    expiry: boolean;
+    pendingApproval: boolean;
+    poFinalized: boolean;
+    security: boolean;
+  };
+  locale: 'ar' | 'en';
+  updateProfile: (fields: {
+    displayName?: string;
+    avatarUrl?: string | null;
     themePreferences?: 'light' | 'dark';
     phone?: string | null;
     email?: string;
+    notificationPreferences?: {
+      lowStock?: boolean;
+      expiry?: boolean;
+      pendingApproval?: boolean;
+      poFinalized?: boolean;
+      security?: boolean;
+    };
+    locale?: 'ar' | 'en';
   }) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<string | null>;
   isSaving: boolean;
   error: string | null;
 }
@@ -30,43 +48,82 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Derive active states synchronously from source contexts to prevent cascading useEffect renders
   const avatarUrl = user?.avatar_url || null;
   const displayName = user?.name || '';
   const themePreferences: 'light' | 'dark' = theme === 'dark' ? 'dark' : 'light';
+  const notificationPreferences = user?.notification_preferences ?? {
+    lowStock: true,
+    expiry: true,
+    pendingApproval: true,
+    poFinalized: false,
+    security: true,
+  };
+  const locale: 'ar' | 'en' = user?.locale || 'en';
 
-  const updateProfile = async (fields: { 
-    displayName?: string; 
-    avatarUrl?: string | null; 
+  const uploadAvatar = useCallback(async (file: File): Promise<string | null> => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const result = await apiClient.post('/auth/profile/avatar', z.any(), formData);
+      const url = (result as { avatar_url: string })?.avatar_url || null;
+      if (url) {
+        updateUser({ avatar_url: url });
+      }
+      return url;
+    } catch (err: unknown) {
+      console.error('[UserProfileProvider] Failed to upload avatar:', err);
+      const msg = err instanceof Error ? err.message : 'Unknown error during avatar upload';
+      setError(msg);
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [updateUser]);
+
+  const updateProfile = async (fields: {
+    displayName?: string;
+    avatarUrl?: string | null;
     themePreferences?: 'light' | 'dark';
     phone?: string | null;
     email?: string;
+    notificationPreferences?: {
+      lowStock?: boolean;
+      expiry?: boolean;
+      pendingApproval?: boolean;
+      poFinalized?: boolean;
+      security?: boolean;
+    };
+    locale?: 'ar' | 'en';
   }) => {
     setIsSaving(true);
     setError(null);
     try {
-      // 1. Sync active system theme immediately
       if (fields.themePreferences) {
         setTheme(fields.themePreferences);
       }
 
-      // 2. Build the updated fields profile
       const updatedFields: Record<string, unknown> = {};
       if (fields.displayName !== undefined) updatedFields.name = fields.displayName;
       if (fields.avatarUrl !== undefined) updatedFields.avatar_url = fields.avatarUrl;
       if (fields.phone !== undefined) updatedFields.phone = fields.phone;
       if (fields.email !== undefined) updatedFields.email = fields.email;
+      if (fields.locale !== undefined) updatedFields.locale = fields.locale;
+      if (fields.notificationPreferences !== undefined) {
+        updatedFields.notification_preferences = {
+          ...notificationPreferences,
+          ...fields.notificationPreferences,
+        };
+      }
 
       if (user) {
         const fullPayload = {
           ...user,
-          ...updatedFields
+          ...updatedFields,
         };
 
-        // 3. Make simulated API / DB call
-        await apiClient.put(`/auth/profile`, AuthUserSchema, fullPayload);
-
-        // 4. Trigger synchronous Auth Provider update to propagate global changes
+        await apiClient.put('/auth/profile', AuthUserSchema, fullPayload);
         updateUser(updatedFields);
       }
     } catch (err: unknown) {
@@ -80,14 +137,17 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   };
 
   return (
-    <UserProfileContext.Provider 
-      value={{ 
-        avatarUrl, 
-        displayName, 
-        themePreferences, 
-        updateProfile, 
-        isSaving, 
-        error 
+    <UserProfileContext.Provider
+      value={{
+        avatarUrl,
+        displayName,
+        themePreferences,
+        notificationPreferences,
+        locale,
+        updateProfile,
+        uploadAvatar,
+        isSaving,
+        error,
       }}
     >
       {children}

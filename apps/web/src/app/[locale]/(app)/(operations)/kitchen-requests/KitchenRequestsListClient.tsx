@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
@@ -26,6 +26,7 @@ import {
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { audioAlerts } from '@/utils/audio';
 
 import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
 import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
@@ -52,6 +53,15 @@ export function KitchenRequestsListClient({
     department_id: initialDepartmentId,
     page: initialPage
   });
+
+  const prevCount = useRef(data?.data?.length ?? 0);
+  useEffect(() => {
+    const currentCount = data?.data?.length ?? 0;
+    if (prevCount.current > 0 && currentCount > prevCount.current) {
+      audioAlerts.playScanSuccess();
+    }
+    prevCount.current = currentCount;
+  }, [data?.data?.length]);
 
   const columns = useMemo<ColumnDef<KitchenRequestSummary>[]>(() => [
     {

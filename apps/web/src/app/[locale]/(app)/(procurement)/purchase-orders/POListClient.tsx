@@ -8,7 +8,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { usePOList, POSummary } from '@/features/purchasing/hooks/usePOList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck } from 'lucide-react';
+import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck, AlertTriangle } from 'lucide-react';
 
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -71,18 +71,29 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
     {
       accessorKey: 'expected_date',
       header: t('expected_date'),
-      cell: ({ row }) => (
-        <div className="flex flex-col text-start">
-          <ClientOnlyTime 
-            date={row.original.expected_date} 
-            mode="date" 
-            locale={locale} 
-            fallback="--/--/----"
-            className="text-label-xs font-mono font-semibold text-foreground/80"
-          />
-          <span className="text-label-xxs uppercase opacity-30 font-semibold">{t('expected_date')}</span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const isOverdue = row.original.expected_date && new Date(row.original.expected_date) < new Date() && row.original.status !== 'FULFILLED';
+        return (
+          <div className="flex flex-col text-start">
+            <div className="flex items-center gap-2">
+              <ClientOnlyTime 
+                date={row.original.expected_date} 
+                mode="date" 
+                locale={locale} 
+                fallback="--/--/----"
+                className={isOverdue ? "text-label-xs font-mono font-bold text-status-error animate-pulse" : "text-label-xs font-mono font-semibold text-foreground/80"}
+              />
+              {isOverdue && (
+                <span className="text-label-xxs font-bold uppercase text-status-error bg-status-error/10 px-1.5 py-0.5 rounded-sm animate-pulse">
+                  <AlertTriangle className="w-3 h-3 inline me-0.5" />
+                  Overdue
+                </span>
+              )}
+            </div>
+            <span className="text-label-xxs uppercase opacity-30 font-semibold">{t('expected_date')}</span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'supplier_total_amount',

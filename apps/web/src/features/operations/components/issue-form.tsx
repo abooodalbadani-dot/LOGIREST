@@ -15,6 +15,7 @@ import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -52,6 +53,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   
   const postIssue = usePostIssue(id, { onConflict });
   const isPostPending = postIssue.isPending;
+  const { playSound } = useAudioFeedback();
 
   const { data: items = [] } = useItems();
 
@@ -139,6 +141,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       if (!res.data || res.data.length === 0) {
         audioAlerts.playScanInvalid();
         setScanError(t('no_item_found'));
+        playSound('error');
         toast.error(t('no_item_found'));
         return;
       }
@@ -187,6 +190,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
       if (totalAvailable <= 0) {
         audioAlerts.playScanInvalid();
+        playSound('error');
         toast.error(t('no_stock_available') || "Shortage: No available stock for this item in this warehouse.");
         setScanError(t('no_stock_available') || "Shortage: No available stock.");
         return;
@@ -217,6 +221,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         });
 
         audioAlerts.playScanSuccess();
+        playSound('success');
         toast.success(t('allocated_successfully') || "FEFO auto-allocated successfully.");
       } else {
         // Partial shortage warning

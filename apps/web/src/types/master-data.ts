@@ -17,7 +17,7 @@ export interface Department {
  version?: number;
 }
 
-export interface UoM { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
+export interface UoM { id: string; code: string; name_ar: string; name_en: string; category?: string; is_active: boolean; created_at: string; version?: number; }
 export interface UoMConversion { from_uom_id: string; to_uom_id: string; factor: number; }
 export interface Category { id: string; code: string; name_ar: string; name_en: string; is_referenced?: boolean; version?: number; }
 export interface Item { id: string; code: string; barcode: string; name_ar: string; name_en: string; category_id: string; primary_uom: UoM; uom_conversions: UoMConversion[]; track_lots: boolean; min_stock_level: number; reorder_point: number; last_purchase_price?: number; is_active: boolean; version?: number; has_transactions?: boolean; }
@@ -54,8 +54,8 @@ export const DepartmentSchema = z.object({
 });
 
 export const UoMSchema = z.object({
- id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
- is_active: z.boolean(), created_at: z.string(), version: z.number().optional()
+  id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
+  category: z.string().optional(), is_active: z.boolean(), created_at: z.string(), version: z.number().optional()
 });
 
 export const CategorySchema = z.object({
@@ -148,6 +148,7 @@ export const UoMFormSchema = z.object({
   .regex(/^[A-Z]+$/, 'master_data.uoms.validation.code_uppercase'),
   name_ar: z.string().min(1, 'master_data.uoms.validation.name_ar_required'),
   name_en: z.string().min(1, 'master_data.uoms.validation.name_en_required'),
+  category: z.string().optional(),
   is_active: z.boolean(),
   version: z.number().optional()
 });

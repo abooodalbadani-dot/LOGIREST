@@ -4,10 +4,11 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Ruler, Activity, ShieldCheck } from 'lucide-react';
+import { Ruler, Activity, ShieldCheck, Tags } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -24,6 +25,7 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props {
   id: string | null;
@@ -43,12 +45,13 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
   const conflict = useConflictHandler('uom', id ?? '');
   const update = useUpdateUoM({ onConflict: conflict.triggerConflict });
   const deleteUoM = useDeleteUoM();
+  const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isDirty, isValid } } = useForm<UoMFormValues>({
     resolver: zodResolver(UoMFormSchema),
-    defaultValues: { code: '', name_ar: '', name_en: '', is_active: true, version: undefined },
+    defaultValues: { code: '', name_ar: '', name_en: '', category: '', is_active: true, version: undefined },
     disabled: isReadOnly,
   });
 
@@ -62,6 +65,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
         code: data.code, 
         name_ar: data.name_ar, 
         name_en: data.name_en,
+        category: data.category || '',
         is_active: data.is_active,
         version: data.version
       });
@@ -215,6 +219,35 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                       />
                       {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.name_ar.message}`)}</p>}
                     </div>
+                  </div>
+
+                  <div className="space-y-2 max-w-sm">
+                    <Label htmlFor="uom-category" className="text-label-xs font-semibold uppercase text-muted-foreground/70 flex items-center gap-2">
+                      <Tags className="w-3 h-3" />
+                      {tu('fields.category')}
+                    </Label>
+                    <Controller
+                      name="category"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value || ''}
+                          onValueChange={field.onChange}
+                          disabled={isReadOnly}
+                        >
+                          <SelectTrigger id="uom-category" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase">
+                            <SelectValue placeholder={t('select_none')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {['mass', 'volume', 'unit', 'count', 'length', 'area'].map(cat => (
+                              <SelectItem key={cat} value={cat} className="text-label-xs font-semibold uppercase">
+                                {tu(`category_options.${cat}`)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
                 </div>
               </CardContent>

@@ -27,6 +27,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useState } from 'react';
 
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props { 
   id: string | null; 
@@ -46,6 +47,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const conflict = useConflictHandler('category', id ?? '');
   const update = useUpdateCategory({ onConflict: conflict.triggerConflict });
   const deleteMutation = useDeleteCategory();
+  const { playSound } = useAudioFeedback();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 

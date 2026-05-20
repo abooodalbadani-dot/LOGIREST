@@ -41,12 +41,14 @@ import { useAdminSettings, useUpdateSettings, AdminSettingsSchema, type AdminSet
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function MailSettingsClient() {
   const t = useTranslations('admin.mail_settings');
   const tCommon = useTranslations('common');
   const { data: currentSettings, isLoading } = useAdminSettings();
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
+  const { playSound } = useAudioFeedback();
   
   const [isTesting, setIsTesting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -65,8 +67,10 @@ export function MailSettingsClient() {
     try {
       await updateSettings(data);
       reset(data);
+      playSound('success');
       toast.success(t('save_success'));
     } catch (error) {
+      playSound('error');
       // Error handling is managed by the mutation hook
     }
   };
@@ -76,6 +80,7 @@ export function MailSettingsClient() {
     // Simulate API call for testing SMTP
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsTesting(false);
+    playSound('success');
     toast.success(t('connection_success'));
   };
 

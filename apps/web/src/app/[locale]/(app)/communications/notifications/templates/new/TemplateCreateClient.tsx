@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,10 @@ import {
   Trash2,
   Lock,
   Check,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Database,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,28 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
-
-const PREDEFINED_PARAMETERS: Record<string, Array<{ name: string; label_ar: string; label_en: string; sample_value: string }>> = {
-  LOW_STOCK: [
-    { name: 'item_name', label_ar: 'اسم الصنف', label_en: 'Item Name', sample_value: 'Tomato Paste' },
-    { name: 'qty', label_ar: 'الكمية الحالية', label_en: 'Current Quantity', sample_value: '5' },
-    { name: 'min_qty', label_ar: 'الحد الأدنى', label_en: 'Minimum Threshold', sample_value: '10' }
-  ],
-  EXPIRY_WARNING: [
-    { name: 'item_name', label_ar: 'اسم الصنف', label_en: 'Item Name', sample_value: 'Frozen Beef Breasts' },
-    { name: 'days', label_ar: 'الأيام المتبقية', label_en: 'Days Remaining', sample_value: '3' },
-    { name: 'lot_number', label_ar: 'رقم الدفعة', label_en: 'Lot Number', sample_value: 'LOT-2026-05A' }
-  ],
-  ROLE_UPDATE: [
-    { name: 'user_name', label_ar: 'اسم المستخدم', label_en: 'User Name', sample_value: 'Khalid Nasser' },
-    { name: 'new_role', label_ar: 'الدور الجديد', label_en: 'New Role', sample_value: 'Kitchen Manager' }
-  ],
-  SCHEDULED_REPORT: [
-    { name: 'date', label_ar: 'التاريخ', label_en: 'Date', sample_value: '2026-05-20' },
-    { name: 'branch_name', label_ar: 'اسم الفرع', label_en: 'Branch Name', sample_value: 'Riyadh Main Kitchen' }
-  ],
-  CUSTOM: []
-};
+import { useTriggerEvents, useParameterRegistry } from '@/features/notifications/hooks/useNotificationTemplates';
 
 export function TemplateCreateClient({ locale }: { locale: string }) {
   const t = useTranslations('notifications');
@@ -51,6 +33,32 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
   const router = useRouter();
   const qc = useQueryClient();
   const { playSound } = useAudioFeedback();
+  const { data: triggerEventsData, isLoading: eventsLoading } = useTriggerEvents();
+  const { data: parameterRegistry, isLoading: registryLoading } = useParameterRegistry();
+
+  const triggerEvents = useMemo(() => (triggerEventsData as { data?: Array<{ code: string; name_ar: string; name_en: string; entity_type: string; description: string; suggested_fields: string[] }> })?.data || (triggerEventsData as Array<{ code: string; name_ar: string; name_en: string; entity_type: string; description: string; suggested_fields: string[] }>) || [], [triggerEventsData]);
+
+  const getSuggestedParams = (eventCode: string) => {
+    const event = triggerEvents.find((e: { code: string }) => e.code === eventCode);
+    if (!event || !parameterRegistry) return [];
+    const entityFields = (parameterRegistry as Record<string, Array<{ entity: string; field: string; type: string; label_ar: string; label_en: string; sample_value: string }>>)[event.entity_type];
+    if (!entityFields) return [];
+    const result: Array<{ name: string; label_ar: string; label_en: string; sample_value: string; entity: string; field_path: string }> = [];
+    event.suggested_fields.forEach((fieldName: string) => {
+      const match = entityFields.find((f: { field: string }) => f.field === fieldName);
+      if (match) {
+        result.push({
+          name: `${match.entity.toLowerCase()}_${match.field}`,
+          label_ar: match.label_ar,
+          label_en: match.label_en,
+          sample_value: match.sample_value,
+          entity: match.entity,
+          field_path: match.field,
+        });
+      }
+    });
+    return result;
+  };
 
   const [step, setStep] = useState(1);
   const [template, setTemplate] = useState({
@@ -60,7 +68,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
     subject_en: '',
     body_ar: '',
     body_en: '',
-    allowed_parameters: [...PREDEFINED_PARAMETERS.LOW_STOCK],
+    allowed_parameters: [] as Array<{ name: string; label_ar: string; label_en: string; sample_value: string; entity?: string; field_path?: string }>,
     is_active: true,
   });
 
@@ -71,6 +79,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
     sample_value: '',
   });
 
+  const [entitySearch, setEntitySearch] = useState('');
+  const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const createMutation = useMutation({
@@ -90,11 +100,33 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
 
   const handleTriggerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    const suggested = getSuggestedParams(val);
     setTemplate(prev => ({
       ...prev,
       trigger_event: val,
-      allowed_parameters: [...(PREDEFINED_PARAMETERS[val] || [])]
+      allowed_parameters: [...suggested]
     }));
+    setSelectedEntity(null);
+  };
+
+  const addRegistryField = (field: { entity: string; field: string; label_ar: string; label_en: string; sample_value: string }) => {
+    const paramName = `${field.entity.toLowerCase()}_${field.field}`;
+    if (template.allowed_parameters.some(p => p.name === paramName)) return;
+    setTemplate(prev => ({
+      ...prev,
+      allowed_parameters: [
+        ...prev.allowed_parameters,
+        {
+          name: paramName,
+          label_ar: field.label_ar,
+          label_en: field.label_en,
+          sample_value: field.sample_value,
+          entity: field.entity,
+          field_path: field.field,
+        }
+      ]
+    }));
+    playSound('click');
   };
 
   const addCustomParam = () => {
@@ -209,23 +241,39 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                 <Label htmlFor="trigger_event" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                   EVENT TRIGGER
                 </Label>
-                <div className="relative">
-                  <select
-                    id="trigger_event"
-                    value={template.trigger_event}
-                    onChange={handleTriggerChange}
-                    className="w-full h-14 bg-surface-container border border-white/10 rounded-none px-5 focus:outline-none focus:ring-1 focus:ring-operational-cyan text-sm font-semibold transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="LOW_STOCK">LOW STOCK ALERT (LOW_STOCK)</option>
-                    <option value="EXPIRY_WARNING">EXPIRY WARNING (EXPIRY_WARNING)</option>
-                    <option value="ROLE_UPDATE">USER ROLE CHANGED (ROLE_UPDATE)</option>
-                    <option value="SCHEDULED_REPORT">SCHEDULED DAILY REPORT (SCHEDULED_REPORT)</option>
-                    <option value="CUSTOM">FULLY CUSTOM EVENT TEMPLATE (CUSTOM)</option>
-                  </select>
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/45">
-                    ▼
+                {eventsLoading ? (
+                  <div className="flex items-center gap-2 h-14 bg-surface-container border border-white/10 rounded-none px-5 text-sm text-muted-foreground/60">
+                    <Loader2 className="w-4 h-4 animate-spin text-operational-cyan" />
+                    Loading trigger events...
                   </div>
-                </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      id="trigger_event"
+                      value={template.trigger_event}
+                      onChange={handleTriggerChange}
+                      className="w-full h-14 bg-surface-container border border-white/10 rounded-none px-5 focus:outline-none focus:ring-1 focus:ring-operational-cyan text-sm font-semibold transition-all appearance-none cursor-pointer"
+                    >
+                      {triggerEvents.map((evt: { code: string; name_en: string; entity_type: string }) => (
+                        <option key={evt.code} value={evt.code}>
+                          {evt.name_en.toUpperCase()} ({evt.code}) — {evt.entity_type}
+                        </option>
+                      ))}
+                      <option value="CUSTOM">FULLY CUSTOM EVENT TEMPLATE (CUSTOM)</option>
+                    </select>
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/45">
+                      ▼
+                    </div>
+                    {template.trigger_event !== 'CUSTOM' && (() => {
+                      const evt = triggerEvents.find((e: { code: string }) => e.code === template.trigger_event);
+                      return evt ? (
+                        <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ml-1">
+                          {evt.description} — Entity: <span className="font-mono text-operational-cyan">{evt.entity_type}</span>
+                        </p>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -239,48 +287,57 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
               transition={{ duration: 0.15 }}
               className="space-y-6"
             >
+              {/* Current Parameters List */}
               <div className="space-y-3">
                 <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 block">
                   ALLOWED PARAMETERS FOR TRIGGER: {template.trigger_event}
+                  <span className="ml-2 text-[9px] font-mono text-muted-foreground/45 bg-white/5 px-1.5 py-0.5">
+                    {template.allowed_parameters.length} TOKENS
+                  </span>
                 </Label>
                 
-                <div className="space-y-2 max-h-[220px] overflow-y-auto">
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
                   {template.allowed_parameters.length === 0 ? (
                     <div className="py-8 border border-dashed border-white/10 rounded-none flex flex-col items-center justify-center text-center text-muted-foreground/40 gap-2">
-                      <p className="text-xs italic font-medium">No parameters defined yet. Add custom tokens below.</p>
+                      <p className="text-xs italic font-medium">No parameters defined yet. Add from the entity browser below or create custom tokens.</p>
                     </div>
                   ) : (
                     template.allowed_parameters.map((param) => {
-                      const isPredefined = PREDEFINED_PARAMETERS[template.trigger_event]?.some(p => p.name === param.name);
+                      const isEntityBound = !!(param.entity && param.field_path);
                       return (
                         <div 
                           key={param.name}
-                          className="flex items-center justify-between p-3.5 bg-surface-container border border-white/10 rounded-none"
+                          className="flex items-center justify-between p-3 bg-surface-container border border-white/10 rounded-none"
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs font-bold text-operational-cyan px-2 py-0.5 rounded-none bg-operational-cyan/10 border border-operational-cyan/20">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="font-mono text-[10px] font-bold text-operational-cyan px-2 py-0.5 rounded-none bg-operational-cyan/10 border border-operational-cyan/20 shrink-0">
                               {"{{"}{param.name}{"}}"}
                             </span>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[10px] font-bold text-foreground/80">
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="text-[10px] font-bold text-foreground/80 truncate">
                                 {param.label_en} / {param.label_ar}
                               </span>
-                              <span className="text-[9px] font-mono text-muted-foreground/45">
+                              <span className="text-[9px] font-mono text-muted-foreground/45 truncate">
                                 Sample: {param.sample_value}
+                                {isEntityBound && (
+                                  <span className="ml-2 text-[8px] uppercase tracking-wider text-operational-cyan/60">
+                                    · {param.entity}.{param.field_path}
+                                  </span>
+                                )}
                               </span>
                             </div>
                           </div>
 
-                          {isPredefined ? (
-                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-muted-foreground/35 bg-white/5 border border-white/5 rounded-none px-1.5 py-0.5 tracking-wider">
-                              <Lock className="w-2.5 h-2.5 stroke-[2.5px]" />
-                              Fixed
+                          {isEntityBound ? (
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-muted-foreground/35 bg-white/5 border border-white/5 rounded-none px-1.5 py-0.5 tracking-wider shrink-0">
+                              <Database className="w-2.5 h-2.5 stroke-[2.5px]" />
+                              DB
                             </div>
                           ) : (
                             <button
                               type="button"
                               onClick={() => removeParam(param.name)}
-                              className="p-1.5 rounded-none text-status-error/60 hover:text-status-error hover:bg-status-error/15 transition-colors"
+                              className="p-1.5 rounded-none text-status-error/60 hover:text-status-error hover:bg-status-error/15 transition-colors shrink-0"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -292,12 +349,125 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                 </div>
               </div>
 
+              {/* Entity Field Browser Panel */}
+              {!registryLoading && parameterRegistry && (
+                <div className="border border-white/10 rounded-none bg-surface-container/30 overflow-hidden">
+                  <div className="p-3 border-b border-white/10 flex items-center justify-between">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5" /> ENTITY FIELD BROWSER
+                    </div>
+                    <div className="relative w-48">
+                      <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                      <input
+                        type="text"
+                        value={entitySearch}
+                        onChange={(e) => setEntitySearch(e.target.value)}
+                        placeholder="Search fields..."
+                        className="w-full h-7 text-[10px] bg-surface-container-lowest border border-white/10 rounded-none pl-7 pr-2 outline-none focus:border-operational-cyan/40 text-foreground placeholder:text-muted-foreground/30 font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex">
+                    {/* Entity Sidebar */}
+                    <div className="w-28 shrink-0 border-r border-white/10 max-h-[250px] overflow-y-auto">
+                      {Object.keys(parameterRegistry as Record<string, unknown>).map((entity) => {
+                        const entityIcon = entity === 'Item' || entity === 'Lot' ? '📦' : entity === 'User' ? '👤' : entity === 'Order' || entity === 'Transfer' ? '📋' : entity === 'Adjustment' ? '⚖️' : entity === 'Branch' ? '📍' : '📊';
+                        return (
+                          <button
+                            key={entity}
+                            type="button"
+                            onClick={() => setSelectedEntity(selectedEntity === entity ? null : entity)}
+                            className={`w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                              selectedEntity === entity
+                                ? 'bg-operational-cyan/10 text-operational-cyan border-l-2 border-operational-cyan'
+                                : 'text-muted-foreground/60 hover:bg-surface-container-low hover:text-foreground border-l-2 border-transparent'
+                            }`}
+                          >
+                            <span className="mr-1">{entityIcon}</span>
+                            {entity}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Fields List */}
+                    <div className="flex-1 max-h-[250px] overflow-y-auto p-2">
+                      {selectedEntity ? (
+                        <div className="space-y-1">
+                          {(parameterRegistry as Record<string, Array<{ entity: string; field: string; type: string; label_ar: string; label_en: string; sample_value: string }>>)[selectedEntity]
+                            .filter((f) =>
+                              !entitySearch ||
+                              f.field.toLowerCase().includes(entitySearch.toLowerCase()) ||
+                              f.label_en.toLowerCase().includes(entitySearch.toLowerCase()) ||
+                              f.label_ar.includes(entitySearch)
+                            )
+                            .map((field) => {
+                              const alreadyAdded = template.allowed_parameters.some(
+                                p => p.name === `${field.entity.toLowerCase()}_${field.field}`
+                              );
+                              return (
+                                <button
+                                  key={field.field}
+                                  type="button"
+                                  disabled={alreadyAdded}
+                                  onClick={() => addRegistryField(field)}
+                                  className={`w-full text-left px-3 py-2 rounded-none text-[10px] transition-all flex items-center justify-between gap-2 ${
+                                    alreadyAdded
+                                      ? 'bg-surface-container-low text-muted-foreground/30 cursor-not-allowed'
+                                      : 'hover:bg-surface-container-lowest text-foreground/80 hover:text-operational-cyan'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="font-mono font-bold text-[9px]">
+                                      {field.field}
+                                    </span>
+                                    <span className="text-muted-foreground/40 truncate">
+                                      {locale === 'ar' ? field.label_ar : field.label_en}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className={`text-[7px] uppercase font-black tracking-widest px-1 py-0.5 rounded-none ${
+                                      field.type === 'string' ? 'bg-emerald-500/10 text-emerald-500/70' :
+                                      field.type === 'number' ? 'bg-amber-500/10 text-amber-500/70' :
+                                      field.type === 'date' ? 'bg-sky-500/10 text-sky-500/70' :
+                                      'bg-purple-500/10 text-purple-500/70'
+                                    }`}>
+                                      {field.type}
+                                    </span>
+                                    {alreadyAdded ? (
+                                      <Check className="w-3 h-3 text-emerald-500/50" />
+                                    ) : (
+                                      <Plus className="w-3 h-3 text-muted-foreground/40" />
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          {(parameterRegistry as Record<string, Array<{ field: string }>>)[selectedEntity].filter((f) =>
+                            !entitySearch ||
+                            f.field.toLowerCase().includes(entitySearch.toLowerCase())
+                          ).length === 0 && (
+                            <p className="text-[10px] text-muted-foreground/40 italic p-3 text-center">
+                              No fields match your search.
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground/40 gap-2 py-8">
+                          <Database className="w-6 h-6" />
+                          <p className="text-[10px] italic font-medium">Select an entity on the left to browse its fields.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Add custom parameter subform */}
-              <div className="p-5 border border-white/10 rounded-none bg-surface-container/30 space-y-4">
+              <div className="p-4 border border-white/10 rounded-none bg-surface-container/30 space-y-3">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
                   <Plus className="w-3.5 h-3.5" /> ADD CUSTOM TOKEN VARIABLE
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="space-y-1">
                     <Label htmlFor="p_name" className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">
                       Token Name
@@ -307,7 +477,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                       value={paramForm.name}
                       onChange={(e) => setParamForm(prev => ({ ...prev, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
                       placeholder="e.g. order_id"
-                      className="h-10 text-xs font-mono rounded-none bg-surface-container border border-white/10 px-3"
+                      className="h-9 text-[11px] font-mono rounded-none bg-surface-container border border-white/10 px-3"
                     />
                   </div>
                   <div className="space-y-1">
@@ -319,7 +489,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                       value={paramForm.sample_value}
                       onChange={(e) => setParamForm(prev => ({ ...prev, sample_value: e.target.value }))}
                       placeholder="e.g. ORD-1002"
-                      className="h-10 text-xs rounded-none bg-surface-container border border-white/10 px-3"
+                      className="h-9 text-[11px] rounded-none bg-surface-container border border-white/10 px-3"
                     />
                   </div>
                   <div className="space-y-1">
@@ -331,7 +501,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                       value={paramForm.label_en}
                       onChange={(e) => setParamForm(prev => ({ ...prev, label_en: e.target.value }))}
                       placeholder="e.g. Order ID"
-                      className="h-10 text-xs rounded-none bg-surface-container border border-white/10 px-3"
+                      className="h-9 text-[11px] rounded-none bg-surface-container border border-white/10 px-3"
                     />
                   </div>
                   <div className="space-y-1">
@@ -343,7 +513,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                       value={paramForm.label_ar}
                       onChange={(e) => setParamForm(prev => ({ ...prev, label_ar: e.target.value }))}
                       placeholder="e.g. رقم الطلب"
-                      className="h-10 text-xs rounded-none bg-surface-container border border-white/10 px-3"
+                      className="h-9 text-[11px] rounded-none bg-surface-container border border-white/10 px-3"
                     />
                   </div>
                 </div>
@@ -351,7 +521,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                   type="button"
                   onClick={addCustomParam}
                   disabled={!paramForm.name || !paramForm.label_en || !paramForm.sample_value}
-                  className="w-full h-10 border border-white/10 hover:border-operational-cyan/35 bg-surface-container-lowest rounded-none font-bold uppercase text-[9px] tracking-widest transition-all mt-1"
+                  className="w-full h-9 border border-white/10 hover:border-operational-cyan/35 bg-surface-container-lowest rounded-none font-bold uppercase text-[9px] tracking-widest transition-all"
                 >
                   Register Variable to List
                 </Button>

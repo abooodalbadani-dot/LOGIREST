@@ -14,7 +14,8 @@ import {
   Warehouse, 
   FileText,
   History,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,8 @@ import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { audioAlerts } from '@/utils/audio';
 import { toast } from '@/hooks/use-toast';
+import { apiClient } from '@/lib/api/client';
+import { z } from 'zod';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
 interface KitchenRequestLineItem extends LineItem {
@@ -84,6 +87,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
   const [fulfillmentData, setFulfillmentData] = useState<{ item_id: string; fulfilled_quantity: number }[]>([]);
+  const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
 
   const { data: warehouseLockState } = useWarehouseLock(request.warehouse_id || null);
   const isWriteBlocked = updateStatus.isPending || fulfillRequest.isPending || !!warehouseLockState?.isLocked;
@@ -224,6 +228,51 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     setFulfillDialogOpen(true);
   };
 
+  const handleSuggestFIFO = async () => {
+    if (!request.warehouse_id) return;
+    setIsSuggestingFIFO(true);
+    try {
+      const itemIds = request.items.map(i => i.item_id);
+      const qs = new URLSearchParams();
+      qs.append('warehouse_id', request.warehouse_id);
+      itemIds.forEach(id => qs.append('item_id', id));
+
+      const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
+        data: z.array(z.object({
+          item_id: z.string(),
+          lot_number: z.string(),
+          expiry_date: z.string().nullable().optional(),
+          qty_available: z.number().optional(),
+        }))
+      }));
+
+      const lots = res.data;
+      const prioritized: Record<string, number> = {};
+      for (const item of request.items) {
+        const itemLots = lots
+          .filter(l => l.item_id === item.item_id)
+          .sort((a, b) => {
+            if (!a.expiry_date) return 1;
+            if (!b.expiry_date) return -1;
+            return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+          });
+        const totalAvailable = itemLots.reduce((sum, l) => sum + (l.qty_available || 0), 0);
+        prioritized[item.item_id] = Math.min(totalAvailable, item.quantity);
+      }
+
+      setFulfillmentData(prev => prev.map(f => ({
+        ...f,
+        fulfilled_quantity: prioritized[f.item_id] ?? f.fulfilled_quantity,
+      })));
+
+      toast.success(locale === 'ar' ? 'تم تطبيق اقتراح FIFO بناءً على تواريخ انتهاء الصلاحية' : 'FIFO suggestion applied based on expiry dates');
+    } catch {
+      toast.error(locale === 'ar' ? 'فشل جلب بيانات FIFO' : 'Failed to fetch FIFO data');
+    } finally {
+      setIsSuggestingFIFO(false);
+    }
+  };
+
   const isDocLocked = isDocumentLocked('KITCHEN_REQUEST', status);
   const isPending = updateStatus.isPending || fulfillRequest.isPending;
 
@@ -251,14 +300,25 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
         </Button>
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role || 'WH_KEEPER'}>
-        <Button 
-          disabled={isWriteBlocked}
-          className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
-          onClick={openFulfillDialog}
-        >
-          <PackageCheck className="w-5 h-5 me-3" />
-          {t('fulfill')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            onClick={handleSuggestFIFO}
+            disabled={isWriteBlocked || isSuggestingFIFO}
+            variant="outline"
+            className="rounded-2xl border-amber-500/30 text-amber-500 hover:bg-amber-500/10 h-14 px-4 text-label-xxs font-black uppercase tracking-widest transition-all"
+          >
+            <Sparkles className={`w-4 h-4 ${isSuggestingFIFO ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button 
+            disabled={isWriteBlocked}
+            className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl h-14 px-12 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-cyan-600/30 border-none"
+            onClick={openFulfillDialog}
+          >
+            <PackageCheck className="w-5 h-5 me-3" />
+            {t('fulfill')}
+          </Button>
+        </div>
       </ActionGuard>
     </>
   );

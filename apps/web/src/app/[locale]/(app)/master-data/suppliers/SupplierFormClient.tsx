@@ -25,6 +25,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props {
   id: string | null;
@@ -48,6 +49,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const conflict = useConflictHandler('supplier', id ?? '');
   const update = useUpdateSupplier({ onConflict: conflict.triggerConflict });
   const deleteMutation = useDeleteSupplier();
+  const { playSound } = useAudioFeedback();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 

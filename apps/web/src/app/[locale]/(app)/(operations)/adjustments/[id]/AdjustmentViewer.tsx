@@ -105,9 +105,27 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   ], [t, locale]);
 
   return (
-    <div className="min-h-screen bg-surface-container-low">
+    <div className="min-h-screen bg-surface-container-low print:bg-white print:min-h-0">
+      <style jsx global>{`
+        @media print {
+          @page { margin: 1.5cm; size: A4 portrait; }
+          body { background: white !important; }
+        }
+      `}</style>
+      {/* Print-Only Voucher Header */}
+      <div className="hidden print:block p-6 border-b-2 border-gray-300 mb-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold uppercase">Warehouse Adjustment Voucher</h1>
+            <p className="text-sm text-gray-600 mt-1">{document?.document_number || ''}</p>
+          </div>
+          <div className="text-right text-sm text-gray-600">
+            <p>{document?.created_at ? format(new Date(document.created_at), 'PPP') : ''}</p>
+          </div>
+        </div>
+      </div>
       {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-40 w-full glass-header h-16 border-b border-outline-variant/10 px-6 lg:px-10 flex items-center justify-between gap-6 transition-all">
+      <div className="sticky top-0 z-40 w-full glass-header h-16 border-b border-outline-variant/10 px-6 lg:px-10 flex items-center justify-between gap-6 transition-all print:hidden">
         <div className="flex items-center gap-4 overflow-hidden">
           <Button 
             variant="ghost" 
@@ -139,10 +157,10 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 print:max-w-full print:px-0 print:py-0 print:space-y-4 print:animate-none">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:block">
           {/* Left Column */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-8 print:max-w-full">
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
               <div className="space-y-4">
                 <div className="space-y-1.5">
@@ -192,7 +210,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-4 space-y-8">
+          <div className="lg:col-span-4 space-y-8 print:hidden">
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group border border-surface-variant/5">
               <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
               <div className="relative space-y-8">

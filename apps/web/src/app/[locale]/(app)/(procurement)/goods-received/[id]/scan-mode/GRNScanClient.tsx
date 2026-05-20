@@ -7,6 +7,7 @@ import { useGoodsReceipt, useUpdateGRNLine } from "@/features/purchasing/api/use
 import { useItems } from "@/features/items/api/useItems"
 import { PackageSearch } from "lucide-react"
 import { toast } from "sonner"
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { isDocumentLocked, type DocumentStatus } from "@/core/workflow/document-engine"
 import { formatDate } from "@/utils/currency"
 
@@ -38,6 +39,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
   const common = useTranslations("common")
   const [isDirtyScanSession, setIsDirtyScanSession] = React.useState(false)
   const { router } = useUnsavedChangesGuard(isDirtyScanSession)
+  const { playSound } = useAudioFeedback()
 
   const { data: grn, isLoading: isLoadingGRN, error: errorGRN } = useGoodsReceipt(id)
   const { data: items, isLoading: isLoadingItems, error: errorItems } = useItems()
@@ -82,6 +84,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
           }
         }, {
           onSuccess: () => {
+            playSound('success')
             setScanStatus("success")
             setStatusMessage(`${locale === 'ar' ? item.name_ar : item.name_en}: ${nextQty}`)
             
@@ -118,6 +121,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
       }
     }, {
       onSuccess: () => {
+        playSound('success')
         setScanStatus("success")
         setStatusMessage(`${pendingItem.name} [${values.lotNumber}]`)
         setIsDirtyScanSession(true)
@@ -130,6 +134,7 @@ export function GRNScanClient({ id, locale }: GRNScanClientProps) {
         }, 2000)
       },
       onError: () => {
+        playSound('error')
         toast.error(common("error"))
       }
     })

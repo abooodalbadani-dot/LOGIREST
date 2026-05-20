@@ -10,7 +10,7 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight } from 'lucide-react';
+import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 
@@ -36,10 +36,12 @@ export function GRNListClient({
  const tc = useTranslations('common');
  const router = useRouter();
 
- const [status, setStatus] = useState<string | undefined>(initialStatus);
- const [page, setPage] = useState(initialPage);
- const [search, setSearch] = useState('');
- const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [status, setStatus] = useState<string | undefined>(initialStatus);
+  const [page, setPage] = useState(initialPage);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sortField, setSortField] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const statusItems = useMemo(() => [
     { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
@@ -53,9 +55,32 @@ export function GRNListClient({
  return () => clearTimeout(timer);
  }, [search]);
 
- const { data, isLoading } = useGRNList({ status, page, search: debouncedSearch });
+  const { data, isLoading } = useGRNList({ status, page, search: debouncedSearch, sort_field: sortField, sort_order: sortOrder });
 
- const columns = useMemo<ColumnDef<GRNSummary, unknown>[]>(() => [
+  const toggleSort = (field: string) => {
+    setSortField(prev => {
+      const newOrder = prev === field && sortOrder === 'asc' ? 'desc' : 'asc';
+      setSortOrder(newOrder);
+      return field;
+    });
+    setPage(1);
+  };
+
+  const SortHeader = ({ field, label }: { field: string; label: string }) => (
+    <button
+      onClick={() => toggleSort(field)}
+      className="flex items-center gap-1.5 text-label-xs font-semibold uppercase text-muted-foreground/60 hover:text-foreground transition-colors"
+    >
+      {label}
+      {sortField === field ? (
+        sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+      ) : (
+        <ArrowUp className="w-3 h-3 opacity-0 group-hover:opacity-30 transition-opacity" />
+      )}
+    </button>
+  );
+
+  const columns = useMemo<ColumnDef<GRNSummary, unknown>[]>(() => [
  {
  accessorKey: 'status',
  header: tc('status_label'),
@@ -71,30 +96,30 @@ export function GRNListClient({
  </div>
  ),
  },
- {
- accessorKey: 'supplier_id',
- header: tc('supplier'),
- cell: ({ row }) => (
- <div className="flex flex-col">
- <span dir="ltr" className="text-label-xs font-semibold text-foreground/80 text-start">{row.original.supplier_id}</span>
- <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
- </div>
- ),
- },
- {
- accessorKey: 'posted_at',
- header: tc('posted_at'),
- cell: ({ row }) =>
- row.original.posted_at ? (
-  <div className="flex items-center gap-2">
-     <ClientOnlyTime 
-       date={row.original.posted_at} 
-       mode="date" 
-       className="text-label-xs opacity-60 font-mono font-medium" 
-     />
-  </div>
- ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
- },
+  {
+    accessorKey: 'supplier_id',
+    header: () => <SortHeader field="supplier_id" label={tc('supplier')} />,
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <span dir="ltr" className="text-label-xs font-semibold text-foreground/80 text-start">{row.original.supplier_id}</span>
+        <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'posted_at',
+    header: () => <SortHeader field="posted_at" label={tc('posted_at')} />,
+    cell: ({ row }) =>
+      row.original.posted_at ? (
+        <div className="flex items-center gap-2">
+          <ClientOnlyTime 
+            date={row.original.posted_at} 
+            mode="date" 
+            className="text-label-xs opacity-60 font-mono font-medium" 
+          />
+        </div>
+      ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
+  },
  {
  id: 'actions',
  header: '',
@@ -117,7 +142,7 @@ export function GRNListClient({
  </div>
  ),
  },
- ], [locale, router, t, tc]);
+  ], [locale, router, t, tc, sortField, sortOrder]);
 
  const totalGRNs = data?.meta?.total || 0;
  const postedCount = data?.data?.filter(p => isPostedStatus('GRN', p.status as DocumentStatus)).length || 0;

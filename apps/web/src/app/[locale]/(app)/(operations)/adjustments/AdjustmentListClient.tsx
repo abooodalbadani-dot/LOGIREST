@@ -10,13 +10,14 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Plus, CheckCircle2, Clock, Activity, FileCheck, AlertTriangle, Filter } from 'lucide-react';
+import { Plus, CheckCircle2, Clock, Activity, FileCheck, AlertTriangle, Filter, RotateCcw } from 'lucide-react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { isAdjustmentPending } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
 import { ADJUSTMENT_STATUS, type AdjustmentStatus } from '@/contracts/statuses';
@@ -39,6 +40,7 @@ export function AdjustmentListClient() {
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const statusItems = useMemo(() => {
     const allItem = {
@@ -58,7 +60,39 @@ export function AdjustmentListClient() {
 
   const { data, isLoading } = useAdjustmentList({ status, page });
 
+  const allData = data?.data || [];
   const columns = useMemo<ColumnDef<AdjustmentSummary>[]>(() => [
+    {
+      id: 'select',
+      header: () => (
+        <Checkbox
+          checked={allData.length > 0 && selectedIds.size === allData.length}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              setSelectedIds(new Set(allData.map(r => r.id)));
+            } else {
+              setSelectedIds(new Set());
+            }
+          }}
+        />
+      ),
+      cell: ({ row }) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={selectedIds.has(row.original.id)}
+            onCheckedChange={(checked) => {
+              const next = new Set(selectedIds);
+              if (checked) {
+                next.add(row.original.id);
+              } else {
+                next.delete(row.original.id);
+              }
+              setSelectedIds(next);
+            }}
+          />
+        </div>
+      ),
+    },
     {
       accessorKey: 'status',
       header: tCommon('status_label'),
@@ -139,7 +173,7 @@ export function AdjustmentListClient() {
         </div>
       ),
     },
-  ], [t, tCommon, router]);
+  ], [t, tCommon, router, selectedIds, allData, setSelectedIds]);
 
   const totalAdjustments = data?.meta?.total || 0;
   const inProgressCount = data?.data?.filter(i => isAdjustmentPending(i.status)).length || 0;
@@ -203,6 +237,22 @@ export function AdjustmentListClient() {
         />
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-4 px-6 py-4 bg-surface-container-low/80 border border-outline-low/10 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
+          <span className="text-label-xs font-bold text-muted-foreground/60">
+            {selectedIds.size} {tCommon('selected')}
+          </span>
+          <div className="flex items-center gap-2 ms-auto">
+            <Button size="sm" className="h-9 px-5 text-label-xs font-bold uppercase bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20">
+              {t('approve')}
+            </Button>
+            <Button size="sm" className="h-9 px-5 text-label-xs font-bold uppercase bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20">
+              {t('post')}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={data?.data || []}
@@ -262,6 +312,15 @@ export function AdjustmentListClient() {
             <Button className="h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-label-xs font-bold uppercase rounded-md transition-all border border-outline-low/10 shadow-sm group">
               <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180 text-status-active/60" />
               {tCommon('filters_button')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-12 px-4 text-muted-foreground/60 hover:text-foreground text-label-xs font-bold uppercase rounded-md transition-all"
+              onClick={() => { setStatus(''); setPage(1); }}
+            >
+              <RotateCcw className="w-3.5 h-3.5 me-2" />
+              {tCommon('clear_filters') || 'Clear Filters'}
             </Button>
           </div>
         }

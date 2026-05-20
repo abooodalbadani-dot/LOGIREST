@@ -25,6 +25,7 @@ import { FormFooter } from '@/components/shared/FormFooter';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useAbortController } from '@/hooks/useAbortController';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -37,6 +38,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('transfer', id);
   const shipTransfer = useShipTransfer({ onConflict: triggerConflict });
   const abortController = useAbortController();
+  const { playSound } = useAudioFeedback();
 
   const [scannedLines, setScannedLines] = useState<Record<string, number>>({});
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -134,6 +136,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       },
       {
         onSuccess: () => {
+          playSound('success');
           router.push(`/transfers/${id}`, { skipGuard: true });
         },
       }

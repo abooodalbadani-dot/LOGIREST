@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
@@ -20,6 +20,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Cpu, Link as LinkIcon, Hash, Barcode as BarcodeIcon, Settings2 } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { apiClient } from '@/infrastructure/api/client';
+import { z } from 'zod';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props { 
   id: string | null; 
@@ -41,6 +44,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const create = useCreateBarcode();
   const conflict = useConflictHandler('barcode', id ?? '');
   const update = useUpdateBarcode({ onConflict: conflict.triggerConflict });
+  const { playSound } = useAudioFeedback();
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<BarcodeFormValues>({
@@ -59,6 +63,8 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const currentCode = useWatch({ control, name: 'code' });
+  const [isCheckingCode, setIsCheckingCode] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   const itemItems = useMemo(() => {
     return items?.data?.map((i) => ({
@@ -89,8 +95,31 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  }
  }, [barcode, reset]);
 
+  useEffect(() => {
+    if (!currentCode || id) {
+      setCodeError(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsCheckingCode(true);
+      try {
+        const response = await apiClient.get(`/master-data/barcodes/check-duplicate?barcode=${currentCode}`, z.any());
+        if (response.is_duplicate) {
+          setCodeError(tb('errors.code_exists') || 'This code is already in use');
+        } else {
+          setCodeError(null);
+        }
+      } catch (e) {
+        setCodeError(null);
+      } finally {
+        setIsCheckingCode(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentCode, id, tb]);
+
   const onSubmit = handleSubmit(async (values) => {
-    if (isReadOnly) return;
+    if (isReadOnly || codeError) return;
     
     try {
       if (id) {
@@ -232,7 +261,13 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  <p dir="ltr" className="font-mono text-body-md font-bold text-status-secondary uppercase">{currentCode}</p>
  </div>
  </div>
- <div className="h-2 w-2 rounded-full bg-status-secondary animate-pulse" />
+ {isCheckingCode ? (
+   <div className="h-4 w-4 border-2 border-status-secondary border-t-transparent rounded-full animate-spin" />
+ ) : codeError ? (
+   <p className="text-label-xs font-semibold text-rose-400 uppercase">{codeError}</p>
+ ) : (
+   <div className="h-2 w-2 rounded-full bg-status-success animate-pulse" />
+ )}
  </div>
  )}
  </div>

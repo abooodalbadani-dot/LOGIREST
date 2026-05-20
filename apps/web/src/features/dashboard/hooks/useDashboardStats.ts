@@ -108,7 +108,7 @@ export function useDashboardStats() {
   return useQuery<DashboardStats>({
     queryKey: ['dashboard', 'stats', userRole],
     queryFn: () => apiClient.get(`/dashboard/stats?role=${userRole}`, DashboardStatsSchema),
-    // Refresh stats every 2 minutes or on focus
     staleTime: 120000,
+    refetchInterval: 60000,
   });
 }

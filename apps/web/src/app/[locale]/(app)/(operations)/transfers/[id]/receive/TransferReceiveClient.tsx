@@ -24,6 +24,7 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAuth } from '@/providers/AuthProvider';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useAbortController } from '@/hooks/useAbortController';
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -38,6 +39,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('transfer', id);
   const receiveTransfer = useReceiveTransfer(id, { onConflict: triggerConflict });
   const abortController = useAbortController();
+  const { playSound } = useAudioFeedback();
 
   const [lines, setLines] = useState<(TransferLine & { _receivedQty?: number })[]>([]);
   const [varianceReason, setVarianceReason] = useState('');
@@ -176,6 +178,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       }
     }, {
       onSuccess: () => {
+        playSound('success');
         router.push(`/transfers/${id}`, { skipGuard: true });
       }
     });

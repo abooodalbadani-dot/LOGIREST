@@ -14,6 +14,7 @@ interface CreateCustomItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
   defaultName: string;
+  initialBarcode?: string;
   onCreate: (item: {
     id: string;
     code: string;
@@ -28,6 +29,7 @@ export function CreateCustomItemDialog({
   isOpen,
   onClose,
   defaultName,
+  initialBarcode,
   onCreate,
 }: CreateCustomItemDialogProps) {
   const tCommon = useTranslations('common');
@@ -39,8 +41,16 @@ export function CreateCustomItemDialog({
   const isArabic = /[\u0600-\u06FF]/.test(defaultName);
   const [nameEn, setNameEn] = useState(() => isArabic ? '' : defaultName);
   const [nameAr, setNameAr] = useState(() => isArabic ? defaultName : '');
-  const [barcode, setBarcode] = useState(() => 'CUST-' + Math.floor(1000000000 + Math.random() * 9000000000).toString());
+  const [barcode, setBarcode] = useState(() => initialBarcode || ('CUST-' + Math.floor(1000000000 + Math.random() * 9000000000).toString()));
   const [selectedUomId, setSelectedUomId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialBarcode) setBarcode(initialBarcode);
+      setNameEn(isArabic ? '' : defaultName);
+      setNameAr(isArabic ? defaultName : '');
+    }
+  }, [isOpen, initialBarcode, defaultName, isArabic]);
 
   // Derive the active UOM ID during render
   const derivedUomId = React.useMemo(() => {

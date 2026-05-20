@@ -340,7 +340,31 @@ export function AdjustmentForm({
     }));
   }, [document]);
   return (
-    <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500 print:bg-white print:p-0 print:m-0 print:pb-0 print:animate-none">
+      {/* Print-optimized voucher styles */}
+      <style jsx global>{`
+        @media print {
+          body { background: white !important; }
+          @page { margin: 1.5cm; size: A4 portrait; }
+          .glass-header, .no-print, .sticky, .print\\:hidden { display: none !important; }
+          .print-only { display: block !important; }
+          .lg\\:col-span-8 { max-width: 100% !important; }
+          .lg\\:col-span-4 { display: none !important; }
+        }
+        .print-only { display: none; }
+      `}</style>
+      {/* Print header (visible only when printing) */}
+      <div className="print-only p-8 border-b-2 border-gray-300 mb-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold uppercase">Warehouse Adjustment Voucher</h1>
+            <p className="text-sm text-gray-600 mt-1">{document?.document_number || ''}</p>
+          </div>
+          <div className="text-right text-sm text-gray-600">
+            <p>{document?.created_at ? new Date(document.created_at).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
+          </div>
+        </div>
+      </div>
       {/* Sticky Glass Header */}
       <div className="sticky top-0 z-50 w-full glass-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

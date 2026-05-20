@@ -38,6 +38,7 @@ import { type Item } from "@/features/items/types";
 import { SmartCombobox } from "@/components/shared/SmartCombobox";
 import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { cn } from "@/lib/utils";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const buildLineSchema = (t: (k: string) => string) => z.object({
   item_id: z.string().min(1, t('validation.item_required')),
@@ -71,6 +72,7 @@ export function IssueForm() {
   const locale = useLocale();
   const { router, registerDirty } = useUnsavedChangesGuard();
   const createIssue = useCreateIssue();
+  const { playSound } = useAudioFeedback();
 
   const { data: warehouses } = useWarehouses();
   const { data: deptData } = useDepartments();
@@ -239,12 +241,16 @@ export function IssueForm() {
 
  const onSubmit = (data: IssueFormValues) => {
  if (!allLinesAllocated) return;
- createIssue.mutate(data, {
- onSuccess: (issue) => {
-  router.push(`/issues/${issue.id}`, { skipGuard: true });
- },
- onError: () => console.error("Failed to create issue"),
- });
+  createIssue.mutate(data, {
+  onSuccess: (issue) => {
+   playSound('success');
+   router.push(`/issues/${issue.id}`, { skipGuard: true });
+  },
+  onError: () => {
+   playSound('error');
+   console.error("Failed to create issue");
+  },
+  });
  };
 
  return (

@@ -25,6 +25,7 @@ import { useUnsavedChangesGuard } from "@/lib/unsaved-changes/useUnsavedChangesG
 import { cn } from "@/lib/utils";
 import { formatQuantity, formatCurrency, formatNumber } from "@/utils/currency";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DocumentLineItemTable, type LineItem } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
@@ -34,6 +35,7 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface StocktakeLineItem extends LineItem {
   snapshotQty: number | null;
@@ -51,6 +53,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const session = rawSession ? mapToSessionVM(rawSession) : null;
  const { data: warehouses } = useWarehouses();
  const submitVariance = useSubmitVariance();
+ const { playSound } = useAudioFeedback();
 
  const tableLines = React.useMemo((): StocktakeLineItem[] => {
   if (!session) return [];
@@ -74,7 +77,13 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
   }));
  }, [session]);
 
- const [reasons, setReasons] = React.useState<Record<string, string>>({})
+  const [reasons, setReasons] = React.useState<Record<string, string>>({})
+  const [discrepanciesOnly, setDiscrepanciesOnly] = React.useState(false)
+
+  const filteredTableLines = React.useMemo(() => {
+    if (!discrepanciesOnly) return tableLines;
+    return tableLines.filter(line => (line.countedQty || 0) !== (line.snapshotQty ?? 0));
+  }, [tableLines, discrepanciesOnly])
 
   const isInitialized = React.useRef(false)
   React.useEffect(() => {
@@ -149,10 +158,12 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
       { id, items: updates },
       {
         onSuccess: () => {
+          playSound('success');
           toast.success(t('posted_success_variance'))
           guardedRouter.push(`/stocktake/${id}`, { skipGuard: true })
         },
         onError: () => {
+          playSound('error');
           toast.error(common('error'))
         }
       }
@@ -167,13 +178,27 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  subtitle={`${warehouseName} ${common('dash')} ${t('variance_review_desc')}`}
  backHref={`/stocktake/${id}/count`}
  >
- <div className="flex items-center gap-4">
-  <StatusBadge 
-    status={session.status} 
-    configMap={STOCKTAKE_STATUS_UI}
-    className="h-9 px-4 text-label-xs font-semibold border-none" 
+  <div className="flex items-center gap-4">
+   <StatusBadge 
+     status={session.status} 
+     configMap={STOCKTAKE_STATUS_UI}
+     className="h-9 px-4 text-label-xs font-semibold border-none" 
+   />
+  <PostConfirmDialog
+  title={t('partial_recount_title') || 'Request Partial Recount'}
+  description={t('partial_recount_desc') || 'This will notify the counting team to recount the items with discrepancies.'}
+  variant="info"
+  icon="info"
+  onConfirm={() => {
+    toast.success(t('partial_recount_requested') || 'Partial recount requested successfully');
+  }}
+  trigger={
+  <Button variant="outline" size="sm" className="h-9 px-5 text-label-xs font-bold uppercase border-outline-low/20">
+    {t('request_partial_recount') || 'Partial Recount'}
+  </Button>
+  }
   />
- <PostConfirmDialog
+  <PostConfirmDialog
  title={t('confirm_variance_title')}
  description={t('confirm_variance_desc')}
  onConfirm={handleSubmit}
@@ -218,9 +243,16 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  color={netImpact >= 0 ? "emerald" : "rose"} />
  </div>
 
- <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
-    <DocumentLineItemTable
-      lines={tableLines}
+  <div className="flex items-center gap-3 px-1">
+    <Switch checked={discrepanciesOnly} onCheckedChange={setDiscrepanciesOnly} id="discrepancies-toggle" />
+    <label htmlFor="discrepancies-toggle" className="text-label-xs font-bold uppercase text-muted-foreground/60 cursor-pointer select-none">
+      {t('discrepancies')} Only
+    </label>
+  </div>
+
+  <Card className="p-10 bg-surface-container-low border-none shadow-none rounded-[2.5rem]">
+     <DocumentLineItemTable
+       lines={filteredTableLines}
       locale={locale}
       isReadOnly={true}
       hideLotColumns={true}

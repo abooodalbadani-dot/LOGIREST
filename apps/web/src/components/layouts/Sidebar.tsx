@@ -102,6 +102,8 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'scan_mode', href: '/inventory/scan-mode', resource: 'inventory', labelKey: 'scan_mode', icon: Barcode },
         { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck },
         { key: 'yield_management', href: '/yield-management', resource: 'inventory', labelKey: 'yield_management', icon: TrendingUp },
+        { key: 'stocktake_archive', href: '/stocktake/archive', resource: 'stocktake', labelKey: 'stocktake_archive', icon: History },
+        { key: 'transfer_hub', href: '/transfers/hub', resource: 'transfer', labelKey: 'transfer_hub', icon: LayoutDashboard },
       ]
     },
     {
@@ -119,6 +121,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { key: 'notifications', href: '/communications/notifications', resource: 'inventory', labelKey: 'notifications', icon: Bell },
         { key: 'templates', href: '/communications/notifications/templates', resource: 'admin', labelKey: 'templates', icon: FileText },
+        { key: 'notification_settings', href: '/communications/notifications/settings', resource: 'admin', labelKey: 'notification_settings', icon: Bell },
         { key: 'email_outbox', href: '/communications/email-outbox', resource: 'inventory', labelKey: 'email_outbox', icon: Mail },
       ]
     },
@@ -133,6 +136,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'suppliers', href: '/master-data/suppliers', resource: 'master_data_suppliers', labelKey: 'suppliers', icon: Building2 },
         { key: 'departments', href: '/master-data/departments', resource: 'master_data_departments', labelKey: 'departments', icon: Building2 },
         { key: 'barcodes', href: '/master-data/barcodes', resource: 'master_data', labelKey: 'barcodes', icon: Barcode },
+        { key: 'barcode_mapping', href: '/master-data/barcodes/mapping', resource: 'barcode_mapping', labelKey: 'barcode_mapping', icon: Barcode },
         { key: 'currencies', href: '/master-data/currencies', resource: 'master_data', labelKey: 'currencies', icon: Coins },
         { key: 'fx_rates', href: '/master-data/fx-rates', resource: 'master_data_fx_rates', labelKey: 'fx_rates', icon: TrendingUp },
         { key: 'branches', href: '/master-data/branches', resource: 'master_data', labelKey: 'branches', icon: Building2 },
@@ -144,6 +148,12 @@ export function Sidebar({ onClose }: SidebarProps) {
       titleKey: 'group_reports',
       items: [
         { key: 'reports', href: '/reports', resource: 'reports', labelKey: 'reports', icon: BarChart3 },
+        { key: 'report_available_inventory', href: '/reports/available-inventory', resource: 'reports', labelKey: 'report_available_inventory', icon: FileText },
+        { key: 'report_currency_summaries', href: '/reports/currency-summaries', resource: 'reports', labelKey: 'report_currency_summaries', icon: FileText },
+        { key: 'report_expiry', href: '/reports/expiry', resource: 'reports', labelKey: 'report_expiry', icon: FileText },
+        { key: 'report_movements', href: '/reports/movements', resource: 'reports', labelKey: 'report_movements', icon: FileText },
+        { key: 'report_procurement_status', href: '/reports/procurement-status', resource: 'reports', labelKey: 'report_procurement_status', icon: FileText },
+        { key: 'report_stocktake_variance', href: '/reports/stocktake-variance', resource: 'reports', labelKey: 'report_stocktake_variance', icon: FileText },
       ]
     },
     {

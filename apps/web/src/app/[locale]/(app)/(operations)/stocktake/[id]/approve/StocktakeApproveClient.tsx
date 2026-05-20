@@ -40,6 +40,7 @@ import {
  DialogHeader,
  DialogTitle,
 } from "@/components/ui/dialog";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface StocktakeLineItem extends LineItem {
   snapshotQty: number | null;
@@ -60,6 +61,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  const { data: warehouses } = useWarehouses();
  const approveStocktake = useApproveStocktake();
  const rejectStocktake = useRejectStocktake();
+ const { playSound } = useAudioFeedback();
 
  const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
  const [rejectionReason, setRejectionReason] = React.useState("");
@@ -121,13 +123,15 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
   approveStocktake.mutate(
    { id },
    {
-    onSuccess: () => {
-     toast.success(t('approved_success'));
-     router.push(`/stocktake/${id}`);
-    },
-    onError: () => {
-     toast.error(common('error'));
-    }
+     onSuccess: () => {
+      playSound('success');
+      toast.success(t('approved_success'));
+      router.push(`/stocktake/${id}`);
+     },
+     onError: () => {
+      playSound('error');
+      toast.error(common('error'));
+     }
    }
   );
  };
@@ -140,14 +144,16 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
   rejectStocktake.mutate(
    { id, comment: rejectionReason },
    {
-    onSuccess: () => {
-     toast.success(t('rejected_success'));
-     setIsRejectDialogOpen(false);
-     router.push(`/stocktake/${id}`);
-    },
-    onError: () => {
-     toast.error(common('error'));
-    }
+     onSuccess: () => {
+      playSound('success');
+      toast.success(t('rejected_success'));
+      setIsRejectDialogOpen(false);
+      router.push(`/stocktake/${id}`);
+     },
+     onError: () => {
+      playSound('error');
+      toast.error(common('error'));
+     }
    }
   );
  };

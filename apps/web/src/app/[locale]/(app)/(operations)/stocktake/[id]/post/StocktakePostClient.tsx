@@ -28,6 +28,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.stocktake')
@@ -39,6 +40,7 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
  const session = rawSession ? mapToSessionVM(rawSession) : null;
  const { data: warehouses } = useWarehouses();
  const postStocktake = usePostStocktake();
+ const { playSound } = useAudioFeedback();
 
  const [confirmValue, setConfirmValue] = React.useState("");
  const confirmKeyword = t('confirm_keyword');
@@ -66,10 +68,12 @@ export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' |
     
     postStocktake.mutate({ id }, {
       onSuccess: () => {
+        playSound('success');
         toast.success(t('posted_success_variance'));
         router.push(`/stocktake/${id}`, { skipGuard: true });
       },
       onError: () => {
+        playSound('error');
         toast.error(common('error'));
       }
     });

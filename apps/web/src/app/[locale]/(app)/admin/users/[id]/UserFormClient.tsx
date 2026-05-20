@@ -15,6 +15,7 @@ import { MasterDataFormLayout } from '@/features/master-data/components/MasterDa
 import { User, Mail, Shield, MapPin, Warehouse, Building2, CheckCircle2, Globe, Power, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'INV_MGR', 'APPROVER', 'WH_KEEPER', 'PROC_OFFICER', 'AUDITOR', 'VIEWER'];
 
@@ -49,6 +50,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   const { data, isLoading } = useAdminUser(id);
   const { user: currentUser } = useAuth();
   const { createUser, updateUser, isLastActiveAdmin } = useAdminUserMutations();
+  const { playSound } = useAudioFeedback();
 
   const isSelf = currentUser?.id === id;
   const isAuditor = currentUser?.role === 'AUDITOR' || isReadOnly;

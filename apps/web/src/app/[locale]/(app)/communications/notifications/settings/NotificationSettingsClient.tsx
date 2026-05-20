@@ -1,24 +1,41 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Bell, Shield, Package, ShoppingCart, Save, ArrowLeft } from 'lucide-react';
+import { Bell, Shield, Package, ShoppingCart, Save, ArrowLeft, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Link } from '@/i18n/navigation';
+import { useUserProfile } from '@/providers/UserProfileProvider';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function NotificationSettingsClient() {
   const t = useTranslations('communications.notifications');
   const tc = useTranslations('common');
+  const { notificationPreferences, updateProfile, isSaving } = useUserProfile();
+  const { playSound } = useAudioFeedback();
 
-  const [settings, setSettings] = React.useState({
-    lowStock: true,
-    expiry: true,
-    pendingApproval: true,
-    poFinalized: false,
-    security: true,
-  });
+  const [settings, setSettings] = React.useState(notificationPreferences);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    setSettings(notificationPreferences);
+  }, [notificationPreferences]);
+
+  const handleSave = async () => {
+    try {
+      await updateProfile({ notificationPreferences: settings });
+      playSound('success');
+      setSaveSuccess(true);
+      setSaveError(null);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch {
+      playSound('error');
+      setSaveError('Failed to save notification preferences');
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -41,12 +58,30 @@ export function NotificationSettingsClient() {
             </p>
           </div>
           <Button
+            onClick={handleSave}
+            disabled={isSaving}
             className="h-12 px-8 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-semibold uppercase text-label-xs gap-2 rounded-sm"
           >
-            <Save className="w-4 h-4" />
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
             {tc('save')}
           </Button>
         </div>
+        {saveSuccess && (
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-sm flex items-center gap-2 text-[10px] font-bold uppercase">
+            <CheckCircle className="w-4 h-4" />
+            Preferences saved successfully
+          </div>
+        )}
+        {saveError && (
+          <div className="p-3 bg-status-error/10 border border-status-error/20 text-status-error rounded-sm flex items-center gap-2 text-[10px] font-bold uppercase">
+            <AlertCircle className="w-4 h-4" />
+            {saveError}
+          </div>
+        )}
       </div>
 
       <div className="space-y-10">

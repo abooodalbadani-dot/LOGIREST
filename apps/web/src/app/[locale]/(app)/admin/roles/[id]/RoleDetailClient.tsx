@@ -8,6 +8,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { ShieldCheck, Lock, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const ACTION_KEYS: RoleAction[] = ['view', 'create', 'edit', 'approve', 'post'];
 
@@ -22,6 +23,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
   const router = useRouter();
   const { data: role, isLoading } = useAdminRole(id);
   const { mutateAsync: updatePermissions, isPending } = useUpdateRolePermissions();
+  const { playSound } = useAudioFeedback();
 
   const basePermissions = useMemo(() => role?.permissions ?? [], [role]);
   const [edits, setEdits] = useState<Record<string, Partial<Record<RoleAction, boolean>>>>({});

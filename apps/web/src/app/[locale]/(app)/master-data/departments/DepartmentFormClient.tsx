@@ -9,6 +9,7 @@ import { Briefcase, ShieldCheck, Landmark } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -74,6 +75,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
   const conflict = useConflictHandler('department', id ?? '');
   const update = useUpdateDepartment({ onConflict: conflict.triggerConflict });
   const deleteDept = useDeleteDepartment();
+  const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

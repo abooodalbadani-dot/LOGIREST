@@ -10,7 +10,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Repeat, Truck, CheckCircle } from 'lucide-react';
+import { Plus, Filter, Repeat, Truck, CheckCircle, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -132,6 +132,17 @@ export function TransferListClient() {
   const inTransitCount = data?.data?.filter(i => isTransferInTransit(i.transfer_status)).length || 0;
   const completedCount = data?.data?.filter(i => isTransferPosted(i.transfer_status)).length || 0;
 
+  const overdueTransfers = useMemo(() => {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    return (data?.data || []).filter(i => {
+      if (!isTransferInTransit(i.transfer_status)) return false;
+      const dispatchDate = i.shipped_at || i.created_at;
+      if (!dispatchDate) return false;
+      return new Date(dispatchDate) < threeDaysAgo;
+    });
+  }, [data?.data]);
+
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <Breadcrumb
@@ -140,6 +151,22 @@ export function TransferListClient() {
           { label: t('title') }
         ]}
       />
+
+      {overdueTransfers.length > 0 && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-sm">
+          <div className="p-2 rounded-lg bg-amber-500/20">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+          </div>
+          <div className="flex-1">
+            <p className="text-label-xs font-bold uppercase text-amber-500">
+              {overdueTransfers.length} {overdueTransfers.length === 1 ? t('transfer') : tCommon('items')} {t('overdue_transfer') || 'in-transit overdue'}
+            </p>
+            <p className="text-label-xxs font-medium text-amber-500/70 mt-0.5">
+              {t('resolve_overdue_transfers') || 'Resolve overdue transfers'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <PageHeader
         title={t('title')}

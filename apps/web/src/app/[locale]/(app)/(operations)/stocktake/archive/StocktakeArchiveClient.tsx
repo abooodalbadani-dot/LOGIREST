@@ -18,6 +18,9 @@ import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { apiClient } from '@/infrastructure/api/client';
 
 export function StocktakeArchiveClient({
   initialPage,
@@ -160,6 +163,29 @@ export function StocktakeArchiveClient({
             <Button className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low">
               <Filter className="w-3 h-3 me-2" />
               {tc('filters_button')}
+            </Button>
+            <Button 
+              className="h-12 px-8 bg-operational-cyan/10 hover:bg-operational-cyan/20 text-operational-cyan text-label-xs font-semibold uppercase rounded-md transition-all border border-operational-cyan/20"
+              onClick={async () => {
+                try {
+                  const res = await apiClient.get('/operations/stocktakes/variance-export', z.any());
+                  const blob = new Blob([res], { type: 'text/csv;charset=utf-8;' });
+                  const link = document.createElement("a");
+                  const url = URL.createObjectURL(blob);
+                  link.setAttribute("href", url);
+                  link.setAttribute("download", `stocktake_variances_${new Date().toISOString().split('T')[0]}.csv`);
+                  link.style.visibility = 'hidden';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  toast.success(t('export_success') || 'Audit variance exported successfully');
+                } catch (err) {
+                  toast.error(tc('error_generic') || 'An error occurred');
+                }
+              }}
+            >
+              <FileText className="w-3 h-3 me-2" />
+              {t('export_audit') || 'Export Audit'}
             </Button>
           </div>
 

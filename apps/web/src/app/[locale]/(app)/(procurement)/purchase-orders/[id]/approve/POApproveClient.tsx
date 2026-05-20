@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { MetricCard } from '@/components/ui/metric-card';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,6 +28,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { formatCurrency } from '@/utils/currency';
@@ -47,6 +49,7 @@ export function POApproveClient({ id }: Props) {
   const queryClient = useQueryClient();
   const approveMutation = useApprovePO();
   const rejectMutation = useRejectPO();
+  const { playSound } = useAudioFeedback();
   
   const [comment, setComment] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
@@ -67,26 +70,31 @@ export function POApproveClient({ id }: Props) {
   const handleApprove = async () => {
     try {
       await approveMutation.mutateAsync({ id, version: po.version || 1 });
+      playSound('success');
       toast.success(t('approval.approve_success'));
       router.push('/purchase-orders');
     } catch (e) {
       console.error(e);
+      playSound('error');
       toast.error(tc('error'));
     }
   };
 
   const handleReject = async () => {
     if (!comment || comment.length < 15) {
+      playSound('error');
       toast.error(t('approval.rejection_reason_min_chars'));
       return;
     }
     
     try {
       await rejectMutation.mutateAsync({ id, reason: comment, version: po.version || 1 });
+      playSound('success');
       toast.success(t('approval.reject_success'));
       router.push('/purchase-orders');
     } catch (e) {
       console.error(e);
+      playSound('error');
       toast.error(tc('error'));
     }
   };
@@ -187,8 +195,16 @@ export function POApproveClient({ id }: Props) {
           </Card>
         </div>
 
-        {/* Action Panel */}
+        {/* Budget Consumption */}
         <div className="space-y-8">
+          <MetricCard
+            label={t('budget_consumption') || 'Budget Consumption'}
+            value={po ? formatCurrency(po.total || 0, po.currency_id, locale as 'ar' | 'en') : '--'}
+            trend={t('department_budget_placeholder') || 'Department Budget: -- / --'}
+            icon={AlertCircle}
+            color="amber"
+          />
+
           <Card className="bg-surface-container-low border-none rounded-3xl shadow-sm overflow-hidden sticky top-24">
             <CardContent className="p-8 space-y-8">
               <div className="space-y-6">

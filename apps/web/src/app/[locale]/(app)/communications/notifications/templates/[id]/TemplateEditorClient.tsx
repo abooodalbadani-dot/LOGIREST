@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useNotificationTemplate } from '@/features/notifications/hooks/useNotificationTemplates';
+import { interpolateTemplate, resolveTemplate } from '@/features/notifications/services/template-resolver';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,8 @@ import {
   Globe, 
   Mail, 
   Languages, 
-  Info
+  Info,
+  Check
 } from 'lucide-react';
 
 const TemplateUpdateSchema = z.object({
@@ -62,6 +64,8 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   const { data, isLoading } = useNotificationTemplate(id);
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
+  const [liveResolve, setLiveResolve] = useState(false);
+  const [resolvedPreview, setResolvedPreview] = useState<{ subject: string; body: string } | null>(null);
 
   const [subjectAr, subjectEn, bodyAr, bodyEn] = useWatch({
     control,
@@ -195,22 +199,33 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
     );
   }
 
-  const interpolate = (text: string, params: Array<{ name: string; sample_value: string }>) => {
-    if (!text) return '';
-    let result = text;
-    params.forEach(p => {
-      const regex = new RegExp(`\\{\\{\\s*${p.name}\\s*\\}\\}`, 'g');
-      result = result.replace(regex, p.sample_value);
+  const handleLiveResolve = async () => {
+    if (!data) return;
+    setLiveResolve(true);
+    const result = await resolveTemplate({
+      templateId: data.id,
+      overrides: {
+        subject_ar: subjectAr,
+        subject_en: subjectEn,
+        body_ar: bodyAr,
+        body_en: bodyEn,
+      },
     });
-    return result;
+    if (result) {
+      setResolvedPreview(result);
+    } else {
+      setLiveResolve(false);
+    }
   };
 
-  const allowedParams = data?.allowed_parameters || [];
+  const allowedParams = (data?.allowed_parameters || []) as Array<{ name: string; label_ar: string; label_en: string; sample_value: string; entity?: string; field_path?: string }>;
   const rawSubject = previewLang === 'ar' ? subjectAr : subjectEn;
   const rawBody = previewLang === 'ar' ? bodyAr : bodyEn;
 
-  const subject = interpolate(rawSubject, allowedParams);
-  const body = interpolate(rawBody, allowedParams);
+  const samplePreview = interpolateTemplate(rawSubject, rawBody, allowedParams);
+  const livePreviewActive = resolvedPreview !== null;
+  const subject = livePreviewActive ? resolvedPreview!.subject : samplePreview.subject;
+  const body = livePreviewActive ? resolvedPreview!.body : samplePreview.body;
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 relative">
@@ -489,21 +504,49 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
                   /communications/notifications/preview/{data?.code?.toLowerCase() || 'mail'}
                 </div>
 
-                <div className="flex bg-surface-container-lowest/50 rounded-lg p-0.5 border border-outline-low backdrop-blur-sm scale-90">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className={`px-3 py-1 rounded text-[9px] font-bold uppercase transition-all ${previewLang === 'ar' ? 'bg-operational-cyan text-black shadow-md font-extrabold' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
-                    onClick={() => setPreviewLang('ar')}
+                    onClick={handleLiveResolve}
+                    disabled={liveResolve}
+                    className={`px-2.5 py-1 rounded text-[8px] font-bold uppercase transition-all flex items-center gap-1 ${
+                      livePreviewActive
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-surface-container-lowest/50 border border-outline-low text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'
+                    }`}
                   >
-                    AR
+                    {liveResolve ? (
+                      <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                    ) : livePreviewActive ? (
+                      <Check className="w-2.5 h-2.5" />
+                    ) : null}
+                    {livePreviewActive ? 'LIVE' : 'RESOLVE'}
                   </button>
-                  <button
-                    type="button"
-                    className={`px-3 py-1 rounded text-[9px] font-bold uppercase transition-all ${previewLang === 'en' ? 'bg-operational-cyan text-black shadow-md font-extrabold' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
-                    onClick={() => setPreviewLang('en')}
-                  >
-                    EN
-                  </button>
+                  {livePreviewActive && (
+                    <button
+                      type="button"
+                      onClick={() => { setLiveResolve(false); setResolvedPreview(null); }}
+                      className="px-2 py-1 rounded text-[8px] font-bold uppercase transition-all text-muted-foreground/40 hover:text-status-error border border-transparent hover:border-status-error/30"
+                    >
+                      RESET
+                    </button>
+                  )}
+                  <div className="flex bg-surface-container-lowest/50 rounded-lg p-0.5 border border-outline-low backdrop-blur-sm scale-90">
+                    <button
+                      type="button"
+                      className={`px-3 py-1 rounded text-[9px] font-bold uppercase transition-all ${previewLang === 'ar' ? 'bg-operational-cyan text-black shadow-md font-extrabold' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
+                      onClick={() => setPreviewLang('ar')}
+                    >
+                      AR
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-3 py-1 rounded text-[9px] font-bold uppercase transition-all ${previewLang === 'en' ? 'bg-operational-cyan text-black shadow-md font-extrabold' : 'text-muted-foreground/60 hover:text-foreground hover:bg-surface-container-high'}`}
+                      onClick={() => setPreviewLang('en')}
+                    >
+                      EN
+                    </button>
+                  </div>
                 </div>
               </div>
 

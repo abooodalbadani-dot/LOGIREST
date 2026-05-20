@@ -792,6 +792,12 @@
       "operators": "المشغلين",
       "po": "أوامر الشراء",
       "pr": "طلبات الشراء",
+      "report_available_inventory": "المخزون المتاح",
+      "report_currency_summaries": "ملخصات العملات",
+      "report_expiry": "تقرير انتهاء الصلاحية",
+      "report_movements": "حركات المخزون",
+      "report_procurement_status": "حالة المشتريات",
+      "report_stocktake_variance": "فروقات الجرد",
       "reports": "التقارير والتحليلات",
       "restaurant_profile": "الملف التعريفي للمطعم",
       "roles": "أدوار الوصول",
@@ -955,7 +961,16 @@
         "delete_failed": "فشل حذف وحدة القياس",
         "update_failed": "فشل تحديث مواصفات الوحدة"
       },
+      "category_options": {
+        "area": "مساحة",
+        "count": "عدد",
+        "length": "طول",
+        "mass": "كتلة",
+        "unit": "وحدة",
+        "volume": "حجم"
+      },
       "fields": {
+        "category": "الفئة",
         "code": "كود الوحدة",
         "created_at": "تاريخ الإنشاء",
         "is_active": "الحالة",
@@ -1325,6 +1340,7 @@
       "inbound_stream": "التدفق الوارد",
       "item_code": "رمز الصنف",
       "item_name": "اسم الصنف",
+      "last_sync": "آخر مزامنة",
       "ledger_pulse": "نبض السجل",
       "ledger_query": "استعلام السجل",
       "lot": "الدفعة",
@@ -1347,6 +1363,16 @@
         "transfer": "تحويل مخزني"
       },
       "zero_movement": "لم يتم رصد أي حركة"
+    },
+    "expired_override": {
+      "title": "تجاوز الصلاحية",
+      "description": "تتبع حالات تجاوز صلاحية الأصناف المسموح بها للصرف أو التسوية.",
+      "lot_number_label": "رقم الدفعة",
+      "expired_on_label": "منتهي في",
+      "reason_label": "سبب التجاوز",
+      "source_document_label": "المستند المصدر",
+      "impacted_qty_label": "الكمية المتأثرة",
+      "no_overrides": "لا توجد تجاوزات صلاحية مسجلة"
     }
   },
   "landed_cost": {
@@ -2288,7 +2314,17 @@
     "total_volume": "إجمالي الحجم",
     "trigger_event": "حدث المشغل",
     "trigger_events": "أحداث المشغلات",
-    "verified_recipient": "مستلم معتمد"
+    "verified_recipient": "مستلم معتمد",
+    "entity_browser": "مستعرض حقول الكيانات",
+    "entity_browser_desc": "تصفح حقول قاعدة البيانات المتاحة وأدرجها كمتغيرات ديناميكية",
+    "entity_search": "البحث عن حقول...",
+    "resolve_live": "مباشر",
+    "resolve": "حل",
+    "resolve_reset": "إعادة تعيين",
+    "loading_events": "جاري تحميل أحداث المشغلات...",
+    "select_entity": "اختر كياناً من اليسار لتصفح حقوله",
+    "db_bound": "قاعدة بيانات",
+    "no_params_desc": "لم يتم تعريف أي متغيرات بعد. أضف من مستعرض الكيانات أدناه أو أنشئ رموزاً مخصصة."
   },
   "operational": {
     "inventory": {
@@ -2851,6 +2887,7 @@
       "draft_status": "مسودة",
       "errors": {
         "create_failed": "فشل إنشاء جلسة الجرد",
+        "pending_documents_error": "قم بترحيل المستندات المعلقة أولاً",
         "post_failed": "فشل ترحيل جلسة الجرد",
         "reject_failed": "فشل رفض جلسة الجرد",
         "start_failed": "فشل بدء جلسة الجرد",
@@ -3548,7 +3585,12 @@
     "title": "الملف الشخصي",
     "two_fa": "مصادقة 2FA",
     "verified_account": "حساب موثق",
-    "verified_identity": "هوية موثقة"
+    "verified_identity": "هوية موثقة",
+    "notif_prefs": "تفضيلات التنبيهات",
+    "notif_prefs_save": "حفظ تفضيلات التنبيهات",
+    "notif_prefs_saved": "تم حفظ تفضيلات التنبيهات",
+    "avatar_upload_desc": "يقبل PNG، JPG، أو GIF (حد أقصى 1.5 ميجابايت). الرفع عبر نقطة نهاية مخصصة للتخزين على الخادم.",
+    "save_success": "تم تحديث الملف الشخصي بنجاح"
   },
   "yield_management": {
     "active_recipes": "الوصفات النشطة",

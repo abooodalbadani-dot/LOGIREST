@@ -17,6 +17,13 @@ export interface AuthUser {
   locale?: 'ar' | 'en'; 
   avatar_url?: string | null;
   phone?: string | null;
+  notification_preferences?: {
+    lowStock: boolean;
+    expiry: boolean;
+    pendingApproval: boolean;
+    poFinalized: boolean;
+    security: boolean;
+  };
 }
 export interface AuthContextValue { 
   user: AuthUser | null; 

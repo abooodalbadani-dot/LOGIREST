@@ -34,6 +34,7 @@ export function useKitchenRequestList(filters: { status?: string; department_id?
     queryKey: ['kitchen-requests', filters],
     queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests?${params.toString()}`, paginatedSchema(KitchenRequestSummarySchema), { signal }),
     staleTime: 60_000,
+    refetchInterval: 15000,
   });
 }
 

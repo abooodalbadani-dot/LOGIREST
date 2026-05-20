@@ -36,6 +36,7 @@ import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { canStartStocktake } from "@/domain/status-guards";
 import { type DocumentStatus } from "@/core/workflow/document-engine";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface StocktakeStartClientProps {
   id: string;
@@ -52,6 +53,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const { data: lockState, isLoading: lockLoading, error: errorLock, guardedRouter: router } = useWarehouseLock(session?.warehouseId ?? null);
   const startStocktake = useStartStocktake();
+  const { playSound } = useAudioFeedback();
   
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -70,13 +72,21 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
 
  const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 
- const handleStart = () => {
-   startStocktake.mutate({ id }, {
-     onSuccess: () => {
-       router.push(`/stocktake/${id}/count`, { skipGuard: true });
-     }
-   });
- };
+  const handleStart = () => {
+    startStocktake.mutate({ id }, {
+      onSuccess: () => {
+        playSound('success');
+        router.push(`/stocktake/${id}/count`, { skipGuard: true });
+      },
+      onError: (error: unknown) => {
+        playSound('error');
+        const err = error as { code?: string; message?: string };
+        if (err?.code === 'PENDING_DOCUMENTS') {
+          toast.error(t('errors.pending_documents_error'));
+        }
+      }
+    });
+  };
 
  return (
  <PermissionGate resource="operations_stocktake" action="edit">

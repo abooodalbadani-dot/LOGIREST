@@ -18,12 +18,14 @@ const GRNSummarySchema = z.object({
 
 export type GRNSummary = z.infer<typeof GRNSummarySchema>;
 
-export function useGRNList(filters: { status?: string; warehouse_id?: string; search?: string; page?: number } = {}) {
- const params = new URLSearchParams();
- if (filters.status) params.set('status', filters.status);
- if (filters.warehouse_id) params.set('warehouse_id', filters.warehouse_id);
- if (filters.search) params.set('search', filters.search);
- params.set('page', String(filters.page ?? 1));
+export function useGRNList(filters: { status?: string; warehouse_id?: string; search?: string; page?: number; sort_field?: string; sort_order?: string } = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.warehouse_id) params.set('warehouse_id', filters.warehouse_id);
+  if (filters.search) params.set('search', filters.search);
+  if (filters.sort_field) params.set('sort_field', filters.sort_field);
+  if (filters.sort_order) params.set('sort_order', filters.sort_order);
+  params.set('page', String(filters.page ?? 1));
  
   return useQuery({
     queryKey: ['grns', filters],

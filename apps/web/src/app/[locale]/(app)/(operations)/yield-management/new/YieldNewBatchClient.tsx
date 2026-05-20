@@ -18,6 +18,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { cn } from '@/lib/utils';
 
 import { useCreateYieldBatch } from '@/features/operations/hooks/useCreateYieldBatch';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function YieldNewBatchClient() {
   const t = useTranslations('yield_management');
@@ -29,6 +30,7 @@ export function YieldNewBatchClient() {
   const [inputQty, setInputQty] = useState('');
 
   const { mutate: createBatch, isPending } = useCreateYieldBatch();
+  const { playSound } = useAudioFeedback();
 
   // Unsaved Changes Guard
   const isDirty = useMemo(() => {
@@ -46,7 +48,11 @@ export function YieldNewBatchClient() {
       input_qty: parseFloat(inputQty),
     }, {
       onSuccess: () => {
+        playSound('success');
         guardedRouter.push('/yield-management', { skipGuard: true });
+      },
+      onError: () => {
+        playSound('error');
       }
     });
   };

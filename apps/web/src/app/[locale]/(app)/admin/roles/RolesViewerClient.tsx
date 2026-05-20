@@ -2,6 +2,7 @@
  
 import { useState, ComponentType } from 'react';
 import { PERMISSION_MATRIX, type ResourceType, type ActionType, type UserRole } from '@/types/rbac';
+import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { 
   Check, 
   Minus, 
@@ -40,6 +41,7 @@ const ROLE_ICONS: Partial<Record<UserRole, ComponentType<{ className?: string }>
 export function RolesViewerClient() {
   const t = useTranslations('admin');
   const [hoveredCell, setHoveredCell] = useState<{ resource: ResourceType; role: UserRole; action: ActionType } | null>(null);
+  useUnsavedChangesGuard(false);
   
   return (
     <MasterDataFormLayout

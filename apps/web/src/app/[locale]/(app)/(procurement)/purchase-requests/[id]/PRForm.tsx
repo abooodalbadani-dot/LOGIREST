@@ -8,6 +8,7 @@ import { Trash2, Plus, Calendar, Package, Calculator, ArrowLeft, Send, Save, Bui
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 import {
  Form,
@@ -59,9 +60,10 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  const router = useRouter();
  const [isSubmitting, setIsSubmitting] = React.useState(false);
  const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
- const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
+  const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
+  const { playSound } = useAudioFeedback();
 
- // Mocks/Hooks for data selection
+  // Mocks/Hooks for data selection
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
  const { data: itemsData } = useMasterDataList('items', ItemSchema);
 
@@ -106,10 +108,12 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  req_qty: 1,
  uom_id: item.primary_uom?.id || 'EA',
  });
- toast.success(tc('items') + ': ' + (locale === 'ar' ? item.name_ar : item.name_en));
- } else {
- toast.error(tc('not_found'));
- }
+  playSound('success');
+  toast.success(tc('items') + ': ' + (locale === 'ar' ? item.name_ar : item.name_en));
+  } else {
+    playSound('error');
+    toast.error(tc('not_found'));
+  }
  };
 
  const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
@@ -130,15 +134,18 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   if (submitAfterSave && prId) {
   const currentVersion = initialData ? ((initialData.version ?? 0) + 1) : 1;
   await submitPR.mutateAsync({ id: prId, version: currentVersion });
+  playSound('success');
   toast.success(t('submit_success'));
   } else {
-  toast.success(tc('save') + ' ' + tc('completed'));
+    playSound('success');
+    toast.success(tc('save') + ' ' + tc('completed'));
   }
 
  router.push('/purchase-requests');
- } catch (error) {
- console.error(error);
- toast.error(tc('error'));
+  } catch (error) {
+  console.error(error);
+  playSound('error');
+  toast.error(tc('error'));
  } finally {
  setIsSubmitting(false);
  setSubmitConfirmOpen(false);

@@ -30,6 +30,7 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props {
   id: string | null;
@@ -69,6 +70,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const conflict = useConflictHandler('branch', id ?? '');
   const update = useUpdateBranch({ onConflict: conflict.triggerConflict });
   const deleteBranch = useDeleteBranch();
+  const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

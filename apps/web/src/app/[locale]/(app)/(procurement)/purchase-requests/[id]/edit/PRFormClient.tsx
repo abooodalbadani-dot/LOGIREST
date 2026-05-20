@@ -3,9 +3,11 @@
 import { usePR } from '@/features/purchasing/hooks/usePR';
 import { PurchaseRequestForm } from '@/features/purchasing/components/purchase-request-form';
 import { useTranslations } from 'next-intl';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function PRFormClient({ id }: { id: string }) {
   const t = useTranslations('procurement.pr');
+  const { playSound } = useAudioFeedback();
   
   const { data: pr, isLoading } = usePR(id);
 

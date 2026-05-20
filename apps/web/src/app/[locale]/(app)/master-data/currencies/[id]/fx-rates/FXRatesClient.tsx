@@ -16,6 +16,7 @@ import { formatRate } from '@/utils/currency';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props { currencyId: string; locale: 'ar' | 'en'; }
 
@@ -37,6 +38,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  const { data: currencies } = useMasterDataList('currencies', CurrencySchema);
 
   const create = useMasterDataCreate('currencies/fx-rates', FXRateSchema);
+  const { playSound } = useAudioFeedback();
 
    const toCurrencyItems = useMemo(() => {
     const list = currencies?.data

@@ -33,6 +33,7 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props {
   id: string | null;
@@ -55,6 +56,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const conflict = useConflictHandler('warehouse', id ?? '');
   const update = useUpdateWarehouse({ onConflict: conflict.triggerConflict });
   const deleteWarehouse = useDeleteWarehouse();
+  const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

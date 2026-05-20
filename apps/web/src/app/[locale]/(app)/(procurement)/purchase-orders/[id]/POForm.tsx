@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowRightLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -70,10 +71,11 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  const t = useTranslations("procurement.po");
  const tc = useTranslations("common");
  
- const createMutation = useCreatePO();
- const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
+  const createMutation = useCreatePO();
+  const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
+  const { playSound } = useAudioFeedback();
 
- const form = useForm<PurchaseOrderFormValues>({
+  const form = useForm<PurchaseOrderFormValues>({
  resolver: zodResolver(formSchema),
  defaultValues: {
  supplier_id: initialData?.supplier_id || "",
@@ -117,22 +119,26 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  async function onSubmit(values: PurchaseOrderFormValues) {
  try {
  if (mode === "edit" && initialData) {
-   await updateMutation.mutateAsync({ 
-    payload: { ...values, version: initialData.version || 1 } 
-  });
- toast.success(t("edit_success"));
+    await updateMutation.mutateAsync({ 
+     payload: { ...values, version: initialData.version || 1 } 
+   });
+  playSound('success');
+  toast.success(t("edit_success"));
  } else {
   if (!currencies || currencies.length === 0) {
+    playSound('error');
     toast.error(t('errors.no_currencies_available'));
     return;
   }
      const result = await createMutation.mutateAsync({ payload: values });
- toast.success(t("submit_success"));
-  router.push(`/purchase-orders/${result.id}`);
+  playSound('success');
+  toast.success(t("submit_success"));
+   router.push(`/purchase-orders/${result.id}`);
  }
  } catch (error) {
- console.error(error);
- toast.error(tc("error_occurred"));
+  console.error(error);
+  playSound('error');
+  toast.error(tc("error_occurred"));
  }
  }
 

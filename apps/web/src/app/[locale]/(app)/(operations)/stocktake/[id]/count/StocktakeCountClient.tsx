@@ -32,6 +32,7 @@ import { useAbortController } from "@/hooks/useAbortController";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { LockBanner } from "@/components/shared/LockBanner";
 import { audioAlerts } from "@/utils/audio";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
@@ -44,6 +45,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const updateCount = useUpdateItemCount();
   const completeCounting = useCompleteCounting();
+  const { playSound } = useAudioFeedback();
 
   const [idempotencyKey] = React.useState(() => crypto.randomUUID());
   const { isOnline } = useNetworkStatus();
@@ -215,10 +217,12 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       }
     }, {
       onSuccess: () => {
+        playSound('success');
         toast.success(t('posted_success'))
         guardedRouter.push(`/stocktake/${id}/variance`, { skipGuard: true })
       },
       onError: () => {
+        playSound('error');
         toast.error(common('error'))
       }
     })

@@ -14,6 +14,8 @@ const StocktakeSummarySchema = z.object({
  started_by: z.string(),
  posted_at: z.string().nullable(),
  posted_by: z.string().nullable(),
+ total_items: z.number().optional().default(0),
+ counted_items: z.number().optional().default(0),
 });
 
 export type StocktakeSummary = z.infer<typeof StocktakeSummarySchema>;
@@ -27,5 +29,6 @@ export function useStocktakeList(filters: { status?: string; warehouse_id?: stri
     queryKey: ['stocktake-sessions', filters],
     queryFn: ({ signal }) => apiClient.get(`/stocktake/sessions?${params}`, paginatedSchema(StocktakeSummarySchema), { signal }),
     staleTime: 30_000,
+    refetchInterval: 10000,
   });
 }

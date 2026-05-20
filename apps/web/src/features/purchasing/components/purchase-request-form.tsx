@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
 import {
@@ -62,7 +63,9 @@ const lineItemSchema = z.object({
     name_en: z.string(),
     primary_uom: z.object({
       code: z.string()
-    })
+    }),
+    min_stock_level: z.number().optional(),
+    reorder_point: z.number().optional(),
   }),
   req_qty: z.number().min(0.01),
   uom_id: z.string().min(1),
@@ -101,6 +104,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const createPR = useCreatePR();
   const updatePR = useUpdatePR({ onConflict });
   const submitPR = useSubmitPR({ onConflict });
+  const { playSound } = useAudioFeedback();
 
   const departmentItems = React.useMemo(() => {
     return warehouses?.data?.map((w: Warehouse) => ({
@@ -134,7 +138,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           name_en: l.item.name_en,
           primary_uom: {
             code: l.item.primary_uom?.code || 'EA'
-          }
+          },
+          min_stock_level: (l.item as Record<string, unknown>)?.min_stock_level as number | undefined,
+          reorder_point: (l.item as Record<string, unknown>)?.reorder_point as number | undefined,
         },
         req_qty: l.req_qty || 0,
         uom_id: l.uom_id,
@@ -164,6 +170,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       if (index >= 0) {
         const existing = currentLines[index];
         form.setValue(`lines.${index}.req_qty`, (existing.req_qty || 0) + 1);
+        playSound('success');
         toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       } else {
         append({
@@ -175,14 +182,18 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             name_en: item.name_en,
             primary_uom: {
               code: item.primary_uom?.code || 'EA'
-            }
+            },
+            min_stock_level: item.min_stock_level,
+            reorder_point: item.reorder_point,
           },
           req_qty: 1,
           uom_id: item.primary_uom?.id || 'EA',
         });
+        playSound('success');
         toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       }
     } else {
+      playSound('error');
       toast.error(tc('not_found'));
     }
   };
@@ -216,14 +227,17 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       if (submitAfterSave && prId) {
         const currentVersion = initialData ? ((initialData.version ?? 0) + 1) : 1;
         await submitPR.mutateAsync({ id: prId, version: currentVersion });
+        playSound('success');
         toast.success(t('submit_success'));
       } else {
+        playSound('success');
         toast.success(tc('save') + ' ' + tc('completed'));
       }
 
       router.push(`/purchase-requests/${prId}`, { skipGuard: true });
     } catch (error) {
       console.error(error);
+      playSound('error');
       toast.error(tc('error'));
     } finally {
       setIsSubmitting(false);
@@ -438,8 +452,11 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     }}
                     renderQty={(line) => {
                       const index = fields.findIndex(f => f.id === line.id);
+                      const item = (line as unknown as Record<string, unknown>)?.item as Record<string, unknown> | undefined;
+                      const minStock = item?.min_stock_level as number | undefined;
+                      const reorderPt = item?.reorder_point as number | undefined;
                       return (
-                        <div className="flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-0.5">
                           <input
                             type="number"
                             step="0.01"
@@ -448,6 +465,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                             dir="ltr"
                             {...form.register(`lines.${index}.req_qty`, { valueAsNumber: true })}
                           />
+                          {(minStock !== undefined || reorderPt !== undefined) && (
+                            <span className="text-label-xxs font-semibold text-muted-foreground/50 whitespace-nowrap">
+                              {minStock !== undefined ? `Min: ${minStock}` : ''}
+                              {minStock !== undefined && reorderPt !== undefined ? ' / ' : ''}
+                              {reorderPt !== undefined ? `Reorder: ${reorderPt}` : ''}
+                            </span>
+                          )}
                         </div>
                       );
                     }}
@@ -471,7 +495,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                                     code: matchedItem?.code || '',
                                     name_ar: matchedItem?.name_ar || '',
                                     name_en: matchedItem?.name_en || '',
-                                    primary_uom: { code: matchedItem?.primary_uom?.code || 'EA' }
+                                    primary_uom: { code: matchedItem?.primary_uom?.code || 'EA' },
+                                    min_stock_level: matchedItem?.min_stock_level,
+                                    reorder_point: matchedItem?.reorder_point,
                                   });
                                   form.setValue(`lines.${index}.uom_id`, matchedItem?.primary_uom?.id || 'EA');
                                 }}

@@ -26,6 +26,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { usePostGRN } from '@/features/purchasing/hooks/usePostGRN';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const fxRateSchema = z.object({
   fx_rate: z.number().min(0.0001, 'Invalid rate')
@@ -45,9 +46,10 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  const queryClient = useQueryClient();
  const { user } = useAuth();
  
- const { toast } = useToast();
- 
- const { data: grn, isLoading: isLoadingGRN } = useGRN(id);
+  const { toast } = useToast();
+  const { playSound } = useAudioFeedback();
+  
+  const { data: grn, isLoading: isLoadingGRN } = useGRN(id);
  
  
   const form = useForm<FXRateFormValues>({
@@ -116,9 +118,14 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
       version: grn?.version || 1
     }, {
       onSuccess: () => {
+        playSound('success');
         toast.success(t('posted_success'));
         setIsPostDialogOpen(false);
         guardedRouter.push(`/goods-received/${id}`, { skipGuard: true });
+      },
+      onError: () => {
+        playSound('error');
+        toast.error(tc('error'));
       }
     });
   };

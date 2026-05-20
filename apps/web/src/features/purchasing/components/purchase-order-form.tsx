@@ -8,8 +8,9 @@ import { useRouter } from "@/i18n/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowRightLeft, Plus, Trash2, Package, Search } from "lucide-react";
+import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { type ComboboxItem } from "@/components/shared/SmartCombobox";
@@ -36,6 +37,15 @@ import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { formatCurrency } from "@/utils/currency";
 import { PurchaseOrderLineItems } from "./purchase-order-line-items";
+import { usePRList } from "@/features/purchasing/hooks/usePRList";
+import { usePR } from "@/features/purchasing/hooks/usePR";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 
 
@@ -110,6 +120,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   
   const createMutation = useCreatePO();
   const updateMutation = useUpdatePO(initialData?.id || "", { onConflict });
+  const { playSound } = useAudioFeedback();
 
   const { fields, append, prepend, remove, update } = useFieldArray({
     control: form.control,
@@ -211,18 +222,22 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         await updateMutation.mutateAsync({ 
           payload: { ...values, version: initialData.version ?? 0 } 
         });
+        playSound('success');
         toast.success(t("edit_success"));
       } else {
         if (!currencies || currencies.length === 0) {
+          playSound('error');
           toast.error(t('errors.no_currencies_available'));
           return;
         }
         const result = await createMutation.mutateAsync({ payload: values });
+        playSound('success');
         toast.success(t("submit_success"));
         router.push(`/purchase-orders/${result.id}`, { skipGuard: true });
       }
     } catch (error) {
       console.error(error);
+      playSound('error');
       toast.error(tc("error_occurred"));
     }
   }
@@ -232,6 +247,28 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const { data: suppliers, isLoading: loadingSuppliers } = useSuppliers();
   const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
   const { data: warehouses, isLoading: loadingWarehouses } = useWarehouses();
+
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
+  const [selectedPRId, setSelectedPRId] = React.useState<string | null>(null);
+  const { data: approvedPRs, isLoading: loadingPRs } = usePRList({ status: 'APPROVED' });
+  const { data: selectedPR } = usePR(selectedPRId);
+
+  const handleImportPR = React.useCallback(() => {
+    if (!selectedPR) return;
+    const prLines = selectedPR.lines.map(l => ({
+      item_id: l.item.id,
+      item_name: locale === 'ar' ? l.item.name_ar : l.item.name_en,
+      item_code: l.item.code,
+      quantity: l.req_qty,
+      unit_price: 0,
+      uom_id: l.uom_id,
+      notes: '',
+    }));
+    form.setValue('lines', prLines);
+    form.setValue('pr_id', selectedPR.id);
+    setImportDialogOpen(false);
+    setSelectedPRId(null);
+  }, [selectedPR, form, locale]);
 
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
   const baseCurrency = settings?.base_currency;
@@ -326,13 +363,79 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t('linked_pr_placeholder')} disabled={isLocked} className="bg-surface-container-low uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
-                      </FormControl>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input placeholder={t('linked_pr_placeholder')} disabled={isLocked} className="bg-surface-container-low uppercase font-mono border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 flex-1" {...field} />
+                        </FormControl>
+                        {!isLocked && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setImportDialogOpen(true)}
+                            className="h-11 px-3 text-label-xs font-semibold border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10"
+                          >
+                            <FileDown className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>{t('import_from_pr') || 'Import from Purchase Request'}</DialogTitle>
+                    </DialogHeader>
+                    <div className="max-h-80 overflow-y-auto space-y-2">
+                      {loadingPRs ? (
+                        <div className="text-center py-8 text-label-xs text-muted-foreground/60">{tc('loading')}</div>
+                      ) : !approvedPRs?.data?.length ? (
+                        <div className="text-center py-8 text-label-xs text-muted-foreground/60">{t('no_approved_prs') || 'No approved purchase requests found'}</div>
+                      ) : (
+                        approvedPRs.data.map(pr => (
+                          <button
+                            key={pr.id}
+                            type="button"
+                            onClick={() => setSelectedPRId(pr.id === selectedPRId ? null : pr.id)}
+                            className={`w-full text-start p-4 rounded-xl border transition-all ${
+                              selectedPRId === pr.id
+                                ? 'border-operational-cyan bg-operational-cyan/5'
+                                : 'border-surface-variant/10 hover:border-surface-variant/30 bg-surface-container-low'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-mono font-bold text-label-sm text-foreground">{pr.document_number}</span>
+                                <span className="text-label-xxs text-muted-foreground/60 ms-2">{pr.department_id}</span>
+                              </div>
+                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{pr.created_at?.split('T')[0]}</span>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => { setImportDialogOpen(false); setSelectedPRId(null); }}
+                      >
+                        {tc('cancel')}
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={!selectedPRId || loadingPRs}
+                        onClick={handleImportPR}
+                        className="bg-operational-cyan hover:brightness-110 text-white"
+                      >
+                        {t('import_lines') || 'Import Lines'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 <FormField
                   control={form.control}

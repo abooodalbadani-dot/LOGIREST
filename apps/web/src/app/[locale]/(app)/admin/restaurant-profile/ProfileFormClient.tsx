@@ -28,13 +28,15 @@ import {
   type RestaurantProfile 
 } from '@/features/admin/hooks/useRestaurantProfile';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function ProfileFormClient({ locale: _locale }: { locale: string }) {
  const t = useTranslations('admin.restaurant_profile');
  const tCommon = useTranslations('common');
  const { data: profile, isLoading } = useRestaurantProfile();
- const { mutateAsync: updateProfile, isPending } = useUpdateRestaurantProfile();
- 
+  const { mutateAsync: updateProfile, isPending } = useUpdateRestaurantProfile();
+  const { playSound } = useAudioFeedback();
+  
 const { register, handleSubmit, formState: { errors, isDirty }, reset, setValue, control } = useForm<RestaurantProfile>({
   resolver: zodResolver(RestaurantProfileSchema),
   });

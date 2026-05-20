@@ -38,6 +38,8 @@ import { useInventoryBalance } from "@/features/inventory/hooks/useInventoryBala
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
+import { useAuth } from "@/providers/AuthProvider";
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const buildFormSchema = (t: (k: string) => string) => z.object({
  warehouseId: z.string().min(1, t('validation.warehouse_required')),
@@ -51,15 +53,22 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations("operations.stocktake");
   const tc = useTranslations("common");
   const { data: warehouses, isLoading: warehousesLoading } = useWarehouses();
+  const { user } = useAuth();
   const createStocktake = useCreateStocktake();
+  const { playSound } = useAudioFeedback();
+
+  const assignedWarehouseIds = React.useMemo(() => {
+    if (!user?.scopes) return null;
+    const ids = user.scopes.map(s => s.warehouse_id).filter(Boolean) as string[];
+    return ids.length > 0 ? ids : null;
+  }, [user?.scopes]);
+
+  const filteredWarehouses = React.useMemo(() => {
+    if (!warehouses || !assignedWarehouseIds) return warehouses;
+    return warehouses.filter(w => assignedWarehouseIds.includes(w.id));
+  }, [warehouses, assignedWarehouseIds]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const { data: inventoryBalances, isLoading: isBalanceLoading } = useInventoryBalance(
-    watchedWarehouse ? { warehouse_id: watchedWarehouse } : undefined,
-    { enabled: !!watchedWarehouse }
-  );
-  const eligibleItemCount = inventoryBalances?.data?.length ?? 0;
 
   const formSchema = buildFormSchema((k) => t(k as Parameters<typeof t>[0]));
 
@@ -78,8 +87,14 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  control: form.control,
  name: "warehouseId",
  });
- const { data: lockStatus } = useWarehouseLock(watchedWarehouse);
- const isWarehouseLocked = !!lockStatus?.isLocked;
+  const { data: lockStatus } = useWarehouseLock(watchedWarehouse);
+  const isWarehouseLocked = !!lockStatus?.isLocked;
+
+  const { data: inventoryBalances, isLoading: isBalanceLoading } = useInventoryBalance(
+    watchedWarehouse ? { warehouse_id: watchedWarehouse } : undefined,
+    { enabled: !!watchedWarehouse }
+  );
+  const eligibleItemCount = inventoryBalances?.data?.length ?? 0;
 
  const onSubmit = (data: StocktakeFormValues) => {
     createStocktake.mutate({
@@ -90,22 +105,31 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
       },
     }, {
       onSuccess: (session) => {
+        playSound('success');
         router.push(`/stocktake/${session.id}`, { skipGuard: true });
       },
       onError: (error) => {
+        playSound('error');
         console.error("Failed to create stocktake session", error);
       },
     });
   };
 
- if (warehousesLoading) {
- return (
- <div className="space-y-6 animate-pulse">
- <div className="h-20 bg-surface-container-low rounded-3xl" />
- <div className="h-64 bg-surface-container-low rounded-[2.5rem]" />
- </div>
- );
- }
+  if (warehousesLoading) {
+  return (
+  <div className="space-y-6 animate-pulse">
+  <div className="h-20 bg-surface-container-low rounded-3xl" />
+  <div className="h-64 bg-surface-container-low rounded-[2.5rem]" />
+  </div>
+  );
+  }
+
+  const warehouseItems = (filteredWarehouses || []).map(w => ({
+    id: w.id,
+    name_en: w.name_en,
+    name_ar: w.name_ar,
+    code: w.code,
+  }));
 
  return (
  <PermissionGate resource="operations_stocktake" action="create">
@@ -164,7 +188,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
   </FormLabel>
   <FormControl>
     <SmartCombobox
-      items={warehouses || []}
+      items={warehouseItems}
       value={field.value}
       onSelect={(wh) => field.onChange(wh.id)}
       placeholder={t('select_warehouse')}
@@ -263,7 +287,12 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
       form.handleSubmit(onSubmit)();
     }}
     title={t('create_confirm_title')}
-    description={t('create_confirm_desc')}
+    description={isBalanceLoading
+      ? (locale === 'ar' ? 'جاري حساب الأصناف المؤهلة...' : 'Calculating eligible items...')
+      : (locale === 'ar'
+        ? `أنت على وشك أخذ لقطة لـ ${eligibleItemCount} صنف`
+        : `You are about to snapshot ${eligibleItemCount} items`)
+    }
     confirmText={tc('confirm')}
     icon="info"
   />

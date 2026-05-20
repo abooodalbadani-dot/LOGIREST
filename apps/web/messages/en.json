@@ -792,6 +792,12 @@
       "operators": "Operators",
       "po": "Purchase Orders",
       "pr": "Purchase Requests",
+      "report_available_inventory": "Available Inventory",
+      "report_currency_summaries": "Currency Summaries",
+      "report_expiry": "Expiry Report",
+      "report_movements": "Stock Movements",
+      "report_procurement_status": "Procurement Status",
+      "report_stocktake_variance": "Stocktake Variance",
       "reports": "Reports & Analytics",
       "restaurant_profile": "Restaurant Profile",
       "roles": "Access Roles",
@@ -955,7 +961,16 @@
         "delete_failed": "Failed to delete measurement unit",
         "update_failed": "Failed to update unit specifications"
       },
+      "category_options": {
+        "area": "Area",
+        "count": "Count",
+        "length": "Length",
+        "mass": "Mass",
+        "unit": "Unit",
+        "volume": "Volume"
+      },
       "fields": {
+        "category": "Category",
         "code": "Unit Code",
         "created_at": "Created At",
         "is_active": "Status",
@@ -1325,6 +1340,7 @@
       "inbound_stream": "Inbound Stream",
       "item_code": "Item Code",
       "item_name": "Item Name",
+      "last_sync": "Last Sync",
       "ledger_pulse": "Ledger Pulse",
       "ledger_query": "Ledger Query",
       "lot": "Lot",
@@ -1347,6 +1363,16 @@
         "transfer": "Warehouse Transfer"
       },
       "zero_movement": "Zero Movement Detected"
+    },
+    "expired_override": {
+      "title": "Expired Override",
+      "description": "Track instances where expired items were overridden for issue or adjustment.",
+      "lot_number_label": "Lot Number",
+      "expired_on_label": "Expired On",
+      "reason_label": "Override Reason",
+      "source_document_label": "Source Document",
+      "impacted_qty_label": "Impacted Qty",
+      "no_overrides": "No expired overrides recorded"
     }
   },
   "landed_cost": {
@@ -2288,7 +2314,17 @@
     "total_volume": "Total Volume",
     "trigger_event": "Trigger Event",
     "trigger_events": "Trigger Events",
-    "verified_recipient": "Verified Recipient"
+    "verified_recipient": "Verified Recipient",
+    "entity_browser": "Entity Field Browser",
+    "entity_browser_desc": "Browse available database fields and inject them as dynamic parameters",
+    "entity_search": "Search fields...",
+    "resolve_live": "LIVE",
+    "resolve": "RESOLVE",
+    "resolve_reset": "RESET",
+    "loading_events": "Loading trigger events...",
+    "select_entity": "Select an entity on the left to browse its fields",
+    "db_bound": "DB",
+    "no_params_desc": "No parameters defined yet. Add from the entity browser below or create custom tokens."
   },
   "operational": {
     "inventory": {
@@ -2851,6 +2887,7 @@
       "draft_status": "Draft",
       "errors": {
         "create_failed": "Failed to create stocktake session",
+        "pending_documents_error": "Resolve pending documents first",
         "post_failed": "Failed to post stocktake session",
         "reject_failed": "Failed to reject stocktake session",
         "start_failed": "Failed to start stocktake session",
@@ -3548,7 +3585,12 @@
     "title": "User Profile",
     "two_fa": "2FA Authentication",
     "verified_account": "Verified Account",
-    "verified_identity": "Verified Identity"
+    "verified_identity": "Verified Identity",
+    "notif_prefs": "Notification Preferences",
+    "notif_prefs_save": "Save Notification Prefs",
+    "notif_prefs_saved": "Notification preferences saved",
+    "avatar_upload_desc": "Accepts PNG, JPG, or GIF (max. 1.5MB). Upload via dedicated endpoint for server-side storage.",
+    "save_success": "Profile updated successfully"
   },
   "yield_management": {
     "active_recipes": "Active Recipes",

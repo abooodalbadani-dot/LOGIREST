@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Calendar, Package, ArrowLeft, Building2, FileText, History } from 'lucide-react';
+import { Calendar, Package, ArrowLeft, Building2, FileText, History, Printer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
 
   return (
     <div className="space-y-10 w-full bg-surface-container-low min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-surface-container-lowest p-8 rounded-[2rem] border border-surface-variant/5 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-surface-container-lowest p-8 rounded-[2rem] border border-surface-variant/5 shadow-sm print:hidden">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-operational-cyan/10 text-operational-cyan">
             <Package className="w-6 h-6" />
@@ -48,6 +48,14 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
         </div>
         
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => window.print()} 
+            className="h-10 px-4 rounded-lg hidden md:flex border-operational-cyan/20 text-operational-cyan hover:bg-operational-cyan/10 uppercase text-label-xs font-bold transition-all"
+          >
+            <Printer className="w-4 h-4 me-2" />
+            {tc('print') || 'Print'}
+          </Button>
           <StatusBadge status={document.status as BadgeStatus} />
           {actions && (
             <>
@@ -58,10 +66,15 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
         </div>
       </div>
 
+      <div className="hidden print:block mb-8">
+        <h1 className="text-2xl font-bold uppercase">{t('detail_title') || 'Purchase Request'}</h1>
+        <p className="text-sm font-mono text-muted-foreground mt-1">Ref: {document.document_number}</p>
+      </div>
+
       <DocumentReadOnlyOverlay isPosted={true}>
-        <div className="space-y-10">
+        <div className="space-y-10 print:space-y-6">
           {/* Header Info */}
-          <div className="bg-surface-container-low p-8 rounded-[2rem] border border-surface-variant/5">
+          <div className="bg-surface-container-low p-8 rounded-[2rem] border border-surface-variant/5 print:p-0 print:border-none print:bg-transparent">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="flex flex-col gap-2">
                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2 ps-1">
@@ -129,7 +142,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
       </DocumentReadOnlyOverlay>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-12 mt-12 border-t border-surface-variant/10">
+      <div className="flex items-center justify-between pt-12 mt-12 border-t border-surface-variant/10 print:hidden">
         <Button
           variant="ghost"
           type="button"

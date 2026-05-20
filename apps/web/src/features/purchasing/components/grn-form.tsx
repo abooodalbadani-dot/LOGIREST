@@ -38,12 +38,15 @@ import { useSuppliers } from '@/features/purchasing/hooks/useSuppliers';
 import { useWarehouses } from '@/features/warehouses/api/useWarehouses';
 import { useCreateGRN } from '@/features/purchasing/hooks/useCreateGRN';
 import { useUpdateGRN } from '@/features/purchasing/hooks/useUpdateGRN';
+import { CreateCustomItemDialog } from '@/components/shared/CreateCustomItemDialog';
 import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { formatCurrency } from '@/utils/currency';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { Item, ItemSchema } from '@/types/master-data';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { cn } from '@/lib/utils';
 
 const grnFormSchema = z.object({
   supplier_id: z.string().min(1, 'Required'),
@@ -73,6 +76,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const isNew = id === 'new';
   const lastResetId = useRef<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const { playSound } = useAudioFeedback()
 
   const { data: suppliers } = useSuppliers();
   const { data: warehouses } = useWarehouses();
@@ -110,6 +114,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const status = (initialData?.status || GRN_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('GRN', status);
 
+  const [isCustomItemDialogOpen, setIsCustomItemDialogOpen] = useState(false);
+  const [customItemBarcode, setCustomItemBarcode] = useState('');
+  
   const { handleSubmit, reset, control, register, getValues, formState: { errors, isDirty } } = useForm<GRNFormValues>({
     resolver: zodResolver(grnFormSchema),
     defaultValues: {
@@ -165,6 +172,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   const handleScan = async (barcode: string) => {
     if (isWarehouseLocked) {
+      playSound('error');
       toast.error(ts('warehouse_locked_mutation_blocked') || "Warehouse is locked. Scan mutation blocked.");
       throw new Error('WarehouseLocked');
     }
@@ -178,9 +186,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         const existing = currentLines[index];
         update(index, {
           ...existing,
-          qty: existing.qty + 1,
-          received_qty: existing.received_qty + 1
+          received_qty: (existing.received_qty || 0) + 1
         });
+        playSound('success');
         toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       } else {
         append({
@@ -202,13 +210,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           unit_cost_foreign: item.last_purchase_price || 0,
           unit_cost_base: 0
         });
+        playSound('success');
         toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
       }
       setScanError('');
     } else {
       setScanError(t('no_item_found'));
+      setCustomItemBarcode(barcode);
+      setIsCustomItemDialogOpen(true);
+      playSound('error');
       toast.error(tc('item_not_found'));
-      throw new Error('ItemNotFound');
     }
   };
 
@@ -238,6 +249,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   const onSubmit = async (values: GRNFormValues) => {
     if (!currencies || currencies.length === 0) {
+      playSound('error');
       toast.error(t('errors.no_currencies_available'));
       return;
     }
@@ -259,6 +271,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
       if (isNew) {
         const result = await createMutation.mutateAsync({ payload, headers });
+        playSound('success');
         toast.success(t('create_success'));
         router.push(`/goods-received/${result.id}`, { skipGuard: true });
       } else if (initialData) {
@@ -269,12 +282,14 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           },
           headers
         });
+        playSound('success');
         toast.success(t('update_success'));
       }
     } catch (error) {
       console.error('[GRNForm] Submit Error:', error);
       const isConflict = error && typeof error === 'object' && 'name' in error && error.name === 'ConflictError';
       if (!isConflict) {
+        playSound('error');
         toast.error(tc('error_occurred'));
       }
     }
@@ -307,6 +322,54 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
             </Button>
           )}
         </div>
+
+      {isCustomItemDialogOpen && (
+        <CreateCustomItemDialog
+          isOpen={isCustomItemDialogOpen}
+          onClose={() => setIsCustomItemDialogOpen(false)}
+          defaultName={customItemBarcode}
+          initialBarcode={customItemBarcode}
+          onCreate={async (newItem) => {
+            try {
+              await apiClient.post('/master-data/items', z.any(), {
+                id: newItem.id,
+                code: newItem.code,
+                barcode: newItem.barcode,
+                name_en: newItem.name_en,
+                name_ar: newItem.name_ar,
+                primary_uom: newItem.primary_uom,
+                track_lots: false,
+                is_active: true,
+                version: 1
+              });
+              append({
+                id: `new-${Date.now()}`,
+                item: {
+                  id: newItem.id,
+                  code: newItem.code,
+                  name_ar: newItem.name_ar,
+                  name_en: newItem.name_en,
+                  primary_uom: {
+                    id: newItem.primary_uom.id,
+                    code: newItem.primary_uom.code
+                  }
+                },
+                lot: null,
+                qty: 1,
+                received_qty: 1,
+                uom_id: newItem.primary_uom.id,
+                unit_cost_foreign: 0,
+                unit_cost_base: 0
+              });
+              playSound('success');
+              toast.success(tc('item_added', { name: locale === 'ar' ? newItem.name_ar : newItem.name_en }));
+            } catch (err) {
+              playSound('error');
+              toast.error(tc('error_generic'));
+            }
+          }}
+        />
+      )}
 
         <DocumentLockWrapper isLocked={isLocked || isWarehouseLocked}>
           <DocumentReadOnlyOverlay isPosted={isLocked || isWarehouseLocked}>
@@ -444,15 +507,19 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         header: tc('table_headers.received_qty'),
                         cell: (field: LineItem) => {
                           const index = fields.findIndex(f => f.id === field.id);
+                          const isOver = field.received_qty > field.qty;
                           return (
                             <input type="number"
                               dir="ltr"
                               disabled={isLocked || isWarehouseLocked}
-                              className="w-20 rounded-sm border border-surface-container-high/30 bg-surface-container-low text-center px-2 py-0.5 font-mono text-xs focus:ring-1 focus:ring-primary-fixed-dim/10 outline-none transition-all disabled:opacity-50 h-7"
+                              className={cn(
+                                "w-20 rounded-sm border border-surface-container-high/30 bg-surface-container-low text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 h-7",
+                                isOver ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
+                              )}
                               {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
                               onChange={e => {
                                 const val = Number(e.target.value);
-                                update(index, { ...fields[index], received_qty: val, qty: val } as LineItem);
+                                update(index, { ...fields[index], received_qty: val } as LineItem);
                               }}
                             />
                           );

@@ -32,12 +32,14 @@ import { type Currency } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export function SettingsClient({ locale }: { locale: string }) {
   const t = useTranslations('admin.settings');
   const tCommon = useTranslations('common');
   const { data: currentSettings, isLoading } = useAdminSettings();
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
+  const { playSound } = useAudioFeedback();
   const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -64,8 +66,10 @@ export function SettingsClient({ locale }: { locale: string }) {
       try {
         await updateSettings(data);
         reset(data);
+        playSound('success');
         toast.success(t('save_success') || 'Settings saved successfully');
       } catch (err) {
+        playSound('error');
         // Managed by hooks
       }
     }
@@ -78,8 +82,10 @@ export function SettingsClient({ locale }: { locale: string }) {
         reset(pendingData);
         setIsConfirmOpen(false);
         setPendingData(null);
+        playSound('success');
         toast.success(t('save_success') || 'Settings saved successfully');
       } catch (err) {
+        playSound('error');
         // Managed by hooks
       }
     }

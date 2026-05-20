@@ -23,4 +23,7 @@ export const authMocks: Record<string, unknown> = {
   'PUT /auth/profile': (body: unknown) => {
     return body;
   },
+  'POST /auth/profile/avatar': () => {
+    return { avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kitchen-store-user&backgroundColor=teal' };
+  },
 };

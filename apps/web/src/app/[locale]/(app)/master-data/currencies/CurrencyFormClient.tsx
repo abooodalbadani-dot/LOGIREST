@@ -20,6 +20,7 @@ import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesG
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface Props {
   id: string | null;
@@ -42,6 +43,7 @@ export function CurrencyFormClient({
   const create = useCreateCurrency();
   const conflict = useConflictHandler('currency', id ?? '');
   const update = useUpdateCurrency({ onConflict: conflict.triggerConflict });
+  const { playSound } = useAudioFeedback();
 
   const { register, handleSubmit, reset, control, formState: { errors, isDirty, isValid } } =
     useForm<CurrencyFormValues>({

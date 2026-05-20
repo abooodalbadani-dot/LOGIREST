@@ -20,6 +20,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { toast } from 'sonner';
@@ -57,6 +58,7 @@ export function FXRateFormClient({
   const create = useCreateFXRate();
   const conflict = useConflictHandler('fx-rate', id ?? '');
   const update = useUpdateFXRate({ onConflict: conflict.triggerConflict });
+  const { playSound } = useAudioFeedback();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -116,6 +118,7 @@ export function FXRateFormClient({
       if (!user || normalizedRole === 'clerk') {
         if (!redirectFired.current) {
           redirectFired.current = true;
+          playSound('error');
           toast.error(getUnauthorizedMessage());
           router.replace('/dashboard');
         }

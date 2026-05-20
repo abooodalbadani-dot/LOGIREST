@@ -7,6 +7,14 @@ export const UserScopeSchema = z.object({
  department_id: z.string().nullable(),
 });
 
+export const NotificationPreferencesSchema = z.object({
+  lowStock: z.boolean().default(true),
+  expiry: z.boolean().default(true),
+  pendingApproval: z.boolean().default(true),
+  poFinalized: z.boolean().default(false),
+  security: z.boolean().default(true),
+});
+
 export const AuthUserSchema = z.object({ 
  id: z.string(), 
  name: z.string(), 
@@ -19,6 +27,7 @@ export const AuthUserSchema = z.object({
  created_at: z.string().optional(),
  avatar_url: z.string().optional().nullable(),
  phone: z.string().optional().nullable(),
+ notification_preferences: NotificationPreferencesSchema.optional(),
 });
 
 export const ForgotPasswordSchema = z.object({

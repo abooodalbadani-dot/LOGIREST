@@ -118,11 +118,34 @@ export function StocktakeListClient({
  </div>
  ),
  },
- {
- accessorKey: 'status',
- header: tc('status_label') || 'State',
- cell: ({ row }) => <StatusBadge status={row.original.status} />,
- },
+  {
+  id: 'progress',
+  header: t('items_counted') || 'Progress',
+  cell: ({ row }) => {
+    const total = row.original.total_items || 0;
+    const counted = row.original.counted_items || 0;
+    const pct = total > 0 ? Math.round((counted / total) * 100) : 0;
+    return (
+      <div className="flex flex-col gap-1.5 min-w-[140px]">
+        <div className="flex items-center justify-between text-label-xxs font-semibold text-muted-foreground/60">
+          <span>{counted}/{total} {t('items_count')}</span>
+          <span>{pct}%</span>
+        </div>
+        <div className="w-full h-2 bg-surface-container-highest/30 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    );
+  },
+  },
+  {
+  accessorKey: 'status',
+  header: tc('status_label') || 'State',
+  cell: ({ row }) => <StatusBadge status={row.original.status} />,
+  },
  {
  id: 'actions',
  header: '',

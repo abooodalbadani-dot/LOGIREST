@@ -2,10 +2,10 @@
 import { db } from './mock-database';
 import { MockFactory } from './mock-factory';
 import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus, PRLineItem } from '@/types/documents';
-import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency, FXRate, Lot } from '@/types/master-data';
+import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency, Lot } from '@/types/master-data';
 import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
-import { InventoryMovement } from '@/types/inventory';
+
 import { getNextStatusV2, canPerformActionV2, DocumentAction } from '@/core/workflow/document-engine';
 import { STOCKTAKE_STATUS } from '@/contracts/statuses';
 
@@ -396,7 +396,31 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const all = await db.items.findAll();
     const filtered = barcode ? all.filter(i => i.barcode === barcode) : all;
     if (method === 'GET') return MockFactory.wrapPagination(filtered);
-    if (method === 'POST') return db.items.save(body as Item);
+    if (method === 'POST') {
+      const payload = body as Item;
+      // Duplicate check for barcode or code
+      const isDuplicate = all.some(i => i.barcode === payload.barcode || i.code === payload.code);
+      if (isDuplicate) {
+        return {
+          error: {
+            status: 409,
+            code: 'DUPLICATE_ITEM',
+            message: 'An item with this barcode or code already exists.'
+          }
+        };
+      }
+      return db.items.save(payload);
+    }
+  }
+  
+  if (normalizedPath === '/master-data/barcodes/check-duplicate') {
+    if (method === 'GET') {
+      const barcode = searchParams.get('barcode');
+      const allItems = await db.items.findAll();
+      const allBarcodes = await db.barcodes.findAll();
+      const isDup = allItems.some(i => i.barcode === barcode) || allBarcodes.some(b => b.code === barcode);
+      return { is_duplicate: isDup };
+    }
   }
   if (normalizedPath.startsWith('/items/')) {
     const id = normalizedPath.split('/').pop()!;
@@ -655,22 +679,42 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         return hydrateTransfer(saved);
       }
     }
+    
+    // Transfer Dispute Action endpoint check
+    if (parts.length === 5 && parts[4] === 'dispute') {
+      if (method === 'POST') {
+        const updated: Transfer = {
+          ...doc,
+          status: 'DISPUTED' as unknown as DocumentStatus,
+          transfer_status: 'DISPUTED' as TransferStatus,
+          updated_at: new Date().toISOString(),
+          version: (doc.version || 0) + 1
+        };
+        const saved = await db.transfers.save(updated);
+        return hydrateTransfer(saved);
+      }
+    }
   }
 
   // --- Stocktake Routes ---
   if (normalizedPath === '/stocktake/sessions') {
     if (method === 'GET') {
       const sessions = await db.stocktake.findAll();
-      return MockFactory.wrapPagination(sessions.map(s => ({
-        id: s.id,
-        session_number: s.session_number,
-        session_name: s.session_name,
-        warehouse_id: s.warehouse_id,
-        status: s.status,
-        snapshot_at: s.snapshot_at,
-        created_at: s.created_at,
-        updated_at: s.updated_at
-      })));
+      return MockFactory.wrapPagination(sessions.map(s => {
+        const items = s.items || [];
+        return {
+          id: s.id,
+          session_number: s.session_number,
+          session_name: s.session_name,
+          warehouse_id: s.warehouse_id,
+          status: s.status,
+          snapshot_at: s.snapshot_at,
+          created_at: s.created_at,
+          updated_at: s.updated_at,
+          total_items: items.length,
+          counted_items: items.filter(i => i.counted_qty != null).length,
+        };
+      }));
     }
     if (method === 'POST') {
       // Check for active session in the same warehouse
@@ -768,6 +812,21 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       if (!nextStatus) return { error: { code: 'UNKNOWN_STATUS', message: 'Next status not found' } };
 
       // Business Logic for specific actions
+      if (action === 'START') {
+        const allGrns = await db.grn.findAll();
+        const allIssues = await db.issues.findAll();
+        const unpostedGrns = allGrns.filter(g => g.status && g.status !== 'POSTED' && g.status !== 'CANCELLED');
+        const unpostedIssues = allIssues.filter(i => i.status && i.status !== 'POSTED' && i.status !== 'CANCELLED');
+        if (unpostedGrns.length > 0 || unpostedIssues.length > 0) {
+          return {
+            error: {
+              code: 'PENDING_DOCUMENTS',
+              message: 'Resolve pending GRNs and Issues before starting stocktake.'
+            }
+          };
+        }
+      }
+
       if (action === 'SUBMIT') {
         session.items.forEach(item => {
           const counted = item.counted_qty ?? 0;
@@ -814,7 +873,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'GET') {
       if (!session) return undefined;
       // Ledger Guard: Hide snapshot during counting
-      const hideSnapshot = (([STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING] as unknown) as DocumentStatus[]).includes(session.status as DocumentStatus);
+      const hideSnapshot = session.status === STOCKTAKE_STATUS.STARTED || session.status === STOCKTAKE_STATUS.COUNTING;
       return {
         ...session,
         items: session.items.map(i => ({
@@ -826,8 +885,24 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'PUT') return db.stocktake.save({ ...(body as StocktakeSession), id });
   }
 
+  // --- Stocktake Export Routes ---
+  if (normalizedPath.startsWith('/stocktake/sessions/') && normalizedPath.endsWith('/variance/export')) {
+    const id = normalizedPath.split('/')[3];
+    const session = await db.stocktake.findById(id);
+    if (!session) return undefined;
+    
+    if (method === 'GET') {
+      // Simulate CSV Export
+      let csv = 'Item Code,Item Name,Expected Qty,Counted Qty,Variance,Reason\n';
+      session.items.forEach(item => {
+        csv += `${item.item_id},"${item.item_name}",${item.snapshot_qty ?? 0},${item.counted_qty ?? 0},${item.variance ?? 0},"${item.variance_reason || ''}"\n`;
+      });
+      return { csv };
+    }
+  }
+
   // --- Warehouse Lock Routes ---
-  if (normalizedPath.startsWith('/inventory/warehouses/') && path.endsWith('/lock')) {
+  if (normalizedPath.startsWith('/inventory/warehouses/') && normalizedPath.endsWith('/lock')) {
     const warehouseId = normalizedPath.split('/')[3];
     const sessions = await db.stocktake.findAll();
     const active = sessions.find(s => s && s.warehouse_id === warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
@@ -970,6 +1045,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
     if (parts.length === 5) {
       const action = parts[4].toUpperCase();
+      
+      if (action === 'EMAIL') {
+        // Simulate email dispatch
+        return { success: true, message: 'PO dispatched via email successfully' };
+      }
+
       const nextStatus = getNextStatusV2('PO', doc.status, action as DocumentAction);
       if (nextStatus) {
         return db.po.save({ ...doc, status: nextStatus });

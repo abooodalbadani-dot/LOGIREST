@@ -17,7 +17,10 @@ import {
   AlertCircle,
   Sun,
   Moon,
-  Loader2
+  Loader2,
+  Bell,
+  Package,
+  ShoppingCart
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,19 +32,23 @@ import LocaleSwitcher from '@/components/shared/LocaleSwitcher';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 export default function ProfilePage() {
   const t = useTranslations('profile');
   const tc = useTranslations('common');
+  const tn = useTranslations('communications.notifications');
   const { user } = useAuth();
-  const { avatarUrl, displayName, themePreferences, updateProfile, isSaving } = useUserProfile();
+  const { avatarUrl, displayName, themePreferences, notificationPreferences, locale, updateProfile, uploadAvatar, isSaving } = useUserProfile();
   const { playSound } = useAudioFeedback();
 
   // Detail fields editing state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [notifPrefs, setNotifPrefs] = useState(notificationPreferences);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -53,37 +60,36 @@ export default function ProfilePage() {
       setName(displayName || user.name || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
+      setNotifPrefs(notificationPreferences);
       /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, [user, displayName]);
+  }, [user, displayName, notificationPreferences]);
 
   if (!user) return null;
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (limit to 1.5MB for Base64 storage)
     if (file.size > 1.5 * 1024 * 1024) {
       playSound('error');
       setValidationError('Image size must be smaller than 1.5MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        await updateProfile({ avatarUrl: reader.result as string });
-        playSound('success');
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-        setValidationError(null);
-      } catch (err) {
-        playSound('error');
-        setValidationError('Failed to update avatar image');
-      }
-    };
-    reader.readAsDataURL(file);
+    setAvatarUploading(true);
+    const url = await uploadAvatar(file);
+    setAvatarUploading(false);
+
+    if (url) {
+      playSound('success');
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+      setValidationError(null);
+    } else {
+      playSound('error');
+      setValidationError('Failed to upload avatar image');
+    }
   };
 
   const handleRemoveAvatar = async () => {
@@ -399,6 +405,90 @@ export default function ProfilePage() {
                   Dark / داكن
                 </button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Preferences Card */}
+          <Card className="border-border-muted/50 bg-surface-container-low/50 backdrop-blur-md relative overflow-hidden group">
+            <div className="absolute -top-[1px] start-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-operational-cyan/50 to-transparent" />
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-operational-cyan/10 rounded-lg">
+                  <Bell className="w-5 h-5 text-operational-cyan" />
+                </div>
+                <CardTitle className="text-title-sm uppercase">Notification Preferences / تفضيلات التنبيهات</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Package className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-bold uppercase">{tn('low_stock_alert') || 'Low Stock'}</span>
+                </div>
+                <Switch
+                  checked={notifPrefs.lowStock}
+                  onCheckedChange={(val) => setNotifPrefs(p => ({ ...p, lowStock: val }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Package className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-bold uppercase">{tn('expiry_alert') || 'Expiry'}</span>
+                </div>
+                <Switch
+                  checked={notifPrefs.expiry}
+                  onCheckedChange={(val) => setNotifPrefs(p => ({ ...p, expiry: val }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-bold uppercase">{tn('pending_approval') || 'Approvals'}</span>
+                </div>
+                <Switch
+                  checked={notifPrefs.pendingApproval}
+                  onCheckedChange={(val) => setNotifPrefs(p => ({ ...p, pendingApproval: val }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-bold uppercase">{tn('po_finalized') || 'PO Finalized'}</span>
+                </div>
+                <Switch
+                  checked={notifPrefs.poFinalized}
+                  onCheckedChange={(val) => setNotifPrefs(p => ({ ...p, poFinalized: val }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-bold uppercase">{tn('security_alert') || 'Security'}</span>
+                </div>
+                <Switch
+                  checked={notifPrefs.security}
+                  onCheckedChange={(val) => setNotifPrefs(p => ({ ...p, security: val }))}
+                />
+              </div>
+              <Button
+                type="button"
+                disabled={isSaving}
+                onClick={async () => {
+                  try {
+                    await updateProfile({ notificationPreferences: notifPrefs });
+                    playSound('success');
+                    setSaveSuccess(true);
+                    setTimeout(() => setSaveSuccess(false), 3000);
+                  } catch {
+                    playSound('error');
+                    setValidationError('Failed to save notification preferences');
+                  }
+                }}
+                className="w-full h-9 mt-2 bg-white/5 border border-white/10 hover:border-operational-cyan/30 rounded-none text-[9px] font-bold uppercase tracking-widest"
+              >
+                {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                Save Notification Prefs
+              </Button>
             </CardContent>
           </Card>
 

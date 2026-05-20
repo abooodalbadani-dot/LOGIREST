@@ -19,14 +19,18 @@ import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
-
-import { Save, Warehouse, PackagePlus } from 'lucide-react';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+ 
+import { Save, Warehouse, PackagePlus, Sparkles } from 'lucide-react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { useAuth } from '@/providers/AuthProvider';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBalance';
+import { apiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
+import { z } from 'zod';
 
 interface NewTransferLine {
   id: string;
@@ -48,9 +52,11 @@ export function TransferNewClient() {
   const t = useTranslations('operations.transfer');
   const tCommon = useTranslations('common');
   const abortController = useAbortController();
+  const { user } = useAuth();
   const { data: warehouses, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
   const { data: items, isLoading: isLoadingItems, error: errorItems } = useItems();
   const createTransfer = useCreateTransfer();
+  const { playSound } = useAudioFeedback();
 
   const [fromWarehouseId, setFromWarehouseId] = useState('');
   const [toWarehouseId, setToWarehouseId] = useState('');
@@ -73,15 +79,25 @@ export function TransferNewClient() {
   // Filter out inactive items
   const allItems = useMemo(() => (items || []).filter((item: Item) => item.is_active !== false), [items]);
 
-  // Memoize warehouses for SmartCombobox
+  // Derive assigned warehouses from user scopes
+  const assignedWarehouseIds = useMemo(() => {
+    if (!user?.scopes) return null;
+    const ids = user.scopes.map(s => s.warehouse_id).filter(Boolean) as string[];
+    return ids.length > 0 ? ids : null;
+  }, [user?.scopes]);
+
+  // Memoize warehouses for SmartCombobox, filtered by user's assigned warehouses
   const warehouseItems = useMemo(() => {
-    return (warehouses || []).map(w => ({
+    const filtered = !assignedWarehouseIds
+      ? (warehouses || [])
+      : (warehouses || []).filter(w => assignedWarehouseIds.includes(w.id));
+    return filtered.map(w => ({
       id: w.id,
       name_en: w.name_en,
       name_ar: w.name_ar,
       code: w.code,
     }));
-  }, [warehouses]);
+  }, [warehouses, assignedWarehouseIds]);
 
   // Unsaved changes guard
   const isDirty = fromWarehouseId !== '' || toWarehouseId !== '' || notes !== '' || lines.length > 0;
@@ -159,6 +175,57 @@ export function TransferNewClient() {
     audioAlerts.playScanSuccess();
   };
 
+  const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
+
+  const handleSuggestFIFO = async () => {
+    if (lines.length === 0) {
+      toast.error(locale === 'ar' ? 'أضف أصنافاً أولاً' : 'Add items first');
+      return;
+    }
+    setIsSuggestingFIFO(true);
+    try {
+      const qs = new URLSearchParams();
+      qs.append('warehouse_id', fromWarehouseId);
+      lines.forEach(l => qs.append('item_id', l.item_id));
+
+      const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
+        data: z.array(z.object({
+          id: z.string(),
+          item_id: z.string(),
+          lot_number: z.string(),
+          expiry_date: z.string().nullable().optional(),
+          qty_available: z.number().optional(),
+        }))
+      }));
+
+      const lots = res.data;
+      const expiredLots = lots.filter(l => l.expiry_date && new Date(l.expiry_date) < new Date());
+      const nearExpiry = lots.filter(l => {
+        if (!l.expiry_date) return false;
+        const daysUntilExpiry = Math.ceil((new Date(l.expiry_date).getTime() - Date.now()) / 86400000);
+        return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+      });
+
+      let msg: string;
+      if (locale === 'ar') {
+        const parts: string[] = [];
+        if (expiredLots.length > 0) parts.push(`${expiredLots.length} batch منتهية الصلاحية`);
+        if (nearExpiry.length > 0) parts.push(`${nearExpiry.length} batch قريبة من الانتهاء`);
+        msg = parts.length > 0 ? `FIFO: ${parts.join('، ')}` : 'جميع الأصناف ضمن الحدود الآمنة';
+      } else {
+        const parts: string[] = [];
+        if (expiredLots.length > 0) parts.push(`${expiredLots.length} expired lots`);
+        if (nearExpiry.length > 0) parts.push(`${nearExpiry.length} lots near expiry`);
+        msg = parts.length > 0 ? `FIFO: ${parts.join(', ')} — prioritize these` : 'All items within safe limits';
+      }
+      toast.info(msg);
+    } catch {
+      toast.error(locale === 'ar' ? 'فشل جلب بيانات FIFO' : 'Failed to fetch FIFO data');
+    } finally {
+      setIsSuggestingFIFO(false);
+    }
+  };
+
   const handleSave = () => {
     if (!fromWarehouseId || !toWarehouseId || lines.length === 0 || hasQuantityErrors) return;
 
@@ -180,6 +247,7 @@ export function TransferNewClient() {
       }
     }, {
       onSuccess: (data) => {
+        playSound('success');
         router.push(`/transfers/${data.id}`, { skipGuard: true });
       }
     });
@@ -315,11 +383,22 @@ export function TransferNewClient() {
                   {t('items_to_transfer')}
                 </h3>
               </div>
-              <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-label-xxs font-semibold uppercase text-emerald-500">
-                  {lines.length} {tCommon('items')}
-                </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSuggestFIFO}
+                  disabled={!fromWarehouseId || lines.length === 0 || isSuggestingFIFO}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 rounded-full border border-amber-500/20 text-amber-500 text-label-xxs font-semibold uppercase transition-all disabled:opacity-30"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  {isSuggestingFIFO ? (locale === 'ar' ? 'جاري...' : 'Loading...') : (locale === 'ar' ? 'اقتراح FIFO' : 'Suggest FIFO')}
+                </button>
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-label-xxs font-semibold uppercase text-emerald-500">
+                    {lines.length} {tCommon('items')}
+                  </span>
+                </div>
               </div>
             </div>
 
