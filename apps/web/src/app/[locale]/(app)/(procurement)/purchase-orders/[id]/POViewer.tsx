@@ -119,7 +119,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
         }
       />
 
-      <DocumentReadOnlyOverlay isPosted={true}>
+      <DocumentReadOnlyOverlay isPosted={document?.status === 'POSTED'}>
         <div className="space-y-10">
           {/* Header Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

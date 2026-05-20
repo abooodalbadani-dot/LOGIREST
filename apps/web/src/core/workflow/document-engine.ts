@@ -217,6 +217,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
     [STOCKTAKE_STATUS.REVIEW]: {
       'REVIEW_VARIANCE': { targetStatus: STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'INV_MGR'] },
       'APPROVE': { targetStatus: STOCKTAKE_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
+      'REJECT': { targetStatus: STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
       'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
     },
     [STOCKTAKE_STATUS.APPROVED]: {
@@ -268,11 +269,9 @@ export function canPerformActionV2(
   const rule = statusTransitions[action];
   if (!rule) return false;
 
-  if (role) {
-    return rule.allowedRoles.includes(role as Role);
-  }
+  if (!role) return false;
 
-  return true;
+  return rule.allowedRoles.includes(role as Role);
 }
 
 /**

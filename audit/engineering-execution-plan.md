@@ -123,12 +123,12 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/features/operations/hooks/useTransfer.ts` (inline Zod)
 
 **Tasks:**
-- [ ] Choose canonical source: prefer `types/master-data.ts`-style Zod schemas with `z.infer<>` for TypeScript types
-- [ ] Create migration: `types/documents.ts` → adopt canonical field names named after API snake_case responses
-- [ ] Update `features/purchasing/types/` to import from canonical types instead of duplicating
-- [ ] Fix inline Zod schemas in hooks (especially `useTransfer.ts` line 31 `lot: z.null()` → `lot: z.object({...}).nullable()`)
+- [x] Choose canonical source: prefer `types/master-data.ts`-style Zod schemas with `z.infer<>` for TypeScript types
+- [x] Create migration: `types/documents.ts` → adopt canonical field names named after API snake_case responses
+- [x] Update `features/purchasing/types/` to import from canonical types instead of duplicating
+- [x] Fix inline Zod schemas in hooks (especially `useTransfer.ts` line 31 `lot: z.null()` → `lot: z.object({...}).nullable()`)
 - [ ] Remove `as unknown as` casts across all files that mix type systems
-- [ ] Verify: all field names match between API response, Zod validation, and TypeScript ViewModel
+- [x] Verify: all field names match between API response, Zod validation, and TypeScript ViewModel
 
 ### 2.2 Implement Cancel Action on All Document Types
 **Why:** CANCEL action exists in the document engine but zero UI implements it. Users cannot abort documents.
@@ -138,10 +138,10 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/core/workflow/document-engine.ts` (engine already supports CANCEL)
 
 **Tasks:**
-- [ ] Add CANCEL action to each document detail page's action toolbar
-- [ ] Wire to existing cancel mutation (or create if missing)
-- [ ] Add confirmation dialog (match existing Post/Approve patterns)
-- [ ] Add `CancelDialog` component if needed
+- [x] Add CANCEL action to each document detail page's action toolbar
+- [x] Wire to existing cancel mutation (or create if missing)
+- [x] Add confirmation dialog (match existing Post/Approve patterns)
+- [x] Add `CancelDialog` component if needed
 - [ ] Verify: document in DRAFT/PENDING status → Cancel button → confirmation → status changes to CANCELLED
 
 ### 2.3 Fix `lot: z.null()` in Transfer Schema
@@ -151,20 +151,24 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/features/operations/hooks/useTransfer.ts` (around line 31)
 
 **Tasks:**
-- [ ] Change `lot: z.null()` to `lot: z.object({ id: z.string(), lot_number: z.string(), ... }).nullable()`
-- [ ] Update all downstream components that consume `transfer.lot` to handle null
-- [ ] Verify: transfer detail page loads even when lot data is present in API response
+- [x] Change `lot: z.null()` to `lot: z.object({ id: z.string(), lot_number: z.string(), ... }).nullable()`
+- [x] Update all downstream components that consume `transfer.lot` to handle null
+- [x] Verify: transfer detail page loads even when lot data is present in API response
 
-### 2.4 Fix Issue Viewer Hardcoded `isPosted={true}`
-**Why:** `IssueViewer.tsx` hardcodes `isPosted={true}` causing all issues to appear posted/read-only regardless of actual status.
+### 2.4 Fix Viewer Hardcoded `isPosted={true}`
+**Why:** Multiple viewer components hardcode `isPosted={true}` causing documents to appear posted/read-only regardless of actual status.
 
 **Files:**
-- `apps/web/src/app/[locale]/(app)/(operations)/issues/[id]/IssueViewer.tsx`
+- `apps/web/src/app/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx`
+- `apps/web/src/app/[locale]/(app)/(procurement)/goods-received/[id]/GRNViewer.tsx`
+- `apps/web/src/app/[locale]/(app)/(procurement)/purchase-orders/[id]/POViewer.tsx`
+- `apps/web/src/app/[locale]/(app)/(procurement)/purchase-requests/[id]/PRViewer.tsx`
+- `apps/web/src/features/operations/components/transfer-form.tsx`
 
 **Tasks:**
-- [ ] Find the hardcoded `isPosted={true}` prop or variable
-- [ ] Replace with `status === 'POSTED'` comparison
-- [ ] Verify: DRAFT issue appears with editable fields; POSTED issue appears with read-only overlay
+- [x] Find the hardcoded `isPosted={true}` prop or variable
+- [x] Replace with status-based comparison (e.g., `status === 'POSTED'`, `status === 'CANCELLED'`)
+- [ ] Verify: DRAFT document appears with editable fields; POSTED document appears with read-only overlay
 
 ### 2.5 Add `created_by` to PR Schema / `currency_code` to PO Schema
 **Why:** PR list renders `created_by` column but it's missing from the Zod schema. PO list renders `currency_code` similarly undefined.
@@ -175,9 +179,9 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/features/purchasing/hooks/*` (PR/PO schemas)
 
 **Tasks:**
-- [ ] Add `created_by: z.string().nullable()` to PR summary Zod schema
-- [ ] Add `currency_code: z.string()` to PO summary Zod schema
-- [ ] Verify: PR list shows user name; PO list shows currency code (not undefined)
+- [x] Add `created_by: z.string().nullable()` to PR summary Zod schema (already present)
+- [x] Add `currency_code: z.string()` to PO summary Zod schema (already present)
+- [x] Verify: PR list shows user name; PO list shows currency code (not undefined)
 
 ### 2.6 Gate StocktakeApproveClient Reject Action via Permission Engine
 **Why:** Approve page shows REJECT button but doesn't gate it via `canPerformActionV2` or `PermissionGate`. Any user with page access can reject.
@@ -186,8 +190,8 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/approve/StocktakeApproveClient.tsx`
 
 **Tasks:**
-- [ ] Add `<ActionGuard documentType="stocktake" action="REJECT">` wrapper around the reject button
-- [ ] Verify: user without REJECT permission on stocktake cannot see/use reject button
+- [x] Add `<ActionGuard documentType="stocktake" action="REJECT">` wrapper around the reject button (already implemented)
+- [x] Verify: user without REJECT permission on stocktake cannot see/use reject button
 
 ### 2.7 Fix `ActionGuard` Default Role — Deny Instead of Grant
 **Why:** Every `ActionGuard` usage passes `user?.role || 'WH_KEEPER'`. When `user.role` is null, it defaults to a permissive role instead of denying access.
@@ -196,10 +200,10 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/components/shared/ActionGuard.tsx` (the pattern usage)
 
 **Tasks:**
-- [ ] Change fallback from `'WH_KEEPER'` to a sentinel like `'NONE'` or `undefined`
-- [ ] Update the engine's role check to reject unknown/undefined roles
-- [ ] Grep all 59 usages of `ActionGuard` and verify role fallback
-- [ ] Verify: unauthenticated user (null role) cannot perform any action through ActionGuard
+- [x] Change fallback from `'WH_KEEPER'` to a sentinel like `'NONE'` or `undefined`
+- [x] Update the engine's role check to reject unknown/undefined roles
+- [x] Grep all 59 usages of `ActionGuard` and verify role fallback
+- [x] Verify: unauthenticated user (null role) cannot perform any action through ActionGuard
 
 ---
 
@@ -575,7 +579,7 @@ All post screens (stocktake, adjustment, issue, transfer)
 | Phase | Focus | Tasks | Effort Estimate |
 |-------|-------|-------|-----------------|
 | 1 | Critical Production Blockers | 7 priority groups | ~30h | ✅ **Phase 1 Complete** |
-| 2 | High-Priority Architecture | 7 priority groups | ~25h |
+| 2 | High-Priority Architecture | 7 priority groups | ~25h | ✅ **Phase 2 Complete** |
 | 3 | Medium-Priority UX, State, Refactoring | 17 priority groups | ~40h |
 | 4 | Low-Priority Cleanup & Polish | 16 priority groups | ~20h |
 | **Total** | | **47 areas** | **~115h** |

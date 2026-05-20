@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { LockBanner } from "@/components/ui/lock-banner";
 import { FEFOLotAllocator } from "@/components/ui/fefo-lot-allocator";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
-import { useCreateIssue } from "@/features/operations/hooks/useCreateIssue";
+import { useCreateIssue, type CreateIssuePayload } from "@/features/operations/hooks/useCreateIssue";
 import { IssueLot } from "@/features/operations/types";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -244,9 +244,23 @@ export function IssueForm() {
   (f) => (f.qty ?? 0) >= (f.requested_qty ?? 0)
  );
 
- const onSubmit = (data: IssueFormValues) => {
- if (!allLinesAllocated) return;
-  createIssue.mutate(data, {
+  const onSubmit = (data: IssueFormValues) => {
+  if (!allLinesAllocated) return;
+   const payload: CreateIssuePayload = {
+     warehouse_id: data.warehouse_id,
+     destination_dept_id: data.destination_dept_id,
+     notes: data.notes,
+     lines: data.lines.map(line => ({
+       item_id: line.item_id,
+       requested_qty: line.requested_qty,
+       notes: line.notes,
+       lot_allocations: line.lot_allocations.map(lot => ({
+         lot_number: lot.lot_number,
+         allocated_qty: lot.allocated_qty,
+       })),
+     })),
+   };
+   createIssue.mutate(payload, {
   onSuccess: (issue) => {
    playSound('success');
    router.push(`/issues/${issue.id}`, { skipGuard: true });

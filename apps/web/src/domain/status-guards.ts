@@ -22,7 +22,7 @@ export const isIssueDraft = (status?: string | null): boolean =>
  * Stocktake Guards
  */
 export const canStartStocktake = (status?: string | null): boolean => 
-  status === STOCKTAKE_STATUS.DRAFT || status === STOCKTAKE_STATUS.STARTED;
+  status === STOCKTAKE_STATUS.DRAFT;
 
 export const isStocktakeCounting = (status?: string | null): boolean => 
   status === STOCKTAKE_STATUS.COUNTING;

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/AuthProvider";
+import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
 
 import { cn } from "@/lib/utils";
@@ -187,15 +188,17 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  }
  actions={
  <div className="flex items-center gap-3">
- <Button 
- variant="outline" 
- className="border-status-error/20 text-status-error hover:bg-status-error/10 rounded-xl"
- onClick={() => setIsRejectDialogOpen(true)}
- >
- <XCircle className="w-4 h-4 me-2" />
- {t('reject_session')}
- </Button>
- <PostConfirmDialog
+  <ActionGuard documentType="STOCKTAKE" action="REJECT" status={session.status} role={user?.role || ''}>
+  <Button 
+  variant="outline" 
+  className="border-status-error/20 text-status-error hover:bg-status-error/10 rounded-xl"
+  onClick={() => setIsRejectDialogOpen(true)}
+  >
+  <XCircle className="w-4 h-4 me-2" />
+  {t('reject_session')}
+  </Button>
+  </ActionGuard>
+  <PostConfirmDialog
  title={t('confirm_approve_title')}
  description={t('confirm_approve_desc')}
  onConfirm={handleApprove}

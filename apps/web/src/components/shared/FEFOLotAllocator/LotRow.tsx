@@ -18,7 +18,7 @@ export function LotRow({
  onQtyChange: (qty: number) => void; 
  isExpired: boolean; 
  isNearExpiry: boolean; 
- userRole: UserRole; 
+ userRole: UserRole | undefined; 
  onExpiredOverride: (reason: string) => void;
 }) {
  const t = useTranslations('common.table_headers');
@@ -26,7 +26,7 @@ export function LotRow({
   const locale = useLocale();
   const bgClass = isExpired ? 'bg-status-error/10' : isNearExpiry ? 'bg-status-warning/10' : 'bg-surface-container';
  
- const canOverride = ['ADMIN', 'INV_MGR'].includes(userRole);
+ const canOverride = ['ADMIN', 'INV_MGR'].includes(userRole || '');
  const inputDisabled = isExpired && !canOverride;
 
  return (

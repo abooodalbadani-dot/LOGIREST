@@ -260,7 +260,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  lots={lots as Lot[]}
  requestedQty={activeLine.qty}
  uomLabel={activeLine.item.primary_uom.code}
- userRole={user?.role || 'WH_KEEPER'} onAllocate={(allocations) => {
+ userRole={user?.role} onAllocate={(allocations) => {
  setLines(prev => prev.map(l => l.id === activeLine.id ? {
  ...l, lot_allocations: allocations
  } : l));

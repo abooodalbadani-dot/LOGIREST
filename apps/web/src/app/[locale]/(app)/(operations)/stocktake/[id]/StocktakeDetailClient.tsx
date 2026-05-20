@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react";
-import { useStocktake } from "@/features/operations/api/useStocktakes";
+import { useStocktake, useCancelStocktake } from "@/features/operations/api/useStocktakes";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { 
@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ClipboardList,
-  Scan,
+  XCircle,
   Printer,
   History
 } from "lucide-react";
@@ -25,12 +25,26 @@ import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { StocktakeForm } from "./StocktakeForm";
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
+  const tc = useTranslations('common')
   const router = useRouter()
   const { user } = useAuth();
   const conflict = useConflictHandler('stocktake', id);
+  const cancelStocktake = useCancelStocktake();
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = React.useState(false);
+  const [cancelReason, setCancelReason] = React.useState("");
   
   const { data: rawSession, isLoading, error } = useStocktake(id);
   const session = rawSession ? mapToSessionVM(rawSession) : null;
@@ -40,6 +54,22 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
 
   const status = session.status as DocumentStatus;
   const isLocked = isDomainLocked('STOCKTAKE', status);
+
+  const handleCancel = () => {
+    cancelStocktake.mutate(
+      { id, version: session.version ?? 0, reason: cancelReason },
+      {
+        onSuccess: () => {
+          toast.success(t('cancelled_success') || 'Stocktake cancelled');
+          setIsCancelDialogOpen(false);
+          router.push(`/stocktake/${id}`);
+        },
+        onError: () => {
+          toast.error(tc('error') || 'Error');
+        },
+      }
+    );
+  };
 
   const workflowActions = (
     <div className="flex items-center gap-2">
@@ -136,6 +166,18 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
           </ActionGuard>
         )}
       </PermissionGate>
+
+      <ActionGuard documentType="STOCKTAKE" status={status} action="CANCEL" role={user?.role || ''}>
+        <Button 
+          variant="outline"
+          onClick={() => setIsCancelDialogOpen(true)} 
+          className="h-10 md:h-12 px-4 md:px-6 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-full gap-2 transition-all text-[10px] md:text-xs font-bold uppercase tracking-wide" 
+          disabled={isLocked}
+        >
+          <XCircle className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="hidden xs:inline">{tc('cancel') || 'Cancel'}</span>
+        </Button>
+      </ActionGuard>
     </div>
   );
 
@@ -154,6 +196,42 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
         onClose={conflict.handleClose}
         onReload={conflict.handleReload}
       />
+
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent className="bg-surface-container-high border-none p-0 overflow-hidden rounded-[2rem] max-w-lg">
+          <div className="p-8 space-y-6">
+            <DialogHeader>
+              <DialogTitle className="text-headline-lg font-semibold">{tc('cancel') || 'Cancel Stocktake'}</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                {t('cancel_confirm_desc') || 'Are you sure you want to cancel this stocktake? This action cannot be undone.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <label className="text-label-xs font-semibold uppercase text-muted-foreground/50">
+                {tc('reason') || 'Reason'} (optional)
+              </label>
+              <Textarea 
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder={tc('enter_reason') || 'Enter reason...'}
+                className="min-h-[80px] bg-surface-container-lowest border-none resize-none rounded-2xl focus-visible:ring-1 focus-visible:ring-status-error/30"
+              />
+            </div>
+            <DialogFooter className="gap-3">
+              <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} className="rounded-xl">
+                {tc('cancel') || 'Close'}
+              </Button>
+              <Button 
+                onClick={handleCancel} 
+                disabled={cancelStocktake.isPending}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-8"
+              >
+                {tc('cancel') || 'Cancel Stocktake'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

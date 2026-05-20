@@ -31,7 +31,7 @@ export function usePurchaseOrders() {
                     name_en: 'Industrial Oven',
                     primary_uom: { id: 'UOM-1', code: 'PCS' }
                   },
-                  quantity: 100, 
+                  quantity: 100,
                   unit_price: 10.00,
                   uom_id: 'UOM-1'
                 },
@@ -61,7 +61,7 @@ export function usePurchaseOrders() {
                     name_en: 'Fresh Tomatoes',
                     primary_uom: { id: 'UOM-2', code: 'KG' }
                   },
-                  quantity: 10, 
+                  quantity: 10,
                   unit_price: 35.00,
                   uom_id: 'UOM-2'
                 },
@@ -111,7 +111,7 @@ export function usePurchaseOrder(id: string) {
                     name_en: 'Industrial Oven',
                     primary_uom: { id: 'UOM-1', code: 'PCS' }
                   },
-                  quantity: 100, 
+                  quantity: 100,
                   unit_price: 10.00,
                   uom_id: 'UOM-1'
                 },
@@ -141,7 +141,7 @@ export function usePurchaseOrder(id: string) {
                     name_en: 'Fresh Tomatoes',
                     primary_uom: { id: 'UOM-2', code: 'KG' }
                   },
-                  quantity: 10, 
+                  quantity: 10,
                   unit_price: 35.00,
                   uom_id: 'UOM-2'
                 },

@@ -174,7 +174,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
             </div>
 
             <div className="bg-surface-container-low/30 rounded-2xl overflow-hidden shadow-2xl">
-              <DocumentReadOnlyOverlay isPosted={true}>
+              <DocumentReadOnlyOverlay isPosted={transferStatus === 'POSTED' || transferStatus === 'CANCELLED'}>
                 <DocumentLineItemTable
                   lines={transfer?.lines ?? []}
                   isReadOnly={true}
@@ -225,7 +225,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
             <PermissionGate action="post" resource="transfer">
               <div className="flex items-center gap-2">
           {transferStatus === TRANSFER_STATUS.DRAFT && (
-            <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role || 'WH_KEEPER'}>
+            <ActionGuard documentType="TRANSFER" status={transferStatus} action="SHIP" role={user?.role}>
               <div>
                 <Link href={`/transfers/${id}/ship`}>
                   <Button
@@ -240,7 +240,7 @@ export function TransferForm({ transfer, id }: TransferFormProps) {
           )}
 
           {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
-            <ActionGuard documentType="TRANSFER" status={transferStatus} action="RECEIVE" role={user?.role || 'WH_KEEPER'}>
+            <ActionGuard documentType="TRANSFER" status={transferStatus} action="RECEIVE" role={user?.role}>
               <div>
                 <Link href={`/transfers/${id}/receive`}>
                   <Button

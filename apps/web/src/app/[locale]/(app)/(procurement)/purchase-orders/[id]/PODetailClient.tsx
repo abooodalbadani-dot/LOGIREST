@@ -68,7 +68,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
         </Button>
       )}
 
-      <ActionGuard documentType="PO" status={status} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
+      <ActionGuard documentType="PO" status={status} action="APPROVE" role={user?.role}>
         <PermissionGate action="approve" resource="po">
           <Button
             onClick={() => router.push(`/purchase-orders/${id}/approve`)}

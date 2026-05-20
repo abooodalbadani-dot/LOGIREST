@@ -5,15 +5,36 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { StockIssueDetailSchema, StockIssueDetail } from './useIssue';
 
+export const CreateIssueLineAllocationSchema = z.object({
+  lot_number: z.string(),
+  allocated_qty: z.number(),
+});
+
+export const CreateIssueLineSchema = z.object({
+  item_id: z.string().min(1),
+  requested_qty: z.number().positive(),
+  lot_allocations: z.array(CreateIssueLineAllocationSchema),
+  notes: z.string().optional(),
+});
+
+export const CreateIssuePayloadSchema = z.object({
+  warehouse_id: z.string().min(1),
+  destination_dept_id: z.string().min(1),
+  lines: z.array(CreateIssueLineSchema).min(1),
+  notes: z.string().optional(),
+});
+
+export type CreateIssuePayload = z.infer<typeof CreateIssuePayloadSchema>;
+
 export function useCreateIssue(options?: { onConflict?: () => void }) {
- const queryClient = useQueryClient();
- 
- return useSafeMutation({
- onConflict: options?.onConflict,
- mutationFn: ({ signal, ...data }: Partial<StockIssueDetail> & { signal?: AbortSignal }) => 
- apiClient.post(`/operations/issues`, z.object({ data: StockIssueDetailSchema }), data, { signal }).then(res => res.data),
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: ['issues'] });
- }
- });
+  const queryClient = useQueryClient();
+
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    mutationFn: ({ signal, ...data }: CreateIssuePayload & { signal?: AbortSignal }) =>
+      apiClient.post('/operations/issues', z.object({ data: StockIssueDetailSchema }), CreateIssuePayloadSchema.parse(data), { signal }).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issues'] });
+    },
+  });
 }

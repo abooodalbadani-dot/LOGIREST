@@ -1,17 +1,16 @@
 import { PRStatus, POStatus, GRNStatus } from '@/contracts/statuses';
 
-
 export interface PurchaseRequestLineItem {
  id: string;
  item: {
- id: string;
- code: string;
- name_ar: string;
- name_en: string;
- primary_uom: {
- id: string;
- code: string;
- };
+   id: string;
+   code: string;
+   name_ar: string;
+   name_en: string;
+   primary_uom: {
+     id: string;
+     code: string;
+   };
  };
  req_qty: number;
  uom_id: string;
@@ -33,9 +32,9 @@ export interface CreatePurchaseRequestDTO {
  department_id: string;
  expected_date: string;
  lines: Array<{
- item_id: string;
- req_qty: number;
- uom_id: string;
+   item_id: string;
+   req_qty: number;
+   uom_id: string;
  }>;
  notes?: string;
 }
@@ -45,14 +44,14 @@ export interface CreatePurchaseRequestDTO {
 export interface PurchaseOrderLineItem {
  id: string;
  item: {
- id: string;
- code: string;
- name_ar: string;
- name_en: string;
- primary_uom: {
- id: string;
- code: string;
- };
+   id: string;
+   code: string;
+   name_ar: string;
+   name_en: string;
+   primary_uom: {
+     id: string;
+     code: string;
+   };
  };
  quantity: number;
  unit_price: number;
@@ -85,11 +84,11 @@ export interface CreatePurchaseOrderDTO {
  exchange_rate: number;
  expected_date: string;
  lines: Array<{
- item_id: string;
- quantity: number;
- unit_price: number;
- uom_id: string;
- notes?: string;
+   item_id: string;
+   quantity: number;
+   unit_price: number;
+   uom_id: string;
+   notes?: string;
  }>;
  notes?: string;
 }
@@ -98,7 +97,7 @@ export interface CreatePurchaseOrderDTO {
 
 export interface GoodsReceiptLineItem {
  id?: string;
- poLineItemId: string; // the linked PO line item
+ poLineItemId: string;
  itemId: string;
  orderedQuantity: number;
  receivedQuantity: number;
@@ -110,15 +109,13 @@ export interface GoodsReceiptLineItem {
 export interface GoodsReceipt {
  id: string;
  grnNumber: string;
- poId: string; // mandatory reference to the PO
- warehouseId: string; // the target warehouse receiving goods
- supplierId: string; // from PO
+ poId: string;
+ warehouseId: string;
+ supplierId: string;
  status: GRNStatus;
  items: GoodsReceiptLineItem[];
  
- // Stored execution details
  supplierCurrency: string;
- // This rate is verified + locked at 'POSTED' stage
  lockedExchangeRate?: number; 
  baseTotalAmount?: number;
  

@@ -8,6 +8,8 @@ import {
   SubmitCountDTO,
   StocktakeItemSchema
 } from '../types/stocktake';
+import { successSchema } from '@/types/api';
+import { STOCKTAKE_STATUS } from '@/contracts/statuses';
 
 const StocktakeListSchema = z.object({
   data: z.array(StocktakeSessionSchema.omit({ items: true })),
@@ -164,6 +166,26 @@ export function usePostStocktake(options?: { onConflict?: () => void }) {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock'] });
+    },
+  });
+}
+
+export function useCancelStocktake(options?: { onConflict?: () => void }) {
+  const qc = useQueryClient();
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    mutationFn: ({ id, reason, version, signal }: { id: string; reason?: string; version: number; signal?: AbortSignal }) =>
+      apiClient.post(`/stocktake/sessions/${id}/cancel`, successSchema, { reason, version }, { signal }),
+    onSuccess: (_, { id }) => {
+      qc.setQueryData(['stocktakes', id], (old: Record<string, unknown> | undefined) => {
+        if (!old) return old;
+        return { ...old, status: STOCKTAKE_STATUS.CANCELLED };
+      });
+      qc.invalidateQueries({ queryKey: ['stocktakes'] });
+      qc.invalidateQueries({ queryKey: ['stocktakes', id] });
+    },
+    onError: (error) => {
+      console.error('[useCancelStocktake] Failed to cancel stocktake:', error);
     },
   });
 }

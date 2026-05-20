@@ -278,7 +278,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   const workflowActions = (
     <>
-      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="REJECT" role={user?.role || 'WH_KEEPER'}>
+      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="REJECT" role={user?.role}>
         <Button 
           variant="outline" 
           disabled={isWriteBlocked}
@@ -289,7 +289,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           {t('reject')}
         </Button>
       </ActionGuard>
-      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
+      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role}>
         <Button 
           disabled={isWriteBlocked}
           className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 px-10 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-600/30 border-none"
@@ -299,7 +299,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           {t('approve')}
         </Button>
       </ActionGuard>
-      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role || 'WH_KEEPER'}>
+      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="FULFILL" role={user?.role}>
         <div className="flex items-center gap-2">
           <Button
             type="button"

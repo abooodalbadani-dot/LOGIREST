@@ -187,7 +187,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                   <h3 className="text-label-sm font-semibold uppercase">{tc('items')}</h3>
                 </div>
               </div>
-              <DocumentReadOnlyOverlay isPosted={true}>
+              <DocumentReadOnlyOverlay isPosted={document?.status === 'POSTED'}>
                 <DocumentLineItemTable
                   lines={mappedLines}
                   isReadOnly={true}

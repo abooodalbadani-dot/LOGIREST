@@ -284,7 +284,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       {/* Workflow Actions for Locked Documents */}
       {isLocked && (
         <>
-          <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role || 'WH_KEEPER'}>
+          <ActionGuard documentType="PR" status={status} action="EDIT" role={user?.role}>
             <PermissionGate action="update" resource="pr">
               <Button
                 onClick={() => router.push(`/purchase-requests/${initialData?.id}/edit`)}
@@ -297,7 +297,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             </PermissionGate>
           </ActionGuard>
 
-          <ActionGuard documentType="PR" status={status} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
+          <ActionGuard documentType="PR" status={status} action="APPROVE" role={user?.role}>
             <PermissionGate action="approve" resource="pr">
               <Button
                 onClick={() => router.push(`/purchase-requests/${initialData?.id}/approve`)}
@@ -309,7 +309,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             </PermissionGate>
           </ActionGuard>
 
-          <ActionGuard documentType="PR" status={status} action="CONVERT_TO_PO" role={user?.role || 'WH_KEEPER'}>
+          <ActionGuard documentType="PR" status={status} action="CONVERT_TO_PO" role={user?.role}>
             <PermissionGate action="create" resource="po">
               <Button
                 onClick={() => router.push(`/purchase-orders/new?pr_id=${initialData?.id}`)}

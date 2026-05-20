@@ -12,6 +12,7 @@ import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment
 import { useSubmitAdjustment } from '@/features/operations/hooks/useSubmitAdjustment';
 import { useRejectAdjustment } from '@/features/operations/hooks/useRejectAdjustment';
 import { useUpdateAdjustment } from '@/features/operations/hooks/useUpdateAdjustment';
+import { useCancelAdjustment } from '@/features/operations/hooks/useCancelAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { useAbortController } from '@/hooks/useAbortController';
@@ -76,6 +77,7 @@ export function AdjustmentForm({
   const rejectAdjustment = useRejectAdjustment(id, { onConflict });
   const postAdjustment = usePostAdjustment({ onConflict });
   const updateAdjustment = useUpdateAdjustment({ onConflict });
+  const cancelAdjustment = useCancelAdjustment({ onConflict });
   const abortController = useAbortController();
 
   const { data: items, isLoading: isLoadingItems } = useItems();
@@ -120,6 +122,8 @@ export function AdjustmentForm({
   const [scanStatus, setScanStatus] = useState<"idle" | "success" | "error">("idle");
   const [statusMessage, setStatusMessage] = useState<string | undefined>();
   const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [rejectionComment, setRejectionComment] = useState('');
 
   // Sync state with adjustment data when it arrives or changes records
@@ -673,7 +677,7 @@ export function AdjustmentForm({
           actions={
             !isNew && (
               <div className="flex items-center gap-3">
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role || 'WH_KEEPER'}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role}>
                   <Button 
                     variant="outline"
                     onClick={() => setSubmitDialogOpen(true)}
@@ -684,7 +688,7 @@ export function AdjustmentForm({
                   </Button>
                 </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role || 'WH_KEEPER'}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role}>
                   <Button 
                     variant="ghost" 
                     onClick={() => setRejectDialogOpen(true)}
@@ -695,7 +699,7 @@ export function AdjustmentForm({
                   </Button>
                 </ActionGuard>
                 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role || 'WH_KEEPER'}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role}>
                   <Button 
                     onClick={() => setApproveDialogOpen(true)}
                     className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-emerald-600/30 border-none"
@@ -705,13 +709,24 @@ export function AdjustmentForm({
                   </Button>
                 </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || 'WH_KEEPER'}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''}>
                   <Button 
                     onClick={() => setPostDialogOpen(true)}
                     className="h-14 px-12 primary-gradient text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-primary/30 border-none"
                   >
                     <CheckCircle className="w-5 h-5 me-3" />
                     {t('post_adjustment')}
+                  </Button>
+                </ActionGuard>
+
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setCancelDialogOpen(true)}
+                    className="h-14 px-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                  >
+                    <XCircle className="w-5 h-5 me-3" />
+                    {tc('cancel')}
                   </Button>
                 </ActionGuard>
               </div>
@@ -781,6 +796,44 @@ export function AdjustmentForm({
         onConfirm={handlePost}
         isLoading={postAdjustment.isPending}
       />
+
+      <PostConfirmDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        title={tc('cancel') || 'Cancel Adjustment'}
+        description={t('cancel_confirm_desc') || 'Are you sure you want to cancel this adjustment? This action cannot be undone.'}
+        onConfirm={() => {
+          cancelAdjustment.mutate(
+            { id, version: document?.version ?? 0, reason: cancelReason },
+            {
+              onSuccess: () => {
+                toast.success(t('cancelled_success') || 'Adjustment cancelled');
+                setCancelDialogOpen(false);
+              },
+              onError: () => {
+                toast.error(tc('error') || 'Error');
+              },
+            }
+          );
+        }}
+        variant="destructive"
+        icon="reject"
+        confirmText={tc('cancel')}
+        disabled={cancelAdjustment.isPending}
+        isLoading={cancelAdjustment.isPending}
+      >
+        <div className="space-y-3">
+          <label className="text-label-xs font-semibold uppercase text-muted-foreground/50">
+            {tc('reason') || 'Reason'} (optional)
+          </label>
+          <Textarea
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder={tc('enter_reason') || 'Enter reason...'}
+            className="bg-surface-container-high/40 border-none rounded-2xl min-h-[80px] p-4 text-body-md font-medium focus:ring-1 focus:ring-red-500/30 resize-none transition-all"
+          />
+        </div>
+      </PostConfirmDialog>
     </div>
   );
 }

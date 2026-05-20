@@ -63,7 +63,7 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
             {t('scan_mode')}
           </Button>
         )}
-        <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role || 'WH_KEEPER'}>
+        <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role}>
           <Button 
             onClick={() => router.push(`/goods-received/${id}/post`)}
             className="h-10 px-8 primary-gradient text-white text-label-xs font-semibold uppercase shadow-xl shadow-primary/20 transition-all rounded-lg"

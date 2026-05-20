@@ -161,7 +161,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
         </div>
 
         {/* Lines Table */}
-        <DocumentReadOnlyOverlay isPosted={true}>
+        <DocumentReadOnlyOverlay isPosted={document?.status === 'POSTED'}>
           <div className="bg-surface-container-lowest rounded-[2rem] overflow-hidden shadow-sm border border-surface-variant/5">
             <DocumentLineItemTable 
               lines={document?.lines || []} 

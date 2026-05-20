@@ -630,7 +630,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                 lots={lots}
                 requestedQty={activeLine.qty}
                 uomLabel={activeLine.item.primary_uom.code}
-                userRole={user?.role || 'WH_KEEPER'} 
+                userRole={user?.role} 
                 onAllocate={(allocations) => {
                   setLines(prev => prev.map(l => l.id === activeLine.id ? {
                     ...l, lot_allocations: allocations

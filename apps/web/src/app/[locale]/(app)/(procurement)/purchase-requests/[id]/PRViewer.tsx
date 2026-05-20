@@ -71,7 +71,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
         <p className="text-sm font-mono text-muted-foreground mt-1">Ref: {document.document_number}</p>
       </div>
 
-      <DocumentReadOnlyOverlay isPosted={true}>
+      <DocumentReadOnlyOverlay isPosted={document?.status === 'APPROVED' || document?.status === 'REJECTED'}>
         <div className="space-y-10 print:space-y-6">
           {/* Header Info */}
           <div className="bg-surface-container-low p-8 rounded-[2rem] border border-surface-variant/5 print:p-0 print:border-none print:bg-transparent">

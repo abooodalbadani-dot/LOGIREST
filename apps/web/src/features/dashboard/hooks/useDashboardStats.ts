@@ -103,7 +103,7 @@ export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
  */
 export function useDashboardStats() {
   const { user } = useAuth();
-  const userRole = user?.role || 'ADMIN';
+  const userRole = user?.role;
 
   return useQuery<DashboardStats>({
     queryKey: ['dashboard', 'stats', userRole],

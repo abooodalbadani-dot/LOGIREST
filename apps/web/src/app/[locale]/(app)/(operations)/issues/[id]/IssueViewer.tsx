@@ -120,7 +120,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                   {lines.length} {t('entries').toUpperCase()}
                 </div>
               </div>
-              <DocumentReadOnlyOverlay isPosted={true}>
+              <DocumentReadOnlyOverlay isPosted={issue.status === 'POSTED'}>
                 <DocumentLineItemTable 
                   lines={lines} 
                   locale={locale} 

@@ -78,10 +78,15 @@ export const PRLineItemSchema = z.object({
   item_id: z.string(),
   item: DocItemSummarySchema,
   lot_id: z.string().nullable(),
-  lot: z.null(),
+  lot: z.object({
+    id: z.string(),
+    lot_number: z.string(),
+    expiry_date: z.string().nullable(),
+    is_expired: z.boolean(),
+  }).nullable(),
   qty: z.number(),
   uom_id: z.string(),
-  unit_cost: z.null(),
+  unit_cost: z.number().nullable(),
   requested_qty: z.number(),
   approved_qty: z.number().nullable(),
 });
@@ -99,7 +104,12 @@ export const POLineItemSchema = z.object({
   item_id: z.string(),
   item: DocItemSummarySchema,
   lot_id: z.string().nullable(),
-  lot: z.null(),
+  lot: z.object({
+    id: z.string(),
+    lot_number: z.string(),
+    expiry_date: z.string().nullable(),
+    is_expired: z.boolean(),
+  }).nullable(),
   qty: z.number(),
   uom_id: z.string(),
   unit_cost: z.number().nullable(),
@@ -150,10 +160,15 @@ export const TransferLineItemSchema = z.object({
   item_id: z.string(),
   item: DocItemSummarySchema,
   lot_id: z.string().nullable(),
-  lot: z.null(),
+  lot: z.object({
+    id: z.string(),
+    lot_number: z.string(),
+    expiry_date: z.string().nullable(),
+    is_expired: z.boolean(),
+  }).nullable(),
   qty: z.number(),
   uom_id: z.string(),
-  unit_cost: z.null(),
+  unit_cost: z.number().nullable(),
   shipped_qty: z.number(),
   received_qty: z.number().nullable(),
   lot_allocations: z.array(LotAllocationSchema).default([]),
@@ -178,10 +193,15 @@ export const AdjustmentLineItemSchema = z.object({
   item_id: z.string(),
   item: DocItemSummarySchema,
   lot_id: z.string().nullable(),
-  lot: z.null(),
+  lot: z.object({
+    id: z.string(),
+    lot_number: z.string(),
+    expiry_date: z.string().nullable(),
+    is_expired: z.boolean(),
+  }).nullable(),
   qty: z.number(),
   uom_id: z.string(),
-  unit_cost: z.null(),
+  unit_cost: z.number().nullable(),
   direction: z.enum(['INCREASE', 'DECREASE']),
   qty_before: z.number(),
   qty_adjusted: z.number(),
@@ -200,13 +220,13 @@ export interface LotAllocation { lot_id: string; lot_number: string; expiry_date
 export interface GRN extends BaseDocument { type: 'GRN'; po_id: string | null; supplier_id: string; currency_id: string; fx_rate: number | null; fx_rate_captured_at: string | null; lines: GRNLineItem[]; }
 export interface GRNLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; po_qty: number | null; received_qty: number; unit_cost_foreign: number; unit_cost_base: number; }
 export interface PurchaseRequest extends BaseDocument { type: 'PR'; requested_by_dept: string; required_by_date: string; lines: PRLineItem[]; }
-export interface PRLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; requested_qty: number; approved_qty: number | null; }
+export interface PRLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; requested_qty: number; approved_qty: number | null; }
 export interface PurchaseOrder extends BaseDocument { type: 'PO'; pr_id: string | null; supplier_id: string; currency_id: string; expected_delivery_date: string; lines: POLineItem[]; }
-export interface POLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: number | null; ordered_qty: number; unit_price: number; total_price: number; }
+export interface POLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; ordered_qty: number; unit_price: number; total_price: number; }
 export interface StockIssue extends BaseDocument { type: 'ISSUE'; destination_dept_id: string; requested_by: string; lines: IssueLineItem[]; }
 export interface IssueLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; requested_qty: number; issued_qty: number; lot_allocations: LotAllocation[]; }
 export interface Transfer extends BaseDocument { type: 'TRANSFER'; from_warehouse_id: string; from_warehouse_name?: string; to_warehouse_id: string; to_warehouse_name?: string; transfer_status: TransferStatus; shipped_at: string | null; received_at: string | null; variance_reason?: string | null; lines: TransferLineItem[]; }
-export interface TransferLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; shipped_qty: number; received_qty: number | null; lot_allocations: LotAllocation[]; }
+export interface TransferLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; shipped_qty: number; received_qty: number | null; lot_allocations: LotAllocation[]; }
 export type AdjustmentReason = 'DAMAGE'|'EXPIRY'|'THEFT'|'COUNTING_ERROR'|'OTHER';
 export interface Adjustment extends BaseDocument { type: 'ADJUSTMENT'; reason: AdjustmentReason; approved_by: string | null; lines: AdjustmentLineItem[]; }
-export interface AdjustmentLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: null; qty: number; uom_id: string; unit_cost: null; direction: 'INCREASE'|'DECREASE'; qty_before: number; qty_adjusted: number; reason_notes: string; }
+export interface AdjustmentLineItem { id: string; document_id: string; item_id: string; item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string; } }; lot_id: string | null; lot: { id: string; lot_number: string; expiry_date: string | null; is_expired: boolean; } | null; qty: number; uom_id: string; unit_cost: number | null; direction: 'INCREASE'|'DECREASE'; qty_before: number; qty_adjusted: number; reason_notes: string; }

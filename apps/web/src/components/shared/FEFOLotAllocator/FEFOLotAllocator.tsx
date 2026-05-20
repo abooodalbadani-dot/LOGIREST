@@ -11,7 +11,7 @@ interface FEFOLotAllocatorProps {
  lots: Lot[];
  requestedQty: number;
  uomLabel: string;
- userRole: UserRole;
+ userRole?: UserRole;
  onAllocate: (allocations: LotAllocation[]) => void;
  onClose: () => void;
 }
@@ -27,7 +27,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  
  for (const lot of sortedLots) {
  if (remaining <= 0) break;
- if (isExpired(lot.expiry_date) && !['ADMIN', 'INV_MGR'].includes(userRole)) {
+ if (isExpired(lot.expiry_date) && !['ADMIN', 'INV_MGR'].includes(userRole || '')) {
  continue;
  }
  

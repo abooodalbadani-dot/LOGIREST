@@ -230,7 +230,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   const workflowActions = (
     <div className="flex items-center gap-3">
-      <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role || 'WH_KEEPER'}>
+      <ActionGuard documentType="GRN" status={status} action="POST" role={user?.role}>
         <PermissionGate action="post" resource="grn">
           <Button
             disabled={isLocked || isWarehouseLocked}
