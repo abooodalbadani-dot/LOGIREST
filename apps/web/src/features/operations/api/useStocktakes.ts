@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { 
   StocktakeSessionSchema, 
   CreateStocktakeDTO, 
@@ -42,6 +43,10 @@ export function useCreateStocktake() {
     mutationFn: ({ data, signal }: { data: CreateStocktakeDTO; signal?: AbortSignal }) => 
       apiClient.post('/stocktake/sessions', StocktakeSessionSchema, data, { signal }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stocktakes'] }),
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }
 
@@ -56,6 +61,10 @@ export function useStartStocktake(options?: { onConflict?: () => void }) {
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock'] });
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }
 
@@ -68,6 +77,10 @@ export function useBeginCounting(options?: { onConflict?: () => void }) {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }
@@ -82,6 +95,10 @@ export function useCompleteCounting(options?: { onConflict?: () => void }) {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }
 
@@ -94,6 +111,10 @@ export function useSubmitVariance(options?: { onConflict?: () => void }) {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }
@@ -109,6 +130,10 @@ export function useUpdateItemCount(options?: { onConflict?: () => void }) {
       }, { signal, headers }),
     onSuccess: (_, { stocktakeId }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes', stocktakeId] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }
@@ -127,6 +152,10 @@ export function useSubmitCounts(options?: { onConflict?: () => void }) {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', dto.stocktake_id] });
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }
 
@@ -139,6 +168,10 @@ export function useApproveStocktake(options?: { onConflict?: () => void }) {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }
@@ -153,6 +186,10 @@ export function useRejectStocktake(options?: { onConflict?: () => void }) {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }
 
@@ -166,6 +203,10 @@ export function usePostStocktake(options?: { onConflict?: () => void }) {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', id] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock'] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }
@@ -186,6 +227,25 @@ export function useCancelStocktake(options?: { onConflict?: () => void }) {
     },
     onError: (error) => {
       console.error('[useCancelStocktake] Failed to cancel stocktake:', error);
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
+  });
+}
+
+export function useRecountItems(options?: { onConflict?: () => void }) {
+  const qc = useQueryClient();
+  return useSafeMutation({
+    onConflict: options?.onConflict,
+    mutationFn: ({ id, itemIds, signal }: { id: string; itemIds: string[]; signal?: AbortSignal }) =>
+      apiClient.post(`/stocktake/sessions/${id}/recount`, StocktakeSessionSchema, { item_ids: itemIds }, { signal }),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: ['stocktakes'] });
+      qc.invalidateQueries({ queryKey: ['stocktakes', id] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }

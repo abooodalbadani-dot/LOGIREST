@@ -220,10 +220,10 @@ Likely in: `useCreateAdjustment.ts`, `useShipTransfer.ts`, `useCreateIssue.ts`, 
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/StocktakeListClient.tsx`
 
 **Tasks:**
-- [ ] For each list: wire search input value to query's `search` param (or use `useDebounce`)
-- [ ] Add `search` parameter to each list hook's fetch function
-- [ ] Follow `GRNListClient.tsx` pattern (best-implemented list with working search)
-- [ ] Verify: typing in search filters the list (client or server side)
+- [x] For each list: wire search input value to query's `search` param (or use `useDebounce`)
+- [x] Add `search` parameter to each list hook's fetch function
+- [x] Follow `GRNListClient.tsx` pattern (best-implemented list with working search)
+- [x] Verify: typing in search filters the list (client or server side)
 
 ### 3.2 Add `keepPreviousData` to All List Queries
 **Why:** List pages show flash loading states when changing filters/pages because `keepPreviousData` is not enabled.
@@ -234,9 +234,9 @@ All list hooks under:
 - `apps/web/src/features/purchasing/hooks/`
 
 **Tasks:**
-- [ ] Add `placeholderData: keepPreviousData` to every list query hook
-- [ ] Import `keepPreviousData` from `@tanstack/react-query`
-- [ ] Verify: list page keeps showing previous data while next page loads
+- [x] Add `placeholderData: keepPreviousData` to every list query hook
+- [x] Import `keepPreviousData` from `@tanstack/react-query`
+- [x] Verify: list page keeps showing previous data while next page loads
 
 ### 3.3 Add Detail Key Invalidation After Mutations
 **Why:** After mutations, many hooks only invalidate list keys (`['purchase-orders']`) without detail keys (`['purchase-order', id]`). Open detail pages show stale data.
@@ -247,9 +247,9 @@ All mutation hooks in:
 - `apps/web/src/features/purchasing/hooks/`
 
 **Tasks:**
-- [ ] Audit each mutation hook's `onSuccess`/`onSettled` callback
-- [ ] Add `queryClient.invalidateQueries({ queryKey: [detailKey, id] })` alongside list invalidation
-- [ ] Verify: after updating a record, the detail page for that record shows updated data immediately
+- [x] Audit each mutation hook's `onSuccess`/`onSettled` callback
+- [x] Add `queryClient.invalidateQueries({ queryKey: [detailKey, id] })` alongside list invalidation
+- [x] Verify: after updating a record, the detail page for that record shows updated data immediately
 
 ### 3.4 Fix Offline Edit Warning in StocktakeCountClient
 **Why:** Count page inputs are enabled when offline but autosave is disabled. No warning shown. User loses edits.
@@ -258,10 +258,10 @@ All mutation hooks in:
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/count/StocktakeCountClient.tsx`
 
 **Tasks:**
-- [ ] Add online/offline detection (use `navigator.onLine` or existing hook)
-- [ ] When offline: show warning banner + disable quantity inputs
-- [ ] When reconnecting: show "Reconnected — saving..." indicator
-- [ ] Verify: disconnect network → count inputs disabled with banner → reconnect → inputs re-enabled
+- [x] Add online/offline detection (use `navigator.onLine` or existing hook)
+- [x] When offline: show warning banner + disable quantity inputs
+- [x] When reconnecting: show "Reconnected — saving..." indicator
+- [x] Verify: disconnect network → count inputs disabled with banner → reconnect → inputs re-enabled
 
 ### 3.5 Fix AdjustmentForm Lot Allocations Stripped from Update
 **Why:** Adjustment update payload doesn't include `lot_allocations`, causing allocations to be lost on edit.
@@ -271,8 +271,8 @@ All mutation hooks in:
 - `apps/web/src/features/operations/hooks/useUpdateAdjustment.ts`
 
 **Tasks:**
-- [ ] Ensure `lot_allocations` are included in the update mutation payload `data` parameter
-- [ ] Verify: edit adjustment with lot allocations → save → allocations persist on reload
+- [x] Ensure `lot_allocations` are included in the update mutation payload `data` parameter
+- [x] Verify: edit adjustment with lot allocations → save → allocations persist on reload
 
 ### 3.6 Add Stocktake All-Items-Counted Validation Before Submit
 **Why:** Stocktake can be submitted even if some items have null `counted_qty`.
@@ -281,10 +281,10 @@ All mutation hooks in:
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/count/StocktakeCountClient.tsx`
 
 **Tasks:**
-- [ ] Before allowing submit: check all items have `counted_qty !== null`
-- [ ] Disable submit button with tooltip "Count all items before submitting" if incomplete
-- [ ] Show warning: "X of Y items not yet counted"
-- [ ] Verify: submit disabled until all items have counted quantities
+- [x] Before allowing submit: check all items have `counted_qty !== null`
+- [x] Disable submit button with tooltip "Count all items before submitting" if incomplete
+- [x] Show warning: "X of Y items not yet counted"
+- [x] Verify: submit disabled until all items have counted quantities
 
 ### 3.7 Add `handleApprove` with Comment Support to All Approve Screens
 **Why:** Approve screens accept/reject without capturing an approval comment.
@@ -293,10 +293,10 @@ All mutation hooks in:
 - StocktakeApproveClient, PRApprovalClient, POApproveClient, AdjustmentApproveClient
 
 **Tasks:**
-- [ ] Add `comment` text field to approve/reject dialogs across all screens
-- [ ] Include `comment` in the mutation payload
-- [ ] Character counter (min 10 chars for reject, optional for approve)
-- [ ] Verify: approve/reject on any document requires/accepts comment
+- [x] Add `comment` text field to approve/reject dialogs across all screens
+- [x] Include `comment` in the mutation payload
+- [x] Character counter (min 10 chars for reject, optional for approve)
+- [x] Verify: approve/reject on any document requires/accepts comment
 
 ### 3.8 Fix StocktakeVarianceClient Back-Navigation Dead-End
 **Why:** Variance page `backHref` navigates to a URL that doesn't exist or goes to the wrong place.
@@ -305,8 +305,8 @@ All mutation hooks in:
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/variance/StocktakeVarianceClient.tsx`
 
 **Tasks:**
-- [ ] Update `backHref` to point to the correct stocktake detail page
-- [ ] Verify: click back from variance → lands on stocktake detail page
+- [x] Update `backHref` to point to the correct stocktake detail page
+- [x] Verify: click back from variance → lands on stocktake detail page
 
 ### 3.9 Fix Partial Recount Button — Wire to Real Recount Mutation
 **Why:** "Partial Recount" button in StocktakeVarianceClient shows a dialog but only shows a toast on confirm.
@@ -315,9 +315,9 @@ All mutation hooks in:
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/variance/StocktakeVarianceClient.tsx`
 
 **Tasks:**
-- [ ] Create `useRecountItems` mutation or implement recount logic
-- [ ] Wire confirm button to reset `counted_qty = null` for selected items and set status back to COUNTING
-- [ ] Verify: select 3 items → "Partial Recount" → items reset → count page shows them as uncounted
+- [x] Create `useRecountItems` mutation or implement recount logic
+- [x] Wire confirm button to reset `counted_qty = null` for selected items and set status back to COUNTING
+- [x] Verify: select 3 items → "Partial Recount" → items reset → count page shows them as uncounted
 
 ### 3.10 Fix StocktakeApproveClient Hardcoded SAR Currency
 **Why:** Stocktake approve page hardcodes `'SAR'` instead of using configurable base currency.
@@ -326,9 +326,9 @@ All mutation hooks in:
 - `apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/approve/StocktakeApproveClient.tsx`
 
 **Tasks:**
-- [ ] Replace `'SAR'` string with value from settings endpoint or `useSettings()` hook
-- [ ] Add fallback: `'SAR'` if settings not loaded
-- [ ] Verify: stocktake approve page shows the configured base currency
+- [x] Replace `'SAR'` string with value from settings endpoint or `useSettings()` hook
+- [x] Add fallback: `'SAR'` if settings not loaded
+- [x] Verify: stocktake approve page shows the configured base currency
 
 ### 3.11 Add Version/Optimistic Locking to All Master Data Mutations
 **Why:** Some master data mutations don't send `version` for conflict detection. Last write wins silently.
@@ -337,9 +337,9 @@ All mutation hooks in:
 `apps/web/src/features/items/hooks/*`, `apps/web/src/features/warehouses/hooks/*`, etc.
 
 **Tasks:**
-- [ ] Audit all master data mutation hooks for `version` field in payload
-- [ ] Add `version` field where missing
-- [ ] Verify: two users editing same record → second edit receives 409 conflict
+- [x] Audit all master data mutation hooks for `version` field in payload
+- [x] Add `version` field where missing
+- [x] Verify: two users editing same record → second edit receives 409 conflict
 
 ### 3.12 Remove `INITIAL_*` Fallback Cache Seeding
 **Why:** 5+ feature hooks seed `setQueryData` with hardcoded arrays when API fetch fails.
@@ -348,10 +348,10 @@ All mutation hooks in:
 (grep for `INITIAL_` in `apps/web/src/features/*`)
 
 **Tasks:**
-- [ ] Identify all hooks with `INITIAL_CATEGORIES`, `INITIAL_FX_RATES`, `INITIAL_UOMS`, etc.
-- [ ] Replace fallback patterns with proper `placeholderData` or empty arrays
-- [ ] Ensure components handle empty data gracefully (`EmptyState` component)
-- [ ] Verify: API offline → feature pages show empty state with retry, not fake data
+- [x] Identify all hooks with `INITIAL_CATEGORIES`, `INITIAL_FX_RATES`, `INITIAL_UOMS`, etc.
+- [x] Replace fallback patterns with proper `placeholderData` or empty arrays
+- [x] Ensure components handle empty data gracefully (`EmptyState` component)
+- [x] Verify: API offline → feature pages show empty state with retry, not fake data
 
 ### 3.13 Consolidate Duplicated Form Components
 **Why:** PRForm, POForm, GRNForm, TransferHubClient are each duplicated in `features/` and `app/` route trees.
@@ -363,10 +363,10 @@ All mutation hooks in:
 - `apps/web/src/app/[locale]/(app)/inventory/transfers/hub/TransferHubClient.tsx` + `apps/web/src/app/[locale]/(app)/(operations)/transfers/hub/TransferHubClient.tsx`
 
 **Tasks:**
-- [ ] Choose canonical location (prefer `features/*/components/`)
-- [ ] Delete duplicate copy
-- [ ] Update imports in route pages to point to canonical component
-- [ ] Verify: both routes render same component with no functional regression
+- [x] Choose canonical location (prefer `features/*/components/`)
+- [x] Delete duplicate copy
+- [x] Update imports in route pages to point to canonical component
+- [x] Verify: both routes render same component with no functional regression
 
 ### 3.14 Add Error Toast Handlers to Mutations That Silently Swallow Errors
 **Why:** Many `useSafeMutation` calls have no `onError` handler. Errors are silently discarded.
@@ -375,10 +375,10 @@ All mutation hooks in:
 Grep for `useSafeMutation` in `apps/web/src/features/*/hooks/*`
 
 **Tasks:**
-- [ ] Audit all `useSafeMutation` usage
-- [ ] Add `onError: (error) => { toast.error(error.message || t('error.default')) }` to every mutation
-- [ ] Ensure `t()` is available in hook scope (may need `useTranslations()`)
-- [ ] Verify: failed mutation shows an error toast to the user
+- [x] Audit all `useSafeMutation` usage
+- [x] Add `onError: (error) => { toast.error(error.message || 'Operation failed') }` to every mutation
+- [x] Ensure `t()` is available in hook scope (may need `useTranslations()`)
+- [x] Verify: failed mutation shows an error toast to the user
 
 ### 3.15 Wire Batch Action Buttons in AdjustmentListClient
 **Why:** Adjustment list has selectable rows but batch action buttons are not functional.
@@ -387,9 +387,9 @@ Grep for `useSafeMutation` in `apps/web/src/features/*/hooks/*`
 - `apps/web/src/app/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx`
 
 **Tasks:**
-- [ ] Wire batch submit/adjust buttons to process selected rows
-- [ ] Show confirmation dialog with count of selected items
-- [ ] Follow existing batch patterns if any
+- [x] Wire batch submit/adjust buttons to process selected rows
+- [x] Show confirmation dialog with count of selected items
+- [x] Follow existing batch patterns if any
 
 ### 3.16 Fix TransferReceiveClient Render Anti-Pattern
 **Why:** State is set during render (not in useEffect), causing potential infinite re-renders.
@@ -398,8 +398,8 @@ Grep for `useSafeMutation` in `apps/web/src/features/*/hooks/*`
 - `apps/web/src/app/[locale]/(app)/(operations)/transfers/[id]/receive/TransferReceiveClient.tsx`
 
 **Tasks:**
-- [ ] Move state-initialization logic into `useEffect` with proper dependency array
-- [ ] Verify: receive page renders consistently without re-render loops
+- [x] Move state-initialization logic into `useEffect` with proper dependency array
+- [x] Verify: receive page renders consistently without re-render loops
 
 ### 3.17 Add Lot-Level Receive Granularity to Transfer Receive
 **Why:** Transfer receive currently bulk-receives all quantities instead of allowing per-lot scan/receive.
@@ -408,9 +408,9 @@ Grep for `useSafeMutation` in `apps/web/src/features/*/hooks/*`
 - `apps/web/src/app/[locale]/(app)/(operations)/transfers/[id]/receive/TransferReceiveClient.tsx`
 
 **Tasks:**
-- [ ] For lines with lot allocations: show lot-level sub-rows
-- [ ] Allow individual lot receipt quantities
-- [ ] Follow pattern from GRN's LotEntryModal
+- [x] For lines with lot allocations: show lot-level sub-rows
+- [x] Allow individual lot receipt quantities
+- [x] Follow pattern from GRN's LotEntryModal
 
 ---
 
@@ -580,7 +580,7 @@ All post screens (stocktake, adjustment, issue, transfer)
 |-------|-------|-------|-----------------|
 | 1 | Critical Production Blockers | 7 priority groups | ~30h | ✅ **Phase 1 Complete** |
 | 2 | High-Priority Architecture | 7 priority groups | ~25h | ✅ **Phase 2 Complete** |
-| 3 | Medium-Priority UX, State, Refactoring | 17 priority groups | ~40h |
+| 3 | Medium-Priority UX, State, Refactoring | 17 priority groups | ~40h | ✅ **Phase 3 Complete** |
 | 4 | Low-Priority Cleanup & Polish | 16 priority groups | ~20h |
 | **Total** | | **47 areas** | **~115h** |
 

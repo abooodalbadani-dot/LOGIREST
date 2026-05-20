@@ -76,10 +76,11 @@ export function useUpdateWarehouse(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     meta: { suppressGlobalConflict: true },
-    mutationFn: ({ id, values, signal }: { id: string; values: WarehouseFormValues; signal?: AbortSignal }) => {
+    mutationFn: ({ id, values, version, signal }: { id: string; values: WarehouseFormValues; version?: number; signal?: AbortSignal }) => {
       return apiClient.put(`/warehouses/${id}`, WarehouseSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code.toUpperCase(),
+        version
       }, { signal });
     },
     onSuccess: (data) => {
@@ -102,8 +103,9 @@ export function useDeleteWarehouse() {
   const t = useTranslations('master_data.warehouses');
 
   return useMutation({
-    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/warehouses/${id}`, z.object({ id: z.string() }).or(z.unknown()), { signal });
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/warehouses/${id}?version=${version}` : `/warehouses/${id}`;
+      return apiClient.del(url, z.object({ id: z.string() }).or(z.unknown()), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

@@ -103,8 +103,9 @@ export function useDeleteDepartment() {
   const t = useTranslations('master_data.departments');
 
   return useMutation({
-    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/departments/${id}`, z.unknown(), { signal });
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/departments/${id}?version=${version}` : `/departments/${id}`;
+      return apiClient.del(url, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

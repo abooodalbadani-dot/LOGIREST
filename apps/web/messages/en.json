@@ -553,6 +553,7 @@
     "doc_types": {
       "adj": "Adjustment",
       "grn": "GRN",
+      "po": "Purchase Order",
       "pr": "Purchase Request",
       "st": "ST"
     },
@@ -576,6 +577,10 @@
     "expiry": "Expiry",
     "export": "Export",
     "export_excel": "Export Excel",
+    "export_excel_coming_soon": "Excel export coming soon",
+    "export_pdf": "Export PDF",
+    "export_pdf_coming_soon": "PDF export coming soon",
+    "print": "Print",
     "fefo": {
       "allocated_status": "Allocated Status",
       "available_batches": "Available Batches (Sorted by Expiry)",
@@ -1374,16 +1379,18 @@
       "reason_label": "Override Reason",
       "source_document_label": "Source Document",
       "impacted_qty_label": "Impacted Qty",
-      "no_overrides": "No expired overrides recorded"
+      "no_overrides": "No expired overrides recorded",
+      "coming_soon": "Coming Soon"
     }
   },
-  "landed_cost": {
+"landed_cost": {
     "allocate_by_value": "By Value",
     "allocate_by_volume": "By Volume",
     "allocate_by_weight": "By Weight",
     "allocation_method": "Allocation Method",
     "base_cost": "Net Purchase Cost",
     "calculate": "Calculate Allocation",
+    "coming_soon": "Coming Soon",
     "customs": "Customs & Duties",
     "freight": "Freight / Shipping",
     "handling": "Handling Fees",
@@ -2434,6 +2441,7 @@
     "lots": {
       "adjust": "Adjust",
       "available_balance": "Available Balance",
+      "coming_soon": "Coming Soon",
       "expiry_label": "Expiry: {date}",
       "export_ledger": "Export Full Ledger",
       "last_activity": "Last Activity",

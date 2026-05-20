@@ -19,6 +19,7 @@ export function useApprovePR(options?: { onConflict?: () => void }) {
       });
 
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-request', id] });
     },
     onError: (error) => {
       console.error('[useApprovePR] Failed to approve PR:', error);

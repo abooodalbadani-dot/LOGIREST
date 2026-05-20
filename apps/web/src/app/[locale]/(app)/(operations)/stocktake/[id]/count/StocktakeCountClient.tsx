@@ -48,7 +48,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const { playSound } = useAudioFeedback();
 
   const [idempotencyKey] = React.useState(() => crypto.randomUUID());
-  const { isOnline } = useNetworkStatus();
+  const { isOnline, wasReconnecting } = useNetworkStatus();
 
   // Warehouse Lock State
   const { data: lockState } = useWarehouseLock(session?.warehouseId || null);
@@ -230,6 +230,9 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
 
 
 
+  const uncountedItems = items.filter(i => !localCounts[i.id] || localCounts[i.id] === 0);
+  const allCounted = uncountedItems.length === 0 && items.length > 0;
+
   return (
     <PermissionGate action="edit" resource="operations_stocktake">
       <div className="space-y-6" onKeyDown={handleKeyDown}>
@@ -257,13 +260,18 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               onConfirm={handleFinish}
               trigger={
                 <Button 
-                  disabled={!items.some((i) => (localCounts[i.id] || 0) > 0) || completeCounting.isPending}
+                  disabled={!allCounted || completeCounting.isPending}
                   className="primary-gradient shadow-lg shadow-primary/20"
                 >
                   {completeCounting.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin me-2" />
                   )}
                   {t('finish_counting')}
+                  {!allCounted && items.length > 0 && (
+                    <span className="ms-2 text-label-xxs opacity-70">
+                      ({uncountedItems.length} {t('items_remaining', { defaultValue: 'remaining' })})
+                    </span>
+                  )}
                 </Button>
               }
             />
@@ -276,7 +284,14 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
               {t('offline_banner', { defaultValue: 'Offline Mode Active - Scanning and autosave paused' })}
             </span>
           </div>
-        )}
+         )}
+         {wasReconnecting && (
+           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+             <span className="text-emerald-500 font-bold uppercase tracking-wider text-sm">
+               {t('reconnected_banner', { defaultValue: 'Reconnected \u2014 saving...' })}
+             </span>
+           </div>
+         )}
 
         <LockBanner lockState={lockState} />
 

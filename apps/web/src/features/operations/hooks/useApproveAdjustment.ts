@@ -30,6 +30,7 @@ export function useApproveAdjustment(id: string, options?: { onConflict?: () => 
         };
       });
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['adjustment', id] });
     },
     onError: (error) => {
       console.error('Failed to approve adjustment:', error);

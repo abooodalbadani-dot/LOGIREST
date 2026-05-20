@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
@@ -31,5 +31,6 @@ export function useGRNList(filters: { status?: string; warehouse_id?: string; se
     queryKey: ['grns', filters],
     queryFn: ({ signal }) => apiClient.get(`/procurement/grns?${params.toString()}`, paginatedSchema(GRNSummarySchema), { signal }),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

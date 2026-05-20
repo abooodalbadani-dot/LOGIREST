@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useStocktake, useApproveStocktake, useRejectStocktake } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/api/useWarehouses";
+import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { 
@@ -61,8 +62,9 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
  const { user } = useAuth();
  
  const { data: session, isLoading, error } = useStocktake(id);
- const { data: warehouses } = useWarehouses();
- const approveStocktake = useApproveStocktake();
+const { data: warehouses } = useWarehouses();
+  const { data: settings } = useAdminSettings();
+  const approveStocktake = useApproveStocktake();
  const rejectStocktake = useRejectStocktake();
  const { playSound } = useAudioFeedback();
 
@@ -124,7 +126,7 @@ export function StocktakeApproveClient({ id, locale }: { id: string, locale: 'ar
 
   const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
-  const currencyCode = 'SAR'; // Base currency
+  const currencyCode = settings?.base_currency || 'SAR';
 
  const handleApprove = () => {
   approveStocktake.mutate(

@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
@@ -19,15 +19,17 @@ const PRSummarySchema = z.object({
 
 export type PRSummary = z.infer<typeof PRSummarySchema>;
 
-export function usePRList(filters: { status?: string; department_id?: string; page?: number } = {}) {
+export function usePRList(filters: { status?: string; department_id?: string; search?: string; page?: number } = {}) {
   const params = new URLSearchParams();
   if (filters.status) params.set('status', filters.status);
   if (filters.department_id) params.set('department_id', filters.department_id);
+  if (filters.search) params.set('search', filters.search);
   params.set('page', String(filters.page ?? 1));
 
   return useQuery({
     queryKey: ['purchase-requests', filters],
     queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests?${params.toString()}`, paginatedSchema(PRSummarySchema), { signal }),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

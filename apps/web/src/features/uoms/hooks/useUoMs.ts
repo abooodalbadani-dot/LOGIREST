@@ -4,79 +4,42 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { type UoM, type UoMFormValues } from '@/types/master-data';
-import { ConflictError } from '@/lib/api/ConflictError';
+import { type UoM, type UoMFormValues, UoMSchema } from '@/types/master-data';
+import { apiClient } from '@/lib/api/client';
+import { z } from 'zod';
 
 const QUERY_KEY = ['uoms'];
 
-const INITIAL_UOMS: UoM[] = [
-  { id: 'UOM-001', code: 'KG', name_ar: 'كيلو جرام', name_en: 'Kilogram', is_active: true, created_at: new Date().toISOString() },
-  { id: 'UOM-002', code: 'L', name_ar: 'لتر', name_en: 'Liter', is_active: true, created_at: new Date().toISOString() },
-  { id: 'UOM-003', code: 'PCS', name_ar: 'حبة', name_en: 'Piece', is_active: true, created_at: new Date().toISOString() },
-  { id: 'UOM-004', code: 'BOX', name_ar: 'صندوق', name_en: 'Box', is_active: true, created_at: new Date().toISOString() },
-  { id: 'UOM-005', code: 'PKT', name_ar: 'باكيت', name_en: 'Packet', is_active: false, created_at: new Date().toISOString() },
-];
+const PaginatedUoMsSchema = z.object({
+  data: z.array(UoMSchema),
+  meta: z.object({
+    total: z.number(),
+    page: z.number(),
+    page_size: z.number(),
+    total_pages: z.number()
+  })
+});
 
 export function useUoMs(filters?: { search?: string }) {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
-    queryFn: async ({ signal }) => {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, 400);
-        signal?.addEventListener('abort', () => {
-          clearTimeout(timeout);
-          reject(new Error('Aborted'));
-        });
-      });
-      
-      let data = queryClient.getQueryData<UoM[]>(QUERY_KEY);
-      if (!data) {
-        data = INITIAL_UOMS;
-        queryClient.setQueryData(QUERY_KEY, data);
-      }
+    placeholderData: { data: [], meta: { total: 0, page: 1, page_size: 50, total_pages: 0 } },
+    queryFn: ({ signal }) => {
+      const params = new URLSearchParams();
+      if (filters?.search) params.append('search', filters.search);
 
-      let filtered = [...data];
-      if (filters?.search) {
-        const s = filters.search.toLowerCase();
-        filtered = filtered.filter(u => 
-          u.code.toLowerCase().includes(s) || 
-          u.name_en.toLowerCase().includes(s) || 
-          u.name_ar.includes(s)
-        );
-      }
-
-      return {
-        data: filtered,
-        meta: {
-          total: filtered.length,
-          page: 1,
-          page_size: 50,
-          total_pages: 1
-        }
-      };
-    }
+      return apiClient.get(`/uoms${params.toString() ? `?${params.toString()}` : ''}`, PaginatedUoMsSchema, { signal });
+    },
+    staleTime: 60_000,
   });
 }
 
 export function useUoM(id: string | null) {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: [...QUERY_KEY, id],
-    queryFn: async ({ signal }) => {
+    queryFn: ({ signal }) => {
       if (!id) return null;
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, 200);
-        signal?.addEventListener('abort', () => {
-          clearTimeout(timeout);
-          reject(new Error('Aborted'));
-        });
-      });
-      
-      const data = queryClient.getQueryData<UoM[]>(QUERY_KEY) || INITIAL_UOMS;
-      return data.find(u => u.id === id) || null;
+      return apiClient.get(`/uoms/${id}`, UoMSchema, { signal });
     },
     enabled: !!id,
   });
@@ -87,24 +50,19 @@ export function useCreateUoM() {
   const t = useTranslations('master_data.uoms');
 
   return useMutation({
-    mutationFn: async (values: UoMFormValues & { signal?: AbortSignal }) => {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      const newUoM: UoM = {
-        id: `UOM-${Math.floor(Math.random() * 1000)}`,
-        ...values,
-        code: values.code.toUpperCase(),
-        created_at: new Date().toISOString()
-      };
-
-      queryClient.setQueryData<UoM[]>(QUERY_KEY, (old = INITIAL_UOMS) => [...old, newUoM]);
-      return newUoM;
+    mutationFn: (values: UoMFormValues & { signal?: AbortSignal }) => {
+      const { signal, ...dataValues } = values;
+      return apiClient.post('/uoms', UoMSchema, {
+        ...dataValues,
+        code: dataValues.code.toUpperCase()
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success(t('created_success'));
     },
-    onError: () => {
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
       toast.error(t('errors.create_failed'));
     }
   });
@@ -117,47 +75,11 @@ export function useUpdateUoM(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     meta: { suppressGlobalConflict: true },
-    mutationFn: async ({ id, values, signal }: { id: string; values: UoMFormValues; signal?: AbortSignal }) => {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, 600);
-        signal?.addEventListener('abort', () => {
-          clearTimeout(timeout);
-          reject(new Error('Aborted'));
-        });
-      });
-
-      const data = queryClient.getQueryData<UoM[]>(QUERY_KEY) || INITIAL_UOMS;
-      const uom = data.find(u => u.id === id);
-      if (!uom) throw new Error('UoM not found');
-
-      if (values.version !== undefined && values.version < (uom.version ?? 0)) {
-        throw new ConflictError({
-          message: 'Data has been modified by another user',
-          code: 'DATA_CONFLICT',
-          currentVersion: uom.version,
-          updatedBy: 'Another User', // In mock, we don't have the real user
-          updatedAt: new Date().toISOString()
-        });
-      }
-
-      // OPERATIONAL GUARD: Prevent deactivation if linked to items
-      // MOCK: UOM-001 is linked to items
-      if (id === 'UOM-001' && values.is_active === false && uom.is_active === true) {
-        throw new Error('GUARD_LINKED_ITEMS');
-      }
-
-      const updatedUoM = { 
-        ...uom, 
+    mutationFn: ({ id, values, signal }: { id: string; values: UoMFormValues; signal?: AbortSignal }) => {
+      return apiClient.put(`/uoms/${id}`, UoMSchema, {
         ...values,
-        code: values.code.toUpperCase(),
-        version: (uom.version ?? 0) + 1
-      };
-
-      queryClient.setQueryData<UoM[]>(QUERY_KEY, (old = INITIAL_UOMS) => 
-        old.map(u => u.id === id ? updatedUoM : u)
-      );
-
-      return updatedUoM;
+        code: values.code.toUpperCase()
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -166,9 +88,7 @@ export function useUpdateUoM(options?: { onConflict?: () => void }) {
     },
     onError: (error: Error) => {
       if (error.message === 'Aborted') return;
-      const key = `errors.${error.message}`;
-      const message = t.has(key) ? t(key) : error.message || t('errors.update_failed');
-      toast.error(message);
+      toast.error(t('errors.update_failed'));
     }
   });
 }
@@ -178,26 +98,9 @@ export function useDeleteUoM() {
   const t = useTranslations('master_data.uoms');
 
   return useMutation({
-    mutationFn: async ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, 600);
-        signal?.addEventListener('abort', () => {
-          clearTimeout(timeout);
-          reject(new Error('Aborted'));
-        });
-      });
-      
-      // OPERATIONAL GUARD: Prevent deletion if UoM is in use
-      // Mock: UOM-001 is in use
-      if (id === 'UOM-001') {
-        throw new Error('cannot_delete_uom_in_use');
-      }
-
-      queryClient.setQueryData<UoM[]>(QUERY_KEY, (old = INITIAL_UOMS) => 
-        old.filter(u => u.id !== id)
-      );
-      
-      return id;
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/uoms/${id}?version=${version}` : `/uoms/${id}`;
+      return apiClient.del(url, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -205,9 +108,7 @@ export function useDeleteUoM() {
     },
     onError: (error: Error) => {
       if (error.message === 'Aborted') return;
-      const key = `errors.${error.message}`;
-      const message = t.has(key) ? t(key) : error.message || t('errors.delete_failed');
-      toast.error(message);
+      toast.error(t('errors.delete_failed'));
     }
   });
 }

@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { PRDetailSchema } from './usePR';
 
@@ -31,9 +32,12 @@ export function useUpdatePR(options?: { onConflict?: () => void }) {
       queryClient.setQueryData(['purchase-request', data.id], data);
       
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-request', data.id] });
     },
     onError: (error) => {
       console.error('[useUpdatePR] Failed to update PR:', error);
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     }
   });
 }

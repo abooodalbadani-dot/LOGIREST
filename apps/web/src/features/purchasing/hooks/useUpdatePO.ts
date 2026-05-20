@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { PODetailSchema } from './usePO';
 
@@ -35,9 +36,12 @@ export function useUpdatePO(id: string, options?: { onConflict?: () => void }) {
       // Update cache
       queryClient.setQueryData(['purchase-order', id], data);
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
     },
     onError: (error) => {
       console.error('[useUpdatePO] Failed to update PO:', error);
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     }
   });
 }

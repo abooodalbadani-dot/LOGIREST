@@ -36,6 +36,7 @@ export function useUpdateAdjustment(options?: { onConflict?: () => void }) {
     onSuccess: (data) => {
       queryClient.setQueryData(['adjustment', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['adjustment', data.id] });
     },
     onError: (error) => {
       console.error('[useUpdateAdjustment] Failed to update adjustment:', error);

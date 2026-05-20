@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { StockIssueDetailSchema, StockIssueDetail } from './useIssue';
 
 export const CreateIssueLineAllocationSchema = z.object({
@@ -35,6 +36,10 @@ export function useCreateIssue(options?: { onConflict?: () => void }) {
       apiClient.post('/operations/issues', z.object({ data: StockIssueDetailSchema }), CreateIssuePayloadSchema.parse(data), { signal }).then(res => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }

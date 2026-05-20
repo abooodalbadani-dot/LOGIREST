@@ -26,6 +26,10 @@ export const AdjustmentLineSchema = z.object({
  qty_adjusted: z.number(),
  uom_id: z.string(),
  reason_notes: z.string().optional(),
+ lot_allocations: z.array(z.object({
+   lot_id: z.string(),
+   qty: z.number(),
+ })).optional(),
 });
 
 export const AdjustmentDetailSchema = z.object({

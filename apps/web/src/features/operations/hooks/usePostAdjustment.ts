@@ -3,7 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
-
+import { toast } from 'sonner';
+ 
 import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
 import { AdjustmentDetail } from './useAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
@@ -30,9 +31,12 @@ export function usePostAdjustment(options?: { onConflict?: () => void }) {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['adjustment', id] });
     },
     onError: (error) => {
       console.error('Failed to post adjustment:', error);
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     }
   });
 }

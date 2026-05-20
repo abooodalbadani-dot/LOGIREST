@@ -12,8 +12,9 @@ export function useDeletePO() {
   const t = useTranslations('procurement.purchase_orders');
 
   return useMutation({
-    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/procurement/purchase-orders/${id}`, z.unknown(), { signal });
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/procurement/purchase-orders/${id}?version=${version}` : `/procurement/purchase-orders/${id}`;
+      return apiClient.del(url, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { AdjustmentDetailSchema } from './useAdjustment';
 
 const LotAllocationSchema = z.object({
@@ -32,8 +33,12 @@ export function useCreateAdjustment(options?: { onConflict?: () => void }) {
  onConflict: options?.onConflict,
  mutationFn: ({ payload, signal, headers }: { payload: CreateAdjustmentPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
  apiClient.post('/operations/adjustments', AdjustmentDetailSchema, CreateAdjustmentPayloadSchema.parse(payload), { signal, headers }),
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: ['adjustments'] });
- }
- });
+onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+  },
+  onError: (error: unknown) => {
+    const message = error instanceof Error ? error.message : 'Operation failed';
+    toast.error(message);
+  },
+  });
 }

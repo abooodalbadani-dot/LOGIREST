@@ -76,10 +76,11 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     meta: { suppressGlobalConflict: true },
-    mutationFn: ({ id, values, signal }: { id: string; values: ItemFormValues; signal?: AbortSignal }) => {
+    mutationFn: ({ id, values, version, signal }: { id: string; values: ItemFormValues; version?: number; signal?: AbortSignal }) => {
       return apiClient.put(`/items/${id}`, ItemSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code.toUpperCase(),
+        version
       }, { signal });
     },
     onSuccess: (data) => {
@@ -106,8 +107,9 @@ export function useDeleteItem() {
   const t = useTranslations('master_data.items');
 
   return useMutation({
-    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/items/${id}`, z.unknown(), { signal });
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/items/${id}?version=${version}` : `/items/${id}`;
+      return apiClient.del(url, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

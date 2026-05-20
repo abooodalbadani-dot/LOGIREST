@@ -22,6 +22,7 @@ export function useRejectPO(options?: { onConflict?: () => void }) {
       });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
     },
     onError: (error) => {
       console.error('[useRejectPO] Failed to reject PO:', error);

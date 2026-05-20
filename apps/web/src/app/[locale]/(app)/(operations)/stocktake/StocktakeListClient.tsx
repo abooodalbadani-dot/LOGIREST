@@ -1,6 +1,7 @@
 'use client';
  
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, Link } from '@/i18n/navigation';
@@ -36,11 +37,14 @@ export function StocktakeListClient({
  initialWarehouseId?: string;
  locale: 'ar' | 'en'
 }) {
- const t = useTranslations('operations.stocktake');
- const router = useRouter();
- const pathname = usePathname();
- const searchParams = useSearchParams();
- const tc = useTranslations('common');
+const t = useTranslations('operations.stocktake');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tc = useTranslations('common');
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
  const statusItems = useMemo(() => {
    const allItem = {
@@ -59,11 +63,12 @@ export function StocktakeListClient({
    return [allItem, ...statuses];
  }, [tc]);
 
- const { data, isLoading } = useStocktakeList({
- status: initialStatus,
- warehouse_id: initialWarehouseId,
- page: initialPage
- });
+const { data, isLoading } = useStocktakeList({
+  status: initialStatus,
+  warehouse_id: initialWarehouseId,
+  search: debouncedSearch || undefined,
+  page: initialPage
+  });
 
  const handleStatusChange = (val: string | null) => {
  const params = new URLSearchParams(searchParams.toString());
@@ -259,7 +264,9 @@ export function StocktakeListClient({
               </div>
               <div className="relative group">
                 <input
-                  placeholder={t('search_placeholder') || 'Search by Session ID...'} 
+                  placeholder={t('search_placeholder') || 'Search by Session ID...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
                 />
               </div>

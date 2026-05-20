@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
@@ -19,15 +19,17 @@ const POSummarySchema = z.object({
 
 export type POSummary = z.infer<typeof POSummarySchema>;
 
-export function usePOList(filters: { status?: string; supplier_id?: string; page?: number } = {}) {
- const params = new URLSearchParams();
- if (filters.status) params.set('status', filters.status);
- if (filters.supplier_id) params.set('supplier_id', filters.supplier_id);
- params.set('page', String(filters.page ?? 1));
+export function usePOList(filters: { status?: string; supplier_id?: string; search?: string; page?: number } = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.supplier_id) params.set('supplier_id', filters.supplier_id);
+  if (filters.search) params.set('search', filters.search);
+  params.set('page', String(filters.page ?? 1));
  
   return useQuery({
     queryKey: ['purchase-orders', filters],
     queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders?${params.toString()}`, paginatedSchema(POSummarySchema), { signal }),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

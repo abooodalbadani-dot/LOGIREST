@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { TransferDetailSchema } from './useTransfer';
 
 const LotAllocationSchema = z.object({
@@ -30,8 +31,12 @@ export function useCreateTransfer(options?: { onConflict?: () => void }) {
  onConflict: options?.onConflict,
  mutationFn: ({ payload, signal, headers }: { payload: CreateTransferPayload; signal?: AbortSignal; headers?: Record<string, string> }) => 
  apiClient.post('/operations/transfers', TransferDetailSchema, CreateTransferPayloadSchema.parse(payload), { signal, headers }),
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: ['transfers'] });
- }
- });
+onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ['transfers'] });
+  },
+  onError: (error: unknown) => {
+    const message = error instanceof Error ? error.message : 'Operation failed';
+    toast.error(message);
+  },
+  });
 }

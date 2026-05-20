@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAdjustmentList, AdjustmentSummary } from '@/features/operations/hooks/useAdjustmentList';
@@ -11,6 +12,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Plus, CheckCircle2, Clock, Activity, FileCheck, AlertTriangle, Filter, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -21,6 +23,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { isAdjustmentPending } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
 import { ADJUSTMENT_STATUS, type AdjustmentStatus } from '@/contracts/statuses';
+import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment';
+import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { useDebounce } from '@/hooks/useDebounce';
+import { apiClient } from '@/lib/api/client';
+import { successSchema } from '@/types/api';
 
 // Reason → Semantic visual styling (Hardened for LogiRest)
 const REASON_CHIP: Record<string, string> = {
@@ -37,10 +44,17 @@ export function AdjustmentListClient() {
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 500);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBatchLoading, setIsBatchLoading] = useState(false);
+  const [batchConfirmAction, setBatchConfirmAction] = useState<'approve' | 'post' | null>(null);
+
+  const postAdjustment = usePostAdjustment();
 
   const statusItems = useMemo(() => {
     const allItem = {
@@ -58,9 +72,42 @@ export function AdjustmentListClient() {
     return [allItem, ...statuses];
   }, [tCommon]);
 
-  const { data, isLoading } = useAdjustmentList({ status, page });
+  const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page });
 
   const allData = data?.data || [];
+
+  const handleBatchApprove = async () => {
+    setIsBatchLoading(true);
+    let successCount = 0;
+    for (const id of selectedIds) {
+      try {
+        await apiClient.post(`/operations/adjustments/${id}/approve`, successSchema, { version: 0 });
+        successCount++;
+      } catch { /* skip on error */ }
+    }
+    setIsBatchLoading(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('approve') || 'adjustments approved'}`);
+      queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+    }
+  };
+
+  const handleBatchPost = async () => {
+    setIsBatchLoading(true);
+    let successCount = 0;
+    for (const id of selectedIds) {
+      try {
+        await postAdjustment.mutateAsync({ id, version: 0 });
+        successCount++;
+      } catch { /* skip on error */ }
+    }
+    setIsBatchLoading(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('post') || 'adjustments posted'}`);
+    }
+  };
   const columns = useMemo<ColumnDef<AdjustmentSummary>[]>(() => [
     {
       id: 'select',
@@ -243,11 +290,11 @@ export function AdjustmentListClient() {
             {selectedIds.size} {tCommon('selected')}
           </span>
           <div className="flex items-center gap-2 ms-auto">
-            <Button size="sm" className="h-9 px-5 text-label-xs font-bold uppercase bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20">
-              {t('approve')}
+            <Button size="sm" onClick={() => setBatchConfirmAction('approve')} disabled={isBatchLoading} className="h-9 px-5 text-label-xs font-bold uppercase bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20">
+              {isBatchLoading ? '...' : t('approve')}
             </Button>
-            <Button size="sm" className="h-9 px-5 text-label-xs font-bold uppercase bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20">
-              {t('post')}
+            <Button size="sm" onClick={() => setBatchConfirmAction('post')} disabled={isBatchLoading} className="h-9 px-5 text-label-xs font-bold uppercase bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/20">
+              {isBatchLoading ? '...' : t('post')}
             </Button>
           </div>
         </div>
@@ -303,7 +350,10 @@ export function AdjustmentListClient() {
               <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('search')}</label>
               <div className="relative group">
                 <Input
-                  placeholder={t('search_placeholder') || 'Search Adjustment Documents...'} className="w-full bg-surface-container-highest/20 border-none h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20 shadow-inner shadow-black/5"
+                  placeholder={t('search_placeholder') || 'Search Adjustment Documents...'}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="w-full bg-surface-container-highest/20 border-none h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20 shadow-inner shadow-black/5"
                 />
                 <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-active/40 transition-colors group-hover:text-status-active/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
@@ -324,6 +374,21 @@ export function AdjustmentListClient() {
             </Button>
           </div>
         }
+      />
+
+      <PostConfirmDialog
+        open={batchConfirmAction !== null}
+        onOpenChange={(open) => { if (!open) setBatchConfirmAction(null); }}
+        title={batchConfirmAction === 'approve' ? t('batch_approve_title') || 'Batch Approve' : t('batch_post_title') || 'Batch Post'}
+        description={batchConfirmAction === 'approve'
+          ? (t('batch_approve_desc') || `Approve ${selectedIds.size} selected adjustments?`)
+          : (t('batch_post_desc') || `Post ${selectedIds.size} selected adjustments?`)}
+        warningText={t(`${batchConfirmAction}_irreversible`) || `This action is irreversible.`}
+        requiresTextConfirmation={true}
+        variant={batchConfirmAction === 'approve' ? 'default' : 'warning'}
+        icon={batchConfirmAction === 'approve' ? 'info' : 'warning'}
+        onConfirm={batchConfirmAction === 'approve' ? handleBatchApprove : handleBatchPost}
+        isLoading={isBatchLoading}
       />
     </div>
   );

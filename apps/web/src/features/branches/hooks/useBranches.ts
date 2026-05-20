@@ -107,8 +107,9 @@ export function useDeleteBranch() {
   const t = useTranslations('master_data.branches');
 
   return useMutation({
-    mutationFn: ({ id, signal }: { id: string; signal?: AbortSignal }) => {
-      return apiClient.del(`/branches/${id}`, z.unknown(), { signal });
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/branches/${id}?version=${version}` : `/branches/${id}`;
+      return apiClient.del(url, z.unknown(), { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

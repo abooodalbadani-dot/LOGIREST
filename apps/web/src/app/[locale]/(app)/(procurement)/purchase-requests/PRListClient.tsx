@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
@@ -28,10 +29,12 @@ export function PRListClient() {
  const tc = useTranslations('common');
  const router = useRouter();
 
- const [page, setPage] = useState(1);
- const [status, setStatus] = useState<string>('');
+const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 500);
 
- const { data, isLoading } = usePRList({ status, page });
+  const { data, isLoading } = usePRList({ status, search: debouncedSearch, page });
 
   const statusItems = useMemo(() => [
     { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
@@ -207,10 +210,12 @@ export function PRListClient() {
  <div className="flex flex-col gap-2 flex-1 min-w-[300px]">
  <label className="text-label-xxs font-semibold uppercase text-muted-foreground/60 ps-1">{tc('search')}</label>
  <div className="relative group">
- <Input
- placeholder={t('search_placeholder')}
- className="w-full bg-surface-variant/10 border-none h-11 px-11 text-label-xs font-bold rounded-sm shadow-inner shadow-black/5 transition-all focus:bg-surface-container-high"
- />
+<Input
+  placeholder={t('search_placeholder')}
+  value={search}
+  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+  className="w-full bg-surface-variant/10 border-none h-11 px-11 text-label-xs font-bold rounded-sm shadow-inner shadow-black/5 transition-all focus:bg-surface-container-high"
+  />
  <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 group-focus-within:text-cyan-500 transition-colors" />
  </div>
  </div>

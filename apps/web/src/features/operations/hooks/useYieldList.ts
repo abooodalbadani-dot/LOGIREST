@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { QUERY_KEY, YieldBatchSchema } from './useYield';
@@ -13,5 +13,6 @@ export function useYieldList(filters?: Record<string, unknown>) {
     queryFn: ({ signal }) => 
       apiClient.get('/operations/yield', YieldListResponseSchema, { signal }),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

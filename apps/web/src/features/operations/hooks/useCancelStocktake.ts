@@ -26,7 +26,7 @@ export function useCancelStocktake(options?: { onConflict?: () => void }) {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['stocktakes'] });
-      queryClient.invalidateQueries({ queryKey: ['stocktakes', id] });
+      queryClient.invalidateQueries({ queryKey: ['stocktake-session', id] });
     },
     onError: (error) => {
       console.error('[useCancelStocktake] Failed to cancel stocktake:', error);

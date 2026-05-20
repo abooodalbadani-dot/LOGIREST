@@ -33,6 +33,7 @@ export function useUpdateGRN(id: string, options?: { onConflict?: () => void }) 
     onSuccess: (data) => {
       queryClient.setQueryData(['grn', id], data);
       queryClient.invalidateQueries({ queryKey: ['grns'] });
+      queryClient.invalidateQueries({ queryKey: ['grn', id] });
     },
     onError: (error) => {
       console.error('[useUpdateGRN] Failed to update GRN:', error);

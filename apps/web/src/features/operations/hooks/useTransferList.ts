@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
@@ -27,5 +27,6 @@ export function useTransferList(filters: { status?: string; page?: number } = {}
     queryKey: ['transfers', filters],
     queryFn: ({ signal }) => apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(TransferSummarySchema), { signal }),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

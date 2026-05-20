@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { GRNDetailSchema } from './useGRN';
 
 const CreateGRNPayloadSchema = z.object({
@@ -32,6 +33,10 @@ export function useCreateGRN(options?: { onConflict?: () => void }) {
     onSuccess: (data) => {
       queryClient.setQueryData(['grn', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['grns'] });
-    }
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }

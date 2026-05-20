@@ -3,11 +3,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
+import { toast } from 'sonner';
 import { z } from 'zod';
+
+const LotReceiveSchema = z.object({
+  lot_id: z.string(),
+  received_qty: z.number(),
+});
 
 const ReceiveLineSchema = z.object({
  line_id: z.string(),
  received_qty: z.number(),
+ lot_receives: z.array(LotReceiveSchema).optional(),
 });
 
 const ReceivePayloadSchema = z.object({
@@ -31,6 +38,8 @@ export function useReceiveTransfer(id: string, options?: { onConflict?: () => vo
     },
     onError: (error) => {
       console.error('Failed to receive transfer:', error);
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     }
   });
 }

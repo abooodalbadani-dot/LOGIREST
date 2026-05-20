@@ -931,6 +931,24 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     return MockFactory.wrapPagination(await db.lots.findAll());
   }
 
+  // --- Yield Routes ---
+  if (normalizedPath === '/operations/yield') {
+    if (method === 'GET') {
+      return [];
+    }
+    if (method === 'POST') {
+      return { id: 'yield-mock-1', ...body, created_at: new Date().toISOString() };
+    }
+    return undefined;
+  }
+  if (normalizedPath.startsWith('/operations/yield/')) {
+    const id = normalizedPath.split('/')[3];
+    if (method === 'GET') {
+      return { id, recipe_name: 'Mock Recipe', category: 'protein', input_qty: 10, output_qty: 8, waste_qty: 2, yield_pct: 80, standard_yield: 85, efficiency: 94.1, created_at: new Date().toISOString() };
+    }
+    return undefined;
+  }
+
   // --- Adjustments Routes ---
   if (normalizedPath === '/operations/adjustments') {
     if (method === 'GET') return MockFactory.wrapPagination(await db.adjustments.findAll());

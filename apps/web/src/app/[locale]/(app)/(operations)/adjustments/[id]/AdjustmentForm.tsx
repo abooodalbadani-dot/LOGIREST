@@ -190,7 +190,8 @@ export function AdjustmentForm({
           item_id: l.item.id,
           qty: l.qty_adjusted,
           uom_id: l.uom_id,
-          direction: l.direction
+          direction: l.direction,
+          lot_allocations: l.lot_allocations?.length ? l.lot_allocations : undefined,
         }))
       };
 

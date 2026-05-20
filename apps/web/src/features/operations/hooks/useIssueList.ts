@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
@@ -36,6 +36,7 @@ export function useIssueList({ status, page = 1 }: { status?: string; page?: num
         })
       }), { signal });
       return res;
-    }
+    },
+    placeholderData: keepPreviousData,
   });
 }

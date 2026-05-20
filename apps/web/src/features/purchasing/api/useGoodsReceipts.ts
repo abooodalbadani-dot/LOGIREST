@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
+import { toast } from 'sonner';
 import { GoodsReceipt, CreateGoodsReceiptDTO, GoodsReceiptLineItem } from '../types';
 import { GRN_STATUS } from '@/contracts/statuses';
 
@@ -143,6 +144,10 @@ export function useCreateGoodsReceipt() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goods-receipts'] });
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
+    },
   });
 }
 
@@ -177,6 +182,10 @@ export function usePostGoodsReceipt() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['goods-receipts'] });
       queryClient.invalidateQueries({ queryKey: ['goods-receipts', id] });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Operation failed';
+      toast.error(message);
     },
   });
 }

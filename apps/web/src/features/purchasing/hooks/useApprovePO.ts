@@ -22,6 +22,7 @@ export function useApprovePO(options?: { onConflict?: () => void }) {
       });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-order', id] });
     },
     onError: (error) => {
       console.error('[useApprovePO] Failed to approve PO:', error);
