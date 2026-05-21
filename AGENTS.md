@@ -9,8 +9,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This repository has been mapped using Graphify to optimize context windows and prevent token bleeding. 
 
 Before searching the codebase, requesting file contents, or tracing a workflow, you MUST:
-1. Consult `GRAPH_REPORT.md` to understand the system's architectural hubs and "God Nodes".
-2. Query `graph.json` to trace exact dependencies, imports, and component relationships.
+1. Consult `E:\Kitchen‑Store Inventory System\graphify-out\GRAPH_REPORT.md` to understand the system's architectural hubs and "God Nodes".
+2. Query `E:\Kitchen‑Store Inventory System\graphify-out\graph.json` to trace exact dependencies, imports, and component relationships.
 
 CRITICAL RULE:
 - Do NOT perform blind recursive directory searches.
