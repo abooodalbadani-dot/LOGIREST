@@ -28,7 +28,7 @@ import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
-import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { STOCKTAKE_STATUS } from '@logirest/shared-types';
 
 export function StocktakeListClient({
  initialStatus,

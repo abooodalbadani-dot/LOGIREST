@@ -45,7 +45,7 @@ import { apiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
-import { ADJUSTMENT_STATUS, type DocumentStatus } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS, type DocumentStatus } from '@logirest/shared-types';
 import { type AdjustmentLine, type AdjustmentDetail } from '@/features/operations/hooks/useAdjustment';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';

@@ -17,7 +17,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
-import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { STOCKTAKE_STATUS } from '@logirest/shared-types';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { apiClient } from '@/infrastructure/api/client';

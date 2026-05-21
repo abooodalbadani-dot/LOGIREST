@@ -20,8 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
-import { PR_STATUS } from '@/contracts/statuses';
+import { DocumentStatus, isApprovedStatus, isPendingStatus } from '@logirest/shared-types';
+import { PR_STATUS } from '@logirest/shared-types';
 
 export function PRListClient() {
  const locale = useLocale();

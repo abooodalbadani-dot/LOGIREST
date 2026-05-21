@@ -8,7 +8,7 @@ import { useItems } from "@/features/items/hooks/useItems"
 import { PackageSearch } from "lucide-react"
 import { toast } from "sonner"
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
-import { isDocumentLocked, type DocumentStatus } from "@/core/workflow/document-engine"
+import { isDocumentLocked, type DocumentStatus } from "@logirest/shared-types"
 import { formatDate } from "@/utils/currency"
 
 import { Button } from "@/components/ui/button"

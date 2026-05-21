@@ -24,7 +24,7 @@ import { LockBanner } from "@/components/shared/LockBanner";
 import { StatusTimeline, type Status } from "@/components/shared/StatusTimeline";
 import { DocumentStatus } from "@/types/DocumentStatus";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
-import { STOCKTAKE_STATUS } from "@/contracts/statuses";
+import { STOCKTAKE_STATUS } from "@logirest/shared-types";
 import { isStocktakeCounting, isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";

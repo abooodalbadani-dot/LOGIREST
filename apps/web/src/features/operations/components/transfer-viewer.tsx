@@ -11,7 +11,7 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useLocale } from '@/hooks/useLocale';
 import { useRouter } from '@/i18n/navigation';
-import { TRANSFER_STATUS } from '@/contracts/statuses';
+import { TRANSFER_STATUS } from '@logirest/shared-types';
 import type { Transfer } from '@/types/documents';
 
 interface TransferViewerProps {

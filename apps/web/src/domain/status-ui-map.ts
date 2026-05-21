@@ -3,7 +3,7 @@ import {
   STOCKTAKE_STATUS, 
   TRANSFER_STATUS, 
   ADJUSTMENT_STATUS,
-} from '@/contracts/statuses';
+} from '@logirest/shared-types';
 
 export type BadgeVariant = 'default' | 'brand' | 'warning' | 'error' | 'success' | 'outline' | 'info';
 

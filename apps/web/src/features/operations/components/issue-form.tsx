@@ -26,12 +26,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
 import type { LotAllocation, StockIssue, IssueLineItem } from '@/types/documents';
 import { StatusTimeline, type StatusTimelineEntry, type Status } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
-import { ISSUE_STATUS } from '@/contracts/statuses';
+import { ISSUE_STATUS } from '@logirest/shared-types';
 import { useAbortController } from '@/hooks/useAbortController';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';

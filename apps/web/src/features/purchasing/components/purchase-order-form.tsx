@@ -52,8 +52,8 @@ import {
 
 import { DocumentLockBanner, DocumentLockWrapper } from "@/components/shared/DocumentLockBanner";
 import { FormFooter } from "@/components/shared/FormFooter";
-import { isDocumentLocked, type DocumentStatus } from "@/core/workflow/document-engine";
-import { PO_STATUS } from "@/contracts/statuses";
+import { isDocumentLocked, type DocumentStatus } from "@logirest/shared-types";
+import { PO_STATUS } from "@logirest/shared-types";
 
 export const lineItemSchema = z.object({
   item_id: z.string().min(1),

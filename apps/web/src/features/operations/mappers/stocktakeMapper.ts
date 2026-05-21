@@ -1,5 +1,5 @@
 import { StocktakeSession, StocktakeItem } from '../types/stocktake';
-import { DocumentStatus } from '@/core/workflow/document-engine';
+import { DocumentStatus } from '@logirest/shared-types';
 
 export interface StocktakeItemVM {
   id: string;

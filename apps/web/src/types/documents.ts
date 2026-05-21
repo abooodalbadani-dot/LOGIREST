@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ALL_STATUSES as ALL_DOCUMENT_STATUSES, DocumentStatus, ALL_TRANSFER_STATUSES, TransferStatus, ALL_STOCKTAKE_STATUSES as STOCKTAKE_STATUSES, StocktakeStatus } from '../contracts/statuses';
+import { ALL_STATUSES as ALL_DOCUMENT_STATUSES, DocumentStatus, ALL_TRANSFER_STATUSES, TransferStatus, ALL_STOCKTAKE_STATUSES as STOCKTAKE_STATUSES, StocktakeStatus } from '@logirest/shared-types';
 
 export type { DocumentStatus, TransferStatus, StocktakeStatus };
 export { STOCKTAKE_STATUSES };

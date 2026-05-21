@@ -2,10 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import { useTransfer } from '@/features/operations/hooks/useTransfer';
-import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { TransferForm } from '@/features/operations/components/transfer-form';
 import { TransferViewer } from '@/features/operations/components/transfer-viewer';
-import { TRANSFER_STATUS } from '@/contracts/statuses';
+import { TRANSFER_STATUS } from '@logirest/shared-types';
 
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';

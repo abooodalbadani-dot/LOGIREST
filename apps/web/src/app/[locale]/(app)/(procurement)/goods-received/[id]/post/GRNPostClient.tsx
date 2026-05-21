@@ -10,7 +10,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
-import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 
 import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';

@@ -4,9 +4,9 @@
  * Both usePermission and canPerformActionV2 derive from this contract.
  */
 
-import type { UserRole } from '@/providers/AuthProvider';
+import type { UserRole } from '../rbac';
 
-export type DocumentType =
+export type BaseDocumentType =
   | 'adjustment'
   | 'transfer'
   | 'issue'
@@ -16,7 +16,9 @@ export type DocumentType =
   | 'po'
   | 'grn';
 
-export type DocumentAction =
+export type DocumentType = BaseDocumentType | Uppercase<BaseDocumentType>;
+
+export type CapabilityAction =
   | 'create'
   | 'submit'
   | 'approve'
@@ -104,7 +106,7 @@ export const ROLE_CAPABILITIES = {
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'] as const,
   },
-} as const satisfies Record<DocumentType, Partial<Record<DocumentAction, readonly UserRole[]>>>;
+} as const satisfies Record<BaseDocumentType, Partial<Record<CapabilityAction, readonly UserRole[]>>>;
 
 export type RoleCapabilities = typeof ROLE_CAPABILITIES;
 
@@ -113,11 +115,12 @@ export type RoleCapabilities = typeof ROLE_CAPABILITIES;
  */
 export function canRolePerformAction(
   documentType: DocumentType,
-  action: DocumentAction,
+  action: CapabilityAction,
   role: UserRole | undefined
 ): boolean {
   if (!role) return false;
-  const actions = ROLE_CAPABILITIES[documentType];
+  const normalizedType = documentType.toLowerCase() as BaseDocumentType;
+  const actions = ROLE_CAPABILITIES[normalizedType];
   if (!actions) return false;
   const allowedRoles = actions[action as keyof typeof actions];
   if (!allowedRoles) return false;

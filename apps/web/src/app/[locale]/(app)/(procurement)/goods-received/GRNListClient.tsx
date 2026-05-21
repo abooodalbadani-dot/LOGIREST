@@ -18,8 +18,8 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
-import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
-import { GRN_STATUS } from '@/contracts/statuses';
+import { isPendingStatus, isPostedStatus, type DocumentStatus } from '@logirest/shared-types';
+import { GRN_STATUS } from '@logirest/shared-types';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 

@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api/client';
 import { GRNDetailSchema } from '@/features/purchasing/hooks/useGRN';
 import { z } from 'zod';
 import { redirect } from '@/i18n/navigation';
-import { GRN_STATUS } from '@/contracts/statuses';
+import { GRN_STATUS } from '@logirest/shared-types';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string, id: string }> }) {
   const { locale } = await params;

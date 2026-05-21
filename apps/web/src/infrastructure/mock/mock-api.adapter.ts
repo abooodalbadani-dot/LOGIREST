@@ -6,8 +6,8 @@ import { Branch, Warehouse, Department, UoM, Category, Item, Supplier, Currency,
 import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
 
-import { getNextStatusV2, canPerformActionV2, DocumentAction } from '@/core/workflow/document-engine';
-import { STOCKTAKE_STATUS, ADJUSTMENT_STATUS, TRANSFER_STATUS, ISSUE_STATUS } from '@/contracts/statuses';
+import { getNextStatusV2, canPerformActionV2, DocumentAction } from '@logirest/shared-types';
+import { STOCKTAKE_STATUS, ADJUSTMENT_STATUS, TRANSFER_STATUS, ISSUE_STATUS } from '@logirest/shared-types';
 import { OPERATIONAL_CONFIG } from '@/contracts/operational-config';
 
 interface HydrationLine {

@@ -23,7 +23,7 @@ import type { BadgeStatus } from '@/components/shared/StatusBadge';
 import type { LotAllocation } from '@/types/documents';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { isIssuePosted } from '@/domain/status-guards';
-import { isDocumentLocked } from '@/core/workflow/document-engine';
+import { isDocumentLocked } from '@logirest/shared-types';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { toast } from 'sonner';
 

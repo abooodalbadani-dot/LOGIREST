@@ -24,7 +24,7 @@ import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
 import { isIssueDraft, isIssuePosted } from '@/domain/status-guards';
 import { ISSUE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
-import { ISSUE_STATUS } from '@/contracts/statuses';
+import { ISSUE_STATUS } from '@logirest/shared-types';
 
 export function IssueListClient({ initialStatus, initialPage }: { initialStatus?: string; initialPage: number }) {
   const t = useTranslations('operations.issue');

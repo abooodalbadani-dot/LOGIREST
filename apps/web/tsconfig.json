@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@logirest/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@logirest/shared-types/*": ["../../packages/shared-types/src/*"]
     },
     "composite": true,
     "noEmit": true,
@@ -11,14 +13,13 @@
       { "name": "next" }
     ]
   },
-  "references": [
-    { "path": "../../packages/contracts" }
-  ],
+
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "../../packages/shared-types/src/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

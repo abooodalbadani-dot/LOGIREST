@@ -15,7 +15,7 @@ import {
  ArrowUpRight,
  ArrowDownRight
 } from "lucide-react";
-import { STOCKTAKE_STATUS } from "@/contracts/statuses";
+import { STOCKTAKE_STATUS } from "@logirest/shared-types";
 import { isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { StatusBadge } from "@/components/shared/StatusBadge";

@@ -28,8 +28,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { audioAlerts } from '@/utils/audio';
 
-import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@/core/workflow/document-engine';
-import { KITCHEN_REQUEST_STATUS } from '@/contracts/statuses';
+import { isPendingStatus, isApprovedStatus, isCompletedStatus, type DocumentStatus } from '@logirest/shared-types';
+import { KITCHEN_REQUEST_STATUS } from '@logirest/shared-types';
 
 export function KitchenRequestsListClient({
   initialStatus,

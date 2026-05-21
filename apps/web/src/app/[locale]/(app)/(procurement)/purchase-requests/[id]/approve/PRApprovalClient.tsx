@@ -15,7 +15,7 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
-import { canPerformActionV2, type DocumentStatus, isDocumentLocked } from '@/core/workflow/document-engine';
+import { canPerformActionV2, type DocumentStatus, isDocumentLocked } from '@logirest/shared-types';
 import { 
   CheckCircle2, 
   XCircle, 

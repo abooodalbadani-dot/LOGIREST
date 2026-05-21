@@ -10,7 +10,7 @@ import {
   StocktakeItemSchema
 } from '../types/stocktake';
 import { successSchema } from '@/types/api';
-import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { STOCKTAKE_STATUS } from '@logirest/shared-types';
 
 const StocktakeListSchema = z.object({
   data: z.array(StocktakeSessionSchema.omit({ items: true })),

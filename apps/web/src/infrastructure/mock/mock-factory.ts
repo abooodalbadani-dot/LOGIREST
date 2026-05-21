@@ -8,7 +8,7 @@ import {
   TRANSFER_STATUS, 
   ADJUSTMENT_STATUS,
   KITCHEN_REQUEST_STATUS
-} from '@/contracts/statuses';
+} from '@logirest/shared-types';
 
 import { 
   PurchaseRequest, PurchaseOrder, GRN, 

@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
-import { ALL_TRANSFER_STATUSES, ALL_STATUSES } from '@/contracts/statuses';
+import { ALL_TRANSFER_STATUSES, ALL_STATUSES } from '@logirest/shared-types';
 
 export const TransferLineLotAllocationSchema = z.object({
  lot_id: z.string(),

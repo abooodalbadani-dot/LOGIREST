@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { STOCKTAKE_STATUSES } from './documents';
 
-import { StocktakeStatus } from '../contracts/statuses';
+import { StocktakeStatus } from '@logirest/shared-types';
 
 
 export interface StocktakeCount { 

@@ -49,10 +49,10 @@ import {
   canPerformActionV2,
   isDocumentLocked,
   DocumentStatus 
-} from '@/core/workflow/document-engine';
+} from '@logirest/shared-types';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
-import { KITCHEN_REQUEST_STATUS, KitchenRequestStatus } from '@/contracts/statuses';
+import { KITCHEN_REQUEST_STATUS, KitchenRequestStatus } from '@logirest/shared-types';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';

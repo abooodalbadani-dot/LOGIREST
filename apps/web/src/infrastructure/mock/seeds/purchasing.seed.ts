@@ -1,5 +1,5 @@
 import { MockFactory } from '../mock-factory';
-import { PR_STATUS, PO_STATUS, GRN_STATUS } from '@/contracts/statuses';
+import { PR_STATUS, PO_STATUS, GRN_STATUS } from '@logirest/shared-types';
 import { PurchaseRequest, PurchaseOrder, GRN } from '@/types/documents';
 
 export const initialPRs: PurchaseRequest[] = [

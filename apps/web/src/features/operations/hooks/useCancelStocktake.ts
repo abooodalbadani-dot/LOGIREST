@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
-import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { STOCKTAKE_STATUS } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
 
 export function useCancelStocktake(options?: { onConflict?: () => void }) {

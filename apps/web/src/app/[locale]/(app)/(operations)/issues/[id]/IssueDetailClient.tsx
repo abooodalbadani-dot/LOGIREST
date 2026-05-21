@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Package } from 'lucide-react';
 import { useIssue } from '@/features/operations/hooks/useIssue';
-import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { IssueForm } from '@/features/operations/components/issue-form';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';

@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
-import { PO_STATUS } from '@/contracts/statuses';
+import { PO_STATUS } from '@logirest/shared-types';
 import { PODetail } from './usePO';
 
 export function useCancelPO(options?: { onConflict?: () => void }) {

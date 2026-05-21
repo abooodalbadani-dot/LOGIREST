@@ -21,7 +21,7 @@ import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@logirest/shared-types';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAuth } from '@/providers/AuthProvider';

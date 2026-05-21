@@ -8,7 +8,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
 
 import { CheckCircle, Mail } from 'lucide-react';
-import { type DocumentStatus } from '@/core/workflow/document-engine';
+import { type DocumentStatus } from '@logirest/shared-types';
 import { apiClient } from '@/infrastructure/api/client';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { useAuth } from '@/providers/AuthProvider';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
-import { PO_STATUS } from '@/contracts/statuses';
+import { PO_STATUS } from '@logirest/shared-types';
 
 interface PODetailClientProps {
   id: string | null;

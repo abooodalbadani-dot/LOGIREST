@@ -3,10 +3,10 @@
  * Centralized logic for document status transitions and permission checks.
  */
 
-import { DocumentStatus } from '@/types/DocumentStatus';
-import { DocumentType } from '@/types/documents';
-import { UserRole as Role } from '@/types/rbac';
-import { ROLE_CAPABILITIES, type DocumentAction as CapabilityAction } from '@/contracts/role-capabilities';
+import { DocumentStatus } from '../contracts/statuses';
+import { DocumentType, BaseDocumentType } from '../contracts/role-capabilities';
+import { UserRole as Role } from '../rbac';
+import { ROLE_CAPABILITIES, type CapabilityAction } from '../contracts/role-capabilities';
 export type { DocumentStatus, DocumentType, Role };
 
 export type DocumentAction = 
@@ -28,10 +28,6 @@ export type DocumentAction =
   | 'RECEIVE'
   | 'CLOSE';
 
-// Role is now imported and aliased from @/types/rbac
-
-// DocumentType is now imported from @/types/documents
-
 import { 
   PR_STATUS, 
   PO_STATUS, 
@@ -41,65 +37,65 @@ import {
   ISSUE_STATUS, 
   ADJUSTMENT_STATUS,
   KITCHEN_REQUEST_STATUS 
-} from '@/contracts/statuses';
+} from '../contracts/statuses';
 
-const workflowMap: Record<DocumentType, {
+const workflowMap: Record<BaseDocumentType, {
   pending: DocumentStatus[];
   completed: DocumentStatus[];
   approved: DocumentStatus[];
   posted: DocumentStatus[];
   locked: DocumentStatus[];
 }> = {
-  'PR': {
+  'pr': {
     pending: [PR_STATUS.DRAFT, PR_STATUS.SUBMITTED, PR_STATUS.REJECTED],
     completed: [PR_STATUS.APPROVED, PR_STATUS.CANCELLED],
     approved: [PR_STATUS.APPROVED],
     posted: [],
     locked: [PR_STATUS.SUBMITTED, PR_STATUS.APPROVED, PR_STATUS.CANCELLED]
   },
-  'PO': {
+  'po': {
     pending: [PO_STATUS.DRAFT, PO_STATUS.SUBMITTED, PO_STATUS.REJECTED],
     completed: [PO_STATUS.APPROVED, PO_STATUS.FULFILLED, PO_STATUS.PARTIAL, PO_STATUS.CANCELLED],
     approved: [PO_STATUS.APPROVED],
     posted: [],
     locked: [PO_STATUS.SUBMITTED, PO_STATUS.APPROVED, PO_STATUS.FULFILLED, PO_STATUS.PARTIAL, PO_STATUS.CANCELLED]
   },
-  'GRN': {
+  'grn': {
     pending: [GRN_STATUS.DRAFT, GRN_STATUS.RECEIVED],
     completed: [GRN_STATUS.POSTED, GRN_STATUS.CANCELLED],
     approved: [],
     posted: [GRN_STATUS.POSTED],
     locked: [GRN_STATUS.POSTED, GRN_STATUS.CANCELLED]
   },
-  'TRANSFER': {
+  'transfer': {
     pending: [TRANSFER_STATUS.DRAFT, TRANSFER_STATUS.IN_TRANSIT],
     completed: [TRANSFER_STATUS.RECEIVED, TRANSFER_STATUS.CANCELLED],
     approved: [],
     posted: [],
     locked: [TRANSFER_STATUS.IN_TRANSIT, TRANSFER_STATUS.RECEIVED, TRANSFER_STATUS.CANCELLED]
   },
-  'ISSUE': {
+  'issue': {
     pending: [ISSUE_STATUS.DRAFT, ISSUE_STATUS.SUBMITTED],
     completed: [ISSUE_STATUS.POSTED, ISSUE_STATUS.CANCELLED],
     approved: [],
     posted: [ISSUE_STATUS.POSTED],
     locked: [ISSUE_STATUS.SUBMITTED, ISSUE_STATUS.POSTED, ISSUE_STATUS.CANCELLED]
   },
-  'ADJUSTMENT': {
+  'adjustment': {
     pending: [ADJUSTMENT_STATUS.DRAFT, ADJUSTMENT_STATUS.SUBMITTED, ADJUSTMENT_STATUS.REJECTED],
     completed: [ADJUSTMENT_STATUS.POSTED, ADJUSTMENT_STATUS.CANCELLED],
     approved: [ADJUSTMENT_STATUS.APPROVED],
     posted: [ADJUSTMENT_STATUS.POSTED],
     locked: [ADJUSTMENT_STATUS.SUBMITTED, ADJUSTMENT_STATUS.APPROVED, ADJUSTMENT_STATUS.POSTED, ADJUSTMENT_STATUS.CANCELLED]
   },
-  'STOCKTAKE': {
+  'stocktake': {
     pending: [STOCKTAKE_STATUS.DRAFT, STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING, STOCKTAKE_STATUS.REVIEW],
     completed: [STOCKTAKE_STATUS.POSTED, STOCKTAKE_STATUS.CLOSED, STOCKTAKE_STATUS.CANCELLED],
     approved: [STOCKTAKE_STATUS.APPROVED],
     posted: [STOCKTAKE_STATUS.POSTED],
     locked: [STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING, STOCKTAKE_STATUS.REVIEW, STOCKTAKE_STATUS.APPROVED, STOCKTAKE_STATUS.POSTED, STOCKTAKE_STATUS.CLOSED, STOCKTAKE_STATUS.CANCELLED]
   },
-  'KITCHEN_REQUEST': {
+  'kitchen_request': {
     pending: [KITCHEN_REQUEST_STATUS.DRAFT, KITCHEN_REQUEST_STATUS.SUBMITTED],
     completed: [KITCHEN_REQUEST_STATUS.FULFILLED, KITCHEN_REQUEST_STATUS.CANCELLED],
     approved: [],
@@ -114,16 +110,12 @@ interface TransitionRule {
   allowedRoles: Role[];
 }
 
-// Legacy transitionMap deleted.
-
-// Legacy canPerformAction deleted.
-
 /**
  * PHASE 2.A: Document-Type Aware Transition Map
  * Explicit, per-document workflow rules. Default Deny.
  */
-const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Partial<Record<DocumentAction, TransitionRule>>>>> = {
-  'PR': {
+const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, Partial<Record<DocumentAction, TransitionRule>>>>> = {
+  'pr': {
     [PR_STATUS.DRAFT]: {
       'SUBMIT': { targetStatus: PR_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
       'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
@@ -140,7 +132,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
     }
   },
-  'PO': {
+  'po': {
     [PO_STATUS.DRAFT]: {
       'SUBMIT': { targetStatus: PO_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
       'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
@@ -160,7 +152,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
     }
   },
-  'GRN': {
+  'grn': {
     [GRN_STATUS.RECEIVED]: {
       'POST': { targetStatus: GRN_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR', 'PROC_OFFICER'] },
     },
@@ -169,7 +161,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR'] },
     }
   },
-  'TRANSFER': {
+  'transfer': {
     [TRANSFER_STATUS.DRAFT]: {
       'SHIP': { targetStatus: TRANSFER_STATUS.IN_TRANSIT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
       'CANCEL': { targetStatus: TRANSFER_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
@@ -178,7 +170,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'RECEIVE': { targetStatus: TRANSFER_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR'] },
     }
   },
-  'ISSUE': {
+  'issue': {
     [ISSUE_STATUS.DRAFT]: {
       'SUBMIT': { targetStatus: ISSUE_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
       'CANCEL': { targetStatus: ISSUE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
@@ -188,7 +180,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'CANCEL': { targetStatus: ISSUE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
     }
   },
-  'ADJUSTMENT': {
+  'adjustment': {
     [ADJUSTMENT_STATUS.DRAFT]: {
       'SUBMIT': { targetStatus: ADJUSTMENT_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
       'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
@@ -205,7 +197,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'EDIT': { targetStatus: ADJUSTMENT_STATUS.DRAFT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
     }
   },
-  'STOCKTAKE': {
+  'stocktake': {
     [STOCKTAKE_STATUS.DRAFT]: {
       'START': { targetStatus: STOCKTAKE_STATUS.STARTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
       'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
@@ -231,7 +223,7 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'CLOSE': { targetStatus: STOCKTAKE_STATUS.CLOSED, allowedRoles: ['ADMIN', 'INV_MGR'] },
     }
   },
-  'KITCHEN_REQUEST': {
+  'kitchen_request': {
     [KITCHEN_REQUEST_STATUS.DRAFT]: {
       'SUBMIT': { targetStatus: KITCHEN_REQUEST_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
       'CANCEL': { targetStatus: KITCHEN_REQUEST_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
@@ -257,8 +249,8 @@ export function canPerformActionV2(
 ): boolean {
   if (!role) return false;
 
-  const normalizedType = documentType.toLowerCase() as CapabilityAction extends string ? string : never;
-  const normalizedAction = action.toLowerCase() as CapabilityAction extends string ? string : never;
+  const normalizedType = documentType.toLowerCase() as BaseDocumentType;
+  const normalizedAction = action.toLowerCase();
 
   const capabilitiesKey = normalizedType === 'pr' ? 'pr'
     : normalizedType === 'po' ? 'po'
@@ -275,7 +267,7 @@ export function canPerformActionV2(
     }
   }
 
-  const typeMap = transitionMapV2[documentType];
+  const typeMap = transitionMapV2[normalizedType];
   
   if (!typeMap) {
     if (process.env.NODE_ENV === 'development') {
@@ -300,8 +292,9 @@ export function canPerformActionV2(
  * Locked documents cannot be edited.
  */
 export function isDocumentLocked(type: DocumentType, status: string): boolean {
-  if (type in workflowMap) {
-    return workflowMap[type].locked.includes(status as DocumentStatus);
+  const normalizedType = type.toLowerCase() as BaseDocumentType;
+  if (normalizedType in workflowMap) {
+    return workflowMap[normalizedType].locked.includes(status as DocumentStatus);
   }
   return false;
 }
@@ -312,33 +305,36 @@ export function isDocumentLocked(type: DocumentType, status: string): boolean {
  */
 
 export function isPendingStatus(type: DocumentType, status: string): boolean {
-  if (type in workflowMap) {
-    return workflowMap[type].pending.includes(status as DocumentStatus);
+  const normalizedType = type.toLowerCase() as BaseDocumentType;
+  if (normalizedType in workflowMap) {
+    return workflowMap[normalizedType].pending.includes(status as DocumentStatus);
   }
   return false;
 }
 
 export function isApprovedStatus(type: DocumentType, status: string): boolean {
-  if (type in workflowMap) {
-    return workflowMap[type].approved.includes(status as DocumentStatus);
+  const normalizedType = type.toLowerCase() as BaseDocumentType;
+  if (normalizedType in workflowMap) {
+    return workflowMap[normalizedType].approved.includes(status as DocumentStatus);
   }
   return false;
 }
 
 export function isPostedStatus(type: DocumentType, status: string): boolean {
-  if (type in workflowMap) {
-    return workflowMap[type].posted.includes(status as DocumentStatus);
+  const normalizedType = type.toLowerCase() as BaseDocumentType;
+  if (normalizedType in workflowMap) {
+    return workflowMap[normalizedType].posted.includes(status as DocumentStatus);
   }
   return false;
 }
 
 export function isCompletedStatus(type: DocumentType, status: string): boolean {
-  if (type in workflowMap) {
-    return workflowMap[type].completed.includes(status as DocumentStatus);
+  const normalizedType = type.toLowerCase() as BaseDocumentType;
+  if (normalizedType in workflowMap) {
+    return workflowMap[normalizedType].completed.includes(status as DocumentStatus);
   }
   return false;
 }
-
 
 /**
  * Gets the next status for a given action using the Document-Aware engine.
@@ -348,5 +344,6 @@ export function getNextStatusV2(
   status: DocumentStatus,
   action: DocumentAction
 ): DocumentStatus | null {
-  return transitionMapV2[documentType]?.[status]?.[action]?.targetStatus || null;
+  const normalizedType = documentType.toLowerCase() as BaseDocumentType;
+  return transitionMapV2[normalizedType]?.[status]?.[action]?.targetStatus || null;
 }

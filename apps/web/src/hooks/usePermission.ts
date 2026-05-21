@@ -1,6 +1,6 @@
 'use client';
 import { useAuth } from '@/providers/AuthProvider';
-import { ROLE_CAPABILITIES, type DocumentType, type DocumentAction, canRolePerformAction } from '@/contracts/role-capabilities';
+import { ROLE_CAPABILITIES, type DocumentType, type CapabilityAction, canRolePerformAction } from '@logirest/shared-types';
 import { PERMISSION_MATRIX, type ResourceType, type ActionType } from '@/types/rbac';
 
 const RESOURCE_TO_DOCUMENT_TYPE: Partial<Record<ResourceType, DocumentType>> = {
@@ -22,7 +22,7 @@ const RESOURCE_TO_DOCUMENT_TYPE: Partial<Record<ResourceType, DocumentType>> = {
   'procurement_grn': 'grn',
 };
 
-const ACTION_TO_DOCUMENT_ACTION: Partial<Record<ActionType, DocumentAction>> = {
+const ACTION_TO_DOCUMENT_ACTION: Partial<Record<ActionType, CapabilityAction>> = {
   create: 'create',
   edit: 'edit',
   delete: 'cancel',

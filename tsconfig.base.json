@@ -8,6 +8,11 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "incremental": true
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@logirest/shared-types": ["packages/shared-types/src/index.ts"],
+      "@logirest/shared-types/*": ["packages/shared-types/src/*"]
+    }
   }
 }

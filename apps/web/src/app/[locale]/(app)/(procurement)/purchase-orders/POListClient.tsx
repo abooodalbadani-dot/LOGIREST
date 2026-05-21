@@ -19,8 +19,8 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 
-import { type DocumentStatus, isApprovedStatus, isPendingStatus } from '@/core/workflow/document-engine';
-import { PO_STATUS } from '@/contracts/statuses';
+import { type DocumentStatus, isApprovedStatus, isPendingStatus } from '@logirest/shared-types';
+import { PO_STATUS } from '@logirest/shared-types';
 import { formatCurrency } from '@/utils/currency';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { BadgeStatus } from '@/components/shared/StatusBadge';

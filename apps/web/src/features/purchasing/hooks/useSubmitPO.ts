@@ -4,7 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
-import { PO_STATUS } from '@/contracts/statuses';
+import { PO_STATUS } from '@logirest/shared-types';
 import { type PODetail } from './usePO';
 
 export function useSubmitPO(options?: { onConflict?: () => void }) {

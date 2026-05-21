@@ -1,5 +1,17 @@
 {
     "mcpServers": {
+        "insforge": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@insforge/mcp@latest",
+                "--api_key",
+                "ik_700c25d6d1fd32ec8834b8c38901e1f4",
+                "--api_base_url",
+                "https://mm4avyi6.ap-southeast.insforge.app"
+            ],
+            "env": {}
+        },
         "context7": {
             "command": "npx",
             "args": [
@@ -24,6 +36,4 @@
         }
     }
 }
-
 // setup mcp server in  ~/.gemini\antigravity\mcp_config.json
-

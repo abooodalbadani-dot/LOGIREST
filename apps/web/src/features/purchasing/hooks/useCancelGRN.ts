@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
-import { GRN_STATUS } from '@/contracts/statuses';
+import { GRN_STATUS } from '@logirest/shared-types';
 
 export function useCancelGRN(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/AuthProvider";
-import { canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { canPerformActionV2, type DocumentStatus } from '@logirest/shared-types';
 
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";

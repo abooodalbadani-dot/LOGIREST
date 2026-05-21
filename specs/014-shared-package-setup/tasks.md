@@ -25,10 +25,10 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Rename directory `packages/contracts/` to `packages/shared-types/`
-- [ ] T002 Update package name to `@logirest/shared-types` in `packages/shared-types/package.json`
-- [ ] T003 [P] Configure root-level workspace references in `package.json` to register `packages/shared-types`
-- [ ] T004 [P] Configure path mappings for `@logirest/shared-types` in `tsconfig.base.json`
+- [x] T001 Rename directory `packages/contracts/` to `packages/shared-types/`
+- [x] T002 Update package name to `@logirest/shared-types` in `packages/shared-types/package.json`
+- [x] T003 [P] Configure root-level workspace references in `package.json` to register `packages/shared-types`
+- [x] T004 [P] Configure path mappings for `@logirest/shared-types` in `tsconfig.base.json`
 
 ---
 
@@ -38,8 +38,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Create baseline package structures and index exports in `packages/shared-types/src/index.ts`
-- [ ] T006 Configure task pipeline rules for `build`, `dev`, and `typecheck` inside `turbo.json`
+- [x] T005 Create baseline package structures and index exports in `packages/shared-types/src/index.ts`
+- [x] T006 Configure task pipeline rules for `build`, `dev`, and `typecheck` inside `turbo.json`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -53,13 +53,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Copy workflow engine from `apps/web/src/core/workflow/document-engine.ts` to `packages/shared-types/src/workflow/document-engine.ts`
-- [ ] T008 [P] [US1] Copy role capabilities from `apps/web/src/contracts/role-capabilities.ts` to `packages/shared-types/src/contracts/role-capabilities.ts`
-- [ ] T009 [P] [US1] Copy statuses from `apps/web/src/contracts/statuses.ts` to `packages/shared-types/src/contracts/statuses.ts`
-- [ ] T010 [US1] Export workflow, capabilities, and statuses from package entrypoint `packages/shared-types/src/index.ts`
-- [ ] T011 [US1] Add `@logirest/shared-types` workspace dependency to `apps/web/package.json`
-- [ ] T012 [US1] Replace local imports referencing `@/core/workflow/document-engine` and `@/contracts/` in `apps/web/src/**` with `@logirest/shared-types`
-- [ ] T013 [US1] Run typecheck verification on frontend using `npm run typecheck --filter=web`
+- [x] T007 [P] [US1] Copy workflow engine from `apps/web/src/core/workflow/document-engine.ts` to `packages/shared-types/src/workflow/document-engine.ts`
+- [x] T008 [P] [US1] Copy role capabilities from `apps/web/src/contracts/role-capabilities.ts` to `packages/shared-types/src/contracts/role-capabilities.ts`
+- [x] T009 [P] [US1] Copy statuses from `apps/web/src/contracts/statuses.ts` to `packages/shared-types/src/contracts/statuses.ts`
+- [x] T010 [US1] Export workflow, capabilities, and statuses from package entrypoint `packages/shared-types/src/index.ts`
+- [x] T011 [US1] Add `@logirest/shared-types` workspace dependency to `apps/web/package.json`
+- [x] T012 [US1] Replace local imports referencing `@/core/workflow/document-engine` and `@/contracts/` in `apps/web/src/**` with `@logirest/shared-types`
+- [x] T013 [US1] Run typecheck verification on frontend using `npm run typecheck --filter=web`
 
 **Checkpoint**: At this point, User Story 1 is fully functional and type-safe.
 
@@ -73,13 +73,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Scaffold NestJS api application using command `npx -y @nestjs/cli new apps/api --package-manager npm --skip-git`
-- [ ] T015 [US2] Add `@logirest/shared-types` workspace dependency to `apps/api/package.json`
-- [ ] T016 [P] [US2] Configure TypeScript path mapping in `apps/api/tsconfig.json` to resolve `@logirest/shared-types`
-- [ ] T017 [US2] Install security and config dependencies (`cookie-parser`, `class-validator`, `class-transformer`, `@nestjs/config`) in `apps/api/package.json`
-- [ ] T018 [US2] Configure routing prefix, cookie parser, CORS, and ValidationPipe exception factory in `apps/api/src/main.ts`
-- [ ] T019 [P] [US2] Create `/health` endpoint controller and module in `apps/api/src/health/health.controller.ts` and `apps/api/src/health/health.module.ts`
-- [ ] T020 [US2] Run backend build verification using `npm run build --filter=api`
+- [x] T014 [US2] Scaffold NestJS api application using command `npx -y @nestjs/cli new apps/api --package-manager npm --skip-git`
+- [x] T015 [US2] Add `@logirest/shared-types` workspace dependency to `apps/api/package.json`
+- [x] T016 [P] [US2] Configure TypeScript path mapping in `apps/api/tsconfig.json` to resolve `@logirest/shared-types`
+- [x] T017 [US2] Install security and config dependencies (`cookie-parser`, `class-validator`, `class-transformer`, `@nestjs/config`) in `apps/api/package.json`
+- [x] T018 [US2] Configure routing prefix, cookie parser, CORS, and ValidationPipe exception factory in `apps/api/src/main.ts`
+- [x] T019 [P] [US2] Create `/health` endpoint controller and module in `apps/api/src/health/health.controller.ts` and `apps/api/src/health/health.module.ts`
+- [x] T020 [US2] Run backend build verification using `npm run build --filter=api`
 
 **Checkpoint**: At this point, the backend service runs and respects security routing rules.
 
@@ -89,9 +89,9 @@
 
 **Purpose**: General codebase improvements and updates that affect multiple user stories
 
-- [ ] T021 [P] Update monorepo README documentation at `README.md`
-- [ ] T022 Run complete monorepo check with `npm run build` and `npm run typecheck` across all workspaces
-- [ ] T023 [P] Update Graphify map using command `graphify update .`
+- [x] T021 [P] Update monorepo README documentation at `README.md`
+- [x] T022 Run complete monorepo check with `npm run build` and `npm run typecheck` across all workspaces
+- [x] T023 [P] Update Graphify map using command `graphify update .`
 
 ---
 

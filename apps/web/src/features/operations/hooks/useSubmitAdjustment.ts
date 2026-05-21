@@ -4,7 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
-import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { AdjustmentDetail } from './useAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 

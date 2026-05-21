@@ -3,7 +3,7 @@
 import { useAdjustment } from '@/features/operations/hooks/useAdjustment';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
-import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { isLocked } from '@/domain/status-guards';
 import { AdjustmentForm } from './AdjustmentForm';
 import { useTranslations } from 'next-intl';

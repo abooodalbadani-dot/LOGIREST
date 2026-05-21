@@ -17,7 +17,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { cn } from '@/lib/utils';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
-import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, canPerformActionV2, type DocumentStatus } from '@logirest/shared-types';
 import { useAuth } from '@/providers/AuthProvider';
 import { AlertCircle, Truck, ArrowLeft, Printer, RefreshCw } from 'lucide-react';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';

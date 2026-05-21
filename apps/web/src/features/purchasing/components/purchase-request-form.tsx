@@ -42,7 +42,7 @@ import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
-import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';

@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 import { toast } from 'sonner';
  
-import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { AdjustmentDetail } from './useAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 

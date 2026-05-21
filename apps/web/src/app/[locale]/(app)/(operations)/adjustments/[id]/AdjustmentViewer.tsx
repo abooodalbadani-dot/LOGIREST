@@ -19,7 +19,7 @@ import { formatQuantity } from '@/utils/currency';
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
-import { ADJUSTMENT_STATUS } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';

@@ -1,5 +1,5 @@
 import { MockFactory } from '../mock-factory';
-import { ISSUE_STATUS, STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { ISSUE_STATUS, STOCKTAKE_STATUS } from '@logirest/shared-types';
 import { StockIssue, Transfer, Adjustment } from '@/types/documents';
 import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';

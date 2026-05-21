@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
-import { PR_STATUS } from '@/contracts/statuses';
+import { PR_STATUS } from '@logirest/shared-types';
 import { PRDetail } from './usePR';
 
 export function useCancelPR(options?: { onConflict?: () => void }) {

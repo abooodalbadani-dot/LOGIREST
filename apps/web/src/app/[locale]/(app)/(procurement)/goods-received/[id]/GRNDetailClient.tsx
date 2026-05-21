@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
@@ -13,7 +13,7 @@ import { Send, Scan } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
-import { GRN_STATUS } from '@/contracts/statuses';
+import { GRN_STATUS } from '@logirest/shared-types';
 
 interface GRNDetailClientProps {
   id: string;

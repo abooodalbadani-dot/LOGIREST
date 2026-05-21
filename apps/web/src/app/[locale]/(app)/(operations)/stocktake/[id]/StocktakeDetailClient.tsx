@@ -14,7 +14,7 @@ import {
   History
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
-import { type DocumentStatus } from "@/core/workflow/document-engine";
+import { type DocumentStatus } from "@logirest/shared-types";
 import { ActionGuard } from "@/core/workflow/ActionGuard";
 import { Button } from "@/components/ui/button";
 import { PermissionGate } from "@/components/shared/PermissionGate";

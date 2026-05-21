@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 
 
-import { ALL_STATUSES } from '@/contracts/statuses';
+import { ALL_STATUSES } from '@logirest/shared-types';
 
 export const AdjustmentStatusSchema = z.enum(ALL_STATUSES);
 

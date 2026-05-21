@@ -4,7 +4,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
 
-import { PR_STATUS } from '@/contracts/statuses';
+import { PR_STATUS } from '@logirest/shared-types';
 import { type PRDetail } from './usePR';
 
 export function useSubmitPR(options?: { onConflict?: () => void }) {

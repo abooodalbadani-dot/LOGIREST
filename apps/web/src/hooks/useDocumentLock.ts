@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { isDocumentLocked, type DocumentType } from '@/core/workflow/document-engine';
+import { isDocumentLocked, type DocumentType } from '@logirest/shared-types';
 
 /**
  * Hook to determine if a document should be locked (read-only) based on its status.

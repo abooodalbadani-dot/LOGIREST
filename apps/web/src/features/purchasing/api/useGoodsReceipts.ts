@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { GoodsReceipt, CreateGoodsReceiptDTO, GoodsReceiptLineItem } from '../types';
-import { GRN_STATUS } from '@/contracts/statuses';
+import { GRN_STATUS } from '@logirest/shared-types';
 
 
 // Mock data

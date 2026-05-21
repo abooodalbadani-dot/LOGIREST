@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
-import { TRANSFER_STATUS } from '@/contracts/statuses';
+import { TRANSFER_STATUS } from '@logirest/shared-types';
 import { TransferDetail } from './useTransfer';
 import { useAuth } from '@/providers/AuthProvider';
 

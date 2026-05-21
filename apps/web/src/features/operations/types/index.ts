@@ -1,4 +1,4 @@
-import { IssueStatus } from '@/contracts/statuses';
+import { IssueStatus } from '@logirest/shared-types';
 
 
 export interface IssueLot {

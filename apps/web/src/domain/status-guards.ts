@@ -6,8 +6,8 @@ import {
   PO_STATUS,
   GRN_STATUS,
   ADJUSTMENT_STATUS,
-} from '@/contracts/statuses';
-import { isDocumentLocked as engineIsDocumentLocked, DocumentType } from '@/core/workflow/document-engine';
+} from '@logirest/shared-types';
+import { isDocumentLocked as engineIsDocumentLocked, DocumentType } from '@logirest/shared-types';
 
 /**
  * Issue Guards

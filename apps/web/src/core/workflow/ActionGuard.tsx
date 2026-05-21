@@ -7,7 +7,7 @@ import {
   DocumentType, 
   DocumentStatus,
   Role
-} from './document-engine';
+} from '@logirest/shared-types';
 
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 

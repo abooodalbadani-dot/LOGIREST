@@ -12,7 +12,7 @@ import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine, type TransferDetail } from '@/features/operations/hooks/useTransfer';
 import { StatusTimeline, type Status } from '@/components/shared/StatusTimeline';
-import { TRANSFER_STATUS } from '@/contracts/statuses';
+import { TRANSFER_STATUS } from '@logirest/shared-types';
 
 interface TransferViewerProps {
   transfer: TransferDetail;

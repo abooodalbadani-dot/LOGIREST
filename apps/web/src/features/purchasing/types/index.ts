@@ -1,4 +1,4 @@
-import { PRStatus, POStatus, GRNStatus } from '@/contracts/statuses';
+import { PRStatus, POStatus, GRNStatus } from '@logirest/shared-types';
 
 export interface PurchaseRequestLineItem {
  id: string;

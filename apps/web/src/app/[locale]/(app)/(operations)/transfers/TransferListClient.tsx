@@ -23,7 +23,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { isTransferPosted } from '@/domain/status-guards';
 import { getStatusConfig } from '@/domain/status-ui-map';
-import { TRANSFER_STATUS } from '@/contracts/statuses';
+import { TRANSFER_STATUS } from '@logirest/shared-types';
 
 export function TransferListClient() {
   const t = useTranslations('operations.transfer');

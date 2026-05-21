@@ -35,7 +35,7 @@ import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { canStartStocktake } from "@/domain/status-guards";
-import { type DocumentStatus } from "@/core/workflow/document-engine";
+import { type DocumentStatus } from "@logirest/shared-types";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 interface StocktakeStartClientProps {
