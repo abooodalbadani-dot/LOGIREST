@@ -18,10 +18,11 @@ export const TransferSummarySchema = z.object({
 
 export type TransferSummary = z.infer<typeof TransferSummarySchema>;
 
-export function useTransferList(filters: { status?: string; page?: number } = {}) {
- const params = new URLSearchParams();
- if (filters.status) params.set('transfer_status', filters.status);
- params.set('page', String(filters.page ?? 1));
+export function useTransferList(filters: { status?: string; page?: number; search?: string } = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set('transfer_status', filters.status);
+  params.set('page', String(filters.page ?? 1));
+  if (filters.search) params.set('search', filters.search);
  
   return useQuery({
     queryKey: ['transfers', filters],

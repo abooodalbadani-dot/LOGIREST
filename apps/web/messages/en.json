@@ -2563,8 +2563,10 @@
         "reject_failed": "Failed to reject adjustment",
         "update_failed": "Failed to update adjustment",
         "negative_stock_not_allowed": "Cannot save adjustment with negative stock",
-        "exceeds_available_stock": "Exceeds available stock"
+        "exceeds_available_stock": "Exceeds available stock",
+        "edit_rejected": "Edit / Resubmit"
       },
+      "rejection_reason_banner": "Editing a rejected adjustment — reason: {reason}",
       "home": "Home",
       "lines_section": "Adjustment Lines",
       "list_subtitle": "Stock recalibration ledger & operational corrections",
@@ -3119,7 +3121,8 @@
       "verification_in_progress": "Verification Active",
       "verified_label": "Verified",
       "warehouse_locked": "Cannot proceed: One or more warehouses are locked due to an active stocktake.",
-      "warehouse_match_error": "Source and destination warehouses cannot be the same"
+      "warehouse_match_error": "Source and destination warehouses cannot be the same",
+      "search_placeholder": "Search by document number or warehouse"
     }
   },
   "procurement": {
@@ -3230,7 +3233,10 @@
       "unit_cost": "Unit Cost",
       "update_success": "Goods Received Note updated successfully.",
       "verified_vendor_sub": "Verified Vendor",
-      "warehouse_locked": "Cannot post: Warehouse is locked due to an active stocktake."
+      "warehouse_locked": "Cannot post: Warehouse is locked due to an active stocktake.",
+      "expiry_date_in_past": "Expiry date cannot be in the past",
+      "expiry_date_in_past_warning": "This expiry date is in the past. Provide a reason to override.",
+      "override_reason": "Override reason"
     },
     "po": {
       "actions": {

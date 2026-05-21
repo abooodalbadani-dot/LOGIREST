@@ -7,7 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\011-critical-operational-safety\plan.md
+E:\Kitchen‑Store Inventory System\specs\012-core-workflow-fixes\plan.md
 <!-- SPECKIT END -->
 
 

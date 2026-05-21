@@ -204,15 +204,17 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
               <History className="w-4 h-4 text-primary opacity-20" />
               <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>
             </div>
-            <StatusTimeline 
-              entries={[
-                { 
-                  status: session.status.toLowerCase() as Status, 
-                  at: session.updatedAt || session.createdAt || new Date().toISOString(), 
-                  by: session.postedBy || common('system_user') 
-                }
-              ]} 
-            />
+            {(() => {
+              const timeline = (session.auditLog ?? []).map(log => ({
+                status: log.status.toLowerCase() as Status,
+                at: log.created_at,
+                by: log.user_name || common('system_user'),
+              }));
+              if (timeline.length === 0) {
+                timeline.push({ status: 'draft' as Status, at: session.createdAt || new Date().toISOString(), by: session.startedBy || common('system_user') });
+              }
+              return <StatusTimeline entries={timeline} />;
+            })()}
           </div>
         </div>
 

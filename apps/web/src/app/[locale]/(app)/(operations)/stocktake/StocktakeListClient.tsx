@@ -21,6 +21,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { isStocktakeInProgress, isStocktakePosted } from '@/domain/status-guards';
 import { STOCKTAKE_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { QueryBoundary } from '@/core/query/QueryBoundary';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -42,6 +43,12 @@ const t = useTranslations('operations.stocktake');
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tc = useTranslations('common');
+
+  const { data: warehousesData } = useWarehouses();
+  const warehouseMap = useMemo(() => {
+    const list = warehousesData?.data ?? [];
+    return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
+  }, [warehousesData]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -112,16 +119,20 @@ const { data, isLoading } = useStocktakeList({
  ),
  },
  {
- accessorKey: 'warehouse_id',
- header: tc('warehouse') || 'Warehouse',
- cell: ({ row }) => (
- <div className="flex items-center gap-2">
- <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
- <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
- </div>
- <span className="font-bold text-label-sm text-foreground/80">{row.original.warehouse_id}</span>
- </div>
- ),
+  accessorKey: 'warehouse_id',
+  header: tc('warehouse') || 'Warehouse',
+  cell: ({ row }) => {
+    const name = warehouseMap.get(row.original.warehouse_id);
+    const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.warehouse_id;
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
+          <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
+        </div>
+        <span className="font-bold text-label-sm text-foreground/80">{display}</span>
+      </div>
+    );
+  },
  },
   {
   id: 'progress',
@@ -171,7 +182,7 @@ const { data, isLoading } = useStocktakeList({
  </div>
  ),
  },
- ], [t, tc, locale, router]);
+ ], [t, tc, locale, router, warehouseMap]);
 
   const activeSessionsCount = data?.meta?.total || 0;
   const inProgressCount = data?.data?.filter(i => isStocktakeInProgress(i.status)).length || 0;

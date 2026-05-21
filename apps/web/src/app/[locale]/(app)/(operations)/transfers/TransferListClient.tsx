@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useTransferList, TransferSummary } from '@/features/operations/hooks/useTransferList';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -17,6 +18,7 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { isTransferInTransit, isTransferPosted } from '@/domain/status-guards';
 import { TRANSFER_STATUS_UI, getStatusConfig } from '@/domain/status-ui-map';
@@ -28,8 +30,18 @@ export function TransferListClient() {
   const locale = useLocale() as 'ar' | 'en';
   const router = useRouter();
 
+  const { data: warehousesData } = useWarehouses();
+  const warehouseMap = useMemo(() => {
+    const list = warehousesData?.data ?? [];
+    return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
+  }, [warehousesData]);
+
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   const statusItems = useMemo(() => {
     const allItem = {
@@ -48,7 +60,7 @@ export function TransferListClient() {
     return [allItem, ...statuses];
   }, [tCommon]);
 
-  const { data, isLoading } = useTransferList({ status, page });
+  const { data, isLoading } = useTransferList({ status, page, search: debouncedSearch });
 
   const columns = useMemo<ColumnDef<TransferSummary>[]>(() => [
     {
@@ -68,20 +80,28 @@ export function TransferListClient() {
     {
       accessorKey: 'from_warehouse_id',
       header: t('from_warehouse'),
-      cell: ({ row }) => (
-        <span className="opacity-80 font-medium">
-          {tCommon('warehouses.' + row.original.from_warehouse_id.toLowerCase())}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const name = warehouseMap.get(row.original.from_warehouse_id);
+        const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.from_warehouse_id;
+        return (
+          <span className="opacity-80 font-medium">
+            {display}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'to_warehouse_id',
       header: t('to_warehouse'),
-      cell: ({ row }) => (
-        <span className="opacity-80 font-medium">
-          {tCommon('warehouses.' + row.original.to_warehouse_id.toLowerCase())}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const name = warehouseMap.get(row.original.to_warehouse_id);
+        const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.to_warehouse_id;
+        return (
+          <span className="opacity-80 font-medium">
+            {display}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'shipped_at',
@@ -126,7 +146,7 @@ export function TransferListClient() {
         </div>
       ),
     },
-  ], [t, tCommon, router]);
+  ], [t, tCommon, router, warehouseMap, locale]);
 
   const totalTransfersCount = data?.meta?.total || 0;
   const inTransitCount = data?.data?.filter(i => isTransferInTransit(i.transfer_status)).length || 0;
@@ -262,6 +282,8 @@ export function TransferListClient() {
                 <div className="relative group">
                   <Input
                     placeholder={t('search_placeholder')}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
                     className="w-full bg-surface-container-highest/40 border-none h-12 ps-12 pe-4 text-label-sm font-semibold rounded-md transition-all group-hover:bg-surface-container-highest/60 focus:ring-1 focus:ring-cyan-500/10 shadow-inner shadow-black/5"
                   />
                   <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 transition-colors group-hover:text-cyan-500/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>

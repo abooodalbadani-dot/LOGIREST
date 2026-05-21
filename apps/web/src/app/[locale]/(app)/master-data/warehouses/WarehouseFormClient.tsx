@@ -167,7 +167,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
         id && !isReadOnly && (
           <PermissionGate action="delete" resource="master_data_warehouses">
             <div className="flex items-center gap-2">
-              {data?.has_stock && (
+              {(data as { has_stock?: boolean } | null)?.has_stock && (
                 <span className="text-[10px] uppercase font-bold text-status-warning bg-status-warning/10 px-2 py-1 rounded">
                   {tw('contains_stock_warning', { defaultValue: 'Contains Stock' })}
                 </span>
@@ -178,7 +178,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                 size="icon"
                 className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={isSaving || data?.has_stock}
+                disabled={isSaving || (data as { has_stock?: boolean } | null)?.has_stock}
               >
                 <Trash2 className="w-5 h-5" />
               </Button>

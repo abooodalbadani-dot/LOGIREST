@@ -188,15 +188,17 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             <History className="w-4 h-4 text-primary opacity-20" />
             <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>
           </div>
-          <StatusTimeline 
-            entries={[
-              { 
-                status: session.status.toLowerCase() as Status, 
-                at: session.updated_at ?? session.snapshot_at, 
-                by: session.posted_by || common('system') 
+          {(() => {
+              const timeline = (session.audit_log ?? []).map(log => ({
+                status: log.status.toLowerCase() as Status,
+                at: log.created_at,
+                by: log.user_name || common('system_user'),
+              }));
+              if (timeline.length === 0) {
+                timeline.push({ status: 'draft' as Status, at: session.created_at ?? session.snapshot_at, by: session.started_by || common('system_user') });
               }
-            ]} 
-          />
+              return <StatusTimeline entries={timeline} />;
+            })()}
         </div>
       </div>
     </div>

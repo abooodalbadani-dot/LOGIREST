@@ -37,6 +37,12 @@ export const StocktakeSessionSchema = z.object({
   approved_at: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  audit_log: z.array(z.object({
+    status: z.string(),
+    created_at: z.string(),
+    user_name: z.string().nullable().optional(),
+    comment: z.string().nullable().optional(),
+  })).optional(),
 });
 
 export type StocktakeSession = z.infer<typeof StocktakeSessionSchema>;

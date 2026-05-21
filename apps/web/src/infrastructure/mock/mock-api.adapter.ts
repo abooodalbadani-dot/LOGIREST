@@ -1049,7 +1049,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       return [];
     }
     if (method === 'POST') {
-      return { id: 'yield-mock-1', ...body, created_at: new Date().toISOString() };
+      return { id: 'yield-mock-1', ...(body as Record<string, unknown>), created_at: new Date().toISOString() };
     }
     return undefined;
   }

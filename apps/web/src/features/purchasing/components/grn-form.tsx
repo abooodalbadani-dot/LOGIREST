@@ -48,6 +48,8 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { cn } from '@/lib/utils';
 
+const isExpiryInPast = (date: string) => new Date(date) < new Date(new Date().toDateString());
+
 const grnFormSchema = z.object({
   supplier_id: z.string().min(1, 'Required'),
   currency_id: z.string().min(1, 'Required'),
@@ -110,6 +112,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const updateMutation = useUpdateGRN({ onConflict });
 
   const [scanError, setScanError] = useState('');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [expiredLineIds, setExpiredLineIds] = useState<string[]>([]);
 
   const status = (initialData?.status || GRN_STATUS.DRAFT) as DocumentStatus;
   const isLocked = isDocumentLocked('GRN', status);
@@ -168,6 +172,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       setIdempotencyKey(crypto.randomUUID());
     }
   }, [initialData, reset]);
+
+  useEffect(() => {
+    const expired = (watchedLines || [])
+      .filter(line => line.lot?.expiry_date && isExpiryInPast(line.lot.expiry_date))
+      .map(line => line.id);
+    setExpiredLineIds(expired);
+    if (expired.length === 0) {
+      setOverrideReason('');
+    }
+  }, [watchedLines]);
 
 
   const handleScan = async (barcode: string) => {
@@ -252,6 +266,23 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       playSound('error');
       toast.error(t('errors.no_currencies_available'));
       return;
+    }
+
+    const expiredLines = values.lines
+      .filter(line => line.lot?.expiry_date && isExpiryInPast(line.lot.expiry_date));
+
+    if (expiredLines.length > 0) {
+      const role = user?.role;
+      if (role === 'WH_KEEPER') {
+        toast.error(t('expiry_date_in_past'));
+        return;
+      }
+      if (role === 'INV_MGR' || role === 'ADMIN') {
+        if (!overrideReason.trim()) {
+          toast.warning(t('expiry_date_in_past_warning'));
+          return;
+        }
+      }
     }
     try {
       const payload = {
@@ -509,6 +540,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                     }))}
                     isReadOnly={isLocked || isWarehouseLocked}
                     dense={true}
+                    rowClassName={(line) => expiredLineIds.includes(line.id) ? 'border-l-2 border-l-destructive bg-destructive/5' : ''}
                     onRemoveLine={(id) => {
                       const idx = fields.findIndex(f => f.id === id);
                       if (idx >= 0) remove(idx);
@@ -556,6 +588,22 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               </div>
             </div>
           </DocumentReadOnlyOverlay>
+
+          {expiredLineIds.length > 0 && (user?.role === 'INV_MGR' || user?.role === 'ADMIN') && (
+            <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-2 border border-amber-500/20">
+              <Label htmlFor="override-reason" className="text-label-xs font-semibold uppercase text-amber-500">
+                {t('override_reason')} *
+              </Label>
+              <Textarea
+                id="override-reason"
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value)}
+                disabled={isLocked || isWarehouseLocked}
+                placeholder={t('override_reason')}
+                className="w-full bg-surface-container-low border border-amber-500/30 rounded-xl p-4 focus-visible:ring-1 focus-visible:ring-amber-500/50 outline-none transition-all text-body-md font-medium min-h-[80px] resize-none text-foreground"
+              />
+            </div>
+          )}
 
           <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-8 pt-10">
             <div className="flex flex-col items-end gap-1 px-6">

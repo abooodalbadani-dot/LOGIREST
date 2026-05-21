@@ -164,14 +164,14 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
       'POST': { targetStatus: GRN_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR', 'PROC_OFFICER'] },
     },
     [GRN_STATUS.DRAFT]: {
-      'EDIT': { targetStatus: GRN_STATUS.DRAFT, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR'] },
-      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR'] },
+      'EDIT': { targetStatus: GRN_STATUS.DRAFT, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR'] },
+      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR'] },
     }
   },
   'TRANSFER': {
     [TRANSFER_STATUS.DRAFT]: {
-      'SHIP': { targetStatus: TRANSFER_STATUS.IN_TRANSIT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-      'CANCEL': { targetStatus: TRANSFER_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'SHIP': { targetStatus: TRANSFER_STATUS.IN_TRANSIT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'CANCEL': { targetStatus: TRANSFER_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
     },
     [TRANSFER_STATUS.IN_TRANSIT]: {
       'RECEIVE': { targetStatus: TRANSFER_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR'] },
@@ -179,8 +179,8 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
   },
   'ISSUE': {
     [ISSUE_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: ISSUE_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-      'CANCEL': { targetStatus: ISSUE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'SUBMIT': { targetStatus: ISSUE_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'CANCEL': { targetStatus: ISSUE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
     },
     [ISSUE_STATUS.SUBMITTED]: {
       'POST': { targetStatus: ISSUE_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR'] },
@@ -189,22 +189,25 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
   },
   'ADJUSTMENT': {
     [ADJUSTMENT_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: ADJUSTMENT_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-      'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'SUBMIT': { targetStatus: ADJUSTMENT_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
     },
     [ADJUSTMENT_STATUS.SUBMITTED]: {
-      'APPROVE': { targetStatus: ADJUSTMENT_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
+      'APPROVE': { targetStatus: ADJUSTMENT_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'] },
       'REJECT': { targetStatus: ADJUSTMENT_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
       'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
     },
     [ADJUSTMENT_STATUS.APPROVED]: {
       'POST': { targetStatus: ADJUSTMENT_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR'] },
+    },
+    [ADJUSTMENT_STATUS.REJECTED]: {
+      'EDIT': { targetStatus: ADJUSTMENT_STATUS.DRAFT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
     }
   },
   'STOCKTAKE': {
     [STOCKTAKE_STATUS.DRAFT]: {
-      'START': { targetStatus: STOCKTAKE_STATUS.STARTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-      'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'START': { targetStatus: STOCKTAKE_STATUS.STARTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
     },
     [STOCKTAKE_STATUS.STARTED]: {
       'COUNT': { targetStatus: STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
@@ -229,12 +232,12 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
   },
   'KITCHEN_REQUEST': {
     [KITCHEN_REQUEST_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: KITCHEN_REQUEST_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-      'CANCEL': { targetStatus: KITCHEN_REQUEST_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'SUBMIT': { targetStatus: KITCHEN_REQUEST_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
+      'CANCEL': { targetStatus: KITCHEN_REQUEST_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
     },
     [KITCHEN_REQUEST_STATUS.SUBMITTED]: {
-      'FULFILL': { targetStatus: KITCHEN_REQUEST_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
-      'CANCEL': { targetStatus: KITCHEN_REQUEST_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
+      'FULFILL': { targetStatus: KITCHEN_REQUEST_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'KITCHEN_CHIEF'] },
+      'CANCEL': { targetStatus: KITCHEN_REQUEST_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'KITCHEN_CHIEF'] },
     }
   }
 };

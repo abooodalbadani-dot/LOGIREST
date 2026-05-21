@@ -453,8 +453,11 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     </div>
                     <Switch 
                       checked={trackLots} 
-                      onCheckedChange={(v) => !isReadOnly && !data?.has_transactions && setValue('track_lots', v)} 
-                      disabled={isReadOnly || data?.has_transactions}
+                      onCheckedChange={(v) => {
+                        const d = data as { has_transactions?: boolean } | null;
+                        if (!isReadOnly && !d?.has_transactions) setValue('track_lots', v);
+                      }} 
+                      disabled={isReadOnly || !!(data as { has_transactions?: boolean } | null)?.has_transactions}
                       className="data-[state=checked]:bg-status-active" 
                     />
                   </div>

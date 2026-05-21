@@ -13,6 +13,7 @@ import { useSubmitAdjustment } from '@/features/operations/hooks/useSubmitAdjust
 import { useRejectAdjustment } from '@/features/operations/hooks/useRejectAdjustment';
 import { useUpdateAdjustment } from '@/features/operations/hooks/useUpdateAdjustment';
 import { useCancelAdjustment } from '@/features/operations/hooks/useCancelAdjustment';
+import { useEditAdjustment } from '@/features/operations/hooks/useEditAdjustment';
 import { useAuth } from '@/providers/AuthProvider';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { useAbortController } from '@/hooks/useAbortController';
@@ -25,7 +26,8 @@ import {
   History,
   Info,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Pencil
 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -78,6 +80,7 @@ export function AdjustmentForm({
   const postAdjustment = usePostAdjustment({ onConflict });
   const updateAdjustment = useUpdateAdjustment({ onConflict });
   const cancelAdjustment = useCancelAdjustment({ onConflict });
+  const editAdjustment = useEditAdjustment({ onConflict });
   const abortController = useAbortController();
 
   const { data: itemsData, isLoading: isLoadingItems } = useItems(); const items = itemsData?.data || [];
@@ -529,7 +532,7 @@ export function AdjustmentForm({
               </div>
               <div className="bg-surface-container-low/30 rounded-[2rem] border border-white/5 mx-4 mb-4 overflow-hidden">
                 <DocumentLineItemTable
-                  lines={lines.map(l => ({ ...l, qty: l.qty_adjusted }))}
+                  lines={lines.map(l => ({ ...l, qty: l.qty_adjusted, lot_allocations: undefined }))}
                   locale={locale as 'ar' | 'en'}
                   isReadOnly={!canEdit || !!lockState?.isLocked}
                   onRemoveLine={(id) => removeLine(id)}
@@ -703,6 +706,17 @@ export function AdjustmentForm({
                   >
                     <Send className="w-5 h-5 me-3" />
                     {t('submit_for_approval')}
+                  </Button>
+                </ActionGuard>
+
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role}>
+                  <Button 
+                    variant="outline"
+                    onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
+                    className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                  >
+                    <Pencil className="w-5 h-5 me-3" />
+                    {t('edit_rejected')}
                   </Button>
                 </ActionGuard>
 

@@ -25,6 +25,7 @@ import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
 import { ADJUSTMENT_STATUS, type AdjustmentStatus, type DocumentStatus } from '@/contracts/statuses';
 import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment';
 import { useApproveAdjustment } from '@/features/operations/hooks/useApproveAdjustment';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2 } from '@/core/workflow/document-engine';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -50,6 +51,12 @@ export function AdjustmentListClient() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  const { data: warehousesData } = useWarehouses();
+  const warehouseMap = useMemo(() => {
+    const list = warehousesData?.data ?? [];
+    return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
+  }, [warehousesData]);
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
@@ -243,7 +250,11 @@ export function AdjustmentListClient() {
     {
       accessorKey: 'warehouse_id',
       header: tCommon('warehouse'),
-      cell: ({ row }) => <span className="opacity-80 font-medium">{tCommon('warehouses.' + row.original.warehouse_id.toLowerCase())}</span>,
+      cell: ({ row }) => {
+        const name = warehouseMap.get(row.original.warehouse_id);
+        const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.warehouse_id;
+        return <span className="opacity-80 font-medium">{display}</span>;
+      },
     },
     {
       accessorKey: 'approved_by',
@@ -290,7 +301,7 @@ export function AdjustmentListClient() {
         </div>
       ),
     },
-  ], [t, tCommon, router, selectedIds, allData, setSelectedIds]);
+  ], [t, tCommon, router, selectedIds, allData, setSelectedIds, warehouseMap, locale]);
 
   const totalAdjustments = data?.meta?.total || 0;
   const inProgressCount = data?.data?.filter(i => isAdjustmentPending(i.status)).length || 0;

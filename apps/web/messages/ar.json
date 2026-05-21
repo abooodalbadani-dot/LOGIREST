@@ -410,6 +410,7 @@
       "login_button": "الانتقال لتسجيل الدخول",
       "title": "انتهت صلاحية الجلسة"
     },
+    "session_verification_failed": "تعذر التحقق من جلستك. يرجى تسجيل الدخول مرة أخرى.",
     "sign_in": "دخول"
   },
   "common": {
@@ -2563,8 +2564,10 @@
         "reject_failed": "فشل رفض التعديل",
         "update_failed": "فشل تحديث التعديل",
         "negative_stock_not_allowed": "لا يمكن حفظ التسوية بمخزون سالب",
-        "exceeds_available_stock": "يتجاوز المخزون المتاح"
+        "exceeds_available_stock": "يتجاوز المخزون المتاح",
+        "edit_rejected": "تعديل / إعادة تقديم"
       },
+      "rejection_reason_banner": "تعديل تسوية مرفوضة — السبب: {reason}",
       "home": "الرئيسية",
       "lines_section": "خطوط التعديل",
       "list_subtitle": "سجل إعادة معايرة المخزون والتصحيحات التشغيلية",
@@ -3119,7 +3122,8 @@
       "verification_in_progress": "التحقق نشط",
       "verified_label": "تم التحقق",
       "warehouse_locked": "لا يمكن المتابعة: مستودع واحد أو أكثر مقفل بسبب جرد نشط.",
-      "warehouse_match_error": "لا يمكن أن يكون مستودع المصدر والوجهة متطابقين"
+      "warehouse_match_error": "لا يمكن أن يكون مستودع المصدر والوجهة متطابقين",
+      "search_placeholder": "بحث برقم المستند أو المستودع"
     }
   },
   "procurement": {
@@ -3230,7 +3234,10 @@
       "unit_cost": "تكلفة الوحدة",
       "update_success": "تم تحديث سند استلام البضائع بنجاح.",
       "verified_vendor_sub": "مورد معتمد",
-      "warehouse_locked": "المستودع مقفل"
+      "warehouse_locked": "المستودع مقفل",
+      "expiry_date_in_past": "لا يمكن أن يكون تاريخ الصلاحية في الماضي",
+      "expiry_date_in_past_warning": "تاريخ الصلاحية هذا في الماضي. قدم سبباً للتجاوز.",
+      "override_reason": "سبب التجاوز"
     },
     "po": {
       "actions": {
@@ -3646,8 +3653,5 @@
   },
   "batch": {
     "skipped_n_ineligible": "تم تخطي {count} تسوية (غير مؤهلة)"
-  },
-  "auth": {
-    "session_verification_failed": "تعذر التحقق من جلستك. يرجى تسجيل الدخول مرة أخرى."
   }
 }

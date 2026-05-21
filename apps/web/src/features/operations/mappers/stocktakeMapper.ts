@@ -34,6 +34,12 @@ export interface StocktakeSessionVM {
   approvedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  auditLog?: Array<{
+    status: string;
+    created_at: string;
+    user_name?: string | null;
+    comment?: string | null;
+  }>;
 }
 
 export function mapToItemVM(item: StocktakeItem): StocktakeItemVM {
@@ -72,5 +78,6 @@ export function mapToSessionVM(session: StocktakeSession): StocktakeSessionVM {
     approvedAt: session.approved_at,
     createdAt: session.created_at,
     updatedAt: session.updated_at,
+    auditLog: session.audit_log,
   };
 }
