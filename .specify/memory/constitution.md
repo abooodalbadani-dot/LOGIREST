@@ -1,14 +1,21 @@
 <!-- 
 Sync Impact Report
-- Version change: 1.1.0 → 2.0.0
+- Version change: 2.0.0 → 3.0.0
 - List of modified principles:
-  - Added new mandatory phase override (Frontend Stabilization & Recovery).
-- Added sections: Active Phase: Frontend Stabilization & Recovery (covering Objectives, Strict Exclusions, Mandatory Execution Order, Definition of Done, and Phase Rules).
+  - Added ARCHITECTURAL AXIOMS (The Zero-Trust Monorepo).
+  - Added AI AGENT OPERATIONAL RULES (OpenCode Directives).
+  - Added DATABASE & STATE PROTOCOLS (InsForge & Prisma).
+  - Added SECURITY & WORKFLOW ENFORCEMENT.
+- Added sections:
+  - ARCHITECTURAL AXIOMS (The Zero-Trust Monorepo)
+  - AI AGENT OPERATIONAL RULES (OpenCode Directives)
+  - DATABASE & STATE PROTOCOLS (InsForge & Prisma)
+  - SECURITY & WORKFLOW ENFORCEMENT
 - Removed sections: N/A
-- Templates requiring updates: ✅ None required (the phase instructions act as runtime governance for all agents).
+- Templates requiring updates: ✅ None required (guidelines are fully in sync and compiled).
 - Follow-up TODOs: N/A
 -->
-# LogiRest Constitution
+# LogiRest Constitution & Development Guidelines
 
 ## Active Phase: Frontend Stabilization & Recovery
 *Ratified for immediate execution.*
@@ -102,6 +109,33 @@ We do not move fast. We move correctly. And we do not exit this phase until it i
 
 ---
 
+## Architectural Axioms & Directives
+
+### I. ARCHITECTURAL AXIOMS (The Zero-Trust Monorepo)
+* **Backend Authority**: The NestJS backend (`apps/api`) is the supreme authority. Frontend validation is advisory only. Every constraint, business rule, and permission must be strictly enforced on the server.
+* **Strict Separation of Concerns**: 
+  * `apps/web` (Next.js 16) is restricted to UI rendering, layout structure, and user interaction. No direct database queries, no raw SQL, and no NestJS dependencies are allowed.
+  * `apps/api` (NestJS) governs database mutations, transaction isolation, security guards, and locking systems.
+  * `packages/shared-types` contains unified Zod schemas, types, and workflow transition maps.
+* **DRY Schema Principle**: The NestJS API MUST import Zod validation schemas and state transition maps directly from `packages/shared-types`. Manual duplication of validation logic or type definitions is strictly FORBIDDEN.
+
+### II. AI AGENT OPERATIONAL RULES (OpenCode Directives)
+* **Graphify First**: Agents MUST consult `graph.json` and `GRAPH_REPORT.md` in `graphify-out/` to resolve imports and relationships before examining the codebase. Blind directory searches or file-structure guessing is strictly FORBIDDEN.
+* **SpecKit Adherence**: Agents MUST execute tasks exactly as defined in the approved SpecKit plans. Unauthorized refactoring, code formatting updates, or feature creep are FORBIDDEN.
+* **Micro-Phasing & Quality Gates**: Code must be kept in a compilation-safe, runnable state at all times. Every completed task MUST end with build and typecheck validations (`npm run build --filter=api` and `npm run typecheck --filter=web`).
+
+### III. DATABASE & STATE PROTOCOLS (InsForge & Prisma)
+* **Single DB Protocol**: All operations MUST use the configured database (`DATABASE_URL`). Testing REQUIRE updating `prisma/seed.ts`. Reset the database using `npx prisma migrate reset --force` between test cycles. Direct database tampering is FORBIDDEN.
+* **Pessimistic Locking**: All ledger mutations (GRN, Issue, Transfer, Adjustments) MUST use raw SQL `SELECT FOR UPDATE` on lot and item rows within a `prisma.$transaction` configured with `Serializable` isolation level.
+* **Optimistic Locking**: All non-ledger document updates (PR, PO, etc.) MUST include a `version` check in the Prisma update `where` clause to prevent concurrency overwrite bugs.
+
+### IV. SECURITY & WORKFLOW ENFORCEMENT
+* **IDOR Prevention**: Target scopes (`warehouseId`, `branchId`) MUST be resolved via request headers (`x-warehouse-id`, `x-branch-id`) and verified against `UserWarehouseScope` via a NestJS Interceptor. Payload-provided scopes MUST NOT be trusted.
+* **State Machine Parity**: Status transitions MUST be checked by a backend `WorkflowStateGuard` that queries the database status of the document and cross-references it with `transitionMapV2` and `role-capabilities.ts`.
+* **Immutable Auditing**: Every critical mutation MUST insert an immutable `AuditLog` record containing `beforeStateJson` and `afterStateJson` snapshots, along with authenticated user credentials.
+
+---
+
 ## Core Principles
 
 ### I. Product Value & Operational Speed
@@ -128,56 +162,11 @@ LogiRest is an Arabic-first professional tool:
 - Zero mixed-dir controls: Never mix Arabic and English in the same UI field or button.
 - Operational Nocturne Aesthetic: High-density, tonal-shift UI using neon cyan/amber/error accents for high visibility in kitchen/warehouse environments.
 
-## UX/UI Principles
-1. **RTL-first Design**: Mirror components (arrows, sidebars, steppers) correctly for Arabic.
-2. **Barcode-First UX**: Ensure USB wedge and mobile camera input are primary input methods.
-3. **Irreversible Action Alerts**: Use `PostConfirmDialog` with specific warnings for all POST movements.
-4. **Consistency**: Use `Operational Nocturne` tokens; avoid ad-hoc Tailwind colors.
-5. **Accessibility**: Target WCAG AA compliance with a focus on high-contrast and RTL screen readers.
-
-## Architecture Principles
-1. **RSC vs Client Boundaries**: Prefer Server Components for data fetching; use Client Components for scanning and forms.
-2. **Modularity**: Business logic (FEFO, scanning) must live in `src/features` or specialized hooks, not Page components.
-3. **Dependency Rules**: Primitives in `src/components/ui` must not depend on business logic; shared components in `src/components/shared` handle common inventory patterns.
-4. **Type Safety**: Zero `any` policy; Zod validation required for all API response boundaries.
-
-## Data/Workflow Principles
-1. **State Management**: Use TanStack Query for server state; avoid global state for document data (prefer URL/Context).
-2. **Posting Rules**: GRN captures FX at post; Stocktake locks movement at start.
-3. **Idempotency**: All write operations must include an items-level check or UUID to prevent double-posting.
-4. **Permissions**: Use `<ProtectedRoute>` and `usePermission()` to gate UI elements before they are rendered.
-
-## Security & Compliance
-1. **Audit Logging**: Every POST or change must be accompanied by an audit entry in the database (client-side triggers).
-2. **Least Privilege**: Users only see data scoped to their assigned Branch/Warehouse/Department.
-3. **Error Handling**: Mask sensitive API errors; map status codes to localized i18n messages.
-
-## Code Standards
-1. **Naming**: CamelCase for components/hooks, kebab-case for files and routes.
-2. **Localization**: Zero hard-coded strings. All text must use `next-intl` keys.
-3. **Folders**: Follow `src/` modular structure defined in `Front_end_execution_tasks.md`.
-4. **i18n rules**: Arabic is `ar` (default), English is `en`. Numerical values are `dir="ltr"`.
-
-## Testing & Quality Gates
-- **Unit Tests**: Mandatory for logic (FEFO allocation, FX calculation).
-- **E2E Tests**: Critical for "Happy Paths" (Complete a GRN, Submit a Stocktake).
-- **DoD Checklist**: PRs are not merged if they fail RTL audit or have lint errors (`tsc --noEmit`).
-
-## Change Management
-- Token updates require a designer review and version bump in `FE-DS`.
-- Breaking changes to shared components require updating all dependent screens in the same PR.
+---
 
 ## Governance
 - The Constitution is the "Source of Truth" for all architectural and product decisions.
 - Amendments require a MAJOR/MINOR version bump and update to the Sync Impact Report.
 - Use `CODEBASE.md` for runtime implementation details and dependency maps.
 
-### How to verify compliance:
-- [ ] Does it work in RTL?
-- [ ] Is it readable in Dark Mode (Nocturne)?
-- [ ] Is every string translated?
-- [ ] Is the document POST state handled correctly?
-- [ ] Are numeric values LTR?
-- [ ] Does the change strictly align with the current Stabilization Phase?
-
-**Version**: 2.0.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-05-09
+**Version**: 3.0.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-21
