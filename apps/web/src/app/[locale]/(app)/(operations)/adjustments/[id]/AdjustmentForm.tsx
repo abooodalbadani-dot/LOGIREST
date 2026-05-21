@@ -91,7 +91,12 @@ export function AdjustmentForm({
   const [notes, setNotes] = useState(document?.notes || '');
   const [lines, setLines] = useState<AdjustmentLine[]>(document?.lines || []);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
-  
+
+  const hasNegativeStock = useMemo(
+    () => lines.some(line => line.direction === 'DECREASE' && line.qty_adjusted > (line.qty_before ?? 0)),
+    [lines]
+  );
+
   const warehouseItems = useMemo(() => 
     warehouses.map(w => ({ id: w.id, name_en: w.name_en, name_ar: w.name_ar })),
   [warehouses]);
@@ -179,6 +184,10 @@ export function AdjustmentForm({
 
   const handleSaveDraft = async () => {
     if (lines.length === 0) return;
+    if (hasNegativeStock) {
+      toast.error(t('errors.negative_stock_not_allowed'));
+      return;
+    }
     try {
       const payload = {
         version: document?.version || 0,
@@ -212,6 +221,10 @@ export function AdjustmentForm({
   };
 
   const handleSubmit = async () => {
+    if (hasNegativeStock) {
+      toast.error(t('errors.negative_stock_not_allowed'));
+      return;
+    }
     try {
       await submitAdjustment.mutateAsync({ id, version: document?.version || 0, signal: abortController.signal });
       toast.success(t('submit_success'));
@@ -597,6 +610,9 @@ export function AdjustmentForm({
                             )}>
                               {formatQuantity(after, locale as 'ar' | 'en')}
                             </span>
+                            {after < 0 && (
+                              <span className="text-xs text-red-500">{t('errors.exceeds_available_stock')}</span>
+                            )}
                           </div>
                         );
                       }
@@ -675,11 +691,11 @@ export function AdjustmentForm({
           isSaving={createAdjustment.isPending || updateAdjustment.isPending}
           isLocked={isLocked}
           isDirty={lines.length > 0}
-          isValid={lines.length > 0 && notes.trim().length >= 10}
+          isValid={!hasNegativeStock && lines.length > 0 && notes.trim().length >= 10}
           actions={
             !isNew && (
               <div className="flex items-center gap-3">
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role} disabled={hasNegativeStock}>
                   <Button 
                     variant="outline"
                     onClick={() => setSubmitDialogOpen(true)}
@@ -701,7 +717,7 @@ export function AdjustmentForm({
                   </Button>
                 </ActionGuard>
                 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role} disabled={hasNegativeStock}>
                   <Button 
                     onClick={() => setApproveDialogOpen(true)}
                     className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-emerald-600/30 border-none"
@@ -711,7 +727,7 @@ export function AdjustmentForm({
                   </Button>
                 </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''}>
+                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
                   <Button 
                     onClick={() => setPostDialogOpen(true)}
                     className="h-14 px-12 primary-gradient text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-primary/30 border-none"

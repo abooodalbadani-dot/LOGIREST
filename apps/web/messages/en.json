@@ -2561,7 +2561,9 @@
         "invalid_status_transition": "Invalid status transition",
         "post_failed": "Failed to post adjustment",
         "reject_failed": "Failed to reject adjustment",
-        "update_failed": "Failed to update adjustment"
+        "update_failed": "Failed to update adjustment",
+        "negative_stock_not_allowed": "Cannot save adjustment with negative stock",
+        "exceeds_available_stock": "Exceeds available stock"
       },
       "home": "Home",
       "lines_section": "Adjustment Lines",
@@ -3641,5 +3643,11 @@
     "vs_standard": "{value} vs Standard",
     "waste_qty": "Waste / Loss",
     "yield_percentage": "Yield %"
+  },
+  "batch": {
+    "skipped_n_ineligible": "{count} adjustments skipped (not eligible)"
+  },
+  "auth": {
+    "session_verification_failed": "Unable to verify your session. Please log in again."
   }
 }

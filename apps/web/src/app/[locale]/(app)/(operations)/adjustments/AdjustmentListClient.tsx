@@ -22,12 +22,15 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { isAdjustmentPending } from '@/domain/status-guards';
 import { ADJUSTMENT_STATUS_UI } from '@/domain/status-ui-map';
-import { ADJUSTMENT_STATUS, type AdjustmentStatus } from '@/contracts/statuses';
+import { ADJUSTMENT_STATUS, type AdjustmentStatus, type DocumentStatus } from '@/contracts/statuses';
 import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment';
+import { useApproveAdjustment } from '@/features/operations/hooks/useApproveAdjustment';
+import { useAuth } from '@/providers/AuthProvider';
+import { canPerformActionV2 } from '@/core/workflow/document-engine';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useDebounce } from '@/hooks/useDebounce';
 import { apiClient } from '@/lib/api/client';
-import { successSchema } from '@/types/api';
+import { AdjustmentDetailSchema } from '@/features/operations/hooks/useAdjustment';
 
 // Reason → Semantic visual styling (Hardened for LogiRest)
 const REASON_CHIP: Record<string, string> = {
@@ -42,9 +45,11 @@ const REASON_CHIP: Record<string, string> = {
 export function AdjustmentListClient() {
   const t = useTranslations('operations.adjustment');
   const tCommon = useTranslations('common');
+  const tb = useTranslations('batch');
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
@@ -55,6 +60,7 @@ export function AdjustmentListClient() {
   const [batchConfirmAction, setBatchConfirmAction] = useState<'approve' | 'post' | null>(null);
 
   const postAdjustment = usePostAdjustment();
+  const approveAdjustment = useApproveAdjustment();
 
   const statusItems = useMemo(() => {
     const allItem = {
@@ -75,37 +81,101 @@ export function AdjustmentListClient() {
   const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page });
 
   const allData = data?.data || [];
+  const selectedItems = allData.filter(item => selectedIds.has(item.id));
 
   const handleBatchApprove = async () => {
     setIsBatchLoading(true);
+
+    const eligible = selectedItems.filter(item =>
+      canPerformActionV2('ADJUSTMENT', item.status as DocumentStatus, 'APPROVE', user?.role)
+    );
+    const skipped = selectedItems.length - eligible.length;
+    if (skipped > 0) {
+      toast.warning(tb('skipped_n_ineligible', { count: skipped }));
+    }
+    if (eligible.length === 0) {
+      setIsBatchLoading(false);
+      return;
+    }
+
+    const eligibleIds = eligible.map(item => item.id);
+    const docs = await Promise.all(
+      eligibleIds.map(id => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema).catch(() => null))
+    );
+    const versionMap = new Map<string, number>();
+    const failures: { id: string; reason: string }[] = [];
+    for (let i = 0; i < eligibleIds.length; i++) {
+      const doc = docs[i];
+      if (doc) {
+        versionMap.set(eligibleIds[i], doc.version ?? 0);
+      } else {
+        failures.push({ id: eligibleIds[i], reason: 'unavailable' });
+      }
+    }
+
     let successCount = 0;
-    for (const id of selectedIds) {
+    for (const [id, version] of versionMap) {
       try {
-        await apiClient.post(`/operations/adjustments/${id}/approve`, successSchema, { version: 0 });
+        await approveAdjustment.mutateAsync({ id, version });
         successCount++;
-      } catch { /* skip on error */ }
+      } catch { failures.push({ id, reason: 'approve_failed' }); }
     }
     setIsBatchLoading(false);
     setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['adjustments'] });
     if (successCount > 0) {
       toast.success(`${successCount} ${t('approve') || 'adjustments approved'}`);
-      queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+    }
+    if (failures.length > 0) {
+      toast.error(`${failures.length} ${t('approve_failed') || 'adjustments failed'}: ${failures.map(f => f.id).join(', ')}`);
     }
   };
 
   const handleBatchPost = async () => {
     setIsBatchLoading(true);
+
+    const eligible = selectedItems.filter(item =>
+      canPerformActionV2('ADJUSTMENT', item.status as DocumentStatus, 'POST', user?.role)
+    );
+    const skipped = selectedItems.length - eligible.length;
+    if (skipped > 0) {
+      toast.warning(tb('skipped_n_ineligible', { count: skipped }));
+    }
+    if (eligible.length === 0) {
+      setIsBatchLoading(false);
+      return;
+    }
+
+    const eligibleIds = eligible.map(item => item.id);
+    const docs = await Promise.all(
+      eligibleIds.map(id => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema).catch(() => null))
+    );
+    const versionMap = new Map<string, number>();
+    const failures: { id: string; reason: string }[] = [];
+    for (let i = 0; i < eligibleIds.length; i++) {
+      const doc = docs[i];
+      if (doc) {
+        versionMap.set(eligibleIds[i], doc.version ?? 0);
+      } else {
+        failures.push({ id: eligibleIds[i], reason: 'unavailable' });
+      }
+    }
+
     let successCount = 0;
-    for (const id of selectedIds) {
+    for (const [id, version] of versionMap) {
       try {
-        await postAdjustment.mutateAsync({ id, version: 0 });
+        await postAdjustment.mutateAsync({ id, version });
         successCount++;
-      } catch { /* skip on error */ }
+      } catch { failures.push({ id, reason: 'post_failed' }); }
     }
     setIsBatchLoading(false);
     setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['adjustments'] });
     if (successCount > 0) {
       toast.success(`${successCount} ${t('post') || 'adjustments posted'}`);
+    }
+    if (failures.length > 0) {
+      toast.error(`${failures.length} ${t('post_failed') || 'adjustments failed'}: ${failures.map(f => f.id).join(', ')}`);
     }
   };
   const columns = useMemo<ColumnDef<AdjustmentSummary>[]>(() => [

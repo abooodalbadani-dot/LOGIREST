@@ -2561,7 +2561,9 @@
         "invalid_status_transition": "انتقال حالة غير صالح",
         "post_failed": "فشل ترحيل التعديل",
         "reject_failed": "فشل رفض التعديل",
-        "update_failed": "فشل تحديث التعديل"
+        "update_failed": "فشل تحديث التعديل",
+        "negative_stock_not_allowed": "لا يمكن حفظ التسوية بمخزون سالب",
+        "exceeds_available_stock": "يتجاوز المخزون المتاح"
       },
       "home": "الرئيسية",
       "lines_section": "خطوط التعديل",
@@ -3641,5 +3643,11 @@
     "vs_standard": "{value} مقابل المعياري",
     "waste_qty": "الفاقد / الهالك",
     "yield_percentage": "نسبة العائد %"
+  },
+  "batch": {
+    "skipped_n_ineligible": "تم تخطي {count} تسوية (غير مؤهلة)"
+  },
+  "auth": {
+    "session_verification_failed": "تعذر التحقق من جلستك. يرجى تسجيل الدخول مرة أخرى."
   }
 }

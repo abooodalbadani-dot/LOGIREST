@@ -80,9 +80,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const payloadStr = decodeURIComponent(escape(atob(storedToken.split('.')[1])));
         const payload = JSON.parse(payloadStr);
-        const parsedUser = AuthUserSchema.parse(payload.user);
+        let parsedUser = AuthUserSchema.parse(payload.user);
 
-        setTimeout(() => {
+        setTimeout(async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const meResponse = await apiClient.get('/auth/me', AuthUserSchema, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            parsedUser = meResponse;
+          } catch (err) {
+            if (err instanceof DOMException && err.name === 'AbortError') {
+              deleteTokenCookie();
+              localStorage.removeItem('logirest_user_overrides');
+              localStorage.removeItem('logirest_active_scope');
+              router.replace('/login?reason=verification_failed');
+              return;
+            }
+            if (err && typeof err === 'object' && 'response' in err && (err as { response?: { status?: number } }).response?.status === 401) {
+              deleteTokenCookie();
+              localStorage.removeItem('logirest_user_overrides');
+              localStorage.removeItem('logirest_active_scope');
+              router.replace('/login?reason=expired');
+              return;
+            }
+            deleteTokenCookie();
+            localStorage.removeItem('logirest_user_overrides');
+            localStorage.removeItem('logirest_active_scope');
+            router.replace('/login?reason=verification_failed');
+            return;
+          }
+
           let finalUser = parsedUser;
           const storedOverrides = localStorage.getItem('logirest_user_overrides');
           if (storedOverrides) {
