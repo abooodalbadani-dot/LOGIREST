@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\001-ux-consistency-polish\plan.md
+E:\Kitchen‑Store Inventory System\specs\015-prisma-db-models\plan.md
 <!-- SPECKIT END -->
 
 # PROTOCOL — GRAPHIFY-DRIVEN NAVIGATION (TOKEN OPTIMIZATION)
@@ -23,7 +23,8 @@ CRITICAL RULE:
 - Do NOT perform blind recursive directory searches.
 - Do NOT guess file paths or rely on your training data for Next.js/NestJS file structures.
 - Resolve file locations and dependency chains through the Graphify map FIRST, then explicitly read ONLY the specific files necessary for the task.
-
+- the update command must be run manually in the terminal: `graphify update .`
+ after any session where code files are created or modified to ensure subsequent tasks navigate the codebase accurately.
 # CRITICAL RULES - MUST FOLLOW
 
 ## RESPONSES
@@ -44,12 +45,6 @@ CRITICAL RULE:
 - When using sub-agents to implement features, act as a coordinator only
 - Use the best model for the task - premium models for complex tasks (like coding) and mid-tier models for simpler tasks, like documentation
 - After completing features (large or small), always run commands like lint, type check and next build to check code quality
-<!--
-## DATABASE SCHEMA CHANGES
-
-- Whenever you make changes to the database schema, ALWAYS run the drizzle generate and migrate commands
-- NEVER run drizzle push!
--->
 
 ## TESTING
 
