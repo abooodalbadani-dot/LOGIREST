@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useStocktakeList, StocktakeSummary } from '@/features/operations/hooks/useStocktakeList';
+import { useStocktakeSummary } from '@/features/operations/hooks/useStocktakeSummary';
+import { useOperationalScope } from '@/hooks/useOperationalScope';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -71,11 +73,13 @@ const t = useTranslations('operations.stocktake');
  }, [tc]);
 
 const { data, isLoading } = useStocktakeList({
-  status: initialStatus,
-  warehouse_id: initialWarehouseId,
-  search: debouncedSearch || undefined,
-  page: initialPage
-  });
+   status: initialStatus,
+   warehouse_id: initialWarehouseId,
+   search: debouncedSearch || undefined,
+   page: initialPage
+   });
+  const { data: summaryData } = useStocktakeSummary();
+  const { warehouseId } = useOperationalScope();
 
  const handleStatusChange = (val: string | null) => {
  const params = new URLSearchParams(searchParams.toString());
@@ -184,9 +188,9 @@ const { data, isLoading } = useStocktakeList({
  },
  ], [t, tc, locale, router, warehouseMap]);
 
-  const activeSessionsCount = data?.meta?.total || 0;
-  const inProgressCount = data?.data?.filter(i => isStocktakeInProgress(i.status)).length || 0;
-  const postedCount = data?.data?.filter(i => isStocktakePosted(i.status)).length || 0;
+const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
+   const inProgressCount = summaryData?.in_progress ?? 0;
+   const postedCount = summaryData?.posted ?? 0;
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">

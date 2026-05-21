@@ -35,6 +35,7 @@ export function useCreateAdjustment(options?: { onConflict?: () => void }) {
  apiClient.post('/operations/adjustments', AdjustmentDetailSchema, CreateAdjustmentPayloadSchema.parse(payload), { signal, headers }),
 onSuccess: () => {
   queryClient.invalidateQueries({ queryKey: ['adjustments'] });
+  queryClient.invalidateQueries({ queryKey: ['adjustments', 'summary'] });
   },
   onError: (error: unknown) => {
     const message = error instanceof Error ? error.message : 'Operation failed';

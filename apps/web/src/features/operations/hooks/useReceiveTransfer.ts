@@ -35,6 +35,7 @@ export function useReceiveTransfer(options?: { onConflict?: () => void }) {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transfers', id] });
+      queryClient.invalidateQueries({ queryKey: ['transfers', 'summary'] });
     },
     onError: (error) => {
       console.error('Failed to receive transfer:', error);

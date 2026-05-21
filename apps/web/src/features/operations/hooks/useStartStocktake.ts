@@ -12,9 +12,10 @@ export function useStartStocktake(options?: { onConflict?: () => void }) {
  mutationFn: ({ signal, ...body }: { warehouse_id: string; signal?: AbortSignal }) =>
  apiClient.post('/stocktake/sessions', StocktakeSessionSchema, body, { signal }),
  onSuccess: (data) => {
- qc.invalidateQueries({ queryKey: ['stocktakes'] });
+qc.invalidateQueries({ queryKey: ['stocktakes'] });
+  qc.invalidateQueries({ queryKey: ['stocktakes', 'summary'] });
 qc.invalidateQueries({ queryKey: ['warehouse-lock', data.warehouse_id] });
-  },
+   },
   onError: (error: unknown) => {
     const message = error instanceof Error ? error.message : 'Operation failed';
     toast.error(message);

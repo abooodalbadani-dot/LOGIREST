@@ -7,7 +7,8 @@ import { StocktakeSession } from '@/features/operations/types/stocktake';
 import { KitchenRequestDetail } from '@/features/operations/types/kitchen-request';
 
 import { getNextStatusV2, canPerformActionV2, DocumentAction } from '@/core/workflow/document-engine';
-import { STOCKTAKE_STATUS } from '@/contracts/statuses';
+import { STOCKTAKE_STATUS, ADJUSTMENT_STATUS, TRANSFER_STATUS, ISSUE_STATUS } from '@/contracts/statuses';
+import { OPERATIONAL_CONFIG } from '@/contracts/operational-config';
 
 interface HydrationLine {
   id?: string;
@@ -619,7 +620,14 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
   // --- Issues Routes ---
   if (normalizedPath === '/operations/issues') {
-    if (method === 'GET') return MockFactory.wrapPagination(await db.issues.findAll());
+    if (method === 'GET') {
+      let issues = await db.issues.findAll();
+      const warehouseId = searchParams.get('warehouse_id');
+      const branchId = searchParams.get('branch_id');
+      if (warehouseId) issues = issues.filter((i: any) => i.warehouse_id === warehouseId);
+      if (branchId) issues = issues.filter((i: any) => i.branch_id === branchId || i.destination_dept_id === branchId);
+      return MockFactory.wrapPagination(issues);
+    }
     if (method === 'POST') {
       const issue = MockFactory.createIssue(body as StockIssue);
       const saved = await db.issues.save(issue);
@@ -681,7 +689,14 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
   // --- Transfers Routes ---
   if (normalizedPath === '/operations/transfers') {
-    if (method === 'GET') return MockFactory.wrapPagination(await db.transfers.findAll());
+    if (method === 'GET') {
+      let transfers = await db.transfers.findAll();
+      const warehouseId = searchParams.get('warehouse_id');
+      const branchId = searchParams.get('branch_id');
+      if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.to_warehouse_id === warehouseId);
+      if (branchId) transfers = transfers.filter((t: any) => t.branch_id === branchId);
+      return MockFactory.wrapPagination(transfers);
+    }
     if (method === 'POST') {
       const transfer = MockFactory.createTransfer(body as Transfer);
       const saved = await db.transfers.save(transfer);
@@ -811,7 +826,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   // --- Stocktake Routes ---
   if (normalizedPath === '/stocktake/sessions') {
     if (method === 'GET') {
-      const sessions = await db.stocktake.findAll();
+      let sessions = await db.stocktake.findAll();
+      const warehouseId = searchParams.get('warehouse_id');
+      const branchId = searchParams.get('branch_id');
+      if (warehouseId) sessions = sessions.filter((s: any) => s.warehouse_id === warehouseId);
+      if (branchId) sessions = sessions.filter((s: any) => s.branch_id === branchId);
       return MockFactory.wrapPagination(sessions.map(s => {
         const items = s.items || [];
         return {
@@ -1063,13 +1082,73 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
   // --- Adjustments Routes ---
   if (normalizedPath === '/operations/adjustments') {
-    if (method === 'GET') return MockFactory.wrapPagination(await db.adjustments.findAll());
+    if (method === 'GET') {
+      let adjustments = await db.adjustments.findAll();
+      const warehouseId = searchParams.get('warehouse_id');
+      const branchId = searchParams.get('branch_id');
+      if (warehouseId) adjustments = adjustments.filter((a: any) => a.warehouse_id === warehouseId);
+      if (branchId) adjustments = adjustments.filter((a: any) => a.branch_id === branchId);
+      return MockFactory.wrapPagination(adjustments);
+    }
     if (method === 'POST') {
       const adj = MockFactory.createAdjustment(body as Adjustment);
       const saved = await db.adjustments.save(adj);
       return hydrateAdjustment(saved);
     }
   }
+  // --- Adjustment Summary Endpoint ---
+  if (normalizedPath === '/operations/adjustments/summary' && method === 'GET') {
+    let adjustments = await db.adjustments.findAll();
+    const warehouseId = searchParams.get('warehouse_id');
+    const branchId = searchParams.get('branch_id');
+    if (warehouseId) adjustments = adjustments.filter((a: any) => a.warehouse_id === warehouseId);
+    if (branchId) adjustments = adjustments.filter((a: any) => a.branch_id === branchId);
+    return {
+      total: adjustments.length,
+      pending: adjustments.filter((a: any) => a.status === ADJUSTMENT_STATUS.DRAFT || a.status === ADJUSTMENT_STATUS.SUBMITTED).length,
+      critical_losses: adjustments.filter((a: any) => a.reason === 'DAMAGE' || a.reason === 'THEFT').length,
+    };
+  }
+
+  // --- Transfer Summary Endpoint ---
+  if (normalizedPath === '/operations/transfers/summary' && method === 'GET') {
+    let transfers = await db.transfers.findAll();
+    const warehouseId = searchParams.get('warehouse_id');
+    const branchId = searchParams.get('branch_id');
+    if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.to_warehouse_id === warehouseId);
+    if (branchId) transfers = transfers.filter((t: any) => t.branch_id === branchId);
+    const inTransit = transfers.filter((t: any) => t.transfer_status === TRANSFER_STATUS.IN_TRANSIT || t.status === TRANSFER_STATUS.IN_TRANSIT);
+    const overdueDays = OPERATIONAL_CONFIG.TRANSFER_OVERDUE_DAYS;
+    const overdueCount = inTransit.filter((t: any) => {
+      const shippedDate = t.shipped_at || t.created_at;
+      if (!shippedDate) return false;
+      const threshold = new Date();
+      threshold.setDate(threshold.getDate() - overdueDays);
+      return new Date(shippedDate) < threshold;
+    }).length;
+    return {
+      total: transfers.length,
+      in_transit: inTransit.length,
+      overdue_count: overdueCount,
+    };
+  }
+
+  // --- Stocktake Summary Endpoint ---
+  if (normalizedPath === '/stocktake/sessions/summary' && method === 'GET') {
+    let sessions = await db.stocktake.findAll();
+    const warehouseId = searchParams.get('warehouse_id');
+    const branchId = searchParams.get('branch_id');
+    if (warehouseId) sessions = sessions.filter((s: any) => s.warehouse_id === warehouseId);
+    if (branchId) sessions = sessions.filter((s: any) => s.branch_id === branchId);
+    return {
+      total: sessions.length,
+      in_progress: sessions.filter((s: any) =>
+        [STOCKTAKE_STATUS.DRAFT, STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING, STOCKTAKE_STATUS.REVIEW].includes(s.status)
+      ).length,
+      posted: sessions.filter((s: any) => s.status === STOCKTAKE_STATUS.POSTED).length,
+    };
+  }
+
   if (normalizedPath.startsWith('/operations/adjustments/')) {
     const parts = normalizedPath.split('/');
     const id = parts[3];

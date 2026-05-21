@@ -16,6 +16,7 @@ export function usePostStocktake(options?: { onConflict?: () => void }) {
     onSuccess: (_, { sessionId, warehouseId }) => {
       qc.invalidateQueries({ queryKey: ['stocktakes'] });
       qc.invalidateQueries({ queryKey: ['stocktakes', sessionId] });
+      qc.invalidateQueries({ queryKey: ['stocktakes', 'summary'] });
       qc.invalidateQueries({ queryKey: ['warehouse-lock', warehouseId] });
     },
     onError: (error) => {

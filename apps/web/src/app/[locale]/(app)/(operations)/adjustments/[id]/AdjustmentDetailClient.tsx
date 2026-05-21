@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ScopeGuard } from '@/components/shared/ScopeGuard';
 
 export function AdjustmentDetailClient({ id }: { id: string }) {
   const t = useTranslations('operations.adjustment');
@@ -26,7 +27,7 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
   const isRejected = status === ADJUSTMENT_STATUS.REJECTED;
 
   return (
-    <>
+    <ScopeGuard warehouseId={adjustment?.warehouse_id}>
       {isRejected && adjustment?.reject && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl flex items-center gap-3 mb-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
           <AlertCircle className="w-5 h-5 shrink-0" />
@@ -46,6 +47,6 @@ export function AdjustmentDetailClient({ id }: { id: string }) {
         onClose={conflict.handleClose} 
         onReload={conflict.handleReload} 
       />
-    </>
+    </ScopeGuard>
   );
 }

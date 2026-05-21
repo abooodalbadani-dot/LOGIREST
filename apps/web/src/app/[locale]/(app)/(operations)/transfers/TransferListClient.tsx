@@ -6,6 +6,9 @@ import { useTranslations, useLocale } from 'next-intl';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useTransferList, TransferSummary } from '@/features/operations/hooks/useTransferList';
+import { useTransferSummary } from '@/features/operations/hooks/useTransferSummary';
+import { useOperationalScope } from '@/hooks/useOperationalScope';
+import { OPERATIONAL_CONFIG } from '@/contracts/operational-config';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -61,6 +64,8 @@ export function TransferListClient() {
   }, [tCommon]);
 
   const { data, isLoading } = useTransferList({ status, page, search: debouncedSearch });
+  const { data: summaryData } = useTransferSummary();
+  const { warehouseId } = useOperationalScope();
 
   const columns = useMemo<ColumnDef<TransferSummary>[]>(() => [
     {
@@ -148,20 +153,11 @@ export function TransferListClient() {
     },
   ], [t, tCommon, router, warehouseMap, locale]);
 
-  const totalTransfersCount = data?.meta?.total || 0;
-  const inTransitCount = data?.data?.filter(i => isTransferInTransit(i.transfer_status)).length || 0;
-  const completedCount = data?.data?.filter(i => isTransferPosted(i.transfer_status)).length || 0;
+  const totalTransfersCount = summaryData?.total ?? data?.meta?.total ?? 0;
+  const inTransitCount = summaryData?.in_transit ?? 0;
+  const completedCount = data?.data?.filter(i => isTransferPosted(i.transfer_status)).length ?? 0;
 
-  const overdueTransfers = useMemo(() => {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    return (data?.data || []).filter(i => {
-      if (!isTransferInTransit(i.transfer_status)) return false;
-      const dispatchDate = i.shipped_at || i.created_at;
-      if (!dispatchDate) return false;
-      return new Date(dispatchDate) < threeDaysAgo;
-    });
-  }, [data?.data]);
+  const overdueCount = summaryData?.overdue_count ?? 0;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -172,14 +168,14 @@ export function TransferListClient() {
         ]}
       />
 
-      {overdueTransfers.length > 0 && (
+      {overdueCount > 0 && (
         <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-sm">
           <div className="p-2 rounded-lg bg-amber-500/20">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
           </div>
           <div className="flex-1">
             <p className="text-label-xs font-bold uppercase text-amber-500">
-              {overdueTransfers.length} {overdueTransfers.length === 1 ? t('transfer') : tCommon('items')} {t('overdue_transfer') || 'in-transit overdue'}
+              {overdueCount} {overdueCount === 1 ? t('transfer') : tCommon('items')} {t('overdue_transfer') || 'in-transit overdue'}
             </p>
             <p className="text-label-xxs font-medium text-amber-500/70 mt-0.5">
               {t('resolve_overdue_transfers') || 'Resolve overdue transfers'}

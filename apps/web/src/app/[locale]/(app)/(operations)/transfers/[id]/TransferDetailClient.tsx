@@ -11,6 +11,7 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ScopeGuard } from '@/components/shared/ScopeGuard';
 
 export function TransferDetailClient({ id }: { id: string }) {
   const t = useTranslations('operations.transfer');
@@ -23,13 +24,17 @@ export function TransferDetailClient({ id }: { id: string }) {
   const isDocLocked = isDocumentLocked("TRANSFER", transferStatus as DocumentStatus);
 
   if (isDocLocked && transfer) {
-    return <TransferViewer transfer={transfer} />;
+    return (
+      <ScopeGuard warehouseId={transfer.from_warehouse_id}>
+        <TransferViewer transfer={transfer} />
+      </ScopeGuard>
+    );
   }
 
   if (!transfer) return null;
 
   return (
-    <>
+    <ScopeGuard warehouseId={transfer.from_warehouse_id}>
       <TransferForm 
         transfer={transfer} 
         id={id} 
@@ -40,6 +45,6 @@ export function TransferDetailClient({ id }: { id: string }) {
         onClose={conflict.handleClose}
         onReload={conflict.handleReload}
       />
-    </>
+    </ScopeGuard>
   );
 }

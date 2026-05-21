@@ -33,6 +33,7 @@ export function useCreateTransfer(options?: { onConflict?: () => void }) {
  apiClient.post('/operations/transfers', TransferDetailSchema, CreateTransferPayloadSchema.parse(payload), { signal, headers }),
 onSuccess: () => {
   queryClient.invalidateQueries({ queryKey: ['transfers'] });
+  queryClient.invalidateQueries({ queryKey: ['transfers', 'summary'] });
   },
   onError: (error: unknown) => {
     const message = error instanceof Error ? error.message : 'Operation failed';

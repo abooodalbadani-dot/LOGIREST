@@ -28,6 +28,7 @@ export function useCancelTransfer(options?: { onConflict?: () => void }) {
       });
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: ['transfers', id] });
+      queryClient.invalidateQueries({ queryKey: ['transfers', 'summary'] });
     },
     onError: (error) => {
       console.error('[useCancelTransfer] Failed to cancel transfer:', error);

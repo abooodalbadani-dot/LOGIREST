@@ -6,6 +6,7 @@
 import { DocumentStatus } from '@/types/DocumentStatus';
 import { DocumentType } from '@/types/documents';
 import { UserRole as Role } from '@/types/rbac';
+import { ROLE_CAPABILITIES, type DocumentAction as CapabilityAction } from '@/contracts/role-capabilities';
 export type { DocumentStatus, DocumentType, Role };
 
 export type DocumentAction = 
@@ -245,6 +246,8 @@ const transitionMapV2: Record<DocumentType, Partial<Record<DocumentStatus, Parti
 /**
  * PHASE 2.A: canPerformActionV2
  * Default Deny, Document-Type Aware.
+ * Uses ROLE_CAPABILITIES as the single source of truth for role-based checks.
+ * Falls back to transitionMapV2 for workflow status checks.
  */
 export function canPerformActionV2(
   documentType: DocumentType,
@@ -252,6 +255,26 @@ export function canPerformActionV2(
   action: DocumentAction,
   role?: Role | string
 ): boolean {
+  if (!role) return false;
+
+  const normalizedType = documentType.toLowerCase() as CapabilityAction extends string ? string : never;
+  const normalizedAction = action.toLowerCase() as CapabilityAction extends string ? string : never;
+
+  const capabilitiesKey = normalizedType === 'pr' ? 'pr'
+    : normalizedType === 'po' ? 'po'
+    : normalizedType === 'grn' ? 'grn'
+    : normalizedType === 'kitchen_request' ? 'kitchen_request'
+    : normalizedType;
+
+  const docCapabilities = ROLE_CAPABILITIES[capabilitiesKey as keyof typeof ROLE_CAPABILITIES];
+  if (docCapabilities) {
+    const capabilityAction = normalizedAction === 'review_variance' ? 'review' : normalizedAction;
+    const allowedRoles = docCapabilities[capabilityAction as keyof typeof docCapabilities];
+    if (allowedRoles) {
+      return (allowedRoles as readonly Role[]).includes(role as Role);
+    }
+  }
+
   const typeMap = transitionMapV2[documentType];
   
   if (!typeMap) {
@@ -263,16 +286,11 @@ export function canPerformActionV2(
 
   const statusTransitions = typeMap[status];
   if (!statusTransitions) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[Workflow Engine] No transitions defined for ${documentType} at status: ${status}`);
-    }
     return false;
   }
 
   const rule = statusTransitions[action];
   if (!rule) return false;
-
-  if (!role) return false;
 
   return rule.allowedRoles.includes(role as Role);
 }

@@ -7,6 +7,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAdjustmentList, AdjustmentSummary } from '@/features/operations/hooks/useAdjustmentList';
+import { useAdjustmentSummary } from '@/features/operations/hooks/useAdjustmentSummary';
+import { useOperationalScope } from '@/hooks/useOperationalScope';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -86,6 +88,8 @@ export function AdjustmentListClient() {
   }, [tCommon]);
 
   const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page });
+  const { data: summaryData } = useAdjustmentSummary();
+  const { warehouseId } = useOperationalScope();
 
   const allData = data?.data || [];
   const selectedItems = allData.filter(item => selectedIds.has(item.id));
@@ -303,10 +307,9 @@ export function AdjustmentListClient() {
     },
   ], [t, tCommon, router, selectedIds, allData, setSelectedIds, warehouseMap, locale]);
 
-  const totalAdjustments = data?.meta?.total || 0;
-  const inProgressCount = data?.data?.filter(i => isAdjustmentPending(i.status)).length || 0;
-  const majorAdjustmentsCount = data?.data?.filter(a => a.reason === 'DAMAGE' || a.reason === 'THEFT').length || 0;
-  const pendingApprovalsCount = inProgressCount;
+  const totalAdjustments = summaryData?.total ?? data?.meta?.total ?? 0;
+  const pendingApprovalsCount = summaryData?.pending ?? 0;
+  const majorAdjustmentsCount = summaryData?.critical_losses ?? 0;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">

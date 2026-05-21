@@ -49,6 +49,12 @@ export type ActionType =
   | 'start' | 'count' | 'review_variance' | 'close' | 'ship' | 'receive' | 'fulfill' | 'reject';
 
 
+/**
+ * @deprecated Use ROLE_CAPABILITIES from @/contracts/role-capabilities instead.
+ * This matrix is kept for backwards compatibility with resources that don't map
+ * to document types (e.g., admin, master_data, reports, etc.).
+ * The usePermission hook now checks ROLE_CAPABILITIES first and falls back to this matrix.
+ */
 export const PERMISSION_MATRIX: Partial<Record<UserRole, Partial<Record<ResourceType, ActionType[]>>>> = {
  ADMIN: {
  grn: ['view', 'create', 'edit', 'delete', 'approve', 'post', 'cancel', 'export', 'update', 'submit'],

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ScopeGuard } from "@/components/shared/ScopeGuard";
 import { isLocked as isDomainLocked } from "@/domain/status-guards";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { StocktakeForm } from "./StocktakeForm";
@@ -182,7 +183,7 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
   );
 
   return (
-    <>
+    <ScopeGuard warehouseId={session?.warehouseId}>
       <StocktakeForm 
         session={session} 
         locale={locale} 
@@ -232,6 +233,6 @@ export function StocktakeDetailClient({ id, locale }: { id: string, locale: 'ar'
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </ScopeGuard>
   );
 }

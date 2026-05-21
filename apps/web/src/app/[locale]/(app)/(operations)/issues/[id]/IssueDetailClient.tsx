@@ -7,6 +7,7 @@ import { isDocumentLocked, type DocumentStatus } from '@/core/workflow/document-
 import { IssueForm } from '@/features/operations/components/issue-form';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { ScopeGuard } from '@/components/shared/ScopeGuard';
 
 export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.issue');
@@ -35,7 +36,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
   }
 
   return (
-    <>
+    <ScopeGuard warehouseId={issue?.warehouse_id}>
       <IssueForm 
         key={issue?.version || id}
         issue={issue} 
@@ -48,6 +49,6 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
         onClose={conflict.handleClose}
         onReload={conflict.handleReload}
       />
-    </>
+    </ScopeGuard>
   );
 }
