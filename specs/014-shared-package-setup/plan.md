@@ -1,104 +1,75 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Shared Package Setup & Scaffolding
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**Branch**: `014-shared-package-setup` | **Date**: 2026-05-21 | **Spec**: [spec.md](file:///e:/Kitchen%E2%80%91Store%20Inventory%20System/specs/014-shared-package-setup/spec.md)
+**Input**: Feature specification from `/specs/014-shared-package-setup/spec.md`
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+This feature encompasses Phase 1: Shared Package Setup & Scaffolding of the LogiRest monorepo. It establishes the central `@logirest/shared-types` workspace package containing shared types, Zod validation schemas, and workflow state machines, and initializes the NestJS backend API gateway with core security, CORS policies, authentication cookie parsers, standardized validation error parsing, and root health check routes. Direct compiler-free workspace resolution is set up to prevent build-latency and type drift between `apps/web` and `apps/api`.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.x, Node.js 20+, NestJS 10.x, Next.js 16+  
+**Primary Dependencies**: `zod`, `cookie-parser`, `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express`, `class-validator`, `class-transformer`  
+**Storage**: N/A (this phase is pure package and workspace architecture setup, no DB tables are created/migrated)  
+**Testing**: Jest (NestJS unit/integration tests)  
+**Target Platform**: Local Node.js runtime and future Docker/containerized deployment  
+**Project Type**: Monorepo Workspaces setup and API Service gateway scaffolding  
+**Performance Goals**: Built-in validation pipeline latency under < 5ms per request; health check response under < 10ms.  
+**Constraints**: Zero compilation steps for shared package types; absolute strictness on backend constraint authority.  
+**Scale/Scope**: Initial workspace structure for 2 core packages/apps: `apps/api` and `packages/shared-types`.
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+1. **Backend Authority (Ax. I)**: Under this plan, all constraints are evaluated on the backend using NestJS global ValidationPipe. Frontend validations are purely advisory. (Status: PASS)
+2. **Strict Separation of Concerns (Ax. I)**: `apps/web` handles only UI; `apps/api` governs database mutations/transaction gates; `packages/shared-types` houses core Zod validation schemas and workflow maps. (Status: PASS)
+3. **DRY Schema Principle (Ax. I)**: The backend scaffold is designed to import Zod validation schemas and transition maps directly from the shared package, with zero copy-pasting of rules. (Status: PASS)
+4. **Graphify First (Op. Rule II)**: We checked the graph and structure using Graphify reports. (Status: PASS)
+5. **Micro-Phasing (Op. Rule II)**: We verify typecheck and build status for apps and packages dynamically. (Status: PASS)
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+specs/014-shared-package-setup/
+├── plan.md              # This file
+├── research.md          # Design decisions and findings
+├── data-model.md        # Document schemas and transitions placeholder
+├── quickstart.md        # Monorepo setup and command execution steps
+└── contracts/           # API interface schema validations
+    └── validation-error.json # JSON error schema
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+apps/
+├── api/
+│   ├── src/
+│   │   ├── main.ts
+│   │   ├── app.module.ts
+│   │   └── health/
+│   │       └── health.controller.ts
+│   └── package.json
+└── web/
+    └── package.json
 
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+packages/
+├── shared-types/
+│   ├── src/
+│   │   ├── index.ts
+│   │   ├── schemas/
+│   │   └── workflows/
+│   └── package.json
+└── contracts/
+    └── package.json
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Option 2 (Web application with frontend `apps/web`, backend `apps/api`, and shareable types `packages/shared-types`).
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+*No constitution violations present. Standard modular monorepo setup.*

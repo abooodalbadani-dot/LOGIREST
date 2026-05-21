@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ValidationErrorResponse",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "const": false
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "The path or name of the invalid parameter or property."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description of the constraint validation failure."
+          }
+        },
+        "required": ["field", "message"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["success", "errors"],
+  "additionalProperties": false
+}

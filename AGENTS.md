@@ -28,7 +28,7 @@ To keep the Graphify map current with any new or modified files,run the update c
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\001-ux-consistency-polish\plan.md
+specs/014-shared-package-setup/plan.md
 <!-- SPECKIT END -->
 
 

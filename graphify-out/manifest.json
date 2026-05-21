@@ -5510,8 +5510,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\AGENTS.md": {
-    "mtime": 1779391091.390086,
-    "ast_hash": "f3e5e1c997e5a95892def89c4928075e",
+    "mtime": 1779393202.2782836,
+    "ast_hash": "d8d96476c4a07c58928a93e246b5af87",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\all_conflicted_files.txt": {
@@ -8530,13 +8530,38 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\spec.md": {
-    "mtime": 1779392642.4294035,
-    "ast_hash": "5d19d9d48c6a99b5aebc6d8552406c6f",
+    "mtime": 1779392926.391646,
+    "ast_hash": "ee44f012fc79df39c22e76eae25fdf14",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\checklists\\requirements.md": {
     "mtime": 1779392648.657271,
     "ast_hash": "64d75419d78409f1f922ba59eb82625c",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\contracts\\validation-error.json": {
+    "mtime": 1779393190.1800234,
+    "ast_hash": "42469386a481cd7a049ff4c5827d0155",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\data-model.md": {
+    "mtime": 1779393184.918779,
+    "ast_hash": "6f11cb508e611e45a9829a56b3a6e9d4",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\plan.md": {
+    "mtime": 1779393177.188915,
+    "ast_hash": "2ba0513cd7149a5d6a8e93b7cd85ac33",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\quickstart.md": {
+    "mtime": 1779393197.0362666,
+    "ast_hash": "85bd5bfc1af5dde196b5e987448475f8",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\research.md": {
+    "mtime": 1779393111.6290991,
+    "ast_hash": "5ab43ac4fe6ac09674bec7e37582acfb",
     "semantic_hash": ""
   }
 }
