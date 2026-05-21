@@ -17,6 +17,8 @@ CRITICAL RULE:
 - Do NOT guess file paths or rely on your training data for Next.js/NestJS file structures.
 - Resolve file locations and dependency chains through the Graphify map FIRST, then explicitly read ONLY the specific files necessary for the task.
 
+To keep the Graphify map current with any new or modified files,run the update command in the terminal: graphify update .
+
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
