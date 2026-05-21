@@ -35,6 +35,7 @@ interface AdjustmentViewerProps {
 export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
   const t = useTranslations('operations.adjustment');
   const tc = useTranslations('common');
+  const tp = useTranslations('print');
   const locale = useLocale();
   const router = useRouter();
 
@@ -113,17 +114,11 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
 
   return (
     <div className="min-h-screen bg-surface-container-low print:bg-white print:min-h-0">
-      <style jsx global>{`
-        @media print {
-          @page { margin: 1.5cm; size: A4 portrait; }
-          body { background: white !important; }
-        }
-      `}</style>
       {/* Print-Only Voucher Header */}
-      <div className="hidden print:block p-6 border-b-2 border-gray-300 mb-6">
+      <div className="print-only print-header p-6 border-b-2 border-gray-300 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold uppercase">Warehouse Adjustment Voucher</h1>
+            <h1 className="text-2xl font-bold uppercase">{tp('adjustment_voucher_title')}</h1>
             <p className="text-sm text-gray-600 mt-1">{document?.document_number || ''}</p>
           </div>
           <div className="text-right text-sm text-gray-600">
@@ -207,7 +202,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-4 space-y-8 print:hidden">
+          <div className="lg:col-span-4 space-y-8 print-hidden">
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group border border-surface-variant/5">
               <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
               <div className="relative space-y-8">

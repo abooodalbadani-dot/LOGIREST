@@ -1,6 +1,7 @@
 'use client';
  
 import { useMemo, useState } from 'react';
+import { SortingState } from '@tanstack/react-table';
 import { useDebounce } from '@/hooks/useDebounce';
 
 import { useTranslations } from 'next-intl';
@@ -16,7 +17,7 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History } from 'lucide-react';
+import { FileText, ClipboardCheck, AlertCircle, Plus, Filter, Search, Warehouse, Calendar, History, RotateCcw } from 'lucide-react';
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -45,6 +46,7 @@ const t = useTranslations('operations.stocktake');
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tc = useTranslations('common');
+  const tFilters = useTranslations('filters');
 
   const { data: warehousesData } = useWarehouses();
   const warehouseMap = useMemo(() => {
@@ -54,6 +56,21 @@ const t = useTranslations('operations.stocktake');
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 500);
+  const [showFilters, setShowFilters] = useState(true);
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const sortBy = sorting[0]?.id || undefined;
+  const sortDir = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (initialStatus && initialStatus !== 'ALL') count++;
+    if (dateFrom) count++;
+    if (dateTo) count++;
+    return count;
+  }, [initialStatus, dateFrom, dateTo]);
 
  const statusItems = useMemo(() => {
    const allItem = {
@@ -73,11 +90,15 @@ const t = useTranslations('operations.stocktake');
  }, [tc]);
 
 const { data, isLoading } = useStocktakeList({
-   status: initialStatus,
-   warehouse_id: initialWarehouseId,
-   search: debouncedSearch || undefined,
-   page: initialPage
-   });
+    status: initialStatus,
+    warehouse_id: initialWarehouseId,
+    search: debouncedSearch || undefined,
+    page: initialPage,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
+    sort_by: sortBy,
+    sort_dir: sortDir
+    });
   const { data: summaryData } = useStocktakeSummary();
   const { warehouseId } = useOperationalScope();
 
@@ -99,10 +120,11 @@ const { data, isLoading } = useStocktakeList({
  };
 
  const columns = useMemo<ColumnDef<StocktakeSummary>[]>(() => [
- {
- accessorKey: 'session_number',
- header: t('session_number') || 'Session',
- cell: ({ row }) => (
+{
+  accessorKey: 'session_number',
+  header: t('session_number') || 'Session',
+  meta: { sortBy: 'snapshot_at' },
+  cell: ({ row }) => (
  <div className="flex flex-col">
  <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
  {row.original.session_number}
@@ -164,6 +186,7 @@ const { data, isLoading } = useStocktakeList({
   {
   accessorKey: 'status',
   header: tc('status_label') || 'State',
+  meta: { sortBy: 'status' },
   cell: ({ row }) => <StatusBadge status={row.original.status} />,
   },
  {
@@ -256,41 +279,84 @@ const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
           />
         </div>
 
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-surface-container-low rounded-lg border border-outline-low shadow-2xl">
-            <div className="flex flex-col gap-3 min-w-[280px] flex-1">
-              <div className="flex items-center gap-2 ms-1">
-                <Filter className="w-3 h-3 text-cyan-500/60" />
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
-              </div>
-              <SmartCombobox
-                items={statusItems}
-                value={initialStatus || 'ALL'}
-                onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
-                placeholder={tc('statuses.all') || "All Statuses"}
-                triggerClassName="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all"
-              />
-            </div>
+<div className="space-y-6">
+           <div className="flex flex-wrap items-end gap-6 w-full p-8 bg-surface-container-low rounded-lg border border-outline-low shadow-2xl">
+             <div className="flex flex-col gap-3 min-w-[280px] flex-1">
+               <div className="flex items-center gap-2 ms-1">
+                 <Filter className="w-3 h-3 text-cyan-500/60" />
+                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('status_label') || 'Filter by State'}</label>
+               </div>
+               <SmartCombobox
+                 items={statusItems}
+                 value={initialStatus || 'ALL'}
+                 onSelect={(item) => handleStatusChange(item.id === 'ALL' ? '' : String(item.id))}
+                 placeholder={tc('statuses.all') || "All Statuses"}
+                 triggerClassName="w-full bg-surface-container-highest/20 border-outline-low h-12 px-5 text-label-sm font-semibold rounded-md focus:ring-cyan-500/20 hover:bg-surface-container-highest/40 transition-all"
+               />
+             </div>
 
-            <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">
-              <div className="flex items-center gap-2 ms-1">
-                <Search className="w-3 h-3 text-cyan-500/60" />
-                <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
-              </div>
-              <div className="relative group">
-                <input
-                  placeholder={t('search_placeholder') || 'Search by Session ID...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
-                />
-              </div>
-            </div>
+             <div className="flex flex-col gap-3 min-w-[340px] flex-[2]">
+               <div className="flex items-center gap-2 ms-1">
+                 <Search className="w-3 h-3 text-cyan-500/60" />
+                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('search')}</label>
+               </div>
+               <div className="relative group">
+                 <input
+                   placeholder={t('search_placeholder') || 'Search by Session ID...'}
+                   value={searchQuery}
+                   onChange={(e) => setSearchQuery(e.target.value)}
+                   className="w-full bg-surface-container-highest/20 border border-outline-low h-12 px-6 text-label-sm font-semibold rounded-md outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all placeholder:text-muted-foreground/20 group-hover:bg-surface-container-highest/40"
+                 />
+               </div>
+             </div>
 
-            <Button className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low hover:text-foreground">
-              {tc('filters_button')}
-            </Button>
-          </div>
+             <Button
+               className="h-12 px-8 bg-surface-container-highest/40 hover:bg-surface-container-highest/60 text-foreground/60 text-label-xs font-semibold uppercase rounded-md transition-all border border-outline-low hover:text-foreground group"
+               onClick={() => setShowFilters(!showFilters)}
+             >
+               <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180" />
+               {tc('filters_button')}
+               {activeFilterCount > 0 && (
+                 <span className="ms-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500 text-white text-label-xxs font-bold">
+                   {activeFilterCount}
+                 </span>
+               )}
+             </Button>
+             <Button
+               variant="ghost"
+               size="sm"
+               className="h-12 px-4 text-muted-foreground/60 hover:text-foreground text-label-xs font-semibold uppercase rounded-md transition-all"
+               onClick={() => { handleStatusChange(''); setDateFrom(''); setDateTo(''); }}
+             >
+               <RotateCcw className="w-3.5 h-3.5 me-2" />
+               {tc('clear_filters') || 'Clear Filters'}
+             </Button>
+           </div>
+
+           {showFilters && (
+             <div className="flex items-center gap-6 px-8 py-4 bg-surface-container-low/30 border border-outline-low/5 rounded-lg">
+               <div className="flex flex-col gap-2 min-w-[180px]">
+                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">{tFilters('date_from')}</label>
+                 <input
+                   type="date"
+                   value={dateFrom}
+                   onChange={(e) => { setDateFrom(e.target.value); handlePageChange(1); }}
+                   className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-cyan-500/20 outline-none"
+                   dir="ltr"
+                 />
+               </div>
+               <div className="flex flex-col gap-2 min-w-[180px]">
+                 <label className="text-label-xs font-semibold uppercase text-muted-foreground/40 ms-1">{tFilters('date_to')}</label>
+                 <input
+                   type="date"
+                   value={dateTo}
+                   onChange={(e) => { setDateTo(e.target.value); handlePageChange(1); }}
+                   className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-cyan-500/20 outline-none"
+                   dir="ltr"
+                 />
+               </div>
+             </div>
+           )}
 
           <div className="bg-surface-container-lowest rounded-lg border border-outline-low overflow-hidden shadow-2xl">
             <DataTable
@@ -301,6 +367,8 @@ const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
               collectionName="operations_stocktake"
               enableVirtualization={true}
               containerHeight="600px"
+              sorting={sorting}
+              onSortingChange={setSorting}
               emptyState={
                 <EmptyState 
                   variant="minimal"

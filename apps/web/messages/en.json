@@ -410,6 +410,7 @@
       "login_button": "Go to Login",
       "title": "Session Expired"
     },
+    "session_verification_failed": "Unable to verify your session. Please log in again.",
     "sign_in": "Sign In"
   },
   "common": {
@@ -707,7 +708,6 @@
     "posted_read_only": "Posted - Read Only",
     "posting_irreversible": "This action cannot be undone.",
     "precision": "Precision",
-    "print": "Print",
     "procurement": "Procurement",
     "profile": {
       "cr_number": "CR Number",
@@ -2650,7 +2650,8 @@
         "warehouse_required": "Warehouse is required"
       },
       "create_lot": "Create New Lot",
-      "warehouse": "Warehouse"
+      "warehouse": "Warehouse",
+      "refreshing_stock": "Updating stock levels..."
     },
     "expired_override": {
       "cancel_scan": "Cancel Scan",
@@ -2984,6 +2985,8 @@
       "scan_mode": "Scanning Protocol Active",
       "scan_placeholder": "Scan barcode...",
       "search_placeholder": "Search sessions...",
+      "manifest_search_placeholder": "Search by name or barcode...",
+      "manifest_search_count": "{filtered} of {total} items",
       "select_warehouse": "Select Warehouse...",
       "session_details": "Session Details",
       "session_name_label": "Session Name",
@@ -3102,7 +3105,6 @@
       "scan_placeholder_receive": "Scan item to increment received quantity...",
       "scan_placeholder_ship": "Scan item to verify...",
       "scan_success": "Item verified",
-      "search_placeholder": "Search Transfer Documents...",
       "select_warehouse": "Select Warehouse...",
       "ship": "Ship",
       "ship_confirm_desc": "Shipping will mark this transfer as In Transit. Stock will be reserved from the source warehouse.",
@@ -3659,7 +3661,14 @@
   "batch": {
     "skipped_n_ineligible": "{count} adjustments skipped (not eligible)"
   },
-  "auth": {
-    "session_verification_failed": "Unable to verify your session. Please log in again."
+  "print": {
+    "adjustment_voucher_title": "Warehouse Adjustment Voucher",
+    "stocktake_report_title": "Physical Inventory Report"
+  },
+  "filters": {
+    "active_count": "Filters ({count})",
+    "date_from": "From Date",
+    "date_to": "To Date",
+    "warehouse": "Warehouse"
   }
 }

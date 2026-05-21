@@ -6,6 +6,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
+import { InlineLoader } from '@/components/shared/InlineLoader';
 import { useCreateAdjustment } from '@/features/operations/hooks/useCreateAdjustment';
 import { useApproveAdjustment } from '@/features/operations/hooks/useApproveAdjustment';
 import { usePostAdjustment } from '@/features/operations/hooks/usePostAdjustment';
@@ -66,6 +68,7 @@ export function AdjustmentForm({
 }: AdjustmentFormProps) {
   const t = useTranslations('operations.adjustment');
   const tc = useTranslations('common');
+  const tp = useTranslations('print');
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();
@@ -133,6 +136,7 @@ export function AdjustmentForm({
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [rejectionComment, setRejectionComment] = useState('');
+  const [isRefreshingStock, setIsRefreshingStock] = useState(false);
 
   // Sync state with adjustment data when it arrives or changes records
   const [prevAdjustmentId, setPrevAdjustmentId] = useState<string | null>(null);
@@ -148,6 +152,7 @@ export function AdjustmentForm({
   // Refresh stock levels when warehouse changes
   useEffect(() => {
     if (canEdit && lines.length > 0) {
+      setIsRefreshingStock(true);
       const refreshStock = async () => {
         const BalanceSchema = z.object({
           data: z.array(z.object({
@@ -178,6 +183,10 @@ export function AdjustmentForm({
         } catch (err) {
           if (err instanceof Error && err.name === 'AbortError') return;
           console.error('Failed to refresh stock:', err);
+        } finally {
+          if (!abortController.signal.aborted) {
+            setIsRefreshingStock(false);
+          }
         }
       };
       
@@ -375,23 +384,11 @@ export function AdjustmentForm({
   }, [document]);
   return (
     <div className="min-h-screen bg-surface-container-low pb-12 animate-in fade-in duration-500 print:bg-white print:p-0 print:m-0 print:pb-0 print:animate-none">
-      {/* Print-optimized voucher styles */}
-      <style jsx global>{`
-        @media print {
-          body { background: white !important; }
-          @page { margin: 1.5cm; size: A4 portrait; }
-          .glass-header, .no-print, .sticky, .print\\:hidden { display: none !important; }
-          .print-only { display: block !important; }
-          .lg\\:col-span-8 { max-width: 100% !important; }
-          .lg\\:col-span-4 { display: none !important; }
-        }
-        .print-only { display: none; }
-      `}</style>
       {/* Print header (visible only when printing) */}
-      <div className="print-only p-8 border-b-2 border-gray-300 mb-6">
+      <div className="print-only print-header p-8 border-b-2 border-gray-300 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold uppercase">Warehouse Adjustment Voucher</h1>
+            <h1 className="text-2xl font-bold uppercase">{tp('adjustment_voucher_title')}</h1>
             <p className="text-sm text-gray-600 mt-1">{document?.document_number || ''}</p>
           </div>
           <div className="text-right text-sm text-gray-600">
@@ -400,29 +397,22 @@ export function AdjustmentForm({
         </div>
       </div>
       {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-50 w-full glass-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex flex-col">
-            <h1 className="font-semibold text-title-sm">
-              {isNew ? t('create_new') : (document?.document_number || '...')}
-            </h1>
-            {!isNew && (
-              <div className="flex items-center gap-2 mt-0.5">
-                <StatusBadge status={adjustmentStatus as BadgeStatus} />
-                <ClientOnlyTime 
-                  date={document?.created_at} 
-                  mode="date" 
-                  locale={locale as 'ar' | 'en'}
-                  className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
-                />
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <DocumentExportMenu />
-          </div>
-        </div>
-      </div>
+      <StickyGlassHeader
+        title={isNew ? t('create_new') : (document?.document_number || '...')}
+        statusBadge={!isNew ? (
+          <>
+            <StatusBadge status={adjustmentStatus as BadgeStatus} />
+            <ClientOnlyTime 
+              date={document?.created_at} 
+              mode="date" 
+              locale={locale as 'ar' | 'en'}
+              className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
+            />
+          </>
+        ) : undefined}
+        actions={<DocumentExportMenu />}
+        isEditing={true}
+      />
 
       <form 
         onSubmit={(e) => e.preventDefault()} 
@@ -431,12 +421,13 @@ export function AdjustmentForm({
         <DocumentLockBanner 
           status={adjustmentStatus} 
           isLocked={isLocked} 
+          className="print-hidden"
         />
 
         {lockState?.isLocked && (
           <div 
             aria-live="assertive"
-            className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl flex items-center gap-3 animate-pulse"
+            className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl flex items-center gap-3 animate-pulse print-hidden"
           >
             <AlertCircle className="w-5 h-5 shrink-0" />
             <div className="flex-1">
@@ -448,9 +439,9 @@ export function AdjustmentForm({
 
         <DocumentLockWrapper isLocked={isLocked}>
           <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:block">
             {/* Left Column */}
-            <div className="lg:col-span-8 space-y-8">
+            <div className="lg:col-span-8 space-y-8 print:max-w-full">
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 border border-surface-variant/5">
               <div className="space-y-4">
                 <div className="space-y-1.5">
@@ -495,7 +486,7 @@ export function AdjustmentForm({
 
             {/* Input Bars (Scanning + Combobox) */}
             {canEdit && adjustmentStatus !== ADJUSTMENT_STATUS.POSTED && (
-              <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5">
+              <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm space-y-6 border border-surface-variant/5 print-hidden">
                 <div className="flex items-center gap-3">
                   <Package className="w-5 h-5 text-primary" />
                   <h3 className="text-label-sm font-semibold uppercase">{t('add_item')}</h3>
@@ -507,6 +498,7 @@ export function AdjustmentForm({
                       placeholder={t('scan_placeholder')}
                       scanStatus={scanStatus}
                       statusMessage={statusMessage}
+                      disabled={isRefreshingStock}
                       className="w-full"
                     />
                   </div>
@@ -515,7 +507,7 @@ export function AdjustmentForm({
                       items={items || []}
                       onSelect={(item) => handleScan(item.code)}
                       placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
-                      disabled={isLoadingItems || !canEdit}
+                      disabled={isLoadingItems || !canEdit || isRefreshingStock}
                     />
                   </div>
                 </div>
@@ -523,6 +515,9 @@ export function AdjustmentForm({
             )}
 
             {/* Items Table */}
+            {isRefreshingStock && (
+              <InlineLoader label={t('refreshing_stock')} className="mb-2" />
+            )}
             <div className="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden border border-surface-variant/5">
               <div className="p-8 flex justify-between items-center">
                 <div className="flex items-center gap-4">
@@ -627,7 +622,7 @@ export function AdjustmentForm({
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-4 space-y-8">
+          <div className="lg:col-span-4 space-y-8 print-hidden">
             <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm relative overflow-hidden group border border-surface-variant/5">
               <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 blur-[50px] -me-16 -mt-16 rounded-full group-hover:bg-primary/10 transition-all duration-700" />
               <div className="relative space-y-8">
@@ -694,7 +689,8 @@ export function AdjustmentForm({
           isSaving={createAdjustment.isPending || updateAdjustment.isPending}
           isLocked={isLocked}
           isDirty={lines.length > 0}
-          isValid={!hasNegativeStock && lines.length > 0 && notes.trim().length >= 10}
+          isValid={!hasNegativeStock && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
+          className="print-hidden"
           actions={
             !isNew && (
               <div className="flex items-center gap-3">

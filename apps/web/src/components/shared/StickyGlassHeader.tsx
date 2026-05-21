@@ -11,6 +11,7 @@ interface StickyGlassHeaderProps {
   actions?: React.ReactNode;
   onBack?: () => void;
   className?: string;
+  isEditing?: boolean;
 }
 
 export function StickyGlassHeader({
@@ -19,11 +20,13 @@ export function StickyGlassHeader({
   actions,
   onBack,
   className,
+  isEditing,
 }: StickyGlassHeaderProps) {
   return (
     <div
       className={cn(
         'sticky top-0 z-[9999] w-full bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm dark:bg-slate-950/90 dark:border-slate-800 flex items-center justify-between px-6 py-4 print:hidden',
+        isEditing && 'border-l-4 border-l-primary',
         className,
       )}
     >

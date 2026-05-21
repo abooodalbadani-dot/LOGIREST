@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useIssueList, IssueSummary } from '@/features/operations/hooks/useIssueList';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
+import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
+import { useAuth } from '@/providers/AuthProvider';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { Button } from '@/components/ui/button';
@@ -27,9 +29,27 @@ import { ISSUE_STATUS } from '@/contracts/statuses';
 export function IssueListClient({ initialStatus, initialPage }: { initialStatus?: string; initialPage: number }) {
   const t = useTranslations('operations.issue');
   const tc = useTranslations('common');
+  const tFilters = useTranslations('filters');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const { warehouseId } = useOperationalScope();
+  const { data: warehousesData } = useWarehouses();
+
+  const [warehouseFilter, setWarehouseFilter] = useState('');
+  const isWarehouseLocked = user?.role === 'WH_KEEPER' || user?.role === 'STORE_MGR';
+  const effectiveWarehouseId = isWarehouseLocked ? (warehouseId || '') : warehouseFilter;
+
+  const warehouseItems = useMemo(() => {
+    const list = warehousesData?.data ?? [];
+    return list.map((w: { id: string; name_en: string; name_ar: string; code?: string }) => ({
+      id: w.id,
+      name_en: w.name_en,
+      name_ar: w.name_ar,
+      code: w.code,
+    }));
+  }, [warehousesData]);
 
   const statusItems = React.useMemo(() => {
     const allItem = {
@@ -50,6 +70,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
 
   const { data, isLoading } = useIssueList({
     status: initialStatus,
+    warehouse_id: effectiveWarehouseId || undefined,
     page: initialPage
   });
 
@@ -233,6 +254,15 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
                 onSelect={(item) => handleStatusChange(item.id)}
                 placeholder={tc('statuses.all') || "All Statuses"}
                 triggerClassName="w-[180px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold uppercase rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap"
+              />
+
+              <SmartCombobox
+                items={warehouseItems}
+                value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
+                onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id as string); } }}
+                placeholder={tFilters('warehouse')}
+                disabled={isWarehouseLocked}
+                triggerClassName="w-[200px] bg-surface-container-high/50 border-none h-14 px-6 text-label-xs font-semibold rounded-md shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/10 whitespace-nowrap"
               />
 
               <Button variant="outline" className="h-14 px-6 bg-surface-container-high/50 hover:bg-surface-container-high border-none rounded-md shadow-inner shadow-black/5">

@@ -708,7 +708,6 @@
     "posted_read_only": "مرحّل - للقراءة فقط",
     "posting_irreversible": "هذا الإجراء لا يمكن التراجع عنه.",
     "precision": "دقة عالية",
-    "print": "طباعة",
     "procurement": "مسؤول المشتريات",
     "profile": {
       "cr_number": "رقم السجل التجاري",
@@ -2651,7 +2650,8 @@
         "warehouse_required": "المستودع مطلوب"
       },
       "create_lot": "إنشاء دفعة جديدة",
-      "warehouse": "المستودع"
+      "warehouse": "المستودع",
+      "refreshing_stock": "جاري تحديث مستويات المخزون..."
     },
     "expired_override": {
       "cancel_scan": "إلغاء المسح",
@@ -2985,6 +2985,8 @@
       "scan_mode": "بروتوكول المسح نشط",
       "scan_placeholder": "امسح الباركود...",
       "search_placeholder": "البحث في جلسات الجرد...",
+      "manifest_search_placeholder": "بحث بالاسم أو الباركود...",
+      "manifest_search_count": "{filtered} من {total} عنصر",
       "select_warehouse": "اختر المستودع...",
       "session_details": "تفاصيل الجلسة",
       "session_name_label": "اسم الجلسة",
@@ -3103,7 +3105,6 @@
       "scan_placeholder_receive": "امسح الصنف لزيادة الكمية المستلمة...",
       "scan_placeholder_ship": "امسح الصنف للتحقق...",
       "scan_success": "تم التحقق من الصنف",
-      "search_placeholder": "البحث في سندات النقل...",
       "select_warehouse": "اختر المستودع...",
       "ship": "شحن",
       "ship_confirm_desc": "سيؤدي الشحن إلى وضع هذا التحويل في حالة قيد النقل. سيتم حجز المخزون من المستودع المصدر.",
@@ -3659,5 +3660,15 @@
   },
   "batch": {
     "skipped_n_ineligible": "تم تخطي {count} تسوية (غير مؤهلة)"
+  },
+  "print": {
+    "adjustment_voucher_title": "قسيمة تسوية المستودع",
+    "stocktake_report_title": "تقرير الجرد المادي"
+  },
+  "filters": {
+    "active_count": "عوامل التصفية ({count})",
+    "date_from": "من تاريخ",
+    "date_to": "إلى تاريخ",
+    "warehouse": "المستودع"
   }
 }

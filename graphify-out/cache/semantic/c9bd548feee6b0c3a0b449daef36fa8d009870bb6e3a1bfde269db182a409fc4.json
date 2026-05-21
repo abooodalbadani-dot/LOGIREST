@@ -1,0 +1,1 @@
+{"nodes": [{"id": "infrastructure_api_client", "label": "apiClient (infrastructure)", "file_type": "code", "source_file": "apps/web/src/infrastructure/api/client.ts", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

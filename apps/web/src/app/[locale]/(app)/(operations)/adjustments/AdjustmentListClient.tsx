@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, SortingState } from '@tanstack/react-table';
 import { useAdjustmentList, AdjustmentSummary } from '@/features/operations/hooks/useAdjustmentList';
 import { useAdjustmentSummary } from '@/features/operations/hooks/useAdjustmentSummary';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
@@ -46,8 +46,9 @@ const REASON_CHIP: Record<string, string> = {
 
 
 export function AdjustmentListClient() {
-  const t = useTranslations('operations.adjustment');
+const t = useTranslations('operations.adjustment');
   const tCommon = useTranslations('common');
+  const tFilters = useTranslations('filters');
   const tb = useTranslations('batch');
   const locale = useLocale();
   const router = useRouter();
@@ -60,13 +61,46 @@ export function AdjustmentListClient() {
     return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
   }, [warehousesData]);
 
+  const warehouseItems = useMemo(() => {
+    const list = warehousesData?.data ?? [];
+    return list.map((w: { id: string; name_en: string; name_ar: string; code?: string }) => ({
+      id: w.id,
+      name_en: w.name_en,
+      name_ar: w.name_ar,
+      code: w.code,
+    }));
+  }, [warehousesData]);
+
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
+  const [warehouseFilter, setWarehouseFilter] = useState('');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBatchLoading, setIsBatchLoading] = useState(false);
   const [batchConfirmAction, setBatchConfirmAction] = useState<'approve' | 'post' | null>(null);
+
+  const [showFilters, setShowFilters] = useState(true);
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const { warehouseId } = useOperationalScope();
+
+  const isWarehouseLocked = user?.role === 'WH_KEEPER' || user?.role === 'STORE_MGR';
+  const effectiveWarehouseId = isWarehouseLocked ? (warehouseId || '') : warehouseFilter;
+
+  const sortBy = sorting[0]?.id || undefined;
+  const sortDir = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (status) count++;
+    if (warehouseFilter && !isWarehouseLocked) count++;
+    if (dateFrom) count++;
+    if (dateTo) count++;
+    return count;
+  }, [status, warehouseFilter, isWarehouseLocked, dateFrom, dateTo]);
 
   const postAdjustment = usePostAdjustment();
   const approveAdjustment = useApproveAdjustment();
@@ -87,9 +121,8 @@ export function AdjustmentListClient() {
     return [allItem, ...statuses];
   }, [tCommon]);
 
-  const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page });
+  const { data, isLoading } = useAdjustmentList({ status, search: debouncedSearch, page, warehouse_id: effectiveWarehouseId || undefined, date_from: dateFrom || undefined, date_to: dateTo || undefined, sort_by: sortBy, sort_dir: sortDir });
   const { data: summaryData } = useAdjustmentSummary();
-  const { warehouseId } = useOperationalScope();
 
   const allData = data?.data || [];
   const selectedItems = allData.filter(item => selectedIds.has(item.id));
@@ -224,6 +257,7 @@ export function AdjustmentListClient() {
     {
       accessorKey: 'status',
       header: tCommon('status_label'),
+      meta: { sortBy: 'status' },
       cell: ({ row }) => (
         <StatusBadge status={row.original.status} />
       ),
@@ -279,6 +313,7 @@ export function AdjustmentListClient() {
     {
       accessorKey: 'created_at',
       header: tCommon('created_at'),
+      meta: { sortBy: 'created_at' },
       cell: ({ row }) =>
         row.original.created_at ? (
           <span dir="ltr" className="text-label-xs text-muted-foreground/40 font-mono font-medium">
@@ -390,6 +425,8 @@ export function AdjustmentListClient() {
         isLoading={isLoading}
         onRowClick={(row: AdjustmentSummary) => router.push(`/adjustments/${row.id}`)}
         collectionName="operations_adjustments"
+        sorting={sorting}
+        onSortingChange={setSorting}
         emptyState={
           <EmptyState
             variant="minimal"
@@ -414,48 +451,95 @@ export function AdjustmentListClient() {
           onPageChange: setPage
         } : undefined}
         filters={
-          <div className="flex items-center gap-6 w-full py-6 px-8 bg-surface-container-low/50 border border-outline-low/10 rounded-xl ambient-shadow backdrop-blur-sm overflow-x-auto no-scrollbar">
-            <div className="flex flex-col gap-2.5 min-w-[240px] flex-1">
-              <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('status_label')}</label>
-              <SmartCombobox
-                items={statusItems}
-                value={status || 'ALL'}
-                onSelect={(item) => {
-                  const nextStatus = item.id === 'ALL' ? '' : item.id;
-                  setStatus(nextStatus);
-                  setPage(1);
-                }}
-                placeholder={tCommon('statuses.all') || "All Statuses"}
-                triggerClassName="w-full bg-surface-container-highest/20 border-none h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 shadow-inner shadow-black/5"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2.5 min-w-[300px] flex-[2]">
-              <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('search')}</label>
-              <div className="relative group">
-                <Input
-                  placeholder={t('search_placeholder') || 'Search Adjustment Documents...'}
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  className="w-full bg-surface-container-highest/20 border-none h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20 shadow-inner shadow-black/5"
+          <div className="space-y-4 w-full">
+            <div className="flex items-center gap-6 w-full py-6 px-8 bg-surface-container-low/50 border border-outline-low/10 rounded-xl ambient-shadow backdrop-blur-sm overflow-x-auto no-scrollbar">
+              <div className="flex flex-col gap-2.5 min-w-[240px] flex-1">
+                <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('status_label')}</label>
+                <SmartCombobox
+                  items={statusItems}
+                  value={status || 'ALL'}
+                  onSelect={(item) => {
+                    const nextStatus = item.id === 'ALL' ? '' : item.id;
+                    setStatus(nextStatus);
+                    setPage(1);
+                  }}
+                  placeholder={tCommon('statuses.all') || "All Statuses"}
+                  triggerClassName="w-full bg-surface-container-highest/20 border-none h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 shadow-inner shadow-black/5"
                 />
-                <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-active/40 transition-colors group-hover:text-status-active/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
+
+              <div className="flex flex-col gap-2.5 min-w-[200px] flex-1">
+                <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tFilters('warehouse')}</label>
+                <SmartCombobox
+                  items={warehouseItems}
+                  value={isWarehouseLocked ? (warehouseId || '') : warehouseFilter}
+                  onSelect={(item) => { if (!isWarehouseLocked) { setWarehouseFilter(item.id as string); setPage(1); } }}
+                  placeholder={tFilters('warehouse')}
+                  disabled={isWarehouseLocked}
+                  triggerClassName="w-full bg-surface-container-highest/20 border-none h-12 px-5 text-label-xs font-bold uppercase rounded-md transition-all hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 shadow-inner shadow-black/5"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2.5 min-w-[300px] flex-[2]">
+                <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tCommon('search')}</label>
+                <div className="relative group">
+                  <Input
+                    placeholder={t('search_placeholder') || 'Search Adjustment Documents...'}
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                    className="w-full bg-surface-container-highest/20 border-none h-12 ps-12 pe-4 text-label-xs font-bold rounded-md transition-all group-hover:bg-surface-container-highest/30 focus:ring-1 focus:ring-status-active/20 placeholder:text-muted-foreground/20 shadow-inner shadow-black/5"
+                  />
+                  <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-active/40 transition-colors group-hover:text-status-active/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+              </div>
+
+              <Button
+                className="h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-label-xs font-bold uppercase rounded-md transition-all border border-outline-low/10 shadow-sm group"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180 text-status-active/60" />
+                {tCommon('filters_button')}
+                {activeFilterCount > 0 && (
+                  <span className="ms-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-status-active text-white text-label-xxs font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-12 px-4 text-muted-foreground/60 hover:text-foreground text-label-xs font-bold uppercase rounded-md transition-all"
+                onClick={() => { setStatus(''); setWarehouseFilter(''); setDateFrom(''); setDateTo(''); setPage(1); }}
+              >
+                <RotateCcw className="w-3.5 h-3.5 me-2" />
+                {tCommon('clear_filters') || 'Clear Filters'}
+              </Button>
             </div>
 
-            <Button className="h-12 px-8 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-foreground text-label-xs font-bold uppercase rounded-md transition-all border border-outline-low/10 shadow-sm group">
-              <Filter className="w-3.5 h-3.5 me-2 transition-transform group-hover:rotate-180 text-status-active/60" />
-              {tCommon('filters_button')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-12 px-4 text-muted-foreground/60 hover:text-foreground text-label-xs font-bold uppercase rounded-md transition-all"
-              onClick={() => { setStatus(''); setPage(1); }}
-            >
-              <RotateCcw className="w-3.5 h-3.5 me-2" />
-              {tCommon('clear_filters') || 'Clear Filters'}
-            </Button>
+            {showFilters && (
+              <div className="flex items-center gap-6 px-8 py-4 bg-surface-container-low/30 border border-outline-low/5 rounded-lg">
+                <div className="flex flex-col gap-2 min-w-[180px]">
+                  <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tFilters('date_from')}</label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                    className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-status-active/20 outline-none"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="flex flex-col gap-2 min-w-[180px]">
+                  <label className="text-label-xs font-bold uppercase text-muted-foreground/40 ms-1">{tFilters('date_to')}</label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                    className="bg-surface-container-highest/20 border border-outline-low/10 h-10 px-3 text-label-xs font-medium rounded-md text-foreground focus:ring-1 focus:ring-status-active/20 outline-none"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         }
       />

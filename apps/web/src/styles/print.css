@@ -1,0 +1,127 @@
+/* Print Utility Classes — Kitchen‑Store Inventory System */
+
+.print-hidden {
+  /* Marker class: hidden during print */
+}
+
+.print-only {
+  display: none !important;
+}
+
+.print-header {
+  /* Marker class: print-only header block */
+}
+
+.print-footer {
+  /* Marker class: print-only footer block */
+}
+
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .glass-header,
+  .sticky {
+    display: none !important;
+  }
+
+  nav,
+  [data-slot="sidebar"],
+  aside,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  button:not(.print-keep),
+  [data-slot="button"]:not(.print-keep) {
+    display: none !important;
+  }
+
+  [data-filter],
+  [data-slot="filter"],
+  .filter-panel {
+    display: none !important;
+  }
+
+  .ambient-shadow,
+  [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
+  .print-header {
+    display: block !important;
+    text-align: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #d1d5db;
+    margin-bottom: 1.5rem;
+  }
+
+  .print-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: black;
+  }
+
+  .print-header p {
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin-top: 0.25rem;
+  }
+
+  .print-footer {
+    display: block !important;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  * {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body,
+  .print-safe-bg {
+    background: white !important;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  table {
+    border-collapse: collapse !important;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: none;
+  }
+}

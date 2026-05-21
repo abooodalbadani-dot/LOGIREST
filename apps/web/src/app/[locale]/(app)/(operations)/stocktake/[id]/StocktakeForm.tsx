@@ -11,7 +11,8 @@ import {
   Warehouse, 
   User, 
   ClipboardList, 
-  History
+  History,
+  Search
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ import { STOCKTAKE_STATUS } from "@/contracts/statuses";
 import { isStocktakeCounting, isStocktakeInReview } from "@/domain/status-guards";
 import { STOCKTAKE_STATUS_UI } from "@/domain/status-ui-map";
 import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
+import { StickyGlassHeader } from "@/components/shared/StickyGlassHeader";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import { DocumentLockBanner } from "@/components/shared/DocumentLockBanner";
@@ -43,6 +45,7 @@ interface StocktakeFormProps {
 }
 
 export function StocktakeForm({ session, locale, actions, isLocked = false, onConflict }: StocktakeFormProps) {
+  const [manifestSearch, setManifestSearch] = React.useState('')
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
   const router = useRouter();
@@ -54,11 +57,18 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
   const warehouse = warehouses?.find(w => w.id === session.warehouseId);
   const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
 
-  // Note: We use canPerformAction directly for internal flags where ActionGuard (JSX) isn't appropriate
   const isCounting = isStocktakeCounting(status) || status === STOCKTAKE_STATUS.STARTED;
 
+  const filteredItems = React.useMemo(() => {
+    if (!manifestSearch) return session.items
+    const q = manifestSearch.toLowerCase()
+    return session.items.filter(item =>
+      item.itemName.toLowerCase().includes(q) || item.barcode?.includes(q)
+    )
+  }, [session.items, manifestSearch])
+
   const tableLines = React.useMemo(() => {
-    return session.items.map((item) => ({
+    return filteredItems.map((item) => ({
       id: item.id,
       item: {
         id: item.itemId,
@@ -75,36 +85,33 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
       countedQty: item.countedQty,
       uom: item.uom
     }));
-  }, [session.items]);
+  }, [filteredItems]);
 
   return (
     <div className="min-h-screen bg-surface-container-low pb-48 animate-in fade-in duration-500">
       {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-50 w-full glass-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex flex-col">
+      <StickyGlassHeader
+        title={
+          <div className="flex flex-col gap-0.5">
             <Breadcrumb
               items={[
                 { label: t('title'), href: `/stocktake` },
                 { label: session.sessionName },
               ]}
             />
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-title-sm">
-                {session.sessionName}
-              </h1>
-              <StatusBadge 
-                status={session.status} 
-                configMap={STOCKTAKE_STATUS_UI}
-                className="h-6 px-2 text-label-xxs font-semibold border-none" 
-              />
-            </div>
+            <span>{session.sessionName}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <DocumentExportMenu />
-          </div>
-        </div>
-      </div>
+        }
+        statusBadge={
+          <StatusBadge 
+            status={session.status} 
+            configMap={STOCKTAKE_STATUS_UI}
+            className="h-6 px-2 text-label-xxs font-semibold border-none" 
+          />
+        }
+        actions={<DocumentExportMenu />}
+        isEditing={true}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         <DocumentLockBanner 
           status={session.status} 
@@ -149,6 +156,28 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                 <p className="text-label-xs font-semibold text-muted-foreground/30 uppercase">{t('items_to_audit')}</p>
               </div>
             </div>
+            <div className="px-6 pb-3 flex flex-col gap-3">
+              <div className="relative">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <input
+                  type="text"
+                  value={manifestSearch}
+                  onChange={(e) => setManifestSearch(e.target.value)}
+                  placeholder={t('manifest_search_placeholder')}
+                  className="w-full ps-9 pe-3 py-2 rounded-xl bg-surface-container-low border border-border/40 text-label-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+                />
+              </div>
+              {manifestSearch && (
+                <p className="text-label-xs font-semibold text-muted-foreground/50">
+                  {t('manifest_search_count', { filtered: filteredItems.length, total: session.items.length })}
+                </p>
+              )}
+            </div>
+            {filteredItems.length === 0 && manifestSearch ? (
+              <div className="px-6 pb-8 text-center">
+                <p className="text-label-sm text-muted-foreground/40">{common('no_results') || 'No matching items'}</p>
+              </div>
+            ) : (
             <DocumentLineItemTable
               lines={tableLines}
               locale={locale}
@@ -197,6 +226,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                 }
               ]}
             />
+            )}
           </Card>
           {/* Status Timeline */}
           <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm transition-all hover:bg-surface-container-low/50">

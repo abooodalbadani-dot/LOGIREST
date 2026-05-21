@@ -18,14 +18,15 @@ export const IssueSummarySchema = z.object({
 
 export type IssueSummary = z.infer<typeof IssueSummarySchema>;
 
-export function useIssueList({ status, page = 1 }: { status?: string; page?: number }) {
+export function useIssueList({ status, warehouse_id, page = 1 }: { status?: string; warehouse_id?: string; page?: number } = {}) {
   const { warehouseId, branchId } = useOperationalScope();
+  const scopeWarehouseId = warehouse_id ?? warehouseId ?? undefined;
   return useQuery({
-    queryKey: ['issues', { status, page, warehouseId, branchId }],
+    queryKey: ['issues', { status, warehouse_id: scopeWarehouseId, branchId, page }],
     queryFn: async ({ signal }) => {
       const qs = new URLSearchParams();
       if (status) qs.append('status', status);
-      if (warehouseId) qs.append('warehouse_id', warehouseId);
+      if (scopeWarehouseId) qs.append('warehouse_id', scopeWarehouseId);
       if (branchId) qs.append('branch_id', branchId);
       qs.append('page', page.toString());
 
