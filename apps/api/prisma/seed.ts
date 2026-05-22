@@ -1,9 +1,10 @@
 import { PrismaClient, Role } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('Seeding database...');
 
   // ─── Currencies ──────────────────────────────────────────────
   const sar = await prisma.currency.upsert({
@@ -140,16 +141,30 @@ async function main() {
     });
   }
 
-  // ─── Admin User ──────────────────────────────────────────────
+  // ─── Users ───────────────────────────────────────────────────
+  const passwordHash = await bcrypt.hash('password123', 12);
+  const adminPasswordHash = await bcrypt.hash('adminpassword', 12);
+
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.com' },
     update: {},
     create: {
       email: 'admin@logirest.com',
-      passwordHash:
-        '$2b$10$dummy.hash.for.seed.purposes.only.not.for.production',
+      passwordHash: adminPasswordHash,
       name: 'System Admin',
       role: Role.ADMIN,
+      isActive: true,
+    },
+  });
+
+  const whKeeper = await prisma.user.upsert({
+    where: { email: 'user1@logirest.com' },
+    update: {},
+    create: {
+      email: 'user1@logirest.com',
+      passwordHash,
+      name: 'Warehouse Keeper',
+      role: Role.WH_KEEPER,
       isActive: true,
     },
   });
@@ -175,7 +190,17 @@ async function main() {
     },
   });
 
-  console.log('✅ Seeding complete!');
+  await prisma.userWarehouseScope.upsert({
+    where: { id: 'scope-whkeeper-hq' },
+    update: {},
+    create: {
+      id: 'scope-whkeeper-hq',
+      userId: whKeeper.id,
+      warehouseId: mainWh.id,
+    },
+  });
+
+  console.log('Seeding complete!');
 }
 
 main()

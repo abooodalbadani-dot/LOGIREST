@@ -1,0 +1,72 @@
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  Res,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import type { Request, Response } from 'express';
+import { AuthService } from './auth.service';
+import { RtrService } from './rtr.service';
+import { LoginDto } from './dto/login.dto';
+import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
+
+@Controller('auth')
+export class AuthController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly rtrService: RtrService,
+  ) {}
+
+  @Public()
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.login(dto, res);
+  }
+
+  @Public()
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies?.logirest_refresh as string | undefined;
+    if (!refreshToken) {
+      return { success: false, message: 'No refresh token provided' };
+    }
+
+    const { accessToken } = await this.rtrService.rotateRefreshToken(
+      refreshToken,
+      res,
+    );
+
+    return { success: true, accessToken };
+  }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies?.logirest_refresh as string | undefined;
+    if (refreshToken) {
+      await this.rtrService.revokeSessionByToken(refreshToken);
+    }
+    this.rtrService.clearRefreshCookie(res);
+
+    return { success: true };
+  }
+
+  @Get('me')
+  async getProfile(@CurrentUser('id') userId: string) {
+    return this.authService.getProfile(userId);
+  }
+}

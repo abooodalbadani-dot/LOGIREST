@@ -86,6 +86,7 @@ model User {
   warehouseLocks   WarehouseLock[]
   stocktakeCounts  StocktakeCount[]
   auditLogs        AuditLog[]
+  refreshTokens    RefreshToken[]
 
   @@map("users")
 }
@@ -101,6 +102,24 @@ model UserWarehouseScope {
 
   @@unique([userId, warehouseId])
   @@map("user_warehouse_scopes")
+}
+
+model RefreshToken {
+  id            String   @id @default(uuid())
+  tokenHash     String   @unique
+  userId        String
+  sessionId     String
+  parentTokenId String?
+  expiresAt     DateTime
+  isRevoked     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  version       Int      @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionId])
+  @@map("refresh_tokens")
 }
 
 model Branch {
