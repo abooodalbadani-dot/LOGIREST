@@ -87,7 +87,11 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@logirest/shared-types$": "<rootDir>/../../../packages/shared-types/src/index.ts",
+      "^@logirest/shared-types/(.*)$": "<rootDir>/../../../packages/shared-types/src/$1"
+    }
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

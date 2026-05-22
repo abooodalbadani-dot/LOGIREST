@@ -96,3 +96,21 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Workflow Engine (Phase 4)
+
+We have implemented a zero-trust **Workflow Engine** featuring dynamic document status transitions, role capability checks, warehouse operational lock checking, and PR-to-PO conversion.
+
+### Core Features
+
+1. **Document Status Transitions**: Fully integrated with `@logirest/shared-types` state machines. Bypassing state machine rules is strictly rejected. Every status transition logs an event to the `ApprovalEvent` and `AuditLog` tables inside a transaction database block.
+2. **Role-Based Workflow Capabilities**: Validates user roles against document type and status actions (e.g. `WH_KEEPER` is blocked from submitting a PR, throwing `403 Forbidden`).
+3. **Warehouse Operational Locks**: Dynamic operational locks (e.g. during a stocktake `WarehouseLock` active state) block any physical inventory mutations (e.g. GRN, Transfer, Adjustment) with a `423 Locked` response, while still allowing procurement processes (PR/PO).
+4. **PR-to-PO Conversion**: Allows manual conversion of an `APPROVED` Purchase Request (PR) to a `DRAFT` Purchase Order (PO) with validated line item unit pricing. Ensures exactly one PO maps to one PR using a unique database constraint on the `prId` field, throwing `409 Conflict` on duplicate requests.
+
+### Usage and Verification
+
+- Run unit tests: `npm run test --workspace=api`
+- Run integration E2E tests: `npm run test:e2e --workspace=api`
+- Type checking: `npm run typecheck --workspace=api`
+- Formatting/Linter: `npm run lint --workspace=api`
