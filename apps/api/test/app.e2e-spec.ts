@@ -1,5 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  BadRequestException,
+} from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -8,7 +13,7 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -21,12 +26,16 @@ describe('AppController (e2e)', () => {
     });
 
     // Flat structured validation error formatting function
-    function formatErrors(validationErrors: ValidationError[]): { field: string; message: string }[] {
+    function formatErrors(
+      validationErrors: ValidationError[],
+    ): { field: string; message: string }[] {
       const result: { field: string; message: string }[] = [];
-      
+
       const format = (errors: ValidationError[], parentProperty = '') => {
         for (const error of errors) {
-          const propertyPath = parentProperty ? `${parentProperty}.${error.property}` : error.property;
+          const propertyPath = parentProperty
+            ? `${parentProperty}.${error.property}`
+            : error.property;
           if (error.constraints) {
             result.push({
               field: propertyPath,
@@ -38,7 +47,7 @@ describe('AppController (e2e)', () => {
           }
         }
       };
-      
+
       format(validationErrors);
       return result;
     }
@@ -79,9 +88,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/api/v1/health (GET) - Should 404 (Prefix Excluded)', () => {
-    return request(app.getHttpServer())
-      .get('/api/v1/health')
-      .expect(404);
+    return request(app.getHttpServer()).get('/api/v1/health').expect(404);
   });
 
   it('/api/v1/test-validation (POST) - Valid Payload', () => {
@@ -111,7 +118,7 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 });

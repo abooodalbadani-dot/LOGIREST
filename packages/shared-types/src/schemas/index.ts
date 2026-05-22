@@ -1,2 +1,1 @@
-// Shared schemas entry point
-export {};
+export * from './enums';

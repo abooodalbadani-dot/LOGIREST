@@ -4,3 +4,7 @@ export * from './contracts/role-capabilities';
 export * from './workflow/document-engine';
 export * from './schemas';
 export * from './workflows';
+
+// Explicitly re-export conflicting types to resolve TS2308 ambiguity
+export type { DocumentType } from './contracts/role-capabilities';
+export type { Role } from './schemas/enums';

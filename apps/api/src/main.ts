@@ -22,12 +22,16 @@ async function bootstrap() {
   });
 
   // Flat structured validation error formatting function
-  function formatErrors(validationErrors: ValidationError[]): { field: string; message: string }[] {
+  function formatErrors(
+    validationErrors: ValidationError[],
+  ): { field: string; message: string }[] {
     const result: { field: string; message: string }[] = [];
-    
+
     const format = (errors: ValidationError[], parentProperty = '') => {
       for (const error of errors) {
-        const propertyPath = parentProperty ? `${parentProperty}.${error.property}` : error.property;
+        const propertyPath = parentProperty
+          ? `${parentProperty}.${error.property}`
+          : error.property;
         if (error.constraints) {
           result.push({
             field: propertyPath,
@@ -39,7 +43,7 @@ async function bootstrap() {
         }
       }
     };
-    
+
     format(validationErrors);
     return result;
   }
@@ -61,4 +65,4 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
