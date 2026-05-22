@@ -7,6 +7,10 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "setupFiles": ["<rootDir>/setup.ts"],
-  "testTimeout": 30000
+  "testTimeout": 30000,
+  "moduleNameMapper": {
+    "^@logirest/shared-types$": "<rootDir>/../../../packages/shared-types/src/index.ts",
+    "^@logirest/shared-types/(.*)$": "<rootDir>/../../../packages/shared-types/src/$1"
+  }
 }
 

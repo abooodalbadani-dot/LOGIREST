@@ -318,7 +318,7 @@ model PRLine {
 model PurchaseOrder {
   id         String   @id @default(uuid())
   poNumber   String   @unique
-  prId       String?
+  prId       String?  @unique
   supplierId String
   status     String   @default("DRAFT")
   currencyId String
@@ -511,14 +511,17 @@ model KitchenRequestItem {
 }
 
 model ApprovalEvent {
-  id            String       @id @default(uuid())
-  documentId    String
-  documentType  DocumentType
-  fromStatus    String
-  toStatus      String
+  id              String       @id @default(uuid())
+  documentId      String
+  documentType    DocumentType
+  fromStatus      String
+  toStatus        String
   actionPerformed String
-  userId        String
-  createdAt     DateTime     @default(now())
+  userId          String
+  stepNumber      Int
+  userRole        Role
+  comments        String?
+  createdAt       DateTime     @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
@@ -631,6 +634,7 @@ model WarehouseLock {
   lockType    LockType
   lockedById  String
   expiresAt   DateTime
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)

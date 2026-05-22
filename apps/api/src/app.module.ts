@@ -8,6 +8,8 @@ import { PrismaModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ScopeInterceptor } from './auth/interceptors/scope.interceptor';
+import { WorkflowModule } from './modules/workflow/workflow.module';
+import { PurchaseRequestsModule } from './modules/purchase-requests/purchase-requests.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { ScopeInterceptor } from './auth/interceptors/scope.interceptor';
     PrismaModule,
     HealthModule,
     AuthModule,
+    WorkflowModule,
+    PurchaseRequestsModule,
   ],
   controllers: [AppController],
   providers: [
