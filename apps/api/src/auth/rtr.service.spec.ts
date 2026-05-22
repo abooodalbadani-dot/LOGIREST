@@ -141,6 +141,7 @@ describe('RtrService', () => {
         sessionId: 'session-1',
         isRevoked: false,
         parentTokenId: null,
+        version: 1,
         user: {
           id: 'user-1',
           email: 'test@test.com',
@@ -158,8 +159,11 @@ describe('RtrService', () => {
 
       expect(result.accessToken).toBe('mock-access-token');
       expect(mockPrisma.refreshToken.update).toHaveBeenCalledWith({
-        where: { id: 'rt-1' },
-        data: { isRevoked: true },
+        where: { id: 'rt-1', version: 1 },
+        data: {
+          isRevoked: true,
+          version: { increment: 1 },
+        },
       });
       expect(mockPrisma.refreshToken.create).toHaveBeenCalledWith(
         expect.objectContaining({

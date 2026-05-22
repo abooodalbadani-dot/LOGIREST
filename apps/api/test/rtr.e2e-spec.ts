@@ -17,6 +17,7 @@ describe('Refresh Token Rotation (e2e)', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    jest.setTimeout(90000);
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

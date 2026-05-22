@@ -25,8 +25,23 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log('Database connection established');
+    let retries = 5;
+    while (retries > 0) {
+      try {
+        await this.$connect();
+        this.logger.log('Database connection established');
+        return;
+      } catch (err) {
+        retries--;
+        this.logger.warn(
+          `Database connection failed, retrying in 2 seconds... (${retries} attempts left). Error: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        if (retries === 0) {
+          throw err;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
   }
 
   async onModuleDestroy() {

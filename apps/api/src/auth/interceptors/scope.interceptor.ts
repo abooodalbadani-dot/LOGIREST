@@ -82,9 +82,14 @@ export class ScopeInterceptor implements NestInterceptor {
           warehouseId,
         },
       },
+      include: {
+        warehouse: {
+          select: { branchId: true },
+        },
+      },
     });
 
-    if (!scope) {
+    if (!scope || scope.warehouse.branchId !== branchId) {
       await this.prisma.auditLog.create({
         data: {
           userId: authenticatedUser.id,
@@ -95,9 +100,13 @@ export class ScopeInterceptor implements NestInterceptor {
           afterStateJson: JSON.stringify({
             attemptedWarehouseId: warehouseId,
             attemptedBranchId: branchId,
+            actualBranchId: scope?.warehouse?.branchId || null,
             userId: authenticatedUser.id,
             userRole: authenticatedUser.role,
             userEmail: authenticatedUser.email,
+            reason: !scope
+              ? 'Warehouse scope not authorized'
+              : 'Branch ID mismatch',
           }),
           ipAddress: request.ip || request.socket?.remoteAddress || undefined,
         },

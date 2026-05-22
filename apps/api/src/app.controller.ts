@@ -24,4 +24,9 @@ export class AppController {
   testValidation(@Body() body: TestDto) {
     return { success: true, data: body };
   }
+
+  @Get('test-scope')
+  testScope(): string {
+    return 'scope-ok';
+  }
 }

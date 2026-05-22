@@ -129,6 +129,7 @@ describe('ScopeInterceptor', () => {
   it('should inject activeScope when authorized', async () => {
     mockPrisma.userWarehouseScope.findUnique.mockResolvedValue({
       userId_warehouseId: { userId: 'user-1', warehouseId: 'wh-1' },
+      warehouse: { branchId: 'br-1' },
     });
 
     const ctx = createMockContext({

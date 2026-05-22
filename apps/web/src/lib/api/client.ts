@@ -1,7 +1,7 @@
 import { ZodSchema } from 'zod';
 import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
-import { getTokenCookie } from './cookies';
+import { getTokenCookie, setTokenCookie } from './cookies';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -21,7 +21,13 @@ async function attemptRefresh(): Promise<boolean> {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (res.ok) return true;
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.success && data.accessToken) {
+          setTokenCookie(data.accessToken);
+          return true;
+        }
+      }
       return false;
     } catch {
       return false;

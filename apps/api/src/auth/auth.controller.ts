@@ -7,6 +7,7 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -41,7 +42,7 @@ export class AuthController {
   ) {
     const refreshToken = req.cookies?.logirest_refresh as string | undefined;
     if (!refreshToken) {
-      return { success: false, message: 'No refresh token provided' };
+      throw new UnauthorizedException('No refresh token provided');
     }
 
     const { accessToken } = await this.rtrService.rotateRefreshToken(

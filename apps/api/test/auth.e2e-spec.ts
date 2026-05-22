@@ -18,6 +18,7 @@ describe('AuthController (e2e)', () => {
   let bcrypt: BcryptService;
 
   beforeAll(async () => {
+    jest.setTimeout(90000);
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

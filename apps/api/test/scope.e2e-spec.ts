@@ -16,6 +16,7 @@ describe('Scope Isolation (e2e)', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    jest.setTimeout(90000);
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -92,24 +93,61 @@ describe('Scope Isolation (e2e)', () => {
 
     it('should return 400 when scope headers are missing on non-exempt route', async () => {
       const res = await request(app.getHttpServer())
-        .get('/api/v1')
+        .get('/api/v1/test-scope')
         .set('Authorization', `Bearer ${accessToken}`);
-      // Verify the interceptor catches missing scope headers
-      // May be 400 (missing headers) or the route works with public decorator
-      expect([400, 200]).toContain(res.status);
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Missing active scope headers');
     });
 
-    it('should return 403 for unauthorized scope', async () => {
+    it('should return 403 for unauthorized scope (warehouse not scoped to user)', async () => {
       const res = await request(app.getHttpServer())
-        .get('/api/v1')
+        .get('/api/v1/test-scope')
         .set('Authorization', `Bearer ${accessToken}`)
         .set('x-warehouse-id', '00000000-0000-0000-0000-000000000099')
         .set('x-branch-id', '00000000-0000-0000-0000-000000000099');
 
-      expect([403, 200]).toContain(res.status);
-      if (res.status === 403) {
-        expect(res.body.message).toContain('Scope not authorized');
-      }
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('Access denied: Scope not authorized');
+    });
+
+    it('should return 403 for scope IDOR (warehouse belongs to different branch)', async () => {
+      const mainWh = await prisma.warehouse.findFirst({
+        where: { code: 'WH-HQ-01' },
+      });
+      const northBranch = await prisma.branch.findFirst({
+        where: { code: 'NORTH' },
+      });
+      expect(mainWh).toBeDefined();
+      expect(northBranch).toBeDefined();
+
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/test-scope')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('x-warehouse-id', mainWh!.id)
+        .set('x-branch-id', northBranch!.id);
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('Access denied: Scope not authorized');
+    });
+
+    it('should return 200 for valid authorized scope', async () => {
+      const mainWh = await prisma.warehouse.findFirst({
+        where: { code: 'WH-HQ-01' },
+      });
+      const mainBranch = await prisma.branch.findFirst({
+        where: { code: 'HQ' },
+      });
+      expect(mainWh).toBeDefined();
+      expect(mainBranch).toBeDefined();
+
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/test-scope')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('x-warehouse-id', mainWh!.id)
+        .set('x-branch-id', mainBranch!.id);
+
+      expect(res.status).toBe(200);
+      expect(res.text).toBe('scope-ok');
     });
   });
 });

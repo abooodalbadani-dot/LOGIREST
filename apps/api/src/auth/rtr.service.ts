@@ -72,6 +72,10 @@ export class RtrService {
       throw new UnauthorizedException('Session expired or invalid');
     }
 
+    if (existingToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Session expired');
+    }
+
     if (existingToken.isRevoked) {
       this.logger.warn(
         `Replay attack detected! Session: ${existingToken.sessionId}`,
@@ -106,10 +110,20 @@ export class RtrService {
       throw new UnauthorizedException('User account has been deactivated');
     }
 
-    await this.prisma.refreshToken.update({
-      where: { id: existingToken.id },
-      data: { isRevoked: true },
-    });
+    try {
+      await this.prisma.refreshToken.update({
+        where: {
+          id: existingToken.id,
+          version: existingToken.version,
+        },
+        data: {
+          isRevoked: true,
+          version: { increment: 1 },
+        },
+      });
+    } catch {
+      throw new UnauthorizedException('Session expired or invalid');
+    }
 
     const { token: newToken, hash: newHash } = this.generateRefreshToken();
 

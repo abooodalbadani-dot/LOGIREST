@@ -158,7 +158,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const refreshAt = Math.max(timeUntilExpiry - 300000, 60000);
       const timerId = setTimeout(async () => {
         try {
-          await apiClient.post('/auth/refresh', z.object({}), {});
+          const data = await apiClient.post(
+            '/auth/refresh',
+            z.object({ success: z.boolean(), accessToken: z.string() }),
+            {},
+          );
+          if (data.success) {
+            setTokenCookie(data.accessToken);
+            setToken(data.accessToken);
+          }
         } catch {
           // Refresh failed silently; 401 interceptor will handle
         }
