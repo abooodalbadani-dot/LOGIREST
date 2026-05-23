@@ -1,0 +1,178 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { GrnController } from './grn/grn.controller';
+import { GrnPostService } from './grn-post.service';
+import { PurchaseOrderController } from './purchase-orders/po.controller';
+import { PurchaseOrderService } from './purchase-orders/po.service';
+import { PrismaService } from '../../database/prisma.service';
+import { WorkflowService } from '../workflow/workflow.service';
+import type { Request } from 'express';
+import { Role } from '@logirest/shared-types';
+
+describe('Purchasing Controllers', () => {
+  const mockGrnPostService = {
+    post: jest.fn(),
+  };
+
+  const mockPurchaseOrderService = {
+    create: jest.fn(),
+    findOne: jest.fn(),
+    submit: jest.fn(),
+    approve: jest.fn(),
+    reject: jest.fn(),
+    cancel: jest.fn(),
+  };
+
+  const mockPrismaService = {};
+  const mockWorkflowService = {};
+
+  const mockRequest = {
+    headers: {},
+    ip: '127.0.0.1',
+  } as unknown as Request;
+
+  describe('GrnController', () => {
+    let controller: GrnController;
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [GrnController],
+        providers: [
+          { provide: GrnPostService, useValue: mockGrnPostService },
+          { provide: PrismaService, useValue: mockPrismaService },
+          { provide: WorkflowService, useValue: mockWorkflowService },
+        ],
+      }).compile();
+
+      controller = module.get<GrnController>(GrnController);
+      jest.clearAllMocks();
+    });
+
+    it('should call GrnPostService.post', async () => {
+      mockGrnPostService.post.mockResolvedValue({ success: true });
+
+      const result = await controller.post(
+        'grn-1',
+        'user-1',
+        'WH_KEEPER',
+        { version: 1 },
+        mockRequest,
+      );
+      expect(result).toEqual({ success: true });
+      expect(mockGrnPostService.post).toHaveBeenCalledWith(
+        'grn-1',
+        'user-1',
+        'WH_KEEPER',
+        1,
+        '127.0.0.1',
+      );
+    });
+  });
+
+  describe('PurchaseOrderController', () => {
+    let controller: PurchaseOrderController;
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [PurchaseOrderController],
+        providers: [
+          { provide: PurchaseOrderService, useValue: mockPurchaseOrderService },
+          { provide: PrismaService, useValue: mockPrismaService },
+          { provide: WorkflowService, useValue: mockWorkflowService },
+        ],
+      }).compile();
+
+      controller = module.get<PurchaseOrderController>(PurchaseOrderController);
+      jest.clearAllMocks();
+    });
+
+    it('should call create', async () => {
+      const body = { supplierId: 'sup-1', currencyId: 'cur-1', lines: [] };
+      mockPurchaseOrderService.create.mockResolvedValue({ id: 'po-1' });
+
+      const result = await controller.create(body, 'user-1');
+      expect(result).toEqual({ id: 'po-1' });
+      expect(mockPurchaseOrderService.create).toHaveBeenCalledWith(
+        body,
+        'user-1',
+      );
+    });
+
+    it('should call findOne', async () => {
+      mockPurchaseOrderService.findOne.mockResolvedValue({ id: 'po-1' });
+
+      const result = await controller.findOne('po-1');
+      expect(result).toEqual({ id: 'po-1' });
+      expect(mockPurchaseOrderService.findOne).toHaveBeenCalledWith('po-1');
+    });
+
+    it('should call submit', async () => {
+      mockPurchaseOrderService.submit.mockResolvedValue({
+        id: 'po-1',
+        status: 'SUBMITTED',
+      });
+
+      const result = await controller.submit(
+        'po-1',
+        'user-1',
+        'WH_KEEPER',
+        { comments: 'ok', version: 1 },
+        mockRequest,
+      );
+      expect(result).toEqual({ id: 'po-1', status: 'SUBMITTED' });
+      expect(mockPurchaseOrderService.submit).toHaveBeenCalledWith(
+        'po-1',
+        'user-1',
+        'WH_KEEPER',
+        { comments: 'ok', version: 1, ipAddress: '127.0.0.1' },
+      );
+    });
+
+    it('should call approve', async () => {
+      mockPurchaseOrderService.approve.mockResolvedValue({
+        id: 'po-1',
+        status: 'APPROVED',
+      });
+
+      const result = await controller.approve(
+        'po-1',
+        'user-1',
+        'INV_MGR',
+        { comments: 'approved', version: 2 },
+        mockRequest,
+      );
+      expect(result).toEqual({ id: 'po-1', status: 'APPROVED' });
+    });
+
+    it('should call reject', async () => {
+      mockPurchaseOrderService.reject.mockResolvedValue({
+        id: 'po-1',
+        status: 'REJECTED',
+      });
+
+      const result = await controller.reject(
+        'po-1',
+        'user-1',
+        'INV_MGR',
+        { comments: 'price too high', version: 2 },
+        mockRequest,
+      );
+      expect(result).toEqual({ id: 'po-1', status: 'REJECTED' });
+    });
+
+    it('should call cancel', async () => {
+      mockPurchaseOrderService.cancel.mockResolvedValue({
+        id: 'po-1',
+        status: 'CANCELLED',
+      });
+
+      const result = await controller.cancel(
+        'po-1',
+        'user-1',
+        'WH_KEEPER',
+        { comments: 'cancelled', version: 2 },
+        mockRequest,
+      );
+      expect(result).toEqual({ id: 'po-1', status: 'CANCELLED' });
+    });
+  });
+});

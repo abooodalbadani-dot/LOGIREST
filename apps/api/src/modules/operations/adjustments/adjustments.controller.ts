@@ -2,6 +2,7 @@
 import {
   Controller,
   Post,
+  Get,
   Param,
   UseGuards,
   Req,
@@ -10,15 +11,158 @@ import {
   Body,
 } from '@nestjs/common';
 import { AdjustmentPostService } from '../adjustment-post.service';
+import { AdjustmentsService } from './adjustments.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { Idempotent } from '../../../decorators/idempotent.decorator';
+import { AdjustmentDirection, AdjustmentReason } from '@prisma/client';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
 @Controller('operations/adjustments')
 export class AdjustmentsController {
-  constructor(private readonly adjPostService: AdjustmentPostService) {}
+  constructor(
+    private readonly adjPostService: AdjustmentPostService,
+    private readonly adjustmentsService: AdjustmentsService,
+  ) {}
+
+  @Post()
+  @Idempotent()
+  async create(
+    @Body()
+    body: {
+      warehouseId: string;
+      lines: Array<{
+        itemId: string;
+        lotId?: string;
+        quantity: number;
+        direction: AdjustmentDirection;
+        reason: AdjustmentReason;
+        unitCost?: number;
+      }>;
+    },
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.adjustmentsService.create(body, userId);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.adjustmentsService.findOne(id);
+  }
+
+  @Post(':id/submit')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'adjustment',
+    action: 'SUBMIT',
+    modelName: 'adjustment',
+  })
+  @HttpCode(HttpStatus.OK)
+  async submit(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.adjustmentsService.submit(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
+  @Post(':id/approve')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'adjustment',
+    action: 'APPROVE',
+    modelName: 'adjustment',
+  })
+  @HttpCode(HttpStatus.OK)
+  async approve(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.adjustmentsService.approve(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
+  @Post(':id/reject')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'adjustment',
+    action: 'REJECT',
+    modelName: 'adjustment',
+  })
+  @HttpCode(HttpStatus.OK)
+  async reject(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.adjustmentsService.reject(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
+  @Post(':id/cancel')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'adjustment',
+    action: 'CANCEL',
+    modelName: 'adjustment',
+  })
+  @HttpCode(HttpStatus.OK)
+  async cancel(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.adjustmentsService.cancel(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
 
   @Post(':id/post')
   @UseGuards(WorkflowStateGuard)

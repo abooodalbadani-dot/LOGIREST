@@ -15,10 +15,15 @@ import { LedgerModule } from './modules/ledger/ledger.module';
 import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { OperationsModule } from './modules/operations/operations.module';
 import { StocktakeModule } from './modules/stocktake/stocktake.module';
+import { KitchenRequestsModule } from './modules/kitchen-requests/kitchen-requests.module';
+import { MasterDataModule } from './modules/master-data/master-data.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { IdempotencyService } from './services/idempotency.service';
 import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
 import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
+import { LockCleanupJob } from './jobs/lock-cleanup.job';
 
 @Module({
   imports: [
@@ -33,11 +38,16 @@ import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
     PurchasingModule,
     OperationsModule,
     StocktakeModule,
+    KitchenRequestsModule,
+    MasterDataModule,
+    InventoryModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     IdempotencyService,
+    LockCleanupJob,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

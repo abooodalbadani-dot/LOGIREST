@@ -1,57 +1,52 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Controller,
   Post,
   Get,
+  Body,
   Param,
   UseGuards,
   Req,
   HttpCode,
   HttpStatus,
-  Body,
 } from '@nestjs/common';
-import { IssuePostService } from '../issue-post.service';
-import { IssuesService } from './issues.service';
+import { PurchaseOrderService } from './po.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
-import { ActiveScope } from '../../../auth/decorators/active-scope.decorator';
 import { Idempotent } from '../../../decorators/idempotent.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
-@Controller('operations/issues')
-export class IssuesController {
-  constructor(
-    private readonly issuePostService: IssuePostService,
-    private readonly issuesService: IssuesService,
-  ) {}
+@Controller('purchase-orders')
+export class PurchaseOrderController {
+  constructor(private readonly poService: PurchaseOrderService) {}
 
   @Post()
   @Idempotent()
   async create(
     @Body()
     body: {
-      departmentId: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      supplierId: string;
+      currencyId: string;
+      prId?: string;
+      lines: Array<{ itemId: string; quantity: number; unitPrice: number }>;
     },
     @CurrentUser('id') userId: string,
-    @ActiveScope('warehouseId') warehouseId: string,
   ) {
-    return this.issuesService.create(body, userId, warehouseId);
+    return this.poService.create(body, userId);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.issuesService.findOne(id);
+    return this.poService.findOne(id);
   }
 
   @Post(':id/submit')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
-    docType: 'issue',
+    docType: 'po',
     action: 'SUBMIT',
-    modelName: 'inventoryIssue',
+    modelName: 'purchaseOrder',
   })
   @HttpCode(HttpStatus.OK)
   async submit(
@@ -68,7 +63,63 @@ export class IssuesController {
       req.ip ||
       undefined;
 
-    return this.issuesService.submit(id, userId, role, {
+    return this.poService.submit(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
+  @Post(':id/approve')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'po',
+    action: 'APPROVE',
+    modelName: 'purchaseOrder',
+  })
+  @HttpCode(HttpStatus.OK)
+  async approve(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.poService.approve(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
+  @Post(':id/reject')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'po',
+    action: 'REJECT',
+    modelName: 'purchaseOrder',
+  })
+  @HttpCode(HttpStatus.OK)
+  async reject(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.poService.reject(id, userId, role, {
       ...body,
       ipAddress,
     });
@@ -77,9 +128,9 @@ export class IssuesController {
   @Post(':id/cancel')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
-    docType: 'issue',
+    docType: 'po',
     action: 'CANCEL',
-    modelName: 'inventoryIssue',
+    modelName: 'purchaseOrder',
   })
   @HttpCode(HttpStatus.OK)
   async cancel(
@@ -96,40 +147,9 @@ export class IssuesController {
       req.ip ||
       undefined;
 
-    return this.issuesService.cancel(id, userId, role, {
+    return this.poService.cancel(id, userId, role, {
       ...body,
       ipAddress,
     });
-  }
-
-  @Post(':id/post')
-  @UseGuards(WorkflowStateGuard)
-  @WorkflowAction({
-    docType: 'issue',
-    action: 'POST',
-    modelName: 'inventoryIssue',
-  })
-  @HttpCode(HttpStatus.OK)
-  async post(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
-    @Body() body: { version?: number },
-    @Req() req: Request,
-  ) {
-    const ipAddress =
-      (Array.isArray(req.headers['x-forwarded-for'])
-        ? req.headers['x-forwarded-for'][0]
-        : req.headers['x-forwarded-for']) ||
-      req.ip ||
-      undefined;
-
-    return this.issuePostService.post(
-      id,
-      userId,
-      role,
-      body.version,
-      ipAddress,
-    );
   }
 }

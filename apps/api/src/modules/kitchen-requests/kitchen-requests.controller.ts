@@ -10,22 +10,17 @@ import {
   HttpStatus,
   Body,
 } from '@nestjs/common';
-import { IssuePostService } from '../issue-post.service';
-import { IssuesService } from './issues.service';
-import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
-import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
-import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
-import { ActiveScope } from '../../../auth/decorators/active-scope.decorator';
-import { Idempotent } from '../../../decorators/idempotent.decorator';
+import { KitchenRequestsService } from './kitchen-requests.service';
+import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
+import { WorkflowAction } from '../../decorators/workflow-action.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { Idempotent } from '../../decorators/idempotent.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
-@Controller('operations/issues')
-export class IssuesController {
-  constructor(
-    private readonly issuePostService: IssuePostService,
-    private readonly issuesService: IssuesService,
-  ) {}
+@Controller('kitchen-requests')
+export class KitchenRequestsController {
+  constructor(private readonly krService: KitchenRequestsService) {}
 
   @Post()
   @Idempotent()
@@ -33,25 +28,25 @@ export class IssuesController {
     @Body()
     body: {
       departmentId: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      warehouseId: string;
+      items: Array<{ itemId: string; quantityRequested: number }>;
     },
     @CurrentUser('id') userId: string,
-    @ActiveScope('warehouseId') warehouseId: string,
   ) {
-    return this.issuesService.create(body, userId, warehouseId);
+    return this.krService.create(body, userId);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.issuesService.findOne(id);
+    return this.krService.findOne(id);
   }
 
   @Post(':id/submit')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
-    docType: 'issue',
+    docType: 'kitchen_request',
     action: 'SUBMIT',
-    modelName: 'inventoryIssue',
+    modelName: 'kitchenRequest',
   })
   @HttpCode(HttpStatus.OK)
   async submit(
@@ -68,7 +63,40 @@ export class IssuesController {
       req.ip ||
       undefined;
 
-    return this.issuesService.submit(id, userId, role, {
+    return this.krService.submit(id, userId, role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
+  @Post(':id/fulfill')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'kitchen_request',
+    action: 'FULFILL',
+    modelName: 'kitchenRequest',
+  })
+  @HttpCode(HttpStatus.OK)
+  async fulfill(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body()
+    body: {
+      comments?: string;
+      version?: number;
+      fulfillments?: Array<{ itemId: string; fulfilledQty: number }>;
+    },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    return this.krService.fulfill(id, userId, role, {
       ...body,
       ipAddress,
     });
@@ -77,9 +105,9 @@ export class IssuesController {
   @Post(':id/cancel')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
-    docType: 'issue',
+    docType: 'kitchen_request',
     action: 'CANCEL',
-    modelName: 'inventoryIssue',
+    modelName: 'kitchenRequest',
   })
   @HttpCode(HttpStatus.OK)
   async cancel(
@@ -96,40 +124,9 @@ export class IssuesController {
       req.ip ||
       undefined;
 
-    return this.issuesService.cancel(id, userId, role, {
+    return this.krService.cancel(id, userId, role, {
       ...body,
       ipAddress,
     });
-  }
-
-  @Post(':id/post')
-  @UseGuards(WorkflowStateGuard)
-  @WorkflowAction({
-    docType: 'issue',
-    action: 'POST',
-    modelName: 'inventoryIssue',
-  })
-  @HttpCode(HttpStatus.OK)
-  async post(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
-    @Body() body: { version?: number },
-    @Req() req: Request,
-  ) {
-    const ipAddress =
-      (Array.isArray(req.headers['x-forwarded-for'])
-        ? req.headers['x-forwarded-for'][0]
-        : req.headers['x-forwarded-for']) ||
-      req.ip ||
-      undefined;
-
-    return this.issuePostService.post(
-      id,
-      userId,
-      role,
-      body.version,
-      ipAddress,
-    );
   }
 }
