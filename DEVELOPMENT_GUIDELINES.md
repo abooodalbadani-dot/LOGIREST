@@ -113,6 +113,26 @@ AI agents executing implementation within this repository MUST operate under str
   ```
 * **FORBIDDEN**: Deducting stock without deterministic locking or executing concurrent stock writes outside a serializable transaction is FORBIDDEN.
 
+### 3.2.1 Ledger Module & Locking Services
+To standardize database concurrency protection and inventory cost valuation, all mutations MUST use the unified ledger services in `apps/api/src/modules/ledger/`:
+
+1. **LedgerLockService**:
+   - `lockItem(tx, warehouseId, itemId)`: Obtains a raw `SELECT FOR UPDATE` lock on the global `WarehouseItem` balance row.
+   - `lockLots(tx, warehouseId, itemId, lotIds)`: Obtains raw `SELECT FOR UPDATE` locks on specific `WarehouseItemLot` rows. The service automatically sorts the lot IDs ascending (`lotId ASC`) to guarantee deadlock prevention.
+   - `assertItemBalance(warehouseItem, requiredQty, itemId)`: Asserts post-lock global balance sufficiency, throwing `UnprocessableEntityException` (422) if insufficient.
+   - `assertLotBalance(warehouseItemLot, requiredQty, lotId)`: Asserts post-lock lot balance sufficiency.
+
+2. **AllocationService**:
+   - `allocate(tx, warehouseId, itemId, requiredQty)`: Progressively allocates stock from lots.
+   - For perishable items (`hasExpiry = true`): FEFO (First-Expired, First-Out) sorted by `expiryDate ASC`, then `receivedDate ASC`. Expired lots are auto-excluded.
+   - For batched items (`isBatched = true, hasExpiry = false`): FIFO (First-In, First-Out) sorted by `receivedDate ASC`.
+   - For unbatched items (`isBatched = false`): Deducts directly from the global `WarehouseItem` balance.
+
+3. **WacService**:
+   - `recalculate(tx, warehouseId, itemId, receivedQty, receivedCost, documentId, idempotencyKey)`: Recalculates WAC on GRN receipts using: `(Current Qty * Current WAC + Received Qty * Received Unit Cost) / (Current Qty + Received Qty)`. Updates `WarehouseItem.wac` and logs cost change in the append-only `CostLedger`. If current quantity is zero or negative, the received cost establishes the new WAC baseline.
+   - `handlePositiveAdjustment(tx, warehouseId, itemId, adjustedQty, documentId, idempotencyKey)`: Enforces positive adjustments (surpluses) inheriting the current WAC without recalculating, logging a `CostLedger` entry.
+
+
 ### 3.3 Optimistic Locking
 * **DIRECTIVE**: All non-ledger document updates (Purchase Requests, Purchase Orders, Adjustments, Stocktakes) MUST use optimistic locking via a `version` field to prevent simultaneous edit overrides.
 * **REQUIRED**: Updates MUST match the target ID and current version, and automatically increment the version:
