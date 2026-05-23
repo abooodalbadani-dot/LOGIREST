@@ -366,6 +366,39 @@ export class WorkflowService {
             },
           });
 
+          // Dispatch notifications for key status changes
+          if (docType === 'pr' && targetStatus === 'SUBMITTED') {
+            await tx.notificationLog.create({
+              data: {
+                targetRole: 'APPROVER',
+                warehouseId: updatedDoc.warehouseId,
+                message: `Purchase Request ${updatedDoc.requestNumber} is submitted and requires approval.`,
+                documentType: 'PURCHASE_REQUEST',
+                documentId: updatedDoc.id,
+              },
+            });
+          } else if (docType === 'pr' && targetStatus === 'APPROVED') {
+            await tx.notificationLog.create({
+              data: {
+                targetRole: 'PROC_OFFICER',
+                warehouseId: updatedDoc.warehouseId,
+                message: `Purchase Request ${updatedDoc.requestNumber} has been approved.`,
+                documentType: 'PURCHASE_REQUEST',
+                documentId: updatedDoc.id,
+              },
+            });
+          } else if (docType === 'transfer' && targetStatus === 'IN_TRANSIT') {
+            await tx.notificationLog.create({
+              data: {
+                targetRole: 'WH_KEEPER',
+                warehouseId: updatedDoc.toWarehouseId,
+                message: `Transfer ${updatedDoc.transferNumber} has been shipped and is in transit.`,
+                documentType: 'TRANSFER',
+                documentId: updatedDoc.id,
+              },
+            });
+          }
+
           return updatedDoc;
         },
         {

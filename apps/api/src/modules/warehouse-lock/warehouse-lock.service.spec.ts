@@ -40,71 +40,141 @@ describe('WarehouseLockService', () => {
     jest.clearAllMocks();
   });
 
-  it('should throw NotFoundException if lock does not exist', async () => {
-    mockPrisma.warehouseLock.findUnique.mockResolvedValue(null);
+  describe('forceUnlock', () => {
+    it('should throw NotFoundException if lock does not exist', async () => {
+      mockPrisma.warehouseLock.findUnique.mockResolvedValue(null);
 
-    await expect(
-      service.forceUnlock('lock-1', 'admin-1', 'Valid Reason Notes'),
-    ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.forceUnlock('lock-1', 'admin-1', 'Valid Reason Notes'),
+      ).rejects.toThrow(NotFoundException);
+    });
 
-    expect(mockPrisma.warehouseLock.findUnique).toHaveBeenCalledWith({
-      where: { id: 'lock-1' },
+    it('should throw BadRequestException if lock is already inactive', async () => {
+      const mockLock = { id: 'lock-1', isActive: false };
+      mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
+
+      await expect(
+        service.forceUnlock('lock-1', 'admin-1', 'Valid Reason Notes'),
+      ).rejects.toThrow(new BadRequestException('Lock is not active.'));
+    });
+
+    it('should deactivate lock and log manual override event in audit log within transaction', async () => {
+      const expiresAt = new Date();
+      const mockLock = {
+        id: 'lock-1',
+        isActive: true,
+        expiresAt,
+        warehouseId: 'wh-1',
+        status: 'ACTIVE',
+      };
+      mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
+      mockPrisma.warehouseLock.update.mockResolvedValue({
+        ...mockLock,
+        isActive: false,
+        status: 'RELEASED',
+      });
+
+      const result = await service.forceUnlock(
+        'lock-1',
+        'admin-1',
+        'This is a valid reason notes length.',
+        '127.0.0.1',
+      );
+
+      expect(result.isActive).toBe(false);
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(mockPrisma.warehouseLock.update).toHaveBeenCalledWith({
+        where: { id: 'lock-1' },
+        data: { isActive: false, status: 'RELEASED' },
+      });
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'admin-1',
+          action: 'FORCE_UNLOCK',
+          targetTable: 'warehouse_locks',
+          targetId: 'lock-1',
+          beforeStateJson: JSON.stringify({
+            isActive: true,
+            status: mockLock.status,
+            expiresAt: mockLock.expiresAt,
+            warehouseId: mockLock.warehouseId,
+          }),
+          afterStateJson: JSON.stringify({
+            isActive: false,
+            status: 'RELEASED',
+            reason_notes: 'This is a valid reason notes length.',
+          }),
+          ipAddress: '127.0.0.1',
+        },
+      });
     });
   });
 
-  it('should throw BadRequestException if lock is already inactive', async () => {
-    const mockLock = { id: 'lock-1', isActive: false };
-    mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
+  describe('manualUnlock', () => {
+    it('should throw NotFoundException if lock does not exist', async () => {
+      mockPrisma.warehouseLock.findUnique.mockResolvedValue(null);
 
-    await expect(
-      service.forceUnlock('lock-1', 'admin-1', 'Valid Reason Notes'),
-    ).rejects.toThrow(new BadRequestException('Lock is not active.'));
-  });
-
-  it('should deactivate lock and log manual override event in audit log within transaction', async () => {
-    const expiresAt = new Date();
-    const mockLock = {
-      id: 'lock-1',
-      isActive: true,
-      expiresAt,
-      warehouseId: 'wh-1',
-    };
-    mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
-    mockPrisma.warehouseLock.update.mockResolvedValue({
-      ...mockLock,
-      isActive: false,
+      await expect(
+        service.manualUnlock('lock-1', 'admin-1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
-    const result = await service.forceUnlock(
-      'lock-1',
-      'admin-1',
-      'This is a valid reason notes length.',
-      '127.0.0.1',
-    );
+    it('should throw BadRequestException if lock is already inactive', async () => {
+      const mockLock = { id: 'lock-1', isActive: false };
+      mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
 
-    expect(result.isActive).toBe(false);
-    expect(mockPrisma.$transaction).toHaveBeenCalled();
-    expect(mockPrisma.warehouseLock.update).toHaveBeenCalledWith({
-      where: { id: 'lock-1' },
-      data: { isActive: false },
+      await expect(
+        service.manualUnlock('lock-1', 'admin-1'),
+      ).rejects.toThrow(new BadRequestException('Lock is not active.'));
     });
-    expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
-      data: {
-        userId: 'admin-1',
-        action: 'FORCE_UNLOCK',
-        targetTable: 'warehouse_locks',
-        targetId: 'lock-1',
-        beforeStateJson: JSON.stringify({
-          isActive: true,
-          expiresAt: mockLock.expiresAt,
-          warehouseId: mockLock.warehouseId,
-        }),
-        afterStateJson: JSON.stringify({
-          isActive: false,
-          reason_notes: 'This is a valid reason notes length.',
-        }),
-        ipAddress: '127.0.0.1',
-      },
+
+    it('should deactivate lock and log manual unlock event in audit log within transaction', async () => {
+      const expiresAt = new Date();
+      const mockLock = {
+        id: 'lock-1',
+        isActive: true,
+        expiresAt,
+        warehouseId: 'wh-1',
+        status: 'STALE',
+      };
+      mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
+      mockPrisma.warehouseLock.update.mockResolvedValue({
+        ...mockLock,
+        isActive: false,
+        status: 'RELEASED',
+      });
+
+      const result = await service.manualUnlock(
+        'lock-1',
+        'admin-1',
+        '127.0.0.1',
+      );
+
+      expect(result.isActive).toBe(false);
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(mockPrisma.warehouseLock.update).toHaveBeenCalledWith({
+        where: { id: 'lock-1' },
+        data: { isActive: false, status: 'RELEASED' },
+      });
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'admin-1',
+          action: 'MANUAL_UNLOCK',
+          targetTable: 'warehouse_locks',
+          targetId: 'lock-1',
+          beforeStateJson: JSON.stringify({
+            isActive: true,
+            status: mockLock.status,
+            expiresAt: mockLock.expiresAt,
+            warehouseId: mockLock.warehouseId,
+          }),
+          afterStateJson: JSON.stringify({
+            isActive: false,
+            status: 'RELEASED',
+          }),
+          ipAddress: '127.0.0.1',
+        },
+      });
     });
   });
 });

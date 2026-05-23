@@ -34,6 +34,7 @@ export class LockCleanupJob implements OnModuleInit, OnModuleDestroy {
       const expiredLocks = await this.prisma.warehouseLock.findMany({
         where: {
           isActive: true,
+          status: 'ACTIVE',
           expiresAt: {
             lt: now,
           },
@@ -44,38 +45,20 @@ export class LockCleanupJob implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      this.logger.log(`Found ${expiredLocks.length} expired locks to release.`);
+      this.logger.log(`Found ${expiredLocks.length} expired locks to mark STALE.`);
 
-      await this.prisma.$transaction(async (tx) => {
-        // Set expired locks to inactive
-        await tx.warehouseLock.updateMany({
-          where: {
-            id: {
-              in: expiredLocks.map((l) => l.id),
-            },
+      await this.prisma.warehouseLock.updateMany({
+        where: {
+          id: {
+            in: expiredLocks.map((l) => l.id),
           },
-          data: {
-            isActive: false,
-          },
-        });
-
-        // Set isLocked to false on the corresponding Warehouses
-        const warehouseIds = Array.from(
-          new Set(expiredLocks.map((l) => l.warehouseId)),
-        );
-        await tx.warehouse.updateMany({
-          where: {
-            id: {
-              in: warehouseIds,
-            },
-          },
-          data: {
-            isLocked: false,
-          },
-        });
+        },
+        data: {
+          status: 'STALE',
+        },
       });
 
-      this.logger.log('Successfully cleaned up expired locks.');
+      this.logger.log('Successfully marked expired locks as STALE.');
     } catch (error) {
       this.logger.error('Failed to cleanup expired locks', error);
     }

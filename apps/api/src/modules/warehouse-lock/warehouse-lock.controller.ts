@@ -51,4 +51,32 @@ export class WarehouseLockController {
       ipAddress,
     );
   }
+
+  @Post(':id/unlock')
+  async manualUnlock(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Req() req: Request,
+  ) {
+    if (role !== 'ADMIN' && role !== 'INV_MGR') {
+      throw new ForbiddenException(
+        'Only admins and managers are authorized to manually release warehouse locks.',
+      );
+    }
+
+    const ipAddress = req.ip || req.socket.remoteAddress;
+
+    const updatedLock = await this.warehouseLockService.manualUnlock(
+      id,
+      userId,
+      ipAddress,
+    );
+
+    return {
+      success: true,
+      message: 'Warehouse lock successfully released.',
+      deactivatedAt: updatedLock.updatedAt,
+    };
+  }
 }

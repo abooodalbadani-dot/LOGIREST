@@ -1,39 +1,53 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { InventoryService } from './inventory.service';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import type {
+  InventoryBalanceQuery,
+  InventoryLotsQuery,
+  InventoryMovementsQuery,
+} from '@logirest/shared-types';
 
 @Controller('inventory')
+@UseGuards(JwtAuthGuard)
 export class InventoryController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly inventoryService: InventoryService) {}
 
-  @Get('balances')
-  async getBalances(@ActiveScope('warehouseId') warehouseId: string) {
-    return this.prisma.warehouseItem.findMany({
-      where: { warehouseId },
-      include: {
-        item: true,
-      },
-    });
+  @Get('balance')
+  async getBalance(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @Query() query: InventoryBalanceQuery,
+  ) {
+    return this.inventoryService.getBalance(warehouseId, query);
+  }
+
+  @Get('lots')
+  async getLots(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @Query() query: InventoryLotsQuery,
+  ) {
+    return this.inventoryService.getLots(warehouseId, query);
   }
 
   @Get('movements')
   async getMovements(
     @ActiveScope('warehouseId') warehouseId: string,
-    @Query('itemId') itemId?: string,
+    @Query() query: InventoryMovementsQuery,
   ) {
-    const filter: any = { warehouseId };
-    if (itemId) {
-      filter.itemId = itemId;
-    }
-    return this.prisma.stockLedger.findMany({
-      where: filter,
-      include: {
-        item: true,
-        lot: true,
-      },
-      orderBy: {
-        postedAt: 'desc',
-      },
-    });
+    return this.inventoryService.getMovements(warehouseId, query);
+  }
+}
+
+@Controller('items')
+@UseGuards(JwtAuthGuard)
+export class ItemsController {
+  constructor(private readonly inventoryService: InventoryService) {}
+
+  @Get('scan')
+  async scanBarcode(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @Query('barcode') barcode: string,
+  ) {
+    return this.inventoryService.scanBarcode(warehouseId, barcode);
   }
 }

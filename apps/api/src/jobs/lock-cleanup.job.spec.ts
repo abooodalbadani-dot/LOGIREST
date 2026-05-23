@@ -10,10 +10,6 @@ describe('LockCleanupJob', () => {
       findMany: jest.fn(),
       updateMany: jest.fn(),
     },
-    warehouse: {
-      updateMany: jest.fn(),
-    },
-    $transaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -39,22 +35,20 @@ describe('LockCleanupJob', () => {
 
     await job.cleanupExpiredLocks();
     expect(mockPrismaService.warehouseLock.findMany).toHaveBeenCalled();
-    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+    expect(mockPrismaService.warehouseLock.updateMany).not.toHaveBeenCalled();
   });
 
-  it('should cleanup expired locks and release warehouses', async () => {
+  it('should transition expired locks to STALE status', async () => {
     const expiredLocks = [
-      { id: 'lock-1', warehouseId: 'wh-1' },
-      { id: 'lock-2', warehouseId: 'wh-2' },
+      { id: 'lock-1', warehouseId: 'wh-1', status: 'ACTIVE' },
+      { id: 'lock-2', warehouseId: 'wh-2', status: 'ACTIVE' },
     ];
     mockPrismaService.warehouseLock.findMany.mockResolvedValue(expiredLocks);
-    mockPrismaService.$transaction.mockImplementation(async (callback) => {
-      return callback(mockPrismaService);
-    });
+    mockPrismaService.warehouseLock.updateMany.mockResolvedValue({ count: 2 });
 
     await job.cleanupExpiredLocks();
 
-    expect(mockPrismaService.$transaction).toHaveBeenCalled();
+    expect(mockPrismaService.warehouseLock.findMany).toHaveBeenCalled();
     expect(mockPrismaService.warehouseLock.updateMany).toHaveBeenCalledWith({
       where: {
         id: {
@@ -62,17 +56,7 @@ describe('LockCleanupJob', () => {
         },
       },
       data: {
-        isActive: false,
-      },
-    });
-    expect(mockPrismaService.warehouse.updateMany).toHaveBeenCalledWith({
-      where: {
-        id: {
-          in: ['wh-1', 'wh-2'],
-        },
-      },
-      data: {
-        isLocked: false,
+        status: 'STALE',
       },
     });
   });

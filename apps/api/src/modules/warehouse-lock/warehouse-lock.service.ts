@@ -39,7 +39,7 @@ export class WarehouseLockService {
       // Deactivate the lock
       const updatedLock = await tx.warehouseLock.update({
         where: { id: lockId },
-        data: { isActive: false },
+        data: { isActive: false, status: 'RELEASED' },
       });
 
       // Write the override audit log entry
@@ -51,12 +51,66 @@ export class WarehouseLockService {
           targetId: lockId,
           beforeStateJson: JSON.stringify({
             isActive: true,
+            status: lock.status,
             expiresAt: lock.expiresAt,
             warehouseId: lock.warehouseId,
           }),
           afterStateJson: JSON.stringify({
             isActive: false,
+            status: 'RELEASED',
             reason_notes: reasonNotes,
+          }),
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return updatedLock;
+    });
+  }
+
+  /**
+   * Manually deactivates a warehouse lock for Admin/Manager roles.
+   */
+  async manualUnlock(
+    lockId: string,
+    userId: string,
+    ipAddress?: string,
+  ): Promise<any> {
+    const lock = await this.prisma.warehouseLock.findUnique({
+      where: { id: lockId },
+    });
+
+    if (!lock) {
+      throw new NotFoundException(
+        `Warehouse lock with ID ${lockId} not found.`,
+      );
+    }
+
+    if (!lock.isActive) {
+      throw new BadRequestException('Lock is not active.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedLock = await tx.warehouseLock.update({
+        where: { id: lockId },
+        data: { isActive: false, status: 'RELEASED' },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'MANUAL_UNLOCK',
+          targetTable: 'warehouse_locks',
+          targetId: lockId,
+          beforeStateJson: JSON.stringify({
+            isActive: true,
+            status: lock.status,
+            expiresAt: lock.expiresAt,
+            warehouseId: lock.warehouseId,
+          }),
+          afterStateJson: JSON.stringify({
+            isActive: false,
+            status: 'RELEASED',
           }),
           ipAddress: ipAddress || null,
         },

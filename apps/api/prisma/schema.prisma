@@ -56,6 +56,12 @@ enum LockType {
   MANUAL
 }
 
+enum LockStatus {
+  ACTIVE
+  STALE
+  RELEASED
+}
+
 enum StocktakeStatus {
   DRAFT
   STARTED
@@ -633,17 +639,19 @@ model CostLedger {
 // ─── Tier 6: Control & Security ────────────────────────────────────
 
 model WarehouseLock {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   warehouseId String
   lockType    LockType
+  status      LockStatus @default(ACTIVE)
   lockedById  String
   expiresAt   DateTime
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   lockedBy  User      @relation(fields: [lockedById], references: [id], onDelete: Restrict)
 
+  @@index([isActive, expiresAt])
   @@map("warehouse_locks")
 }
 
@@ -717,4 +725,19 @@ model StocktakeSnapshot {
   lot     Lot?             @relation(fields: [lotId], references: [id], onDelete: Restrict)
 
   @@map("stocktake_snapshots")
+}
+
+model NotificationLog {
+  id           String        @id @default(uuid())
+  targetRole   Role
+  warehouseId  String?
+  message      String
+  isRead       Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  documentType DocumentType?
+  documentId   String?
+
+  @@index([targetRole, isRead])
+  @@index([warehouseId])
+  @@map("notification_logs")
 }

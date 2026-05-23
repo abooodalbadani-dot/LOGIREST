@@ -34,6 +34,9 @@ describe('WorkflowService', () => {
       findUnique: jest.fn(),
       updateMany: jest.fn(),
     },
+    notificationLog: {
+      create: jest.fn(),
+    },
   };
 
   const mockConcurrencyService = {
@@ -131,6 +134,7 @@ describe('WorkflowService', () => {
         status: 'DRAFT',
         version: 1,
         warehouseId: 'wh-1',
+        requestNumber: 'PR-2026-0001',
       };
 
       let callCount = 0;
@@ -162,6 +166,15 @@ describe('WorkflowService', () => {
       expect(mockPrisma.purchaseRequest.updateMany).toHaveBeenCalled();
       expect(mockPrisma.approvalEvent.create).toHaveBeenCalled();
       expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+      expect(mockPrisma.notificationLog.create).toHaveBeenCalledWith({
+        data: {
+          targetRole: 'APPROVER',
+          warehouseId: 'wh-1',
+          message: 'Purchase Request PR-2026-0001 is submitted and requires approval.',
+          documentType: 'PURCHASE_REQUEST',
+          documentId: 'doc-1',
+        },
+      });
     });
 
     it('should throw ForbiddenException if role cannot perform action', async () => {

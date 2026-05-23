@@ -19,6 +19,8 @@ import { KitchenRequestsModule } from './modules/kitchen-requests/kitchen-reques
 import { MasterDataModule } from './modules/master-data/master-data.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { NotificationModule } from './modules/notifications/notification.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { IdempotencyService } from './services/idempotency.service';
 import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
@@ -42,6 +44,8 @@ import { LockCleanupJob } from './jobs/lock-cleanup.job';
     MasterDataModule,
     InventoryModule,
     ReportsModule,
+    NotificationModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
