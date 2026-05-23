@@ -23,7 +23,7 @@
 
 **Purpose**: Project dependency and context initialization
 
-- [ ] T001 Verify and update project dependencies in apps/api/package.json
+- [x] T001 Verify and update project dependencies in apps/api/package.json
 
 ---
 
@@ -33,9 +33,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Generate database delta migration and apply to PostgreSQL in apps/api/prisma/schema.prisma
-- [ ] T003 [P] Implement Prisma migrations sync verification checks in apps/api/src/database/prisma.service.ts
-- [ ] T004 [P] Implement environment schema validation using Zod in apps/api/src/config/env.validation.ts and apps/api/src/app.module.ts
+- [x] T002 Generate database delta migration and apply to PostgreSQL in apps/api/prisma/schema.prisma
+- [x] T003 [P] Implement Prisma migrations sync verification checks in apps/api/src/database/prisma.service.ts
+- [x] T004 [P] Implement environment schema validation using Zod in apps/api/src/config/env.validation.ts and apps/api/src/app.module.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -49,13 +49,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Implement Available Inventory report route in apps/api/src/modules/reports/reports.controller.ts
-- [ ] T006 [P] [US1] Implement paginated Inventory Movements report route in apps/api/src/modules/reports/reports.controller.ts
-- [ ] T007 [P] [US1] Implement Expiry report route in apps/api/src/modules/reports/reports.controller.ts
-- [ ] T008 [P] [US1] Implement Stocktake Variance report route in apps/api/src/modules/reports/reports.controller.ts
-- [ ] T009 [P] [US1] Implement Procurement Status report route in apps/api/src/modules/reports/reports.controller.ts
-- [ ] T010 [P] [US1] Implement Currency Summaries report route in apps/api/src/modules/reports/reports.controller.ts
-- [ ] T011 [US1] Implement unit and integration tests in apps/api/src/modules/reports/reports.controller.spec.ts
+- [x] T005 [P] [US1] Implement Available Inventory report route in apps/api/src/modules/reports/reports.controller.ts
+- [x] T006 [P] [US1] Implement paginated Inventory Movements report route in apps/api/src/modules/reports/reports.controller.ts
+- [x] T007 [P] [US1] Implement Expiry report route in apps/api/src/modules/reports/reports.controller.ts
+- [x] T008 [P] [US1] Implement Stocktake Variance report route in apps/api/src/modules/reports/reports.controller.ts
+- [x] T009 [P] [US1] Implement Procurement Status report route in apps/api/src/modules/reports/reports.controller.ts
+- [x] T010 [P] [US1] Implement Currency Summaries report route in apps/api/src/modules/reports/reports.controller.ts
+- [x] T011 [US1] Implement unit and integration tests in apps/api/src/modules/reports/reports.controller.spec.ts
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently.
 
@@ -69,7 +69,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Implement configuration validation verification test suite in apps/api/test/config-validation.e2e-spec.ts
+- [x] T012 [US2] Implement configuration validation verification test suite in apps/api/test/config-validation.e2e-spec.ts
 
 **Checkpoint**: At this point, User Story 2 configuration guard is active and verified.
 
@@ -83,7 +83,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Verify compilation of warehouse lock guard and controller in apps/api/src/guards/warehouse-lock.guard.ts
+- [x] T013 [US3] Verify compilation of warehouse lock guard and controller in apps/api/src/guards/warehouse-lock.guard.ts
 
 **Checkpoint**: All schema-dependent lock and notification triggers are validated.
 
@@ -93,10 +93,10 @@
 
 **Purpose**: Quality verification and CI config updates
 
-- [ ] T014 [P] Add typecheck and tests commands to CI workflow in .github/workflows/test-build.yml
-- [ ] T015 Run lint validation check via npm run lint --filter=api
-- [ ] T016 Run typecheck validation check via npm run typecheck --filter=api
-- [ ] T017 Run quickstart.md validation steps
+- [x] T014 [P] Add typecheck and tests commands to CI workflow in .github/workflows/test-build.yml
+- [x] T015 Run lint validation check via npm run lint --filter=api
+- [x] T016 Run typecheck validation check via npm run typecheck --filter=api
+- [x] T017 Run quickstart.md validation steps
 
 ---
 
