@@ -23,9 +23,9 @@
 
 **Purpose**: Project initialization and basic structure verification.
 
-- [ ] T001 Verify project workspace dependencies and structure per implementation plan
-- [ ] T002 Verify backend apps/api configuration andPackages configuration
-- [ ] T003 [P] Configure and run linting/formatting tools in apps/api/
+- [x] T001 Verify project workspace dependencies and structure per implementation plan
+- [x] T002 Verify backend apps/api configuration andPackages configuration
+- [x] T003 [P] Configure and run linting/formatting tools in apps/api/
 
 ---
 
@@ -35,13 +35,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Implement pessimistic locking in LedgerLockService inside apps/api/src/modules/ledger/ledger-lock.service.ts
-- [ ] T005 [P] Implement progressive lot allocation (FEFO/FIFO) inside apps/api/src/modules/ledger/allocation.service.ts
-- [ ] T006 [P] Implement WAC calculations in WacService inside apps/api/src/modules/ledger/wac.service.ts
-- [ ] T007 [P] Create and configure WorkflowStateGuard inside apps/api/src/guards/workflow-state.guard.ts
-- [ ] T008 [P] Configure active scope checks in ScopeInterceptor inside apps/api/src/interceptors/scope.interceptor.ts
-- [ ] T009 Create and configure AuditLog helper service inside apps/api/src/services/audit.service.ts
-- [ ] T010 Create and configure WarehouseLock check in WarehouseLockGuard inside apps/api/src/guards/warehouse-lock.guard.ts
+- [x] T004 Implement pessimistic locking in LedgerLockService inside apps/api/src/modules/ledger/ledger-lock.service.ts
+- [x] T005 [P] Implement progressive lot allocation (FEFO/FIFO) inside apps/api/src/modules/ledger/allocation.service.ts
+- [x] T006 [P] Implement WAC calculations in WacService inside apps/api/src/modules/ledger/wac.service.ts
+- [x] T007 [P] Create and configure WorkflowStateGuard inside apps/api/src/guards/workflow-state.guard.ts
+- [x] T008 [P] Configure active scope checks in ScopeInterceptor inside apps/api/src/interceptors/scope.interceptor.ts
+- [x] T009 Create and configure AuditLog helper service inside apps/api/src/services/audit.service.ts
+- [x] T010 Create and configure WarehouseLock check in WarehouseLockGuard inside apps/api/src/guards/warehouse-lock.guard.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin.
 
@@ -57,12 +57,12 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T011 [P] [US1] Create unit tests for GRN posting inside apps/api/test/purchasing/grn-post.spec.ts
+- [x] T011 [P] [US1] Create unit tests for GRN posting inside apps/api/test/purchasing/grn-post.spec.ts
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement GRN posting transaction service inside apps/api/src/modules/purchasing/grn-post.service.ts
-- [ ] T013 [US1] Create and expose GRN post controller endpoint inside apps/api/src/modules/purchasing/grn/grn.controller.ts
+- [x] T012 [US1] Implement GRN posting transaction service inside apps/api/src/modules/purchasing/grn-post.service.ts
+- [x] T013 [US1] Create and expose GRN post controller endpoint inside apps/api/src/modules/purchasing/grn/grn.controller.ts
 
 **Checkpoint**: User Story 1 is fully functional and testable independently.
 
@@ -76,12 +76,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T014 [P] [US2] Create unit tests for Issue posting inside apps/api/test/operations/issue-post.spec.ts
+- [x] T014 [P] [US2] Create unit tests for Issue posting inside apps/api/test/operations/issue-post.spec.ts
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Implement Issue posting transaction service inside apps/api/src/modules/operations/issue-post.service.ts
-- [ ] T016 [US2] Create and expose Issue post controller endpoint inside apps/api/src/modules/operations/issues/issues.controller.ts
+- [x] T015 [US2] Implement Issue posting transaction service inside apps/api/src/modules/operations/issue-post.service.ts
+- [x] T016 [US2] Create and expose Issue post controller endpoint inside apps/api/src/modules/operations/issues/issues.controller.ts
 
 **Checkpoint**: User Stories 1 AND 2 are both functional independently.
 
@@ -95,13 +95,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T017 [P] [US3] Create unit/integration tests for Transfer ship and receive inside apps/api/test/operations/transfer-post.spec.ts
+- [x] T017 [P] [US3] Create unit/integration tests for Transfer ship and receive inside apps/api/test/operations/transfer-post.spec.ts
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Implement Transfer SHIP transaction service inside apps/api/src/modules/operations/transfer-post.service.ts
-- [ ] T019 [US3] Implement Transfer RECEIVE transaction service inside apps/api/src/modules/operations/transfer-post.service.ts
-- [ ] T020 [US3] Create and expose Transfer ship and receive endpoints inside apps/api/src/modules/operations/transfers/transfers.controller.ts
+- [x] T018 [US3] Implement Transfer SHIP transaction service inside apps/api/src/modules/operations/transfer-post.service.ts
+- [x] T019 [US3] Implement Transfer RECEIVE transaction service inside apps/api/src/modules/operations/transfer-post.service.ts
+- [x] T020 [US3] Create and expose Transfer ship and receive endpoints inside apps/api/src/modules/operations/transfers/transfers.controller.ts
 
 **Checkpoint**: User Stories 1, 2, and 3 are all functional independently.
 
@@ -115,12 +115,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T021 [P] [US4] Create unit tests for Stock Adjustments inside apps/api/test/operations/adjustment-post.spec.ts
+- [x] T021 [P] [US4] Create unit tests for Stock Adjustments inside apps/api/test/operations/adjustment-post.spec.ts
 
 ### Implementation for User Story 4
 
-- [ ] T022 [US4] Implement Adjustment posting transaction service inside apps/api/src/modules/operations/adjustment-post.service.ts
-- [ ] T023 [US4] Create and expose Adjustment post controller endpoint inside apps/api/src/modules/operations/adjustments/adjustments.controller.ts
+- [x] T022 [US4] Implement Adjustment posting transaction service inside apps/api/src/modules/operations/adjustment-post.service.ts
+- [x] T023 [US4] Create and expose Adjustment post controller endpoint inside apps/api/src/modules/operations/adjustments/adjustments.controller.ts
 
 **Checkpoint**: User Stories 1, 2, 3, and 4 are functional.
 
@@ -134,12 +134,12 @@
 
 ### Tests for User Story 5
 
-- [ ] T024 [P] [US5] Create unit tests for Stocktake posting inside apps/api/test/stocktake/stocktake-post.spec.ts
+- [x] T024 [P] [US5] Create unit tests for Stocktake posting inside apps/api/test/stocktake/stocktake-post.spec.ts
 
 ### Implementation for User Story 5
 
-- [ ] T025 [US5] Implement Stocktake posting transaction service inside apps/api/src/modules/stocktake/stocktake-post.service.ts
-- [ ] T026 [US5] Create and expose Stocktake post controller endpoint inside apps/api/src/modules/stocktake/stocktake.controller.ts
+- [x] T025 [US5] Implement Stocktake posting transaction service inside apps/api/src/modules/stocktake/stocktake-post.service.ts
+- [x] T026 [US5] Create and expose Stocktake post controller endpoint inside apps/api/src/modules/stocktake/stocktake.controller.ts
 
 **Checkpoint**: All user stories are functional.
 
@@ -149,10 +149,10 @@
 
 **Purpose**: Verification, lint, type checks, and knowledge graph update.
 
-- [ ] T027 Run quickstart.md validation script and check all endpoints via manual testing
-- [ ] T028 [P] Run typecheck validation for frontend and backend projects using npm run typecheck
-- [ ] T029 Run full lint check and clean up any remaining code styling warnings inside apps/api/
-- [ ] T030 Execute graphify update command to rebuild project knowledge graph using graphify update .
+- [x] T027 Run quickstart.md validation script and check all endpoints via manual testing
+- [x] T028 [P] Run typecheck validation for frontend and backend projects using npm run typecheck
+- [x] T029 Run full lint check and clean up any remaining code styling warnings inside apps/api/
+- [x] T030 Execute graphify update command to rebuild project knowledge graph using graphify update .
 
 ---
 

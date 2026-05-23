@@ -12,6 +12,9 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
 import { PurchaseRequestsModule } from './modules/purchase-requests/purchase-requests.module';
 import { WarehouseLockModule } from './modules/warehouse-lock/warehouse-lock.module';
 import { LedgerModule } from './modules/ledger/ledger.module';
+import { PurchasingModule } from './modules/purchasing/purchasing.module';
+import { OperationsModule } from './modules/operations/operations.module';
+import { StocktakeModule } from './modules/stocktake/stocktake.module';
 import { IdempotencyService } from './services/idempotency.service';
 import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
@@ -27,6 +30,9 @@ import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
     PurchaseRequestsModule,
     WarehouseLockModule,
     LedgerModule,
+    PurchasingModule,
+    OperationsModule,
+    StocktakeModule,
   ],
   controllers: [AppController],
   providers: [

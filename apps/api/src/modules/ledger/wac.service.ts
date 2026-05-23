@@ -82,7 +82,7 @@ export class WacService {
   }
 
   /**
-   * Enforces positive adjustments inheriting current WAC without recalculating.
+   * Enforces positive adjustments recalculating WAC.
    * Logs an entry in CostLedger to track the transaction.
    */
   async handlePositiveAdjustment(
@@ -90,11 +90,12 @@ export class WacService {
     warehouseId: string,
     itemId: string,
     adjustedQty: number, // must be positive
+    adjustedCost: number,
     documentId: string,
     idempotencyKey?: string,
   ): Promise<number> {
     this.logger.log(
-      `Handling positive adjustment for item ${itemId} in wh ${warehouseId}. Qty: ${adjustedQty}`,
+      `Handling positive adjustment for item ${itemId} in wh ${warehouseId}. Qty: ${adjustedQty} @ ${adjustedCost}`,
     );
 
     // 1. Lock the WarehouseItem row
@@ -105,22 +106,47 @@ export class WacService {
       );
     }
 
+    const currentQty = Number(whItem.qtyOnHand);
     const currentWac = Number(whItem.wac);
 
-    // 2. Log to CostLedger with current WAC (no change to unit cost basis)
+    let newWac: number;
+    if (currentQty <= 0) {
+      newWac = adjustedCost;
+    } else {
+      const currentTotalCost = currentQty * currentWac;
+      const receivedTotalCost = adjustedQty * adjustedCost;
+      const totalQty = currentQty + adjustedQty;
+
+      if (totalQty <= 0) {
+        newWac = adjustedCost;
+      } else {
+        newWac = (currentTotalCost + receivedTotalCost) / totalQty;
+      }
+    }
+
+    // Round to 4 decimal places
+    newWac = Math.round(newWac * 10000) / 10000;
+
+    // 2. Update WAC on WarehouseItem
+    await tx.warehouseItem.update({
+      where: { warehouseId_itemId: { warehouseId, itemId } },
+      data: { wac: newWac },
+    });
+
+    // 3. Log to CostLedger
     await tx.costLedger.create({
       data: {
         warehouseId,
         itemId,
         quantity: adjustedQty,
-        unitPrice: currentWac, // inherits current WAC
-        newWac: currentWac, // WAC remains unchanged
+        unitPrice: adjustedCost,
+        newWac: newWac,
         documentId,
         documentType: DocumentType.ADJUSTMENT,
         idempotencyKey,
       },
     });
 
-    return currentWac;
+    return newWac;
   }
 }

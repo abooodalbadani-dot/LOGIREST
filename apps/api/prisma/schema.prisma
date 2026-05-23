@@ -443,6 +443,7 @@ model TransferLine {
   itemId          String
   quantityShipped Decimal  @db.Decimal(18, 4)
   quantityReceived Decimal? @db.Decimal(18, 4)
+  varianceReason  String?
 
   transfer  Transfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -473,6 +474,7 @@ model AdjustmentLine {
   quantity      Decimal             @db.Decimal(18, 4)
   direction     AdjustmentDirection
   reason        AdjustmentReason
+  unitCost      Decimal?            @db.Decimal(18, 4)
 
   adjustment Adjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
   item       Item       @relation(fields: [itemId], references: [id], onDelete: Restrict)

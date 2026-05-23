@@ -142,31 +142,35 @@ describe('WacService', () => {
     const itemId = 'item-1';
     const docId = 'doc-1';
 
-    it('should inherit current WAC and not recalculate', async () => {
+    it('should recalculate WAC correctly when positive adjustment is posted', async () => {
       mockLockItem.mockResolvedValue({
         warehouseId: whId,
         itemId: itemId,
         qtyOnHand: new Prisma.Decimal(10),
-        wac: new Prisma.Decimal(5.5),
+        wac: new Prisma.Decimal(5.0),
       });
 
       const wacResult = await service.handlePositiveAdjustment(
         mockPrismaTx,
         whId,
         itemId,
-        5,
+        10,
+        7.0,
         docId,
       );
 
-      expect(wacResult).toBe(5.5);
-      expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
+      expect(wacResult).toBe(6.0);
+      expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+        where: { warehouseId_itemId: { warehouseId: whId, itemId } },
+        data: { wac: 6.0 },
+      });
       expect(mockCostLedgerCreate).toHaveBeenCalledWith({
         data: {
           warehouseId: whId,
           itemId: itemId,
-          quantity: 5,
-          unitPrice: 5.5,
-          newWac: 5.5,
+          quantity: 10,
+          unitPrice: 7.0,
+          newWac: 6.0,
           documentId: docId,
           documentType: DocumentType.ADJUSTMENT,
           idempotencyKey: undefined,
