@@ -4,12 +4,12 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { ConcurrencyService } from '../../services/concurrency.service';
 import { DocumentType as PrismaDocType } from '@prisma/client';
 import {
   DocumentType,
@@ -35,7 +35,10 @@ export const MODEL_TO_TABLE: Record<string, string> = {
 export class WorkflowService {
   private readonly logger = new Logger(WorkflowService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly concurrencyService: ConcurrencyService,
+  ) {}
 
   /**
    * Helper to map model names to document types
@@ -119,7 +122,6 @@ export class WorkflowService {
       where: {
         warehouseId,
         isActive: true,
-        expiresAt: { gt: new Date() },
       },
     });
 
@@ -289,8 +291,11 @@ export class WorkflowService {
 
           // Optimistic locking verification
           if (clientVersion !== undefined && doc.version !== clientVersion) {
-            throw new ConflictException(
-              `Version conflict: Document has been updated by another process. (Expected: ${clientVersion}, Current: ${doc.version})`,
+            await this.concurrencyService.handleConflict(
+              documentId,
+              modelName,
+              clientVersion,
+              tx,
             );
           }
 
@@ -305,8 +310,11 @@ export class WorkflowService {
           });
 
           if (updateResult.count === 0) {
-            throw new ConflictException(
-              `Version conflict: Document update failed. It might have been modified concurrently.`,
+            await this.concurrencyService.handleConflict(
+              documentId,
+              modelName,
+              currentVersion,
+              tx,
             );
           }
 

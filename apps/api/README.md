@@ -114,3 +114,34 @@ We have implemented a zero-trust **Workflow Engine** featuring dynamic document 
 - Run integration E2E tests: `npm run test:e2e --workspace=api`
 - Type checking: `npm run typecheck --workspace=api`
 - Formatting/Linter: `npm run lint --workspace=api`
+
+## Concurrency Control & Consistency (Phase 5)
+
+We have implemented robust concurrency safety and consistency mechanisms across the NestJS API application:
+
+### Core Features
+
+1. **Optimistic Locking (US1/US3)**:
+   - Validates document `version` fields during status transitions to prevent concurrent update races (stale updates).
+   - Mismatched client versions result in a structured `409 Conflict` response (`VersionConflictException`), detailing the `currentVersion`, `lastModifiedBy`, and `lastModifiedAt` data retrieved from the document and audit logs.
+
+2. **Idempotency Subsystem (US2)**:
+   - Registers `@Idempotent()` decorator to guard POST creation routes.
+   - Requires client-supplied `x-idempotency-key` (validated UUID v4).
+   - Prevents duplicate requests during processing with a `409 Conflict` (102 Processing) and caches successful responses to return them sequentially on retries without re-invoking business logic.
+   - Cleans up locks on handler failure.
+   - Prunes expired idempotency logs older than 24 hours using an automated hourly cron scheduler.
+
+3. **Warehouse Locks & Admin Override (US4)**:
+   - Restores stale lock bypass protection: active warehouse locks (`isActive: true`) block physical mutations even if their expiration date (`expiresAt`) is in the past.
+   - Exposes a restricted endpoint `POST /api/v1/warehouse-locks/:id/force-unlock` guarded with `JwtAuthGuard`.
+   - Restricts force-unlock overrides strictly to `Role.ADMIN` users with a minimum 10-character reason notes requirement.
+   - Executes force-unlock inside a transaction, disabling the lock and writing a `FORCE_UNLOCK` entry to the `AuditLog` table containing before/after states, admin ID, and client IP address.
+
+### E2E Test Execution Note
+Due to the strict InsForge PostgreSQL connection limit (exactly `3` concurrent connections), run the E2E tests individually or with sequence-controlled pacing:
+- Concurrency control: `npx jest --config ./test/jest-e2e.json test/concurrency.e2e-spec.ts`
+- Idempotency checks: `npx jest --config ./test/jest-e2e.json test/idempotency.e2e-spec.ts`
+- Warehouse lock overrides: `npx jest --config ./test/jest-e2e.json test/warehouse-lock.e2e-spec.ts`
+- Workflow roles & locks: `npx jest --config ./test/jest-e2e.json test/workflow-roles.e2e-spec.ts`
+

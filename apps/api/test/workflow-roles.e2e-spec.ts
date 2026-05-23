@@ -391,7 +391,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
       }
     });
 
-    it('should allow physical inventory mutation (GRN POST) when lock is expired', async () => {
+    it('should block physical inventory mutation (GRN POST) when lock is expired but active (423 Locked)', async () => {
       // Create expired warehouse lock
       const lock = await prisma.warehouseLock.create({
         data: {
@@ -404,12 +404,16 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
       });
 
       try {
-        await request(app.getHttpServer())
+        const res = await request(app.getHttpServer())
           .post(`/api/v1/test-workflow/grn/${grnId}/post`)
           .set('Authorization', `Bearer ${adminToken}`)
           .set('x-warehouse-id', warehouseId)
           .set('x-branch-id', branchId)
-          .expect(200);
+          .expect(423);
+
+        expect(res.body.message).toContain(
+          'Warehouse is locked. Physical inventory mutations are blocked',
+        );
       } finally {
         await prisma.warehouseLock.delete({ where: { id: lock.id } });
       }

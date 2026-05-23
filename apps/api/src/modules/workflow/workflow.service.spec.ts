@@ -2,10 +2,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkflowService } from './workflow.service';
 import { PrismaService } from '../../database/prisma.service';
+import { ConcurrencyService } from '../../services/concurrency.service';
+import { VersionConflictException } from '../../exceptions/version-conflict.exception';
 import {
   ForbiddenException,
   BadRequestException,
-  ConflictException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -35,11 +36,18 @@ describe('WorkflowService', () => {
     },
   };
 
+  const mockConcurrencyService = {
+    handleConflict: jest.fn().mockImplementation(() => {
+      throw new VersionConflictException(2, 'Jane Doe', new Date());
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkflowService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ConcurrencyService, useValue: mockConcurrencyService },
       ],
     }).compile();
 
@@ -197,7 +205,7 @@ describe('WorkflowService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw ConflictException on version mismatch', async () => {
+    it('should throw VersionConflictException on version mismatch', async () => {
       const mockDoc = {
         id: 'doc-1',
         status: 'DRAFT',
@@ -216,7 +224,42 @@ describe('WorkflowService', () => {
           '',
           1, // Client expects version 1, but DB is version 2
         ),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(VersionConflictException);
+      expect(mockConcurrencyService.handleConflict).toHaveBeenCalledWith(
+        'doc-1',
+        'purchaseRequest',
+        1,
+        expect.any(Object),
+      );
+    });
+
+    it('should throw VersionConflictException when update count is 0', async () => {
+      const mockDoc = {
+        id: 'doc-1',
+        status: 'DRAFT',
+        version: 1,
+      };
+
+      mockPrisma.purchaseRequest.findUnique.mockResolvedValue(mockDoc);
+      mockPrisma.purchaseRequest.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.executeTransition(
+          'doc-1',
+          'purchaseRequest',
+          'SUBMIT',
+          'user-1',
+          'PROC_OFFICER',
+          '',
+          1,
+        ),
+      ).rejects.toThrow(VersionConflictException);
+      expect(mockConcurrencyService.handleConflict).toHaveBeenCalledWith(
+        'doc-1',
+        'purchaseRequest',
+        1,
+        expect.any(Object),
+      );
     });
   });
 });

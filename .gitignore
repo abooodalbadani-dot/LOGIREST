@@ -107,3 +107,7 @@ Thumbs.db
 .roo
 .trae
 .windsurf
+
+# Graphify cache
+graphify-out/cache/
+

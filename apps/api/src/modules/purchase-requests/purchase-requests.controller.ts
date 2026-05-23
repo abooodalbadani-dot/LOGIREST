@@ -14,6 +14,7 @@ import { PurchaseRequestsService } from './purchase-requests.service';
 import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { Idempotent } from '../../decorators/idempotent.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
@@ -22,6 +23,7 @@ export class PurchaseRequestsController {
   constructor(private readonly prService: PurchaseRequestsService) {}
 
   @Post()
+  @Idempotent()
   async create(
     @Body()
     body: {
