@@ -14,15 +14,21 @@ import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { Idempotent } from '../../../decorators/idempotent.decorator';
+import {
+  ApiSecureController,
+  ApiIdempotentHeader,
+} from '../../../decorators/swagger-docs.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
 @Controller('purchase-orders')
+@ApiSecureController()
 export class PurchaseOrderController {
   constructor(private readonly poService: PurchaseOrderService) {}
 
   @Post()
   @Idempotent()
+  @ApiIdempotentHeader()
   async create(
     @Body()
     body: {

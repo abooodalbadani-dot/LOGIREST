@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +21,17 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1', {
     exclude: ['health'],
   });
+
+  // Configure Swagger OpenAPI documentation
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('LogiRest API')
+    .setDescription('LogiRest Warehouse & Kitchen Inventory Management API')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addCookieAuth('jwt')
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Flat structured validation error formatting function
   function formatErrors(

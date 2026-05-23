@@ -12,11 +12,13 @@ import {
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import type { Role } from '@logirest/shared-types';
 import { WarehouseLockService } from './warehouse-lock.service';
 
 @Controller('warehouse-locks')
 @UseGuards(JwtAuthGuard)
+@ApiSecureController()
 export class WarehouseLockController {
   constructor(private readonly warehouseLockService: WarehouseLockService) {}
 

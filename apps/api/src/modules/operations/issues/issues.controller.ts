@@ -17,10 +17,15 @@ import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../../auth/decorators/active-scope.decorator';
 import { Idempotent } from '../../../decorators/idempotent.decorator';
+import {
+  ApiSecureController,
+  ApiIdempotentHeader,
+} from '../../../decorators/swagger-docs.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
 @Controller('operations/issues')
+@ApiSecureController()
 export class IssuesController {
   constructor(
     private readonly issuePostService: IssuePostService,
@@ -29,6 +34,7 @@ export class IssuesController {
 
   @Post()
   @Idempotent()
+  @ApiIdempotentHeader()
   async create(
     @Body()
     body: {

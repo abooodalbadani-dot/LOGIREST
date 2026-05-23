@@ -63,7 +63,7 @@ export class InventoryService {
 
     if (query.status) {
       whereClause.lot = {
-        status: query.status as LotStatus,
+        status: query.status,
       };
     }
 
@@ -165,7 +165,9 @@ export class InventoryService {
     });
 
     if (!mapping) {
-      throw new NotFoundException(`No item registered for barcode '${barcode}'`);
+      throw new NotFoundException(
+        `No item registered for barcode '${barcode}'`,
+      );
     }
 
     const activeLots = await this.prisma.warehouseItemLot.findMany({

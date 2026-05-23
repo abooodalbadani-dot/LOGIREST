@@ -170,7 +170,8 @@ describe('WorkflowService', () => {
         data: {
           targetRole: 'APPROVER',
           warehouseId: 'wh-1',
-          message: 'Purchase Request PR-2026-0001 is submitted and requires approval.',
+          message:
+            'Purchase Request PR-2026-0001 is submitted and requires approval.',
           documentType: 'PURCHASE_REQUEST',
           documentId: 'doc-1',
         },

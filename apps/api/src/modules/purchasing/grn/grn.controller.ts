@@ -13,10 +13,12 @@ import { GrnPostService } from '../grn-post.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
 @Controller('procurement/goods-received')
+@ApiSecureController()
 export class GrnController {
   constructor(private readonly grnPostService: GrnPostService) {}
 

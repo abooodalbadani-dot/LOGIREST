@@ -264,9 +264,9 @@ describe('InventoryService', () => {
     it('should throw NotFoundException if barcode mapping does not exist', async () => {
       mockPrismaService.barcodeMapping.findUnique.mockResolvedValue(null);
 
-      await expect(service.scanBarcode('wh-1', '9780201379624')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.scanBarcode('wh-1', '9780201379624'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

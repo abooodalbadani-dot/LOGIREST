@@ -35,7 +35,10 @@ describe('Inventory Controllers', () => {
       const result = await inventoryController.getBalance('wh-1', query);
 
       expect(result).toBe(mockResult);
-      expect(mockInventoryService.getBalance).toHaveBeenCalledWith('wh-1', query);
+      expect(mockInventoryService.getBalance).toHaveBeenCalledWith(
+        'wh-1',
+        query,
+      );
     });
 
     it('should call getLots on InventoryService', async () => {
@@ -57,7 +60,10 @@ describe('Inventory Controllers', () => {
       const result = await inventoryController.getMovements('wh-1', query);
 
       expect(result).toBe(mockResult);
-      expect(mockInventoryService.getMovements).toHaveBeenCalledWith('wh-1', query);
+      expect(mockInventoryService.getMovements).toHaveBeenCalledWith(
+        'wh-1',
+        query,
+      );
     });
   });
 
@@ -69,7 +75,10 @@ describe('Inventory Controllers', () => {
       const result = await itemsController.scanBarcode('wh-1', '9780201379624');
 
       expect(result).toBe(mockResult);
-      expect(mockInventoryService.scanBarcode).toHaveBeenCalledWith('wh-1', '9780201379624');
+      expect(mockInventoryService.scanBarcode).toHaveBeenCalledWith(
+        'wh-1',
+        '9780201379624',
+      );
     });
   });
 });

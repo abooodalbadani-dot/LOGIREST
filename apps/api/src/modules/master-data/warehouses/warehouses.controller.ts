@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import type { Request } from 'express';
 
 @Controller('master-data/warehouses')
+@ApiSecureController()
 export class WarehousesController {
   constructor(private readonly prisma: PrismaService) {}
 

@@ -9,9 +9,11 @@ import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { Role, AuditLogsQuery } from '@logirest/shared-types';
+import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 
 @Controller('admin/audit-logs')
 @UseGuards(JwtAuthGuard)
+@ApiSecureController()
 export class AuditLogsController {
   constructor(private readonly prisma: PrismaService) {}
 

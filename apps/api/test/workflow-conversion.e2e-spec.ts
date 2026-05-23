@@ -6,6 +6,7 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
+import { randomUUID } from 'crypto';
 
 describe('PR to PO Conversion (e2e)', () => {
   jest.setTimeout(120000);
@@ -211,6 +212,7 @@ describe('PR to PO Conversion (e2e)', () => {
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
+        .set('x-idempotency-key', randomUUID())
         .send({
           branchId,
           warehouseId,

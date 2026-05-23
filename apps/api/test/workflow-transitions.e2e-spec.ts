@@ -6,6 +6,7 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
+import { randomUUID } from 'crypto';
 
 describe('Workflow Transitions (e2e)', () => {
   let app: INestApplication<App>;
@@ -139,13 +140,18 @@ describe('Workflow Transitions (e2e)', () => {
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
+        .set('x-idempotency-key', randomUUID())
         .send({
           branchId,
           warehouseId,
           lines: [{ itemId, quantity: 15 }],
-        })
-        .expect(201);
+        });
 
+      if (res.status !== 201) {
+        console.error('ERROR BODY IN TEST:', JSON.stringify(res.body, null, 2));
+      }
+
+      expect(res.status).toBe(201);
       expect(res.body.status).toBe('DRAFT');
       expect(res.body.version).toBe(1);
       prId = res.body.id;
@@ -217,6 +223,7 @@ describe('Workflow Transitions (e2e)', () => {
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
+        .set('x-idempotency-key', randomUUID())
         .send({
           branchId,
           warehouseId,

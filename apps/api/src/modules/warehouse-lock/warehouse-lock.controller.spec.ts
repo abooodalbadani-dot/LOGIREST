@@ -110,32 +110,58 @@ describe('WarehouseLockController', () => {
 
     it('should unlock successfully when role is ADMIN', async () => {
       const req = mockRequest('127.0.0.1');
-      const mockUpdated = { id: 'lock-1', isActive: false, updatedAt: new Date('2026-05-23T15:47:00Z') };
+      const mockUpdated = {
+        id: 'lock-1',
+        isActive: false,
+        updatedAt: new Date('2026-05-23T15:47:00Z'),
+      };
       mockWarehouseLockService.manualUnlock.mockResolvedValue(mockUpdated);
 
-      const result = await controller.manualUnlock('lock-1', 'admin-1', 'ADMIN', req);
+      const result = await controller.manualUnlock(
+        'lock-1',
+        'admin-1',
+        'ADMIN',
+        req,
+      );
 
       expect(result).toEqual({
         success: true,
         message: 'Warehouse lock successfully released.',
         deactivatedAt: mockUpdated.updatedAt,
       });
-      expect(mockWarehouseLockService.manualUnlock).toHaveBeenCalledWith('lock-1', 'admin-1', '127.0.0.1');
+      expect(mockWarehouseLockService.manualUnlock).toHaveBeenCalledWith(
+        'lock-1',
+        'admin-1',
+        '127.0.0.1',
+      );
     });
 
     it('should unlock successfully when role is INV_MGR', async () => {
       const req = mockRequest('127.0.0.1');
-      const mockUpdated = { id: 'lock-1', isActive: false, updatedAt: new Date('2026-05-23T15:47:00Z') };
+      const mockUpdated = {
+        id: 'lock-1',
+        isActive: false,
+        updatedAt: new Date('2026-05-23T15:47:00Z'),
+      };
       mockWarehouseLockService.manualUnlock.mockResolvedValue(mockUpdated);
 
-      const result = await controller.manualUnlock('lock-1', 'mgr-1', 'INV_MGR', req);
+      const result = await controller.manualUnlock(
+        'lock-1',
+        'mgr-1',
+        'INV_MGR',
+        req,
+      );
 
       expect(result).toEqual({
         success: true,
         message: 'Warehouse lock successfully released.',
         deactivatedAt: mockUpdated.updatedAt,
       });
-      expect(mockWarehouseLockService.manualUnlock).toHaveBeenCalledWith('lock-1', 'mgr-1', '127.0.0.1');
+      expect(mockWarehouseLockService.manualUnlock).toHaveBeenCalledWith(
+        'lock-1',
+        'mgr-1',
+        '127.0.0.1',
+      );
     });
   });
 });

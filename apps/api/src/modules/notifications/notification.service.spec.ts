@@ -39,7 +39,9 @@ describe('NotificationService', () => {
         documentId: 'pr-1',
         createdAt: new Date(),
       };
-      mockPrismaService.notificationLog.create.mockResolvedValue(mockNotification);
+      mockPrismaService.notificationLog.create.mockResolvedValue(
+        mockNotification,
+      );
 
       const result = await service.createNotification({
         targetRole: Role.APPROVER,
@@ -82,10 +84,7 @@ describe('NotificationService', () => {
         where: {
           targetRole: Role.WH_KEEPER,
           isRead: false,
-          OR: [
-            { warehouseId: null },
-            { warehouseId: 'wh-1' },
-          ],
+          OR: [{ warehouseId: null }, { warehouseId: 'wh-1' }],
         },
         orderBy: {
           createdAt: 'desc',
@@ -111,22 +110,23 @@ describe('NotificationService', () => {
 
   describe('markAllAsRead', () => {
     it('should update all unread matching notifications to read', async () => {
-      mockPrismaService.notificationLog.updateMany.mockResolvedValue({ count: 5 });
+      mockPrismaService.notificationLog.updateMany.mockResolvedValue({
+        count: 5,
+      });
 
       const result = await service.markAllAsRead(Role.APPROVER, 'wh-1');
 
       expect(result).toEqual({ count: 5 });
-      expect(mockPrismaService.notificationLog.updateMany).toHaveBeenCalledWith({
-        where: {
-          targetRole: Role.APPROVER,
-          isRead: false,
-          OR: [
-            { warehouseId: null },
-            { warehouseId: 'wh-1' },
-          ],
+      expect(mockPrismaService.notificationLog.updateMany).toHaveBeenCalledWith(
+        {
+          where: {
+            targetRole: Role.APPROVER,
+            isRead: false,
+            OR: [{ warehouseId: null }, { warehouseId: 'wh-1' }],
+          },
+          data: { isRead: true },
         },
-        data: { isRead: true },
-      });
+      );
     });
   });
 });

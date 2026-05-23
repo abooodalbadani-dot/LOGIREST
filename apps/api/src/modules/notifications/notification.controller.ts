@@ -1,19 +1,14 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  Post,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Patch, Post, Param, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { NotificationService } from './notification.service';
+import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import type { Role } from '@logirest/shared-types';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
+@ApiSecureController()
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -39,7 +34,10 @@ export class NotificationController {
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
-    const result = await this.notificationService.markAllAsRead(role, warehouseId);
+    const result = await this.notificationService.markAllAsRead(
+      role,
+      warehouseId,
+    );
     return {
       success: true,
       markedReadCount: result.count,

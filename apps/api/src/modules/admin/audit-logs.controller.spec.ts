@@ -45,7 +45,10 @@ describe('AuditLogsController', () => {
       },
     ]);
 
-    const result = await controller.getAuditLogs(Role.ADMIN, { page: 1, limit: 50 });
+    const result = await controller.getAuditLogs(Role.ADMIN, {
+      page: 1,
+      limit: 50,
+    });
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0]).toEqual({
@@ -77,7 +80,11 @@ describe('AuditLogsController', () => {
       },
     ]);
 
-    const result = await controller.getAuditLogs(Role.INV_MGR, { page: 1, limit: 50, userId: 'mgr-1' });
+    const result = await controller.getAuditLogs(Role.INV_MGR, {
+      page: 1,
+      limit: 50,
+      userId: 'mgr-1',
+    });
 
     expect(result.data[0].performedByRole).toBe(Role.INV_MGR);
     expect(result.data[0].beforeStateJson).toBeNull();

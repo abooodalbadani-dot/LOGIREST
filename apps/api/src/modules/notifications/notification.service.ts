@@ -29,10 +29,7 @@ export class NotificationService {
       where: {
         targetRole: role,
         isRead: false,
-        OR: [
-          { warehouseId: null },
-          { warehouseId: warehouseId || undefined },
-        ],
+        OR: [{ warehouseId: null }, { warehouseId: warehouseId || undefined }],
       },
       orderBy: {
         createdAt: 'desc',
@@ -52,10 +49,7 @@ export class NotificationService {
       where: {
         targetRole: role,
         isRead: false,
-        OR: [
-          { warehouseId: null },
-          { warehouseId: warehouseId || undefined },
-        ],
+        OR: [{ warehouseId: null }, { warehouseId: warehouseId || undefined }],
       },
       data: { isRead: true },
     });

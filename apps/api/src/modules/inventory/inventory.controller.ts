@@ -2,6 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import type {
   InventoryBalanceQuery,
   InventoryLotsQuery,
@@ -10,6 +11,7 @@ import type {
 
 @Controller('inventory')
 @UseGuards(JwtAuthGuard)
+@ApiSecureController()
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
@@ -40,6 +42,7 @@ export class InventoryController {
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
+@ApiSecureController()
 export class ItemsController {
   constructor(private readonly inventoryService: InventoryService) {}
 

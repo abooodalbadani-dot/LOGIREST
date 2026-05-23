@@ -45,7 +45,9 @@ export class LockCleanupJob implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      this.logger.log(`Found ${expiredLocks.length} expired locks to mark STALE.`);
+      this.logger.log(
+        `Found ${expiredLocks.length} expired locks to mark STALE.`,
+      );
 
       await this.prisma.warehouseLock.updateMany({
         where: {

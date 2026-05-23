@@ -3,7 +3,7 @@ import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
 import { getTokenCookie, setTokenCookie } from './cookies';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -54,8 +54,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
 
   const isAuthError = (e: Record<string, unknown>) =>
     e.status === 401 || e.code === 'UNAUTHORIZED' || e.code === 'SESSION_EXPIRED';
-  
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' || 
+
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' ||
     (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_MOCKS !== 'false');
   if (useMocks) {
     const { getMockResponse } = await import('@/infrastructure/mock/mock-api.adapter');
@@ -108,7 +108,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
       const err: ApiError = { code: 'UNAUTHORIZED', message: 'errors.unauthorized', field_errors: null };
       throw err;
     }
-    
+
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
       throw new ConflictError({
@@ -128,7 +128,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
       console.error(`[API Error] ${method} ${path}`, err);
       throw err;
     }
-    
+
     const data = await res.json();
     return schema.parse(data);
   } catch (error) {

@@ -114,18 +114,18 @@ describe('WarehouseLockService', () => {
     it('should throw NotFoundException if lock does not exist', async () => {
       mockPrisma.warehouseLock.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.manualUnlock('lock-1', 'admin-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.manualUnlock('lock-1', 'admin-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if lock is already inactive', async () => {
       const mockLock = { id: 'lock-1', isActive: false };
       mockPrisma.warehouseLock.findUnique.mockResolvedValue(mockLock);
 
-      await expect(
-        service.manualUnlock('lock-1', 'admin-1'),
-      ).rejects.toThrow(new BadRequestException('Lock is not active.'));
+      await expect(service.manualUnlock('lock-1', 'admin-1')).rejects.toThrow(
+        new BadRequestException('Lock is not active.'),
+      );
     });
 
     it('should deactivate lock and log manual unlock event in audit log within transaction', async () => {

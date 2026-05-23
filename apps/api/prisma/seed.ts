@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Role, LotStatus, DocumentType } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -53,10 +53,10 @@ async function main() {
   // ─── Units of Measure ────────────────────────────────────────
   const uomData = [
     { name: 'Kilogram', code: 'KG' },
-    { name: 'Gram', code: 'G' },
     { name: 'Liter', code: 'LTR' },
-    { name: 'Milliliter', code: 'ML' },
     { name: 'Piece', code: 'PCS' },
+    { name: 'Gram', code: 'G' },
+    { name: 'Milliliter', code: 'ML' },
     { name: 'Pack', code: 'PK' },
     { name: 'Box', code: 'BOX' },
     { name: 'Carton', code: 'CTN' },
@@ -64,8 +64,9 @@ async function main() {
     { name: 'Pound', code: 'LB' },
   ];
 
+  const uoms: Record<string, any> = {};
   for (const uom of uomData) {
-    await prisma.unitOfMeasure.upsert({
+    uoms[uom.code] = await prisma.unitOfMeasure.upsert({
       where: { code: uom.code },
       update: {},
       create: uom,
@@ -107,25 +108,26 @@ async function main() {
   });
 
   // ─── Departments ─────────────────────────────────────────────
-  const departments = [
-    { name: 'Hot Kitchen', branchId: mainBranch.id },
-    { name: 'Cold Kitchen', branchId: mainBranch.id },
-    { name: 'Bakery', branchId: mainBranch.id },
-    { name: 'Pastry', branchId: mainBranch.id },
-    { name: 'Stewarding', branchId: mainBranch.id },
-  ];
-
-  for (const dept of departments) {
-    await prisma.department.create({ data: dept });
+  // Use createMany or individual upserts to prevent duplicate errors
+  const departmentNames = ['Hot Kitchen', 'Cold Kitchen', 'Bakery', 'Pastry', 'Stewarding'];
+  for (const name of departmentNames) {
+    const existing = await prisma.department.findFirst({
+      where: { name, branchId: mainBranch.id },
+    });
+    if (!existing) {
+      await prisma.department.create({
+        data: { name, branchId: mainBranch.id },
+      });
+    }
   }
 
   // ─── Categories ──────────────────────────────────────────────
-  const categories = [
+  const categoryNames = [
     'Meat & Poultry',
-    'Seafood',
-    'Dairy',
     'Dry Goods',
     'Fresh Produce',
+    'Seafood',
+    'Dairy',
     'Frozen',
     'Beverages',
     'Cleaning Supplies',
@@ -133,11 +135,12 @@ async function main() {
     'Spices & Seasoning',
   ];
 
-  for (const catName of categories) {
-    await prisma.category.upsert({
-      where: { name: catName },
+  const categories: Record<string, any> = {};
+  for (const name of categoryNames) {
+    categories[name] = await prisma.category.upsert({
+      where: { name },
       update: {},
-      create: { name: catName },
+      create: { name },
     });
   }
 
@@ -146,57 +149,331 @@ async function main() {
   const adminPasswordHash = await bcrypt.hash('adminpassword', 12);
 
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@logirest.com' },
+    where: { email: 'admin@logirest.local' },
     update: {},
     create: {
-      email: 'admin@logirest.com',
-      passwordHash: adminPasswordHash,
-      name: 'System Admin',
+      email: 'admin@logirest.local',
+      passwordHash,
+      name: 'System Administrator',
       role: Role.ADMIN,
       isActive: true,
     },
   });
 
-  const whKeeper = await prisma.user.upsert({
-    where: { email: 'user1@logirest.com' },
+  const adminComUser = await prisma.user.upsert({
+    where: { email: 'admin@logirest.com' },
     update: {},
     create: {
-      email: 'user1@logirest.com',
+      email: 'admin@logirest.com',
+      passwordHash: adminPasswordHash,
+      name: 'System Admin Com',
+      role: Role.ADMIN,
+      isActive: true,
+    },
+  });
+
+  const managerUser = await prisma.user.upsert({
+    where: { email: 'manager@logirest.local' },
+    update: {},
+    create: {
+      email: 'manager@logirest.local',
       passwordHash,
-      name: 'Warehouse Keeper',
-      role: Role.WH_KEEPER,
+      name: 'Inventory Manager',
+      role: Role.INV_MGR,
       isActive: true,
     },
   });
 
   // ─── User Warehouse Scope ────────────────────────────────────
   await prisma.userWarehouseScope.upsert({
-    where: { id: 'scope-admin-hq' },
+    where: {
+      userId_warehouseId: {
+        userId: adminUser.id,
+        warehouseId: mainWh.id,
+      },
+    },
     update: {},
     create: {
-      id: 'scope-admin-hq',
       userId: adminUser.id,
       warehouseId: mainWh.id,
     },
   });
 
   await prisma.userWarehouseScope.upsert({
-    where: { id: 'scope-admin-north' },
+    where: {
+      userId_warehouseId: {
+        userId: adminComUser.id,
+        warehouseId: mainWh.id,
+      },
+    },
     update: {},
     create: {
-      id: 'scope-admin-north',
-      userId: adminUser.id,
-      warehouseId: northWh.id,
+      userId: adminComUser.id,
+      warehouseId: mainWh.id,
     },
   });
 
   await prisma.userWarehouseScope.upsert({
-    where: { id: 'scope-whkeeper-hq' },
+    where: {
+      userId_warehouseId: {
+        userId: managerUser.id,
+        warehouseId: mainWh.id,
+      },
+    },
     update: {},
     create: {
-      id: 'scope-whkeeper-hq',
-      userId: whKeeper.id,
+      userId: managerUser.id,
       warehouseId: mainWh.id,
+    },
+  });
+
+  // ─── Items ───────────────────────────────────────────────────
+  // Item 1: Unbatched item
+  const itemRice = await prisma.item.upsert({
+    where: { sku: 'RICE-001' },
+    update: {},
+    create: {
+      sku: 'RICE-001',
+      name: 'Premium Basmati Rice',
+      categoryId: categories['Dry Goods'].id,
+      uomId: uoms['KG'].id,
+      isBatched: false,
+      hasExpiry: false,
+      isActive: true,
+    },
+  });
+
+  // Item 2: Batched item (no expiry)
+  const itemOil = await prisma.item.upsert({
+    where: { sku: 'OIL-002' },
+    update: {},
+    create: {
+      sku: 'OIL-002',
+      name: 'Vegetable Cooking Oil',
+      categoryId: categories['Dry Goods'].id,
+      uomId: uoms['LTR'].id,
+      isBatched: true,
+      hasExpiry: false,
+      isActive: true,
+    },
+  });
+
+  // Item 3: Batched item with expiry
+  const itemMilk = await prisma.item.upsert({
+    where: { sku: 'MILK-003' },
+    update: {},
+    create: {
+      sku: 'MILK-003',
+      name: 'Fresh Whole Milk',
+      categoryId: categories['Dairy'].id,
+      uomId: uoms['LTR'].id,
+      isBatched: true,
+      hasExpiry: true,
+      isActive: true,
+    },
+  });
+
+  // ─── Barcode Mappings ────────────────────────────────────────
+  await prisma.barcodeMapping.upsert({
+    where: { barcode: '8801234567890' },
+    update: {},
+    create: {
+      itemId: itemRice.id,
+      barcode: '8801234567890',
+    },
+  });
+
+  await prisma.barcodeMapping.upsert({
+    where: { barcode: '8801234567891' },
+    update: {},
+    create: {
+      itemId: itemOil.id,
+      barcode: '8801234567891',
+    },
+  });
+
+  await prisma.barcodeMapping.upsert({
+    where: { barcode: '8801234567892' },
+    update: {},
+    create: {
+      itemId: itemMilk.id,
+      barcode: '8801234567892',
+    },
+  });
+
+  // ─── Lots ────────────────────────────────────────────────────
+  const lotOil = await prisma.lot.upsert({
+    where: { lotNumber: 'LOT-OIL-001' },
+    update: {},
+    create: {
+      itemId: itemOil.id,
+      lotNumber: 'LOT-OIL-001',
+      status: LotStatus.ACTIVE,
+      receivedDate: new Date(),
+    },
+  });
+
+  const milkExpiry = new Date();
+  milkExpiry.setDate(milkExpiry.getDate() + 30); // expires in 30 days
+
+  const lotMilk = await prisma.lot.upsert({
+    where: { lotNumber: 'LOT-MILK-001' },
+    update: {},
+    create: {
+      itemId: itemMilk.id,
+      lotNumber: 'LOT-MILK-001',
+      status: LotStatus.ACTIVE,
+      receivedDate: new Date(),
+      expiryDate: milkExpiry,
+    },
+  });
+
+  // ─── Initial Stock balances ──────────────────────────────────
+  // Rice stock (1000 kg)
+  await prisma.warehouseItem.upsert({
+    where: {
+      warehouseId_itemId: {
+        warehouseId: mainWh.id,
+        itemId: itemRice.id,
+      },
+    },
+    update: {
+      qtyOnHand: 1000,
+      wac: 6.5,
+    },
+    create: {
+      warehouseId: mainWh.id,
+      itemId: itemRice.id,
+      qtyOnHand: 1000,
+      qtyAllocated: 0,
+      wac: 6.5,
+    },
+  });
+
+  await prisma.stockLedger.upsert({
+    where: { idempotencyKey: 'init-stock-rice' },
+    update: {},
+    create: {
+      idempotencyKey: 'init-stock-rice',
+      warehouseId: mainWh.id,
+      itemId: itemRice.id,
+      lotId: null,
+      quantity: 1000,
+      documentId: 'INITIAL_BALANCE',
+      documentType: DocumentType.ADJUSTMENT,
+      postedAt: new Date(),
+    },
+  });
+
+  // Oil stock (500 liters in lot LOT-OIL-001)
+  await prisma.warehouseItem.upsert({
+    where: {
+      warehouseId_itemId: {
+        warehouseId: mainWh.id,
+        itemId: itemOil.id,
+      },
+    },
+    update: {
+      qtyOnHand: 500,
+      wac: 12.0,
+    },
+    create: {
+      warehouseId: mainWh.id,
+      itemId: itemOil.id,
+      qtyOnHand: 500,
+      qtyAllocated: 0,
+      wac: 12.0,
+    },
+  });
+
+  await prisma.warehouseItemLot.upsert({
+    where: {
+      warehouseId_itemId_lotId: {
+        warehouseId: mainWh.id,
+        itemId: itemOil.id,
+        lotId: lotOil.id,
+      },
+    },
+    update: {
+      qtyOnHand: 500,
+    },
+    create: {
+      warehouseId: mainWh.id,
+      itemId: itemOil.id,
+      lotId: lotOil.id,
+      qtyOnHand: 500,
+      qtyAllocated: 0,
+    },
+  });
+
+  await prisma.stockLedger.upsert({
+    where: { idempotencyKey: 'init-stock-oil' },
+    update: {},
+    create: {
+      idempotencyKey: 'init-stock-oil',
+      warehouseId: mainWh.id,
+      itemId: itemOil.id,
+      lotId: lotOil.id,
+      quantity: 500,
+      documentId: 'INITIAL_BALANCE',
+      documentType: DocumentType.ADJUSTMENT,
+      postedAt: new Date(),
+    },
+  });
+
+  // Milk stock (200 liters in lot LOT-MILK-001)
+  await prisma.warehouseItem.upsert({
+    where: {
+      warehouseId_itemId: {
+        warehouseId: mainWh.id,
+        itemId: itemMilk.id,
+      },
+    },
+    update: {
+      qtyOnHand: 200,
+      wac: 4.5,
+    },
+    create: {
+      warehouseId: mainWh.id,
+      itemId: itemMilk.id,
+      qtyOnHand: 200,
+      qtyAllocated: 0,
+      wac: 4.5,
+    },
+  });
+
+  await prisma.warehouseItemLot.upsert({
+    where: {
+      warehouseId_itemId_lotId: {
+        warehouseId: mainWh.id,
+        itemId: itemMilk.id,
+        lotId: lotMilk.id,
+      },
+    },
+    update: {
+      qtyOnHand: 200,
+    },
+    create: {
+      warehouseId: mainWh.id,
+      itemId: itemMilk.id,
+      lotId: lotMilk.id,
+      qtyOnHand: 200,
+      qtyAllocated: 0,
+    },
+  });
+
+  await prisma.stockLedger.upsert({
+    where: { idempotencyKey: 'init-stock-milk' },
+    update: {},
+    create: {
+      idempotencyKey: 'init-stock-milk',
+      warehouseId: mainWh.id,
+      itemId: itemMilk.id,
+      lotId: lotMilk.id,
+      quantity: 200,
+      documentId: 'INITIAL_BALANCE',
+      documentType: DocumentType.ADJUSTMENT,
+      postedAt: new Date(),
     },
   });
 
