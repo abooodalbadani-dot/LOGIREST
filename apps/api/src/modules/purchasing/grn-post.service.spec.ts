@@ -166,4 +166,40 @@ describe('GrnPostService', () => {
       service.post('grn-1', 'user-1', Role.PROC_OFFICER, 1),
     ).rejects.toThrow(BadRequestException);
   });
+
+  it('should throw BadRequestException if item is frozen in destination warehouse', async () => {
+    const grnId = 'grn-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockGrnFindUnique.mockResolvedValue({
+      id: grnId,
+      warehouseId,
+      status: 'RECEIVED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          lotId: 'lot-1',
+          quantityReceived: new Prisma.Decimal(10),
+          unitPrice: new Prisma.Decimal(5.0),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: true,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+    });
+
+    await expect(
+      service.post(grnId, userId, Role.PROC_OFFICER, 1),
+    ).rejects.toThrow(new BadRequestException('Cannot post GRN: Item SKU1 is frozen/locked in destination warehouse'));
+  });
 });

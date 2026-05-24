@@ -60,6 +60,21 @@ export class GrnPostService {
         const item = line.item;
         const lotId = line.lotId;
 
+        // Check if item is frozen in destination warehouse
+        const destWhItemCheck = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: grn.warehouseId,
+              itemId: item.id,
+            },
+          },
+        });
+        if (destWhItemCheck?.isFrozen) {
+          throw new BadRequestException(
+            `Cannot post GRN: Item ${item.sku} is frozen/locked in destination warehouse`,
+          );
+        }
+
         if (item.isBatched || item.hasExpiry) {
           if (!lotId) {
             throw new BadRequestException(

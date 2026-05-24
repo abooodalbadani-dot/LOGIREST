@@ -72,15 +72,15 @@ describe('WacService', () => {
       expect(mockLockItem).toHaveBeenCalledWith(mockPrismaTx, whId, itemId);
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
-        data: { wac: 6.0 },
+        data: { wac: new Prisma.Decimal(6.0) },
       });
       expect(mockCostLedgerCreate).toHaveBeenCalledWith({
         data: {
           warehouseId: whId,
           itemId: itemId,
-          quantity: 10,
-          unitPrice: 7.0,
-          newWac: 6.0,
+          quantity: new Prisma.Decimal(10),
+          unitPrice: new Prisma.Decimal(7.0),
+          newWac: new Prisma.Decimal(6.0),
           documentId: docId,
           documentType: DocumentType.GOODS_RECEIVED_NOTE,
           idempotencyKey: undefined,
@@ -108,7 +108,7 @@ describe('WacService', () => {
       expect(newWac).toBe(8.0);
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
-        data: { wac: 8.0 },
+        data: { wac: new Prisma.Decimal(8.0) },
       });
     });
 
@@ -132,7 +132,7 @@ describe('WacService', () => {
       expect(newWac).toBe(10.0);
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
-        data: { wac: 10.0 },
+        data: { wac: new Prisma.Decimal(10.0) },
       });
     });
   });
@@ -162,15 +162,15 @@ describe('WacService', () => {
       expect(wacResult).toBe(6.0);
       expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
         where: { warehouseId_itemId: { warehouseId: whId, itemId } },
-        data: { wac: 6.0 },
+        data: { wac: new Prisma.Decimal(6.0) },
       });
       expect(mockCostLedgerCreate).toHaveBeenCalledWith({
         data: {
           warehouseId: whId,
           itemId: itemId,
-          quantity: 10,
-          unitPrice: 7.0,
-          newWac: 6.0,
+          quantity: new Prisma.Decimal(10),
+          unitPrice: new Prisma.Decimal(7.0),
+          newWac: new Prisma.Decimal(6.0),
           documentId: docId,
           documentType: DocumentType.ADJUSTMENT,
           idempotencyKey: undefined,

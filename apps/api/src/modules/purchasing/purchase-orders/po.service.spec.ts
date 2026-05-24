@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PurchaseOrderService } from './po.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
+import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
 import { NotFoundException } from '@nestjs/common';
 import { Role } from '@logirest/shared-types';
 
@@ -15,10 +16,27 @@ describe('PurchaseOrderService', () => {
       create: jest.fn(),
       findUnique: jest.fn(),
     },
+    purchaseRequest: {
+      findUnique: jest.fn(),
+    },
+    branch: {
+      findFirst: jest.fn(),
+    },
+    $transaction: jest
+      .fn()
+      .mockImplementation((cb: (tx: any) => Promise<unknown>) =>
+        cb(mockPrisma),
+      ),
   };
 
   const mockWorkflowService = {
     executeTransition: jest.fn(),
+  };
+
+  const mockDocumentSequenceService = {
+    generateNext: jest.fn().mockImplementation((tx, type) => {
+      return `${type}-SEQ-00001`;
+    }),
   };
 
   beforeEach(async () => {
@@ -27,6 +45,10 @@ describe('PurchaseOrderService', () => {
         PurchaseOrderService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        {
+          provide: DocumentSequenceService,
+          useValue: mockDocumentSequenceService,
+        },
       ],
     }).compile();
 
@@ -45,6 +67,10 @@ describe('PurchaseOrderService', () => {
         prId: 'pr-1',
         lines: [{ itemId: 'item-1', quantity: 10, unitPrice: 5.5 }],
       };
+
+      mockPrisma.purchaseRequest.findUnique.mockResolvedValue({
+        branchId: 'branch-1',
+      });
 
       mockPrisma.purchaseOrder.create.mockResolvedValue({
         id: 'po-1',

@@ -56,6 +56,21 @@ export class IssuePostService {
       for (const line of issue.lines) {
         const item = line.item;
 
+        // Check if item is frozen in source warehouse
+        const sourceWhItemCheck = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: issue.warehouseId,
+              itemId: item.id,
+            },
+          },
+        });
+        if (sourceWhItemCheck?.isFrozen) {
+          throw new BadRequestException(
+            `Cannot post issue: Item ${item.sku} is frozen/locked in source warehouse`,
+          );
+        }
+
         // Perform progressive lot allocation (FEFO/FIFO) and decrement quantities
         const allocations = await this.allocationService.allocate(
           tx,

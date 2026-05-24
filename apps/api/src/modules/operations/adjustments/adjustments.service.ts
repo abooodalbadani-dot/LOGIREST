@@ -2,13 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
-import { AdjustmentDirection, AdjustmentReason } from '@prisma/client';
+import {
+  AdjustmentDirection,
+  AdjustmentReason,
+  DocumentType,
+} from '@prisma/client';
+import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
 
 @Injectable()
 export class AdjustmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly documentSequenceService: DocumentSequenceService,
   ) {}
 
   async create(
@@ -25,32 +31,48 @@ export class AdjustmentsService {
     },
     userId: string,
   ) {
-    const adjustmentNumber = `ADJ-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.prisma.$transaction(async (tx) => {
+      const warehouse = await tx.warehouse.findUnique({
+        where: { id: body.warehouseId },
+        select: { branchId: true },
+      });
+      if (!warehouse) {
+        throw new NotFoundException(
+          `Warehouse with ID ${body.warehouseId} not found`,
+        );
+      }
 
-    return this.prisma.adjustment.create({
-      data: {
-        adjustmentNumber,
-        warehouseId: body.warehouseId,
-        status: 'DRAFT',
-        lines: {
-          create: body.lines.map((line) => ({
-            itemId: line.itemId,
-            lotId: line.lotId || null,
-            quantity: line.quantity,
-            direction: line.direction,
-            reason: line.reason,
-            unitCost: line.unitCost || null,
-          })),
-        },
-      },
-      include: {
-        lines: {
-          include: {
-            item: true,
-            lot: true,
+      const adjustmentNumber = await this.documentSequenceService.generateNext(
+        tx,
+        DocumentType.ADJUSTMENT,
+        warehouse.branchId,
+      );
+
+      return tx.adjustment.create({
+        data: {
+          adjustmentNumber,
+          warehouseId: body.warehouseId,
+          status: 'DRAFT',
+          lines: {
+            create: body.lines.map((line) => ({
+              itemId: line.itemId,
+              lotId: line.lotId || null,
+              quantity: line.quantity,
+              direction: line.direction,
+              reason: line.reason,
+              unitCost: line.unitCost || null,
+            })),
           },
         },
-      },
+        include: {
+          lines: {
+            include: {
+              item: true,
+              lot: true,
+            },
+          },
+        },
+      });
     });
   }
 

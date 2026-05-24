@@ -135,9 +135,10 @@ model Branch {
   version   Int      @default(1)
   createdAt DateTime @default(now())
 
-  warehouses   Warehouse[]
-  departments  Department[]
-  purchaseRequests PurchaseRequest[]
+  warehouses        Warehouse[]
+  departments       Department[]
+  purchaseRequests  PurchaseRequest[]
+  documentSequences DocumentSequence[]
 
   @@map("branches")
 }
@@ -568,6 +569,7 @@ model WarehouseItem {
   qtyOnHand    Decimal  @default(0) @db.Decimal(18, 4)
   qtyAllocated Decimal  @default(0) @db.Decimal(18, 4)
   wac          Decimal  @default(0) @db.Decimal(18, 4)
+  isFrozen     Boolean  @default(false) @map("is_frozen")
   updatedAt    DateTime @updatedAt
 
   warehouse Warehouse           @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
@@ -740,4 +742,20 @@ model NotificationLog {
   @@index([targetRole, isRead])
   @@index([warehouseId])
   @@map("notification_logs")
+}
+
+model DocumentSequence {
+  id              String       @id @default(uuid())
+  branchId        String       @map("branch_id")
+  documentType    DocumentType @map("document_type")
+  year            Int
+  currentSequence Int          @default(0) @map("current_sequence")
+  prefix          String
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  branch          Branch       @relation(fields: [branchId], references: [id], onDelete: Restrict)
+
+  @@unique([documentType, year, branchId])
+  @@map("document_sequences")
 }

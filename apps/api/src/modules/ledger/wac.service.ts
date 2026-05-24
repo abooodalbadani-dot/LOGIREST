@@ -37,31 +37,33 @@ export class WacService {
       );
     }
 
-    const currentQty = Number(whItem.qtyOnHand);
-    const currentWac = Number(whItem.wac);
+    const currentQty = new Prisma.Decimal(whItem.qtyOnHand);
+    const currentWac = new Prisma.Decimal(whItem.wac);
+    const rxQty = new Prisma.Decimal(receivedQty);
+    const rxCost = new Prisma.Decimal(receivedCost);
 
-    let newWac: number;
-    if (currentQty <= 0) {
-      newWac = receivedCost;
+    let newWac: Prisma.Decimal;
+    if (currentQty.lte(0)) {
+      newWac = rxCost;
     } else {
-      const currentTotalCost = currentQty * currentWac;
-      const receivedTotalCost = receivedQty * receivedCost;
-      const totalQty = currentQty + receivedQty;
+      const currentTotalCost = currentQty.mul(currentWac);
+      const receivedTotalCost = rxQty.mul(rxCost);
+      const totalQty = currentQty.add(rxQty);
 
-      if (totalQty <= 0) {
-        newWac = receivedCost;
+      if (totalQty.lte(0)) {
+        newWac = rxCost;
       } else {
-        newWac = (currentTotalCost + receivedTotalCost) / totalQty;
+        newWac = currentTotalCost.add(receivedTotalCost).div(totalQty);
       }
     }
 
     // Round to 4 decimal places
-    newWac = Math.round(newWac * 10000) / 10000;
+    const roundedWac = newWac.toDecimalPlaces(4);
 
     // 2. Update WAC on WarehouseItem
     await tx.warehouseItem.update({
       where: { warehouseId_itemId: { warehouseId, itemId } },
-      data: { wac: newWac },
+      data: { wac: roundedWac },
     });
 
     // 3. Log mutation to CostLedger
@@ -69,16 +71,16 @@ export class WacService {
       data: {
         warehouseId,
         itemId,
-        quantity: receivedQty,
-        unitPrice: receivedCost,
-        newWac: newWac,
+        quantity: rxQty,
+        unitPrice: rxCost,
+        newWac: roundedWac,
         documentId,
         documentType: DocumentType.GOODS_RECEIVED_NOTE,
         idempotencyKey,
       },
     });
 
-    return newWac;
+    return roundedWac.toNumber();
   }
 
   /**
@@ -106,31 +108,33 @@ export class WacService {
       );
     }
 
-    const currentQty = Number(whItem.qtyOnHand);
-    const currentWac = Number(whItem.wac);
+    const currentQty = new Prisma.Decimal(whItem.qtyOnHand);
+    const currentWac = new Prisma.Decimal(whItem.wac);
+    const adjQty = new Prisma.Decimal(adjustedQty);
+    const adjCost = new Prisma.Decimal(adjustedCost);
 
-    let newWac: number;
-    if (currentQty <= 0) {
-      newWac = adjustedCost;
+    let newWac: Prisma.Decimal;
+    if (currentQty.lte(0)) {
+      newWac = adjCost;
     } else {
-      const currentTotalCost = currentQty * currentWac;
-      const receivedTotalCost = adjustedQty * adjustedCost;
-      const totalQty = currentQty + adjustedQty;
+      const currentTotalCost = currentQty.mul(currentWac);
+      const receivedTotalCost = adjQty.mul(adjCost);
+      const totalQty = currentQty.add(adjQty);
 
-      if (totalQty <= 0) {
-        newWac = adjustedCost;
+      if (totalQty.lte(0)) {
+        newWac = adjCost;
       } else {
-        newWac = (currentTotalCost + receivedTotalCost) / totalQty;
+        newWac = currentTotalCost.add(receivedTotalCost).div(totalQty);
       }
     }
 
     // Round to 4 decimal places
-    newWac = Math.round(newWac * 10000) / 10000;
+    const roundedWac = newWac.toDecimalPlaces(4);
 
     // 2. Update WAC on WarehouseItem
     await tx.warehouseItem.update({
       where: { warehouseId_itemId: { warehouseId, itemId } },
-      data: { wac: newWac },
+      data: { wac: roundedWac },
     });
 
     // 3. Log to CostLedger
@@ -138,15 +142,15 @@ export class WacService {
       data: {
         warehouseId,
         itemId,
-        quantity: adjustedQty,
-        unitPrice: adjustedCost,
-        newWac: newWac,
+        quantity: adjQty,
+        unitPrice: adjCost,
+        newWac: roundedWac,
         documentId,
         documentType: DocumentType.ADJUSTMENT,
         idempotencyKey,
       },
     });
 
-    return newWac;
+    return roundedWac.toNumber();
   }
 }

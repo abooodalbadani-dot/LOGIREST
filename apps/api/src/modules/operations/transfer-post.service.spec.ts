@@ -18,6 +18,10 @@ describe('TransferPostService', () => {
   const mockStockLedgerCreate = jest.fn();
   const mockWarehouseItemLotUpsert = jest.fn();
   const mockWarehouseItemUpsert = jest.fn();
+  const mockWarehouseItemFindUnique = jest.fn();
+  const mockWarehouseFindUnique = jest.fn();
+  const mockWarehouseCreate = jest.fn();
+  const mockCostLedgerCreate = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -37,11 +41,19 @@ describe('TransferPostService', () => {
     stockLedger: {
       create: mockStockLedgerCreate,
     },
+    costLedger: {
+      create: mockCostLedgerCreate,
+    },
     warehouseItemLot: {
       upsert: mockWarehouseItemLotUpsert,
     },
     warehouseItem: {
       upsert: mockWarehouseItemUpsert,
+      findUnique: mockWarehouseItemFindUnique,
+    },
+    warehouse: {
+      findUnique: mockWarehouseFindUnique,
+      create: mockWarehouseCreate,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -82,6 +94,9 @@ describe('TransferPostService', () => {
 
     service = module.get<TransferPostService>(TransferPostService);
     jest.clearAllMocks();
+    mockWarehouseItemFindUnique.mockResolvedValue({ wac: new Prisma.Decimal(10.0), isFrozen: false });
+    mockWarehouseFindUnique.mockResolvedValue({ id: 'wh-loss-id', branchId: 'branch-1' });
+    mockWarehouseCreate.mockResolvedValue({ id: 'wh-loss-id', branchId: 'branch-1' });
   });
 
   describe('ship', () => {
@@ -339,6 +354,162 @@ describe('TransferPostService', () => {
         service.receive(transferId, userId, Role.INV_MGR, 2, undefined, [
           { lineId: 'line-1', quantityReceived: 3 },
         ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should recalculate destination WAC correctly and log transit loss on receipt discrepancy', async () => {
+      const transferId = 'transfer-1';
+      const userId = 'user-1';
+
+      mockTransferFindUnique.mockResolvedValue({
+        id: transferId,
+        fromWarehouseId: 'wh-source',
+        toWarehouseId: 'wh-dest',
+        status: 'IN_TRANSIT',
+        version: 2,
+        lines: [
+          {
+            id: 'line-1',
+            itemId: 'item-rice',
+            quantityShipped: new Prisma.Decimal(10),
+            item: {
+              id: 'item-rice',
+              sku: 'RICE',
+              isBatched: false,
+              hasExpiry: false,
+            },
+          },
+        ],
+      });
+
+      mockWarehouseItemFindUnique.mockImplementation(async (args) => {
+        if (args.where.warehouseId_itemId.warehouseId === 'wh-source') {
+          return { wac: new Prisma.Decimal(10.00), isFrozen: false };
+        }
+        return { wac: new Prisma.Decimal(4.00), isFrozen: false };
+      });
+
+      (mockLockService.lockItem as jest.Mock).mockResolvedValue({
+        qtyOnHand: new Prisma.Decimal(5),
+        wac: new Prisma.Decimal(4.00),
+      });
+
+      mockWarehouseFindUnique.mockResolvedValue({ id: 'wh-loss-id' });
+
+      mockTransferUpdate.mockResolvedValue({
+        id: transferId,
+        status: 'RECEIVED',
+      });
+      mockApprovalEventCount.mockResolvedValue(1);
+
+      const result = await service.receive(
+        transferId,
+        userId,
+        Role.INV_MGR,
+        2,
+        undefined,
+        [
+          {
+            lineId: 'line-1',
+            quantityReceived: 8,
+            varianceReason: 'Lost in transit',
+          },
+        ],
+      );
+
+      expect(result).toBeDefined();
+
+      expect(mockWarehouseItemUpsert).toHaveBeenCalledWith({
+        where: {
+          warehouseId_itemId: { warehouseId: 'wh-dest', itemId: 'item-rice' },
+        },
+        create: expect.objectContaining({
+          wac: new Prisma.Decimal(7.6923),
+          qtyOnHand: new Prisma.Decimal(8),
+        }),
+        update: expect.objectContaining({
+          wac: new Prisma.Decimal(7.6923),
+          qtyOnHand: { increment: new Prisma.Decimal(8) },
+        }),
+      });
+
+      expect(mockStockLedgerCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          warehouseId: 'wh-loss-id',
+          itemId: 'item-rice',
+          quantity: new Prisma.Decimal(2),
+          documentType: DocumentType.TRANSFER,
+        }),
+      });
+
+      expect(mockCostLedgerCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          warehouseId: 'wh-loss-id',
+          itemId: 'item-rice',
+          quantity: new Prisma.Decimal(2),
+          unitPrice: new Prisma.Decimal(10.00),
+          newWac: new Prisma.Decimal(10.00),
+          documentType: DocumentType.TRANSFER,
+        }),
+      });
+    });
+
+    it('should throw BadRequestException if item is frozen in destination warehouse', async () => {
+      const transferId = 'transfer-1';
+      mockTransferFindUnique.mockResolvedValue({
+        id: transferId,
+        fromWarehouseId: 'wh-source',
+        toWarehouseId: 'wh-dest',
+        status: 'IN_TRANSIT',
+        version: 2,
+        lines: [
+          {
+            id: 'line-1',
+            itemId: 'item-1',
+            quantityShipped: new Prisma.Decimal(5),
+            item: { id: 'item-1', sku: 'SKU1', isBatched: false, hasExpiry: false },
+          },
+        ],
+      });
+      mockWarehouseItemFindUnique.mockImplementation(async (args) => {
+        if (args.where.warehouseId_itemId.warehouseId === 'wh-dest') {
+          return { isFrozen: true };
+        }
+        return { isFrozen: false };
+      });
+
+      await expect(
+        service.receive(transferId, 'user-1', Role.INV_MGR, 2, undefined, [
+          { lineId: 'line-1', quantityReceived: 5 },
+        ]),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('ship - frozen check', () => {
+    it('should throw BadRequestException if item is frozen in source warehouse', async () => {
+      const transferId = 'transfer-1';
+      mockTransferFindUnique.mockResolvedValue({
+        id: transferId,
+        fromWarehouseId: 'wh-source',
+        toWarehouseId: 'wh-dest',
+        status: 'DRAFT',
+        version: 1,
+        lines: [
+          {
+            id: 'line-1',
+            itemId: 'item-1',
+            quantityShipped: new Prisma.Decimal(5),
+            item: { id: 'item-1', sku: 'SKU1', isBatched: false, hasExpiry: false },
+          },
+        ],
+      });
+      mockWarehouseItemFindUnique.mockResolvedValue({
+        isFrozen: true,
+      });
+
+      await expect(
+        service.ship(transferId, 'user-1', Role.INV_MGR, 1),
       ).rejects.toThrow(BadRequestException);
     });
   });

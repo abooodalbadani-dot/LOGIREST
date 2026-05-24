@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
+import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
+import { DocumentType } from '@prisma/client';
 
 @Injectable()
 export class PurchaseOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly documentSequenceService: DocumentSequenceService,
   ) {}
 
   async create(
@@ -19,26 +22,53 @@ export class PurchaseOrderService {
     },
     userId: string,
   ) {
-    const poNumber = `PO-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.prisma.$transaction(async (tx) => {
+      let branchId: string | undefined;
+      if (body.prId) {
+        const pr = await tx.purchaseRequest.findUnique({
+          where: { id: body.prId },
+          select: { branchId: true },
+        });
+        if (pr) {
+          branchId = pr.branchId;
+        }
+      }
 
-    return this.prisma.purchaseOrder.create({
-      data: {
-        poNumber,
-        prId: body.prId || null,
-        supplierId: body.supplierId,
-        currencyId: body.currencyId,
-        status: 'DRAFT',
-        lines: {
-          create: body.lines.map((line) => ({
-            itemId: line.itemId,
-            quantity: line.quantity,
-            unitPrice: line.unitPrice,
-          })),
+      if (!branchId) {
+        const firstBranch = await tx.branch.findFirst({ select: { id: true } });
+        if (!firstBranch) {
+          throw new NotFoundException(
+            'No active branch found to generate document sequence',
+          );
+        }
+        branchId = firstBranch.id;
+      }
+
+      const poNumber = await this.documentSequenceService.generateNext(
+        tx,
+        DocumentType.PURCHASE_ORDER,
+        branchId,
+      );
+
+      return tx.purchaseOrder.create({
+        data: {
+          poNumber,
+          prId: body.prId || null,
+          supplierId: body.supplierId,
+          currencyId: body.currencyId,
+          status: 'DRAFT',
+          lines: {
+            create: body.lines.map((line) => ({
+              itemId: line.itemId,
+              quantity: line.quantity,
+              unitPrice: line.unitPrice,
+            })),
+          },
         },
-      },
-      include: {
-        lines: true,
-      },
+        include: {
+          lines: true,
+        },
+      });
     });
   }
 

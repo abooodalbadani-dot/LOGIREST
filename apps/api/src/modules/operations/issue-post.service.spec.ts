@@ -16,6 +16,7 @@ describe('IssuePostService', () => {
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockWarehouseItemFindUnique = jest.fn();
 
   const mockPrismaTx = {
     inventoryIssue: {
@@ -34,6 +35,9 @@ describe('IssuePostService', () => {
     },
     auditLog: {
       create: mockAuditLogCreate,
+    },
+    warehouseItem: {
+      findUnique: mockWarehouseItemFindUnique,
     },
   } as unknown as Prisma.TransactionClient;
 
@@ -61,6 +65,7 @@ describe('IssuePostService', () => {
 
     service = module.get<IssuePostService>(IssuePostService);
     jest.clearAllMocks();
+    mockWarehouseItemFindUnique.mockResolvedValue(null);
   });
 
   it('should post SUBMITTED inventory issue successfully', async () => {
@@ -158,5 +163,39 @@ describe('IssuePostService', () => {
     await expect(
       service.post('issue-1', 'user-1', Role.INV_MGR, 1),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException if item is frozen in source warehouse', async () => {
+    const issueId = 'issue-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockIssueFindUnique.mockResolvedValue({
+      id: issueId,
+      warehouseId,
+      status: 'SUBMITTED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          quantity: new Prisma.Decimal(10),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: true,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+    });
+
+    await expect(
+      service.post(issueId, userId, Role.INV_MGR, 1),
+    ).rejects.toThrow(new BadRequestException('Cannot post issue: Item SKU1 is frozen/locked in source warehouse'));
   });
 });

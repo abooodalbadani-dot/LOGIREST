@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { PurchaseRequestsService } from './purchase-requests.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { DocumentSequenceService } from '../sequencing/document-sequence.service';
 import {
   NotFoundException,
   BadRequestException,
@@ -21,10 +21,21 @@ describe('PurchaseRequestsService', () => {
       create: jest.fn(),
       findFirst: jest.fn(),
     },
+    $transaction: jest
+      .fn()
+      .mockImplementation((cb: (tx: any) => Promise<unknown>) =>
+        cb(mockPrisma),
+      ),
   };
 
   const mockWorkflowService = {
     executeTransition: jest.fn(),
+  };
+
+  const mockDocumentSequenceService = {
+    generateNext: jest.fn().mockImplementation((tx, type) => {
+      return `${type}-SEQ-00001`;
+    }),
   };
 
   beforeEach(async () => {
@@ -33,6 +44,10 @@ describe('PurchaseRequestsService', () => {
         PurchaseRequestsService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        {
+          provide: DocumentSequenceService,
+          useValue: mockDocumentSequenceService,
+        },
       ],
     }).compile();
 
@@ -52,7 +67,7 @@ describe('PurchaseRequestsService', () => {
 
       mockPrisma.purchaseRequest.create.mockResolvedValue({
         id: 'pr-1',
-        requestNumber: 'PR-12345',
+        requestNumber: 'PURCHASE_REQUEST-SEQ-00001',
         status: 'DRAFT',
         branchId: 'branch-1',
         warehouseId: 'wh-1',
@@ -65,7 +80,7 @@ describe('PurchaseRequestsService', () => {
       expect(result.status).toBe('DRAFT');
       expect(mockPrisma.purchaseRequest.create).toHaveBeenCalledWith({
         data: {
-          requestNumber: expect.stringMatching(/^PR-\d+-\d+$/),
+          requestNumber: 'PURCHASE_REQUEST-SEQ-00001',
           branchId: 'branch-1',
           warehouseId: 'wh-1',
           createdById: userId,
@@ -255,7 +270,7 @@ describe('PurchaseRequestsService', () => {
       );
       expect(mockPrisma.purchaseOrder.create).toHaveBeenCalledWith({
         data: {
-          poNumber: expect.stringMatching(/^PO-\d+-\d+$/),
+          poNumber: 'PURCHASE_ORDER-SEQ-00001',
           prId: 'pr-1',
           supplierId: 'supplier-1',
           currencyId: 'currency-1',

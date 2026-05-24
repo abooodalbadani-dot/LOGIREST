@@ -60,6 +60,21 @@ export class AdjustmentPostService {
         const lotId = line.lotId;
         const qtyVal = Number(line.quantity);
 
+        // Check if item is frozen in warehouse
+        const whItemCheck = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: adj.warehouseId,
+              itemId: item.id,
+            },
+          },
+        });
+        if (whItemCheck?.isFrozen && userRole !== Role.ADMIN) {
+          throw new BadRequestException(
+            `Cannot post adjustment: Item ${item.sku} is frozen/locked. Only an Admin can post a reconciling adjustment.`,
+          );
+        }
+
         if (item.isBatched || item.hasExpiry) {
           if (!lotId) {
             throw new BadRequestException(
@@ -111,9 +126,11 @@ export class AdjustmentPostService {
                 qtyOnHand: qtyVal,
                 qtyAllocated: 0,
                 wac: 0,
+                isFrozen: false,
               },
               update: {
                 qtyOnHand: { increment: qtyVal },
+                isFrozen: false,
               },
             });
 
@@ -183,6 +200,7 @@ export class AdjustmentPostService {
               },
               data: {
                 qtyOnHand: { decrement: qtyVal },
+                isFrozen: false,
               },
             });
 
@@ -218,9 +236,11 @@ export class AdjustmentPostService {
                 qtyOnHand: qtyVal,
                 qtyAllocated: 0,
                 wac: 0,
+                isFrozen: false,
               },
               update: {
                 qtyOnHand: { increment: qtyVal },
+                isFrozen: false,
               },
             });
 
@@ -264,6 +284,7 @@ export class AdjustmentPostService {
               },
               data: {
                 qtyOnHand: { decrement: qtyVal },
+                isFrozen: false,
               },
             });
 

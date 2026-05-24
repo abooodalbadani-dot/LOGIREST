@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   NotFoundException,
@@ -8,12 +7,15 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
+import { DocumentSequenceService } from '../sequencing/document-sequence.service';
+import { DocumentType } from '@prisma/client';
 
 @Injectable()
 export class PurchaseRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly documentSequenceService: DocumentSequenceService,
   ) {}
 
   async create(
@@ -24,25 +26,31 @@ export class PurchaseRequestsService {
     },
     userId: string,
   ) {
-    const requestNumber = `PR-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.prisma.$transaction(async (tx) => {
+      const requestNumber = await this.documentSequenceService.generateNext(
+        tx,
+        DocumentType.PURCHASE_REQUEST,
+        body.branchId,
+      );
 
-    return this.prisma.purchaseRequest.create({
-      data: {
-        requestNumber,
-        branchId: body.branchId,
-        warehouseId: body.warehouseId,
-        createdById: userId,
-        status: 'DRAFT',
-        lines: {
-          create: body.lines.map((line) => ({
-            itemId: line.itemId,
-            quantity: line.quantity,
-          })),
+      return tx.purchaseRequest.create({
+        data: {
+          requestNumber,
+          branchId: body.branchId,
+          warehouseId: body.warehouseId,
+          createdById: userId,
+          status: 'DRAFT',
+          lines: {
+            create: body.lines.map((line) => ({
+              itemId: line.itemId,
+              quantity: line.quantity,
+            })),
+          },
         },
-      },
-      include: {
-        lines: true,
-      },
+        include: {
+          lines: true,
+        },
+      });
     });
   }
 
@@ -188,44 +196,50 @@ export class PurchaseRequestsService {
     );
 
     // 4. Create the Purchase Order in DRAFT status referencing the PR ID
-    const poNumber = `PO-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.prisma.$transaction(async (tx) => {
+      const poNumber = await this.documentSequenceService.generateNext(
+        tx,
+        DocumentType.PURCHASE_ORDER,
+        pr.branchId,
+      );
 
-    try {
-      return await this.prisma.purchaseOrder.create({
-        data: {
-          poNumber,
-          prId: id,
-          supplierId: body.supplierId,
-          currencyId: body.currencyId,
-          status: 'DRAFT',
-          lines: {
-            create: pr.lines.map((prLine) => {
-              const unitPrice = priceMap.get(prLine.itemId) || 0;
-              return {
-                itemId: prLine.itemId,
-                quantity: prLine.quantity,
-                unitPrice: unitPrice,
-              };
-            }),
+      try {
+        return await tx.purchaseOrder.create({
+          data: {
+            poNumber,
+            prId: id,
+            supplierId: body.supplierId,
+            currencyId: body.currencyId,
+            status: 'DRAFT',
+            lines: {
+              create: pr.lines.map((prLine) => {
+                const unitPrice = priceMap.get(prLine.itemId) || 0;
+                return {
+                  itemId: prLine.itemId,
+                  quantity: prLine.quantity,
+                  unitPrice: unitPrice,
+                };
+              }),
+            },
           },
-        },
-        include: {
-          lines: true,
-        },
-      });
-    } catch (error) {
-      // Prisma unique constraint violation code is 'P2002'
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        (error as any).code === 'P2002'
-      ) {
-        throw new ConflictException(
-          `Purchase Request ${id} has already been converted to a Purchase Order.`,
-        );
+          include: {
+            lines: true,
+          },
+        });
+      } catch (error) {
+        // Prisma unique constraint violation code is 'P2002'
+        if (
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          (error as any).code === 'P2002'
+        ) {
+          throw new ConflictException(
+            `Purchase Request ${id} has already been converted to a Purchase Order.`,
+          );
+        }
+        throw error;
       }
-      throw error;
-    }
+    });
   }
 }

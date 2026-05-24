@@ -23,9 +23,9 @@
 
 **Purpose**: Project initialization and basic database schema adjustments
 
-- [ ] T001 Define `DocumentSequence` model and add `isFrozen` field to `WarehouseItem` in `apps/api/prisma/schema.prisma`
-- [ ] T002 Generate database migration script: `npx prisma migrate dev --name add_document_sequence_and_is_frozen --schema=apps/api/prisma/schema.prisma`
-- [ ] T003 [P] Create sequencing module and register it in app modules `apps/api/src/app.module.ts`
+- [x] T001 Define `DocumentSequence` model and add `isFrozen` field to `WarehouseItem` in `apps/api/prisma/schema.prisma`
+- [x] T002 Generate database migration script: `npx prisma migrate dev --name add_document_sequence_and_is_frozen --schema=apps/api/prisma/schema.prisma`
+- [x] T003 [P] Create sequencing module and register it in app modules `apps/api/src/app.module.ts`
 
 ---
 
@@ -35,7 +35,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Implement `Prisma.Decimal` arithmetic utilities and precision rounding (to 4 decimal places) helper functions in `apps/api/src/modules/ledger/wac.service.ts`
+- [x] T004 Implement `Prisma.Decimal` arithmetic utilities and precision rounding (to 4 decimal places) helper functions in `apps/api/src/modules/ledger/wac.service.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -50,13 +50,13 @@
 ### Tests for User Story 1
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T005 [P] [US1] Create unit tests in `apps/api/src/modules/operations/transfer-post.service.spec.ts` to assert that receipt WAC is calculated correctly and transit loss transactions are posted to the Cost and Stock ledgers (must fail initially)
+- [x] T005 [P] [US1] Create unit tests in `apps/api/src/modules/operations/transfer-post.service.spec.ts` to assert that receipt WAC is calculated correctly and transit loss transactions are posted to the Cost and Stock ledgers (must fail initially)
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Refactor `receive` method in `apps/api/src/modules/operations/transfer-post.service.ts` to retrieve the source warehouse item's WAC
-- [ ] T007 [US1] Refactor WAC recalculation inside the `WarehouseItem` upsert loop of `apps/api/src/modules/operations/transfer-post.service.ts` using `Prisma.Decimal` high-precision arithmetic
-- [ ] T008 [US1] Implement transit loss write-off posting logic in `apps/api/src/modules/operations/transfer-post.service.ts` to write quantity discrepancies as `TRANSIT_LOSS` in both stock and cost ledgers under a system-wide `Transit Loss Expense` account
+- [x] T006 [US1] Refactor `receive` method in `apps/api/src/modules/operations/transfer-post.service.ts` to retrieve the source warehouse item's WAC
+- [x] T007 [US1] Refactor WAC recalculation inside the `WarehouseItem` upsert loop of `apps/api/src/modules/operations/transfer-post.service.ts` using `Prisma.Decimal` high-precision arithmetic
+- [x] T008 [US1] Implement transit loss write-off posting logic in `apps/api/src/modules/operations/transfer-post.service.ts` to write quantity discrepancies as `TRANSIT_LOSS` in both stock and cost ledgers under a system-wide `Transit Loss Expense` account
 
 **Checkpoint**: User Story 1 is fully functional and testable independently.
 
@@ -70,16 +70,16 @@
 
 ### Tests for User Story 2
 
-- [ ] T009 [P] [US2] Create unit tests in `apps/api/src/modules/sequencing/document-sequence.service.spec.ts` checking format validation, annual reset triggers, and concurrency safety using transaction locks (must fail initially)
+- [x] T009 [P] [US2] Create unit tests in `apps/api/src/modules/sequencing/document-sequence.service.spec.ts` checking format validation, annual reset triggers, and concurrency safety using transaction locks (must fail initially)
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Implement `DocumentSequenceService` with atomic database-level locks (`SELECT FOR UPDATE`) in `apps/api/src/modules/sequencing/document-sequence.service.ts`
-- [ ] T011 [US2] Refactor PR number generation inside `apps/api/src/modules/purchase-requests/purchase-requests.service.ts` to use `DocumentSequenceService`
-- [ ] T012 [US2] Refactor PO number generation inside `apps/api/src/modules/purchasing/purchase-orders/po.service.ts` to use `DocumentSequenceService`
-- [ ] T013 [US2] Refactor Stock Transfer number generation inside `apps/api/src/modules/operations/transfers/transfers.service.ts` to use `DocumentSequenceService`
-- [ ] T014 [US2] Refactor Inventory Issue number generation inside `apps/api/src/modules/operations/issues/issues.service.ts` to use `DocumentSequenceService`
-- [ ] T015 [US2] Refactor Stock Adjustment number generation inside `apps/api/src/modules/operations/adjustments/adjustments.service.ts` to use `DocumentSequenceService`
+- [x] T010 [US2] Implement `DocumentSequenceService` with atomic database-level locks (`SELECT FOR UPDATE`) in `apps/api/src/modules/sequencing/document-sequence.service.ts`
+- [x] T011 [US2] Refactor PR number generation inside `apps/api/src/modules/purchase-requests/purchase-requests.service.ts` to use `DocumentSequenceService`
+- [x] T012 [US2] Refactor PO number generation inside `apps/api/src/modules/purchasing/purchase-orders/po.service.ts` to use `DocumentSequenceService`
+- [x] T013 [US2] Refactor Stock Transfer number generation inside `apps/api/src/modules/operations/transfers/transfers.service.ts` to use `DocumentSequenceService`
+- [x] T014 [US2] Refactor Inventory Issue number generation inside `apps/api/src/modules/operations/issues/issues.service.ts` to use `DocumentSequenceService`
+- [x] T015 [US2] Refactor Stock Adjustment number generation inside `apps/api/src/modules/operations/adjustments/adjustments.service.ts` to use `DocumentSequenceService`
 
 **Checkpoint**: User Stories 1 and 2 should both work independently.
 
@@ -93,13 +93,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T016 [P] [US3] Create unit/integration tests in `apps/api/src/modules/ledger/reconciliation.job.spec.ts` asserting drift checks, SKU freezing execution, and mutation controller rejections (must fail initially)
+- [x] T016 [P] [US3] Create unit/integration tests in `apps/api/src/modules/ledger/reconciliation.job.spec.ts` asserting drift checks, SKU freezing execution, and mutation controller rejections (must fail initially)
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Implement scheduled daily NestJS cron job `ReconciliationJob` inside `apps/api/src/modules/ledger/reconciliation.job.ts` comparing `WarehouseItem.qtyOnHand` with the sum of historical transaction entries in `StockLedger`
-- [ ] T018 [US3] Add validation block inside mutating services (GRN post, stock adjustments, issues, transfers) checking the `isFrozen` status of each item, returning `423 LOCKED` or `400 BAD REQUEST` if true
-- [ ] T019 [US3] Implement automatic unfreezing trigger upon successful posting of a reconciling Stock Adjustment document in `apps/api/src/modules/operations/adjustments/adjustment-post.service.ts`
+- [x] T017 [US3] Implement scheduled daily NestJS cron job `ReconciliationJob` inside `apps/api/src/modules/ledger/reconciliation.job.ts` comparing `WarehouseItem.qtyOnHand` with the sum of historical transaction entries in `StockLedger`
+- [x] T018 [US3] Add validation block inside mutating services (GRN post, stock adjustments, issues, transfers) checking the `isFrozen` status of each item, returning `423 LOCKED` or `400 BAD REQUEST` if true
+- [x] T019 [US3] Implement automatic unfreezing trigger upon successful posting of a reconciling Stock Adjustment document in `apps/api/src/modules/operations/adjustments/adjustment-post.service.ts`
 
 **Checkpoint**: All user stories should now be independently functional.
 
@@ -109,10 +109,10 @@
 
 **Purpose**: Refactoring, quality checks, and performance validation
 
-- [ ] T020 [P] Run typecheck verification: `npm run typecheck --filter=api`
-- [ ] T021 [P] Run ESLint sweep and styling checks: `npm run lint --filter=api`
-- [ ] T022 Compile production bundle: `npm run build --filter=api`
-- [ ] T023 Run developer quickstart validation in `specs/024-transaction-financial-hardening/quickstart.md`
+- [x] T020 [P] Run typecheck verification: `npm run typecheck --filter=api`
+- [x] T021 [P] Run ESLint sweep and styling checks: `npm run lint --filter=api`
+- [x] T022 Compile production bundle: `npm run build --filter=api`
+- [x] T023 Run developer quickstart validation in `specs/024-transaction-financial-hardening/quickstart.md`
 
 ---
 

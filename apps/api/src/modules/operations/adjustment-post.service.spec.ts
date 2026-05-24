@@ -26,6 +26,7 @@ describe('AdjustmentPostService', () => {
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpsert = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
+  const mockWarehouseItemFindUnique = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
@@ -43,6 +44,7 @@ describe('AdjustmentPostService', () => {
     warehouseItem: {
       upsert: mockWarehouseItemUpsert,
       update: mockWarehouseItemUpdate,
+      findUnique: mockWarehouseItemFindUnique,
     },
     stockLedger: {
       create: mockStockLedgerCreate,
@@ -88,6 +90,7 @@ describe('AdjustmentPostService', () => {
 
     service = module.get<AdjustmentPostService>(AdjustmentPostService);
     jest.clearAllMocks();
+    mockWarehouseItemFindUnique.mockResolvedValue(null);
   });
 
   it('should post APPROVED INCREASE adjustment successfully', async () => {
@@ -229,5 +232,104 @@ describe('AdjustmentPostService', () => {
     await expect(service.post('adj-1', 'user-1', Role.INV_MGR)).rejects.toThrow(
       BadRequestException,
     );
+  });
+
+  it('should throw BadRequestException if item is frozen and role is not ADMIN', async () => {
+    const adjId = 'adj-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockAdjFindUnique.mockResolvedValue({
+      id: adjId,
+      warehouseId,
+      status: 'APPROVED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          lotId: 'lot-1',
+          quantity: new Prisma.Decimal(5),
+          direction: AdjustmentDirection.IN,
+          reason: AdjustmentReason.CORRECTION,
+          unitCost: new Prisma.Decimal(10),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: true,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+    });
+
+    await expect(
+      service.post(adjId, userId, Role.INV_MGR, 1),
+    ).rejects.toThrow(new BadRequestException('Cannot post adjustment: Item SKU1 is frozen/locked. Only an Admin can post a reconciling adjustment.'));
+  });
+
+  it('should allow posting and unfreeze item if item is frozen and role is ADMIN', async () => {
+    const adjId = 'adj-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockAdjFindUnique.mockResolvedValue({
+      id: adjId,
+      warehouseId,
+      status: 'APPROVED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          lotId: 'lot-1',
+          quantity: new Prisma.Decimal(5),
+          direction: AdjustmentDirection.IN,
+          reason: AdjustmentReason.CORRECTION,
+          unitCost: new Prisma.Decimal(10),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: true,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+    });
+
+    mockAdjUpdate.mockResolvedValue({ id: adjId, status: 'POSTED' });
+    mockApprovalEventCount.mockResolvedValue(1);
+
+    const result = await service.post(adjId, userId, Role.ADMIN, 1);
+
+    expect(result).toBeDefined();
+    expect(mockWarehouseItemUpsert).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId: 'item-1',
+        },
+      },
+      create: {
+        warehouseId,
+        itemId: 'item-1',
+        qtyOnHand: 5,
+        qtyAllocated: 0,
+        wac: 0,
+        isFrozen: false,
+      },
+      update: {
+        qtyOnHand: { increment: 5 },
+        isFrozen: false,
+      },
+    });
   });
 });

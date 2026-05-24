@@ -22,6 +22,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { DocumentSequenceModule } from './modules/sequencing/document-sequence.module';
 import { IdempotencyService } from './services/idempotency.service';
 import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
@@ -50,6 +51,7 @@ import { LockCleanupJob } from './jobs/lock-cleanup.job';
     ReportsModule,
     NotificationModule,
     AdminModule,
+    DocumentSequenceModule,
   ],
   controllers: [AppController],
   providers: [

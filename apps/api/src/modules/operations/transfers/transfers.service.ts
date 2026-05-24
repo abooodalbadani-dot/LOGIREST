@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
+import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
+import { DocumentType } from '@prisma/client';
 
 @Injectable()
 export class TransfersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly documentSequenceService: DocumentSequenceService,
   ) {}
 
   async create(
@@ -18,28 +21,44 @@ export class TransfersService {
     },
     userId: string,
   ) {
-    const transferNumber = `TRN-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.prisma.$transaction(async (tx) => {
+      const warehouse = await tx.warehouse.findUnique({
+        where: { id: body.fromWarehouseId },
+        select: { branchId: true },
+      });
+      if (!warehouse) {
+        throw new NotFoundException(
+          `Source warehouse with ID ${body.fromWarehouseId} not found`,
+        );
+      }
 
-    return this.prisma.transfer.create({
-      data: {
-        transferNumber,
-        fromWarehouseId: body.fromWarehouseId,
-        toWarehouseId: body.toWarehouseId,
-        status: 'DRAFT',
-        lines: {
-          create: body.lines.map((line) => ({
-            itemId: line.itemId,
-            quantityShipped: line.quantityShipped,
-          })),
-        },
-      },
-      include: {
-        lines: {
-          include: {
-            item: true,
+      const transferNumber = await this.documentSequenceService.generateNext(
+        tx,
+        DocumentType.TRANSFER,
+        warehouse.branchId,
+      );
+
+      return tx.transfer.create({
+        data: {
+          transferNumber,
+          fromWarehouseId: body.fromWarehouseId,
+          toWarehouseId: body.toWarehouseId,
+          status: 'DRAFT',
+          lines: {
+            create: body.lines.map((line) => ({
+              itemId: line.itemId,
+              quantityShipped: line.quantityShipped,
+            })),
           },
         },
-      },
+        include: {
+          lines: {
+            include: {
+              item: true,
+            },
+          },
+        },
+      });
     });
   }
 

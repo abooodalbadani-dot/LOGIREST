@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
-import { Role, DocumentType } from '@prisma/client';
+import { Role, DocumentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class TransferPostService {
@@ -58,6 +58,21 @@ export class TransferPostService {
       // 2. Process each line
       for (const line of transfer.lines) {
         const item = line.item;
+
+        // Check if item is frozen in source warehouse
+        const sourceWhItem = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: transfer.fromWarehouseId,
+              itemId: item.id,
+            },
+          },
+        });
+        if (sourceWhItem?.isFrozen) {
+          throw new BadRequestException(
+            `Cannot ship transfer: Item ${item.sku} is frozen/locked in source warehouse`,
+          );
+        }
 
         // Perform progressive lot allocation (FEFO/FIFO) and decrement quantities in source warehouse
         const allocations = await this.allocationService.allocate(
@@ -234,6 +249,34 @@ export class TransferPostService {
           );
         }
 
+        // Check if item is frozen in destination warehouse
+        const destWhItemCheck = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: transfer.toWarehouseId,
+              itemId: item.id,
+            },
+          },
+        });
+        if (destWhItemCheck?.isFrozen) {
+          throw new BadRequestException(
+            `Cannot receive transfer: Item ${item.sku} is frozen/locked in destination warehouse`,
+          );
+        }
+
+        // Retrieve source warehouse WAC
+        const sourceWhItem = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: transfer.fromWarehouseId,
+              itemId: item.id,
+            },
+          },
+        });
+        const sourceWac = sourceWhItem
+          ? new Prisma.Decimal(sourceWhItem.wac)
+          : new Prisma.Decimal(0);
+
         // Update TransferLine
         await tx.transferLine.update({
           where: { id: line.id },
@@ -321,8 +364,38 @@ export class TransferPostService {
           });
         }
 
+        // Lock/fetch destination warehouse item to recalculate WAC
+        const destWhItem = await this.lockService.lockItem(
+          tx,
+          transfer.toWarehouseId,
+          item.id,
+        );
+        const currentQty = destWhItem
+          ? new Prisma.Decimal(destWhItem.qtyOnHand)
+          : new Prisma.Decimal(0);
+        const currentWac = destWhItem
+          ? new Prisma.Decimal(destWhItem.wac)
+          : new Prisma.Decimal(0);
+        const rxQty = new Prisma.Decimal(receivedQty);
+        const rxCost = sourceWac;
+
+        let newDestWac: Prisma.Decimal;
+        if (currentQty.lte(0)) {
+          newDestWac = rxCost;
+        } else {
+          const currentTotalCost = currentQty.mul(currentWac);
+          const receivedTotalCost = rxQty.mul(rxCost);
+          const totalQty = currentQty.add(rxQty);
+
+          if (totalQty.lte(0)) {
+            newDestWac = rxCost;
+          } else {
+            newDestWac = currentTotalCost.add(receivedTotalCost).div(totalQty);
+          }
+        }
+        const roundedDestWac = newDestWac.toDecimalPlaces(4);
+
         // Upsert total item balance in target warehouse
-        await this.lockService.lockItem(tx, transfer.toWarehouseId, item.id);
         await tx.warehouseItem.upsert({
           where: {
             warehouseId_itemId: {
@@ -333,14 +406,99 @@ export class TransferPostService {
           create: {
             warehouseId: transfer.toWarehouseId,
             itemId: item.id,
-            qtyOnHand: receivedQty,
+            qtyOnHand: rxQty,
             qtyAllocated: 0,
-            wac: 0,
+            wac: roundedDestWac,
           },
           update: {
-            qtyOnHand: { increment: receivedQty },
+            qtyOnHand: { increment: rxQty },
+            wac: roundedDestWac,
           },
         });
+
+        // Log mutation to CostLedger for destination warehouse
+        await tx.costLedger.create({
+          data: {
+            warehouseId: transfer.toWarehouseId,
+            itemId: item.id,
+            quantity: rxQty,
+            unitPrice: rxCost,
+            newWac: roundedDestWac,
+            documentId: transfer.id,
+            documentType: DocumentType.TRANSFER,
+          },
+        });
+
+        // Log Transit Loss if there is a discrepancy
+        const discrepancy = shippedQty - receivedQty;
+        if (discrepancy > 0) {
+          let transitLossWh = await tx.warehouse.findUnique({
+            where: { code: 'TRANSIT_LOSS' },
+          });
+          if (!transitLossWh) {
+            const toWh = await tx.warehouse.findUnique({
+              where: { id: transfer.toWarehouseId },
+              select: { branchId: true },
+            });
+            if (!toWh) {
+              throw new NotFoundException(
+                `Destination warehouse with ID ${transfer.toWarehouseId} not found`,
+              );
+            }
+            transitLossWh = await tx.warehouse.create({
+              data: {
+                code: 'TRANSIT_LOSS',
+                name: 'Transit Loss Expense Warehouse',
+                branchId: toWh.branchId,
+                isActive: false,
+              },
+            });
+          }
+
+          const discrepancyDec = new Prisma.Decimal(discrepancy);
+
+          await tx.warehouseItem.upsert({
+            where: {
+              warehouseId_itemId: {
+                warehouseId: transitLossWh.id,
+                itemId: item.id,
+              },
+            },
+            create: {
+              warehouseId: transitLossWh.id,
+              itemId: item.id,
+              qtyOnHand: discrepancyDec,
+              qtyAllocated: 0,
+              wac: sourceWac,
+            },
+            update: {
+              qtyOnHand: { increment: discrepancyDec },
+            },
+          });
+
+          await tx.stockLedger.create({
+            data: {
+              warehouseId: transitLossWh.id,
+              itemId: item.id,
+              lotId: null,
+              quantity: discrepancyDec,
+              documentId: transfer.id,
+              documentType: DocumentType.TRANSFER,
+            },
+          });
+
+          await tx.costLedger.create({
+            data: {
+              warehouseId: transitLossWh.id,
+              itemId: item.id,
+              quantity: discrepancyDec,
+              unitPrice: sourceWac,
+              newWac: sourceWac,
+              documentId: transfer.id,
+              documentType: DocumentType.TRANSFER,
+            },
+          });
+        }
       }
 
       // 3. Update Transfer status to RECEIVED
