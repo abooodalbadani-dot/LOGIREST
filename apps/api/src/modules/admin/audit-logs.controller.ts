@@ -22,9 +22,9 @@ export class AuditLogsController {
     @CurrentUser('role') role: Role,
     @Query() query: AuditLogsQuery,
   ) {
-    if (role !== 'ADMIN' && role !== 'INV_MGR') {
+    if (role !== 'ADMIN' && role !== 'INV_MGR' && role !== 'AUDITOR') {
       throw new ForbiddenException(
-        'Only admins and managers are authorized to access administrative audit logs.',
+        'Only admins, managers, and auditors are authorized to access administrative audit logs.',
       );
     }
 
