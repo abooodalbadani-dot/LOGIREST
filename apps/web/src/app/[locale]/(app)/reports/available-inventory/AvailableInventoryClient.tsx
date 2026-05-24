@@ -85,6 +85,7 @@ export default function AvailableInventoryClient() {
  data={data || []}
  filename="Available_Inventory_Report"
  title={t('available_inventory')}
+ exportRoute="/reports/available-inventory/export"
  />
  }
  collectionName="reports"

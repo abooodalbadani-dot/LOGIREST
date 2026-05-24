@@ -212,6 +212,9 @@ model Supplier {
   name         String
   code         String  @unique
   contactEmail String?
+  contactName  String?
+  contactPhone String?
+  isActive     Boolean @default(true)
   version      Int     @default(1)
 
   purchaseOrders PurchaseOrder[]
@@ -259,6 +262,7 @@ model Item {
   isActive   Boolean  @default(true)
   version    Int      @default(1)
   createdAt  DateTime @default(now())
+  reorderPoint Decimal? @db.Decimal(18, 4)
 
   category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   unitOfMeasure       UnitOfMeasure        @relation(fields: [uomId], references: [id], onDelete: Restrict)
@@ -722,12 +726,13 @@ model StocktakeCount {
 }
 
 model StocktakeSnapshot {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   sessionId   String
   itemId      String
   lotId       String?
-  qtySnapshot Decimal @db.Decimal(18, 4)
-  wacSnapshot Decimal @db.Decimal(18, 4)
+  qtySnapshot Decimal  @db.Decimal(18, 4)
+  wacSnapshot Decimal  @db.Decimal(18, 4)
+  createdAt   DateTime @default(now())
 
   session StocktakeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   item    Item             @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -767,3 +772,30 @@ model DocumentSequence {
   @@unique([documentType, year, branchId])
   @@map("document_sequences")
 }
+
+model OutboxEvent {
+  id          String    @id @default(uuid())
+  eventType   String
+  payload     Json
+  status      String    @default("PENDING") // PENDING | SUCCEEDED | FAILED
+  attempts    Int       @default(0)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}
+
+model ReconciliationRun {
+  id                 String   @id @default(uuid())
+  ranAt              DateTime @default(now())
+  itemsChecked       Int
+  discrepanciesFound Int
+  frozenItems        String[]
+  durationMs         Int
+
+  @@map("reconciliation_runs")
+}
+

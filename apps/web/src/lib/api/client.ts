@@ -91,6 +91,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     const res = await fetch(`${BASE}${path}`, {
       method,
       signal,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Accept-Language': locale,

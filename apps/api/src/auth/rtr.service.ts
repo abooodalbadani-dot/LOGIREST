@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { Response } from 'express';
+import { OutboxService } from '../modules/outbox/outbox.service';
 
 @Injectable()
 export class RtrService {
@@ -11,6 +12,7 @@ export class RtrService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   private hashToken(token: string): string {
@@ -55,6 +57,7 @@ export class RtrService {
   async rotateRefreshToken(
     currentToken: string,
     res: Response,
+    ipAddress?: string,
   ): Promise<{ accessToken: string }> {
     const tokenHash = this.hashToken(currentToken);
     this.logger.debug(
@@ -81,26 +84,36 @@ export class RtrService {
         `Replay attack detected! Session: ${existingToken.sessionId}`,
       );
 
-      await this.prisma.refreshToken.updateMany({
-        where: { sessionId: existingToken.sessionId },
-        data: { isRevoked: true },
-      });
+      await this.prisma.$transaction(async (tx) => {
+        await tx.refreshToken.updateMany({
+          where: { sessionId: existingToken.sessionId },
+          data: { isRevoked: true },
+        });
 
-      await this.prisma.auditLog.create({
-        data: {
+        await tx.auditLog.create({
+          data: {
+            userId: existingToken.userId,
+            action: 'REFRESH_TOKEN_REPLAY',
+            targetTable: 'refresh_tokens',
+            targetId: existingToken.sessionId,
+            ipAddress,
+            beforeStateJson: JSON.stringify({
+              tokenHash: tokenHash.substring(0, 8),
+              sessionId: existingToken.sessionId,
+            }),
+            afterStateJson: JSON.stringify({
+              action: 'ALL_SESSION_TOKENS_REVOKED',
+              sessionId: existingToken.sessionId,
+            }),
+          },
+        });
+
+        await this.outboxService.writeEvent(tx, 'SECURITY_ALERT_REPLAY_ATTACK', {
           userId: existingToken.userId,
-          action: 'REFRESH_TOKEN_REPLAY',
-          targetTable: 'refresh_tokens',
-          targetId: existingToken.sessionId,
-          beforeStateJson: JSON.stringify({
-            tokenHash: tokenHash.substring(0, 8),
-            sessionId: existingToken.sessionId,
-          }),
-          afterStateJson: JSON.stringify({
-            action: 'ALL_SESSION_TOKENS_REVOKED',
-            sessionId: existingToken.sessionId,
-          }),
-        },
+          sessionId: existingToken.sessionId,
+          ipAddress: ipAddress || null,
+          timestamp: new Date().toISOString(),
+        });
       });
 
       throw new UnauthorizedException('Session expired or invalid');
@@ -146,6 +159,15 @@ export class RtrService {
       { expiresIn: '15m' },
     );
 
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('logirest_token', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+      secure: isProduction,
+      maxAge: 15 * 60 * 1000,
+    });
+
     this.setRefreshCookie(res, newToken);
 
     return { accessToken };
@@ -165,6 +187,12 @@ export class RtrService {
       httpOnly: true,
       sameSite: 'lax',
       path: '/api/v1/auth/refresh',
+      secure: process.env.NODE_ENV === 'production',
+    });
+    res.clearCookie('logirest_token', {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
       secure: process.env.NODE_ENV === 'production',
     });
   }

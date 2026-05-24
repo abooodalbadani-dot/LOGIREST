@@ -44,6 +44,15 @@ export class AuthService {
       { expiresIn: '15m' },
     );
 
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('logirest_token', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+      secure: isProduction,
+      maxAge: 15 * 60 * 1000,
+    });
+
     await this.rtrService.createSession(user.id, res);
 
     return {

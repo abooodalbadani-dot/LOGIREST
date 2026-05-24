@@ -3,9 +3,14 @@ import { z } from 'zod';
 export const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   PORT: z.coerce.number().default(4000),
-  FRONTEND_URL: z.string().url(),
+  FRONTEND_URL: z.string(),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
+  REDIS_URL: z.string().url().default('redis://localhost:6379'),
+  IDEMPOTENCY_TTL_HOURS: z.coerce.number().default(24),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

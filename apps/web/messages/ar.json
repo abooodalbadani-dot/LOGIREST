@@ -3544,7 +3544,8 @@
       "variance": "الفرق"
     },
     "title": "مركز التقارير",
-    "view_report": "عرض التقرير"
+    "view_report": "عرض التقرير",
+    "select_session": "اختر الجلسة"
   },
   "transfers": {
     "capacity": {

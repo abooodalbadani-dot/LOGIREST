@@ -115,7 +115,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
     if (prisma) {
       if (adminId || nonAdminId) {
         await prisma.userWarehouseScope.deleteMany({
-          where: { userId: { in: [adminId, nonAdminId] } },
+          where: { userId: { in: [adminId, nonAdminId].filter(Boolean) } },
         });
       }
       if (warehouseId) {
@@ -125,7 +125,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
       }
       if (adminId || nonAdminId) {
         await prisma.auditLog.deleteMany({
-          where: { userId: { in: [adminId, nonAdminId] } },
+          where: { userId: { in: [adminId, nonAdminId].filter(Boolean) } },
         });
       }
       if (warehouseId) {
@@ -134,13 +134,16 @@ describe('Warehouse Lock & Admin Override E2E', () => {
         });
       }
       if (branchId) {
+        await prisma.documentSequence.deleteMany({
+          where: { branchId },
+        });
         await prisma.branch.delete({
           where: { id: branchId },
         });
       }
       if (adminId || nonAdminId) {
         await prisma.user.deleteMany({
-          where: { id: { in: [adminId, nonAdminId] } },
+          where: { id: { in: [adminId, nonAdminId].filter(Boolean) } },
         });
       }
 

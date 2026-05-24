@@ -2,6 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, DocumentType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 
+const PREFIX_MAP: Record<DocumentType, string> = {
+  [DocumentType.PURCHASE_REQUEST]: 'PR',
+  [DocumentType.PURCHASE_ORDER]: 'PO',
+  [DocumentType.GOODS_RECEIVED_NOTE]: 'GRN',
+  [DocumentType.INVENTORY_ISSUE]: 'ISS',
+  [DocumentType.TRANSFER]: 'TRF',
+  [DocumentType.ADJUSTMENT]: 'ADJ',
+  [DocumentType.KITCHEN_REQUEST]: 'KR',
+  [DocumentType.STOCKTAKE]: 'ST',
+};
+
 @Injectable()
 export class DocumentSequenceService {
   private readonly logger = new Logger(DocumentSequenceService.name);
@@ -10,7 +21,7 @@ export class DocumentSequenceService {
 
   /**
    * Generates the next sequential document number for a given document type, branch, and current calendar year.
-   * Format: {DOC_TYPE}-{YYYY}-{BRANCH_CODE}-{SEQUENCE_5_DIGITS}
+   * Format: {DOC_PREFIX}-{YYYY}-{BRANCH_CODE}-{SEQUENCE_5_DIGITS}
    * Uses SELECT FOR UPDATE database locking to ensure concurrency safety.
    */
   async generateNext(
@@ -19,6 +30,7 @@ export class DocumentSequenceService {
     branchId: string,
   ): Promise<string> {
     const currentYear = new Date().getFullYear();
+    const docPrefix = PREFIX_MAP[documentType] || documentType;
 
     // 1. Fetch branch code
     const branch = await tx.branch.findUnique({
@@ -30,7 +42,9 @@ export class DocumentSequenceService {
     }
 
     // 2. Lock and retrieve/create the sequence for the type, year, and branch
-    const sequences = await tx.$queryRaw<any[]>`
+    const sequences = await tx.$queryRaw<
+      Array<{ id: string; current_sequence: number }>
+    >`
       SELECT id, current_sequence 
       FROM "document_sequences" 
       WHERE "document_type" = ${documentType}::"DocumentType" 
@@ -43,7 +57,7 @@ export class DocumentSequenceService {
 
     if (sequences.length === 0) {
       try {
-        const prefix = `${documentType}-${currentYear}-${branch.code}`;
+        const prefix = `${docPrefix}-${currentYear}-${branch.code}`;
         const newSeq = await tx.documentSequence.create({
           data: {
             branchId,
@@ -54,9 +68,11 @@ export class DocumentSequenceService {
           },
         });
         seqRecord = { id: newSeq.id, current_sequence: 1 };
-      } catch (err) {
+      } catch {
         // Handle potential race condition if row was created concurrently between select and insert
-        const retrySeqs = await tx.$queryRaw<any[]>`
+        const retrySeqs = await tx.$queryRaw<
+          Array<{ id: string; current_sequence: number }>
+        >`
           SELECT id, current_sequence 
           FROM "document_sequences" 
           WHERE "document_type" = ${documentType}::"DocumentType" 
@@ -92,6 +108,6 @@ export class DocumentSequenceService {
 
     // 3. Format sequence to 5 digits padding
     const seqStr = String(seqRecord.current_sequence).padStart(5, '0');
-    return `${documentType}-${currentYear}-${branch.code}-${seqStr}`;
+    return `${docPrefix}-${currentYear}-${branch.code}-${seqStr}`;
   }
 }

@@ -11,7 +11,11 @@ export class HealthController {
   async check() {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      return { status: 'OK', db: 'connected', timestamp: new Date().toISOString() };
+      return {
+        status: 'OK',
+        db: 'connected',
+        timestamp: new Date().toISOString(),
+      };
     } catch {
       throw new ServiceUnavailableException({
         status: 'ERROR',

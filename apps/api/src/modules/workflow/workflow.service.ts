@@ -11,6 +11,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { ConcurrencyService } from '../../services/concurrency.service';
 import { DocumentType as PrismaDocType } from '@prisma/client';
+import { OutboxService } from '../outbox/outbox.service';
 import {
   DocumentType,
   DocumentStatus,
@@ -38,6 +39,7 @@ export class WorkflowService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly concurrencyService: ConcurrencyService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   /**
@@ -374,10 +376,15 @@ export class WorkflowService {
               data: {
                 targetRole: 'APPROVER',
                 warehouseId: updatedDoc.warehouseId,
-                message: `Purchase Request ${updatedDoc.requestNumber} is submitted and requires approval.`,
+                message: `Purchase Request ${updatedDoc.requestNumber} is awaiting approval.`,
                 documentType: 'PURCHASE_REQUEST',
                 documentId: updatedDoc.id,
               },
+            });
+            await this.outboxService.writeEvent(tx, 'PR_SUBMITTED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.requestNumber,
+              warehouseId: updatedDoc.warehouseId,
             });
           } else if (docType === 'pr' && targetStatus === 'APPROVED') {
             await tx.notificationLog.create({
@@ -389,6 +396,12 @@ export class WorkflowService {
                 documentId: updatedDoc.id,
               },
             });
+            await this.outboxService.writeEvent(tx, 'PR_APPROVED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.requestNumber,
+              warehouseId: updatedDoc.warehouseId,
+              createdById: updatedDoc.createdById,
+            });
           } else if (docType === 'transfer' && targetStatus === 'IN_TRANSIT') {
             await tx.notificationLog.create({
               data: {
@@ -399,12 +412,72 @@ export class WorkflowService {
                 documentId: updatedDoc.id,
               },
             });
+            await this.outboxService.writeEvent(tx, 'TRANSFER_SHIPPED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.transferNumber,
+              warehouseId: updatedDoc.toWarehouseId,
+            });
+          }
+
+          // New Outbox Notification triggers:
+          if (docType === 'grn' && targetStatus === 'POSTED') {
+            await this.outboxService.writeEvent(tx, 'GRN_POSTED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.grnNumber,
+              warehouseId: updatedDoc.warehouseId,
+            });
+          } else if (docType === 'adjustment' && targetStatus === 'POSTED') {
+            await this.outboxService.writeEvent(tx, 'ADJUSTMENT_POSTED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.adjustmentNumber,
+              warehouseId: updatedDoc.warehouseId,
+            });
+          } else if (
+            docType === 'kitchen_request' &&
+            targetStatus === 'SUBMITTED'
+          ) {
+            await this.outboxService.writeEvent(
+              tx,
+              'KITCHEN_REQUEST_SUBMITTED',
+              {
+                id: updatedDoc.id,
+                documentNumber: updatedDoc.requestNumber,
+                warehouseId: updatedDoc.warehouseId,
+              },
+            );
+          } else if (
+            docType === 'kitchen_request' &&
+            targetStatus === 'POSTED'
+          ) {
+            await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_POSTED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.requestNumber,
+              warehouseId: updatedDoc.warehouseId,
+            });
+          } else if (docType === 'stocktake' && targetStatus === 'STARTED') {
+            await this.outboxService.writeEvent(tx, 'STOCKTAKE_STARTED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.sessionNumber,
+              warehouseId: updatedDoc.warehouseId,
+            });
+          } else if (docType === 'stocktake' && targetStatus === 'POSTED') {
+            await this.outboxService.writeEvent(tx, 'STOCKTAKE_POSTED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.sessionNumber,
+              warehouseId: updatedDoc.warehouseId,
+            });
+          } else if (docType === 'transfer' && targetStatus === 'RECEIVED') {
+            await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.transferNumber,
+              warehouseId: updatedDoc.fromWarehouseId,
+            });
           }
 
           return updatedDoc;
         },
         {
-          timeout: 20000,
+          timeout: 30000,
         },
       );
     } catch (error) {

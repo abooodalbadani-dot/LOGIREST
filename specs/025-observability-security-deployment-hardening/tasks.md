@@ -26,10 +26,10 @@
 
 **⚠️ CRITICAL**: No user story implementation can start until the database outbox schema and base routing middlewares are complete.
 
-- [ ] T003 Setup database migrations for OutboxEvent table in apps/api/prisma/schema.prisma
-- [ ] T004 Run Prisma migrations to update live database schema with outbox_events table using powershell
-- [ ] T005 [P] Register Cookie-Parser middleware on NestJS API in apps/api/src/main.ts
-- [ ] T006 [P] Initialize Redis configuration module in apps/api/src/modules/app.module.ts
+- [x] T003 Setup database migrations for OutboxEvent table in apps/api/prisma/schema.prisma
+- [x] T004 Run Prisma migrations to update live database schema with outbox_events table using powershell
+- [x] T005 [P] Register Cookie-Parser middleware on NestJS API in apps/api/src/main.ts
+- [x] T006 [P] Initialize Redis configuration module in apps/api/src/modules/app.module.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin.
 
@@ -42,14 +42,14 @@
 **Independent Test**: Assert that tokens are not readable via `document.cookie` in browser console, and subsequent requests authenticate successfully.
 
 ### Tests for User Story 1
-- [ ] T007 [P] [US1] Write integration tests for secure cookie delivery and refresh rotation in apps/api/test/auth-cookies.spec.ts
+- [x] T007 [P] [US1] Write integration tests for secure cookie delivery and refresh rotation in apps/api/test/auth-cookies.e2e-spec.ts
 
 ### Implementation for User Story 1
-- [ ] T008 [US1] Refactor AuthController login and register to set access_token and refresh_token in response cookies in apps/api/src/modules/auth/auth.controller.ts
-- [ ] T009 [US1] Refactor AuthController refresh to read refresh_token from cookies and execute RTR in apps/api/src/modules/auth/auth.controller.ts
-- [ ] T010 [US1] Refactor JwtAuthGuard and strategies to extract access token from cookies in apps/api/src/modules/auth/jwt.strategy.ts
-- [ ] T011 [US1] Refactor frontend custom client to enable standard credentials propagation (credentials: 'include') in apps/web/src/lib/client.ts
-- [ ] T012 [US1] Execute authentication integration tests and assert successful cookie login/refresh in apps/api/test/auth-cookies.spec.ts
+- [x] T008 [US1] Refactor AuthController login and register to set access_token and refresh_token in response cookies in apps/api/src/modules/auth/auth.controller.ts
+- [x] T009 [US1] Refactor AuthController refresh to read refresh_token from cookies and execute RTR in apps/api/src/modules/auth/auth.controller.ts
+- [x] T010 [US1] Refactor JwtAuthGuard and strategies to extract access token from cookies in apps/api/src/modules/auth/jwt.strategy.ts
+- [x] T011 [US1] Refactor frontend custom client to enable standard credentials propagation (credentials: 'include') in apps/web/src/lib/client.ts
+- [x] T012 [US1] Execute authentication integration tests and assert successful cookie login/refresh in apps/api/test/auth-cookies.e2e-spec.ts
 
 **Checkpoint**: Secure session cookies are fully functional and independently verified.
 
@@ -62,11 +62,11 @@
 **Independent Test**: Start frontend dev server without NEXT_PUBLIC_API_URL and assert startup termination.
 
 ### Tests for User Story 2
-- [ ] T013 [P] [US2] Write unit tests for client configuration validation in apps/web/test/config.spec.ts
+- [x] T013 [P] [US2] Write unit tests for client configuration validation in apps/web/src/tests/unit/config.test.ts
 
 ### Implementation for User Story 2
-- [ ] T014 [US2] Implement fail-fast validation check inside the application entry point in apps/web/src/app/layout.tsx
-- [ ] T015 [US2] Run client fail-fast validation tests and confirm application halts on invalid config in apps/web/test/config.spec.ts
+- [x] T014 [US2] Implement fail-fast validation check inside the application entry point in apps/web/src/app/[locale]/layout.tsx
+- [x] T015 [US2] Run client fail-fast validation tests and confirm application halts on invalid config in apps/web/src/tests/unit/config.test.ts
 
 **Checkpoint**: Client fail-fast configuration is operational.
 
@@ -79,11 +79,11 @@
 **Independent Test**: Simulate database outage and assert /health returns 503 Service Unavailable.
 
 ### Tests for User Story 3
-- [ ] T016 [P] [US3] Write integration tests for active database health check in apps/api/test/health.spec.ts
+- [x] T016 [P] [US3] Write integration tests for active database health check in apps/api/test/health.e2e-spec.ts
 
 ### Implementation for User Story 3
-- [ ] T017 [US3] Refactor HealthController to execute Prisma query raw connectivity ping in apps/api/src/modules/health/health.controller.ts
-- [ ] T018 [US3] Verify active database connection health check tests succeed in apps/api/test/health.spec.ts
+- [x] T017 [US3] Refactor HealthController to execute Prisma query raw connectivity ping in apps/api/src/health/health.controller.ts
+- [x] T018 [US3] Verify active database connection health check tests succeed in apps/api/test/health.e2e-spec.ts
 
 **Checkpoint**: Active database health checks are fully integrated and verified.
 

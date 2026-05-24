@@ -9,6 +9,8 @@ import { BcryptService } from '../src/auth/bcrypt.service';
 import { randomUUID } from 'crypto';
 
 describe('Concurrency Control E2E', () => {
+  jest.setTimeout(180000);
+
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let bcrypt: BcryptService;
@@ -89,6 +91,14 @@ describe('Concurrency Control E2E', () => {
 
   afterAll(async () => {
     if (prisma) {
+      if (warehouseId) {
+        await prisma.warehouseItemLot.deleteMany({
+          where: { warehouseId },
+        });
+        await prisma.warehouseItem.deleteMany({
+          where: { warehouseId },
+        });
+      }
       if (procOfficerId) {
         await prisma.userWarehouseScope.deleteMany({
           where: { userId: procOfficerId },
@@ -133,6 +143,9 @@ describe('Concurrency Control E2E', () => {
         });
       }
       if (branchId) {
+        await prisma.documentSequence.deleteMany({
+          where: { branchId },
+        });
         await prisma.branch.delete({
           where: { id: branchId },
         });

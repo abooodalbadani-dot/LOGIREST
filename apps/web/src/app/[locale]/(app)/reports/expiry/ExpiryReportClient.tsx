@@ -93,6 +93,7 @@ export default function ExpiryReportClient() {
  data={data || []}
  filename="Expiry_Report"
  title={t('expiry')}
+ exportRoute="/reports/expiry/export"
  />
  }
  collectionName="reports"

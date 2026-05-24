@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "suppliers" ADD COLUMN IF NOT EXISTS "contactName" TEXT;
+ALTER TABLE "suppliers" ADD COLUMN IF NOT EXISTS "contactPhone" TEXT;
+ALTER TABLE "suppliers" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT true;

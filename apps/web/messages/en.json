@@ -3544,7 +3544,8 @@
       "variance": "Variance"
     },
     "title": "Reports Hub",
-    "view_report": "View Report"
+    "view_report": "View Report",
+    "select_session": "Select Session"
   },
   "transfers": {
     "capacity": {

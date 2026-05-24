@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: logirest-db
+    environment:
+      POSTGRES_DB: logirest
+      POSTGRES_USER: logirest
+      POSTGRES_PASSWORD: logirest_secret
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logirest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: logirest-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: logirest-api
+    environment:
+      DATABASE_URL: postgresql://logirest:logirest_secret@db:5432/logirest
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: http://localhost:3000
+      PORT: 4000
+      NODE_ENV: production
+      JWT_ACCESS_SECRET: dev-jwt-access-secret-key-at-least-32-chars-long
+      JWT_REFRESH_SECRET: dev-jwt-refresh-secret-key-at-least-32-chars-long
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    container_name: logirest-web
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:

@@ -3,6 +3,7 @@ import {
   Get,
   UseGuards,
   Query,
+  Res,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -11,6 +12,9 @@ import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { Prisma, DocumentType } from '@prisma/client';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import type { Response } from 'express';
+import * as ExcelJS from 'exceljs';
 
 interface OverdueTransfer {
   transferId: string;
@@ -130,41 +134,22 @@ export class ReportsController {
         item: {
           include: {
             category: true,
+            unitOfMeasure: true,
           },
         },
       },
     });
 
-    const categoriesMap = new Map<
-      string,
-      {
-        categoryName: string;
-        qtyOnHand: number;
-        qtyAllocated: number;
-        qtyAvailable: number;
-      }
-    >();
-
-    for (const wi of items) {
-      const category = wi.item.category;
-      const categoryName = category.name;
-      const qtyOnHand = Number(wi.qtyOnHand);
-      const qtyAllocated = Number(wi.qtyAllocated);
-      const qtyAvailable = qtyOnHand - qtyAllocated;
-
-      const existing = categoriesMap.get(category.id) || {
-        categoryName,
-        qtyOnHand: 0,
-        qtyAllocated: 0,
-        qtyAvailable: 0,
-      };
-      existing.qtyOnHand += qtyOnHand;
-      existing.qtyAllocated += qtyAllocated;
-      existing.qtyAvailable += qtyAvailable;
-      categoriesMap.set(category.id, existing);
-    }
-
-    return Array.from(categoriesMap.values());
+    return items.map((wi) => ({
+      sku: wi.item.sku,
+      name: wi.item.name,
+      category: wi.item.category.name,
+      uom: wi.item.unitOfMeasure.code,
+      qty_physical: Number(wi.qtyOnHand),
+      qty_reserved: Number(wi.qtyAllocated),
+      qty_available: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+      wac: Number(wi.wac || 0),
+    }));
   }
 
   @Get('movements')
@@ -243,14 +228,28 @@ export class ReportsController {
       },
     });
 
-    return lots.map((l) => ({
-      itemId: l.itemId,
-      itemName: l.item.name,
-      sku: l.item.sku,
-      lotNumber: l.lot.lotNumber,
-      expiryDate: l.lot.expiryDate,
-      qtyOnHand: Number(l.qtyOnHand),
-    }));
+    const now = new Date();
+    return lots.map((l) => {
+      const expiryDate = l.lot.expiryDate as Date;
+      const diffTime = expiryDate.getTime() - now.getTime();
+      const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      let status = 'ACTIVE';
+      if (daysRemaining < 0) {
+        status = 'EXPIRED';
+      } else if (daysRemaining <= 7) {
+        status = 'NEAR_EXPIRY';
+      }
+
+      return {
+        sku: l.item.sku,
+        name: l.item.name,
+        lot_no: l.lot.lotNumber,
+        expiry_date: expiryDate.toISOString(),
+        days_remaining: daysRemaining,
+        status,
+        qtyOnHand: Number(l.qtyOnHand),
+      };
+    });
   }
 
   @Get('stocktake-variance')
@@ -296,13 +295,14 @@ export class ReportsController {
       const variance = qtyCounted - qtySnapshot;
 
       return {
-        itemId: s.itemId,
-        itemName: s.item.name,
         sku: s.item.sku,
-        lotNumber: s.lot?.lotNumber || null,
-        qtySnapshot,
-        qtyCounted,
+        name: s.item.name,
+        system_qty: qtySnapshot,
+        counted_qty: qtyCounted,
         variance,
+        reason: '',
+        lotNumber: s.lot?.lotNumber || null,
+        wac: Number(s.wacSnapshot),
       };
     });
   }
@@ -315,42 +315,30 @@ export class ReportsController {
           warehouseId,
         },
       },
-      select: {
-        status: true,
-        lines: {
-          select: {
-            quantity: true,
-            unitPrice: true,
-          },
-        },
+      include: {
+        supplier: true,
+        currency: true,
+        lines: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
-    const statusSummary = new Map<
-      string,
-      { count: number; totalValue: number }
-    >();
-
-    for (const po of orders) {
-      let value = 0;
-      for (const line of po.lines) {
-        value += Number(line.quantity) * Number(line.unitPrice);
-      }
-
-      const existing = statusSummary.get(po.status) || {
-        count: 0,
-        totalValue: 0,
+    return orders.map((po) => {
+      const total = po.lines.reduce(
+        (sum, line) => sum + Number(line.quantity) * Number(line.unitPrice),
+        0,
+      );
+      return {
+        po_no: po.poNumber,
+        date: po.createdAt.toISOString(),
+        supplier: po.supplier.name,
+        currency: po.currency.code,
+        total,
+        status: po.status,
       };
-      existing.count++;
-      existing.totalValue += value;
-      statusSummary.set(po.status, existing);
-    }
-
-    return Array.from(statusSummary.entries()).map(([status, stats]) => ({
-      status,
-      count: stats.count,
-      totalValue: stats.totalValue,
-    }));
+    });
   }
 
   @Get('currency-summaries')
@@ -376,9 +364,27 @@ export class ReportsController {
       where: { isBase: true },
     });
 
+    const fxRates = baseCurrency
+      ? await this.prisma.fXRate.findMany({
+          where: {
+            toCurrencyId: baseCurrency.id,
+          },
+          orderBy: {
+            effectiveFrom: 'desc',
+          },
+        })
+      : [];
+
+    const fxMap = new Map<string, number>();
+    for (const rate of fxRates) {
+      if (!fxMap.has(rate.fromCurrencyId)) {
+        fxMap.set(rate.fromCurrencyId, Number(rate.rate));
+      }
+    }
+
     const currencyGroups = new Map<
       string,
-      { currencyCode: string; amount: number; baseAmount: number }
+      { currency: string; total: number; total_base: number; last_rate: number }
     >();
 
     for (const po of orders) {
@@ -388,34 +394,467 @@ export class ReportsController {
       }
 
       let baseVal = 0;
+      let rate = 1;
       if (po.currency.isBase) {
         baseVal = orderVal;
+        rate = 1;
       } else if (baseCurrency) {
-        const fxRate = await this.prisma.fXRate.findFirst({
-          where: {
-            fromCurrencyId: po.currencyId,
-            toCurrencyId: baseCurrency.id,
-          },
-          orderBy: {
-            effectiveFrom: 'desc',
-          },
-        });
-        const rate = fxRate ? Number(fxRate.rate) : 1;
+        rate = fxMap.get(po.currencyId) ?? 1;
         baseVal = orderVal * rate;
       }
 
       const existing = currencyGroups.get(po.currencyId) || {
-        currencyCode: po.currency.code,
-        amount: 0,
-        baseAmount: 0,
+        currency: po.currency.code,
+        total: 0,
+        total_base: 0,
+        last_rate: rate,
       };
-      existing.amount += orderVal;
-      existing.baseAmount += baseVal;
+      existing.total += orderVal;
+      existing.total_base += baseVal;
+      existing.last_rate = rate;
       currencyGroups.set(po.currencyId, existing);
     }
 
     return Array.from(currencyGroups.values());
   }
+
+  @Get('wac-history')
+  async getWacHistory(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @Query('itemId') itemId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    if (!itemId) {
+      throw new BadRequestException('itemId is required');
+    }
+    const where: Prisma.CostLedgerWhereInput = {
+      warehouseId,
+      itemId,
+    };
+    if (startDate || endDate) {
+      const postedAtFilter: Prisma.DateTimeFilter = {};
+      if (startDate) {
+        postedAtFilter.gte = new Date(startDate);
+      }
+      if (endDate) {
+        postedAtFilter.lte = new Date(endDate);
+      }
+      where.postedAt = postedAtFilter;
+    }
+
+    return this.prisma.costLedger.findMany({
+      where,
+      include: {
+        item: true,
+      },
+      orderBy: {
+        postedAt: 'desc',
+      },
+    });
+  }
+
+  @Get('lot-trace')
+  async getLotTrace(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @Query('lotId') lotId: string,
+  ) {
+    if (!lotId) {
+      throw new BadRequestException('lotId is required');
+    }
+
+    const lot = await this.prisma.lot.findFirst({
+      where: { id: lotId },
+      include: { item: true },
+    });
+
+    if (!lot) {
+      throw new BadRequestException('Lot not found');
+    }
+
+    const allocations = await this.prisma.lotAllocation.findMany({
+      where: { lotId },
+      include: {
+        issueLine: {
+          include: {
+            inventoryIssue: true,
+          },
+        },
+        transferLine: {
+          include: {
+            transfer: true,
+          },
+        },
+      },
+    });
+
+    return {
+      lotNumber: lot.lotNumber,
+      itemSku: lot.item.sku,
+      itemName: lot.item.name,
+      receivedDate: lot.receivedDate,
+      expiryDate: lot.expiryDate,
+      status: lot.status,
+      allocations: allocations.map((a) => {
+        let documentNumber = 'N/A';
+        let documentType = 'UNKNOWN';
+        let quantity = 0;
+        let date = new Date();
+        let status = 'UNKNOWN';
+
+        if (a.issueLine) {
+          documentNumber = a.issueLine.inventoryIssue.issueNumber;
+          documentType = 'INVENTORY_ISSUE';
+          quantity = Number(a.quantityAllocated);
+          date = a.issueLine.inventoryIssue.createdAt;
+          status = a.issueLine.inventoryIssue.status;
+        } else if (a.transferLine) {
+          documentNumber = a.transferLine.transfer.transferNumber;
+          documentType = 'TRANSFER';
+          quantity = Number(a.quantityAllocated);
+          date = a.transferLine.transfer.createdAt;
+          status = a.transferLine.transfer.status;
+        }
+
+        return {
+          documentNumber,
+          documentType,
+          quantity,
+          date: date.toISOString(),
+          status,
+        };
+      }),
+    };
+  }
+
+  // ─── ExcelJS Exports ──────────────────────────────────────────────
+
+  @Get('movements/export')
+  async exportMovements(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Res() res: Response,
+    @Query('itemId') itemId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('transactionType') transactionType?: string,
+  ) {
+    const result = await this.getMovements(
+      warehouseId,
+      '1',
+      '1000000', // Unlimited fetch for exports
+      itemId,
+      startDate,
+      endDate,
+      transactionType,
+    );
+
+    const formattedData = result.data.map((m) => ({
+      postedAt: m.postedAt,
+      itemName: m.item.name,
+      sku: m.item.sku,
+      documentType: m.documentType,
+      documentId: m.documentId,
+      quantity: Number(m.quantity),
+    }));
+
+    await this.generateXlsxResponse(
+      res,
+      'stock-movements',
+      'Stock Movements',
+      userName,
+      [
+        { header: 'Date', key: 'postedAt', width: 25, isDate: true },
+        { header: 'Item Name', key: 'itemName', width: 35 },
+        { header: 'SKU', key: 'sku', width: 20 },
+        { header: 'Transaction Type', key: 'documentType', width: 25 },
+        { header: 'Document Ref', key: 'documentId', width: 35 },
+        { header: 'Quantity', key: 'quantity', width: 15, isNumber: true },
+      ],
+      formattedData,
+    );
+  }
+
+  @Get('expiry/export')
+  async exportExpiry(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.getExpiryReport(warehouseId);
+
+    await this.generateXlsxResponse(
+      res,
+      'expiry-report',
+      'Lot Expiry Report',
+      userName,
+      [
+        { header: 'SKU', key: 'sku', width: 20 },
+        { header: 'Item Name', key: 'name', width: 35 },
+        { header: 'Lot Number', key: 'lot_no', width: 25 },
+        { header: 'Expiry Date', key: 'expiry_date', width: 25, isDate: true },
+        { header: 'Qty On Hand', key: 'qtyOnHand', width: 15, isNumber: true },
+        {
+          header: 'Days Remaining',
+          key: 'days_remaining',
+          width: 18,
+          isNumber: true,
+        },
+        { header: 'Status', key: 'status', width: 15 },
+      ],
+      data,
+      (ws) => {
+        // Expiry Highlight Customizer
+        ws.eachRow((row, rowNum) => {
+          if (rowNum < 6) return;
+          const daysVal = Number(row.getCell(6).value);
+          if (daysVal < 0) {
+            row.eachCell((cell) => {
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFECACA' }, // Light Red
+              };
+            });
+          } else if (daysVal <= 7) {
+            row.eachCell((cell) => {
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFEF08A' }, // Light Yellow
+              };
+            });
+          }
+        });
+      },
+    );
+  }
+
+  @Get('available-inventory/export')
+  async exportAvailableInventory(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.getAvailableInventory(warehouseId);
+
+    const formattedData = data.map((d) => ({
+      ...d,
+      total_value: d.qty_physical * d.wac,
+    }));
+
+    await this.generateXlsxResponse(
+      res,
+      'available-inventory',
+      'Available Inventory',
+      userName,
+      [
+        { header: 'Category', key: 'category', width: 25 },
+        { header: 'Item Name', key: 'name', width: 35 },
+        { header: 'SKU', key: 'sku', width: 20 },
+        { header: 'UoM', key: 'uom', width: 12 },
+        {
+          header: 'Qty On Hand',
+          key: 'qty_physical',
+          width: 18,
+          isNumber: true,
+        },
+        {
+          header: 'Qty Allocated',
+          key: 'qty_reserved',
+          width: 18,
+          isNumber: true,
+        },
+        {
+          header: 'Qty Available',
+          key: 'qty_available',
+          width: 18,
+          isNumber: true,
+        },
+        { header: 'WAC', key: 'wac', width: 15, isNumber: true },
+        {
+          header: 'Total Value',
+          key: 'total_value',
+          width: 18,
+          isNumber: true,
+        },
+      ],
+      formattedData,
+      (ws) => {
+        // Summary Footer
+        const lastRowIndex = ws.rowCount;
+        const footerRow = ws.addRow([]);
+        footerRow.getCell(8).value = 'Total Inventory Value:';
+        footerRow.getCell(8).font = { bold: true };
+        footerRow.getCell(9).value = { formula: `SUM(I6:I${lastRowIndex})` };
+        footerRow.getCell(9).font = { bold: true };
+        footerRow.getCell(9).numFmt = '#,##0.00';
+      },
+    );
+  }
+
+  @Get('stocktake-variance/export')
+  async exportStocktakeVariance(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Query('sessionId') sessionId: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.getStocktakeVariance(warehouseId, sessionId);
+
+    const formattedData = data.map((d) => ({
+      ...d,
+      variance_value: d.variance * d.wac,
+    }));
+
+    await this.generateXlsxResponse(
+      res,
+      'stocktake-variance',
+      'Stocktake Variance Report',
+      userName,
+      [
+        { header: 'SKU', key: 'sku', width: 20 },
+        { header: 'Item Name', key: 'name', width: 35 },
+        { header: 'Lot Number', key: 'lotNumber', width: 25 },
+        { header: 'System Qty', key: 'system_qty', width: 15, isNumber: true },
+        {
+          header: 'Counted Qty',
+          key: 'counted_qty',
+          width: 15,
+          isNumber: true,
+        },
+        { header: 'Variance', key: 'variance', width: 15, isNumber: true },
+        { header: 'WAC', key: 'wac', width: 15, isNumber: true },
+        {
+          header: 'Variance Value',
+          key: 'variance_value',
+          width: 18,
+          isNumber: true,
+        },
+      ],
+      formattedData,
+      (ws) => {
+        // Red/Green Customizer
+        ws.eachRow((row, rowNum) => {
+          if (rowNum < 6) return;
+          const varianceCell = row.getCell(6);
+          const val = Number(varianceCell.value);
+          if (val > 0) {
+            varianceCell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFD1FAE5' }, // Light Green
+            };
+            varianceCell.font = { bold: true, color: { argb: 'FF065F46' } };
+          } else if (val < 0) {
+            varianceCell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFEE2E2' }, // Light Red
+            };
+            varianceCell.font = { bold: true, color: { argb: 'FF991B1B' } };
+          }
+        });
+      },
+    );
+  }
+
+  @Get('procurement-status/export')
+  async exportProcurementStatus(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.getProcurementStatus(warehouseId);
+
+    await this.generateXlsxResponse(
+      res,
+      'procurement-status',
+      'Procurement Status Report',
+      userName,
+      [
+        { header: 'PO Number', key: 'po_no', width: 25 },
+        { header: 'Date', key: 'date', width: 25, isDate: true },
+        { header: 'Supplier Name', key: 'supplier', width: 35 },
+        { header: 'Currency', key: 'currency', width: 15 },
+        { header: 'Total Value', key: 'total', width: 18, isNumber: true },
+        { header: 'Status', key: 'status', width: 18 },
+      ],
+      data,
+    );
+  }
+
+  @Get('wac-history/export')
+  async exportWacHistory(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Query('itemId') itemId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.getWacHistory(
+      warehouseId,
+      itemId,
+      startDate,
+      endDate,
+    );
+
+    const formattedData = data.map((d) => ({
+      postedAt: d.postedAt,
+      documentType: d.documentType,
+      documentId: d.documentId,
+      quantity: Number(d.quantity),
+      unitPrice: Number(d.unitPrice),
+      newWac: Number(d.newWac),
+      itemName: d.item.name,
+      sku: d.item.sku,
+    }));
+
+    await this.generateXlsxResponse(
+      res,
+      'wac-history',
+      'Weighted Average Cost (WAC) History',
+      userName,
+      [
+        { header: 'Date', key: 'postedAt', width: 25, isDate: true },
+        { header: 'SKU', key: 'sku', width: 20 },
+        { header: 'Item Name', key: 'itemName', width: 35 },
+        { header: 'Document Type', key: 'documentType', width: 25 },
+        { header: 'Document Ref', key: 'documentId', width: 35 },
+        { header: 'Qty Adjusted', key: 'quantity', width: 15, isNumber: true },
+        { header: 'Unit Price', key: 'unitPrice', width: 15, isNumber: true },
+        { header: 'New WAC', key: 'newWac', width: 15, isNumber: true },
+      ],
+      formattedData,
+    );
+  }
+
+  @Get('lot-trace/export')
+  async exportLotTrace(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('name') userName: string,
+    @Query('lotId') lotId: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.getLotTrace(warehouseId, lotId);
+
+    await this.generateXlsxResponse(
+      res,
+      'lot-traceability',
+      `Lot Traceability Report - ${data.lotNumber}`,
+      userName,
+      [
+        { header: 'Doc Number', key: 'documentNumber', width: 25 },
+        { header: 'Doc Type', key: 'documentType', width: 25 },
+        { header: 'Allocated Qty', key: 'quantity', width: 18, isNumber: true },
+        { header: 'Transaction Date', key: 'date', width: 25, isDate: true },
+      ],
+      data.allocations,
+    );
+  }
+
+  // ─── Private Logic Helper ────────────────────────────────────────
 
   private async getOverdueTransfersList(warehouseId: string) {
     const transfers = await this.prisma.transfer.findMany({
@@ -429,22 +868,31 @@ export class ReportsController {
       },
     });
 
+    const transferIds = transfers.map((t) => t.id);
+
+    const shipEvents = await this.prisma.approvalEvent.findMany({
+      where: {
+        documentId: { in: transferIds },
+        toStatus: 'IN_TRANSIT',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const eventMap = new Map<string, Date>();
+    for (const event of shipEvents) {
+      if (!eventMap.has(event.documentId)) {
+        eventMap.set(event.documentId, event.createdAt);
+      }
+    }
+
     const overdueTransfers: OverdueTransfer[] = [];
     const now = new Date();
     const overdueDays = Number(process.env.TRANSFER_OVERDUE_DAYS || 7);
 
     for (const transfer of transfers) {
-      const shipEvent = await this.prisma.approvalEvent.findFirst({
-        where: {
-          documentId: transfer.id,
-          toStatus: 'IN_TRANSIT',
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-
-      const shippedAt = shipEvent ? shipEvent.createdAt : transfer.createdAt;
+      const shippedAt = eventMap.get(transfer.id) || transfer.createdAt;
       const diffTime = now.getTime() - shippedAt.getTime();
       const daysInTransit = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
@@ -461,5 +909,119 @@ export class ReportsController {
     }
 
     return overdueTransfers;
+  }
+
+  private async generateXlsxResponse(
+    res: Response,
+    filename: string,
+    title: string,
+    userName: string,
+    columns: {
+      header: string;
+      key: string;
+      width: number;
+      isNumber?: boolean;
+      isDate?: boolean;
+    }[],
+    data: Record<string, unknown>[],
+    customStyler?: (worksheet: ExcelJS.Worksheet) => void,
+  ) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(title);
+
+    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9-]/g, '-');
+
+    // 1. Add Branding Title
+    const titleRow = worksheet.addRow(['LogiRest Inventory Management System']);
+    titleRow.font = {
+      name: 'Helvetica Neue',
+      size: 16,
+      bold: true,
+      color: { argb: 'FF1E3A8A' },
+    };
+
+    // 2. Add Report Subject
+    const subjectRow = worksheet.addRow([title]);
+    subjectRow.font = { name: 'Helvetica Neue', size: 12, bold: true };
+
+    // 3. Add Metadata Row
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const metaRow = worksheet.addRow([
+      `Generated At: ${nowStr} | Generated By: ${userName || 'System'}`,
+    ]);
+    metaRow.font = {
+      name: 'Helvetica Neue',
+      size: 10,
+      italic: true,
+      color: { argb: 'FF64748B' },
+    };
+
+    // Row 4 is spacer
+    worksheet.addRow([]);
+
+    // 5. Add headers at Row 5
+    const headerHeaders = columns.map((c) => c.header);
+    const headerRow = worksheet.addRow(headerHeaders);
+
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF1E3A8A' },
+      };
+      cell.font = {
+        name: 'Helvetica Neue',
+        bold: true,
+        color: { argb: 'FFFFFFFF' },
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    // 6. Populate data
+    for (const item of data) {
+      const rowValues = columns.map((col) => {
+        const val = item[col.key];
+        if (col.isDate && val) {
+          if (
+            typeof val === 'string' ||
+            typeof val === 'number' ||
+            val instanceof Date
+          ) {
+            return new Date(val);
+          }
+        }
+        if (col.isNumber && val !== undefined && val !== null) {
+          if (typeof val === 'number' || typeof val === 'string') {
+            return Number(val);
+          }
+        }
+        return (val as ExcelJS.CellValue) ?? '';
+      });
+      worksheet.addRow(rowValues);
+    }
+
+    // 7. Auto fit columns widths
+    columns.forEach((col, index) => {
+      const excelCol = worksheet.getColumn(index + 1);
+      excelCol.width = col.width;
+    });
+
+    // 8. Run custom stylers (e.g. highlights, variance coloring, sum row footers)
+    if (customStyler) {
+      customStyler(worksheet);
+    }
+
+    // Send HTTP Response
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${sanitizedFilename}.xlsx`,
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
   }
 }
