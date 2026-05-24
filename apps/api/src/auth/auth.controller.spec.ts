@@ -69,9 +69,9 @@ describe('AuthController', () => {
   describe('refresh', () => {
     it('should throw UnauthorizedException if refresh token cookie is missing', async () => {
       const req = { cookies: {} } as Request;
-      await expect(controller.refresh(req, mockResponse)).rejects.toThrow(
-        new UnauthorizedException('No refresh token provided'),
-      );
+      await expect(
+        controller.refresh(req, mockResponse, '127.0.0.1'),
+      ).rejects.toThrow(new UnauthorizedException('No refresh token provided'));
     });
 
     it('should call rtrService.rotateRefreshToken if cookie exists', async () => {
@@ -82,11 +82,12 @@ describe('AuthController', () => {
         accessToken: 'new-at',
       });
 
-      const result = await controller.refresh(req, mockResponse);
+      const result = await controller.refresh(req, mockResponse, '127.0.0.1');
       expect(result).toEqual({ success: true, accessToken: 'new-at' });
       expect(mockRtrService.rotateRefreshToken).toHaveBeenCalledWith(
         'rt-token',
         mockResponse,
+        '127.0.0.1',
       );
     });
   });

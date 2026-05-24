@@ -375,11 +375,11 @@ export class ReportsController {
         })
       : [];
 
-    const fxMap = new Map<string, number>();
+    const fxRatesByCurrency = new Map<string, any[]>();
     for (const rate of fxRates) {
-      if (!fxMap.has(rate.fromCurrencyId)) {
-        fxMap.set(rate.fromCurrencyId, Number(rate.rate));
-      }
+      const list = fxRatesByCurrency.get(rate.fromCurrencyId) || [];
+      list.push(rate);
+      fxRatesByCurrency.set(rate.fromCurrencyId, list);
     }
 
     const currencyGroups = new Map<
@@ -395,23 +395,33 @@ export class ReportsController {
 
       let baseVal = 0;
       let rate = 1;
+      const rates = fxRatesByCurrency.get(po.currencyId) || [];
+
       if (po.currency.isBase) {
         baseVal = orderVal;
         rate = 1;
       } else if (baseCurrency) {
-        rate = fxMap.get(po.currencyId) ?? 1;
+        const activeRate = rates.find((r) => r.effectiveFrom <= po.createdAt);
+        const finalRateObj = activeRate || rates[0];
+        rate = finalRateObj ? Number(finalRateObj.rate) : 1;
         baseVal = orderVal * rate;
       }
+
+      const latestRateForGroup = po.currency.isBase
+        ? 1
+        : rates[0]
+          ? Number(rates[0].rate)
+          : 1;
 
       const existing = currencyGroups.get(po.currencyId) || {
         currency: po.currency.code,
         total: 0,
         total_base: 0,
-        last_rate: rate,
+        last_rate: latestRateForGroup,
       };
       existing.total += orderVal;
       existing.total_base += baseVal;
-      existing.last_rate = rate;
+      existing.last_rate = latestRateForGroup;
       currencyGroups.set(po.currencyId, existing);
     }
 

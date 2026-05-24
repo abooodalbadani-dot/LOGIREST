@@ -16,6 +16,8 @@ interface OutboxPayload {
   qtyOnHand?: number;
   reorderPoint?: number;
   uomCode?: string;
+  supplierEmail?: string;
+  supplierId?: string;
 }
 
 @Processor('outbox')
@@ -157,6 +159,12 @@ export class OutboxWorker extends WorkerHost {
         // Notify the source warehouse keeper
         targetRoles = [Role.WH_KEEPER];
         break;
+      case 'SUPPLIER_PO_NOTIFIED':
+      case 'SUPPLIER_GRN_NOTIFIED':
+        if (data.supplierEmail) {
+          return [data.supplierEmail];
+        }
+        return [];
       default:
         return [];
     }
@@ -235,6 +243,22 @@ export class OutboxWorker extends WorkerHost {
           <p><strong>Current Balance</strong>: ${data.qtyOnHand || 0} ${data.uomCode || ''}</p>
           <p><strong>Reorder Threshold</strong>: ${data.reorderPoint || 0} ${data.uomCode || ''}</p>
           <p>Please initiate a new purchase request to replenish stock immediately.</p>
+        `;
+        break;
+      case 'SUPPLIER_PO_NOTIFIED':
+        subject = `Purchase Order ${docNo} Approved`;
+        body = `
+          <p>Dear Supplier,</p>
+          <p>We are pleased to inform you that Purchase Order <strong>${docNo}</strong> has been approved.</p>
+          <p>Please find the PO details in our inventory system or wait for the PDF document request.</p>
+        `;
+        break;
+      case 'SUPPLIER_GRN_NOTIFIED':
+        subject = `Goods Receipt Confirmed for PO/GRN ${docNo}`;
+        body = `
+          <p>Dear Supplier,</p>
+          <p>This is to confirm that the items from Purchase Order/Goods Received Note <strong>${docNo}</strong> have been received and registered in our warehouse.</p>
+          <p>Thank you for your service.</p>
         `;
         break;
       default:

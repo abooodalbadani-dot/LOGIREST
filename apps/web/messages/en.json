@@ -870,7 +870,9 @@
       "unknown": "Unknown",
       "variance_review": "Variance Review",
       "variance_submitted": "Variance Submitted",
-      "voided": "Voided"
+      "voided": "Voided",
+      "out_of_stock": "Out of Stock",
+      "low_stock": "Low Stock"
     },
     "stocktake_in_progress_desc": "Transactions are restricted due to an active stocktake.",
     "subject": "Subject",

@@ -38,7 +38,9 @@ describe('Health Check (e2e)', () => {
 
     it('should return 503 Service Unavailable when database query fails', async () => {
       // Mock prisma.$queryRaw to throw an error
-      const spy = jest.spyOn(prisma, '$queryRaw').mockRejectedValue(new Error('Database offline') as never);
+      const spy = jest
+        .spyOn(prisma, '$queryRaw')
+        .mockRejectedValue(new Error('Database offline'));
 
       const res = await request(app.getHttpServer()).get('/health');
 

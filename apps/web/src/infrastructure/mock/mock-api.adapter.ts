@@ -1667,6 +1667,31 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     }
   }
 
+  // --- Notifications Routes ---
+  if (normalizedPath === '/notifications') {
+    if (method === 'GET') {
+      return [
+        {
+          id: 'notif-1',
+          targetRole: 'ADMIN',
+          warehouseId: 'wh-central',
+          message: 'Purchase Request PR-2026-HQ-00001 is awaiting approval.',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          documentType: 'PURCHASE_REQUEST',
+          documentId: 'pr-1'
+        }
+      ];
+    }
+  }
+  if (normalizedPath.startsWith('/notifications/') && normalizedPath.endsWith('/read') && method === 'PATCH') {
+    const id = normalizedPath.split('/')[2];
+    return { id, isRead: true };
+  }
+  if (normalizedPath === '/notifications/read-all' && method === 'POST') {
+    return { success: true, markedReadCount: 1 };
+  }
+
   // --- Default Fallback ---
   console.warn(`[MockApiAdapter] Route not handled: ${method} ${path}`);
   return undefined;

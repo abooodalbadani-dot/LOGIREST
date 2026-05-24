@@ -108,12 +108,16 @@ export class RtrService {
           },
         });
 
-        await this.outboxService.writeEvent(tx, 'SECURITY_ALERT_REPLAY_ATTACK', {
-          userId: existingToken.userId,
-          sessionId: existingToken.sessionId,
-          ipAddress: ipAddress || null,
-          timestamp: new Date().toISOString(),
-        });
+        await this.outboxService.writeEvent(
+          tx,
+          'SECURITY_ALERT_REPLAY_ATTACK',
+          {
+            userId: existingToken.userId,
+            sessionId: existingToken.sessionId,
+            ipAddress: ipAddress || null,
+            timestamp: new Date().toISOString(),
+          },
+        );
       });
 
       throw new UnauthorizedException('Session expired or invalid');

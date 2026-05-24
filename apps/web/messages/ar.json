@@ -870,7 +870,9 @@
       "unknown": "غير معروف",
       "variance_review": "مراجعة الفوارق",
       "variance_submitted": "تم تقديم الفوارق",
-      "voided": "ملغي/باطل"
+      "voided": "ملغي/باطل",
+      "out_of_stock": "نفذت الكمية",
+      "low_stock": "مخزون منخفض"
     },
     "stocktake_in_progress_desc": "المعاملات مقيدة بسبب عملية جرد جارية.",
     "subject": "الموضوع",

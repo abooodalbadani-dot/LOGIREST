@@ -224,6 +224,10 @@ export class WorkflowService {
     const docType = this.mapModelToDocType(modelName);
     const targetTable = MODEL_TO_TABLE[modelName] || modelName;
 
+    if (action === 'REJECT' && (!comments || comments.trim() === '')) {
+      throw new BadRequestException('Comments are mandatory for REJECT action');
+    }
+
     const existingDoc = await this.prisma[modelName].findUnique({
       where: { id: documentId },
     });
@@ -426,6 +430,30 @@ export class WorkflowService {
               documentNumber: updatedDoc.grnNumber,
               warehouseId: updatedDoc.warehouseId,
             });
+            const po = await tx.purchaseOrder.findUnique({
+              where: { id: updatedDoc.poId },
+              include: { supplier: true },
+            });
+            if (po?.supplier?.contactEmail) {
+              await this.outboxService.writeEvent(tx, 'SUPPLIER_GRN_NOTIFIED', {
+                id: updatedDoc.id,
+                documentNumber: updatedDoc.grnNumber,
+                supplierId: po.supplier.id,
+                supplierEmail: po.supplier.contactEmail,
+              });
+            }
+          } else if (docType === 'po' && targetStatus === 'APPROVED') {
+            const supplier = await tx.supplier.findUnique({
+              where: { id: updatedDoc.supplierId },
+            });
+            if (supplier?.contactEmail) {
+              await this.outboxService.writeEvent(tx, 'SUPPLIER_PO_NOTIFIED', {
+                id: updatedDoc.id,
+                documentNumber: updatedDoc.poNumber,
+                supplierId: supplier.id,
+                supplierEmail: supplier.contactEmail,
+              });
+            }
           } else if (docType === 'adjustment' && targetStatus === 'POSTED') {
             await this.outboxService.writeEvent(tx, 'ADJUSTMENT_POSTED', {
               id: updatedDoc.id,

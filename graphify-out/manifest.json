@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.agent\\scripts\\checklist.py": {
-    "mtime": 1777125406.5876496,
-    "ast_hash": "4afeafa7b5f59a5dd5f041b46918aa62",
+    "mtime": 1779665843.6759984,
+    "ast_hash": "6ad4bdba90a8605569d1d6f3ac28462a",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.agent\\scripts\\session_manager.py": {
@@ -590,13 +590,13 @@
     "semantic_hash": "b46eb4c193e51325a4905c153e1e2351"
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\messages\\ar.json": {
-    "mtime": 1779637048.876894,
-    "ast_hash": "2b95168337e211ec5783180623633b6d",
+    "mtime": 1779661367.1991713,
+    "ast_hash": "dc77cecbbad7a3fef0ff1727550790a2",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\messages\\en.json": {
-    "mtime": 1779637036.6735473,
-    "ast_hash": "e35d803c489dd7058a88c00d417a4499",
+    "mtime": 1779661338.2039585,
+    "ast_hash": "7c8f1075ae82a6368312cdc34aff52df",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\scratch\\analyze_keys.py": {
@@ -1445,9 +1445,9 @@
     "semantic_hash": "ddbc37a86b9b05e211536802736ded3d"
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\inventory\\balance\\StockBalanceClient.tsx": {
-    "mtime": 1779316316.093206,
-    "ast_hash": "f6ea86ce6d29738716969a18154d0592",
-    "semantic_hash": "f6ea86ce6d29738716969a18154d0592"
+    "mtime": 1779665102.5847094,
+    "ast_hash": "377fe2171f6f724883abad669fbd7af9",
+    "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\app\\[locale]\\(app)\\inventory\\expired-override\\ExpiredOverrideClient.tsx": {
     "mtime": 1779316316.093206,
@@ -2010,9 +2010,9 @@
     "semantic_hash": "ae2d25d895bf854c8c9dcbc4ee6f6f6c"
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\components\\layouts\\Topbar.tsx": {
-    "mtime": 1779316316.1190379,
-    "ast_hash": "bda5564afe83c4fe8b09bffd1e84f22f",
-    "semantic_hash": "bda5564afe83c4fe8b09bffd1e84f22f"
+    "mtime": 1779662915.506888,
+    "ast_hash": "54ec9ff071065804ef602479044bb596",
+    "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\components\\operations\\expired-override-modal.tsx": {
     "mtime": 1778876014.0471835,
@@ -2460,8 +2460,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\domain\\status-ui-map.ts": {
-    "mtime": 1779416733.1429567,
-    "ast_hash": "06c919abceb46b29e44527317ac04db2",
+    "mtime": 1779661314.8195243,
+    "ast_hash": "f4d9ba836fa4090fb4540216a8eb13f4",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\features\\admin\\hooks\\useAdminRoles.ts": {
@@ -3095,8 +3095,8 @@
     "semantic_hash": "e10a77fe77c276ae33ad2feafc132980"
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\infrastructure\\mock\\mock-api.adapter.ts": {
-    "mtime": 1779416733.2109277,
-    "ast_hash": "87d972600abe859b4778c480614c2b52",
+    "mtime": 1779661900.9235935,
+    "ast_hash": "94f23d0357f4083681ef9cc32d0e3239",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\infrastructure\\mock\\mock-database.ts": {
@@ -3335,9 +3335,9 @@
     "semantic_hash": "b1286cdb877f8510b5d83c233925561c"
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\types\\notifications.ts": {
-    "mtime": 1779316316.6922164,
-    "ast_hash": "b3ad2fc7b456b41a334d4da2f9e63f8a",
-    "semantic_hash": "b3ad2fc7b456b41a334d4da2f9e63f8a"
+    "mtime": 1779661844.5444057,
+    "ast_hash": "88af5b8d2333b65cf903bb24ad18c592",
+    "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\types\\rbac.ts": {
     "mtime": 1779379824.4495142,
@@ -8650,8 +8650,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\README.md": {
-    "mtime": 1779498499.9474807,
-    "ast_hash": "6fcff2cc425fd9e2a0380ce595654492",
+    "mtime": 1779664109.2530773,
+    "ast_hash": "687a22b6a9f28baadc367475020cda91",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\014-shared-package-setup\\tasks.md": {
@@ -8660,8 +8660,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\prisma\\seed.ts": {
-    "mtime": 1779627786.663467,
-    "ast_hash": "f7fc0d8346006505ca1330cb708b35f9",
+    "mtime": 1779659299.901083,
+    "ast_hash": "b4a0b6520a8575b76ef6a7194177c552",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\database\\database.module.ts": {
@@ -8825,8 +8825,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\setup.ts": {
-    "mtime": 1779416733.1120934,
-    "ast_hash": "3e9b17edfd389a5780b9284cdad25cb3",
+    "mtime": 1779665296.3990245,
+    "ast_hash": "047ed545eb70097e10e591a9802e3169",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\016-auth-and-security\\spec.md": {
@@ -8880,13 +8880,13 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\auth.controller.ts": {
-    "mtime": 1779589457.9011867,
-    "ast_hash": "d20361bd4ff7449b5a224ddd9d7ac55e",
+    "mtime": 1779659464.1640804,
+    "ast_hash": "8231b06737ffd860932a5022f0fe406f",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\auth.module.ts": {
-    "mtime": 1779473644.4460578,
-    "ast_hash": "64dd74ea42b46c7166ba07a55a8fdf75",
+    "mtime": 1779659528.3851001,
+    "ast_hash": "f8cef749bf0ab4d9289768ff1a3ab30c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\auth.service.spec.ts": {
@@ -8915,8 +8915,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\rtr.service.ts": {
-    "mtime": 1779647756.8276098,
-    "ast_hash": "abbbf966c1ca50f495c0864a549bba5d",
+    "mtime": 1779665194.9566631,
+    "ast_hash": "4badea4e6486ada6bb3594aa1bfcb34f",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\decorators\\active-scope.decorator.ts": {
@@ -8935,8 +8935,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\dto\\login.dto.ts": {
-    "mtime": 1779473644.4460578,
-    "ast_hash": "fd258e2dcb83e9c69c2ccfff024d3340",
+    "mtime": 1779665194.9566631,
+    "ast_hash": "e28e0a5f71c3ee6e22dd15b279b6a4ea",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\guards\\jwt-auth.guard.ts": {
@@ -9055,8 +9055,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\workflow\\workflow.service.ts": {
-    "mtime": 1779645291.2973514,
-    "ast_hash": "c56607fd632c71031971aa5fe5eef9be",
+    "mtime": 1779660820.0250714,
+    "ast_hash": "95510daab596f045108d3af8674f26d5",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\workflow-conversion.e2e-spec.ts": {
@@ -9470,8 +9470,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\auth.controller.spec.ts": {
-    "mtime": 1779550570.836658,
-    "ast_hash": "c8fe47bc273c91c6d6522c40102337bf",
+    "mtime": 1779665194.9566631,
+    "ast_hash": "11a976372eeadc3ede970ba50f972dec",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\auth\\jwt.strategy.spec.ts": {
@@ -9520,8 +9520,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\master-data\\master-data.module.ts": {
-    "mtime": 1779550570.836658,
-    "ast_hash": "334239586a6d142900d910c48c8ceb5f",
+    "mtime": 1779659903.4988356,
+    "ast_hash": "cb3e7eebee93c238ebf4656e024fede9",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\master-data\\warehouses\\warehouses.controller.spec.ts": {
@@ -9580,8 +9580,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\reports\\reports.controller.ts": {
-    "mtime": 1779637469.9088376,
-    "ast_hash": "9c4551c526224ba78fd25a08d5ed290a",
+    "mtime": 1779665194.9566631,
+    "ast_hash": "538c821b946cbd443ec6802b27f29053",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\reports\\reports.module.ts": {
@@ -9650,13 +9650,13 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\admin\\audit-logs.controller.spec.ts": {
-    "mtime": 1779584472.3544996,
-    "ast_hash": "e34b136832e093cf40de33891cce9cfa",
+    "mtime": 1779660889.5088468,
+    "ast_hash": "d3e517eb1f408b983386d4b6ac1a46f1",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\admin\\audit-logs.controller.ts": {
-    "mtime": 1779584472.3544996,
-    "ast_hash": "e46ebcc396d292de9b6519c450b51db9",
+    "mtime": 1779659821.9708683,
+    "ast_hash": "8c63c0ae69e3fab681248e6162611bcb",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\inventory\\inventory.service.spec.ts": {
@@ -9770,8 +9770,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\config\\env.validation.ts": {
-    "mtime": 1779641513.060418,
-    "ast_hash": "fcebe79888a1fad89115ec7b0a37588a",
+    "mtime": 1779659566.1370597,
+    "ast_hash": "9cea957dc05b26b9febe6aa0e550b7a4",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\config-validation.e2e-spec.ts": {
@@ -10005,8 +10005,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\outbox\\outbox.worker.ts": {
-    "mtime": 1779631439.3231125,
-    "ast_hash": "11ae775d88e8c119e9b17d97450b1696",
+    "mtime": 1779660867.0011182,
+    "ast_hash": "716a9c0ebf316d26d9ac2322b71132d6",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\jobs\\idempotency-cleanup.job.spec.ts": {
@@ -10045,13 +10045,13 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\health.e2e-spec.ts": {
-    "mtime": 1779653650.7776594,
-    "ast_hash": "0ef8b2a8cdacbcd07d5ac707b0c07d87",
+    "mtime": 1779665194.9566631,
+    "ast_hash": "26664dbfb69b0e2bf440c3a6a4825fde",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\outbox.e2e-spec.ts": {
-    "mtime": 1779652704.7394857,
-    "ast_hash": "c5e6e2ef063505fd7d0cd782ec6845ff",
+    "mtime": 1779658693.288659,
+    "ast_hash": "bdc84a70a629250385ecef566b22cf1d",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\lib\\config-check.ts": {
@@ -10062,6 +10062,51 @@
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\tests\\unit\\config.test.ts": {
     "mtime": 1779649338.184362,
     "ast_hash": "251b69e236a4139bd5663c6bf1e0d863",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\prisma\\migrations\\20260525000000_extend_supplier_model\\migration.sql": {
+    "mtime": 1779658969.3175163,
+    "ast_hash": "f3fd2be94ad7697bc5fa51688e09231e",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\master-data\\fx-rates\\fx-rates.controller.ts": {
+    "mtime": 1779659861.9775207,
+    "ast_hash": "b759e039e3249c33c45c1768ba726dc3",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\master-data\\fx-rates\\fx-rates.module.ts": {
+    "mtime": 1779659883.0951984,
+    "ast_hash": "2e0cbe2774ae9852badcc0a5efcce153",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\master-data\\fx-rates\\dto\\create-fx-rate.dto.ts": {
+    "mtime": 1779665194.9566631,
+    "ast_hash": "5b978e2afa4ed8a2a8b811052434c7ba",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\concurrency-scenarios.e2e-spec.ts": {
+    "mtime": 1779665215.2154238,
+    "ast_hash": "209c81ad539fc5d11163fbcff938c0a6",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\stocktake-lock.e2e-spec.ts": {
+    "mtime": 1779664919.2114623,
+    "ast_hash": "ee612c8e66c73a28beba0ba5a5fbda02",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\workflow-e2e.e2e-spec.ts": {
+    "mtime": 1779665275.9040532,
+    "ast_hash": "758f0f4d0fa998ce33f09a50e66b3336",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\components\\shared\\NotificationBell.tsx": {
+    "mtime": 1779662854.9115837,
+    "ast_hash": "19f7baabf45c7bff9150843a0bffc945",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\scratch\\test-proxy.js": {
+    "mtime": 1779658577.3806455,
+    "ast_hash": "a4381edf347048beb4cd63a9b4d58ecd",
     "semantic_hash": ""
   }
 }
