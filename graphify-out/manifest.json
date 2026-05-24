@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.specify\\feature.json": {
-    "mtime": 1779577080.0088737,
-    "ast_hash": "b293ddc4bbcbe2d708025b2732158493",
+    "mtime": 1779585054.9668188,
+    "ast_hash": "8894d0a776ed21966ff72629cd06a10b",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.specify\\init-options.json": {
@@ -3170,7 +3170,7 @@
     "semantic_hash": "1b5998003f2b5c58212216aa74fe46f8"
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\web\\src\\lib\\api\\client.ts": {
-    "mtime": 1779560945.6538234,
+    "mtime": 1779584472.3717437,
     "ast_hash": "cb95e76d279bfd176c3ff75d70f5f0d5",
     "semantic_hash": ""
   },
@@ -5485,8 +5485,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\AGENTS.md": {
-    "mtime": 1779579156.2526672,
-    "ast_hash": "5a1a3d699674b50447e3b23158c8fb47",
+    "mtime": 1779585576.4737258,
+    "ast_hash": "abcf40a0f8a9c593be5c37d7e55dd613",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\all_conflicted_files.txt": {
@@ -8545,7 +8545,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\package.json": {
-    "mtime": 1779568641.5629618,
+    "mtime": 1779584472.3358698,
     "ast_hash": "426d50864436a520e7202bfee6c8a408",
     "semantic_hash": ""
   },
@@ -8570,7 +8570,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\app.module.ts": {
-    "mtime": 1779581272.4043684,
+    "mtime": 1779584472.3358698,
     "ast_hash": "2858932cf95dcb182bbf4fdb21993235",
     "semantic_hash": ""
   },
@@ -8580,7 +8580,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\main.ts": {
-    "mtime": 1779559420.4192383,
+    "mtime": 1779584472.3544996,
     "ast_hash": "6cc2b6eb29a41ffdee11367226d36c07",
     "semantic_hash": ""
   },
@@ -8635,7 +8635,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\packages\\shared-types\\src\\schemas\\index.ts": {
-    "mtime": 1779552665.1763203,
+    "mtime": 1779584472.4718843,
     "ast_hash": "5a0e77c89a8d0863fac7e996dc682e90",
     "semantic_hash": ""
   },
@@ -8660,8 +8660,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\prisma\\seed.ts": {
-    "mtime": 1779571444.6007593,
-    "ast_hash": "45f7091cc0958ded93ce7dcced0b506e",
+    "mtime": 1779584472.3358698,
+    "ast_hash": "6250a0f1b6f8d10239dab600b0b72db1",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\database\\database.module.ts": {
@@ -8670,7 +8670,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\database\\prisma.service.ts": {
-    "mtime": 1779570427.665627,
+    "mtime": 1779584472.3514931,
     "ast_hash": "1fe63317c78e956f5a2e0c42b4e58b4f",
     "semantic_hash": ""
   },
@@ -9025,22 +9025,22 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchase-requests\\purchase-requests.controller.ts": {
-    "mtime": 1779559713.0857995,
+    "mtime": 1779584472.3707192,
     "ast_hash": "e472530c2458af782063d3fb10a78133",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchase-requests\\purchase-requests.module.ts": {
-    "mtime": 1779582118.9213016,
+    "mtime": 1779584472.3712327,
     "ast_hash": "15c9b7de1bef41c5671a2bf1805feb12",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchase-requests\\purchase-requests.service.spec.ts": {
-    "mtime": 1779583860.2821984,
+    "mtime": 1779584472.3717437,
     "ast_hash": "ff90826ea3a69109ac922d401c54b14b",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchase-requests\\purchase-requests.service.ts": {
-    "mtime": 1779582218.6969328,
+    "mtime": 1779584472.3717437,
     "ast_hash": "63d5161244ca171ec6dfceef349c87e5",
     "semantic_hash": ""
   },
@@ -9050,17 +9050,17 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\workflow\\workflow.service.spec.ts": {
-    "mtime": 1779560112.5910985,
+    "mtime": 1779584472.3717437,
     "ast_hash": "3913a2fc6988519a2f5580a83affed42",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\workflow\\workflow.service.ts": {
-    "mtime": 1779554980.8821094,
+    "mtime": 1779584472.3717437,
     "ast_hash": "4e70d75f1f19f52c238c2e0949abf027",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\workflow-conversion.e2e-spec.ts": {
-    "mtime": 1779572470.1868303,
+    "mtime": 1779584472.3717437,
     "ast_hash": "bb5003207e8c9cc0a677bb15d3082140",
     "semantic_hash": ""
   },
@@ -9070,7 +9070,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\workflow-transitions.e2e-spec.ts": {
-    "mtime": 1779572412.7607074,
+    "mtime": 1779584472.3717437,
     "ast_hash": "f8f378e3ed219af22adb743c1843a2d8",
     "semantic_hash": ""
   },
@@ -9155,12 +9155,12 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\warehouse-lock\\warehouse-lock.controller.spec.ts": {
-    "mtime": 1779560112.5910985,
-    "ast_hash": "e70aa11366926581c3871d77922cd916",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "a9077bc84d255800637be916d10bf63a",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\warehouse-lock\\warehouse-lock.controller.ts": {
-    "mtime": 1779559870.8827567,
+    "mtime": 1779584472.3717437,
     "ast_hash": "d83385930ab046aa6c5268ceffc18f3b",
     "semantic_hash": ""
   },
@@ -9170,12 +9170,12 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\warehouse-lock\\warehouse-lock.service.spec.ts": {
-    "mtime": 1779560112.5910985,
-    "ast_hash": "f068f79d57c64e052b1752f13bed6796",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "495a01d9c8eb72fe8afcabd432a2a269",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\warehouse-lock\\warehouse-lock.service.ts": {
-    "mtime": 1779556666.3744571,
+    "mtime": 1779584472.3717437,
     "ast_hash": "d1de5fa3057234233cb1468ada6d870d",
     "semantic_hash": ""
   },
@@ -9275,17 +9275,17 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\ledger\\ledger.module.ts": {
-    "mtime": 1779583504.0332527,
+    "mtime": 1779584472.3544996,
     "ast_hash": "6503d3723ddf2f1101b6e2311455944c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\ledger\\wac.service.spec.ts": {
-    "mtime": 1779581121.761017,
+    "mtime": 1779584472.3544996,
     "ast_hash": "d48f09a3c70dbce35a7c1aef9a904791",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\ledger\\wac.service.ts": {
-    "mtime": 1779581061.73472,
+    "mtime": 1779584472.3544996,
     "ast_hash": "4928cac74b212a22158b4fb46d1967ca",
     "semantic_hash": ""
   },
@@ -9335,72 +9335,72 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\adjustment-post.service.spec.ts": {
-    "mtime": 1779583663.9467573,
+    "mtime": 1779584472.3544996,
     "ast_hash": "950c50733aea94883530de775e3f3550",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\adjustment-post.service.ts": {
-    "mtime": 1779583551.869974,
+    "mtime": 1779584472.3544996,
     "ast_hash": "2ae8d30ca963cdad6d9993396f33d1e2",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\issue-post.service.spec.ts": {
-    "mtime": 1779583150.4631054,
+    "mtime": 1779584472.3544996,
     "ast_hash": "0c07e6069708ec90c937bdd323a79944",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\issue-post.service.ts": {
-    "mtime": 1779583092.3079655,
+    "mtime": 1779584472.3544996,
     "ast_hash": "6efbc6153b92e48663ecc66435700128",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\operations.module.ts": {
-    "mtime": 1779582670.5193956,
+    "mtime": 1779584472.3544996,
     "ast_hash": "1db682e1f174aed2b2751dd69c27516c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\transfer-post.service.spec.ts": {
-    "mtime": 1779581734.608841,
+    "mtime": 1779584472.3544996,
     "ast_hash": "ce3248e8404963c2b586fa9aa6bc863c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\transfer-post.service.ts": {
-    "mtime": 1779583860.2812014,
+    "mtime": 1779584472.3544996,
     "ast_hash": "5f874ef1525abeb5b92f23450d9c64f2",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\adjustments\\adjustments.controller.ts": {
-    "mtime": 1779559592.4574826,
+    "mtime": 1779584472.3544996,
     "ast_hash": "31e43ca721cd3471d9b266b51754503b",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\issues\\issues.controller.ts": {
-    "mtime": 1779559638.880366,
+    "mtime": 1779584472.3544996,
     "ast_hash": "2eadeed3e9214cacc9446c94ea58577a",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\transfers\\transfers.controller.ts": {
-    "mtime": 1779559682.109247,
+    "mtime": 1779584472.3544996,
     "ast_hash": "eecc24b81a600f1cdb41e716f01297b8",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\grn-post.service.spec.ts": {
-    "mtime": 1779583080.7139003,
+    "mtime": 1779584472.3717437,
     "ast_hash": "b500b9d5d13a38e02299dd5429511e28",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\grn-post.service.ts": {
-    "mtime": 1779583070.7367222,
+    "mtime": 1779584472.3717437,
     "ast_hash": "9e720c8fb4b1a354ab502ec095b032eb",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\purchasing.module.ts": {
-    "mtime": 1779582418.0881865,
+    "mtime": 1779584472.3717437,
     "ast_hash": "f7285ff3832ca389e9bd56e11c46b057",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\grn\\grn.controller.ts": {
-    "mtime": 1779559809.5308936,
+    "mtime": 1779584472.3717437,
     "ast_hash": "06dae554a4ea3a74eeb11238709ff516",
     "semantic_hash": ""
   },
@@ -9415,7 +9415,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\stocktake\\stocktake.controller.ts": {
-    "mtime": 1779559827.0838184,
+    "mtime": 1779584472.3717437,
     "ast_hash": "69f8eeb9a32f910766822e3834130112",
     "semantic_hash": ""
   },
@@ -9480,32 +9480,32 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\jobs\\lock-cleanup.job.spec.ts": {
-    "mtime": 1779556606.132837,
-    "ast_hash": "23d2f46d6f772b75e559830c83791e23",
+    "mtime": 1779584472.3514931,
+    "ast_hash": "11df5a66e38b6d9a2b567fc2765023dd",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\jobs\\lock-cleanup.job.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "e6e2cdefa7bdffeb7ed570a61e38d778",
+    "mtime": 1779584472.3514931,
+    "ast_hash": "34eb4fe643797fe313aa365b143cd82f",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\inventory\\inventory.controller.spec.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "6fd81bfa68e9a2e917f63910ff7b38d1",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "c13e1736f1867f2283c4fe0f4f162e50",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\inventory\\inventory.controller.ts": {
-    "mtime": 1779559456.55888,
+    "mtime": 1779584472.3544996,
     "ast_hash": "388cd2c15496551418d2be56aa87999d",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\inventory\\inventory.module.ts": {
-    "mtime": 1779554289.6461358,
+    "mtime": 1779584472.3544996,
     "ast_hash": "2f5181906db707ece3193e2ac7804d80",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\kitchen-requests\\kitchen-requests.controller.ts": {
-    "mtime": 1779559484.8527002,
+    "mtime": 1779584472.3544996,
     "ast_hash": "86278826bfc36a7aff2e90aa15aa35a6",
     "semantic_hash": ""
   },
@@ -9530,7 +9530,7 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\master-data\\warehouses\\warehouses.controller.ts": {
-    "mtime": 1779559510.2412694,
+    "mtime": 1779584472.3544996,
     "ast_hash": "21c5ed9c488eb7bced31353f6ce72a58",
     "semantic_hash": ""
   },
@@ -9540,17 +9540,17 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\adjustments\\adjustments.service.ts": {
-    "mtime": 1779583860.2812014,
+    "mtime": 1779584472.3544996,
     "ast_hash": "759c40bbfedb606510e6d7aee9c37df0",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\issues\\issues.service.ts": {
-    "mtime": 1779583860.2812014,
+    "mtime": 1779584472.3544996,
     "ast_hash": "a08b0a350f73f24631f489e50f175032",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\operations\\transfers\\transfers.service.ts": {
-    "mtime": 1779583860.2812014,
+    "mtime": 1779584472.370211,
     "ast_hash": "1a66054573d4089a875316bffdf8de8a",
     "semantic_hash": ""
   },
@@ -9560,28 +9560,28 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\purchase-orders\\po.controller.ts": {
-    "mtime": 1779559762.340315,
+    "mtime": 1779584472.3717437,
     "ast_hash": "a75abac97e7b59ace4d91a43472a48ce",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\purchase-orders\\po.service.spec.ts": {
-    "mtime": 1779583860.2821984,
+    "mtime": 1779584472.3717437,
     "ast_hash": "0d44a9eba18390e44bed97842ed20835",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\purchasing\\purchase-orders\\po.service.ts": {
-    "mtime": 1779583860.2821984,
+    "mtime": 1779584472.3717437,
     "ast_hash": "fb1d219fdf8571e6218d2c6ea5272e6d",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\reports\\reports.controller.spec.ts": {
-    "mtime": 1779570071.7737687,
-    "ast_hash": "fa2a62df4f9f827e9226b091d649113a",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "37335d0470079c8879142376afb1e57c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\reports\\reports.controller.ts": {
-    "mtime": 1779570632.4677489,
-    "ast_hash": "6b5a6eb71cda7b111fca9798c2232548",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "e70b7c261b031c2467c793657863e27e",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\reports\\reports.module.ts": {
@@ -9605,253 +9605,293 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\spec.md": {
-    "mtime": 1779551409.1429086,
-    "ast_hash": "6bafa13c4ddc4344ae48bac62c21dccf",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "78b858ea3d0db618c4ef4042f6e814c9",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\checklists\\requirements.md": {
-    "mtime": 1779551028.8883865,
-    "ast_hash": "0dba7d99da308612a2712bebdb71a095",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "337addc973ce92767051b0bfde789eea",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\data-model.md": {
-    "mtime": 1779551675.5696485,
-    "ast_hash": "d6bb3521384b80c86aace72d65fc7c6d",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "29729d9a7ed9194c955510560524f6c7",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\plan.md": {
-    "mtime": 1779551629.9323368,
-    "ast_hash": "211a347f386a9a46145a9df9ec2d85de",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "857c0d863ffa3956b084ed21053ca89e",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\quickstart.md": {
-    "mtime": 1779557110.602336,
-    "ast_hash": "0b6145f5134cb44aef6ec24908ff3d68",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "c2fbe5792b703daed1b7f71ddf86efca",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\research.md": {
-    "mtime": 1779551652.1086864,
-    "ast_hash": "74a6c9c52d3943014b0818a6fb0814e2",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "a7de363d7ecf6e7170f0513efdb842f3",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\contracts\\endpoints.md": {
-    "mtime": 1779551697.9806867,
-    "ast_hash": "08238638a44494c65ae74d81b2587da6",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "325b30486821a58ce810134105709e38",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\022-inventory-reporting\\tasks.md": {
-    "mtime": 1779557172.3671348,
-    "ast_hash": "84569393ae5f80f57d21bd27f7a080e2",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "75e3200d34017db4031181515475094a",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\admin\\admin.module.ts": {
-    "mtime": 1779555437.6572368,
-    "ast_hash": "80538520a3b689a3910f52ad28b58468",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "3490fe7568dd4010364b48ebdf64b985",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\admin\\audit-logs.controller.spec.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "91d3357508bc34c49a94cf24264fffd9",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "e34b136832e093cf40de33891cce9cfa",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\admin\\audit-logs.controller.ts": {
-    "mtime": 1779559434.6813226,
-    "ast_hash": "8becf6e3cd7e59325f3d13c51bd04a64",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "e46ebcc396d292de9b6519c450b51db9",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\inventory\\inventory.service.spec.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "4740950e2accc29558ebe65da810b9e9",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "11d24572cbe9119ae4b6cd99c0270b91",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\inventory\\inventory.service.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "66b026ac6ac03858a51cd1adb73c32f4",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "f442dc04200bed61dafe4053305a475b",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\notifications\\notification.controller.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "cef901090335ad5171ea9eb573c6cb23",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "f913bcbc93756734c237083f77a99c89",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\notifications\\notification.module.ts": {
-    "mtime": 1779553689.6982589,
-    "ast_hash": "c52ce89c72e6fa337dc1997e71713bd4",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "48e2fc52c03eaf12e14c3eb981ed636c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\notifications\\notification.service.spec.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "5622277f48d6e14cc999c18a72d94fbb",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "5c9059ab8cf1fc58ede611a457a28bed",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\notifications\\notification.service.ts": {
-    "mtime": 1779560112.5910985,
-    "ast_hash": "764c1f2685ed4aeb99c7446a01ba5a97",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "151954636b642956c34f487f1c5eb236",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\packages\\shared-types\\src\\schemas\\reporting.schema.ts": {
-    "mtime": 1779552636.369664,
-    "ast_hash": "458cb0768283f46c0fc4e1a5c6a6c0c0",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "397891ba9db9a9dbec28ec408f8036a4",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\scratch\\test-db.js": {
-    "mtime": 1779553386.7501695,
-    "ast_hash": "df4dc462fd4991a623e4f13b2b299b1c",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "e2f4b76f822bd736ed0913c0f646df5d",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\decorators\\swagger-docs.decorator.ts": {
-    "mtime": 1779560112.5901017,
-    "ast_hash": "e03413d5c12482f8917f1cfc23d00cf1",
+    "mtime": 1779584472.3514931,
+    "ast_hash": "04ed24ef4c7cbaf597f812b22bf79ae3",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\scratch\\inspect_db.ts": {
-    "mtime": 1779562498.4401703,
-    "ast_hash": "e801d157d14a726df451c9bf4fd68bad",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "9180e183378cf81bbd7d253a9e0aba2a",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\production_readiness_audit.md": {
-    "mtime": 1779564067.472019,
-    "ast_hash": "8a5378659464d868e22d0b7d91b69e55",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "0f582ba603f45d370f47b0382a23017f",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\audit_expansion_report.md": {
-    "mtime": 1779565631.0948753,
-    "ast_hash": "0484e55c5a6b0d26e8e229bcc1719ef5",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "d2ddfdde8c048756094ac64750cf06f8",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\production_hardening_roadmap.md": {
-    "mtime": 1779566428.5399854,
-    "ast_hash": "58f56fa5a025c4f49d7651cd98e8db93",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "9319c5d08c18bbecc994752aaa4c0650",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\spec.md": {
-    "mtime": 1779567291.5390134,
-    "ast_hash": "358b660a1b68ef826b4edd51996e779f",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "163b208d9b62985d4a02bbc7c6620d9c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\checklists\\requirements.md": {
-    "mtime": 1779567313.2342937,
-    "ast_hash": "7130762097c339de6163f5fe997857ab",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "bc6bcb2e93442874bbfcd5c7809ce43e",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\data-model.md": {
-    "mtime": 1779567918.3615384,
-    "ast_hash": "38a15ff6bbb9371095b7faa9e4aaf675",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "2746766f15f5b6795e6dbbf3981344b0",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\plan.md": {
-    "mtime": 1779567874.892232,
-    "ast_hash": "43c3ac18dedd65f887944603d126bcf6",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "798d01ed56dc6ace4883e513164bc13a",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\quickstart.md": {
-    "mtime": 1779567968.0696282,
-    "ast_hash": "4124dcedc593ea88df3a7ad626363c16",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "0122a6ddb8899f69f3e5ed0fe03b1ba0",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\research.md": {
-    "mtime": 1779567899.4504795,
-    "ast_hash": "6c1dad0dc67de065cdfff6d592d0cd81",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "1e3052e35f5540fe5ea7fab4515d916b",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\contracts\\endpoints.md": {
-    "mtime": 1779567952.367096,
-    "ast_hash": "fd978a3d41c7f3ff173bfdbf30a4fa2e",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "315204e67bab837694843dcc5ac4ab17",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\023-api-db-core-hardening\\tasks.md": {
-    "mtime": 1779576499.7294004,
-    "ast_hash": "fb79ef3e0223f2078f2acc97c89d87ee",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "c3698af19f551207020f75909219d09f",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\prisma\\migrations\\20260523204900_drift_delta_hardening\\migration.sql": {
-    "mtime": 1779569368.849333,
-    "ast_hash": "584c42a6919fcb65d4b76d68b27bda45",
+    "mtime": 1779584472.3358698,
+    "ast_hash": "929c24a0074505ab389677bc4591ee65",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\config\\env.validation.ts": {
-    "mtime": 1779570071.7737687,
-    "ast_hash": "644b2a82af693b8ffaedb1e8cfbee4e7",
+    "mtime": 1779584472.3358698,
+    "ast_hash": "53ca2210cb3088577bbc686e39dd1cba",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\test\\config-validation.e2e-spec.ts": {
-    "mtime": 1779570386.7308855,
-    "ast_hash": "003ff71e3d811f4eeae409c9a7bb8134",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "2aeeeaa22993ae8be9f48dbdf56d51ef",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.github\\workflows\\test-build.yml": {
-    "mtime": 1779570018.7931385,
-    "ast_hash": "e7ba425eee8e1926ebad6b7a9ac4e4f2",
+    "mtime": 1779584472.3358698,
+    "ast_hash": "1527c3548fd901c24cfb405154b03240",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\spec.md": {
-    "mtime": 1779577973.697561,
-    "ast_hash": "09ba9c5d3ed01e051bd187e43c968ac4",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "f2f3081e5f2867ef717b894965e3082c",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\checklists\\requirements.md": {
-    "mtime": 1779577120.6976001,
-    "ast_hash": "80aa538e8de76a030128d03b08074240",
+    "mtime": 1779584472.4718843,
+    "ast_hash": "af5ddff88fea98470274a5b60e6215a4",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\data-model.md": {
-    "mtime": 1779579035.9427025,
-    "ast_hash": "6f2e446af2a2367cb350abf55e956d53",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "02e76bca5082a5438ec525fb1aff5485",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\plan.md": {
-    "mtime": 1779578976.8235831,
-    "ast_hash": "9a71032baefec5b8b9e8daabc48a2689",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "fe1f2a7ce40dbc2687e851c0ac8de144",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\quickstart.md": {
-    "mtime": 1779579103.2206101,
-    "ast_hash": "0803a7d7e6215dcb1c5d74c13ebcea03",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "64b7be900257c53e437dfc7bc2e2dbfd",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\research.md": {
-    "mtime": 1779579010.1352944,
-    "ast_hash": "2673b7c4bdd624b647585d6bf531bf74",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "ebf7d6b22d163c4c2172b4af9f0a1584",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\contracts\\endpoints.md": {
-    "mtime": 1779579067.2025604,
-    "ast_hash": "c8c64a95c137ebd1245af40264295b45",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "29b52d49c120474c0d01483d93788807",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\specs\\024-transaction-financial-hardening\\tasks.md": {
-    "mtime": 1779581885.37438,
-    "ast_hash": "886330e9d3c918a3a823c1dc9d0c1f8a",
+    "mtime": 1779584472.4875097,
+    "ast_hash": "ec844c7a772fd3ec5b946b9cc4adb965",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\prisma\\migrations\\20260524000000_add_document_sequence_and_is_frozen\\migration.sql": {
-    "mtime": 1779580830.8359914,
-    "ast_hash": "5a9cdaa404c15dd28ef530b774c3a231",
+    "mtime": 1779584472.3358698,
+    "ast_hash": "2026977d36eb817e3d2c96cf07716f55",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\ledger\\reconciliation.job.spec.ts": {
-    "mtime": 1779583524.1298082,
-    "ast_hash": "4f36b9785f81e6eefb03e22a72242224",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "eb9ec7d93201d37f9da09ca5a60adedf",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\ledger\\reconciliation.job.ts": {
-    "mtime": 1779583925.786449,
-    "ast_hash": "125652c1cff792974c5b004f6f8f7032",
+    "mtime": 1779584472.3544996,
+    "ast_hash": "6c64fb24d4c3bf55a39a9d8236775e03",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\sequencing\\document-sequence.module.ts": {
-    "mtime": 1779581250.4994242,
-    "ast_hash": "944957ef7abe1f2c624f28d99f3d6127",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "d5dac94e83a5744794ea4087159fe938",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\sequencing\\document-sequence.service.spec.ts": {
-    "mtime": 1779583860.2821984,
-    "ast_hash": "a103913ecb9984ce6b542568e6c36d2f",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "49e1ae476a188980a8cefa59a362cc47",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\apps\\api\\src\\modules\\sequencing\\document-sequence.service.ts": {
-    "mtime": 1779583860.2821984,
-    "ast_hash": "38573504001362b89a6ac464cabfc1ea",
+    "mtime": 1779584472.3717437,
+    "ast_hash": "6dbd9995c111b9edf4ccb46329e4e35d",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\spec.md": {
+    "mtime": 1779585023.6156094,
+    "ast_hash": "6eccf85fcc0d53ce08848a6dc239a6e7",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\checklists\\requirements.md": {
+    "mtime": 1779585042.5424461,
+    "ast_hash": "0f26b148025e75572915d994b8953887",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\data-model.md": {
+    "mtime": 1779585511.606954,
+    "ast_hash": "aa0292c0a130ac747b147b101e5d5deb",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\plan.md": {
+    "mtime": 1779585474.065785,
+    "ast_hash": "f0f6c318e4ab11f2d2d1225de972958e",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\quickstart.md": {
+    "mtime": 1779585531.6332414,
+    "ast_hash": "85d9cbd3a475bbe29eea4efd6901d326",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\research.md": {
+    "mtime": 1779585492.7291963,
+    "ast_hash": "859f0f51c2e43831bc207704130ddb11",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\contracts\\endpoints.md": {
+    "mtime": 1779585546.7470427,
+    "ast_hash": "905bfa03d5046c1198718e7dfe0823df",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\025-observability-security-deployment-hardening\\tasks.md": {
+    "mtime": 1779585799.0232036,
+    "ast_hash": "961031ebbc843fcab66f24bb8a078cff",
     "semantic_hash": ""
   }
 }
