@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validate } from './config/env.validation';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -35,6 +36,10 @@ import { LockCleanupJob } from './jobs/lock-cleanup.job';
       isGlobal: true,
       validate,
     }),
+    // Rate limiting: 10 requests per 60 seconds per IP (applied globally)
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 60000, limit: 10 },
+    ]),
     PrismaModule,
     HealthModule,
     AuthModule,
@@ -58,6 +63,10 @@ import { LockCleanupJob } from './jobs/lock-cleanup.job';
     AppService,
     IdempotencyService,
     LockCleanupJob,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

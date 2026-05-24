@@ -52,6 +52,13 @@ export class PrismaService
   }
 
   private async verifyMigrationSync() {
+    if (process.env.NODE_ENV === 'test') {
+      this.logger.log(
+        'Skipping database migration alignment check in test environment',
+      );
+      return;
+    }
+
     let migrationsDir = path.resolve(process.cwd(), 'prisma/migrations');
     if (!fs.existsSync(migrationsDir)) {
       migrationsDir = path.resolve(process.cwd(), 'apps/api/prisma/migrations');

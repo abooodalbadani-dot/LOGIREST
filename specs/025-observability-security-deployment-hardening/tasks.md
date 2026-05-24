@@ -15,8 +15,8 @@
 
 **Purpose**: Project initialization and environment configuration
 
-- [ ] T001 Verify project structure under specs/025-observability-security-deployment-hardening/
-- [ ] T002 Configure backend and frontend env dependencies for cookies and queues in package.json
+- [x] T001 Verify project structure under specs/025-observability-security-deployment-hardening/
+- [x] T002 Configure backend and frontend env dependencies for cookies and queues in package.json
 
 ---
 

@@ -142,6 +142,8 @@ export class WorkflowService {
     if (normalizedType === 'grn' && action === 'POST') isMutating = true;
     if (normalizedType === 'issue' && action === 'POST') isMutating = true;
     if (normalizedType === 'adjustment' && action === 'POST') isMutating = true;
+    if (normalizedType === 'kitchen_request' && action === 'POST')
+      isMutating = true;
     if (
       normalizedType === 'transfer' &&
       (action === 'SHIP' || action === 'RECEIVE')

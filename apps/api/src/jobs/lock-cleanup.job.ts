@@ -57,10 +57,23 @@ export class LockCleanupJob implements OnModuleInit, OnModuleDestroy {
         },
         data: {
           status: 'STALE',
+          isActive: false,
         },
       });
 
-      this.logger.log('Successfully marked expired locks as STALE.');
+      // Reset Warehouse.isLocked for all affected warehouses so inventory
+      // mutations are unblocked after the stocktake lock expires.
+      const affectedWarehouseIds = [
+        ...new Set(expiredLocks.map((l) => l.warehouseId)),
+      ];
+      await this.prisma.warehouse.updateMany({
+        where: { id: { in: affectedWarehouseIds } },
+        data: { isLocked: false },
+      });
+
+      this.logger.log(
+        `Successfully marked ${expiredLocks.length} expired locks as STALE and unlocked ${affectedWarehouseIds.length} warehouse(s).`,
+      );
     } catch (error) {
       this.logger.error('Failed to cleanup expired locks', error);
     }
