@@ -1,1407 +1,1189 @@
 # Engineering Implementation Tasks
-## Converted from Enterprise Production Readiness Audit
-**Source**: [enterprise_production_readiness_audit.md](file:///C:/Users/Qursan/.gemini/antigravity-ide/brain/8438b317-aaf6-4318-913f-1e10d37e3acb/enterprise_production_readiness_audit.md)  
-**Generated**: 2026-05-24 | **Total Tasks**: 72 | **Sprints**: 6
+## LogiRest — Production Readiness Remediation
+**Source:** [Enterprise Production Readiness Audit](./enterprise_production_readiness_audit.md)
+**Created:** 2026-05-25 | **Status:** OPEN
 
 ---
 
 ## Legend
 
-- `[P]` — Can run in parallel with other [P] tasks in same sprint
-- `[BE]` — Backend (NestJS/Prisma)
-- `[FE]` — Frontend (Next.js)
-- `[DB]` — Database/Migration
-- `[DO]` — DevOps/Deployment
-- `[SEC]` — Security
-- `[OBS]` — Observability
-- `[TEST]` — Testing
-
-**Status**: `[ ]` = Todo | `[/]` = In Progress | `[x]` = Done
-
----
-
-## SPRINT 1 — Critical Blockers: Inventory Safety & Security Correctness
-> **Goal**: Fix bugs that will cause production incidents on day 1.  
-> **Duration**: ~5 days
+| Symbol | Meaning |
+|---|---|
+| 🔴 | Critical — blocks production |
+| 🟠 | High — must fix in Sprint 1 |
+| 🟡 | Medium — hardening |
+| 🔵 | Low — technical excellence |
+| `[ ]` | Not started |
+| `[/]` | In progress |
+| `[x]` | Done |
 
 ---
 
-### S1-T01 `[BE]` Fix Warehouse Lock Reset Bug
-**Severity**: 🔴 CRITICAL (C-1)  
-**File**: `apps/api/src/jobs/lock-cleanup.job.ts`  
+## SPRINT 0 — Critical Pre-Production Blockers
+> **Goal:** Clear all 10 critical blockers. Estimated: **5–7 engineering days**
+> All tasks in this sprint are gate conditions for production pilot launch.
 
-**Problem**: `LockCleanupJob` marks `WarehouseLock.status = STALE` but never resets `Warehouse.isLocked = false`. Every stocktake permanently locks the warehouse.
+---
 
-**Implementation**:
-```typescript
-// In cleanupExpiredLocks(), after updateMany on warehouse_locks:
-await this.prisma.warehouse.updateMany({
-  where: { id: { in: expiredLocks.map(l => l.warehouseId) } },
-  data: { isLocked: false },
+### TASK-001 🔴 — Wire Admin Roles UI to Real Backend API
+**Audit Ref:** `C-FE-1`, `C-TEST-1`
+**Priority:** CRITICAL
+**Effort:** 2 days (BE: 0.5d, FE: 1d, Tests: 0.5d)
+
+**Problem:**
+`useAdminRoles.ts` returns a static `MOCK_ROLES` array with a simulated 500ms delay.
+`useUpdateRolePermissions()` performs a fake mutation that never persists.
+The `/admin/roles` page appears functional but changes are silently discarded.
+
+**Affected Files:**
+- `apps/web/src/features/admin/hooks/useAdminRoles.ts` — **REPLACE** mock with real API calls
+- `apps/api/src/modules/admin/admin.controller.ts` — **ADD** roles endpoints
+- `apps/api/src/modules/admin/admin.service.ts` — **ADD** role query logic
+- `packages/shared-types/src/index.ts` — verify `Role` enum is exported
+
+**Implementation Steps:**
+
+**Backend:**
+1. Add `GET /admin/roles` endpoint — return a structured list of all `Role` enum values, their display names, descriptions, and current user counts via `prisma.user.groupBy({ by: ['role'], _count: true })`.
+2. The `Role` enum is enforced by the DB/auth layer; permission matrix is in `shared-types`. The endpoint should expose both.
+3. Response type:
+```ts
+// packages/shared-types
+export interface RoleDescriptor {
+  id: Role;
+  displayName: string;
+  description: string;
+  userCount: number;
+}
+```
+
+**Frontend:**
+1. Replace `MOCK_ROLES` in `useAdminRoles.ts` with `apiClient.get<RoleDescriptor[]>('/admin/roles')`.
+2. Remove `await new Promise(resolve => setTimeout(resolve, 500))` fake delay.
+3. `useUpdateRolePermissions()` — the role permission matrix lives in `shared-types` (not DB), so this mutation should call a real `PATCH /admin/roles/:id/permissions` endpoint if dynamic permissions are needed, OR the UI should be read-only (displaying the static matrix from `canPerformActionV2`) with a note that permissions are code-managed.
+4. Remove all `MOCK_ROLES` references.
+
+**Acceptance Criteria:**
+- `[ ]` `GET /admin/roles` returns real data from DB
+- `[ ]` `/admin/roles` page shows real user counts per role
+- `[ ]` No `MOCK_ROLES` constant in any production file
+- `[ ]` Unit test: `admin.service.spec.ts` — role list query
+- `[ ]` E2E test: admin-roles.e2e-spec.ts — roles API integration
+
+---
+
+### TASK-002 🔴 — Fix Security Replay Attack Outbox Handler
+**Audit Ref:** `C-BE-1`, `C-EMAIL-2`, `C-SEC-*`
+**Priority:** CRITICAL
+**Effort:** 0.5 days
+
+**Problem:**
+`rtr.service.ts` emits `SECURITY_ALERT_REPLAY_ATTACK` to the outbox on token replay detection.
+`OutboxWorker.renderTemplate()` and `resolveRecipients()` have no `case` for this event type.
+It falls through to `default` — dispatched to zero recipients, silently swallowed.
+
+**Affected Files:**
+- `apps/api/src/modules/outbox/outbox.worker.ts` — **ADD** case handler
+- `apps/api/src/modules/outbox/email.service.ts` — **ADD** email template
+
+**Implementation Steps:**
+
+1. In `OutboxWorker.resolveRecipients()`:
+```ts
+case 'SECURITY_ALERT_REPLAY_ATTACK':
+  return prisma.user.findMany({
+    where: { role: Role.ADMIN, isActive: true },
+    select: { email: true, name: true },
+  });
+```
+
+2. In `OutboxWorker.renderTemplate()`:
+```ts
+case 'SECURITY_ALERT_REPLAY_ATTACK':
+  return {
+    subject: '🚨 SECURITY ALERT: Token Replay Attack Detected',
+    html: `
+      <h2>Security Alert — Refresh Token Replay</h2>
+      <p>A refresh token replay attack was detected at <strong>${payload.timestamp}</strong>.</p>
+      <p><strong>User ID:</strong> ${payload.userId}</p>
+      <p><strong>Session ID:</strong> ${payload.sessionId}</p>
+      <p><strong>IP Address:</strong> ${payload.ipAddress ?? 'Unknown'}</p>
+      <p>All tokens for this session have been revoked. Investigate immediately.</p>
+    `,
+  };
+```
+
+3. Add in-system notification for ADMIN role via `NotificationService.createNotification()` inside `rtr.service.ts` after the outbox write.
+
+**Acceptance Criteria:**
+- `[ ]` Replay attack triggers email to all active ADMIN users
+- `[ ]` Replay attack triggers in-system notification to ADMIN role
+- `[ ]` Event no longer falls through to `default` case
+- `[ ]` Unit test: `outbox.worker.spec.ts` — SECURITY_ALERT_REPLAY_ATTACK rendering
+- `[ ]` E2E test: add case in `rtr.e2e-spec.ts` — verify outbox event is dispatched and template rendered
+
+---
+
+### TASK-003 🔴 — Fix Transfer SHIP/RECEIVE Workflow Role Validation
+**Audit Ref:** `C-BE-2`, `C-WF-1`
+**Priority:** CRITICAL
+**Effort:** 1 day
+
+**Problem:**
+`TransferPostService.ship()` validates status by checking `transfer.status !== 'DRAFT'` directly.
+`TransferPostService.receive()` checks `transfer.status !== 'IN_TRANSIT'` directly.
+Both bypass `canPerformActionV2()` from shared-types, meaning future role matrix changes won't apply to transfers.
+
+**Affected Files:**
+- `apps/api/src/modules/operations/transfer-post.service.ts` — **MODIFY** ship() and receive()
+- `apps/api/src/modules/workflow/workflow.service.ts` — reference for `canPerformActionV2` usage pattern
+
+**Implementation Steps:**
+
+1. Import `canPerformActionV2` from `@logirest/shared-types` in `transfer-post.service.ts`.
+2. In `ship()`, before the status check, add:
+```ts
+const canShip = canPerformActionV2(
+  transfer.status as TransferStatus,
+  'SHIP',
+  userRole,
+  { documentType: DocumentType.TRANSFER }
+);
+if (!canShip.allowed) {
+  throw new ForbiddenException(canShip.reason ?? 'You are not allowed to ship this transfer');
+}
+```
+3. Apply the same pattern in `receive()` with action `'RECEIVE'`.
+4. Keep the existing status check as a secondary guard (defense-in-depth), but the role check must come first.
+
+**Acceptance Criteria:**
+- `[ ]` `ship()` calls `canPerformActionV2` with user role before any status mutation
+- `[ ]` `receive()` calls `canPerformActionV2` with user role before any status mutation
+- `[ ]` A WAREHOUSE_KEEPER cannot ship if the role matrix forbids it
+- `[ ]` Add test case in `workflow-roles.e2e-spec.ts` — transfer SHIP role enforcement
+- `[ ]` Add test case in `workflow-roles.e2e-spec.ts` — transfer RECEIVE role enforcement
+
+---
+
+### TASK-004 🔴 — Add ISSUE_POSTED Outbox Event and NotificationLog
+**Audit Ref:** `C-BE-*`, `C-WF-2`, `C-EMAIL-3`
+**Priority:** CRITICAL
+**Effort:** 0.5 days
+
+**Problem:**
+`IssuePostService.post()` performs all inventory mutations and writes StockLedger and AuditLog, but never dispatches an outbox event or creates a NotificationLog entry.
+Inventory managers are completely unnotified when stock is consumed.
+
+**Affected Files:**
+- `apps/api/src/modules/operations/issue-post.service.ts` — **ADD** outbox dispatch
+- `apps/api/src/modules/outbox/outbox.service.ts` — reference for `writeEvent()`
+- `apps/api/src/modules/outbox/outbox.worker.ts` — **ADD** `ISSUE_POSTED` case handler
+- `apps/api/src/modules/operations/operations.module.ts` — ensure `OutboxModule` is imported
+
+**Implementation Steps:**
+
+1. Inject `OutboxService` into `IssuePostService`.
+2. At the end of `post()` (inside the transaction, after status update), add:
+```ts
+await this.outboxService.writeEvent(tx, 'ISSUE_POSTED', {
+  issueId: issue.id,
+  issueNumber: updatedIssue.issueNumber,
+  warehouseId: issue.warehouseId,
+  postedByUserId: userId,
+  totalLines: issue.lines.length,
+  timestamp: new Date().toISOString(),
+});
+```
+3. In `OutboxWorker.resolveRecipients()`:
+```ts
+case 'ISSUE_POSTED':
+  return prisma.user.findMany({
+    where: {
+      role: { in: [Role.ADMIN, Role.INV_MANAGER] },
+      isActive: true,
+    },
+    select: { email: true, name: true },
+  });
+```
+4. In `OutboxWorker.renderTemplate()`:
+```ts
+case 'ISSUE_POSTED':
+  return {
+    subject: `Stock Issue Posted — ${payload.issueNumber}`,
+    html: `<h2>Inventory Issue Posted</h2>
+      <p>Issue <strong>${payload.issueNumber}</strong> has been posted.</p>
+      <p>Lines: ${payload.totalLines}</p>`,
+  };
+```
+5. Create a `NotificationLog` entry inside the transaction targeting `INV_MANAGER` and `ADMIN` roles.
+
+**Acceptance Criteria:**
+- `[ ]` `ISSUE_POSTED` outbox event is written inside the posting transaction
+- `[ ]` Outbox worker renders a template for `ISSUE_POSTED`
+- `[ ]` Outbox worker resolves INV_MANAGER and ADMIN recipients
+- `[ ]` NotificationLog entry created for ISSUE_POSTED
+- `[ ]` Unit test in `outbox.worker.spec.ts` — ISSUE_POSTED template rendering
+- `[ ]` E2E test: outbox.e2e-spec.ts — verify ISSUE_POSTED event is dispatched after issue post
+
+---
+
+### TASK-005 🔴 — Migrate ReconciliationJob from setTimeout to @Cron
+**Audit Ref:** `C-INV-2`, `C-PERF-1`
+**Priority:** CRITICAL
+**Effort:** 0.5 days (+ performance refactor 1 day)
+
+**Problem:**
+`ReconciliationJob` uses `setTimeout(() => ..., delay)` to schedule itself for 01:00 AM.
+If the server restarts at 00:59, the next run fires 25 hours later — a silent gap.
+Additionally, the reconciliation loop is O(N) sequential transactions — 10k items = 500s runtime.
+
+**Affected Files:**
+- `apps/api/src/modules/ledger/reconciliation.job.ts` — **REFACTOR**
+- `apps/api/src/app.module.ts` — verify `ScheduleModule.forRoot()` is imported (it is)
+
+**Implementation Steps:**
+
+**Part A — Cron Migration (CRITICAL):**
+1. Remove `OnModuleInit`, `OnModuleDestroy`, `timeoutId`, and `scheduleNextRun()`.
+2. Replace with `@Cron('0 1 * * *')` decorator on `runReconciliation()`:
+```ts
+import { Cron } from '@nestjs/schedule';
+
+@Cron('0 1 * * *', { name: 'daily-reconciliation' })
+async runReconciliation() { ... }
+```
+3. Keep `onModuleDestroy` only to handle graceful shutdown if needed.
+
+**Part B — Performance Fix (HIGH, can be done in Sprint 1):**
+1. Batch discrepant items: instead of one `$transaction` per discrepant item, collect all discrepancies and perform a single `updateMany` + batched `createMany` for notifications.
+2. Use cursor-based pagination over `warehouseItems` (chunked by 500) to avoid loading 10k rows into memory at once.
+
+```ts
+// Batch update frozen items
+await prisma.warehouseItem.updateMany({
+  where: { id: { in: discrepantIds } },
+  data: { isFrozen: true },
+});
+
+// Batch notifications
+await prisma.notification.createMany({
+  data: discrepantItems.map(item => ({ ... })),
 });
 ```
 
-**Acceptance Criteria**:
-- [ ] After lock `expiresAt` passes, `Warehouse.isLocked` is set to `false`
-- [ ] `isWarehouseLocked()` returns `false` for expired locks
-- [ ] Unit test asserts both `WarehouseLock.status = STALE` and `Warehouse.isLocked = false` after cleanup
+**Acceptance Criteria:**
+- `[ ]` `ReconciliationJob` uses `@Cron('0 1 * * *')` decorator
+- `[ ]` No `setTimeout`, `scheduleNextRun`, `timeoutId` in the class
+- `[ ]` Server restart does not cause reconciliation to be skipped
+- `[ ]` (Sprint 1) Reconciliation processes items in batches of 500
+- `[ ]` Unit test: `reconciliation.job.spec.ts` — verify cron fires at 01:00 (mock scheduler)
 
 ---
 
-### S1-T02 `[BE]` Fix Health Check — Add Live DB Ping
-**Severity**: 🔴 CRITICAL (C-2)  
-**File**: `apps/api/src/health/health.controller.ts`
+### TASK-006 🔴 — Fix SMTP Silent Failure — Add Delivery Transparency
+**Audit Ref:** `C-BE-4`, `C-EMAIL-1`
+**Priority:** CRITICAL
+**Effort:** 1 day
 
-**Problem**: Returns static `{ status: 'OK' }`. Kubernetes/ECS health probes always pass even when DB is down.
+**Problem:**
+If SMTP is not configured, `EmailService.sendEmail()` returns `true` silently.
+The outbox worker marks the event as `SUCCEEDED` even though no email was sent.
+Operators have zero visibility that email delivery is broken.
 
-**Implementation**:
-```typescript
-@Get()
-@Public()
-async check() {
+**Affected Files:**
+- `apps/api/src/modules/outbox/email.service.ts` — **MODIFY** sendEmail()
+- `apps/api/src/modules/outbox/outbox.worker.ts` — **MODIFY** to handle SMTP_UNCONFIGURED result
+- `apps/api/src/modules/admin/admin.controller.ts` — **ADD** `GET /admin/system/email-status`
+
+**Implementation Steps:**
+
+1. In `EmailService`, distinguish between "no SMTP configured" and "send success":
+```ts
+// Return a discriminated union
+type EmailResult =
+  | { ok: true }
+  | { ok: false; reason: 'SMTP_UNCONFIGURED' | 'SEND_FAILED'; error?: string };
+
+async sendEmail(to, subject, html): Promise<EmailResult> {
+  if (!this.transporter) {
+    this.logger.warn('SMTP not configured — email skipped');
+    return { ok: false, reason: 'SMTP_UNCONFIGURED' };
+  }
   try {
-    await this.prisma.$queryRaw`SELECT 1`;
-    return { status: 'OK', db: 'connected', timestamp: new Date().toISOString() };
-  } catch {
-    throw new ServiceUnavailableException({ status: 'ERROR', db: 'disconnected' });
+    await this.transporter.sendMail({ ... });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: 'SEND_FAILED', error: err.message };
   }
 }
 ```
 
-**Acceptance Criteria**:
-- [ ] Returns `200 { status: 'OK', db: 'connected' }` when DB is reachable
-- [ ] Returns `503` when DB is unreachable
-- [ ] `PrismaService` injected into `HealthModule`
+2. In `OutboxWorker.process()`:
+- If result is `SMTP_UNCONFIGURED`: mark outbox event with `lastError: 'SMTP_NOT_CONFIGURED'`, status `FAILED` (or a dedicated status), and DO NOT retry (it's a config issue, not a transient failure).
+- Create an admin notification: "Email system is not configured. N events failed to dispatch."
 
----
-
-### S1-T03 `[BE][SEC]` Enforce HOLD/QUARANTINE Lot Filtering in Allocation
-**Severity**: 🔴 CRITICAL (C-10)  
-**File**: `apps/api/src/modules/ledger/allocation.service.ts`
-
-**Problem**: `allocate()` fetches lots with `qtyOnHand > 0` but does not check `lot.status`. HOLD/QUARANTINE lots can be issued.
-
-**Implementation**:
-```typescript
-// In warehouseItemLot.findMany where clause, add:
-lot: { status: LotStatus.ACTIVE }
-```
-
-**Acceptance Criteria**:
-- [ ] Lots with `status = HOLD` are excluded from allocation
-- [ ] Lots with `status = QUARANTINE` are excluded from allocation
-- [ ] Existing unit test updated to include a HOLD lot in fixture and verify it is skipped
-- [ ] Error message is thrown when only non-ACTIVE lots exist but stock is > 0
-
----
-
-### S1-T04 `[BE][SEC]` Add Warehouse Lock Check for Kitchen Requests
-**Severity**: 🔴 CRITICAL  
-**File**: `apps/api/src/modules/workflow/workflow.service.ts`
-
-**Problem**: `verifyWarehouseLocks()` does not check Kitchen Requests. Kitchen Requests consume inventory and must respect warehouse locks.
-
-**Implementation**:
-```typescript
-// In verifyWarehouseLocks(), add:
-if (normalizedType === 'kitchen_request' && action === 'POST') isMutating = true;
-```
-
-**Acceptance Criteria**:
-- [ ] Kitchen Request POST action blocked when `Warehouse.isLocked = true`
-- [ ] Returns `HTTP 423 Locked` with correct message
-- [ ] Unit test verifies kitchen_request is blocked during active stocktake lock
-
----
-
-### S1-T05 `[BE][SEC]` Disable Swagger in Production
-**Severity**: 🔴 CRITICAL (C-8)  
-**File**: `apps/api/src/main.ts`
-
-**Problem**: `SwaggerModule.setup()` runs unconditionally. API schema is publicly accessible in production.
-
-**Implementation**:
-```typescript
-if (process.env.NODE_ENV !== 'production') {
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+3. Add `GET /admin/system/email-status` endpoint:
+```ts
+{
+  smtpConfigured: boolean,
+  failedEventCount: number,
+  lastFailureAt: Date | null
 }
 ```
 
-**Acceptance Criteria**:
-- [ ] `GET /api/docs` returns `404` when `NODE_ENV=production`
-- [ ] Swagger still accessible in dev/staging (`NODE_ENV=development`)
+4. Add env validation warning: if `SMTP_HOST` is not set, log a `WARN` at startup.
+
+**Acceptance Criteria:**
+- `[ ]` `sendEmail()` returns discriminated result (not raw boolean)
+- `[ ]` Outbox worker marks `SMTP_UNCONFIGURED` events as `FAILED` (not `SUCCEEDED`)
+- `[ ]` Admin notification created when SMTP is unconfigured and an event is attempted
+- `[ ]` `GET /admin/system/email-status` returns SMTP health and failed count
+- `[ ]` Unit test: `email.service.spec.ts` — SMTP unconfigured returns `{ ok: false, reason: 'SMTP_UNCONFIGURED' }`
+- `[ ]` Integration test: outbox worker correctly handles SMTP_UNCONFIGURED result
 
 ---
 
-### S1-T06 `[BE][SEC]` Add Rate Limiting to Auth Endpoints
-**Severity**: 🔴 CRITICAL (C-9)  
-**File**: `apps/api/src/app.module.ts`, `apps/api/src/auth/auth.controller.ts`
+### TASK-007 🔴 — Add DB-Level Non-Negative Stock CHECK Constraints
+**Audit Ref:** `C-DB-1`, `C-INV-1`
+**Priority:** CRITICAL
+**Effort:** 0.5 days
 
-**Implementation**:
+**Problem:**
+`warehouse_items.qty_on_hand` and `warehouse_item_lots.qty_on_hand` have no database-level CHECK constraint.
+Only application-level guards prevent negative stock — bypassed by direct SQL or a future code path gap.
+
+**Affected Files:**
+- `apps/api/prisma/migrations/` — **NEW** migration file
+- `apps/api/prisma/schema.prisma` — verify no `Decimal` default conflict
+
+**Implementation Steps:**
+
+1. Create a new Prisma migration:
 ```bash
-# Install
-npm install @nestjs/throttler
-```
-```typescript
-// app.module.ts imports:
-ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }])
-// app.module.ts providers:
-{ provide: APP_GUARD, useClass: ThrottlerGuard }
-// auth.controller.ts on POST /login:
-@Throttle({ default: { limit: 10, ttl: 60000 } })
+npx prisma migrate dev --name add_nonneg_qty_constraints
 ```
 
-**Acceptance Criteria**:
-- [ ] 11th login attempt within 60 seconds returns `429 Too Many Requests`
-- [ ] Non-auth endpoints are not rate-limited (or have higher limits)
-- [ ] `X-RateLimit-Remaining` header is returned
+2. In the migration SQL file, add:
+```sql
+ALTER TABLE "warehouse_items"
+  ADD CONSTRAINT "warehouse_items_qty_on_hand_nonneg"
+  CHECK ("qty_on_hand" >= 0);
+
+ALTER TABLE "warehouse_items"
+  ADD CONSTRAINT "warehouse_items_qty_allocated_nonneg"
+  CHECK ("qty_allocated" >= 0);
+
+ALTER TABLE "warehouse_item_lots"
+  ADD CONSTRAINT "warehouse_item_lots_qty_on_hand_nonneg"
+  CHECK ("qty_on_hand" >= 0);
+```
+
+3. Also add CHECK on `outbox_events.status`:
+```sql
+ALTER TABLE "outbox_events"
+  ADD CONSTRAINT "outbox_events_status_valid"
+  CHECK ("status" IN ('PENDING', 'SUCCEEDED', 'FAILED'));
+```
+
+4. Verify all existing data passes before applying to production (run in transaction with rollback on any violation).
+
+**Acceptance Criteria:**
+- `[ ]` Migration applied successfully to dev, staging, and production DB
+- `[ ]` `INSERT INTO warehouse_items (qty_on_hand) VALUES (-1)` fails with constraint violation
+- `[ ]` `INSERT INTO warehouse_item_lots (qty_on_hand) VALUES (-1)` fails with constraint violation
+- `[ ]` `outbox_events.status` rejects any value outside `PENDING/SUCCEEDED/FAILED`
+- `[ ]` E2E test: `db-integrity.e2e-spec.ts` — verify negative qty insert is rejected by DB
 
 ---
 
-### S1-T07 `[DB]` Add Missing Database Indexes
-**Severity**: 🔴 HIGH (H-4, H-5)  
-**File**: `apps/api/prisma/schema.prisma`  
-**Migration**: `apps/api/prisma/migrations/`
+### TASK-008 🔴 — Remove Hardcoded 'SAR' from Dashboard Components
+**Audit Ref:** `C-FE-2`, `C-FE-3`, `CRIT-8`, `CRIT-9`
+**Priority:** CRITICAL
+**Effort:** 1 day
 
-**Missing Indexes**:
+**Problem:**
+Multiple production components ignore `settings.base_currency` and hardcode `'SAR'`:
+- `StoreManagerDashboard.tsx:94` — `formatCurrency(stats.totalValue, 'SAR', locale)`
+- `DashboardClient.tsx:27` — `baseCurrency: 'SAR'`
+- `SearchClient.tsx:78` — hardcoded demo result with `'4,250 SAR', '2024-04-20'`
+- `useGoodsReceipts.ts:17,133` — `supplierCurrency: 'USD'` and `'SAR'`
+
+**Affected Files:**
+- `apps/web/src/features/dashboard/components/StoreManagerDashboard.tsx`
+- `apps/web/src/app/[locale]/(app)/dashboard/DashboardClient.tsx`
+- `apps/web/src/app/[locale]/(app)/search/SearchClient.tsx`
+- `apps/web/src/features/purchasing/api/useGoodsReceipts.ts`
+- `apps/web/src/features/purchasing/components/purchase-order-form.tsx`
+
+**Implementation Steps:**
+
+1. **`StoreManagerDashboard.tsx`:** Use the settings hook instead of literal:
+```tsx
+const { data: settings } = useSettings();
+const baseCurrency = settings?.base_currency ?? 'SAR';
+// ...
+value={formatCurrency(stats.totalValue, baseCurrency, locale as 'ar' | 'en')}
+```
+
+2. **`DashboardClient.tsx`:** Remove `baseCurrency: 'SAR'` from the default object. Read from `useSettings()`.
+
+3. **`SearchClient.tsx`:** Remove the entire hardcoded result object:
+```tsx
+// REMOVE THIS:
+{ metadata: { [isRtl ? 'التاريخ' : 'Date']: '2024-04-20', [isRtl ? 'الإجمالي' : 'Total']: '4,250 SAR' } }
+```
+Connect to the real search API endpoint, or render an empty state if search is not yet implemented.
+
+4. **`useGoodsReceipts.ts`:**
+- Remove `supplierCurrency: 'USD'` default (line 17) — fetch from the associated PO's currency.
+- Remove `supplierCurrency: 'SAR' // Can be refined to fetch from PO` (line 133) — use `grn.purchaseOrder.currency.code`.
+
+5. **`purchase-order-form.tsx`:** `baseCurrency || 'SAR'` is acceptable IF `baseCurrency` comes from settings. Verify the hook call is present.
+
+**Acceptance Criteria:**
+- `[ ]` No literal `'SAR'` in `StoreManagerDashboard.tsx` financial display
+- `[ ]` No literal `'SAR'` in `DashboardClient.tsx` initialization
+- `[ ]` `SearchClient.tsx` hardcoded demo record removed
+- `[ ]` `useGoodsReceipts.ts` fetches supplier currency from PO data
+- `[ ]` All currency displays use `settings?.base_currency` with appropriate fallback
+- `[ ]` Manual QA: verify dashboard renders correctly when base_currency is 'AED'
+
+---
+
+### TASK-009 🔴 — Add Void/Cancellation Workflow States (Phase 1: CANCELLED for DRAFT)
+**Audit Ref:** `C-WF-3`, `C-INV-4`, `CRIT-4`
+**Priority:** CRITICAL — Phase 1 (VOIDED for POSTED deferred to Sprint 1)
+**Effort:** 2 days
+
+**Problem:**
+No document can be voided or cancelled once created. There is no reversal path in any state machine.
+This forces manual SQL intervention for any erroneous posting in production.
+
+**Phase 1 Scope (Sprint 0):**
+- Add `CANCELLED` state for DRAFT-stage documents (safe, no ledger impact)
+- Stub VOIDED state in shared-types for future implementation
+
+**Phase 2 Scope (Sprint 1 — TASK-019):**
+- Full VOIDED state for POSTED documents with offsetting ledger entries
+
+**Affected Files:**
+- `packages/shared-types/src/index.ts` — **ADD** `CANCELLED` and `VOIDED` states to state machines
+- `apps/api/src/modules/workflow/workflow.service.ts` — verify transitions are picked up
+- `apps/api/src/modules/purchase-requests/purchase-requests.controller.ts` — **ADD** CANCEL endpoint
+- `apps/api/src/modules/purchasing/purchasing.controller.ts` — **ADD** CANCEL endpoint
+- `apps/web/src/app/[locale]/(app)/(procurement)/purchase-requests/` — **ADD** Cancel button
+
+**Implementation Steps:**
+
+1. In `shared-types`, add `CANCELLED` to relevant status enums and state machine transitions:
+```ts
+// PR: DRAFT → CANCELLED (by creator or ADMIN)
+// PO: DRAFT → CANCELLED (by creator or ADMIN)
+// Transfer: DRAFT → CANCELLED (before SHIP)
+// Adjustment: DRAFT → CANCELLED (before POST)
+// Issue: DRAFT → CANCELLED (before POST)
+// Kitchen Request: DRAFT → CANCELLED (before POST)
+```
+
+2. Add `CANCEL` action to `canPerformActionV2` logic for each document type.
+
+3. Add `POST /purchase-requests/:id/cancel`, `POST /purchase-orders/:id/cancel` etc. — each calling `workflow.service.executeTransition()` with action `CANCEL`.
+
+4. Add cancel button in frontend detail views guarded by `canPerformActionV2`.
+
+5. VOIDED state for POSTED documents: stub the enum value, add schema migration, leave service implementation for TASK-019.
+
+**Acceptance Criteria:**
+- `[ ]` `CANCELLED` state exists in shared-types state machine for all document types at DRAFT stage
+- `[ ]` `POST /:documentType/:id/cancel` endpoints exist and enforce role via `canPerformActionV2`
+- `[ ]` Cancel writes ApprovalEvent and AuditLog entry
+- `[ ]` Cancel button visible in frontend for eligible documents
+- `[ ]` E2E test: workflow-transitions.e2e-spec.ts — DRAFT → CANCELLED transition
+- `[ ]` A POSTED document cannot be cancelled (only VOIDED — Phase 2)
+
+---
+
+## SPRINT 1 — High Priority Post-Launch Fixes
+> **Goal:** Resolve all HIGH-priority items. Estimated: **2 weeks post-pilot**
+
+---
+
+### TASK-010 🟠 — Persist Low-Stock Alert Debounce to Redis
+**Audit Ref:** `C-BE-5`, `HIGH-1`
+**Priority:** HIGH
+**Effort:** 0.5 days
+
+**Problem:**
+`LowStockAlertJob.alertDebounceRegistry` is an in-memory `Map`. On any server restart, all debounce state is lost and 06:00 AM scan fires ALL low-stock alerts again.
+
+**Affected Files:**
+- `apps/api/src/jobs/low-stock-alert.job.ts` — **MODIFY** debounce storage
+- `apps/api/src/app.module.ts` — verify Redis/BullMQ is available
+
+**Implementation Steps:**
+1. Inject `@InjectRedis()` or use BullMQ's underlying Redis connection to persist debounce keys.
+2. Replace `this.alertDebounceRegistry.set(key, now)` with:
+```ts
+await this.redis.set(
+  `low_stock_debounce:${debounceKey}`,
+  Date.now().toString(),
+  'EX', 86400 // 24 hours TTL
+);
+```
+3. Replace `this.alertDebounceRegistry.get(key)` with:
+```ts
+const lastAlertTime = await this.redis.get(`low_stock_debounce:${debounceKey}`);
+if (lastAlertTime && Date.now() - parseInt(lastAlertTime) < this.DEBOUNCE_DURATION_MS) continue;
+```
+
+**Acceptance Criteria:**
+- `[ ]` Debounce state survives API restart
+- `[ ]` Redis keys have 24-hour TTL
+- `[ ]` Unit test: `low-stock-alert.job.spec.ts` — debounce persists across simulated restarts
+
+---
+
+### TASK-011 🟠 — Add Unique Constraint on document_sequences
+**Audit Ref:** `H-DB-1`, `H-NUM-1`, `HIGH-2`
+**Priority:** HIGH
+**Effort:** 0.25 days
+
+**Affected Files:**
+- `apps/api/prisma/migrations/` — **NEW** migration
+- `apps/api/prisma/schema.prisma` — **ADD** `@@unique` constraint
+
+**Implementation Steps:**
+1. Add to Prisma schema:
 ```prisma
-model AuditLog {
-  @@index([targetTable, targetId])
-  @@index([userId, createdAt(sort: Desc)])
-  @@index([createdAt(sort: Desc)])
-}
-
-model ApprovalEvent {
-  @@index([documentId, documentType])
-}
-
-model RefreshToken {
-  @@index([expiresAt])  // For cleanup queries
-}
-
-model NotificationLog {
-  @@index([createdAt(sort: Desc)])  // For TTL cleanup
+model DocumentSequence {
+  // ...
+  @@unique([documentType, year, branchId])
 }
 ```
+2. Generate and apply migration.
 
-**Acceptance Criteria**:
-- [ ] Migration runs cleanly: `prisma migrate deploy`
-- [ ] `EXPLAIN ANALYZE` on `AuditLog WHERE targetTable = X AND targetId = Y` uses index scan
+**Acceptance Criteria:**
+- `[ ]` Duplicate insert on `(documentType, year, branchId)` fails with unique constraint violation
+- `[ ]` E2E test: `document-sequence` concurrent generation still produces sequential numbers
 
 ---
 
-### S1-T08 `[BE][SEC]` Add Helmet Security Headers
-**Severity**: 🔴 HIGH (H-1)  
-**File**: `apps/api/src/main.ts`
+### TASK-012 🟠 — Add Lot-Level Cross-Check to Reconciliation Job
+**Audit Ref:** `C-INV-3`, `HIGH-3`
+**Priority:** HIGH
+**Effort:** 1 day
 
-```bash
-npm install helmet
+**Problem:**
+The daily reconciliation only checks `warehouse_items.qty_on_hand` vs `SUM(stock_ledger.quantity)`.
+Lot-level balances in `warehouse_item_lots.qty_on_hand` are not verified against per-lot stock ledger sums.
+A lot-level drift (correct total, wrong lot split) goes undetected.
+
+**Affected Files:**
+- `apps/api/src/modules/ledger/reconciliation.job.ts` — **ADD** lot-level check section
+
+**Implementation Steps:**
+1. After the existing item-level check, add:
+```ts
+// Check C: Lot-level balance vs stock ledger per lot
+const lotLedgerTotals = await prisma.stockLedger.groupBy({
+  by: ['warehouseId', 'itemId', 'lotId'],
+  _sum: { quantity: true },
+  where: { lotId: { not: null } },
+});
+
+const lotBalances = await prisma.warehouseItemLot.findMany({
+  include: { lot: true, warehouse: true, item: true }
+});
+
+for (const lot of lotBalances) {
+  const key = `${lot.warehouseId}_${lot.itemId}_${lot.lotId}`;
+  const ledgerQty = lotLedgerMap.get(key) ?? 0;
+  if (!new Prisma.Decimal(lot.qtyOnHand).equals(new Prisma.Decimal(ledgerQty))) {
+    // Log warning and raise ADMIN notification (soft check — do not freeze automatically)
+  }
+}
 ```
-```typescript
-import helmet from 'helmet';
-app.use(helmet());
+2. Log to `reconciliation_runs` with additional `lotDiscrepanciesFound` field (requires schema migration).
+
+**Acceptance Criteria:**
+- `[ ]` Reconciliation job checks lot-level balances against per-lot stock ledger sums
+- `[ ]` Lot-level discrepancy creates ADMIN notification (soft alert, not freeze)
+- `[ ]` `reconciliation_runs` records lot discrepancy count
+
+---
+
+### TASK-013 🟠 — Validate Adjustment IN Unit Cost (Prevent Zero WAC)
+**Audit Ref:** `H-INV-2`, `HIGH-4`
+**Priority:** HIGH
+**Effort:** 0.5 days
+
+**Problem:**
+If an Adjustment IN is posted without a `unitCost`, WAC defaults to `0`, permanently corrupting inventory valuation for that item.
+
+**Affected Files:**
+- `apps/api/src/modules/operations/adjustment-post.service.ts` — **ADD** validation
+- DTO validation for adjustment lines — **ADD** `@IsPositive()` on `unitCost` for IN adjustments
+- `apps/web/src/` — **ADD** unit cost field requirement in Adjustment form for type=IN
+
+**Implementation Steps:**
+1. In `adjustment-post.service.ts`, for lines with positive quantity (IN):
+```ts
+if (Number(line.quantity) > 0 && (!line.unitCost || Number(line.unitCost) <= 0)) {
+  throw new BadRequestException(
+    `Line for SKU ${item.sku}: Unit cost is required for positive (IN) adjustments`
+  );
+}
+```
+2. Add `@IsPositive()` validator on `unitCost` in the adjustment line DTO when type is `IN`.
+3. In frontend, mark unit cost as required for IN adjustments.
+
+**Acceptance Criteria:**
+- `[ ]` Posting an IN adjustment with missing/zero unit cost throws 400 Bad Request
+- `[ ]` Frontend form marks unit cost as required for IN adjustments
+- `[ ]` Unit test: `adjustment-post.service.spec.ts` — zero-cost IN adjustment is rejected
+
+---
+
+### TASK-014 🟠 — Adjust Rate Limiting for Operational Endpoints
+**Audit Ref:** `C-SEC-1`, `HIGH-5`
+**Priority:** HIGH
+**Effort:** 0.5 days
+
+**Problem:**
+Global throttle of 10 req/60s is too low for warehouse operations (barcode scanning, multi-line GRN creation).
+A single GRN with 20 line items processed sequentially would hit this limit.
+
+**Affected Files:**
+- `apps/api/src/app.module.ts` — **MODIFY** ThrottlerModule config
+- `apps/api/src/modules/operations/*.controller.ts` — **ADD** `@Throttle` overrides
+
+**Implementation Steps:**
+1. Update global throttle to a saner default (e.g., 60 req/60s or 100 req/60s):
+```ts
+ThrottlerModule.forRoot([
+  { name: 'short', ttl: 60000, limit: 100 },  // General API
+  { name: 'auth', ttl: 60000, limit: 10 },    // Auth endpoints only
+])
+```
+2. Apply strict `@Throttle({ auth: { limit: 5 } })` override on `/auth/login` and `/auth/refresh`.
+3. Apply relaxed `@SkipThrottle()` or high-limit override on barcode-scan-heavy endpoints like GRN line additions.
+
+**Acceptance Criteria:**
+- `[ ]` Login endpoint: max 10 req/60s
+- `[ ]` General API: min 60 req/60s (or higher)
+- `[ ]` A barcode-scan workflow of 30 rapid requests does not get throttled
+- `[ ]` Auth endpoints remain strictly rate-limited
+
+---
+
+### TASK-015 🟠 — Add TRANSFER_RECEIVED NotificationLog Entry
+**Audit Ref:** `H-BE-4`, `HIGH-10`
+**Priority:** HIGH
+**Effort:** 0.25 days
+
+**Affected Files:**
+- `apps/api/src/modules/workflow/workflow.service.ts` — **ADD** NotificationLog for TRANSFER_RECEIVED
+
+**Implementation Steps:**
+1. In `executeTransition()`, find the `case 'TRANSFER_RECEIVED'` block (or wherever the outbox event is written).
+2. After the outbox write, add:
+```ts
+await tx.notificationLog.create({
+  data: {
+    targetRole: Role.ADMIN,
+    warehouseId: document.fromWarehouseId,
+    message: `Transfer ${document.transferNumber} received at ${document.toWarehouse.name}`,
+    isRead: false,
+  },
+});
 ```
 
-**Acceptance Criteria**:
-- [ ] `X-Frame-Options: DENY` header present on all responses
-- [ ] `X-Content-Type-Options: nosniff` header present
-- [ ] `Content-Security-Policy` header present
-- [ ] `Strict-Transport-Security` header present (production only)
+**Acceptance Criteria:**
+- `[ ]` TRANSFER_RECEIVED creates a NotificationLog entry
+- `[ ]` E2E test: `workflow-e2e.e2e-spec.ts` — verify notification created on receive
 
 ---
 
-## SPRINT 2 — Critical Blockers: Deployment Infrastructure
-> **Goal**: Make the system deployable in containers.  
-> **Duration**: ~5 days
+### TASK-016 🟠 — Add WAC History and Lot Trace to Frontend Reports Hub
+**Audit Ref:** `H-FE-2`, `H-RPT-*`, `HIGH-7`
+**Priority:** HIGH
+**Effort:** 1 day
+
+**Affected Files:**
+- `apps/web/src/app/[locale]/(app)/reports/ReportsHubClient.tsx` — **ADD** entries
+- `apps/web/src/app/[locale]/(app)/reports/wac-history/` — **CREATE** page
+- `apps/web/src/app/[locale]/(app)/reports/lot-trace/` — **CREATE** page
+
+**Implementation Steps:**
+1. Add WAC History and Lot Trace entries to `ReportsHubClient.tsx`.
+2. Create `wac-history/page.tsx`:
+   - Query param: `itemId` (required), `startDate`, `endDate`
+   - Call `GET /reports/wac-history?itemId=...`
+   - Table: Date | SKU | Document Type | Qty | Unit Price | New WAC
+   - Export button → `GET /reports/wac-history/export`
+3. Create `lot-trace/page.tsx`:
+   - Query param: `lotId` (required)
+   - Call `GET /reports/lot-trace?lotId=...`
+   - Header: Lot Number, Item SKU, Received Date, Expiry Date, Status
+   - Table: Document Number | Document Type | Qty Allocated | Date | Status
+   - Export button → `GET /reports/lot-trace/export`
+
+**Acceptance Criteria:**
+- `[ ]` WAC History appears in Reports Hub navigation
+- `[ ]` Lot Trace appears in Reports Hub navigation
+- `[ ]` Both pages load data from real API
+- `[ ]` Both pages have working XLSX export buttons
 
 ---
 
-### S2-T09 `[DO]` Create Multi-Stage Dockerfile for API
-**Severity**: 🔴 CRITICAL (C-6)  
-**File**: `apps/api/Dockerfile` [NEW]
+### TASK-017 🟠 — Fix Reports Export Memory Issue (Chunked/Streamed Export)
+**Audit Ref:** `H-RPT-1`, `C-PERF-2`, `HIGH-9`
+**Priority:** HIGH
+**Effort:** 1.5 days
 
-```dockerfile
-# Stage 1: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json turbo.json ./
-COPY packages/ packages/
-COPY apps/api/ apps/api/
-RUN npm ci --workspace=apps/api
-RUN npm run build --workspace=apps/api
+**Problem:**
+`exportMovements()` calls `getMovements()` with limit `'1000000'` — materializes the entire result in memory before streaming.
+For a warehouse with 1M movements, this causes out-of-memory crashes.
 
-# Stage 2: Production
-FROM node:20-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/node_modules ./node_modules
-COPY --from=builder /app/apps/api/prisma ./prisma
-EXPOSE 4000
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+**Affected Files:**
+- `apps/api/src/modules/reports/reports.controller.ts` — **MODIFY** export methods
+- `apps/api/src/modules/reports/reports.service.ts` — **EXTRACT** query logic (see TASK-018)
+
+**Implementation Steps:**
+1. Replace unlimited `take: 1000000` with cursor-based chunking:
+```ts
+const CHUNK_SIZE = 1000;
+let lastId: string | undefined;
+const allData: FormattedRow[] = [];
+
+do {
+  const chunk = await this.prisma.stockLedger.findMany({
+    where,
+    take: CHUNK_SIZE,
+    skip: lastId ? 1 : 0,
+    cursor: lastId ? { id: lastId } : undefined,
+    orderBy: { postedAt: 'desc' },
+    include: { item: true },
+  });
+  allData.push(...chunk.map(formatRow));
+  lastId = chunk.length === CHUNK_SIZE ? chunk[chunk.length - 1].id : undefined;
+} while (lastId);
+```
+2. Add a configurable export limit: `MAX_EXPORT_ROWS = parseInt(process.env.MAX_EXPORT_ROWS || '50000')`.
+3. If the count exceeds the limit, return a `413 Payload Too Large` with a message to apply date filters.
+
+**Acceptance Criteria:**
+- `[ ]` No export endpoint uses `take: 1000000`
+- `[ ]` Exports are chunked in batches of 1000 rows
+- `[ ]` Export requests for datasets > `MAX_EXPORT_ROWS` return 413 with a helpful message
+- `[ ]` Export of 10k rows completes without OOM
+
+---
+
+### TASK-018 🟠 — Extract ReportsService from ReportsController
+**Audit Ref:** `H-BE-2`, `HIGH-8`
+**Priority:** HIGH
+**Effort:** 1.5 days
+
+**Problem:**
+All 1,038 lines of query logic are in `reports.controller.ts`. This violates SRP, makes unit testing impossible, and cannot be reused.
+
+**Affected Files:**
+- `apps/api/src/modules/reports/reports.controller.ts` — **EXTRACT** all query methods
+- `apps/api/src/modules/reports/reports.service.ts` — **CREATE**
+- `apps/api/src/modules/reports/reports.module.ts` — **ADD** provider
+
+**Implementation Steps:**
+1. Create `reports.service.ts` with all data-fetching methods (getKpis, getDashboard, getMovements, getExpiryReport, getStocktakeVariance, getProcurementStatus, getCurrencySummaries, getWacHistory, getLotTrace, getOverdueTransfersList).
+2. Controller becomes thin — delegates to service, handles HTTP concerns (response headers, XLSX write, query parsing).
+3. Add `reports.service.spec.ts` with unit tests.
+
+**Acceptance Criteria:**
+- `[ ]` `reports.controller.ts` contains no direct Prisma query calls
+- `[ ]` `reports.service.ts` contains all query logic
+- `[ ]` `reports.service.spec.ts` covers all report queries
+- `[ ]` All existing report API endpoints remain functional
+
+---
+
+### TASK-019 🟠 — Implement VOIDED State for POSTED Documents (Phase 2)
+**Audit Ref:** `C-WF-3`, `C-INV-4`
+**Priority:** HIGH (deferred from Sprint 0 due to complexity)
+**Effort:** 3 days
+
+**Problem:**
+Once a GRN, Issue, or Adjustment is POSTED, there is no system mechanism to reverse it. Manual SQL is the only option.
+
+**Affected Files:**
+- `packages/shared-types/src/index.ts` — **ADD** `VOIDED` states and `VOID` action
+- `apps/api/src/modules/operations/grn-void.service.ts` — **CREATE**
+- `apps/api/src/modules/operations/issue-void.service.ts` — **CREATE**
+- `apps/api/src/modules/operations/adjustment-void.service.ts` — **CREATE**
+- `apps/api/prisma/migrations/` — **ADD** VOIDED enum values
+- Frontend void buttons on POSTED document detail pages
+
+**Implementation Steps:**
+1. Add `VOIDED` to status enums in shared-types and Prisma schema.
+2. Create void services with offsetting ledger entries:
+   - GRN void: creates negative StockLedger entries for each GRN line (reversal)
+   - Recalculates WAC by subtracting the received cost
+   - Creates CostLedger entry with negative quantity
+3. Void is ADMIN-only action.
+4. Void writes AuditLog, ApprovalEvent, and creates VOIDED NotificationLog.
+5. Voided documents are read-only; no further transitions possible.
+
+**Acceptance Criteria:**
+- `[ ]` `VOIDED` state exists in state machine for GRN, Issue, Adjustment, Transfer
+- `[ ]` `POST /:documentType/:id/void` endpoint exists and is ADMIN-only
+- `[ ]` Void creates offsetting StockLedger and CostLedger entries
+- `[ ]` WAC is recalculated after GRN void
+- `[ ]` E2E test: GRN POST → VOID → verify StockLedger net zero
+- `[ ]` E2E test: Issue POST → VOID → verify stock restored
+
+---
+
+## SPRINT 2-3 — Medium Priority Hardening
+> **Goal:** System hardening, observability, security depth. Estimated: **3–4 weeks**
+
+---
+
+### TASK-020 🟡 — Add SMTP Runtime Configuration Admin UI
+**Audit Ref:** `C-BE-4`, `C-EMAIL-1` (Phase 2)
+**Priority:** MEDIUM
+**Effort:** 1.5 days
+
+**Implementation:**
+1. `POST /admin/settings/smtp` — saves SMTP config to DB `system_settings` table (encrypted at rest).
+2. `EmailService` reads from DB on startup (with env var fallback).
+3. Frontend: Admin → Settings → Email Configuration panel.
+
+**Acceptance Criteria:**
+- `[ ]` SMTP settings configurable via Admin UI without server restart
+- `[ ]` SMTP settings stored encrypted in DB
+- `[ ]` "Test Email" button in UI sends a test email and shows result
+
+---
+
+### TASK-021 🟡 — Add CSRF Protection on Mutating Endpoints
+**Audit Ref:** `C-SEC-2`
+**Priority:** MEDIUM
+**Effort:** 1 day
+
+**Implementation:**
+1. Implement double-submit cookie CSRF pattern or use `csurf`/`nestjs-csrf`.
+2. Apply CSRF middleware to all `POST`, `PATCH`, `PUT`, `DELETE` routes.
+3. Frontend: include CSRF token in all state-mutating requests.
+
+---
+
+### TASK-022 🟡 — Add Login Failure Audit Logging
+**Audit Ref:** `H-SEC-3`
+**Priority:** MEDIUM
+**Effort:** 0.5 days
+
+**Affected Files:**
+- `apps/api/src/auth/auth.service.ts` — **ADD** audit log on failed login
+
+**Implementation:**
+```ts
+// On failed login:
+await this.prisma.auditLog.create({
+  data: {
+    userId: user?.id ?? null,
+    action: 'LOGIN_FAILED',
+    targetTable: 'users',
+    targetId: user?.id ?? email,
+    ipAddress,
+    beforeStateJson: JSON.stringify({ email, reason: 'invalid_password' }),
+    afterStateJson: JSON.stringify({ attempt: 'FAILED' }),
+  }
+});
 ```
 
-**Acceptance Criteria**:
-- [ ] `docker build -f apps/api/Dockerfile .` completes without error
-- [ ] Container starts, passes `/health` with live DB
-- [ ] Image size < 500MB
+**Acceptance Criteria:**
+- `[ ]` Failed login attempts recorded in `audit_logs`
+- `[ ]` Includes IP address, email attempted, timestamp
 
 ---
 
-### S2-T10 `[DO]` Create Multi-Stage Dockerfile for Web
-**Severity**: 🔴 CRITICAL (C-6)  
-**File**: `apps/web/Dockerfile` [NEW]
+### TASK-023 🟡 — Add Failed Outbox Event Requeue UI
+**Audit Ref:** `H-OBS-4`
+**Priority:** MEDIUM
+**Effort:** 1 day
 
-```dockerfile
-# Stage 1: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-COPY package*.json turbo.json tsconfig.base.json ./
-COPY packages/ packages/
-COPY apps/web/ apps/web/
-RUN npm ci --workspace=apps/web
-RUN npm run build --workspace=apps/web
+**Implementation:**
+1. `GET /admin/outbox/failed` — list all `FAILED` outbox events with details.
+2. `POST /admin/outbox/:id/retry` — resets status to `PENDING`, clears `attempts` counter.
+3. Frontend: Admin → Outbox Monitoring panel.
 
-# Stage 2: Production
-FROM node:20-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/public ./public
-EXPOSE 3000
-CMD ["node", "server.js"]
+---
+
+### TASK-024 🟡 — Add Frozen Items Dashboard
+**Audit Ref:** `H-OBS-3`
+**Priority:** MEDIUM
+**Effort:** 0.5 days
+
+**Implementation:**
+1. `GET /admin/inventory/frozen` — list all `isFrozen: true` items with warehouse, last reconciliation discrepancy, and freeze timestamp.
+2. `POST /admin/inventory/:id/unfreeze` — ADMIN-only; unfreezes and writes AuditLog.
+3. Frontend: Admin → Inventory Integrity panel.
+
+---
+
+### TASK-025 🟡 — Add Quarantine Lot Management UI
+**Audit Ref:** `H-INV-1`
+**Priority:** MEDIUM
+**Effort:** 1 day
+
+**Implementation:**
+1. `PATCH /lots/:id/quarantine` and `PATCH /lots/:id/release-quarantine` — ADMIN/INV_MANAGER.
+2. Frontend: Lot detail view — quarantine status badge + action buttons.
+
+---
+
+### TASK-026 🟡 — Parameterize seed.prod.ts for Multi-Client Deployment
+**Audit Ref:** `C-DB-3`
+**Priority:** MEDIUM
+**Effort:** 0.5 days
+
+**Affected Files:**
+- `apps/api/prisma/seed.prod.ts`
+
+**Implementation:**
+Replace hardcoded SAR/USD values with env vars:
+```ts
+const BASE_CURRENCY_CODE = process.env.BASE_CURRENCY_CODE || 'SAR';
+const BASE_CURRENCY_NAME = process.env.BASE_CURRENCY_NAME || 'Saudi Riyal';
+```
+Remove hardcoded FX rates — they should be entered via admin UI post-deployment.
+
+---
+
+### TASK-027 🟡 — Add Branch-Aware XLSX Report Headers
+**Audit Ref:** `H-RPT-4`
+**Priority:** MEDIUM
+**Effort:** 0.5 days
+
+**Affected Files:**
+- `apps/api/src/modules/reports/reports.controller.ts` — **MODIFY** `generateXlsxResponse()`
+
+**Implementation:**
+1. Accept `branchName` and `warehouseName` as parameters to `generateXlsxResponse()`.
+2. Add these to row 1/2 of the XLSX alongside "LogiRest Inventory Management System".
+
+---
+
+### TASK-028 🟡 — Add Expiry Warning Scheduled Job
+**Audit Ref:** Missing automation, `H-EMAIL-3`
+**Priority:** MEDIUM
+**Effort:** 1 day
+
+**Implementation:**
+1. New job `expiry-alert.job.ts` with `@Cron('0 7 * * *')` (07:00 AM daily).
+2. Queries `warehouse_item_lots` where `expiryDate` within 7 days.
+3. Dispatches `EXPIRY_WARNING` outbox event per warehouse.
+4. Debounce using Redis keys (same pattern as TASK-010).
+
+---
+
+### TASK-029 🟡 — Add Prisma Middleware for Soft-Delete Enforcement
+**Audit Ref:** `H-BE-3`
+**Priority:** MEDIUM
+**Effort:** 1 day
+
+**Affected Files:**
+- `apps/api/src/database/prisma.service.ts` — **ADD** middleware
+
+**Implementation:**
+```ts
+this.$use(async (params, next) => {
+  const softDeleteModels = ['Item', 'Supplier', 'Warehouse', 'User'];
+  if (softDeleteModels.includes(params.model) && params.action === 'findMany') {
+    params.args = params.args ?? {};
+    params.args.where = { ...params.args.where, isActive: true };
+  }
+  return next(params);
+});
 ```
 
-**Acceptance Criteria**:
-- [ ] `docker build -f apps/web/Dockerfile .` completes without error
-- [ ] Frontend loads and hits the API correctly
-
 ---
 
-### S2-T11 `[DO]` Create docker-compose.yml for Full Stack
-**Severity**: 🔴 CRITICAL (C-6)  
-**File**: `docker-compose.yml` [NEW]
+### TASK-030 🟡 — Add CI Schema Drift Check
+**Audit Ref:** `C-DB-4`
+**Priority:** MEDIUM
+**Effort:** 0.5 days
 
+**Implementation:**
+Add to CI pipeline (GitHub Actions or equivalent):
 ```yaml
-services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: logirest
-      POSTGRES_USER: logirest
-      POSTGRES_PASSWORD: logirest_secret
-    volumes: [db_data:/var/lib/postgresql/data]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U logirest"]
-      interval: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    environment:
-      DATABASE_URL: postgresql://logirest:logirest_secret@db:5432/logirest
-      REDIS_URL: redis://redis:6379
-      FRONTEND_URL: http://web:3000
-      NODE_ENV: production
-    depends_on:
-      db: { condition: service_healthy }
-      redis: { condition: service_healthy }
-    ports: ["4000:4000"]
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://api:4000
-    depends_on: [api]
-    ports: ["3000:3000"]
-
-volumes:
-  db_data:
+- name: Check Prisma schema drift
+  run: npx prisma migrate status
+  env:
+    DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
 ```
-
-**Acceptance Criteria**:
-- [ ] `docker compose up` starts all 4 services
-- [ ] `curl http://localhost:4000/health` returns `{ status: 'OK', db: 'connected' }`
-- [ ] Frontend login flow works end-to-end
+Fail CI if pending migrations exist in a staging environment.
 
 ---
 
-### S2-T12 `[DO]` Create Production Seed File
-**Severity**: 🔴 CRITICAL (C-4)  
-**File**: `apps/api/prisma/seed.prod.ts` [NEW]
+### TASK-031 🟡 — Add WAC Consistency Verification Job
+**Audit Ref:** Runtime integrity, `H-TEST-1`
+**Priority:** MEDIUM
+**Effort:** 1 day
 
-**Problem**: Current `seed.ts` creates 3 users with `password123`. Never run in production.
-
-**Implementation**:
-- Create `seed.prod.ts` with **only** essential reference data (currencies, UoMs, categories)
-- NO users, NO fake stock, NO demo branches
-- Add first-run admin creation prompt via CLI args
-- Update `package.json` scripts: `"seed:prod": "ts-node prisma/seed.prod.ts"`
-- Add `README` warning: `seed.ts` is DEV ONLY
-
-**Acceptance Criteria**:
-- [ ] `seed.prod.ts` contains no hardcoded user credentials
-- [ ] Contains SAR, USD, EUR currencies
-- [ ] Contains standard UoMs (KG, LTR, PCS, etc.)
-- [ ] `seed.ts` header has prominent `DEV ONLY — DO NOT RUN IN PRODUCTION` warning
-- [ ] `.env.example` documents how to create the first admin user
+**Implementation:**
+1. Weekly `@Cron('0 2 * * 0')` (02:00 AM Sunday) job.
+2. Computes `SUM(cost_ledger.quantity * cost_ledger.unit_price)` vs `warehouse_items.qty_on_hand * warehouse_items.wac` per item.
+3. Flags items where the cost model diverges by > 0.01%.
+4. Creates ADMIN notification and logs to a new `cost_integrity_runs` table.
 
 ---
 
-### S2-T13 `[DO]` Add `.env.example` for Production
-**Severity**: 🔴 CRITICAL  
-**File**: `apps/api/.env.example`
-
-**Add missing production variables**:
-```bash
-# Required in production
-DATABASE_URL=postgresql://user:pass@host:5432/logirest
-PORT=4000
-FRONTEND_URL=https://your-domain.com
-JWT_ACCESS_SECRET=<min-32-char-random-secret>
-JWT_REFRESH_SECRET=<min-32-char-random-secret>
-NODE_ENV=production
-
-# Optional
-IDEMPOTENCY_TTL_HOURS=24
-TRANSFER_OVERDUE_DAYS=7
-REDIS_URL=redis://localhost:6379
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=noreply@logirest.app
-```
-
-**Acceptance Criteria**:
-- [ ] All env vars used in codebase documented
-- [ ] `envSchema` in `env.validation.ts` updated to validate `REDIS_URL` (optional with default)
-- [ ] `JWT_SECRET` removed from `.env.example` (unused, misleading)
+## SPRINT 4+ — Low Priority Technical Excellence
 
 ---
 
-### S2-T14 `[DO]` Add GitHub Actions CI Pipeline
-**Severity**: 🔵 LOW → Required for production  
-**File**: `.github/workflows/ci.yml` [NEW]
+### TASK-032 🔵 — Add OpenTelemetry Distributed Tracing
+**Audit Ref:** `H-OBS-1`
+**Priority:** LOW
+**Effort:** 2 days
 
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  api-test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env: { POSTGRES_DB: test, POSTGRES_USER: test, POSTGRES_PASSWORD: test }
-        options: --health-cmd pg_isready
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci
-      - run: npm run test --workspace=apps/api
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
-          JWT_ACCESS_SECRET: test-secret-at-least-32-chars-long
-          JWT_REFRESH_SECRET: test-secret-at-least-32-chars-long
-          FRONTEND_URL: http://localhost:3000
-  
-  web-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci
-      - run: npm run build --workspace=apps/web
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:4000
-```
-
-**Acceptance Criteria**:
-- [ ] Pipeline runs on every push
-- [ ] API tests pass in CI environment
-- [ ] Web builds without error in CI
+Propagate `x-correlation-id` through BullMQ worker context. Instrument Prisma queries with OpenTelemetry spans.
 
 ---
 
-## SPRINT 3 — Email, Async Delivery & Notifications
-> **Goal**: Make the notification system actually notify users.  
-> **Duration**: ~7 days
+### TASK-033 🔵 — Add Prometheus Metrics Endpoint
+**Audit Ref:** `H-OBS-2`
+**Priority:** LOW
+**Effort:** 1.5 days
+
+Expose `/metrics` with:
+- `logirest_posting_operations_total` (counter by document_type)
+- `logirest_warehouse_locks_active` (gauge)
+- `logirest_reconciliation_discrepancies_total` (counter)
+- `logirest_outbox_events_failed_total` (counter)
 
 ---
 
-### S3-T15 `[BE]` Implement BullMQ + Redis Module
-**Severity**: 🔴 CRITICAL (C-7)  
-**Files**: `apps/api/src/app.module.ts`, `apps/api/package.json`
+### TASK-034 🔵 — Add Document Numbering Race Condition E2E Test
+**Audit Ref:** `C-TEST-2`
+**Priority:** LOW
+**Effort:** 0.5 days
 
-```bash
-npm install bullmq @nestjs/bullmq ioredis
-```
-```typescript
-// app.module.ts
-BullModule.forRoot({ connection: { url: process.env.REDIS_URL } }),
-BullModule.registerQueue({ name: 'outbox' }),
-```
-
-**Acceptance Criteria**:
-- [ ] Redis connection established on startup
-- [ ] `outbox` queue visible in Redis via CLI
-- [ ] Graceful shutdown drains queue
+Concurrent document creation test: 20 parallel requests for PR creation in same branch/year — verify all receive unique sequential numbers.
 
 ---
 
-### S3-T16 `[BE]` Create OutboxEvent Prisma Model + Migration
-**Severity**: 🔴 CRITICAL (C-7)  
-**File**: `apps/api/prisma/schema.prisma`
+### TASK-035 🔵 — Add WAC Accuracy E2E Test
+**Audit Ref:** `H-TEST-1`
+**Priority:** LOW
+**Effort:** 0.5 days
 
-```prisma
-model OutboxEvent {
-  id          String   @id @default(uuid())
-  eventType   String
-  payload     Json
-  status      String   @default("PENDING")  // PENDING | SUCCEEDED | FAILED
-  attempts    Int      @default(0)
-  lastError   String?
-  processedAt DateTime?
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime // createdAt + 7 days for succeeded
-
-  @@index([status, createdAt])
-  @@map("outbox_events")
-}
-```
-
-**Acceptance Criteria**:
-- [ ] Migration runs: `prisma migrate dev --name add_outbox_events`
-- [ ] `OutboxEvent` created atomically inside workflow transactions
+Full flow test: GRN POST (price X, qty Y) → Issue POST → Transfer → verify WAC at each step.
 
 ---
 
-### S3-T17 `[BE]` Create OutboxService — Transactional Event Writer
-**Severity**: 🔴 CRITICAL (C-7)  
-**File**: `apps/api/src/modules/outbox/outbox.service.ts` [NEW]
+### TASK-036 🔵 — Reconciliation Job E2E Integration Test
+**Audit Ref:** `H-TEST-2`
+**Priority:** LOW
+**Effort:** 0.5 days
 
-**Responsibilities**:
-- `writeEvent(tx, eventType, payload)` — writes to `outbox_events` inside caller's transaction
-- Called from `WorkflowService.executeTransition()` after status update
-
-**Acceptance Criteria**:
-- [ ] Outbox write is **inside** the same Prisma transaction as the status update
-- [ ] If transaction rolls back, no outbox event is created
-- [ ] `eventType` is one of: `PR_SUBMITTED`, `PR_APPROVED`, `PO_APPROVED`, `GRN_POSTED`, `ISSUE_POSTED`, `TRANSFER_SHIPPED`, `TRANSFER_RECEIVED`, `KITCHEN_REQUEST_SUBMITTED`, `ADJUSTMENT_POSTED`, `STOCKTAKE_POSTED`
+Deliberately inject drift (update `qty_on_hand` directly in test DB), trigger reconciliation, verify item is frozen and notification created.
 
 ---
 
-### S3-T18 `[BE]` Create OutboxWorker — BullMQ Processor
-**Severity**: 🔴 CRITICAL (C-7)  
-**File**: `apps/api/src/modules/outbox/outbox.worker.ts` [NEW]
+### TASK-037 🔵 — API Versioning and Deprecation Strategy
+**Audit Ref:** `C-SEC-4`
+**Priority:** LOW
+**Effort:** 1 day
 
-**Responsibilities**:
-- Polls `outbox_events WHERE status = PENDING ORDER BY createdAt ASC`
-- Dispatches email/push per `eventType`
-- Updates `status = SUCCEEDED | FAILED`, increments `attempts`
-- Retry up to 3 times with exponential backoff
-
-**Acceptance Criteria**:
-- [ ] Worker processes events within 10 seconds of creation
-- [ ] Failed events (3 attempts) set `status = FAILED`, log `lastError`
-- [ ] Succeeded events get `processedAt` timestamp
-- [ ] Duplicate events skipped (idempotent worker)
+Document the versioning contract. Add `Deprecation` and `Sunset` headers to endpoints planned for v2. Implement forwarding from `/api/v1` legacy routes.
 
 ---
 
-### S3-T19 `[BE]` Implement Email Delivery via SMTP
-**Severity**: 🔴 CRITICAL (C-3)  
-**File**: `apps/api/src/modules/outbox/email.service.ts` [NEW]
+### TASK-038 🔵 — DB Archival Policy for Audit Logs and Stock Ledger
+**Audit Ref:** `H-DB-3`
+**Priority:** LOW
+**Effort:** 1 day
 
-```bash
-npm install nodemailer @types/nodemailer
-```
+Define and document retention policy. Implement `@Cron('0 3 1 * *')` monthly archival job that moves `audit_logs` and `stock_ledger` older than 2 years to an `_archive` table or exports to cold storage.
 
-**Email Templates** (HTML — minimum viable):
-| EventType | Recipients | Subject |
+---
+
+### TASK-039 🔵 — Add Redis Health Check to /health Endpoint
+**Audit Ref:** Deployment risks
+**Priority:** LOW
+**Effort:** 0.25 days
+
+**Affected Files:**
+- `apps/api/src/health/health.controller.ts`
+
+Add Redis connectivity check (BullMQ queue ping) to the existing health endpoint response.
+
+---
+
+## SUMMARY TABLE
+
+| Task | Sprint | Priority | Area | Effort | Status |
+|---|---|---|---|---|---|
+| TASK-001 Admin Roles API | S0 | 🔴 CRIT | FE+BE | 2d | `[ ]` |
+| TASK-002 Replay Attack Handler | S0 | 🔴 CRIT | BE | 0.5d | `[ ]` |
+| TASK-003 Transfer Role Validation | S0 | 🔴 CRIT | BE | 1d | `[ ]` |
+| TASK-004 ISSUE_POSTED Outbox | S0 | 🔴 CRIT | BE | 0.5d | `[ ]` |
+| TASK-005 Reconciliation Cron | S0 | 🔴 CRIT | BE | 0.5d | `[ ]` |
+| TASK-006 SMTP Transparency | S0 | 🔴 CRIT | BE | 1d | `[ ]` |
+| TASK-007 DB Qty CHECK Constraints | S0 | 🔴 CRIT | DB | 0.5d | `[ ]` |
+| TASK-008 Remove Hardcoded SAR | S0 | 🔴 CRIT | FE | 1d | `[ ]` |
+| TASK-009 Void/Cancel Phase 1 | S0 | 🔴 CRIT | BE+FE | 2d | `[ ]` |
+| TASK-010 Redis Debounce | S1 | 🟠 HIGH | BE | 0.5d | `[ ]` |
+| TASK-011 DocSeq Unique Constraint | S1 | 🟠 HIGH | DB | 0.25d | `[ ]` |
+| TASK-012 Lot-Level Reconciliation | S1 | 🟠 HIGH | BE | 1d | `[ ]` |
+| TASK-013 Adjustment Zero WAC Guard | S1 | 🟠 HIGH | BE+FE | 0.5d | `[ ]` |
+| TASK-014 Rate Limit Adjustment | S1 | 🟠 HIGH | BE | 0.5d | `[ ]` |
+| TASK-015 TRANSFER_RECEIVED Notif | S1 | 🟠 HIGH | BE | 0.25d | `[ ]` |
+| TASK-016 WAC History + Lot Trace UI | S1 | 🟠 HIGH | FE | 1d | `[ ]` |
+| TASK-017 Chunked Export | S1 | 🟠 HIGH | BE | 1.5d | `[ ]` |
+| TASK-018 ReportsService Extract | S1 | 🟠 HIGH | BE | 1.5d | `[ ]` |
+| TASK-019 Void POSTED Documents | S1 | 🟠 HIGH | BE+FE | 3d | `[ ]` |
+| TASK-020 SMTP Admin UI | S2 | 🟡 MED | FE+BE | 1.5d | `[ ]` |
+| TASK-021 CSRF Protection | S2 | 🟡 MED | BE | 1d | `[ ]` |
+| TASK-022 Login Failure Audit | S2 | 🟡 MED | BE | 0.5d | `[ ]` |
+| TASK-023 Outbox Requeue UI | S2 | 🟡 MED | FE+BE | 1d | `[ ]` |
+| TASK-024 Frozen Items Dashboard | S2 | 🟡 MED | FE+BE | 0.5d | `[ ]` |
+| TASK-025 Quarantine Lot UI | S2 | 🟡 MED | FE+BE | 1d | `[ ]` |
+| TASK-026 Parameterize seed.prod.ts | S2 | 🟡 MED | BE | 0.5d | `[ ]` |
+| TASK-027 Branch-Aware XLSX Headers | S2 | 🟡 MED | BE | 0.5d | `[ ]` |
+| TASK-028 Expiry Warning Job | S2 | 🟡 MED | BE | 1d | `[ ]` |
+| TASK-029 Soft-Delete Middleware | S3 | 🟡 MED | BE | 1d | `[ ]` |
+| TASK-030 CI Schema Drift Check | S3 | 🟡 MED | DevOps | 0.5d | `[ ]` |
+| TASK-031 WAC Consistency Job | S3 | 🟡 MED | BE | 1d | `[ ]` |
+| TASK-032 OpenTelemetry Tracing | S4 | 🔵 LOW | BE | 2d | `[ ]` |
+| TASK-033 Prometheus Metrics | S4 | 🔵 LOW | BE | 1.5d | `[ ]` |
+| TASK-034 DocNum Race E2E Test | S4 | 🔵 LOW | Test | 0.5d | `[ ]` |
+| TASK-035 WAC Accuracy E2E Test | S4 | 🔵 LOW | Test | 0.5d | `[ ]` |
+| TASK-036 Reconciliation E2E Test | S4 | 🔵 LOW | Test | 0.5d | `[ ]` |
+| TASK-037 API Versioning Strategy | S4 | 🔵 LOW | BE | 1d | `[ ]` |
+| TASK-038 DB Archival Policy | S4 | 🔵 LOW | DB | 1d | `[ ]` |
+| TASK-039 Redis Health Check | S4 | 🔵 LOW | BE | 0.25d | `[ ]` |
+
+---
+
+## SPRINT 0 EFFORT SUMMARY
+
+| Area | Tasks | Estimated Days |
 |---|---|---|
-| `PR_SUBMITTED` | APPROVER role users | Purchase Request {number} awaiting approval |
-| `PR_APPROVED` | PR creator | Your PR {number} has been approved |
-| `GRN_POSTED` | INV_MGR role | GRN {number} posted — stock updated |
-| `KITCHEN_REQUEST_SUBMITTED` | WH_KEEPER | Kitchen Request {number} submitted |
-| `TRANSFER_SHIPPED` | WH_KEEPER (destination) | Transfer {number} in transit to you |
-| `LOW_STOCK_ALERT` | INV_MGR, WH_KEEPER | ⚠️ Low stock: {item} in {warehouse} |
+| Backend | TASK-002, 003, 004, 005, 006 | 3.5d |
+| Database | TASK-007 | 0.5d |
+| Frontend | TASK-001 (FE part), 008 | 2d |
+| Full-Stack | TASK-001 (BE), TASK-009 | 2.5d |
+| **Total Sprint 0** | **9 tasks** | **~8.5d** |
 
-**Acceptance Criteria**:
-- [ ] Email sent to correct role-based recipients
-- [ ] `SMTP_*` env vars drive configuration
-- [ ] If `SMTP_HOST` not set, email silently skipped (not error)
-- [ ] Email HTML has brand header: "LogiRest Inventory Management"
-- [ ] No hardcoded credentials anywhere
+**Recommended Sprint 0 Team:**
+- 1 Backend Engineer (TASK-002, 003, 004, 005, 006, 007)
+- 1 Frontend Engineer (TASK-008)
+- 1 Full-Stack / Tech Lead (TASK-001, 009)
+- Timeline: **1 week**
 
 ---
 
-### S3-T20 `[BE]` Add OutboxCleanup Cron Job (7-Day TTL)
-**Severity**: 🔴 CRITICAL (C-7)  
-**File**: `apps/api/src/modules/outbox/outbox-cleanup.job.ts` [NEW]
-
-**Implementation**:
-- Delete `OutboxEvent WHERE status = SUCCEEDED AND processedAt < now() - 7 days`
-- Runs daily at 02:00 AM
-- Log count of deleted records
-
-**Acceptance Criteria**:
-- [ ] Old succeeded events purged daily
-- [ ] Failed events retained indefinitely (for investigation)
-- [ ] Cleanup result logged with count
-
----
-
-### S3-T21 `[BE]` Expand Workflow Notification Triggers
-**Severity**: 🔴 HIGH (H-12)  
-**File**: `apps/api/src/modules/workflow/workflow.service.ts`
-
-**Add missing notification dispatches** (via OutboxService):
-- `grn` + `POSTED` → notify `INV_MGR`
-- `adjustment` + `POSTED` → notify `INV_MGR`, `AUDITOR`
-- `kitchen_request` + `SUBMITTED` → notify `WH_KEEPER`
-- `kitchen_request` + `POSTED` → notify `KITCHEN_CHIEF` (fulfilled)
-- `stocktake` + `STARTED` → notify `WH_KEEPER`, `INV_MGR`
-- `stocktake` + `POSTED` → notify `INV_MGR`, `AUDITOR`
-- `transfer` + `RECEIVED` → notify source `WH_KEEPER`
-
-**Acceptance Criteria**:
-- [ ] All 7 new notification triggers emit OutboxEvents
-- [ ] Each notification references the correct document number and warehouse
-- [ ] Existing 3 triggers unchanged
-
----
-
-### S3-T22 `[BE]` Add Low-Stock Threshold Alert System
-**Severity**: 🔴 HIGH  
-**Files**: `apps/api/src/jobs/low-stock-alert.job.ts` [NEW]
-
-**Implementation**:
-- New scheduled job running daily at 06:00 AM
-- Queries `WarehouseItem WHERE qtyOnHand <= reorderPoint`
-- Requires new `Item.reorderPoint Decimal?` field (new migration)
-- Emits `LOW_STOCK_ALERT` OutboxEvent per item
-
-**Acceptance Criteria**:
-- [ ] Items with `qtyOnHand <= reorderPoint` generate alerts
-- [ ] No duplicate alerts for same item on consecutive days (debounce: 24h)
-- [ ] Items with null `reorderPoint` skipped
-
----
-
-## SPRINT 4 — Reporting: Export & Enterprise Formatting
-> **Goal**: Produce exportable, enterprise-grade reports.  
-> **Duration**: ~7 days
-
----
-
-### S4-T23 `[BE]` Install Report Export Libraries
-**Severity**: 🔴 CRITICAL (C-5)  
-**File**: `apps/api/package.json`
-
-```bash
-npm install exceljs
-npm install @types/pdfkit pdfkit
-```
-
-**Acceptance Criteria**:
-- [ ] `exceljs` importable in report controller
-- [ ] No breaking changes to existing API
-
----
-
-### S4-T24 `[BE]` Add XLSX Export — Stock Movements
-**Severity**: 🔴 CRITICAL (C-5)  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-```typescript
-@Get('movements/export')
-async exportMovements(@ActiveScope('warehouseId') wh, @Res() res, @Query() q) {
-  // Fetch all (no pagination for export)
-  const data = await this.getMovementsData(wh, q);
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Stock Movements');
-  ws.columns = [
-    { header: 'Date', key: 'postedAt', width: 20 },
-    { header: 'Item', key: 'itemName', width: 30 },
-    { header: 'SKU', key: 'sku', width: 15 },
-    { header: 'Type', key: 'documentType', width: 20 },
-    { header: 'Document Ref', key: 'documentId', width: 25 },
-    { header: 'Quantity', key: 'quantity', width: 12 },
-  ];
-  // Add enterprise header (company, warehouse, generated at, generated by)
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', 'attachment; filename=stock-movements.xlsx');
-  await wb.xlsx.write(res);
-}
-```
-
-**Acceptance Criteria**:
-- [ ] `GET /reports/movements/export` returns valid `.xlsx` file
-- [ ] Report header includes: Warehouse Name, Date Range, Generated At, Generated By (user name)
-- [ ] All rows included (no pagination limit)
-- [ ] Numeric columns formatted as numbers (not strings)
-
----
-
-### S4-T25 `[BE]` Add XLSX Export — Expiry Report
-**Severity**: 🔴 CRITICAL (C-5)  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-**Columns**: Item Name, SKU, Lot Number, Expiry Date, Days Until Expiry, Qty On Hand, Warehouse
-
-**Acceptance Criteria**:
-- [ ] `GET /reports/expiry/export` returns valid `.xlsx`
-- [ ] Items expiring within 7 days highlighted in yellow (cell fill)
-- [ ] Items already expired highlighted in red
-
----
-
-### S4-T26 `[BE]` Add XLSX Export — Available Inventory
-**Severity**: 🔴 CRITICAL (C-5)  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-**Columns**: Category, Item Name, SKU, UoM, Qty On Hand, Qty Allocated, Qty Available, WAC, Total Value
-
-**Acceptance Criteria**:
-- [ ] `GET /reports/available-inventory/export` returns valid `.xlsx`
-- [ ] "Total Value" column = Qty On Hand × WAC (Decimal, 2 places)
-- [ ] Sheet footer row shows SUM of Total Value
-
----
-
-### S4-T27 `[BE]` Add XLSX Export — Stocktake Variance
-**Severity**: 🔴 CRITICAL (C-5)  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-**Columns**: Item, SKU, Lot, Snapshot Qty, Counted Qty, Variance, WAC, Variance Value
-
-**Acceptance Criteria**:
-- [ ] `GET /reports/stocktake-variance/export?sessionId=X` returns valid `.xlsx`
-- [ ] Positive variance (surplus) shown in green
-- [ ] Negative variance (deficit) shown in red
-- [ ] Session number, date, and warehouse in report header
-
----
-
-### S4-T28 `[BE]` Add XLSX Export — Procurement Status
-**Severity**: 🔴 HIGH  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-**Acceptance Criteria**:
-- [ ] `GET /reports/procurement-status/export` returns valid `.xlsx`
-
----
-
-### S4-T29 `[BE]` Fix N+1 Query — Overdue Transfers Report
-**Severity**: 🔴 HIGH (H-3)  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-**Problem**: `approvalEvent.findFirst` called inside a loop per transfer.
-
-**Fix**: Batch-fetch all ship events in one query, then map by `documentId`.
-```typescript
-const shipEvents = await this.prisma.approvalEvent.findMany({
-  where: { documentId: { in: transferIds }, toStatus: 'IN_TRANSIT' },
-  orderBy: { createdAt: 'desc' },
-});
-const eventMap = new Map(shipEvents.map(e => [e.documentId, e]));
-```
-
-**Acceptance Criteria**:
-- [ ] `getOverdueTransfersList()` makes exactly 2 DB queries regardless of transfer count
-- [ ] Results identical to previous implementation
-
----
-
-### S4-T30 `[BE]` Fix N+1 Query — Currency Summaries Report
-**Severity**: 🔴 HIGH (H-3)  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-**Fix**: Pre-fetch all FX rates in one query before the loop.
-```typescript
-const fxRates = await this.prisma.fXRate.findMany({
-  where: { toCurrencyId: baseCurrency.id },
-  orderBy: { effectiveFrom: 'desc' },
-});
-const fxMap = new Map(fxRates.map(r => [r.fromCurrencyId, r]));
-```
-
-**Acceptance Criteria**:
-- [ ] `getCurrencySummaries()` makes O(1) FX rate queries
-- [ ] Results identical to previous implementation
-
----
-
-### S4-T31 `[BE]` Add WAC History Report
-**Severity**: 🔴 HIGH  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-```typescript
-@Get('wac-history')
-async getWacHistory(
-  @ActiveScope('warehouseId') warehouseId: string,
-  @Query('itemId') itemId: string,
-  @Query('startDate') startDate?: string,
-  @Query('endDate') endDate?: string,
-)
-```
-
-**Acceptance Criteria**:
-- [ ] Returns `CostLedger` entries filtered by warehouse + item + date range
-- [ ] Includes: posted date, document type, document ref, qty, unit price, new WAC
-- [ ] XLSX export available at `GET /reports/wac-history/export`
-
----
-
-### S4-T32 `[BE]` Add Lot Traceability Report
-**Severity**: 🔴 HIGH  
-**File**: `apps/api/src/modules/reports/reports.controller.ts`
-
-```typescript
-@Get('lot-trace')
-async getLotTrace(
-  @ActiveScope('warehouseId') warehouseId: string,
-  @Query('lotId') lotId: string,
-)
-```
-
-Returns: all `LotAllocation` records linked to the lot, with parent document reference and dates.
-
-**Acceptance Criteria**:
-- [ ] Trace shows: received via which GRN, allocated to which Issues/Transfers
-- [ ] XLSX export available
-
----
-
-### S4-T33 `[FE]` Add Export Buttons to All Report Pages
-**Severity**: 🔴 CRITICAL (C-5)  
-**Files**: All files under `apps/web/src/app/[locale]/(app)/reports/*/`
-
-**Implementation**: Add "Export XLSX" button to each report page that calls the `/export` endpoint.
-
-**Acceptance Criteria**:
-- [ ] Export button present on: movements, expiry, available-inventory, stocktake-variance, procurement-status
-- [ ] Loading state shown while export generates
-- [ ] File downloads automatically
-- [ ] Export button disabled while report data is loading
-
----
-
-### S4-T34 `[FE]` Add Print Layout CSS
-**Severity**: 🔴 HIGH  
-**File**: `apps/web/src/app/globals.css`
-
-```css
-@media print {
-  nav, sidebar, .no-print { display: none !important; }
-  .print-header { display: block; }
-  table { page-break-inside: avoid; }
-}
-```
-
-Add `.print-header` component with: Company Name, Branch, Report Title, Generated At, Generated By.
-
-**Acceptance Criteria**:
-- [ ] `window.print()` produces clean layout
-- [ ] Navigation and sidebars hidden in print view
-- [ ] Report header with company/branch/timestamp visible in print
-- [ ] Table rows don't break across pages
-
----
-
-## SPRINT 5 — Observability, Cleanup & Correctness
-> **Goal**: Make the system diagnosable and self-maintaining.  
-> **Duration**: ~7 days
-
----
-
-### S5-T35 `[BE][OBS]` Add Structured JSON Logging
-**Severity**: 🔴 HIGH (H-8)  
-**File**: `apps/api/src/main.ts`, `apps/api/package.json`
-
-```bash
-npm install nestjs-pino pino-http pino-pretty
-```
-```typescript
-// app.module.ts
-LoggerModule.forRoot({
-  pinoHttp: {
-    level: process.env.LOG_LEVEL || 'info',
-    transport: process.env.NODE_ENV !== 'production'
-      ? { target: 'pino-pretty' }
-      : undefined,
-  },
-})
-```
-
-**Acceptance Criteria**:
-- [ ] All log output is JSON in production (`NODE_ENV=production`)
-- [ ] Human-readable pretty-print in development
-- [ ] Each log line includes: `timestamp`, `level`, `context`, `message`, `requestId`
-- [ ] No sensitive data (tokens, passwords) in any log line
-
----
-
-### S5-T36 `[BE][OBS]` Add Request Correlation IDs
-**Severity**: 🔴 HIGH  
-**File**: `apps/api/src/interceptors/` [NEW: `correlation-id.interceptor.ts`]
-
-**Implementation**:
-- Generate UUID per request if `X-Correlation-ID` header not present
-- Attach to all log context via `AsyncLocalStorage`
-- Return `X-Correlation-ID` in response header
-
-**Acceptance Criteria**:
-- [ ] Every log line includes `correlationId`
-- [ ] Response includes `X-Correlation-ID` header
-- [ ] Frontend logs and backend logs can be correlated using this ID
-
----
-
-### S5-T37 `[BE][OBS]` Persist Reconciliation Run Results
-**Severity**: 🟡 MEDIUM (M-4)  
-**File**: `apps/api/prisma/schema.prisma` + `apps/api/src/modules/ledger/reconciliation.job.ts`
-
-```prisma
-model ReconciliationRun {
-  id               String   @id @default(uuid())
-  ranAt            DateTime @default(now())
-  itemsChecked     Int
-  discrepanciesFound Int
-  frozenItems      String[] // list of SKUs frozen
-  durationMs       Int
-
-  @@map("reconciliation_runs")
-}
-```
-
-**Acceptance Criteria**:
-- [ ] Every reconciliation run saves a `ReconciliationRun` record
-- [ ] Admins can query: `GET /admin/reconciliation-runs` to see history
-- [ ] Frozen item SKUs listed in the run record
-
----
-
-### S5-T38 `[DB]` Add Notification Log Cleanup Job
-**Severity**: 🔴 HIGH (H-6)  
-**File**: `apps/api/src/jobs/notification-cleanup.job.ts` [NEW]
-
-**Implementation**:
-- Delete `NotificationLog WHERE isRead = true AND createdAt < now() - 30 days`
-- Delete `NotificationLog WHERE isRead = false AND createdAt < now() - 90 days`
-- Runs daily at 03:00 AM
-
-**Acceptance Criteria**:
-- [ ] Old read notifications cleaned up after 30 days
-- [ ] Old unread notifications cleaned up after 90 days
-- [ ] Cleanup count logged per run
-
----
-
-### S5-T39 `[DB]` Add IdempotencyLog Cleanup Job
-**Severity**: 🔴 HIGH (H-7)  
-**File**: `apps/api/src/jobs/idempotency-cleanup.job.ts` [NEW]
-
-**Implementation**:
-- Delete `IdempotencyLog WHERE createdAt < now() - IDEMPOTENCY_TTL_HOURS`
-- Add `IDEMPOTENCY_TTL_HOURS` to `envSchema` Zod validation with default `24`
-- Runs hourly
-
-**Acceptance Criteria**:
-- [ ] Expired idempotency keys deleted automatically
-- [ ] TTL configurable via `IDEMPOTENCY_TTL_HOURS` env var
-- [ ] `IDEMPOTENCY_TTL_HOURS` is validated at startup
-
----
-
-### S5-T40 `[DB]` Add RefreshToken Cleanup Job
-**Severity**: 🔴 HIGH (H-10)  
-**File**: `apps/api/src/jobs/token-cleanup.job.ts` [NEW]
-
-**Implementation**:
-- Delete `RefreshToken WHERE (isRevoked = true OR expiresAt < now()) AND createdAt < now() - 7 days`
-- Runs daily at 04:00 AM
-
-**Acceptance Criteria**:
-- [ ] Expired/revoked tokens cleaned after 7-day grace window
-- [ ] Active tokens never deleted
-- [ ] Cleanup count logged
-
----
-
-### S5-T41 `[BE]` Verify Reconciliation Sign Convention
-**Severity**: 🔴 HIGH (H-11)  
-**Files**: `apps/api/src/modules/operations/issue-post.service.ts`, `apps/api/src/modules/operations/transfer-post.service.ts`, `apps/api/src/modules/operations/adjustment-post.service.ts`
-
-**Audit Task**: Inspect all `StockLedger.create()` calls to confirm:
-- IN operations (GRN, positive adjustment, transfer receive): `quantity > 0`
-- OUT operations (issue, negative adjustment, transfer ship): `quantity < 0`
-- If incorrect, add sign fix + migration
-
-**Acceptance Criteria**:
-- [ ] `SUM(quantity) WHERE warehouseId=X AND itemId=Y` equals `WarehouseItem.qtyOnHand`
-- [ ] Reconciliation job runs without false positives on a clean database
-- [ ] Unit test verifies sign convention for each operation type
-
----
-
-### S5-T42 `[BE]` Add qtyAllocated Reconciliation Check
-**Severity**: 🟡 MEDIUM (M-5)  
-**File**: `apps/api/src/modules/ledger/reconciliation.job.ts`
-
-**Add to `runReconciliation()`**:
-- Cross-check `WarehouseItem.qtyAllocated` against `SUM(LotAllocation.quantityAllocated)` for active documents
-- Log discrepancies separately (don't freeze for this — softer check)
-
-**Acceptance Criteria**:
-- [ ] `qtyAllocated` discrepancies are logged with severity WARN
-- [ ] A notification is sent to ADMIN on discrepancy (non-freezing)
-
----
-
-### S5-T43 `[DB]` Add StocktakeSnapshot.createdAt
-**Severity**: 🟡 MEDIUM (M-9)  
-**File**: `apps/api/prisma/schema.prisma`
-
-```prisma
-model StocktakeSnapshot {
-  // Add:
-  createdAt DateTime @default(now())
-}
-```
-
-**Acceptance Criteria**:
-- [ ] Migration applied cleanly
-- [ ] `createdAt` populated automatically on snapshot creation
-
----
-
-### S5-T44 `[BE]` Add Frozen Item Recovery Endpoint
-**Severity**: 🟡 MEDIUM  
-**File**: `apps/api/src/modules/inventory/inventory.controller.ts`
-
-**Problem**: Once reconciliation freezes an item (`isFrozen = true`), there is no API to unfreeze it after manual correction.
-
-```typescript
-@Patch(':id/unfreeze')
-@Roles(Role.ADMIN)
-async unfreezeItem(@Param('id') itemId: string, @ActiveScope('warehouseId') warehouseId: string) {
-  // Validate user is ADMIN, log audit trail, set isFrozen = false
-}
-```
-
-**Acceptance Criteria**:
-- [ ] ADMIN-only endpoint to unfreeze a frozen item
-- [ ] Requires `reason` field in body
-- [ ] `AuditLog` entry created with before/after state
-
----
-
-### S5-T45 `[BE]` Fix CORS for Multi-Environment
-**Severity**: 🔴 HIGH (H-9)  
-**File**: `apps/api/src/main.ts`
-
-**Implementation**:
-```typescript
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',');
-app.enableCors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-    else callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-});
-```
-
-**Acceptance Criteria**:
-- [ ] Multiple origins supported via comma-separated `FRONTEND_URL`
-- [ ] Unknown origins rejected with `403`
-- [ ] No fallback to localhost in production (validated by Zod)
-
----
-
-### S5-T46 `[BE]` Add Document Number Format Cleanup
-**Severity**: 🟡 MEDIUM (M-7)  
-**File**: `apps/api/src/modules/sequencing/document-sequence.service.ts`
-
-**Problem**: Format is `GOODS_RECEIVED_NOTE-2026-HQ-00001`. Should be `GRN-2026-HQ-00001`.
-
-**Implementation**: Map `DocumentType` to short prefix:
-```typescript
-const PREFIX_MAP: Record<DocumentType, string> = {
-  PURCHASE_REQUEST: 'PR',
-  PURCHASE_ORDER: 'PO',
-  GOODS_RECEIVED_NOTE: 'GRN',
-  INVENTORY_ISSUE: 'ISS',
-  TRANSFER: 'TRF',
-  ADJUSTMENT: 'ADJ',
-  KITCHEN_REQUEST: 'KR',
-  STOCKTAKE: 'ST',
-};
-```
-
-**Acceptance Criteria**:
-- [ ] New documents use short prefix format
-- [ ] Existing document numbers unchanged (migration not needed — format stored in `prefix` column)
-- [ ] Unit test verifies format: `PR-2026-HQ-00001`
-
----
-
-## SPRINT 6 — Security Hardening, Testing & Polish
-> **Goal**: Harden security, add coverage, improve UX.  
-> **Duration**: ~7 days
-
----
-
-### S6-T47 `[BE][SEC]` Add Stale Session Refresh Token Audit
-**Severity**: 🟡 MEDIUM  
-**File**: `apps/api/src/auth/rtr.service.ts`
-
-**Add**: When detecting a replayed token, emit a `SECURITY_ALERT_REPLAY_ATTACK` notification to all ADMIN users (via OutboxEvent).
-
-**Acceptance Criteria**:
-- [ ] Replay attack triggers ADMIN notification
-- [ ] Alert includes: user ID, session ID, IP address, timestamp
-
----
-
-### S6-T48 `[BE][SEC]` Enforce Password Complexity in DTOs
-**Severity**: 🔵 LOW (L-2)  
-**File**: `apps/api/src/auth/dto/login.dto.ts` + user management DTOs
-
-**Implementation**: For user creation/password change DTOs:
-```typescript
-@IsString()
-@MinLength(8)
-@Matches(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])/, {
-  message: 'Password must contain uppercase, number, and special character'
-})
-password: string;
-```
-
-**Acceptance Criteria**:
-- [ ] Password < 8 chars rejected with descriptive error
-- [ ] Passwords without uppercase rejected
-- [ ] Passwords without number rejected
-
----
-
-### S6-T49 `[BE][SEC]` Validate JWT_SECRET Removal from Env Schema
-**Severity**: 🔵 LOW (L-3)  
-**File**: `apps/api/src/config/env.validation.ts`
-
-- Remove `JWT_SECRET` from `.env.example` (unused — only `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` used)
-- Add comment explaining which secret is used for what
-
-**Acceptance Criteria**:
-- [ ] `JWT_SECRET` not referenced anywhere in codebase (grep check)
-- [ ] `.env.example` only lists variables that are actually consumed
-
----
-
-### S6-T50 `[BE]` Add Concurrency Test — Double-Post Prevention
-**Severity**: 🔴 CRITICAL  
-**File**: `apps/api/test/concurrency.spec.ts` [NEW]
-
-**Scenarios**:
-1. Two concurrent GRN posts for same document → only one succeeds
-2. Two concurrent Issue posts for same item → total deducted correctly
-3. Two concurrent stocktake lock creations → only one lock active
-
-**Acceptance Criteria**:
-- [ ] Tests use `Promise.all()` to simulate concurrency
-- [ ] Optimistic locking prevents double-posting
-- [ ] Stock totals remain correct after concurrent operations
-
----
-
-### S6-T51 `[BE]` Add End-to-End Workflow Integration Test
-**Severity**: 🔴 CRITICAL  
-**File**: `apps/api/test/workflow-e2e.spec.ts` [NEW]
-
-**Test Scenario**: Full procurement cycle:
-```
-Create PR → Submit PR → Approve PR →
-Create PO (from PR) → Approve PO →
-Create GRN (from PO) → Post GRN →
-Verify StockLedger entry created →
-Verify WarehouseItem.qtyOnHand increased →
-Verify WAC updated →
-Create Issue → Post Issue →
-Verify StockLedger entry negative →
-Verify WarehouseItem.qtyOnHand decreased →
-Run Reconciliation → Verify no discrepancy
-```
-
-**Acceptance Criteria**:
-- [ ] Full cycle completes without error
-- [ ] Ledger quantities balance after full cycle
-- [ ] Reconciliation reports 0 discrepancies
-
----
-
-### S6-T52 `[BE]` Add Stocktake Lock Lifecycle Test
-**Severity**: 🔴 CRITICAL  
-**File**: `apps/api/test/stocktake-lock.spec.ts` [NEW]
-
-**Scenario**:
-1. Start stocktake → verify warehouse locked
-2. GRN post attempt → verify 423 Locked
-3. Simulate lock expiry (manipulate `expiresAt`)
-4. Run `LockCleanupJob.cleanupExpiredLocks()`
-5. Verify `Warehouse.isLocked = false`
-6. GRN post attempt → verify it succeeds
-
-**Acceptance Criteria**:
-- [ ] Test verifies the complete lock→expire→unlock cycle
-- [ ] This test would have caught the C-1 bug
-
----
-
-### S6-T53 `[BE]` Add Reconciliation Sign Convention Test
-**Severity**: 🔴 HIGH  
-**File**: `apps/api/src/modules/ledger/reconciliation.job.spec.ts`
-
-**Add tests**:
-- Issue 100 units → `StockLedger.quantity = -100`
-- Receive 100 units (GRN) → `StockLedger.quantity = +100`
-- Run reconciliation → `SUM = 0 = qtyOnHand` after full in/out cycle
-
-**Acceptance Criteria**:
-- [ ] Passing tests confirm sign convention is correct
-- [ ] Reconciliation detects injected discrepancy correctly
-
----
-
-### S6-T54 `[BE]` Add Audit Log for Master Data Mutations
-**Severity**: 🔴 HIGH (H-8)  
-**Files**: `apps/api/src/modules/master-data/` controllers
-
-**Problem**: User role changes, item creation, supplier updates leave no audit trail.
-
-**Implementation**: Add `AuditLog` entries to:
-- `UserService.updateRole()` — log before/after role
-- `ItemService.create/update()` — log item mutations  
-- `SupplierService.create/update()` — log supplier mutations
-- `WarehouseService.create/update()` — log warehouse mutations
-
-**Acceptance Criteria**:
-- [ ] Role change generates `AuditLog` entry with `action: USER_ROLE_CHANGED`
-- [ ] All master data CRUD operations are auditable
-- [ ] `AUDITOR` role can query audit logs via `GET /admin/audit-logs`
-
----
-
-### S6-T55 `[FE]` Add Real-Time Notification Bell with Polling
-**Severity**: 🔴 HIGH  
-**File**: `apps/web/src/app/[locale]/(app)/layout.tsx` or shared component
-
-**Implementation**: Add notification bell that:
-- Polls `GET /api/v1/notifications` every 30 seconds
-- Shows unread count badge
-- Dropdown lists last 10 unread notifications
-- Click marks notification as read
-
-**Acceptance Criteria**:
-- [ ] Badge shows correct unread count
-- [ ] Clicking bell opens notification dropdown
-- [ ] Clicking a notification navigates to the relevant document
-- [ ] "Mark all read" button available
-
----
-
-### S6-T56 `[FE]` Add Low-Stock Warning to Inventory List
-**Severity**: 🔴 HIGH  
-**File**: `apps/web/src/app/[locale]/(app)/inventory/` pages
-
-**Implementation**:
-- Items with `qtyOnHand <= reorderPoint` highlighted with ⚠️ warning
-- Items with `qtyOnHand = 0` shown with 🔴 "Out of Stock" badge
-
-**Acceptance Criteria**:
-- [ ] Visual indicator for low-stock items
-- [ ] Out-of-stock items shown distinctly
-- [ ] Filter: "Show only low-stock items"
-
----
-
-### S6-T57 `[FE]` Add Empty State Components
-**Severity**: 🟡 MEDIUM  
-**Files**: All report and list pages
-
-**Implementation**: When API returns empty array, show:
-- Relevant icon
-- Descriptive message ("No stock movements in this period")
-- Action button if applicable ("Create Purchase Request")
-
-**Acceptance Criteria**:
-- [ ] Empty state shown on: movements, expiry, available-inventory, PR list, PO list, transfers, issues, adjustments
-- [ ] Each empty state has unique message (not generic "No data")
-
----
-
-### S6-T58 `[FE]` RTL Layout Verification & Fix
-**Severity**: 🔴 HIGH  
-**Files**: `apps/web/src/app/globals.css`, locale-specific layouts
-
-**Implementation**:
-- Verify `dir="rtl"` applied to `<html>` for Arabic locale
-- Fix any LTR-only CSS (text alignment, flex direction, padding/margin)
-- Test tables, forms, modals, sidebars in RTL
-
-**Acceptance Criteria**:
-- [ ] Arabic locale renders all pages in RTL
-- [ ] No layout breakage in RTL mode
-- [ ] Icons and directional elements (arrows, chevrons) mirrored appropriately
-
----
-
-### S6-T59 `[BE]` Add FX Rate Management API
-**Severity**: 🟡 MEDIUM (M-8)  
-**File**: `apps/api/src/modules/master-data/` 
-
-**Implementation**:
-- `POST /master-data/fx-rates` — Create new FX rate entry (ADMIN, GM roles only)
-- `GET /master-data/fx-rates` — List all FX rates with latest effective rate
-- Rate effective from `effectiveFrom` date (historical rates preserved)
-
-**Acceptance Criteria**:
-- [ ] New rates can be added without deleting historical rates
-- [ ] `getCurrencySummaries` report always uses the rate effective at time of PO creation (or latest)
-- [ ] `AuditLog` entry created on FX rate change
-
----
-
-### S6-T60 `[BE]` Add REJECT Workflow Action
-**Severity**: 🟡 MEDIUM (M-6)  
-**Files**: `packages/shared-types/src/workflows/`, `apps/api/src/modules/`
-
-**Problem**: Only `CANCEL` exists. Business needs formal `REJECT` with mandatory reason.
-
-**Implementation**:
-- Add `REJECT` action to shared-types workflow definitions
-- Valid transitions: `SUBMITTED → REJECTED`, `APPROVED → REJECTED` (for GM override)
-- `REJECTED` is terminal (no further transitions)
-- `comments` field mandatory for REJECT action
-
-**Acceptance Criteria**:
-- [ ] `REJECT` action defined in shared-types
-- [ ] Backend enforces mandatory `comments` for REJECT
-- [ ] `ApprovalEvent` records the rejection reason
-- [ ] `REJECTED` documents visible in lists with distinct UI treatment
-
----
-
-### S6-T61 `[DO]` Add Environment Promotion Documentation
-**Severity**: 🟡 MEDIUM  
-**File**: `apps/api/README.md`
-
-**Document**:
-1. Migration deployment strategy (`prisma migrate deploy` in container entrypoint)
-2. Zero-downtime migration guidelines (additive-only changes)
-3. Rollback procedure (Prisma does not auto-rollback — manual steps)
-4. First-run admin setup procedure
-5. Production environment variables reference
-
-**Acceptance Criteria**:
-- [ ] README covers all 5 points above
-- [ ] Includes example `docker compose` production command
-
----
-
-### S6-T62 `[BE]` Add Supplier Contact Email to Notification System
-**Severity**: 🟡 MEDIUM  
-**File**: `apps/api/prisma/schema.prisma` + notifications
-
-**Extend `Supplier` model**:
-- `contactName String?`
-- `contactPhone String?`
-- `isActive Boolean @default(true)`
-
-Send email to `Supplier.contactEmail` when:
-- PO is approved (notify supplier of new PO)
-- GRN is posted (confirm receipt)
-
-**Acceptance Criteria**:
-- [ ] Schema migration applied
-- [ ] Supplier email notification dispatched via OutboxService on PO approval
-
----
-
-## Summary Table
-
-| Sprint | Focus | Tasks | Duration |
-|---|---|---|---|
-| Sprint 1 | Critical bugs: inventory safety, security | S1-T01 → S1-T08 | 5 days |
-| Sprint 2 | Critical: deployment infrastructure | S2-T09 → S2-T14 | 5 days |
-| Sprint 3 | Email, async delivery, notifications | S3-T15 → S3-T22 | 7 days |
-| Sprint 4 | Reporting: XLSX export, N+1 fixes | S4-T23 → S4-T34 | 7 days |
-| Sprint 5 | Observability, cleanup, correctness | S5-T35 → S5-T46 | 7 days |
-| Sprint 6 | Security, testing, UX polish | S6-T47 → S6-T62 | 7 days |
-| **Total** | | **62 tasks** | **~38 days** |
-
-## Parallel Execution Map
-
-```
-Sprint 1 (can parallelize):
-  Dev A: S1-T01, S1-T04       (inventory/workflow bugs)
-  Dev B: S1-T02, S1-T05       (health check, swagger)
-  Dev C: S1-T03, S1-T06, S1-T08  (security)
-  Dev D: S1-T07               (DB indexes — migration)
-
-Sprint 2 (can parallelize):
-  Dev A: S2-T09               (API Dockerfile)
-  Dev B: S2-T10               (Web Dockerfile)
-  Dev C: S2-T12, S2-T13       (prod seed, env vars)
-  Dev D: S2-T14               (CI pipeline)
-  → S2-T11 (docker-compose): after T09 + T10 done
-
-Sprint 3 (sequential within story, parallel across):
-  Dev A: S3-T15, S3-T17, S3-T18   (BullMQ + outbox)
-  Dev B: S3-T16               (DB schema)
-  Dev C: S3-T19               (email service)
-  → S3-T20, S3-T21, S3-T22: after T15-T19
-
-Sprint 4 (highly parallel):
-  Dev A: S4-T23, S4-T24, S4-T25   (exports)
-  Dev B: S4-T26, S4-T27, S4-T28   (exports)
-  Dev C: S4-T29, S4-T30       (N+1 fixes)
-  Dev D: S4-T31, S4-T32       (new reports)
-  Dev E: S4-T33, S4-T34       (frontend)
-```
-
-## Go-Live Checklist
-
-After completing **Sprint 1 + Sprint 2**:
-- [ ] `Warehouse.isLocked` bug fixed and tested (S1-T01)
-- [ ] `/health` pings database (S1-T02)
-- [ ] Dockerfiles build and run (S2-T09, S2-T10, S2-T11)
-- [ ] No demo credentials in production seed (S2-T12)
-- [ ] Swagger hidden in production (S1-T05)
-- [ ] Helmet headers active (S1-T08)
-- [ ] Rate limiting on auth (S1-T06)
-- [ ] HOLD lots not allocated (S1-T03)
-
-After **Sprint 3 + Sprint 4**:
-- [ ] Email notifications working (S3-T19)
-- [ ] XLSX export on all reports (S4-T24 → S4-T28)
-- [ ] BullMQ outbox operational (S3-T15 → S3-T18)
-
-**Full Production Ready**: After all 6 sprints complete.
+*Tasks generated from: [enterprise_production_readiness_audit.md](./enterprise_production_readiness_audit.md)*
+*Last updated: 2026-05-25*
