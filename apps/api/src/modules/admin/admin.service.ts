@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { 
-  UserRole, 
-  ROLE_METADATA, 
+import {
+  UserRole,
+  ROLE_METADATA,
   canRolePerformAction,
   RoleDescriptor,
-  Permission
+  Permission,
 } from '@logirest/shared-types';
 
 @Injectable()
@@ -19,10 +19,10 @@ export class AdminService {
       'Operations',
       'Admin',
       'Reports',
-      'Communications'
+      'Communications',
     ];
 
-    return modules.map(module => {
+    return modules.map((module) => {
       let view = false;
       let create = false;
       let edit = false;
@@ -38,24 +38,55 @@ export class AdminService {
       } else {
         switch (module) {
           case 'Inventory':
-            view = canRolePerformAction('stocktake', 'view', role) || canRolePerformAction('adjustment', 'view', role);
-            create = canRolePerformAction('stocktake', 'create', role) || canRolePerformAction('adjustment', 'create', role);
-            edit = canRolePerformAction('stocktake', 'count', role) || canRolePerformAction('adjustment', 'edit', role);
-            approve = canRolePerformAction('stocktake', 'approve', role) || canRolePerformAction('adjustment', 'approve', role);
-            post = canRolePerformAction('stocktake', 'post', role) || canRolePerformAction('adjustment', 'post', role);
+            view =
+              canRolePerformAction('stocktake', 'view', role) ||
+              canRolePerformAction('adjustment', 'view', role);
+            create =
+              canRolePerformAction('stocktake', 'create', role) ||
+              canRolePerformAction('adjustment', 'create', role);
+            edit =
+              canRolePerformAction('stocktake', 'count', role) ||
+              canRolePerformAction('adjustment', 'edit', role);
+            approve =
+              canRolePerformAction('stocktake', 'approve', role) ||
+              canRolePerformAction('adjustment', 'approve', role);
+            post =
+              canRolePerformAction('stocktake', 'post', role) ||
+              canRolePerformAction('adjustment', 'post', role);
             break;
           case 'Procurement':
-            view = canRolePerformAction('pr', 'view', role) || canRolePerformAction('po', 'view', role) || canRolePerformAction('grn', 'view', role);
-            create = canRolePerformAction('pr', 'create', role) || canRolePerformAction('po', 'create', role) || canRolePerformAction('grn', 'create', role);
-            edit = canRolePerformAction('pr', 'submit', role) || canRolePerformAction('po', 'submit', role) || canRolePerformAction('grn', 'cancel', role);
-            approve = canRolePerformAction('pr', 'approve', role) || canRolePerformAction('po', 'approve', role);
+            view =
+              canRolePerformAction('pr', 'view', role) ||
+              canRolePerformAction('po', 'view', role) ||
+              canRolePerformAction('grn', 'view', role);
+            create =
+              canRolePerformAction('pr', 'create', role) ||
+              canRolePerformAction('po', 'create', role) ||
+              canRolePerformAction('grn', 'create', role);
+            edit =
+              canRolePerformAction('pr', 'submit', role) ||
+              canRolePerformAction('po', 'submit', role) ||
+              canRolePerformAction('grn', 'cancel', role);
+            approve =
+              canRolePerformAction('pr', 'approve', role) ||
+              canRolePerformAction('po', 'approve', role);
             post = canRolePerformAction('grn', 'post', role);
             break;
           case 'Operations':
-            view = canRolePerformAction('transfer', 'view', role) || canRolePerformAction('issue', 'view', role) || canRolePerformAction('kitchen_request', 'view', role);
-            create = canRolePerformAction('transfer', 'create', role) || canRolePerformAction('issue', 'create', role) || canRolePerformAction('kitchen_request', 'create', role);
-            edit = canRolePerformAction('transfer', 'ship', role) || canRolePerformAction('issue', 'submit', role);
-            approve = canRolePerformAction('kitchen_request', 'fulfill', role) || canRolePerformAction('transfer', 'receive', role);
+            view =
+              canRolePerformAction('transfer', 'view', role) ||
+              canRolePerformAction('issue', 'view', role) ||
+              canRolePerformAction('kitchen_request', 'view', role);
+            create =
+              canRolePerformAction('transfer', 'create', role) ||
+              canRolePerformAction('issue', 'create', role) ||
+              canRolePerformAction('kitchen_request', 'create', role);
+            edit =
+              canRolePerformAction('transfer', 'ship', role) ||
+              canRolePerformAction('issue', 'submit', role);
+            approve =
+              canRolePerformAction('kitchen_request', 'fulfill', role) ||
+              canRolePerformAction('transfer', 'receive', role);
             post = canRolePerformAction('issue', 'post', role);
             break;
           case 'Reports':
@@ -79,7 +110,7 @@ export class AdminService {
 
       return {
         module,
-        actions: { view, create, edit, approve, post }
+        actions: { view, create, edit, approve, post },
       };
     });
   }
@@ -101,20 +132,22 @@ export class AdminService {
     }
 
     // 2. Map all system roles defined in ROLE_METADATA to return the complete descriptor list
-    const rolesList: RoleDescriptor[] = Object.keys(ROLE_METADATA).map(roleKey => {
-      const userRole = roleKey as UserRole;
-      const metadata = ROLE_METADATA[userRole];
-      const userCount = countMap.get(userRole) ?? 0;
-      const permissions = this.getPermissionsForRole(userRole);
+    const rolesList: RoleDescriptor[] = Object.keys(ROLE_METADATA).map(
+      (roleKey) => {
+        const userRole = roleKey as UserRole;
+        const metadata = ROLE_METADATA[userRole];
+        const userCount = countMap.get(userRole) ?? 0;
+        const permissions = this.getPermissionsForRole(userRole);
 
-      return {
-        id: userRole,
-        displayName: metadata.displayName,
-        description: metadata.description,
-        userCount,
-        permissions,
-      };
-    });
+        return {
+          id: userRole,
+          displayName: metadata.displayName,
+          description: metadata.description,
+          userCount,
+          permissions,
+        };
+      },
+    );
 
     return rolesList;
   }

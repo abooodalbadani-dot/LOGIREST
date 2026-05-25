@@ -66,7 +66,7 @@ description: "Actionable tasks list for TASK-001 implementation"
 - [X] T007 [P] [US1] Create AdminService in apps/api/src/modules/admin/admin.service.ts
 - [X] T008 [US1] Add `GET /admin/roles` endpoint inside AdminController in apps/api/src/modules/admin/admin.controller.ts
 - [X] T009 [US1] Register AdminService as a provider in AdminModule in apps/api/src/modules/admin/admin.module.ts
-- [ ] T010 [US1] Replace `MOCK_ROLES` query function in useAdminRoles hook in apps/web/src/features/admin/hooks/useAdminRoles.ts with apiClient call
+- [X] T010 [US1] Replace `MOCK_ROLES` query function in useAdminRoles hook in apps/web/src/features/admin/hooks/useAdminRoles.ts with apiClient call
 
 **Checkpoint**: User Story 1 is fully functional and testable independently.
 
@@ -80,8 +80,8 @@ description: "Actionable tasks list for TASK-001 implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T011 [P] [US2] Import `ROLE_CAPABILITIES` inside frontend roles grid component in apps/web/src/features/admin/components/
-- [ ] T012 [US2] Render permissions grid as read-only and add a notice banner stating that role permissions are code-managed for security compliance
+- [X] T011 [P] [US2] Import `ROLE_CAPABILITIES` inside frontend roles grid component in apps/web/src/features/admin/components/
+- [X] T012 [US2] Render permissions grid as read-only and add a notice banner stating that role permissions are code-managed for security compliance
 
 **Checkpoint**: User Stories 1 and 2 work independently.
 
@@ -95,7 +95,7 @@ description: "Actionable tasks list for TASK-001 implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T013 [P] [US3] Map display labels and descriptions inside the roles table using static `ROLE_METADATA` imported from `@logirest/shared-types`
+- [X] T013 [P] [US3] Map display labels and descriptions inside the roles table using static `ROLE_METADATA` imported from `@logirest/shared-types`
 
 **Checkpoint**: All user stories are independently functional.
 
@@ -105,9 +105,9 @@ description: "Actionable tasks list for TASK-001 implementation"
 
 **Purpose**: Refactoring, cleanup, and final validation gates.
 
-- [ ] T014 Remove all remaining static `MOCK_ROLES` references in production code
-- [ ] T015 Run `npm run typecheck --filter=web` and `npm run build --filter=api` to verify monorepo compilation integrity
-- [ ] T016 Run E2E Jest specs and ensure zero lint or test failures
+- [X] T014 Remove all remaining static `MOCK_ROLES` references in production code
+- [X] T015 Run `npm run typecheck --filter=web` and `npm run build --filter=api` to verify monorepo compilation integrity
+- [X] T016 Run E2E Jest specs and ensure zero lint or test failures
 
 ---
 

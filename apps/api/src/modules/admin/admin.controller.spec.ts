@@ -41,15 +41,20 @@ describe('AdminController', () => {
 
   describe('getRoles', () => {
     it('should throw ForbiddenException if user role is not ADMIN', async () => {
-      await expect(
-        controller.getRoles(Role.INV_MGR),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.getRoles(Role.INV_MGR)).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(mockAdminService.getRoles).not.toHaveBeenCalled();
     });
 
     it('should return roles list from AdminService for ADMIN', async () => {
       const mockRoles = [
-        { id: 'ADMIN', displayName: 'Administrator', userCount: 2, permissions: [] },
+        {
+          id: 'ADMIN',
+          displayName: 'Administrator',
+          userCount: 2,
+          permissions: [],
+        },
       ];
       mockAdminService.getRoles.mockResolvedValue(mockRoles);
 
@@ -60,4 +65,3 @@ describe('AdminController', () => {
     });
   });
 });
-

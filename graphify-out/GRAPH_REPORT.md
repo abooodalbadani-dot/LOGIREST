@@ -1,16 +1,16 @@
 # Graph Report - Kitchen‑Store Inventory System  (2026-05-25)
 
 ## Corpus Check
-- 1816 files · ~3,190,657 words
+- 1830 files · ~3,196,472 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 17308 nodes · 32139 edges · 1378 communities (1285 shown, 93 thin omitted)
+- 17427 nodes · 32272 edges · 1392 communities (1290 shown, 102 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 164 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3990fb41`
+- Built from commit: `458c685e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1207,11 +1207,25 @@
 - [[_COMMUNITY_Community 1375|Community 1375]]
 - [[_COMMUNITY_Community 1376|Community 1376]]
 - [[_COMMUNITY_Community 1377|Community 1377]]
+- [[_COMMUNITY_Community 1378|Community 1378]]
+- [[_COMMUNITY_Community 1379|Community 1379]]
+- [[_COMMUNITY_Community 1380|Community 1380]]
+- [[_COMMUNITY_Community 1381|Community 1381]]
+- [[_COMMUNITY_Community 1382|Community 1382]]
+- [[_COMMUNITY_Community 1383|Community 1383]]
+- [[_COMMUNITY_Community 1384|Community 1384]]
+- [[_COMMUNITY_Community 1385|Community 1385]]
+- [[_COMMUNITY_Community 1386|Community 1386]]
+- [[_COMMUNITY_Community 1387|Community 1387]]
+- [[_COMMUNITY_Community 1388|Community 1388]]
+- [[_COMMUNITY_Community 1389|Community 1389]]
+- [[_COMMUNITY_Community 1390|Community 1390]]
+- [[_COMMUNITY_Community 1391|Community 1391]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 301 edges
 2. `Button()` - 248 edges
-3. `apiClient` - 219 edges
+3. `apiClient` - 220 edges
 4. `useSafeMutation()` - 173 edges
 5. `useAuth()` - 162 edges
 6. `PageHeader()` - 155 edges
@@ -1221,26 +1235,26 @@
 10. `ProtectedRoute component` - 106 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `AdjustmentViewer()` --calls--> `format`  [INFERRED]
-  scratch/app_backup/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx → apps/api/package.json
-- `StocktakeViewer()` --calls--> `format`  [INFERRED]
-  scratch/app_backup/[locale]/(app)/(operations)/stocktake/[id]/StocktakeViewer.tsx → apps/api/package.json
-- `LocaleLayout()` --calls--> `cookies`  [INFERRED]
-  scratch/app_backup/[locale]/layout.tsx → apps/api/test/auth-cookies.e2e-spec.ts
+- `LocaleRootPage()` --calls--> `cookies`  [INFERRED]
+  scratch/app_backup/[locale]/page.tsx → apps/api/test/auth-cookies.e2e-spec.ts
 - `AdjustmentListClient()` --calls--> `useLocale()`  [INFERRED]
   scratch/app_backup/[locale]/(app)/(operations)/adjustments/AdjustmentListClient.tsx → apps/web/src/hooks/useLocale.ts
 - `AdjustmentForm()` --calls--> `useLocale()`  [INFERRED]
   scratch/app_backup/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentForm.tsx → apps/web/src/hooks/useLocale.ts
+- `AdjustmentViewer()` --calls--> `useLocale()`  [INFERRED]
+  scratch/app_backup/[locale]/(app)/(operations)/adjustments/[id]/AdjustmentViewer.tsx → apps/web/src/hooks/useLocale.ts
+- `IssueForm()` --calls--> `useLocale()`  [INFERRED]
+  scratch/app_backup/[locale]/(app)/(operations)/issues/new/issue-form.tsx → apps/web/src/hooks/useLocale.ts
 
-## Communities (1378 total, 93 thin omitted)
+## Communities (1392 total, 102 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.06
-Nodes (107): Props, BranchFormClient(), Props, Props, MasterDataFormLayout(), Props, TransferViewer(), ConflictDialog() (+99 more)
+Cohesion: 0.04
+Nodes (137): Props, Props, Props, BranchFormClient(), Props, Props, MasterDataFormLayout(), Props (+129 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (114): useVarianceReasons(), GRNForm(), GRNFormProps, grnFormSchema, GRNFormValues, isExpiryInPast(), LineItem, IssueForm() (+106 more)
+Cohesion: 0.03
+Nodes (111): useStocktake(), PRApprovalClient(), GRNForm(), GRNFormProps, grnFormSchema, GRNFormValues, isExpiryInPast(), LineItem (+103 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
@@ -1251,8 +1265,8 @@ Cohesion: 0.03
 Nodes (65): LedgerLockService, firstCallSql, item, lot, mockCalls, mockPrisma, mockPrismaTx, mockQueryRaw (+57 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.04
-Nodes (25): AdjustmentsService, PurchaseOrderService, body, mockDocumentSequenceService, mockPrisma, mockWorkflowService, po, role (+17 more)
+Cohesion: 0.22
+Nodes (8): currentYear, mockBranchFindUnique, mockDocumentSequenceCreate, mockDocumentSequenceUpdate, mockPrisma, mockPrismaTx, mockQueryRaw, rawSqlCall
 
 ### Community 5 - "Community 5"
 Cohesion: 0.08
@@ -1263,16 +1277,16 @@ Cohesion: 0.08
 Nodes (62): ActionGuard Component, Breadcrumb Component, ConflictDialog Component, DataTable Component, DocumentLineItemTable Component, DocumentLockBanner Component, FormFooter Component, LockBanner Component (+54 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.08
-Nodes (13): InventoryController, ItemsController, mockInventoryService, mockPrismaService, mockResult, query, InventoryModule, InventoryService (+5 more)
+Cohesion: 0.07
+Nodes (12): InventoryController, ItemsController, mockInventoryService, mockPrismaService, mockResult, query, InventoryService, mockExpiry (+4 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.07
 Nodes (26): 1.1 Backend Supremacy, 1.2 Separation of Concerns, 1.3 DRY Schema Enforcement, 1. ARCHITECTURAL AXIOMS (The Zero-Trust Monorepo), 2.1 Graphify First, 2.2 SpecKit Adherence, 2.3 Micro-Phasing & Compilation Safety, 2. AI AGENT OPERATIONAL RULES (OpenCode Directives) (+18 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.11
-Nodes (35): request(), OPERATIONAL_CONFIG, parseEnvInt(), KitchenRequestSummary, KitchenRequestSummarySchema, useCreateKitchenRequest(), useFulfillKitchenRequest(), useKitchenRequest() (+27 more)
+Cohesion: 0.18
+Nodes (23): request(), OPERATIONAL_CONFIG, parseEnvInt(), base64UrlEncode(), clearCookie(), createMockToken(), decodeMockToken(), findMockUser() (+15 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.07
@@ -1300,15 +1314,15 @@ Nodes (39): assign_guard_status(), BrokenRef, build_route_map(), cross_reference
 
 ### Community 16 - "Community 16"
 Cohesion: 0.07
-Nodes (13): IdempotencyGuard, context, error, mockIdempotencyService, mockReflector, IdempotencyInterceptor, context, handler (+5 more)
+Nodes (12): IdempotencyGuard, context, error, mockIdempotencyService, mockReflector, IdempotencyInterceptor, context, handler (+4 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.11
 Nodes (18): 7.1 Purchase Request (PR) Flow, 7.2 Purchase Order (PO) Flow, 7.3 GRN Flow (Goods Received Note), 7.4 Issue Flow, 7.5 Transfer Flow, 7.6 Stocktake Flow, 7.7 Adjustment Flow, 7.8 Kitchen Request Flow (+10 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.15
-Nodes (16): AdminController, mockPrismaService, mockRun, ActiveScope, AuthenticatedRequest, AuthenticatedRequest, CurrentUser, Idempotent() (+8 more)
+Cohesion: 0.06
+Nodes (41): ActiveScope, AuthenticatedRequest, AuthenticatedRequest, CurrentUser, Idempotent(), ApiIdempotentHeader(), ApiSecureController(), WorkflowAction() (+33 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.09
@@ -1319,8 +1333,8 @@ Cohesion: 0.12
 Nodes (15): Assumptions, Clarifications, Edge Cases, Feature Specification: Inventory Query, Reporting, & Administrative Jobs, Functional Requirements, Key Entities *(include if feature involves data)*, Measurable Outcomes, Requirements *(mandatory)* (+7 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.15
-Nodes (20): AuditLogRow, useNotificationTemplate(), useParameterRegistry(), useTriggerEvents(), AuditLogEntry, AuditLogEntrySchema, EmailOutboxEntry, EntityField (+12 more)
+Cohesion: 0.10
+Nodes (30): deleteTokenCookie(), getTokenCookie(), setTokenCookie(), ADJUSTMENT_STATUS, AdjustmentDetail, AdjustmentDetailSchema, AdjustmentLine, AdjustmentLineSchema (+22 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.05
@@ -1343,8 +1357,8 @@ Cohesion: 0.06
 Nodes (36): settings, active_roles, security_score, total_accounts, base_currency, base_currency_display, base_currency_warning, cancel (+28 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.40
-Nodes (8): PaginatedSuppliersSchema, QUERY_KEY, useCreateSupplier(), useDeleteSupplier(), useSupplier(), useUpdateSupplier(), SupplierFormClient(), SupplierSchema
+Cohesion: 0.20
+Nodes (10): EditSupplierPage(), PaginatedSuppliersSchema, QUERY_KEY, useCreateSupplier(), useDeleteSupplier(), useSupplier(), useUpdateSupplier(), SupplierDetailPage() (+2 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.06
@@ -1366,17 +1380,13 @@ Nodes (31): restaurant_profile, address, commercial_registration, email, logo, n
 Cohesion: 0.06
 Nodes (32): dependencies, @base-ui/react, class-variance-authority, clsx, date-fns, framer-motion, glob, @hookform/resolvers (+24 more)
 
-### Community 33 - "Community 33"
-Cohesion: 0.07
-Nodes (11): EmailService, OutboxCleanupJob, OutboxWorker, mockEvent, mockJob, EventEmitter, expiredDate, matchEvent (+3 more)
-
 ### Community 34 - "Community 34"
-Cohesion: 0.07
-Nodes (50): StockBalanceClient(), AdminDashboard(), KitchenDashboard(), KPICard(), KPICardProps, NearExpiryWidget(), PendingDocument, PendingDocumentsWidget() (+42 more)
+Cohesion: 0.08
+Nodes (44): StockBalanceClient(), AdminDashboard(), KitchenDashboard(), KPICard(), KPICardProps, ExpiringLot, NearExpiryWidget(), PendingDocument (+36 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.06
-Nodes (35): roles, roles, actions, admin, admin_policy_note, admin_role_locked, administration, approve (+27 more)
+Cohesion: 0.07
+Nodes (30): roles, actions, admin_policy_note, admin_role_locked, administration, approve, at_least_one_view, confirm_update_permissions (+22 more)
 
 ### Community 36 - "Community 36"
 Cohesion: 0.06
@@ -1395,8 +1405,8 @@ Cohesion: 0.07
 Nodes (29): admin, action, admins, audit_log, branch_scope, changes, create_user, created_at (+21 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.29
-Nodes (5): TransferDisputePage(), TransferDisputeClient(), TransferDisputeClientProps, TransferDisputePageClient(), TransferLine
+Cohesion: 0.10
+Nodes (18): QueryBoundary Shared Component, TRANSFER_STATUS Constants, TransferDisputeClient Component, TransferDisputePageClient Component, TransferViewer Component, useTransfer Hook, PageProps, StocktakeArchivePage() (+10 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.13
@@ -1415,16 +1425,16 @@ Cohesion: 0.09
 Nodes (22): additionalProperties, items, type, description, type, additionalProperties, properties, required (+14 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.07
-Nodes (38): useUpdateSettings(), Currency, CurrencySchema, useCurrencies(), useInventoryMovements(), RestaurantProfile, RestaurantProfileSchema, useRestaurantProfile() (+30 more)
+Cohesion: 0.45
+Nodes (5): RestaurantProfile, RestaurantProfileSchema, useRestaurantProfile(), useUpdateRestaurantProfile(), ReportHeader()
 
 ### Community 46 - "Community 46"
 Cohesion: 0.22
 Nodes (15): mockGoodsReceipts, useCreateGoodsReceipt(), useGoodsReceipt(), useGoodsReceipts(), usePostGoodsReceipt(), useUpdateGRNLine(), CreateGoodsReceiptDTO, CreatePurchaseOrderDTO (+7 more)
 
 ### Community 47 - "Community 47"
-Cohesion: 0.19
-Nodes (18): canStartStocktake(), isAdjustmentDraft(), isAdjustmentPending(), isAdjustmentPosted(), isDraft(), isGRNDraft(), isIssueDraft(), isIssuePosted() (+10 more)
+Cohesion: 0.12
+Nodes (27): AxiosLikeError, SafeMutationOptions, AdjustmentStatus, ALL_ADJUSTMENT_STATUSES, ALL_GRN_STATUSES, ALL_ISSUE_STATUSES, ALL_KITCHEN_REQUEST_STATUSES, ALL_PO_STATUSES (+19 more)
 
 ### Community 48 - "Community 48"
 Cohesion: 0.07
@@ -1483,8 +1493,8 @@ Cohesion: 0.10
 Nodes (20): Alternatives Considered, Alternatives Considered, Alternatives Considered, Alternatives Considered, Background & Context, Background & Context, Background & Context, Background & Context (+12 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.11
-Nodes (37): REASON_CHIP, ImportLandingClientProps, TransferViewerProps, TRANSFER_STATUS, ColumnMeta, DataTableProps, ADJUSTMENT_STATUS_UI, BadgeVariant (+29 more)
+Cohesion: 0.08
+Nodes (36): actionColors, AuditLogsClient(), AuditLogsPage(), generateMetadata(), TransferViewer(), TransferViewerProps, TRANSFER_STATUS, DepartmentListClient() (+28 more)
 
 ### Community 64 - "Community 64"
 Cohesion: 0.13
@@ -1523,8 +1533,8 @@ Cohesion: 0.05
 Nodes (43): Accessibility, Available Domains, Available Stacks, code:bash (python3 --version || python --version), code:bash (python3 .agent/.shared/ui-ux-pro-max/scripts/search.py "<key), code:bash (python3 .agent/.shared/ui-ux-pro-max/scripts/search.py "beau), code:bash (# Get UX guidelines for animation and accessibility), code:bash (python3 .agent/.shared/ui-ux-pro-max/scripts/search.py "layo) (+35 more)
 
 ### Community 73 - "Community 73"
-Cohesion: 0.09
-Nodes (32): ADJUSTMENT_STATUS enum/constants, ActionGuard – workflow permission component, AdjustmentCreateClient – create adjustment form, AdjustmentForm – edit/create adjustment form, AdjustmentViewer – read-only adjustment display, DocumentLineItemTable component, DocumentLockBanner Shared Component, DocumentReadOnlyOverlay Shared Component (+24 more)
+Cohesion: 0.06
+Nodes (67): ADJUSTMENT_STATUS enum/constants, ActionGuard – workflow permission component, AdjustmentCreateClient – create adjustment form, AdjustmentDetailClient – detail/detail orchestrator, AdjustmentForm – edit/create adjustment form, AdjustmentViewer – read-only adjustment display, ConflictDialog – optimistic concurrency UI, DocumentLineItemTable component (+59 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.08
@@ -1555,12 +1565,12 @@ Cohesion: 0.10
 Nodes (38): hasGeneratedHeader(), HEADER_MARKERS, isGeneratedFile(), isGitIgnored(), acceptCli(), argVal(), deindentContent(), detectCommentSyntax() (+30 more)
 
 ### Community 81 - "Community 81"
-Cohesion: 0.11
-Nodes (38): useStocktake(), StocktakeApprovePage(), StocktakeApproveClient(), StocktakeLineItem, ConflictDialogProps, isLocked(), StocktakeDetailClient(), CURRENT_USER_ROLE (+30 more)
+Cohesion: 0.04
+Nodes (113): DocumentReadOnlyOverlay Shared Component, StatusTimeline Shared Component, format, useVarianceReasons(), StocktakeApprovePage(), StocktakeApproveClient(), StocktakeLineItem, IssueForm() (+105 more)
 
 ### Community 82 - "Community 82"
-Cohesion: 0.22
-Nodes (11): isConfigValid(), cairo, ibmPlexMono, ibmPlexSans, ibmPlexSansArabic, LocaleLayout(), metadata, viewport (+3 more)
+Cohesion: 0.15
+Nodes (18): isConfigValid(), cairo, ibmPlexMono, ibmPlexSans, ibmPlexSansArabic, LocaleLayout(), metadata, viewport (+10 more)
 
 ### Community 83 - "Community 83"
 Cohesion: 0.18
@@ -1587,8 +1597,8 @@ Cohesion: 0.12
 Nodes (16): devDependencies, eslint, eslint-config-next, jsdom, @playwright/test, tailwindcss, @tailwindcss/postcss, @testing-library/jest-dom (+8 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.07
-Nodes (24): IssueScanClient – barcode scan issue mode, ProtectedRoute component, actionColors, AuditLogsClient(), AuditLogsPage(), generateMetadata(), BranchListClient(), BranchesPage() (+16 more)
+Cohesion: 0.05
+Nodes (28): AppShell – main app layout shell, IssueScanClient – barcode scan issue mode, ProtectedRoute component, adjustments/[id]/page.tsx – detail server page, adjustments/new/page.tsx – create server page, AppLayout – authenticated shell, AvailableInventoryPage(), generateMetadata() (+20 more)
 
 ### Community 90 - "Community 90"
 Cohesion: 0.05
@@ -1615,8 +1625,8 @@ Cohesion: 0.06
 Nodes (33): 1. Infinite Recursive RLS (CRITICAL — Causes OOM Crash), 2. Missing USING or WITH CHECK (HIGH), 3. Overly Permissive Policies (HIGH), 4. View Bypass (MEDIUM), Authenticated-Only Access, Checklist, code:sql (-- 1. Create table), code:sql (-- SLOW: Must join to resolve ownership) (+25 more)
 
 ### Community 96 - "Community 96"
-Cohesion: 0.15
-Nodes (12): CategoryFormClient(), EditCategoryPage(), PaginatedCategoriesSchema, QUERY_KEY, useCategory(), useCreateCategory(), useDeleteCategory(), useUpdateCategory() (+4 more)
+Cohesion: 0.23
+Nodes (11): CategoryFormClient(), PaginatedCategoriesSchema, QUERY_KEY, useCategories(), useCategory(), useCreateCategory(), useDeleteCategory(), useUpdateCategory() (+3 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.08
@@ -1755,16 +1765,16 @@ Cohesion: 0.20
 Nodes (9): routing, defaultLocale, routing, LocaleRootPage – redirector, proxy.ts – i18n/auth middleware, i18n routing configuration, config, intlMiddleware (+1 more)
 
 ### Community 131 - "Community 131"
-Cohesion: 0.25
-Nodes (9): CreateGRNPayload, CreateGRNPayloadSchema, useCreateGRN(), GRNDetail, GRNDetailSchema, LineItemSchema, UpdateGRNPayload, UpdateGRNPayloadSchema (+1 more)
+Cohesion: 0.20
+Nodes (11): CreateGRNPayload, CreateGRNPayloadSchema, useCreateGRN(), GRNDetail, GRNDetailSchema, LineItemSchema, UpdateGRNPayload, UpdateGRNPayloadSchema (+3 more)
 
 ### Community 132 - "Community 132"
-Cohesion: 0.10
-Nodes (18): mockApprovalEventCount, mockApprovalEventCreate, mockAuditLogCreate, mockCountFindMany, mockLockService, mockPrisma, mockPrismaTx, mockSessionFindUnique (+10 more)
+Cohesion: 0.12
+Nodes (29): ALL_STOCKTAKE_STATUSES, ALL_TRANSFER_STATUSES, StocktakeStatus, TransferStatus, AdjustmentLineItem, AdjustmentLineItemSchema, AdjustmentReason, AdjustmentSchema (+21 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.05
-Nodes (91): normalizeAdjustment(), normalizeDocument(), normalizeGRN(), normalizeIssue(), normalizePO(), normalizePR(), normalizeTransfer(), toCamelCase() (+83 more)
+Cohesion: 0.16
+Nodes (28): normalizeAdjustment(), normalizeDocument(), normalizeGRN(), normalizeIssue(), normalizePO(), normalizePR(), normalizeTransfer(), toCamelCase() (+20 more)
 
 ### Community 134 - "Community 134"
 Cohesion: 0.07
@@ -1799,8 +1809,8 @@ Cohesion: 0.18
 Nodes (12): dependencies, @insforge/sdk, devDependencies, turbo, name, packageManager, private, workspaces (+4 more)
 
 ### Community 142 - "Community 142"
-Cohesion: 0.13
-Nodes (29): AdjustmentDetailClient – detail/detail orchestrator, ConflictDialog – optimistic concurrency UI, GRNDetailClient Dispatcher, GRNForm Component, GRNPostClient Component, GRNViewer Component, GRN_STATUS Constants, GRN Type (+21 more)
+Cohesion: 0.08
+Nodes (15): ReconciliationJob, mockCreateNotification, mockLotAllocationFindMany, mockNotificationService, mockPrisma, mockPrismaTx, mockReconciliationRunCreate, mockStockLedgerGroupBy (+7 more)
 
 ### Community 143 - "Community 143"
 Cohesion: 0.06
@@ -1827,8 +1837,8 @@ Cohesion: 0.07
 Nodes (27): 10. Best Practices Checklist, 1. MCP Overview, 2. Server Architecture, 3. Tool Design Principles, 4. Resource Patterns, 5. Error Handling, 6. Multimodal Handling, 7. Security Principles (+19 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.09
-Nodes (29): Content Quality, Feature Readiness, Notes, Requirement Completeness, Specification Quality Checklist: API Controllers (Phase 8), Specification Quality Checklist: Authentication & Security, Specification Quality Checklist: Concurrency Control, Specification Quality Checklist: Data Integrity & Scope Isolation (+21 more)
+Cohesion: 0.08
+Nodes (30): Content Quality, Feature Readiness, Notes, Requirement Completeness, Specification Quality Checklist: API Controllers (Phase 8), Specification Quality Checklist: Authentication & Security, Specification Quality Checklist: Concurrency Control, Specification Quality Checklist: Data Integrity & Scope Isolation (+22 more)
 
 ### Community 150 - "Community 150"
 Cohesion: 0.07
@@ -1868,7 +1878,7 @@ Nodes (21): getLegacyLiveSessionsDir(), readLiveServerInfo(), completeCli(), com
 
 ### Community 161 - "Community 161"
 Cohesion: 0.08
-Nodes (14): compare_json(), get_keys(), compare_json(), compare_keys(), compare_translations(), analyze_diffs(), get_files_dict(), analyze_diffs() (+6 more)
+Nodes (14): compare_json(), compare_dirs(), get_file_hash(), compare_keys(), compare_translations(), analyze_diffs(), get_files_dict(), analyze_diffs() (+6 more)
 
 ### Community 168 - "Community 168"
 Cohesion: 0.18
@@ -1883,8 +1893,8 @@ Cohesion: 0.07
 Nodes (26): 1. Dead Links & Empty Actions, 2. Orphaned Screens (Unreachable Pages), 3. Workflow Dead-Ends (Missing Business Logic Links), 4. Breadcrumbs & Back Navigation, 5. Actionable Checklist, ✅ Correct Back Navigation (Reference Implementation), ✅ Correctly Implemented Workflows, 🔴 CRITICAL — Must Fix This Week (+18 more)
 
 ### Community 215 - "Community 215"
-Cohesion: 0.18
-Nodes (22): actionLabel(), barPaletteForTheme(), buildConfigureRow(), buildConfirmedRow(), buildDots(), buildGeneratingRow(), buildParamsPanel(), buildSavingRow() (+14 more)
+Cohesion: 0.15
+Nodes (27): actionLabel(), barPaletteForTheme(), buildConfigureRow(), buildConfirmedRow(), buildCyclingRow(), buildDots(), buildGeneratingRow(), buildParamsPanel() (+19 more)
 
 ### Community 216 - "Community 216"
 Cohesion: 0.08
@@ -1983,8 +1993,8 @@ Cohesion: 0.09
 Nodes (22): 2. Bundle Size Optimization, Avoid Barrel File Imports, code:tsx (import { Check, X, Menu } from 'lucide-react'), code:tsx (function FlagsProvider({ children, flags }: Props) {), code:tsx (import Check from 'lucide-react/dist/esm/icons/check'), code:js (// next.config.js - use optimizePackageImports), code:tsx (function AnimationPlayer({ enabled, setEnabled }: { enabled:), code:tsx (import { Analytics } from '@vercel/analytics/react') (+14 more)
 
 ### Community 240 - "Community 240"
-Cohesion: 0.13
-Nodes (28): cleanup(), clearScrollY(), clearSession(), desc(), handleAccept(), handleClick(), handleDiscard(), handleKeyDown() (+20 more)
+Cohesion: 0.17
+Nodes (23): cleanup(), clearScrollY(), clearSession(), copyToClipboard(), desc(), handleClick(), handleKeyDown(), handleMouseMove() (+15 more)
 
 ### Community 241 - "Community 241"
 Cohesion: 0.09
@@ -2131,8 +2141,8 @@ Cohesion: 0.11
 Nodes (18): 1. Context gathering, 2. Register, Absolute bans, code:text (IMPECCABLE_PREFLIGHT: context=pass product=pass command_refe), code:bash (node {{scripts_path}}/load-context.mjs), code:bash (node {{scripts_path}}/pin.mjs <pin|unpin> <command>), Color, Commands (+10 more)
 
 ### Community 277 - "Community 277"
-Cohesion: 0.22
-Nodes (11): clearHandled(), cycleVariant(), isSessionHandled(), loadSession(), pickVariantContent(), queueCheckpoint(), readScrollY(), resumeSession() (+3 more)
+Cohesion: 0.13
+Nodes (19): clearHandled(), cycleVariant(), extractContext(), handleGo(), id8(), isSessionHandled(), loadSession(), pickVariantContent() (+11 more)
 
 ### Community 278 - "Community 278"
 Cohesion: 0.11
@@ -2191,8 +2201,8 @@ Cohesion: 0.11
 Nodes (18): 3.10 Fix StocktakeApproveClient Hardcoded SAR Currency, 3.11 Add Version/Optimistic Locking to All Master Data Mutations, 3.12 Remove `INITIAL_*` Fallback Cache Seeding, 3.13 Consolidate Duplicated Form Components, 3.14 Add Error Toast Handlers to Mutations That Silently Swallow Errors, 3.15 Wire Batch Action Buttons in AdjustmentListClient, 3.16 Fix TransferReceiveClient Render Anti-Pattern, 3.17 Add Lot-Level Receive Granularity to Transfer Receive (+10 more)
 
 ### Community 292 - "Community 292"
-Cohesion: 0.18
-Nodes (10): code:tsx (entries={[{), Critical Finding: Same Single-Entry Timeline, Positive Findings, Production Gaps, Production Gaps, Purpose, Purpose, SCREEN: Purchase Order Viewer (+2 more)
+Cohesion: 0.11
+Nodes (17): code:tsx (entries={[{), Critical Finding: Same Single-Entry Timeline, Data Flow, Operational Safety, Positive Findings, Production Gaps, Production Gaps, Production Gaps (+9 more)
 
 ### Community 293 - "Community 293"
 Cohesion: 0.11
@@ -2731,8 +2741,8 @@ Cohesion: 0.14
 Nodes (13): 1. Executive Summary & Architectural Motivation, 2.1 Timing-Based USB Wedge Auto-Detection, 2.2 Hook-Driven Always-Focused Management, 2.3 Keystroke Debouncing & Double-Trigger Prevention, 2. Advanced Barcode Scanning Mechanics, 3.1 Double-Post Prevention, 3.2 Warehouse Lock Systems (`useWarehouseLock`), 3.3 Workflow Validation & Status Checks (+5 more)
 
 ### Community 427 - "Community 427"
-Cohesion: 0.27
-Nodes (10): buildDesignHeader(), designPanelCss(), fetchDesignSystem(), initDesignPanel(), loadDesignPrefs(), renderDesignBody(), renderDesignChrome(), renderParsedMdCta() (+2 more)
+Cohesion: 0.18
+Nodes (14): buildDesignHeader(), designPanelCss(), fetchDesignSystem(), initDesignPanel(), loadDesignPrefs(), loadDetectScript(), onDetectMessage(), renderDesignBody() (+6 more)
 
 ### Community 428 - "Community 428"
 Cohesion: 0.15
@@ -2807,8 +2817,8 @@ Cohesion: 0.29
 Nodes (9): Find-FeatureDirByPrefix(), Find-SpecifyRoot(), Get-CurrentBranch(), Get-FeatureDirFromBranchPrefixOrExit(), Get-FeaturePathsEnv(), Get-RepoRoot(), Get-SpecKitEffectiveBranchName(), Test-FeatureBranch() (+1 more)
 
 ### Community 446 - "Community 446"
-Cohesion: 0.19
-Nodes (16): applyParamDefaults(), applyParamValue(), buildCyclingRow(), closedClipPath(), closeTunePopover(), getVisibleVariantEl(), hideParamsPanel(), navBtn() (+8 more)
+Cohesion: 0.23
+Nodes (13): applyParamDefaults(), applyParamValue(), closedClipPath(), closeTunePopover(), hideParamsPanel(), openTunePopover(), parseVariantParams(), popoverDirection() (+5 more)
 
 ### Community 447 - "Community 447"
 Cohesion: 0.15
@@ -3423,8 +3433,8 @@ Cohesion: 0.12
 Nodes (16): Assumptions, Clarifications, Edge Cases, Feature Specification: Observability, Security & Deployment Hardening (Phase 3), Functional Requirements, Key Entities *(include if feature involves data)*, Measurable Outcomes, Requirements *(mandatory)* (+8 more)
 
 ### Community 600 - "Community 600"
-Cohesion: 0.12
-Nodes (18): AdminModule, AuditLogsController, PrismaModule, FXRatesController, FXRatesModule, HealthModule, KitchenRequestsModule, LedgerModule (+10 more)
+Cohesion: 0.09
+Nodes (22): helmet, PrismaModule, FXRatesController, FXRatesModule, HealthModule, InventoryModule, KitchenRequestsModule, LedgerModule (+14 more)
 
 ### Community 601 - "Community 601"
 Cohesion: 0.25
@@ -3636,11 +3646,7 @@ Nodes (27): Caveats, Checklist, code:sql (storage.foldername(name)   -- text[] o
 
 ### Community 654 - "Community 654"
 Cohesion: 0.06
-Nodes (35): dependencies, bcrypt, bullmq, class-transformer, class-validator, cookie-parser, exceljs, helmet (+27 more)
-
-### Community 655 - "Community 655"
-Cohesion: 0.11
-Nodes (8): GrnController, PurchaseOrderController, body, mockGrnPostService, mockPrismaService, mockPurchaseOrderService, mockRequest, mockWorkflowService
+Nodes (33): dependencies, bcrypt, bullmq, class-transformer, class-validator, cookie-parser, exceljs, ioredis (+25 more)
 
 ### Community 656 - "Community 656"
 Cohesion: 0.07
@@ -3987,8 +3993,8 @@ Cohesion: 0.18
 Nodes (11): jest, collectCoverageFrom, coverageDirectory, moduleFileExtensions, moduleNameMapper, rootDir, testEnvironment, testRegex (+3 more)
 
 ### Community 742 - "Community 742"
-Cohesion: 0.05
-Nodes (19): AdjustmentDetailClient(), IssueDetailClient(), AdjustmentDetailPage(), BranchDetailPage(), CurrencyDetailPage(), DepartmentDetailPage(), generateMetadata(), GoodsReceivedDetailPage() (+11 more)
+Cohesion: 0.06
+Nodes (18): AdjustmentDetailClient(), IssueDetailClient(), AdjustmentDetailPage(), BranchDetailPage(), CurrencyDetailPage(), DepartmentDetailPage(), generateMetadata(), GoodsReceivedDetailPage() (+10 more)
 
 ### Community 743 - "Community 743"
 Cohesion: 0.13
@@ -4503,12 +4509,12 @@ Cohesion: 0.12
 Nodes (15): 1. Force Unlock Endpoint, 2. Responses, API Contract: Force-Unlock Warehouse Lock, Bad Request (400 Bad Request), code:json ({), code:json ({), code:json ({), code:json ({) (+7 more)
 
 ### Community 871 - "Community 871"
-Cohesion: 0.08
-Nodes (12): AdjustmentFormSchema, AdjustmentFormValues, REASON_OPTIONS, AdjustmentNewPage(), generateMetadata(), NewBranchPage(), NewCurrencyPage(), NewDepartmentPage() (+4 more)
+Cohesion: 0.06
+Nodes (16): EditItemPage(), ItemDetailPage(), ItemFormClient(), generateMetadata(), NewBarcodePage(), NewBranchPage(), NewCategoryPage(), NewCurrencyPage() (+8 more)
 
 ### Community 872 - "Community 872"
-Cohesion: 0.16
-Nodes (18): FXRatesClient(), Props, useContextScope(), useMasterDataCreate(), useMasterDataItem(), useMasterDataUpdate(), Topbar(), TopbarProps (+10 more)
+Cohesion: 0.25
+Nodes (10): useContextScope(), useMasterDataCreate(), useMasterDataItem(), useMasterDataUpdate(), TopbarProps, ContextSelector(), ContextSelectorProps, NotificationBell() (+2 more)
 
 ### Community 874 - "Community 874"
 Cohesion: 0.50
@@ -4615,8 +4621,8 @@ Cohesion: 0.50
 Nodes (3): content, fs, lines
 
 ### Community 902 - "Community 902"
-Cohesion: 0.23
-Nodes (13): Step1Upload(), Step1UploadProps, Step2Validate(), Step2ValidateProps, Step3Errors(), Step3ErrorsProps, Step4Commit(), ImportStep (+5 more)
+Cohesion: 0.10
+Nodes (13): AdminController, mockAdminService, mockPrismaService, mockRoles, mockRun, AdminModule, AdminService, adminRole (+5 more)
 
 ### Community 903 - "Community 903"
 Cohesion: 0.83
@@ -4691,8 +4697,8 @@ Cohesion: 0.67
 Nodes (3): Performance Considerations, Response Time, Token Usage
 
 ### Community 930 - "Community 930"
-Cohesion: 0.11
-Nodes (10): mockResult, mockUpdated, mockWarehouseLockService, req, WarehouseLockController, WarehouseLockModule, expiresAt, mockLock (+2 more)
+Cohesion: 0.14
+Nodes (6): mockResult, mockUpdated, mockWarehouseLockService, req, WarehouseLockController, WarehouseLockService
 
 ### Community 931 - "Community 931"
 Cohesion: 0.67
@@ -4791,11 +4797,11 @@ Cohesion: 0.67
 Nodes (3): bolder, argumentHint, description
 
 ### Community 969 - "Community 969"
-Cohesion: 0.67
+Cohesion: 0.50
 Nodes (3): clarify, argumentHint, description
 
 ### Community 970 - "Community 970"
-Cohesion: 0.50
+Cohesion: 0.67
 Nodes (3): colorize, argumentHint, description
 
 ### Community 971 - "Community 971"
@@ -4959,8 +4965,8 @@ Cohesion: 0.08
 Nodes (24): AI Integration, Best Practices, code:bash (npx @insforge/cli ai setup), code:javascript (let video = job), code:bash (# All models), code:javascript (const completion = await insforge.ai.chat.completions.create), code:javascript (const image = await insforge.ai.images.generate({), code:bash (OPENROUTER_API_KEY=sk-or-v1-...) (+16 more)
 
 ### Community 1179 - "Community 1179"
-Cohesion: 0.12
-Nodes (15): EditUserPage(), useAdminUser(), useAdminUserMutations(), useDepartments(), UserDetailPage(), ALL_ROLES, MOCK_BRANCHES, MOCK_DEPARTMENTS (+7 more)
+Cohesion: 0.08
+Nodes (23): code:bash (# Implement and test P1 in parallel), Dependencies & Execution Order, Format: `[ID] [P?] [Story] Description`, Implementation for User Story 1, Implementation for User Story 2, Implementation for User Story 3, Implementation Strategy, Incremental Delivery (+15 more)
 
 ### Community 1181 - "Community 1181"
 Cohesion: 0.18
@@ -4971,8 +4977,8 @@ Cohesion: 0.18
 Nodes (11): 6.1 Authentication, 6.2 Master Data, 6.3 Purchasing Workflow, 6.4 Operations Workflow, 6.5 Stocktake, 6.6 Inventory Query & Reports, 6. RESTful API ROUTING PLAN, [API_PLAN] (+3 more)
 
 ### Community 1183 - "Community 1183"
-Cohesion: 0.06
-Nodes (71): apiClient, attemptRefresh(), dispatchExpiredEvent(), RequestOptions, AxiosLikeError, SafeMutationOptions, useSafeMutation(), ADJUSTMENT_STATUS (+63 more)
+Cohesion: 0.14
+Nodes (12): attemptRefresh(), dispatchExpiredEvent(), RequestOptions, CreatePOPayload, CreatePOPayloadSchema, useDeletePO(), useDeletePR(), PODetailSchema (+4 more)
 
 ### Community 1184 - "Community 1184"
 Cohesion: 0.10
@@ -4999,12 +5005,12 @@ Cohesion: 0.09
 Nodes (21): Authorization Prerequisite, Best Practices, code:typescript (import { createClient } from '@insforge/sdk'), code:bash (npx @insforge/cli payments status), code:typescript (const { data, error } = await insforge.payments.createChecko), code:sql (ALTER TABLE public.products), code:typescript (const lineItems = cart.items.map(({ product, quantity }) => ), code:typescript (const { data, error } = await insforge.payments.createChecko) (+13 more)
 
 ### Community 1191 - "Community 1191"
-Cohesion: 0.15
-Nodes (9): PrecisionTable Shared Component, LandedCostClient(), LandedCostItem, MOCK_ITEMS, LandedCostPage(), YieldManagementPage(), MOCK_YIELD_DATA, YieldItem (+1 more)
+Cohesion: 0.29
+Nodes (17): db, seedDatabase(), seedIfEmpty(), initialBarcodes, initialBranches, initialCategories, initialCurrencies, initialDepartments (+9 more)
 
 ### Community 1192 - "Community 1192"
-Cohesion: 0.03
-Nodes (33): VersionConflictException, context, mockReflector, mockWorkflowService, WarehouseLockGuard, ctx, doc, mockPrisma (+25 more)
+Cohesion: 0.04
+Nodes (29): counts, mockPrismaService, mockRequest, mockStocktakePostService, mockStocktakeService, mockWorkflowService, StocktakeController, mockApprovalEventCount (+21 more)
 
 ### Community 1193 - "Community 1193"
 Cohesion: 0.13
@@ -5019,8 +5025,8 @@ Cohesion: 0.10
 Nodes (20): Availability, Best Practices, Checkout and Portal Authorization, code:bash (# Verify CLI auth and linked project), code:bash (# Sync all configured environments), code:bash (npx @insforge/cli payments products list --environment test), code:bash (# One-time price), code:bash (npx @insforge/cli payments webhooks configure test) (+12 more)
 
 ### Community 1196 - "Community 1196"
-Cohesion: 0.15
-Nodes (11): BarcodeListClient(), BarcodesPage(), generateMetadata(), useBarcodes(), useUoMs(), BarcodeMappingClient(), MappingEntry, BarcodeMappingPage() (+3 more)
+Cohesion: 0.53
+Nodes (3): generateMetadata(), UnitsOfMeasurePage(), UoMListClient()
 
 ### Community 1197 - "Community 1197"
 Cohesion: 0.33
@@ -5031,8 +5037,8 @@ Cohesion: 0.22
 Nodes (9): 4. Workflow Map, Adjustment Workflow, code:block2 ([DRAFT] ──submit──► [SUBMITTED] ──approve──► [APPROVED] ──po), code:block3 ([DRAFT] ──start──► [STARTED] ──count──► [COUNTING] ──submit─), code:block4 ([DRAFT] ──ship──► [IN_TRANSIT] ──receive──► [RECEIVED]), code:block5 ([DRAFT] ──(receive items)──► [RECEIVED] ──post──► [POSTED]), GRN Workflow, Stocktake Workflow (+1 more)
 
 ### Community 1199 - "Community 1199"
-Cohesion: 0.17
-Nodes (11): RoleEditPage(), AdminRole, DEFAULT_MODULES, MOCK_ROLES, Permission, RoleAction, useAdminRole(), useAdminRoles() (+3 more)
+Cohesion: 0.10
+Nodes (30): RoleEditPage(), AdminRole, DEFAULT_MODULES, MOCK_ROLES, Permission, PermissionSchema, RoleAction, RoleDescriptorSchema (+22 more)
 
 ### Community 1200 - "Community 1200"
 Cohesion: 0.15
@@ -5043,8 +5049,8 @@ Cohesion: 0.33
 Nodes (5): name, private, scripts, typecheck, version
 
 ### Community 1202 - "Community 1202"
-Cohesion: 0.29
-Nodes (4): ConflictBus, ConflictListener, ConflictError, QueryProvider()
+Cohesion: 0.24
+Nodes (6): ConflictBus, ConflictEventPayload, ConflictListener, ConflictError, ConflictProvider(), QueryProvider()
 
 ### Community 1203 - "Community 1203"
 Cohesion: 0.30
@@ -5087,8 +5093,8 @@ Cohesion: 0.14
 Nodes (13): 1. Configure the Environment, 2. Validate the Schema, 3. Generate and Apply Migrations, 4. Run Lookup Data Seeding, 5. Verify the Tables, code:env (DATABASE_URL="postgresql://username:password@localhost:5432/), code:bash (npx prisma validate --schema=apps/api/prisma/schema.prisma), code:bash (npx prisma migrate dev --name init_core_schema --schema=apps) (+5 more)
 
 ### Community 1216 - "Community 1216"
-Cohesion: 0.26
-Nodes (10): ConflictEventPayload, locales, ConflictProvider(), LocaleSwitcher(), UnsavedChangesDialog(), PendingNavigation, UnsavedChangesContext, UnsavedChangesContextType (+2 more)
+Cohesion: 0.22
+Nodes (11): locales, LoginPage(), loginSchema, LoginValues, LocaleSwitcher(), UnsavedChangesDialog(), PendingNavigation, UnsavedChangesContext (+3 more)
 
 ### Community 1217 - "Community 1217"
 Cohesion: 0.15
@@ -5112,7 +5118,7 @@ Nodes (7): codes, enumNames, expected, prisma, sar, tableNames, usd
 
 ### Community 1222 - "Community 1222"
 Cohesion: 0.13
-Nodes (24): ExpiredOverrideInline(), FEFOLotAllocatorProps, allExpired, assertAllocated(), confirmBtn, inputs, lot1Input, lotsWithNull (+16 more)
+Nodes (23): ExpiredOverrideInline(), FEFOLotAllocatorProps, allExpired, assertAllocated(), confirmBtn, inputs, lot1Input, lotsWithNull (+15 more)
 
 ### Community 1223 - "Community 1223"
 Cohesion: 0.12
@@ -5127,24 +5133,24 @@ Cohesion: 0.15
 Nodes (13): conflict, description, force_reload_hint, reload, retry, retry_hint, server_version, stay (+5 more)
 
 ### Community 1226 - "Community 1226"
-Cohesion: 0.31
-Nodes (8): CreateYieldBatchRequest, useCreateYieldBatch(), QUERY_KEY, useYield(), YieldBatch, YieldBatchSchema, useYieldList(), YieldListResponseSchema
+Cohesion: 0.18
+Nodes (12): CreateYieldBatchRequest, useCreateYieldBatch(), QUERY_KEY, useYield(), YieldBatch, YieldBatchSchema, useYieldList(), YieldListResponseSchema (+4 more)
 
 ### Community 1227 - "Community 1227"
 Cohesion: 0.20
 Nodes (11): 3.2 PO Approve/Reject, 3.3 GRN Create & Post, 3. Procurement Lifecycles, 5.1 PATCH `/api/v1/notifications/:id/read`, 5.2 POST `/api/v1/notifications/read-all`, 5. Notification Control, code:json ({), code:json ({) (+3 more)
 
 ### Community 1228 - "Community 1228"
-Cohesion: 0.24
-Nodes (5): BarcodeFormClient(), EditBarcodePage(), Props, BarcodeDetailPage(), NewBarcodePage()
+Cohesion: 0.23
+Nodes (11): BarcodeFormClient(), PaginatedBarcodesSchema, QUERY_KEY, useBarcode(), useBarcodes(), useCreateBarcode(), useDeleteBarcode(), useUpdateBarcode() (+3 more)
 
 ### Community 1229 - "Community 1229"
 Cohesion: 0.18
 Nodes (10): code:text (specs/018-concurrency-control/), code:text (apps/api/src/), Complexity Tracking, Constitution Check, Documentation (this feature), Implementation Plan: Concurrency Control (Phase 5), Project Structure, Source Code (repository root) (+2 more)
 
 ### Community 1230 - "Community 1230"
-Cohesion: 0.06
-Nodes (33): generateMetadata(), POApprovePage(), PRApprovalPage(), Props, POApproveClient(), Props, PRApprovalClient(), Props (+25 more)
+Cohesion: 0.20
+Nodes (6): generateMetadata(), POApprovePage(), PRApprovalPage(), Props, POApproveClient(), NotFound()
 
 ### Community 1232 - "Community 1232"
 Cohesion: 0.18
@@ -5171,8 +5177,8 @@ Cohesion: 0.11
 Nodes (19): code:typescript (@IsString()), code:block35 (Create PR → Submit PR → Approve PR →), S6-T47 `[BE][SEC]` Add Stale Session Refresh Token Audit, S6-T48 `[BE][SEC]` Enforce Password Complexity in DTOs, S6-T49 `[BE][SEC]` Validate JWT_SECRET Removal from Env Schema, S6-T50 `[BE]` Add Concurrency Test — Double-Post Prevention, S6-T51 `[BE]` Add End-to-End Workflow Integration Test, S6-T52 `[BE]` Add Stocktake Lock Lifecycle Test (+11 more)
 
 ### Community 1241 - "Community 1241"
-Cohesion: 0.08
-Nodes (11): EditBranchPage(), EditCurrencyPage(), EditDepartmentPage(), EditFXRatePage(), EditItemPage(), EditSupplierPage(), EditUoMPage(), EditWarehousePage() (+3 more)
+Cohesion: 0.10
+Nodes (9): EditBarcodePage(), EditBranchPage(), EditCategoryPage(), EditCurrencyPage(), EditDepartmentPage(), EditUoMPage(), EditWarehousePage(), generateMetadata() (+1 more)
 
 ### Community 1242 - "Community 1242"
 Cohesion: 0.12
@@ -5191,8 +5197,8 @@ Cohesion: 0.17
 Nodes (11): 1. Concurrency Control & Row Locking, 2. FEFO/FIFO Lot Allocation Algorithm, 3. Weighted Average Cost (WAC) Calculation, Alternatives Considered, Decision, Decision, Decision, Rationale (+3 more)
 
 ### Community 1246 - "Community 1246"
-Cohesion: 0.42
-Nodes (3): FXRateListClient(), FXRatesPage(), generateMetadata()
+Cohesion: 0.35
+Nodes (4): FXRateListClient(), FXRatesClient(), FXRatesPage(), generateMetadata()
 
 ### Community 1247 - "Community 1247"
 Cohesion: 0.18
@@ -5207,8 +5213,8 @@ Cohesion: 0.25
 Nodes (7): 1.1 WarehouseLock (Updated Schema), 1.2 NotificationLog (New Entity), 1.3 AuditLog (Existing/Updated Entity), 1. Entity Definitions, 2. Validation & Domain Constraints, code:prisma (enum LockStatus {), Data Models: Inventory Query, Reporting, & Administrative Jobs
 
 ### Community 1250 - "Community 1250"
-Cohesion: 0.14
-Nodes (22): StocktakeListSchema, useApproveStocktake(), useBeginCounting(), useCancelStocktake(), useCompleteCounting(), useCreateStocktake(), usePostStocktake(), useRecountItems() (+14 more)
+Cohesion: 0.08
+Nodes (41): StocktakeListSchema, useApproveStocktake(), useBeginCounting(), useCancelStocktake(), useCompleteCounting(), useCreateStocktake(), usePostStocktake(), useRecountItems() (+33 more)
 
 ### Community 1251 - "Community 1251"
 Cohesion: 0.22
@@ -5219,16 +5225,16 @@ Cohesion: 0.22
 Nodes (9): 5.1 Start Stocktake Session (Warehouse Lock), 5.2 Submit Count Quantities, 5.3 Review & Post Stocktake, 5. Stocktake Sessions, code:json ({), code:json ({), code:json ({), code:json ({) (+1 more)
 
 ### Community 1253 - "Community 1253"
-Cohesion: 0.12
-Nodes (27): ActionMenu(), ActionMenuProps, getExcelBrandingHeader(), getExportBranding(), generatePDF(), PDFColumn, ExcelColumn, generateExcelWithBranding() (+19 more)
+Cohesion: 0.06
+Nodes (47): ActionMenu(), ActionMenuProps, ExpiredOverrideClient(), MOCK_OVERRIDES, ExpiredOverridePage(), generateMetadata(), Props, useNotificationTemplate() (+39 more)
 
 ### Community 1254 - "Community 1254"
-Cohesion: 0.06
-Nodes (26): AuthController, dto, expectedProfile, expectedResult, mockAuthService, mockRequest, mockResponse, mockRtrService (+18 more)
+Cohesion: 0.05
+Nodes (31): AuthController, dto, expectedProfile, expectedResult, mockAuthService, mockRequest, mockResponse, mockRtrService (+23 more)
 
 ### Community 1255 - "Community 1255"
-Cohesion: 0.06
-Nodes (58): ACTION_KEYS, Props, InventoryLayout(), cn(), GRNScanClient(), GRNScanClientProps, ConfirmationDialogProps, DocumentLock() (+50 more)
+Cohesion: 0.27
+Nodes (17): ConfirmationDialogProps, BUTTON_STYLES, ICON_MAP, PostConfirmDialogProps, VARIANT_STYLES, AlertDialog(), AlertDialogAction(), AlertDialogCancel() (+9 more)
 
 ### Community 1256 - "Community 1256"
 Cohesion: 0.29
@@ -5255,48 +5261,48 @@ Cohesion: 0.08
 Nodes (25): 10. Disaster Recovery Gaps, 11. Missing Automation, 12. Final Expanded Risk Matrix, 17. AUDIT EXPANSION REPORT, 1. Existing Findings Summary, 2. Newly Discovered Gaps, 3. Missing Operational Safeguards, 4. Hidden Production Risks (+17 more)
 
 ### Community 1263 - "Community 1263"
-Cohesion: 0.18
-Nodes (6): LowStockAlertJob, mockWhItem, nowSpy, OutboxService, mockTx, mockTxSpy
+Cohesion: 0.17
+Nodes (10): VersionConflictException, ConcurrencyService, mockAuditLog, mockDoc, mockPrisma, response, mockConcurrencyService, mockDoc (+2 more)
 
 ### Community 1264 - "Community 1264"
-Cohesion: 0.12
-Nodes (15): AppShell – main app layout shell, AppLayout(), AppLayout – authenticated shell, AppShell(), Sidebar(), LocaleLayout – root provider tree, useWarehouseScope(), WarehouseScopeContext (+7 more)
+Cohesion: 0.16
+Nodes (11): AppLayout(), AppShell(), Sidebar(), Topbar(), useWarehouseScope(), WarehouseScopeContext, WarehouseScopeContextValue, WarehouseScopeProvider() (+3 more)
 
 ### Community 1265 - "Community 1265"
-Cohesion: 0.04
-Nodes (66): PaginatedBarcodesSchema, QUERY_KEY, useBarcode(), useCreateBarcode(), useDeleteBarcode(), useUpdateBarcode(), PaginatedFXRatesSchema, QUERY_KEY (+58 more)
+Cohesion: 0.08
+Nodes (26): adjustmentRepo, barcodeRepo, branchRepo, categoryRepo, currencyRepo, departmentRepo, fxRateRepo, grnRepo (+18 more)
 
 ### Community 1266 - "Community 1266"
-Cohesion: 0.06
-Nodes (36): AdjustmentReason, AdjustmentReasonSchema, AdjustmentSummary, AdjustmentSummarySchema, AdminUserRow, UserFormSchema, UserFormValues, EmailOutboxEntrySchema (+28 more)
+Cohesion: 0.07
+Nodes (35): apiClient, AdjustmentReason, AdjustmentReasonSchema, AdjustmentSummary, AdjustmentSummarySchema, useAdjustmentList(), GRNSummary, GRNSummarySchema (+27 more)
 
 ### Community 1267 - "Community 1267"
 Cohesion: 0.29
 Nodes (6): 1. Prerequisites, 2. Running Verification Checks, 3. Manual Verification Steps, code:bash (npm install), code:bash (# Build the NestJS API), Quickstart: API Controllers (Phase 8)
 
 ### Community 1268 - "Community 1268"
-Cohesion: 0.06
-Nodes (38): AvailableInventoryClient(), AvailableInventoryPage(), generateMetadata(), CurrencySummariesClient(), CurrencySummariesPage(), generateMetadata(), ExpiryReportClient(), ExpiryReportPage() (+30 more)
+Cohesion: 0.07
+Nodes (48): AvailableInventoryClient(), ExpiryReportClient(), useUpdateSettings(), AvailableInventoryReport, AvailableInventoryReportSchema, CurrencySummaryReport, CurrencySummaryReportSchema, ExpiryReport (+40 more)
 
 ### Community 1270 - "Community 1270"
-Cohesion: 0.38
-Nodes (5): EmailOutboxClient(), statusConfig, EmailOutboxPage(), generateMetadata(), useEmailOutbox()
+Cohesion: 0.28
+Nodes (7): EmailOutboxClient(), statusConfig, EmailOutboxPage(), generateMetadata(), EmailOutboxEntrySchema, EmailOutboxRow, useEmailOutbox()
 
 ### Community 1271 - "Community 1271"
 Cohesion: 0.12
 Nodes (6): { createIORedisClient }, duplicatedWrapped, EventEmitter, MockRedis, rawClient, wrappedClient
 
 ### Community 1272 - "Community 1272"
-Cohesion: 0.10
-Nodes (26): BarcodesImportPage(), ImportWizardClient(), ImportWizardClientProps, ImportMetadata, ImportState, useImportWizard(), WizardReturn, getTemplateHeaders() (+18 more)
+Cohesion: 0.07
+Nodes (40): BarcodesImportPage(), ImportWizardClient(), ImportWizardClientProps, Step1Upload(), Step1UploadProps, Step2Validate(), Step2ValidateProps, Step3Errors() (+32 more)
 
 ### Community 1274 - "Community 1274"
-Cohesion: 0.09
-Nodes (20): AdjustmentListClient – adjustment list page, DataTable Shared Component, GRNListClient Component, ISSUE_STATUS enum/constants, IssueListClient – issue list page, PermissionGate Component, QueryBoundary Shared Component, adjustments/page.tsx – list server page (+12 more)
+Cohesion: 0.05
+Nodes (26): AdjustmentListClient – adjustment list page, DataTable Shared Component, ISSUE_STATUS enum/constants, IssueListClient – issue list page, REASON_CHIP, adjustments/page.tsx – list server page, StockBalancePage(), issues/page.tsx – list server page (+18 more)
 
 ### Community 1275 - "Community 1275"
-Cohesion: 0.10
-Nodes (26): deleteTokenCookie(), getTokenCookie(), setTokenCookie(), ForgotPasswordPage(), forgotPasswordSchema, ForgotPasswordValues, DashboardStats, DashboardStatsSchema (+18 more)
+Cohesion: 0.12
+Nodes (20): ForgotPasswordPage(), forgotPasswordSchema, ForgotPasswordValues, AdminUserRow, useAdminUser(), useAdminUsers(), UserFormSchema, UserFormValues (+12 more)
 
 ### Community 1276 - "Community 1276"
 Cohesion: 0.22
@@ -5311,8 +5317,8 @@ Cohesion: 0.18
 Nodes (13): 1.3 Me (Current User Details), 2.1 GET `/api/v1/items/scan`, 2. Health Endpoint Contract, 2. Optimized Scanner Resolution, 4. Stocktake Variance Report, 4. Transfer Receiving, 5. Procurement Status Report, API Endpoints: Reports Service (Phase 1) (+5 more)
 
 ### Community 1279 - "Community 1279"
-Cohesion: 0.17
-Nodes (11): 1.1 Login, 1.2 Logout, 1. Authentication, 4.1 Stock Issue Posting, 4.2 Stock Transfer Ship/Receive, 4. Operational Movement & Adjustments, API Contracts: API Controllers (Phase 8), code:json ({) (+3 more)
+Cohesion: 0.29
+Nodes (7): 4.1 Stock Issue Posting, 4.2 Stock Transfer Ship/Receive, 4. Operational Movement & Adjustments, code:json ({), code:json ({), code:json ({), code:json ({)
 
 ### Community 1280 - "Community 1280"
 Cohesion: 0.22
@@ -5323,8 +5329,8 @@ Cohesion: 0.20
 Nodes (9): 1. Master Source of Truth for Role Metadata, 2. User Aggregate Query Strategy, 3. Read-Only Permissions Display, code:typescript (const userCounts = await this.prisma.user.groupBy({), code:typescript (export interface RoleDescriptor {), Decisions Summary, Research & Decision Log: Wire Admin Roles UI to Real Backend API, Role Metadata Static Dictionary (+1 more)
 
 ### Community 1282 - "Community 1282"
-Cohesion: 0.11
-Nodes (17): 1. Authentication Cookies & Headers Contract, 1. Available Inventory Report, 1. Document Sequence Generation Interface, 2. Inventory Movements Report, 2. Issue Posting, 2. Reconciliation Discrepancy & Locking Contract, API Contracts & Interface Definitions: Phase 3 Hardening, API Contracts & Internal Interfaces: Phase 2 Hardening (+9 more)
+Cohesion: 0.17
+Nodes (11): 1. Authentication Cookies & Headers Contract, 1. Available Inventory Report, 1. Document Sequence Generation Interface, API Contracts & Interface Definitions: Phase 3 Hardening, code:http (HTTP/1.1 200 OK), Cookie Headers Structure, Internal Service Contract (`DocumentSequenceService`), Parameter Mapping (+3 more)
 
 ### Community 1283 - "Community 1283"
 Cohesion: 0.29
@@ -5339,20 +5345,20 @@ Cohesion: 0.09
 Nodes (22): code:bash (# Launch model updates and test script setup in parallel), Dependencies & Execution Order, Format: `[ID] [P?] [Story] Description`, Implementation for User Story 1, Implementation for User Story 2, Implementation for User Story 3, Implementation Strategy, MVP First (User Story 1 Only) (+14 more)
 
 ### Community 1287 - "Community 1287"
-Cohesion: 0.04
-Nodes (17): AdjustmentsController, IssuesController, IssuesService, KitchenRequestsController, KitchenRequestsService, body, mockAdjustmentPostService, mockAdjustmentsService (+9 more)
+Cohesion: 0.03
+Nodes (19): AdjustmentsController, AdjustmentsService, IssuesController, IssuesService, KitchenRequestsController, KitchenRequestsService, body, mockAdjustmentPostService (+11 more)
 
 ### Community 1288 - "Community 1288"
-Cohesion: 0.25
-Nodes (4): LotBalanceClient(), LotMovement, MOCK_MOVEMENTS, LotBalancesPage()
+Cohesion: 0.12
+Nodes (15): 1. Dynamic Recipient Resolution Strategy, 2. In-System Notification Integration, 3. Outbox Failure & Retry Policy, Alternatives Considered, Alternatives Considered, Alternatives Considered, code:ts (const users = await this.prisma.user.findMany({), code:ts (await tx.notificationLog.create({) (+7 more)
 
 ### Community 1289 - "Community 1289"
 Cohesion: 0.22
 Nodes (8): clearedCookies, newCookies, newRefreshCookie, newTokenCookie, refreshCookie, refreshCookieString, tokenCookie, tokenCookieString
 
 ### Community 1290 - "Community 1290"
-Cohesion: 0.05
-Nodes (69): formSchema, lineItemSchema, PurchaseOrderForm(), PurchaseOrderFormProps, PurchaseOrderFormValues, LineItemRow(), LineItemRowProps, PurchaseOrderLineItems() (+61 more)
+Cohesion: 0.04
+Nodes (87): formSchema, lineItemSchema, PurchaseOrderForm(), PurchaseOrderFormProps, PurchaseOrderFormValues, LineItemRow(), LineItemRowProps, PurchaseOrderLineItems() (+79 more)
 
 ### Community 1291 - "Community 1291"
 Cohesion: 0.25
@@ -5363,24 +5369,28 @@ Cohesion: 0.48
 Nodes (5): confirmBtn, { container }, defaultProps, input, mockUseLocale
 
 ### Community 1293 - "Community 1293"
-Cohesion: 0.22
-Nodes (9): checkpointPayload(), extractContext(), handleGo(), id8(), positionBar(), sendCheckpoint(), showBar(), startVariantObserver() (+1 more)
+Cohesion: 0.13
+Nodes (14): Assumptions, Clarifications, Edge Cases, Feature Specification: Security Replay Attack Alerts, Functional Requirements, Key Entities, Measurable Outcomes, Requirements *(mandatory)* (+6 more)
 
 ### Community 1294 - "Community 1294"
-Cohesion: 0.48
-Nodes (5): CreateTransferPayload, CreateTransferPayloadSchema, LotAllocationSchema, useCreateTransfer(), TransferDetailSchema
+Cohesion: 0.31
+Nodes (7): CreateTransferPayload, CreateTransferPayloadSchema, LotAllocationSchema, useCreateTransfer(), TransferDetailSchema, TransferLineLotAllocationSchema, TransferLineSchema
 
 ### Community 1295 - "Community 1295"
 Cohesion: 0.11
 Nodes (17): 18. FINAL GO-LIVE ASSESSMENT, 1. SYSTEM READINESS OVERVIEW, 2. FRONTEND AUDIT REPORT, 7. DOCUMENT NUMBERING AUDIT, Assessment, Conditions for Production Readiness, 🔴 CRITICAL GAPS, Enterprise Full-System Production Readiness Audit (+9 more)
+
+### Community 1296 - "Community 1296"
+Cohesion: 0.52
+Nodes (3): ContextSelectorClient(), ContextSelectorPage(), generateMetadata()
 
 ### Community 1297 - "Community 1297"
 Cohesion: 0.52
 Nodes (3): IssueScanClient(), IssueScanPage(), metadata
 
 ### Community 1298 - "Community 1298"
-Cohesion: 0.43
-Nodes (6): ConfirmationContext, ConfirmationContextType, ConfirmationOptions, ConfirmationProvider(), useConfirmation(), ConfirmationDialog()
+Cohesion: 0.17
+Nodes (11): 1. Local Testing Environment Setup, 2. Triggering a Refresh Token Replay Attack, 3. Verifying Alerts, 4. Running Automated Tests, code:bash (# Start Docker services), code:sql (SELECT * FROM "notification_logs"), code:sql (SELECT * FROM "outbox_events"), code:bash (# Run unit tests for outbox worker) (+3 more)
 
 ### Community 1299 - "Community 1299"
 Cohesion: 0.28
@@ -5391,52 +5401,52 @@ Cohesion: 0.29
 Nodes (7): code:tsx (const { data: settings } = useSettings();), code:tsx (// REMOVE THIS:), code:ts (// PR: DRAFT → CANCELLED (by creator or ADMIN)), S2-T14 `[DO]` Add GitHub Actions CI Pipeline, S3-T15 `[BE]` Implement BullMQ + Redis Module, TASK-008 🔴 — Remove Hardcoded 'SAR' from Dashboard Components, TASK-009 🔴 — Add Void/Cancellation Workflow States (Phase 1: CANCELLED for DRAFT)
 
 ### Community 1301 - "Community 1301"
-Cohesion: 0.06
-Nodes (38): canPerform(), hasPermission(), StockBalancePage(), canRolePerformAction(), DocumentAction, DocumentType, RoleCapabilities, ACTION_TO_DOCUMENT_ACTION (+30 more)
+Cohesion: 0.08
+Nodes (38): canPerform(), hasPermission(), PermissionContract, RoleDescriptorContract, BaseDocumentType, canRolePerformAction(), CapabilityAction, DocumentAction (+30 more)
 
 ### Community 1302 - "Community 1302"
 Cohesion: 0.24
 Nodes (9): 3.1 PR Create & Convert, 4.1 GET `/api/v1/admin/audit-logs`, 4.2 POST `/api/v1/warehouse-locks/:id/unlock`, 4. Administrative Audits & Actions, API Endpoint Contracts: Inventory Query, Reporting, & Administrative Jobs, code:json ({), code:json ({), code:json ({) (+1 more)
 
 ### Community 1303 - "Community 1303"
-Cohesion: 0.43
-Nodes (4): useAdminUsers(), UsersPage(), roleVariants, UserListClient()
+Cohesion: 0.35
+Nodes (6): getExcelBrandingHeader(), getExportBranding(), generatePDF(), PDFColumn, ExcelColumn, generateExcelWithBranding()
 
 ### Community 1304 - "Community 1304"
-Cohesion: 0.29
-Nodes (7): 6.1 Create & Submit Request, 6.2 Fulfill Request, 6. Kitchen Requests, code:json ({), code:json ({), code:json ({), code:json ({)
+Cohesion: 0.17
+Nodes (11): 1.1 Login, 1.2 Logout, 1. Authentication, 6.1 Create & Submit Request, 6.2 Fulfill Request, 6. Kitchen Requests, API Contracts: API Controllers (Phase 8), code:json ({) (+3 more)
 
 ### Community 1305 - "Community 1305"
-Cohesion: 0.29
-Nodes (7): YieldManagementClient Component, YieldNewBatchClient Component, useCreateYieldBatch Hook, YieldBatch Type, useYieldList Hook, Yield Management Page, New Yield Batch Page
+Cohesion: 0.18
+Nodes (10): code:text (specs/028-replay-attack-alerts/), code:text (apps/api/src/), Complexity Tracking, Constitution Check, Documentation (this feature), Implementation Plan: Security Replay Attack Alerts, Project Structure, Source Code (repository root) (+2 more)
 
 ### Community 1306 - "Community 1306"
 Cohesion: 0.31
 Nodes (9): CreateIssueLineAllocationSchema, CreateIssueLineSchema, CreateIssuePayload, CreateIssuePayloadSchema, useCreateIssue(), IssueLineItemSchema, IssueLineLotAllocationSchema, StockIssueDetail (+1 more)
 
 ### Community 1307 - "Community 1307"
-Cohesion: 0.06
-Nodes (32): AdjustmentListClient(), AdjustmentsPage(), useAdjustmentList(), AdjustmentSummaryMetrics, AdjustmentSummaryMetricsSchema, useAdjustmentSummary(), useIssueList(), OperationalScope (+24 more)
+Cohesion: 0.12
+Nodes (13): PrecisionTable Shared Component, YieldManagementClient Component, TransferHubPage(), MOCK_TRANSFERS, TransferHubClient(), TransferItem, LandedCostClient(), LandedCostItem (+5 more)
 
 ### Community 1308 - "Community 1308"
-Cohesion: 0.52
-Nodes (3): generateMetadata(), RolesPage(), RolesListClient()
+Cohesion: 0.29
+Nodes (5): AdjustmentListClient(), AdjustmentsPage(), AdjustmentSummaryMetrics, AdjustmentSummaryMetricsSchema, useAdjustmentSummary()
 
 ### Community 1309 - "Community 1309"
-Cohesion: 0.52
-Nodes (3): PageProps, StocktakeArchivePage(), StocktakeArchiveClient()
+Cohesion: 0.33
+Nodes (5): CreatePRPayload, CreatePRPayloadSchema, PRDetailSchema, UpdatePRPayload, UpdatePRPayloadSchema
 
 ### Community 1310 - "Community 1310"
-Cohesion: 0.48
-Nodes (4): usePRList(), generateMetadata(), PurchaseRequestsPage(), PRListClient()
+Cohesion: 0.52
+Nodes (3): generateMetadata(), PurchaseRequestsPage(), PRListClient()
 
 ### Community 1311 - "Community 1311"
-Cohesion: 0.29
-Nodes (7): Data Flow, Operational Safety, Production Gaps, Purpose, SCREEN: Stocktake List, UI Structure, Workflows
+Cohesion: 0.25
+Nodes (4): context, mockReflector, mockWorkflowService, WarehouseLockGuard
 
 ### Community 1312 - "Community 1312"
-Cohesion: 0.39
-Nodes (5): ThemeProvider(), ThemeSync(), useTheme(), UserProfileProvider(), ThemeToggle()
+Cohesion: 0.31
+Nodes (7): ThemeProvider(), ThemeSync(), useTheme(), UserProfileContext, UserProfileContextType, UserProfileProvider(), ThemeToggle()
 
 ### Community 1313 - "Community 1313"
 Cohesion: 0.67
@@ -5451,16 +5461,16 @@ Cohesion: 0.36
 Nodes (7): check_page(), find_pages(), is_page_file(), main(), Check if this file is likely a public-facing page., Find page files to check., Check a single page for SEO issues.
 
 ### Community 1317 - "Community 1317"
-Cohesion: 0.60
+Cohesion: 0.53
 Nodes (3): CurrencyListClient(), CurrenciesPage(), generateMetadata()
 
 ### Community 1318 - "Community 1318"
-Cohesion: 0.47
-Nodes (6): TRANSFER_STATUS Constants, TransferDisputeClient Component, TransferDisputePageClient Component, TransferViewer Component, useTransfer Hook, Transfer Dispute Page
+Cohesion: 0.43
+Nodes (6): Avatar(), AvatarBadge(), AvatarFallback(), AvatarGroup(), AvatarGroupCount(), AvatarImage()
 
 ### Community 1319 - "Community 1319"
-Cohesion: 0.29
-Nodes (5): MasterDataDetailLayout(), Props, UoMDetailPage(), Props, UoMDetailClient()
+Cohesion: 0.43
+Nodes (3): UoMDetailPage(), Props, UoMDetailClient()
 
 ### Community 1320 - "Community 1320"
 Cohesion: 0.33
@@ -5483,8 +5493,12 @@ Cohesion: 0.40
 Nodes (5): 13. OBSERVABILITY REPORT, 🔴 CRITICAL GAPS, ⚠️ HIGH GAPS, ✅ Strengths, ✅ What Exists
 
 ### Community 1327 - "Community 1327"
-Cohesion: 0.60
+Cohesion: 0.53
 Nodes (3): generateMetadata(), SuppliersPage(), SupplierListClient()
+
+### Community 1328 - "Community 1328"
+Cohesion: 0.47
+Nodes (3): useKitchenRequest(), KitchenRequestDetailClient(), KitchenRequestDetailPage()
 
 ### Community 1329 - "Community 1329"
 Cohesion: 0.50
@@ -5506,17 +5520,9 @@ Nodes (3): code:typescript (// contracts/operational-config.ts), Contracts: Phas
 Cohesion: 0.50
 Nodes (4): logirest_logo, logo_alt, restaurant_logo, branding
 
-### Community 1335 - "Community 1335"
-Cohesion: 0.27
-Nodes (6): Pagination(), PaginationProps, useNotificationTemplates(), NotificationTemplatesPage(), PREDEFINED_PARAMETERS, TemplateListClient()
-
 ### Community 1336 - "Community 1336"
 Cohesion: 0.40
 Nodes (5): 21. Operational Risk Report, CRITICAL Risks, HIGH Risks, LOW Risks, MEDIUM Risks
-
-### Community 1337 - "Community 1337"
-Cohesion: 0.60
-Nodes (3): GRNListClient(), generateMetadata(), GoodsReceivedPage()
 
 ### Community 1338 - "Community 1338"
 Cohesion: 0.50
@@ -5575,8 +5581,8 @@ Cohesion: 0.25
 Nodes (8): 16. PRIORITIZED IMPROVEMENT ROADMAP, Critical (Pre-Production Sprint 1 — 2 weeks), Critical (Sprint 0 — Pre-Production, 1 week), High (Pre-Production Sprint 2 — 2 weeks), High (Sprint 1 — First 2 weeks post-launch), Low (Technical Excellence), Medium (Post-Production Hardening — 4 weeks), Medium (Sprint 2-4 — Post-Launch Hardening)
 
 ### Community 1354 - "Community 1354"
-Cohesion: 0.48
-Nodes (4): CategoryListClient(), CategoriesPage(), generateMetadata(), useCategories()
+Cohesion: 0.53
+Nodes (3): CategoryListClient(), CategoriesPage(), generateMetadata()
 
 ### Community 1355 - "Community 1355"
 Cohesion: 0.29
@@ -5590,25 +5596,21 @@ Nodes (7): 4. DATABASE AUDIT REPORT, 🔴 CRITICAL GAPS, 🔴 CRITICAL GAPS, ⚠
 Cohesion: 0.40
 Nodes (5): 6. REPORTING & EXPORT AUDIT, Available API Endpoints, 🔴 CRITICAL GAPS, ⚠️ HIGH GAPS, ⚠️ HIGH GAPS
 
-### Community 1358 - "Community 1358"
-Cohesion: 0.47
-Nodes (3): usePOList(), POListPage(), POListClient()
-
 ### Community 1360 - "Community 1360"
-Cohesion: 0.18
-Nodes (15): ExpiringLot, DataTable(), { Link, redirect, usePathname, useRouter, getPathname }, ItemListClient(), generateMetadata(), ItemsPage(), ScanLog(), ScanLogEntry (+7 more)
+Cohesion: 0.07
+Nodes (57): ImportLandingClientProps, MasterDataDetailLayout(), Props, ColumnMeta, DataTable(), DataTableProps, Pagination(), PaginationProps (+49 more)
 
 ### Community 1365 - "Community 1365"
-Cohesion: 0.60
-Nodes (3): generateMetadata(), WarehousesPage(), WarehouseListClient()
+Cohesion: 0.38
+Nodes (3): CurrencySummariesClient(), CurrencySummariesPage(), generateMetadata()
 
 ### Community 1366 - "Community 1366"
-Cohesion: 0.04
-Nodes (46): mockPrismaService, format, BcryptService, PrismaMigration, PrismaService, IdempotencyCleanupJob, mockConfigService, mockPrismaService (+38 more)
+Cohesion: 0.03
+Nodes (47): mockPrismaService, BcryptService, PrismaMigration, PrismaService, IdempotencyCleanupJob, mockConfigService, mockPrismaService, LockCleanupJob (+39 more)
 
 ### Community 1368 - "Community 1368"
-Cohesion: 0.60
-Nodes (3): LoginPage(), loginSchema, LoginValues
+Cohesion: 0.52
+Nodes (5): Tabs(), TabsContent(), TabsList(), tabsListVariants, TabsTrigger()
 
 ### Community 1369 - "Community 1369"
 Cohesion: 0.60
@@ -5618,9 +5620,17 @@ Nodes (3): VarianceReasonItem, VarianceReasonListSchema, VarianceReasonSchema
 Cohesion: 0.53
 Nodes (4): getServerSnapshot(), getSnapshot(), NetworkStatusBanner(), subscribe()
 
+### Community 1371 - "Community 1371"
+Cohesion: 0.48
+Nodes (5): LotReceiveSchema, ReceiveLineSchema, ReceivePayload, ReceivePayloadSchema, useReceiveTransfer()
+
 ### Community 1372 - "Community 1372"
 Cohesion: 0.60
 Nodes (3): FXRateCapture(), FXRateCaptureProps, FxRateSchema
+
+### Community 1373 - "Community 1373"
+Cohesion: 0.29
+Nodes (6): 2. Inventory Movements Report, 2. Issue Posting, 2. Reconciliation Discrepancy & Locking Contract, API Contracts & Internal Interfaces: Phase 2 Hardening, code:http (POST /auth/refresh HTTP/1.1), Mutating Operations Restriction Guard
 
 ### Community 1374 - "Community 1374"
 Cohesion: 0.67
@@ -5630,6 +5640,30 @@ Nodes (3): 2.7 — Control / Locking Entities, Entity: `IdempotencyLog`, Entity:
 Cohesion: 0.67
 Nodes (3): 6. Write all variants in a single edit, code:html (<!-- Variants: insert below this line -->), code:tsx (<style data-impeccable-css="SESSION_ID">{`)
 
+### Community 1377 - "Community 1377"
+Cohesion: 0.33
+Nodes (5): 1. Primary Entities, 2. Validation & Flow Constraints, Data Model Design: Security Replay Attack Alerts, `NotificationLog`, `OutboxEvent`
+
+### Community 1380 - "Community 1380"
+Cohesion: 0.53
+Nodes (3): BranchListClient(), BranchesPage(), generateMetadata()
+
+### Community 1384 - "Community 1384"
+Cohesion: 0.53
+Nodes (4): Branch, CreateBranchDTO, UpdateBranchDTO, Branch
+
+### Community 1385 - "Community 1385"
+Cohesion: 0.53
+Nodes (4): CreateSupplierDTO, Supplier, UpdateSupplierDTO, Supplier
+
+### Community 1386 - "Community 1386"
+Cohesion: 0.60
+Nodes (3): StatusTimeline(), StatusTimelineProps, TimelineStep
+
+### Community 1387 - "Community 1387"
+Cohesion: 0.40
+Nodes (5): roles, admin, chief, manager, procurement
+
 ## Ambiguous Edges - Review These
 - `StocktakeForm Component` → `useStocktakes Hook (API)`  [AMBIGUOUS]
   apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/StocktakeForm.tsx · relation: references
@@ -5637,9 +5671,9 @@ Nodes (3): 6. Write all variants in a single edit, code:html (<!-- Variants: ins
   apps/web/src/app/[locale]/(app)/(operations)/stocktake/[id]/StocktakeViewer.tsx · relation: references
 
 ## Knowledge Gaps
-- **8237 isolated node(s):** `{ chromium }`, `rect`, `main`, `{ chromium }`, `fs` (+8232 more)
+- **8304 isolated node(s):** `{ chromium }`, `rect`, `main`, `{ chromium }`, `fs` (+8299 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **93 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **102 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -5648,13 +5682,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **What is the exact relationship between `StocktakeViewer Component` and `useStocktakes Hook (API)`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `cn()` connect `Community 1255` to `Community 0`, `Community 1`, `Community 902`, `Community 1290`, `Community 1298`, `Community 1301`, `Community 1179`, `Community 1307`, `Community 32`, `Community 34`, `Community 1196`, `Community 45`, `Community 63`, `Community 1230`, `Community 1360`, `Community 81`, `Community 1370`, `Community 1253`, `Community 1264`, `Community 1268`, `Community 1272`?**
-  _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `sorted` connect `Community 161` to `Community 1376`, `Community 1377`, `Community 642`, `Community 1316`, `Community 796`, `Community 1222`, `Community 487`, `Community 1322`, `Community 15`, `Community 439`, `Community 505`, `Community 58`, `Community 1340`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `PrismaService` connect `Community 1366` to `Community 3`, `Community 4`, `Community 132`, `Community 7`, `Community 1287`, `Community 1289`, `Community 655`, `Community 16`, `Community 18`, `Community 33`, `Community 930`, `Community 1192`, `Community 1324`, `Community 50`, `Community 600`, `Community 1244`, `Community 99`, `Community 1254`, `Community 1263`?**
+- **Why does `sorted` connect `Community 161` to `Community 1376`, `Community 642`, `Community 1316`, `Community 796`, `Community 1222`, `Community 487`, `Community 1322`, `Community 1390`, `Community 15`, `Community 439`, `Community 505`, `Community 58`, `Community 1340`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `PrismaService` connect `Community 1366` to `Community 99`, `Community 3`, `Community 4`, `Community 902`, `Community 1254`, `Community 7`, `Community 1287`, `Community 1192`, `Community 1289`, `Community 1324`, `Community 142`, `Community 1263`, `Community 18`, `Community 50`, `Community 600`, `Community 1244`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
+- **Why does `cn()` connect `Community 81` to `Community 0`, `Community 1`, `Community 1290`, `Community 1296`, `Community 1301`, `Community 21`, `Community 32`, `Community 34`, `Community 1318`, `Community 45`, `Community 1199`, `Community 63`, `Community 1360`, `Community 82`, `Community 1368`, `Community 1370`, `Community 1253`, `Community 1255`, `Community 1386`, `Community 1264`, `Community 1268`, `Community 1272`, `Community 1274`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `cn()` (e.g. with `clsx` and `AdjustmentViewer()`) actually correct?**
   _`cn()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `{ chromium }`, `rect`, `main` to the rest of the system?**
-  _8335 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _8402 weakly-connected nodes found - possible documentation gaps or missing edges._

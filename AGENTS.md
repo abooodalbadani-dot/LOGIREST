@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\026-wire-admin-roles-ui\plan.md
+E:\Kitchen‑Store Inventory System\specs\028-replay-attack-alerts\plan.md
 <!-- SPECKIT END -->
 
 # PROTOCOL — GRAPHIFY-DRIVEN NAVIGATION (TOKEN OPTIMIZATION)

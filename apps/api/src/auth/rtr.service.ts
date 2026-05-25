@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { Response } from 'express';
 import { OutboxService } from '../modules/outbox/outbox.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class RtrService {
@@ -84,41 +85,53 @@ export class RtrService {
         `Replay attack detected! Session: ${existingToken.sessionId}`,
       );
 
-      await this.prisma.$transaction(async (tx) => {
-        await tx.refreshToken.updateMany({
-          where: { sessionId: existingToken.sessionId },
-          data: { isRevoked: true },
-        });
+      await this.prisma.$transaction(
+        async (tx) => {
+          await tx.refreshToken.updateMany({
+            where: { sessionId: existingToken.sessionId },
+            data: { isRevoked: true },
+          });
 
-        await tx.auditLog.create({
-          data: {
-            userId: existingToken.userId,
-            action: 'REFRESH_TOKEN_REPLAY',
-            targetTable: 'refresh_tokens',
-            targetId: existingToken.sessionId,
-            ipAddress,
-            beforeStateJson: JSON.stringify({
-              tokenHash: tokenHash.substring(0, 8),
-              sessionId: existingToken.sessionId,
-            }),
-            afterStateJson: JSON.stringify({
-              action: 'ALL_SESSION_TOKENS_REVOKED',
-              sessionId: existingToken.sessionId,
-            }),
-          },
-        });
+          await tx.auditLog.create({
+            data: {
+              userId: existingToken.userId,
+              action: 'REFRESH_TOKEN_REPLAY',
+              targetTable: 'refresh_tokens',
+              targetId: existingToken.sessionId,
+              ipAddress,
+              beforeStateJson: JSON.stringify({
+                tokenHash: tokenHash.substring(0, 8),
+                sessionId: existingToken.sessionId,
+              }),
+              afterStateJson: JSON.stringify({
+                action: 'ALL_SESSION_TOKENS_REVOKED',
+                sessionId: existingToken.sessionId,
+              }),
+            },
+          });
 
-        await this.outboxService.writeEvent(
-          tx,
-          'SECURITY_ALERT_REPLAY_ATTACK',
-          {
-            userId: existingToken.userId,
-            sessionId: existingToken.sessionId,
-            ipAddress: ipAddress || null,
-            timestamp: new Date().toISOString(),
-          },
-        );
-      });
+          await this.outboxService.writeEvent(
+            tx,
+            'SECURITY_ALERT_REPLAY_ATTACK',
+            {
+              userId: existingToken.userId,
+              sessionId: existingToken.sessionId,
+              ipAddress: ipAddress || null,
+              timestamp: new Date().toISOString(),
+            },
+          );
+
+          await tx.notificationLog.create({
+            data: {
+              targetRole: Role.ADMIN,
+              message: `🚨 SECURITY ALERT: Refresh token replay attack detected at ${new Date().toISOString()} for User ID: ${existingToken.userId}, Session ID: ${existingToken.sessionId}, IP: ${ipAddress ?? 'Unknown'}. All tokens for this session have been revoked immediately.`,
+            },
+          });
+        },
+        {
+          timeout: 25000,
+        },
+      );
 
       throw new UnauthorizedException('Session expired or invalid');
     }

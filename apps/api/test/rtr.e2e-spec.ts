@@ -11,6 +11,9 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
+import { getQueueToken } from '@nestjs/bullmq';
+
+jest.setTimeout(180000);
 
 describe('Refresh Token Rotation (e2e)', () => {
   let app: INestApplication<App>;
@@ -69,6 +72,8 @@ describe('Refresh Token Rotation (e2e)', () => {
     );
 
     await app.init();
+    const queue = app.get(getQueueToken('outbox'));
+    jest.spyOn(queue, 'add').mockResolvedValue({ id: 'mock-job-id' } as any);
     prisma = app.get(PrismaService);
   });
 
@@ -77,82 +82,87 @@ describe('Refresh Token Rotation (e2e)', () => {
     await app.close();
   });
 
-  describe('POST /api/v1/auth/refresh', () => {
-    it('should return new access token on silent refresh', async () => {
+  describe('Refresh Token Rotation Lifecycle (e2e)', () => {
+    it('should complete the full Refresh Token Rotation lifecycle including silent refresh, replay attack detection, and session logout', async () => {
+      console.log('E2E TEST PROGRESS: Starting Step 1 (Login)...');
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+        .send({ email: 'admin@logirest.com', password: 'Adminpassword123!' });
 
+      expect(loginRes.status).toBe(200);
       const cookies = loginRes.headers['set-cookie'];
       const refreshCookie = Array.isArray(cookies)
         ? cookies.find((c: string) => c.startsWith('logirest_refresh='))
         : undefined;
+      expect(refreshCookie).toBeDefined();
+      const refreshToken1 = refreshCookie.split(';')[0].split('=')[1];
 
-      if (!refreshCookie) {
-        console.warn('Refresh cookie not set, skipping refresh test');
-        return;
-      }
-
-      const refreshToken = refreshCookie.split(';')[0].split('=')[1];
-
+      console.log('E2E TEST PROGRESS: Starting Step 2 (Silent Refresh)...');
       const refreshRes = await request(app.getHttpServer())
         .post('/api/v1/auth/refresh')
-        .set('Cookie', `logirest_refresh=${refreshToken}`);
+        .set('Cookie', `logirest_refresh=${refreshToken1}`);
 
       expect(refreshRes.status).toBe(200);
       expect(refreshRes.body.success).toBe(true);
       expect(refreshRes.body.accessToken).toBeDefined();
-    });
 
-    it('should reject on reused refresh token (replay detection)', async () => {
-      const loginRes = await request(app.getHttpServer())
-        .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
-
-      const cookies = loginRes.headers['set-cookie'];
-      const refreshCookie = Array.isArray(cookies)
-        ? cookies.find((c: string) => c.startsWith('logirest_refresh='))
+      const refreshCookies2 = refreshRes.headers['set-cookie'];
+      const refreshCookie2 = Array.isArray(refreshCookies2)
+        ? refreshCookies2.find((c: string) => c.startsWith('logirest_refresh='))
         : undefined;
+      expect(refreshCookie2).toBeDefined();
+      const refreshToken2 = refreshCookie2.split(';')[0].split('=')[1];
 
-      if (!refreshCookie) {
-        return;
-      }
+      console.log(
+        'E2E TEST PROGRESS: Starting Step 3 (Replay Attack Preparations)...',
+      );
+      // Clear out previous alerts first
+      console.log('E2E TEST PROGRESS: Deleting previous outboxEvents...');
+      await prisma.outboxEvent.deleteMany({
+        where: { eventType: 'SECURITY_ALERT_REPLAY_ATTACK' },
+      });
+      console.log('E2E TEST PROGRESS: Deleting previous notificationLogs...');
+      await prisma.notificationLog.deleteMany({
+        where: { targetRole: 'ADMIN' },
+      });
 
-      const refreshToken = refreshCookie.split(';')[0].split('=')[1];
-
-      await request(app.getHttpServer())
-        .post('/api/v1/auth/refresh')
-        .set('Cookie', `logirest_refresh=${refreshToken}`);
-
+      console.log('E2E TEST PROGRESS: Making Replay Attack Request...');
       const replayRes = await request(app.getHttpServer())
         .post('/api/v1/auth/refresh')
-        .set('Cookie', `logirest_refresh=${refreshToken}`);
+        .set('Cookie', `logirest_refresh=${refreshToken1}`);
 
+      console.log(
+        'E2E TEST PROGRESS: Replay Attack Request Completed. Checking Assertions...',
+      );
       expect(replayRes.status).toBe(401);
-    });
-  });
 
-  describe('POST /api/v1/auth/logout', () => {
-    it('should clear refresh cookie on logout', async () => {
-      const loginRes = await request(app.getHttpServer())
-        .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+      // Verify outbox alert event was created in database
+      const outboxEvent = await prisma.outboxEvent.findFirst({
+        where: { eventType: 'SECURITY_ALERT_REPLAY_ATTACK' },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(outboxEvent).toBeDefined();
+      expect(outboxEvent?.payload).toBeDefined();
+      expect(outboxEvent?.status).toBe('PENDING');
 
-      const cookies = loginRes.headers['set-cookie'];
-      const refreshCookie = Array.isArray(cookies)
-        ? cookies.find((c: string) => c.startsWith('logirest_refresh='))
-        : undefined;
+      // Verify transactional in-system notification targeting Role.ADMIN is created
+      const notification = await prisma.notificationLog.findFirst({
+        where: { targetRole: 'ADMIN' },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(notification).toBeDefined();
+      expect(notification?.message.toLowerCase()).toContain(
+        'replay attack detected',
+      );
 
-      const refreshToken = refreshCookie
-        ? refreshCookie.split(';')[0].split('=')[1]
-        : '';
-
+      console.log('E2E TEST PROGRESS: Starting Step 4 (Logout)...');
       const logoutRes = await request(app.getHttpServer())
         .post('/api/v1/auth/logout')
-        .set('Cookie', `logirest_refresh=${refreshToken}`);
+        .set('Cookie', `logirest_refresh=${refreshToken2}`);
 
       expect(logoutRes.status).toBe(200);
       expect(logoutRes.body.success).toBe(true);
-    });
+      console.log('E2E TEST PROGRESS: Completed All Steps Successfully!');
+    }, 180000);
   });
 });

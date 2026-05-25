@@ -18,6 +18,10 @@ interface OutboxPayload {
   uomCode?: string;
   supplierEmail?: string;
   supplierId?: string;
+  userId?: string;
+  sessionId?: string;
+  ipAddress?: string | null;
+  timestamp?: string;
 }
 
 @Processor('outbox')
@@ -92,7 +96,7 @@ export class OutboxWorker extends WorkerHost {
       );
 
       const nextAttempts = event.attempts + 1;
-      const finalStatus = nextAttempts >= 3 ? 'FAILED' : 'PENDING';
+      const finalStatus = nextAttempts >= 5 ? 'FAILED' : 'PENDING';
 
       // Update state for retrying or flagging failure
       await this.prisma.outboxEvent.update({
@@ -122,6 +126,9 @@ export class OutboxWorker extends WorkerHost {
     const data = (payload || {}) as OutboxPayload;
 
     switch (eventType) {
+      case 'SECURITY_ALERT_REPLAY_ATTACK':
+        targetRoles = [Role.ADMIN];
+        break;
       case 'PR_SUBMITTED':
         targetRoles = [Role.APPROVER];
         break;
@@ -194,6 +201,17 @@ export class OutboxWorker extends WorkerHost {
     const docNo = data.documentNumber || data.id || 'N/A';
 
     switch (eventType) {
+      case 'SECURITY_ALERT_REPLAY_ATTACK':
+        subject = '🚨 SECURITY ALERT: Token Replay Attack Detected';
+        body = `
+          <h2>Security Alert — Refresh Token Replay</h2>
+          <p>A refresh token replay attack was detected at <strong>${data.timestamp || 'N/A'}</strong>.</p>
+          <p><strong>User ID:</strong> ${data.userId || 'N/A'}</p>
+          <p><strong>Session ID:</strong> ${data.sessionId || 'N/A'}</p>
+          <p><strong>IP Address:</strong> ${data.ipAddress ?? 'Unknown'}</p>
+          <p>All tokens for this session have been revoked. Investigate immediately.</p>
+        `;
+        break;
       case 'PR_SUBMITTED':
         subject = `Purchase Request ${docNo} awaiting approval`;
         body = `

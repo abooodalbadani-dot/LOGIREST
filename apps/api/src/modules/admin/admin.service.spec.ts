@@ -42,19 +42,21 @@ describe('AdminService', () => {
     expect(result).toHaveLength(10);
 
     // Verify that ADMIN has count 2
-    const adminRole = result.find(r => r.id === 'ADMIN');
+    const adminRole = result.find((r) => r.id === 'ADMIN');
     expect(adminRole).toBeDefined();
     expect(adminRole?.userCount).toBe(2);
     expect(adminRole?.displayName).toBe('Administrator');
 
     // Verify that INV_MGR has count 5
-    const invMgrRole = result.find(r => r.id === 'INV_MGR');
+    const invMgrRole = result.find((r) => r.id === 'INV_MGR');
     expect(invMgrRole).toBeDefined();
     expect(invMgrRole?.userCount).toBe(5);
-    expect(invMgrRole?.description).toBe('Manages stock levels, adjustments and stocktake workflows');
+    expect(invMgrRole?.description).toBe(
+      'Manages stock levels, adjustments and stocktake workflows',
+    );
 
     // Verify that WH_KEEPER has count 0 (empty roles edge case)
-    const whKeeperRole = result.find(r => r.id === 'WH_KEEPER');
+    const whKeeperRole = result.find((r) => r.id === 'WH_KEEPER');
     expect(whKeeperRole).toBeDefined();
     expect(whKeeperRole?.userCount).toBe(0);
     expect(whKeeperRole?.displayName).toBe('Warehouse Keeper');
