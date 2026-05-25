@@ -48,6 +48,9 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   COUNTING_COMPLETED: { variant: 'info', labelKey: 'statuses.counting_completed' },
   ACTIVE: { variant: 'success', labelKey: 'statuses.active' },
   INACTIVE: { variant: 'error', labelKey: 'statuses.inactive' },
+  OUT_OF_STOCK: { variant: 'error', labelKey: 'statuses.out_of_stock' },
+  LOW_STOCK: { variant: 'warning', labelKey: 'statuses.low_stock' },
+  HEALTHY: { variant: 'success', labelKey: 'statuses.healthy' },
 };
 
 /**

@@ -76,15 +76,15 @@ enum StocktakeStatus {
 // ─── Tier 1: Master Data ───────────────────────────────────────────
 
 model User {
-  id           String              @id @default(uuid())
-  email        String              @unique
+  id           String   @id @default(uuid())
+  email        String   @unique
   passwordHash String
   name         String
   role         Role
-  isActive     Boolean             @default(true)
-  version      Int                 @default(1)
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  isActive     Boolean  @default(true)
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   warehouseScopes  UserWarehouseScope[]
   purchaseRequests PurchaseRequest[]
@@ -98,10 +98,10 @@ model User {
 }
 
 model UserWarehouseScope {
-  id          String    @id @default(uuid())
+  id          String @id @default(uuid())
   userId      String
   warehouseId String
-  version     Int       @default(1)
+  version     Int    @default(1)
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
@@ -125,6 +125,7 @@ model RefreshToken {
 
   @@index([userId])
   @@index([sessionId])
+  @@index([expiresAt]) // Enables efficient expired-token cleanup queries
   @@map("refresh_tokens")
 }
 
@@ -153,21 +154,21 @@ model Warehouse {
   version   Int      @default(1)
   createdAt DateTime @default(now())
 
-  branch                 Branch                 @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  userScopes             UserWarehouseScope[]
-  purchaseRequests       PurchaseRequest[]
-  goodsReceivedNotes     GoodsReceivedNote[]
-  inventoryIssues        InventoryIssue[]
-  transfersFrom          Transfer[]             @relation("TransferFrom")
-  transfersTo            Transfer[]             @relation("TransferTo")
-  adjustments            Adjustment[]
-  kitchenRequests        KitchenRequest[]
-  warehouseItems         WarehouseItem[]
-  warehouseItemLots      WarehouseItemLot[]
-  stockLedgers           StockLedger[]
-  costLedgers            CostLedger[]
-  warehouseLocks         WarehouseLock[]
-  stocktakeSessions      StocktakeSession[]
+  branch             Branch               @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  userScopes         UserWarehouseScope[]
+  purchaseRequests   PurchaseRequest[]
+  goodsReceivedNotes GoodsReceivedNote[]
+  inventoryIssues    InventoryIssue[]
+  transfersFrom      Transfer[]           @relation("TransferFrom")
+  transfersTo        Transfer[]           @relation("TransferTo")
+  adjustments        Adjustment[]
+  kitchenRequests    KitchenRequest[]
+  warehouseItems     WarehouseItem[]
+  warehouseItemLots  WarehouseItemLot[]
+  stockLedgers       StockLedger[]
+  costLedgers        CostLedger[]
+  warehouseLocks     WarehouseLock[]
+  stocktakeSessions  StocktakeSession[]
 
   @@map("warehouses")
 }
@@ -178,9 +179,9 @@ model Department {
   name     String
   version  Int    @default(1)
 
-  branch           Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  inventoryIssues  InventoryIssue[]
-  kitchenRequests  KitchenRequest[]
+  branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  inventoryIssues InventoryIssue[]
+  kitchenRequests KitchenRequest[]
 
   @@map("departments")
 }
@@ -211,6 +212,9 @@ model Supplier {
   name         String
   code         String  @unique
   contactEmail String?
+  contactName  String?
+  contactPhone String?
+  isActive     Boolean @default(true)
   version      Int     @default(1)
 
   purchaseOrders PurchaseOrder[]
@@ -219,26 +223,26 @@ model Supplier {
 }
 
 model Currency {
-  id     String  @id @default(uuid())
-  code   String  @unique
-  name   String
-  isBase Boolean @default(false)
-  version Int    @default(1)
+  id      String  @id @default(uuid())
+  code    String  @unique
+  name    String
+  isBase  Boolean @default(false)
+  version Int     @default(1)
 
-  purchaseOrders  PurchaseOrder[]
-  fxRatesFrom     FXRate[]          @relation("FXFrom")
-  fxRatesTo       FXRate[]          @relation("FXTo")
+  purchaseOrders PurchaseOrder[]
+  fxRatesFrom    FXRate[]        @relation("FXFrom")
+  fxRatesTo      FXRate[]        @relation("FXTo")
 
   @@map("currencies")
 }
 
 model FXRate {
-  id            String   @id @default(uuid())
+  id             String   @id @default(uuid())
   fromCurrencyId String
   toCurrencyId   String
-  rate          Decimal  @db.Decimal(18, 6)
-  effectiveFrom DateTime
-  version       Int      @default(1)
+  rate           Decimal  @db.Decimal(18, 6)
+  effectiveFrom  DateTime
+  version        Int      @default(1)
 
   fromCurrency Currency @relation("FXFrom", fields: [fromCurrencyId], references: [id], onDelete: Restrict)
   toCurrency   Currency @relation("FXTo", fields: [toCurrencyId], references: [id], onDelete: Restrict)
@@ -248,43 +252,44 @@ model FXRate {
 }
 
 model Item {
-  id         String  @id @default(uuid())
+  id         String   @id @default(uuid())
   categoryId String
   uomId      String
   name       String
-  sku        String  @unique
-  isBatched  Boolean @default(false)
-  hasExpiry  Boolean @default(false)
-  isActive   Boolean @default(true)
-  version    Int     @default(1)
+  sku        String   @unique
+  isBatched  Boolean  @default(false)
+  hasExpiry  Boolean  @default(false)
+  isActive   Boolean  @default(true)
+  version    Int      @default(1)
   createdAt  DateTime @default(now())
+  reorderPoint Decimal? @db.Decimal(18, 4)
 
-  category       Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  unitOfMeasure  UnitOfMeasure     @relation(fields: [uomId], references: [id], onDelete: Restrict)
-  barcodeMappings BarcodeMapping[]
-  prLines        PRLine[]
-  poLines        POLine[]
-  grnLines       GRNLine[]
-  issueLines     InventoryIssueLine[]
-  transferLines  TransferLine[]
-  adjustmentLines AdjustmentLine[]
+  category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  unitOfMeasure       UnitOfMeasure        @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  barcodeMappings     BarcodeMapping[]
+  prLines             PRLine[]
+  poLines             POLine[]
+  grnLines            GRNLine[]
+  issueLines          InventoryIssueLine[]
+  transferLines       TransferLine[]
+  adjustmentLines     AdjustmentLine[]
   kitchenRequestItems KitchenRequestItem[]
-  lots           Lot[]
-  warehouseItems WarehouseItem[]
-  warehouseItemLots WarehouseItemLot[]
-  stockLedgers   StockLedger[]
-  costLedgers    CostLedger[]
-  stocktakeCounts StocktakeCount[]
-  stocktakeSnapshots StocktakeSnapshot[]
+  lots                Lot[]
+  warehouseItems      WarehouseItem[]
+  warehouseItemLots   WarehouseItemLot[]
+  stockLedgers        StockLedger[]
+  costLedgers         CostLedger[]
+  stocktakeCounts     StocktakeCount[]
+  stocktakeSnapshots  StocktakeSnapshot[]
 
   @@map("items")
 }
 
 model BarcodeMapping {
-  id       String @id @default(uuid())
-  itemId   String
-  barcode  String @unique
-  version  Int    @default(1)
+  id      String @id @default(uuid())
+  itemId  String
+  barcode String @unique
+  version Int    @default(1)
 
   item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
@@ -303,10 +308,10 @@ model PurchaseRequest {
   version       Int      @default(1)
   createdAt     DateTime @default(now())
 
-  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  createdBy User    @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  lines     PRLine[]
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  warehouse      Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdBy      User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  lines          PRLine[]
   purchaseOrders PurchaseOrder[]
 
   @@map("purchase_requests")
@@ -334,10 +339,10 @@ model PurchaseOrder {
   version    Int      @default(1)
   createdAt  DateTime @default(now())
 
-  purchaseRequest PurchaseRequest? @relation(fields: [prId], references: [id], onDelete: SetNull)
-  supplier        Supplier         @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  currency        Currency         @relation(fields: [currencyId], references: [id], onDelete: Restrict)
-  lines           POLine[]
+  purchaseRequest    PurchaseRequest?    @relation(fields: [prId], references: [id], onDelete: SetNull)
+  supplier           Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  currency           Currency            @relation(fields: [currencyId], references: [id], onDelete: Restrict)
+  lines              POLine[]
   goodsReceivedNotes GoodsReceivedNote[]
 
   @@map("purchase_orders")
@@ -373,12 +378,12 @@ model GoodsReceivedNote {
 }
 
 model GRNLine {
-  id              String   @id @default(uuid())
-  grnId           String
-  itemId          String
-  quantityReceived Decimal  @db.Decimal(18, 4)
-  unitPrice       Decimal  @db.Decimal(18, 4)
-  lotId           String?
+  id               String  @id @default(uuid())
+  grnId            String
+  itemId           String
+  quantityReceived Decimal @db.Decimal(18, 4)
+  unitPrice        Decimal @db.Decimal(18, 4)
+  lotId            String?
 
   goodsReceivedNote GoodsReceivedNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
   item              Item              @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -396,8 +401,8 @@ model InventoryIssue {
   version      Int      @default(1)
   createdAt    DateTime @default(now())
 
-  warehouse  Warehouse  @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  department Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   lines      InventoryIssueLine[]
 
   @@map("inventory_issues")
@@ -409,18 +414,18 @@ model InventoryIssueLine {
   itemId   String
   quantity Decimal @db.Decimal(18, 4)
 
-  inventoryIssue InventoryIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  item           Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  inventoryIssue InventoryIssue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  item           Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
   lotAllocations LotAllocation[]
 
   @@map("inventory_issue_lines")
 }
 
 model LotAllocation {
-  id               String  @id @default(uuid())
-  issueLineId      String?
-  transferLineId   String?
-  lotId            String
+  id                String  @id @default(uuid())
+  issueLineId       String?
+  transferLineId    String?
+  lotId             String
   quantityAllocated Decimal @db.Decimal(18, 4)
 
   issueLine    InventoryIssueLine? @relation(fields: [issueLineId], references: [id], onDelete: Cascade)
@@ -439,23 +444,23 @@ model Transfer {
   version         Int      @default(1)
   createdAt       DateTime @default(now())
 
-  fromWarehouse Warehouse @relation("TransferFrom", fields: [fromWarehouseId], references: [id], onDelete: Restrict)
-  toWarehouse   Warehouse @relation("TransferTo", fields: [toWarehouseId], references: [id], onDelete: Restrict)
+  fromWarehouse Warehouse      @relation("TransferFrom", fields: [fromWarehouseId], references: [id], onDelete: Restrict)
+  toWarehouse   Warehouse      @relation("TransferTo", fields: [toWarehouseId], references: [id], onDelete: Restrict)
   lines         TransferLine[]
 
   @@map("transfers")
 }
 
 model TransferLine {
-  id              String   @id @default(uuid())
-  transferId      String
-  itemId          String
-  quantityShipped Decimal  @db.Decimal(18, 4)
+  id               String   @id @default(uuid())
+  transferId       String
+  itemId           String
+  quantityShipped  Decimal  @db.Decimal(18, 4)
   quantityReceived Decimal? @db.Decimal(18, 4)
-  varianceReason  String?
+  varianceReason   String?
 
-  transfer  Transfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
-  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  transfer       Transfer        @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  item           Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
   lotAllocations LotAllocation[]
 
   @@map("transfer_lines")
@@ -469,21 +474,21 @@ model Adjustment {
   version          Int      @default(1)
   createdAt        DateTime @default(now())
 
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  warehouse Warehouse        @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   lines     AdjustmentLine[]
 
   @@map("adjustments")
 }
 
 model AdjustmentLine {
-  id            String              @id @default(uuid())
-  adjustmentId  String
-  itemId        String
-  lotId         String?
-  quantity      Decimal             @db.Decimal(18, 4)
-  direction     AdjustmentDirection
-  reason        AdjustmentReason
-  unitCost      Decimal?            @db.Decimal(18, 4)
+  id           String              @id @default(uuid())
+  adjustmentId String
+  itemId       String
+  lotId        String?
+  quantity     Decimal             @db.Decimal(18, 4)
+  direction    AdjustmentDirection
+  reason       AdjustmentReason
+  unitCost     Decimal?            @db.Decimal(18, 4)
 
   adjustment Adjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
   item       Item       @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -501,17 +506,17 @@ model KitchenRequest {
   version       Int      @default(1)
   createdAt     DateTime @default(now())
 
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  warehouse  Warehouse  @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  department Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   items      KitchenRequestItem[]
 
   @@map("kitchen_requests")
 }
 
 model KitchenRequestItem {
-  id               String  @id @default(uuid())
-  requestId        String
-  itemId           String
+  id                String  @id @default(uuid())
+  requestId         String
+  itemId            String
   quantityRequested Decimal @db.Decimal(18, 4)
   quantityFulfilled Decimal @db.Decimal(18, 4)
 
@@ -536,27 +541,29 @@ model ApprovalEvent {
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  // Composite index for workflow step counting (used in executeTransition)
+  @@index([documentId, documentType])
   @@map("approval_events")
 }
 
 // ─── Tier 3 & 4: Live Inventory Position & Lots ────────────────────
 
 model Lot {
-  id           String     @id @default(uuid())
+  id           String    @id @default(uuid())
   itemId       String
-  lotNumber    String     @unique
-  receivedDate DateTime   @default(now())
+  lotNumber    String    @unique
+  receivedDate DateTime  @default(now())
   expiryDate   DateTime?
-  status       LotStatus  @default(ACTIVE)
-  createdAt    DateTime   @default(now())
+  status       LotStatus @default(ACTIVE)
+  createdAt    DateTime  @default(now())
 
-  item              Item              @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  grnLines          GRNLine[]
-  lotAllocations    LotAllocation[]
-  adjustmentLines   AdjustmentLine[]
-  warehouseItemLots WarehouseItemLot[]
-  stockLedgers      StockLedger[]
-  stocktakeCounts   StocktakeCount[]
+  item               Item                @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  grnLines           GRNLine[]
+  lotAllocations     LotAllocation[]
+  adjustmentLines    AdjustmentLine[]
+  warehouseItemLots  WarehouseItemLot[]
+  stockLedgers       StockLedger[]
+  stocktakeCounts    StocktakeCount[]
   stocktakeSnapshots StocktakeSnapshot[]
 
   @@index([itemId, expiryDate(sort: Asc)])
@@ -572,8 +579,8 @@ model WarehouseItem {
   isFrozen     Boolean  @default(false) @map("is_frozen")
   updatedAt    DateTime @updatedAt
 
-  warehouse Warehouse           @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  item      Item                @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  item      Item               @relation(fields: [itemId], references: [id], onDelete: Restrict)
   lots      WarehouseItemLot[]
 
   @@id([warehouseId, itemId])
@@ -679,6 +686,10 @@ model AuditLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  // Indexes for incident investigation and audit queries
+  @@index([targetTable, targetId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
   @@map("audit_logs")
 }
 
@@ -690,7 +701,7 @@ model StocktakeSession {
   version       Int             @default(1)
   createdAt     DateTime        @default(now())
 
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  warehouse Warehouse           @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   counts    StocktakeCount[]
   snapshots StocktakeSnapshot[]
 
@@ -698,11 +709,11 @@ model StocktakeSession {
 }
 
 model StocktakeCount {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   sessionId   String
   itemId      String
   lotId       String?
-  qtyCounted  Decimal @db.Decimal(18, 4)
+  qtyCounted  Decimal  @db.Decimal(18, 4)
   countedById String
   countedAt   DateTime @default(now())
 
@@ -715,12 +726,13 @@ model StocktakeCount {
 }
 
 model StocktakeSnapshot {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   sessionId   String
   itemId      String
   lotId       String?
-  qtySnapshot Decimal @db.Decimal(18, 4)
-  wacSnapshot Decimal @db.Decimal(18, 4)
+  qtySnapshot Decimal  @db.Decimal(18, 4)
+  wacSnapshot Decimal  @db.Decimal(18, 4)
+  createdAt   DateTime @default(now())
 
   session StocktakeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   item    Item             @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -741,6 +753,7 @@ model NotificationLog {
 
   @@index([targetRole, isRead])
   @@index([warehouseId])
+  @@index([createdAt(sort: Desc)]) // Enables efficient TTL-based cleanup
   @@map("notification_logs")
 }
 
@@ -754,8 +767,35 @@ model DocumentSequence {
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
-  branch          Branch       @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
 
   @@unique([documentType, year, branchId])
   @@map("document_sequences")
 }
+
+model OutboxEvent {
+  id          String    @id @default(uuid())
+  eventType   String
+  payload     Json
+  status      String    @default("PENDING") // PENDING | SUCCEEDED | FAILED
+  attempts    Int       @default(0)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}
+
+model ReconciliationRun {
+  id                 String   @id @default(uuid())
+  ranAt              DateTime @default(now())
+  itemsChecked       Int
+  discrepanciesFound Int
+  frozenItems        String[]
+  durationMs         Int
+
+  @@map("reconciliation_runs")
+}
+

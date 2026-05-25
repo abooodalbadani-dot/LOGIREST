@@ -9,6 +9,8 @@ describe('InventoryService', () => {
   const mockPrismaService = {
     warehouseItem: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     warehouseItemLot: {
       findMany: jest.fn(),
@@ -20,6 +22,12 @@ describe('InventoryService', () => {
     barcodeMapping: {
       findUnique: jest.fn(),
     },
+    auditLog: {
+      create: jest.fn(),
+    },
+    $transaction: jest
+      .fn()
+      .mockImplementation((cb: any) => cb(mockPrismaService)),
   };
 
   beforeEach(async () => {
@@ -267,6 +275,94 @@ describe('InventoryService', () => {
       await expect(
         service.scanBarcode('wh-1', '9780201379624'),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('unfreeze', () => {
+    it('should successfully unfreeze a frozen item and write audit logs', async () => {
+      const mockWhItem = {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        qtyOnHand: 100.0,
+        qtyAllocated: 5.0,
+        wac: 10.0,
+        isFrozen: true,
+      };
+
+      const mockUpdatedItem = {
+        ...mockWhItem,
+        isFrozen: false,
+      };
+
+      mockPrismaService.warehouseItem.findUnique.mockResolvedValue(mockWhItem);
+      mockPrismaService.warehouseItem.update.mockResolvedValue(mockUpdatedItem);
+
+      const result = await service.unfreeze(
+        'item-1',
+        'wh-1',
+        'user-1',
+        'Reconciliation correction',
+        '127.0.0.1',
+      );
+
+      expect(result).toEqual(mockUpdatedItem);
+      expect(mockPrismaService.warehouseItem.update).toHaveBeenCalledWith({
+        where: {
+          warehouseId_itemId: {
+            warehouseId: 'wh-1',
+            itemId: 'item-1',
+          },
+        },
+        data: {
+          isFrozen: false,
+        },
+      });
+
+      expect(mockPrismaService.auditLog.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'user-1',
+          action: 'INVENTORY_UNFREEZE',
+          targetTable: 'warehouse_items',
+          targetId: 'wh-1_item-1',
+          beforeStateJson: JSON.stringify({
+            qtyOnHand: 100,
+            qtyAllocated: 5,
+            wac: 10,
+            isFrozen: true,
+          }),
+          afterStateJson: JSON.stringify({
+            qtyOnHand: 100,
+            qtyAllocated: 5,
+            wac: 10,
+            isFrozen: false,
+            unfreezeReason: 'Reconciliation correction',
+          }),
+          ipAddress: '127.0.0.1',
+        },
+      });
+    });
+
+    it('should throw NotFoundException if warehouse item does not exist', async () => {
+      mockPrismaService.warehouseItem.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.unfreeze('item-1', 'wh-1', 'user-1', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if item is not frozen', async () => {
+      const mockWhItem = {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        isFrozen: false,
+      };
+      mockPrismaService.warehouseItem.findUnique.mockResolvedValue(mockWhItem);
+
+      await expect(
+        service.unfreeze('item-1', 'wh-1', 'user-1', 'Reason'),
+      ).rejects.toThrow(
+        expect.objectContaining({ message: 'Warehouse item is not frozen.' }),
+      );
     });
   });
 });

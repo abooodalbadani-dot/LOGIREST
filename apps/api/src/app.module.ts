@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validate } from './config/env.validation';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -28,6 +29,15 @@ import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
 import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
 import { LockCleanupJob } from './jobs/lock-cleanup.job';
+import { LowStockAlertJob } from './jobs/low-stock-alert.job';
+import { NotificationCleanupJob } from './jobs/notification-cleanup.job';
+import { IdempotencyCleanupJob } from './jobs/idempotency-cleanup.job';
+import { TokenCleanupJob } from './jobs/token-cleanup.job';
+import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
+import { OutboxModule } from './modules/outbox/outbox.module';
+import { LoggerModule } from 'nestjs-pino';
+import * as crypto from 'crypto';
 
 @Module({
   imports: [
@@ -35,6 +45,35 @@ import { LockCleanupJob } from './jobs/lock-cleanup.job';
       isGlobal: true,
       validate,
     }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        genReqId: (req, res) => {
+          const rawCorrelationId =
+            req.headers['x-correlation-id'] || req.headers['x-request-id'];
+          const correlationId = Array.isArray(rawCorrelationId)
+            ? rawCorrelationId[0]
+            : (rawCorrelationId as string) || crypto.randomUUID();
+          res.setHeader('x-correlation-id', correlationId);
+          return correlationId;
+        },
+        customProps: (req, res) => ({
+          correlationId: res.getHeader('x-correlation-id'),
+        }),
+        level: process.env.LOG_LEVEL || 'info',
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
+      },
+    }),
+    ScheduleModule.forRoot(),
+    BullModule.forRoot({
+      connection: {
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
+      },
+    }),
+    // Rate limiting: 10 requests per 60 seconds per IP (applied globally)
+    ThrottlerModule.forRoot([{ name: 'short', ttl: 60000, limit: 10 }]),
     PrismaModule,
     HealthModule,
     AuthModule,
@@ -52,12 +91,21 @@ import { LockCleanupJob } from './jobs/lock-cleanup.job';
     NotificationModule,
     AdminModule,
     DocumentSequenceModule,
+    OutboxModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     IdempotencyService,
     LockCleanupJob,
+    LowStockAlertJob,
+    NotificationCleanupJob,
+    IdempotencyCleanupJob,
+    TokenCleanupJob,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

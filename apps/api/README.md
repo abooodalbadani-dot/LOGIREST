@@ -145,3 +145,50 @@ Due to the strict InsForge PostgreSQL connection limit (exactly `3` concurrent c
 - Warehouse lock overrides: `npx jest --config ./test/jest-e2e.json test/warehouse-lock.e2e-spec.ts`
 - Workflow roles & locks: `npx jest --config ./test/jest-e2e.json test/workflow-roles.e2e-spec.ts`
 
+## Enterprise Production Deployment & Promotion (Sprint 6)
+
+### 1. Environment Promotion
+The deployment workflow promotes images through the standard pipeline:
+`Development -> Staging -> Production`
+
+- **Build Pipeline**: The CI/CD pipeline builds Docker images tagged with the commit SHA and git tag.
+- **Prisma Migrations**: Database migrations are run as part of the container startup script (`npx prisma migrate deploy` in the entrypoint) rather than out-of-band to ensure zero discrepancies between application code and database schema.
+
+### 2. Zero-Downtime Migration Strategy
+To avoid service disruption during promotions:
+- **Additive Schema Updates**: Database columns and tables must be created as nullable or with default values. Do not rename or delete fields in a single release.
+- **Two-Phase Deployments**: 
+  1. Deploy database schema changes first (additive-only).
+  2. Deploy the application containers that consume the new fields.
+  3. Clean up old fields in a subsequent release.
+
+### 3. Container Rollback Procedure
+If a production incident occurs:
+1. Revert to the last stable container image tag (e.g. using `docker compose` or Kubernetes deployment configs).
+2. **Database Rollbacks**: Since Prisma does not support automatic down migrations, rollbacks must be performed manually. Reverting to a previous container version will not roll back the database schema. If schema rollback is required, execute manual DDL statements via a database tool or run a custom SQL migration script.
+
+### 4. Production Environment Variables Reference
+Ensure the following variables are configured in the container runtime environment:
+
+| Variable | Description | Example / Note |
+| --- | --- | --- |
+| `DATABASE_URL` | PostgreSQL connection URL with pool limits | `postgresql://user:pass@host:5432/db?sslmode=require` |
+| `JWT_ACCESS_SECRET` | Secret key for access token signing | Minimum 32-character random string |
+| `JWT_REFRESH_SECRET` | Secret key for refresh token signing | Minimum 32-character random string |
+| `FRONTEND_URL` | Absolute URL of the Next.js frontend | `https://logirest.app` |
+| `PORT` | Listening port for the NestJS API | `4000` |
+| `NODE_ENV` | Mode of operation | `production` |
+| `REDIS_URL` | BullMQ Redis connection string | `redis://redis-host:6379` |
+| `SMTP_HOST` | Outbox SMTP email gateway host | `smtp.mailgun.org` |
+| `SMTP_PORT` | Outbox SMTP email gateway port | `587` |
+| `SMTP_USER` | SMTP username | `postmaster@logirest.app` |
+| `SMTP_PASS` | SMTP password | Secret password |
+| `SMTP_FROM` | Outbox sender address | `noreply@logirest.app` |
+
+### 5. Production Docker Compose Command
+Run the application stack in production mode:
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+

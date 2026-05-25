@@ -5,11 +5,13 @@ import {
   Body,
   Req,
   Res,
+  Ip,
   HttpCode,
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RtrService } from './rtr.service';
 import { LoginDto } from './dto/login.dto';
@@ -24,6 +26,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ short: { limit: 10, ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -39,6 +42,7 @@ export class AuthController {
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
+    @Ip() ipAddress: string,
   ) {
     const refreshToken = req.cookies?.logirest_refresh as string | undefined;
     if (!refreshToken) {
@@ -48,6 +52,7 @@ export class AuthController {
     const { accessToken } = await this.rtrService.rotateRefreshToken(
       refreshToken,
       res,
+      ipAddress,
     );
 
     return { success: true, accessToken };

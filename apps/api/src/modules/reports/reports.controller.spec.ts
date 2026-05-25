@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ReportsController } from './reports.controller';
 import { PrismaService } from '../../database/prisma.service';
+import type { Response } from 'express';
 
 describe('ReportsController', () => {
   let controller: ReportsController;
@@ -29,6 +30,7 @@ describe('ReportsController', () => {
     },
     approvalEvent: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
     },
     warehouseItemLot: {
       findMany: jest.fn(),
@@ -47,9 +49,19 @@ describe('ReportsController', () => {
     },
     fXRate: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
     },
     stockLedger: {
       count: jest.fn(),
+      findMany: jest.fn(),
+    },
+    costLedger: {
+      findMany: jest.fn(),
+    },
+    lot: {
+      findFirst: jest.fn(),
+    },
+    lotAllocation: {
       findMany: jest.fn(),
     },
   };
@@ -99,7 +111,7 @@ describe('ReportsController', () => {
           toWarehouse: { name: 'Dest' },
         },
       ]);
-      mockPrismaService.approvalEvent.findFirst.mockResolvedValue(null); // Fallback to createdAt
+      mockPrismaService.approvalEvent.findMany.mockResolvedValue([]);
 
       const result = await controller.getDashboard('wh-1');
       expect(result).toEqual({
@@ -132,7 +144,7 @@ describe('ReportsController', () => {
   });
 
   describe('getOverdueTransfers', () => {
-    it('should return overdue transfers exceeding thresholds', async () => {
+    it('should return overdue transfers exceeding thresholds without N+1 query', async () => {
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
       mockPrismaService.transfer.findMany.mockResolvedValue([
         {
@@ -143,7 +155,13 @@ describe('ReportsController', () => {
           toWarehouse: { name: 'Dest' },
         },
       ]);
-      mockPrismaService.approvalEvent.findFirst.mockResolvedValue(null);
+      mockPrismaService.approvalEvent.findMany.mockResolvedValue([
+        {
+          documentId: 'transfer-1',
+          toStatus: 'IN_TRANSIT',
+          createdAt: tenDaysAgo,
+        },
+      ]);
 
       const result = await controller.getOverdueTransfers('wh-1');
       expect(result).toEqual([
@@ -160,27 +178,17 @@ describe('ReportsController', () => {
   });
 
   describe('getAvailableInventory', () => {
-    it('should aggregate available inventory by category', async () => {
+    it('should return detailed item-level available inventory balances', async () => {
       mockPrismaService.warehouseItem.findMany.mockResolvedValue([
         {
           qtyOnHand: 100,
           qtyAllocated: 10,
+          wac: 5.5,
           item: {
+            sku: 'SKU-001',
+            name: 'Item 1',
             category: { id: 'cat-1', name: 'Veg' },
-          },
-        },
-        {
-          qtyOnHand: 50,
-          qtyAllocated: 5,
-          item: {
-            category: { id: 'cat-1', name: 'Veg' },
-          },
-        },
-        {
-          qtyOnHand: 200,
-          qtyAllocated: 0,
-          item: {
-            category: { id: 'cat-2', name: 'Meat' },
+            unitOfMeasure: { code: 'PCS' },
           },
         },
       ]);
@@ -188,16 +196,14 @@ describe('ReportsController', () => {
       const result = await controller.getAvailableInventory('wh-1');
       expect(result).toEqual([
         {
-          categoryName: 'Veg',
-          qtyOnHand: 150,
-          qtyAllocated: 15,
-          qtyAvailable: 135,
-        },
-        {
-          categoryName: 'Meat',
-          qtyOnHand: 200,
-          qtyAllocated: 0,
-          qtyAvailable: 200,
+          sku: 'SKU-001',
+          name: 'Item 1',
+          category: 'Veg',
+          uom: 'PCS',
+          qty_physical: 100,
+          qty_reserved: 10,
+          qty_available: 90,
+          wac: 5.5,
         },
       ]);
     });
@@ -232,9 +238,8 @@ describe('ReportsController', () => {
   });
 
   describe('getExpiryReport', () => {
-    it('should return expiring lots ordered by expiry date', async () => {
+    it('should return expiring lots ordered by expiry date with remaining days and status', async () => {
       const futureDate1 = new Date('2026-06-01');
-      const futureDate2 = new Date('2026-07-01');
       mockPrismaService.warehouseItemLot.findMany.mockResolvedValue([
         {
           itemId: 'item-1',
@@ -242,38 +247,23 @@ describe('ReportsController', () => {
           item: { name: 'Milk', sku: 'SKU-1' },
           lot: { lotNumber: 'LOT-1', expiryDate: futureDate1 },
         },
-        {
-          itemId: 'item-2',
-          qtyOnHand: 20,
-          item: { name: 'Cheese', sku: 'SKU-2' },
-          lot: { lotNumber: 'LOT-2', expiryDate: futureDate2 },
-        },
       ]);
 
       const result = await controller.getExpiryReport('wh-1');
-      expect(result).toEqual([
-        {
-          itemId: 'item-1',
-          itemName: 'Milk',
+      expect(result.length).toBe(1);
+      expect(result[0]).toEqual(
+        expect.objectContaining({
           sku: 'SKU-1',
-          lotNumber: 'LOT-1',
-          expiryDate: futureDate1,
+          name: 'Milk',
+          lot_no: 'LOT-1',
           qtyOnHand: 50,
-        },
-        {
-          itemId: 'item-2',
-          itemName: 'Cheese',
-          sku: 'SKU-2',
-          lotNumber: 'LOT-2',
-          expiryDate: futureDate2,
-          qtyOnHand: 20,
-        },
-      ]);
+        }),
+      );
     });
   });
 
   describe('getStocktakeVariance', () => {
-    it('should calculate variance for stocktake session', async () => {
+    it('should calculate variance for stocktake session matching client keys', async () => {
       mockPrismaService.stocktakeSession.findFirst.mockResolvedValue({
         id: 'session-1',
         warehouseId: 'wh-1',
@@ -283,6 +273,7 @@ describe('ReportsController', () => {
           itemId: 'item-1',
           lotId: 'lot-1',
           qtySnapshot: 10,
+          wacSnapshot: 5.0,
           item: { name: 'Item A', sku: 'SKU-A' },
           lot: { lotNumber: 'LOT-A' },
         },
@@ -294,13 +285,14 @@ describe('ReportsController', () => {
       const result = await controller.getStocktakeVariance('wh-1', 'session-1');
       expect(result).toEqual([
         {
-          itemId: 'item-1',
-          itemName: 'Item A',
           sku: 'SKU-A',
-          lotNumber: 'LOT-A',
-          qtySnapshot: 10,
-          qtyCounted: 9.5,
+          name: 'Item A',
+          system_qty: 10,
+          counted_qty: 9.5,
           variance: -0.5,
+          reason: '',
+          lotNumber: 'LOT-A',
+          wac: 5.0,
         },
       ]);
     });
@@ -320,23 +312,35 @@ describe('ReportsController', () => {
   });
 
   describe('getProcurementStatus', () => {
-    it('should return purchase order summary grouped by status', async () => {
+    it('should return detailed itemized purchase order status', async () => {
       mockPrismaService.purchaseOrder.findMany.mockResolvedValue([
-        { status: 'APPROVED', lines: [{ quantity: 5, unitPrice: 10 }] },
-        { status: 'APPROVED', lines: [{ quantity: 2, unitPrice: 50 }] },
-        { status: 'DRAFT', lines: [{ quantity: 1, unitPrice: 100 }] },
+        {
+          poNumber: 'PO-0001',
+          createdAt: new Date(),
+          supplier: { name: 'ABC Supplier' },
+          currency: { code: 'USD' },
+          status: 'APPROVED',
+          lines: [{ quantity: 5, unitPrice: 10 }],
+        },
       ]);
 
       const result = await controller.getProcurementStatus('wh-1');
       expect(result).toEqual([
-        { status: 'APPROVED', count: 2, totalValue: 150 },
-        { status: 'DRAFT', count: 1, totalValue: 100 },
+        {
+          po_no: 'PO-0001',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          date: expect.any(String),
+          supplier: 'ABC Supplier',
+          currency: 'USD',
+          total: 50,
+          status: 'APPROVED',
+        },
       ]);
     });
   });
 
   describe('getCurrencySummaries', () => {
-    it('should return aggregated purchase orders grouped by currency with base equivalents', async () => {
+    it('should return aggregated purchase orders grouped by currency with base equivalents without N+1 query', async () => {
       mockPrismaService.purchaseOrder.findMany.mockResolvedValue([
         {
           currencyId: 'sar-id',
@@ -354,13 +358,125 @@ describe('ReportsController', () => {
         code: 'SAR',
         isBase: true,
       });
-      mockPrismaService.fXRate.findFirst.mockResolvedValue({ rate: 3.75 });
+      mockPrismaService.fXRate.findMany.mockResolvedValue([
+        { fromCurrencyId: 'usd-id', rate: 3.75 },
+      ]);
 
       const result = await controller.getCurrencySummaries('wh-1');
       expect(result).toEqual([
-        { currencyCode: 'SAR', amount: 100, baseAmount: 100 },
-        { currencyCode: 'USD', amount: 50, baseAmount: 187.5 },
+        { currency: 'SAR', total: 100, total_base: 100, last_rate: 1 },
+        { currency: 'USD', total: 50, total_base: 187.5, last_rate: 3.75 },
       ]);
+    });
+  });
+
+  describe('getWacHistory', () => {
+    it('should query cost ledger for WAC history filtered by warehouse and item', async () => {
+      mockPrismaService.costLedger.findMany.mockResolvedValue([
+        {
+          id: '1',
+          postedAt: new Date(),
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          quantity: 10,
+          unitPrice: 5,
+          newWac: 5,
+          documentId: 'doc-1',
+          documentType: 'GOODS_RECEIVED_NOTE',
+          item: { sku: 'SKU-1', name: 'Item 1' },
+        },
+      ]);
+
+      const result = await controller.getWacHistory('wh-1', 'item-1');
+      expect(result.length).toBe(1);
+      expect(result[0].newWac).toBe(5);
+    });
+
+    it('should throw BadRequestException if itemId is missing', async () => {
+      await expect(async () => {
+        await controller.getWacHistory('wh-1', '');
+      }).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getLotTrace', () => {
+    it('should trace lot receipt and issue allocations', async () => {
+      mockPrismaService.lot.findFirst.mockResolvedValue({
+        id: 'lot-1',
+        lotNumber: 'LOT-001',
+        receivedDate: new Date(),
+        expiryDate: null,
+        status: 'ACTIVE',
+        item: { sku: 'SKU-1', name: 'Item 1' },
+      });
+
+      mockPrismaService.lotAllocation.findMany.mockResolvedValue([
+        {
+          id: 'alloc-1',
+          quantityAllocated: 5,
+          issueLine: {
+            inventoryIssue: {
+              issueNumber: 'ISSUE-0001',
+              createdAt: new Date(),
+              status: 'POSTED',
+            },
+          },
+          transferLine: null,
+        },
+      ]);
+
+      const result = await controller.getLotTrace('wh-1', 'lot-1');
+      expect(result.lotNumber).toBe('LOT-001');
+      expect(result.allocations.length).toBe(1);
+      expect(result.allocations[0].documentNumber).toBe('ISSUE-0001');
+    });
+
+    it('should throw BadRequestException if lotId is missing', async () => {
+      await expect(async () => {
+        await controller.getLotTrace('wh-1', '');
+      }).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('Excel Export Endpoints', () => {
+    const mockRes = {
+      setHeader: jest.fn(),
+      write: jest.fn((chunk: unknown, encoding?: unknown, cb?: unknown) => {
+        const callback =
+          typeof cb === 'function'
+            ? cb
+            : typeof encoding === 'function'
+              ? encoding
+              : null;
+        if (typeof callback === 'function') {
+          (callback as () => void)();
+        }
+        return true;
+      }),
+      end: jest.fn(),
+    };
+
+    it('should set headers and return valid movements spreadsheet', async () => {
+      mockPrismaService.stockLedger.count.mockResolvedValue(1);
+      mockPrismaService.stockLedger.findMany.mockResolvedValue([
+        {
+          postedAt: new Date(),
+          item: { name: 'Item 1', sku: 'SKU-1' },
+          documentType: 'GOODS_RECEIVED_NOTE',
+          documentId: 'grn-1',
+          quantity: 10,
+        },
+      ]);
+
+      await controller.exportMovements(
+        'wh-1',
+        'Admin',
+        mockRes as unknown as Response,
+      );
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
     });
   });
 });

@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { LotStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from './ledger-lock.service';
 
@@ -51,12 +51,14 @@ export class AllocationService {
     }
 
     // Case B & C: Batched items
-    // Fetch all lots with stock (> 0) in the warehouse to identify candidates for locking
+    // Fetch all ACTIVE lots with stock (> 0) in the warehouse.
+    // HOLD and QUARANTINE lots are excluded — they must not be issued.
     const lotBalances = await tx.warehouseItemLot.findMany({
       where: {
         warehouseId,
         itemId,
         qtyOnHand: { gt: 0 },
+        lot: { status: LotStatus.ACTIVE },
       },
       include: {
         lot: true,

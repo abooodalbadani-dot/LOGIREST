@@ -91,12 +91,13 @@ export function useExpiryReport() {
  });
 }
 
-export function useStocktakeVarianceReport() {
- return useQuery({
- queryKey: ['reports', 'stocktake-variance'],
- queryFn: ({ signal }) => apiClient.get('/reports/stocktake-variance', z.array(StocktakeVarianceReportSchema), { signal }),
- staleTime: 5 * 60 * 1000,
- });
+export function useStocktakeVarianceReport(sessionId?: string | null) {
+  return useQuery({
+    queryKey: ['reports', 'stocktake-variance', sessionId],
+    queryFn: ({ signal }) => apiClient.get(`/reports/stocktake-variance?sessionId=${sessionId || ''}`, z.array(StocktakeVarianceReportSchema), { signal }),
+    enabled: !!sessionId,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 export function useProcurementStatusReport() {

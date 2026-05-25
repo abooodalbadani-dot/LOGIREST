@@ -86,6 +86,7 @@ export default function StockMovementsClient() {
  data={data || []}
  filename="Stock_Movements_Report"
  title={t('movements')}
+ exportRoute="/reports/movements/export"
  />
  }
  collectionName="reports"

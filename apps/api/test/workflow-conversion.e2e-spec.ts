@@ -151,6 +151,12 @@ describe('PR to PO Conversion (e2e)', () => {
 
   afterAll(async () => {
     // Teardown everything
+    await prisma.warehouseItemLot.deleteMany({
+      where: { warehouseId },
+    });
+    await prisma.warehouseItem.deleteMany({
+      where: { warehouseId },
+    });
     await prisma.userWarehouseScope.deleteMany({
       where: { userId: { in: [procOfficerId, adminId] } },
     });
@@ -189,6 +195,9 @@ describe('PR to PO Conversion (e2e)', () => {
     });
     await prisma.warehouse.delete({
       where: { id: warehouseId },
+    });
+    await prisma.documentSequence.deleteMany({
+      where: { branchId },
     });
     await prisma.branch.delete({
       where: { id: branchId },

@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { isConfigValid } from '@/lib/config-check';
 
 import { WarehouseScopeProvider } from '@/providers/WarehouseScopeProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -48,6 +49,118 @@ export default async function LocaleLayout({
  children: React.ReactNode;
  params: Promise<{ locale: string }>;
 }) {
+  if (!isConfigValid(process.env)) {
+    return (
+      <html lang="en" className="dark">
+        <head>
+          <title>Configuration Error | LogiRest</title>
+          <style>{`
+            body {
+              margin: 0;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              background-color: #0b0f19;
+              color: #f1f5f9;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              overflow: hidden;
+            }
+            .card {
+              max-width: 500px;
+              width: 90%;
+              padding: 2.5rem;
+              background: rgba(17, 24, 39, 0.7);
+              backdrop-filter: blur(16px);
+              border: 1px solid rgba(239, 68, 68, 0.2);
+              border-radius: 16px;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(239, 68, 68, 0.05);
+              text-align: center;
+              animation: float 6s ease-in-out infinite;
+            }
+            .icon {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 64px;
+              height: 64px;
+              border-radius: 50%;
+              background: rgba(239, 68, 68, 0.1);
+              color: #ef4444;
+              font-size: 2rem;
+              margin-bottom: 1.5rem;
+              border: 1px solid rgba(239, 68, 68, 0.2);
+            }
+            h1 {
+              font-size: 1.5rem;
+              font-weight: 700;
+              margin: 0 0 1rem 0;
+              letter-spacing: -0.025em;
+              background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            }
+            p {
+              font-size: 0.95rem;
+              line-height: 1.6;
+              color: #94a3b8;
+              margin: 0 0 2rem 0;
+            }
+            .code-block {
+              font-family: 'Courier New', Courier, monospace;
+              background: #070a13;
+              padding: 1rem;
+              border-radius: 8px;
+              border: 1px solid rgba(255, 255, 255, 0.05);
+              font-size: 0.85rem;
+              color: #ef4444;
+              text-align: left;
+              margin-bottom: 1.5rem;
+              overflow-x: auto;
+            }
+            .badge {
+              display: inline-block;
+              padding: 0.25rem 0.75rem;
+              border-radius: 9999px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              background: rgba(239, 68, 68, 0.15);
+              color: #f87171;
+              margin-bottom: 1rem;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+            .footer {
+              font-size: 0.75rem;
+              color: #475569;
+            }
+            @keyframes float {
+              0%, 100% { transform: translateY(0px); }
+              50% { transform: translateY(-8px); }
+            }
+          `}</style>
+        </head>
+        <body>
+          <div className="card">
+            <div className="icon">⚠️</div>
+            <div className="badge">Config Error</div>
+            <h1>Observability & Safety Blocker</h1>
+            <p>
+              The frontend application failed to initialize because the primary API Gateway URL is undefined in the environment.
+            </p>
+            <div className="code-block">
+              FATAL: NEXT_PUBLIC_API_URL is missing<br />
+              NEXT_PUBLIC_USE_MOCKS = false
+            </div>
+            <div className="footer">
+              LogiRest Enterprise Engine v16.2.6
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
   const { locale } = await params;
   const messages = await getMessages();
   

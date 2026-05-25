@@ -89,4 +89,25 @@ describe('AuditLogsController', () => {
     expect(result.data[0].performedByRole).toBe(Role.INV_MGR);
     expect(result.data[0].beforeStateJson).toBeNull();
   });
+
+  it('should return paginated and mapped audit logs for AUDITOR', async () => {
+    mockPrismaService.auditLog.count.mockResolvedValue(1);
+    mockPrismaService.auditLog.findMany.mockResolvedValue([
+      {
+        id: 'log-3',
+        createdAt: new Date(),
+        userId: 'auditor-1',
+        user: { role: Role.AUDITOR },
+        beforeStateJson: null,
+        afterStateJson: JSON.stringify({ status: 'RELEASED', isActive: false }),
+      },
+    ]);
+
+    const result = await controller.getAuditLogs(Role.AUDITOR, {
+      page: 1,
+      limit: 50,
+    });
+
+    expect(result.data[0].performedByRole).toBe(Role.AUDITOR);
+  });
 });

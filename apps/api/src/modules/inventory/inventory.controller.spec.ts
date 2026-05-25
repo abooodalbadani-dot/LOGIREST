@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InventoryController, ItemsController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
+import { ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 describe('Inventory Controllers', () => {
   let inventoryController: InventoryController;
@@ -11,6 +13,7 @@ describe('Inventory Controllers', () => {
     getLots: jest.fn(),
     getMovements: jest.fn(),
     scanBarcode: jest.fn(),
+    unfreeze: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -64,6 +67,65 @@ describe('Inventory Controllers', () => {
         'wh-1',
         query,
       );
+    });
+
+    describe('unfreeze', () => {
+      it('should throw ForbiddenException if user is not ADMIN', async () => {
+        await expect(
+          inventoryController.unfreeze(
+            'item-1',
+            'wh-1',
+            'user-1',
+            Role.INV_MGR,
+            'reason',
+            '127.0.0.1',
+          ),
+        ).rejects.toThrow(ForbiddenException);
+
+        expect(mockInventoryService.unfreeze).not.toHaveBeenCalled();
+      });
+
+      it('should throw BadRequestException if reason is missing or empty', async () => {
+        await expect(
+          inventoryController.unfreeze(
+            'item-1',
+            'wh-1',
+            'user-1',
+            Role.ADMIN,
+            ' ',
+            '127.0.0.1',
+          ),
+        ).rejects.toThrow(BadRequestException);
+
+        expect(mockInventoryService.unfreeze).not.toHaveBeenCalled();
+      });
+
+      it('should call unfreeze on InventoryService if authorized', async () => {
+        const mockResult = {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          isFrozen: false,
+        };
+        mockInventoryService.unfreeze.mockResolvedValue(mockResult);
+
+        const result = await inventoryController.unfreeze(
+          'item-1',
+          'wh-1',
+          'user-1',
+          Role.ADMIN,
+          'Reconciliation ok',
+          '127.0.0.1',
+        );
+
+        expect(result).toBe(mockResult);
+        expect(mockInventoryService.unfreeze).toHaveBeenCalledWith(
+          'item-1',
+          'wh-1',
+          'user-1',
+          'Reconciliation ok',
+          '127.0.0.1',
+        );
+      });
     });
   });
 

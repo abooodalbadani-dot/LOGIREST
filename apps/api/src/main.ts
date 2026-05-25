@@ -4,16 +4,33 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
+
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  app.useLogger(app.get(Logger));
+
+  // Helmet: set secure HTTP response headers (X-Frame-Options, CSP, HSTS, etc.)
+  app.use(helmet());
 
   // Configure cookie parser middleware
   app.use(cookieParser());
 
   // Configure CORS
+  const allowedOrigins = (
+    process.env.FRONTEND_URL || 'http://localhost:3000'
+  ).split(',');
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 
@@ -22,16 +39,18 @@ async function bootstrap() {
     exclude: ['health'],
   });
 
-  // Configure Swagger OpenAPI documentation
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('LogiRest API')
-    .setDescription('LogiRest Warehouse & Kitchen Inventory Management API')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addCookieAuth('jwt')
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  // Swagger: only expose API docs in non-production environments
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('LogiRest API')
+      .setDescription('LogiRest Warehouse & Kitchen Inventory Management API')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .addCookieAuth('jwt')
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   // Flat structured validation error formatting function
   function formatErrors(

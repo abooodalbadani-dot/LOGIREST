@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import type {
   InventoryBalanceQuery,
@@ -200,5 +204,71 @@ export class InventoryService {
         expiryDate: wLot.lot.expiryDate,
       })),
     };
+  }
+
+  async unfreeze(
+    itemId: string,
+    warehouseId: string,
+    userId: string,
+    reason: string,
+    ipAddress?: string,
+  ) {
+    const whItem = await this.prisma.warehouseItem.findUnique({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId,
+        },
+      },
+    });
+
+    if (!whItem) {
+      throw new NotFoundException(
+        `Warehouse item with ID ${itemId} not found in the active warehouse.`,
+      );
+    }
+
+    if (!whItem.isFrozen) {
+      throw new BadRequestException('Warehouse item is not frozen.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.warehouseItem.update({
+        where: {
+          warehouseId_itemId: {
+            warehouseId,
+            itemId,
+          },
+        },
+        data: {
+          isFrozen: false,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'INVENTORY_UNFREEZE',
+          targetTable: 'warehouse_items',
+          targetId: `${warehouseId}_${itemId}`,
+          beforeStateJson: JSON.stringify({
+            qtyOnHand: Number(whItem.qtyOnHand),
+            qtyAllocated: Number(whItem.qtyAllocated),
+            wac: Number(whItem.wac),
+            isFrozen: whItem.isFrozen,
+          }),
+          afterStateJson: JSON.stringify({
+            qtyOnHand: Number(updated.qtyOnHand),
+            qtyAllocated: Number(updated.qtyAllocated),
+            wac: Number(updated.wac),
+            isFrozen: updated.isFrozen,
+            unfreezeReason: reason,
+          }),
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return updated;
+    });
   }
 }

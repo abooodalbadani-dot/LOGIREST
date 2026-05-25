@@ -89,6 +89,14 @@ describe('Idempotency Subsystem E2E', () => {
 
   afterAll(async () => {
     if (prisma) {
+      if (warehouseId) {
+        await prisma.warehouseItemLot.deleteMany({
+          where: { warehouseId },
+        });
+        await prisma.warehouseItem.deleteMany({
+          where: { warehouseId },
+        });
+      }
       if (procOfficerId) {
         await prisma.userWarehouseScope.deleteMany({
           where: { userId: procOfficerId },
@@ -130,6 +138,9 @@ describe('Idempotency Subsystem E2E', () => {
         });
       }
       if (branchId) {
+        await prisma.documentSequence.deleteMany({
+          where: { branchId },
+        });
         await prisma.branch.delete({
           where: { id: branchId },
         });

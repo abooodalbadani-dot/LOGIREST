@@ -100,3 +100,15 @@ export const AuditLogEntrySchema = z.object({
  })),
  created_at: z.string(),
 });
+
+export const NotificationLogSchema = z.object({
+  id: z.string(),
+  targetRole: z.string(),
+  warehouseId: z.string().nullable().optional(),
+  message: z.string(),
+  isRead: z.boolean(),
+  createdAt: z.string(),
+  documentType: z.string().nullable().optional(),
+  documentId: z.string().nullable().optional(),
+});
+export type NotificationLog = z.infer<typeof NotificationLogSchema>;

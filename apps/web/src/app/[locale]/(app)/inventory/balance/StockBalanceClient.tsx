@@ -49,6 +49,7 @@ export default function StockBalanceClient() {
 
   const [warehouseFilter] = useState('');
   const [searchFilter, setSearchFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useInventoryBalance({
@@ -56,6 +57,19 @@ export default function StockBalanceClient() {
     search: searchFilter || undefined,
     page,
   });
+
+  const filteredItems = useMemo(() => {
+    if (!data?.data) return [];
+    return data.data.filter(item => {
+      if (statusFilter === 'low') {
+        return item.qty_available <= item.reorder_point;
+      }
+      if (statusFilter === 'out') {
+        return item.qty_available === 0;
+      }
+      return true;
+    });
+  }, [data?.data, statusFilter]);
 
   const columns = useMemo<ColumnDef<StockBalanceItem, unknown>[]>(() => [
     {
@@ -93,11 +107,26 @@ export default function StockBalanceClient() {
     {
       accessorKey: 'qty_available',
       header: tc('table_headers.available'),
-      cell: ({ row }) => (
-        <span dir="ltr" className="font-mono text-label-sm font-semibold text-foreground">
-          {formatNumber(row.original.qty_available, currentLocale as 'ar' | 'en', 2)}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const qty = row.original.qty_available;
+        const reorderPoint = row.original.reorder_point;
+        const isOutOfStock = qty === 0;
+        const isLowStock = qty <= reorderPoint;
+        return (
+          <span 
+            dir="ltr" 
+            className={`font-mono text-label-sm font-semibold ${
+              isOutOfStock 
+                ? 'text-status-error font-bold' 
+                : isLowStock 
+                  ? 'text-status-warning' 
+                  : 'text-foreground'
+            }`}
+          >
+            {formatNumber(qty, currentLocale as 'ar' | 'en', 2)}
+          </span>
+        );
+      },
     },
     {
       id: 'unit',
@@ -114,14 +143,12 @@ export default function StockBalanceClient() {
       cell: ({ row }) => {
         const qty = row.original.qty_available;
         const reorderPoint = row.original.reorder_point;
-        const isLow = qty < reorderPoint;
-        const isCritical = qty <= 5; // Placeholder logic
         
-        if (isCritical) {
-          return <StatusBadge status="CRITICAL" className="h-6" />;
+        if (qty === 0) {
+          return <StatusBadge status="OUT_OF_STOCK" className="h-6" />;
         }
-        if (isLow) {
-          return <StatusBadge status="LOW" className="h-6" />;
+        if (qty <= reorderPoint) {
+          return <StatusBadge status="LOW_STOCK" className="h-6" />;
         }
         return <StatusBadge status="HEALTHY" className="h-6" />;
       }
@@ -260,12 +287,14 @@ export default function StockBalanceClient() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-label-xs font-semibold text-muted-foreground/60 uppercase">{t('filter_status')}</span>
-            <Select value="all">
+            <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || 'all')}>
               <SelectTrigger className="w-48 bg-surface-container-low border-none rounded-xl h-10 text-label-xs font-semibold uppercase">
                 <SelectValue placeholder={t('filter_all')} />
               </SelectTrigger>
               <SelectContent className="bg-surface-container-low border-surface-variant/10">
                 <SelectItem value="all">{t('filter_all')}</SelectItem>
+                <SelectItem value="low">{t('low_stock')}</SelectItem>
+                <SelectItem value="out">{tc('statuses.out_of_stock')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -303,7 +332,7 @@ export default function StockBalanceClient() {
         <div className="bg-surface-container-low/20 rounded-[2.5rem] border border-surface-variant/10 overflow-hidden shadow-2xl">
           <DataTable
             columns={columns}
-            data={data?.data ?? []}
+            data={filteredItems}
             isLoading={isLoading}
             collectionName="inventory_orchestration_feed"
             pagination={{

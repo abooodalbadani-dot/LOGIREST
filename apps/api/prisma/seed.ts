@@ -1,3 +1,7 @@
+// ==========================================
+// DEV ONLY — DO NOT RUN IN PRODUCTION
+// Contains hardcoded default credentials and mock data.
+// ==========================================
 import { PrismaClient, Role, LotStatus, DocumentType } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
@@ -145,8 +149,8 @@ async function main() {
   }
 
   // ─── Users ───────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('password123', 12);
-  const adminPasswordHash = await bcrypt.hash('adminpassword', 12);
+  const passwordHash = await bcrypt.hash('Password123!', 12);
+  const adminPasswordHash = await bcrypt.hash('Adminpassword123!', 12);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.local' },
@@ -224,6 +228,43 @@ async function main() {
     create: {
       userId: managerUser.id,
       warehouseId: mainWh.id,
+    },
+  });
+
+  // ─── Suppliers ───────────────────────────────────────────────
+  const supplierGlobal = await prisma.supplier.upsert({
+    where: { code: 'SUP-001' },
+    update: {
+      contactEmail: 'supplier1@example.com',
+      contactName: 'John Doe',
+      contactPhone: '+1234567890',
+      isActive: true,
+    },
+    create: {
+      code: 'SUP-001',
+      name: 'Global Food Supplies',
+      contactEmail: 'supplier1@example.com',
+      contactName: 'John Doe',
+      contactPhone: '+1234567890',
+      isActive: true,
+    },
+  });
+
+  const supplierDairy = await prisma.supplier.upsert({
+    where: { code: 'SUP-002' },
+    update: {
+      contactEmail: 'supplier2@example.com',
+      contactName: 'Jane Smith',
+      contactPhone: '+0987654321',
+      isActive: true,
+    },
+    create: {
+      code: 'SUP-002',
+      name: 'Fresh Dairy Co',
+      contactEmail: 'supplier2@example.com',
+      contactName: 'Jane Smith',
+      contactPhone: '+0987654321',
+      isActive: true,
     },
   });
 

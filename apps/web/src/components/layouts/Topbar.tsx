@@ -6,6 +6,7 @@ import { useContextScope } from '@/hooks/useContextScope';
 import LocaleSwitcher from '../shared/LocaleSwitcher';
 import { ContextSelector } from '../shared/ContextSelector';
 import { ThemeToggle } from '../shared/ThemeToggle';
+import { NotificationBell } from '../shared/NotificationBell';
 
 import { useTranslations } from 'next-intl';
 
@@ -81,6 +82,7 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
           <Search className="w-4 h-4" />
         </Link>
 
+        {user && <NotificationBell />}
         {user && <ThemeToggle />}
         <LocaleSwitcher />
       </div>

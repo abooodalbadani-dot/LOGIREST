@@ -93,6 +93,12 @@ describe('Workflow Transitions (e2e)', () => {
 
   afterAll(async () => {
     // Delete created records in reverse order
+    await prisma.warehouseItemLot.deleteMany({
+      where: { warehouseId },
+    });
+    await prisma.warehouseItem.deleteMany({
+      where: { warehouseId },
+    });
     await prisma.userWarehouseScope.deleteMany({
       where: { userId: procOfficerId },
     });
@@ -119,6 +125,9 @@ describe('Workflow Transitions (e2e)', () => {
     });
     await prisma.warehouse.delete({
       where: { id: warehouseId },
+    });
+    await prisma.documentSequence.deleteMany({
+      where: { branchId },
     });
     await prisma.branch.delete({
       where: { id: branchId },

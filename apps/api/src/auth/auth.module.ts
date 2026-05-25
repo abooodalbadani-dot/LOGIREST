@@ -7,6 +7,7 @@ import { BcryptService } from './bcrypt.service';
 import { RtrService } from './rtr.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { OutboxModule } from '../modules/outbox/outbox.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
         'dev-jwt-access-secret-key-at-least-32-chars-long',
       signOptions: { expiresIn: '15m' },
     }),
+    OutboxModule,
   ],
   controllers: [AuthController],
   providers: [

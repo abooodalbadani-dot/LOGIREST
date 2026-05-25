@@ -12,6 +12,8 @@ describe('ReconciliationJob', () => {
   const mockWarehouseItemFindMany = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockCreateNotification = jest.fn();
+  const mockLotAllocationFindMany = jest.fn();
+  const mockReconciliationRunCreate = jest.fn();
 
   const mockPrismaTx = {
     warehouseItem: {
@@ -25,6 +27,12 @@ describe('ReconciliationJob', () => {
     },
     warehouseItem: {
       findMany: mockWarehouseItemFindMany,
+    },
+    lotAllocation: {
+      findMany: mockLotAllocationFindMany,
+    },
+    reconciliationRun: {
+      create: mockReconciliationRunCreate,
     },
     $transaction: jest
       .fn()
@@ -74,15 +82,28 @@ describe('ReconciliationJob', () => {
         warehouseId: 'wh-1',
         itemId: 'item-1',
         qtyOnHand: new Prisma.Decimal(15),
+        qtyAllocated: new Prisma.Decimal(0),
         item: { sku: 'SKU1' },
         warehouse: { name: 'HQ', code: 'HQ-01' },
       },
     ]);
 
+    // Mock in-transit allocations: none
+    mockLotAllocationFindMany.mockResolvedValue([]);
+
     await job.runReconciliation();
 
     expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
     expect(mockCreateNotification).not.toHaveBeenCalled();
+
+    expect(mockReconciliationRunCreate).toHaveBeenCalledWith({
+      data: {
+        itemsChecked: 1,
+        discrepanciesFound: 0,
+        frozenItems: [],
+        durationMs: expect.any(Number),
+      },
+    });
   });
 
   it('should freeze SKU and log notification if discrepancy is detected', async () => {
@@ -103,10 +124,14 @@ describe('ReconciliationJob', () => {
         warehouseId: 'wh-1',
         itemId: 'item-1',
         qtyOnHand: new Prisma.Decimal(15),
+        qtyAllocated: new Prisma.Decimal(0),
         item: { sku: 'SKU1' },
         warehouse: { name: 'HQ', code: 'HQ-01' },
       },
     ]);
+
+    // Mock in-transit allocations: none
+    mockLotAllocationFindMany.mockResolvedValue([]);
 
     await job.runReconciliation();
 
@@ -128,6 +153,119 @@ describe('ReconciliationJob', () => {
       message: expect.stringContaining(
         'CRITICAL: Stock reconciliation discrepancy for SKU SKU1 in Warehouse HQ',
       ),
+    });
+
+    expect(mockReconciliationRunCreate).toHaveBeenCalledWith({
+      data: {
+        itemsChecked: 1,
+        discrepanciesFound: 1,
+        frozenItems: ['SKU1'],
+        durationMs: expect.any(Number),
+      },
+    });
+  });
+
+  it('should trigger soft warning notification if allocation discrepancy is detected', async () => {
+    // Mock ledger: Item 1 has total of 15 quantity
+    mockStockLedgerGroupBy.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        _sum: {
+          quantity: new Prisma.Decimal(15),
+        },
+      },
+    ]);
+
+    // Mock warehouse items: Item 1 has 15 on hand, but qtyAllocated is 5 (discrepancy!)
+    mockWarehouseItemFindMany.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        qtyOnHand: new Prisma.Decimal(15),
+        qtyAllocated: new Prisma.Decimal(5),
+        item: { sku: 'SKU1' },
+        warehouse: { name: 'HQ', code: 'HQ-01' },
+      },
+    ]);
+
+    // Mock in-transit allocations: none (expected qtyAllocated is 0)
+    mockLotAllocationFindMany.mockResolvedValue([]);
+
+    await job.runReconciliation();
+
+    // Should NOT freeze (update isFrozen)
+    expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
+
+    // Should create soft warning notification
+    expect(mockCreateNotification).toHaveBeenCalledWith({
+      targetRole: Role.ADMIN,
+      warehouseId: 'wh-1',
+      message: expect.stringContaining(
+        'WARNING: Stock allocation discrepancy for SKU SKU1 in Warehouse HQ',
+      ),
+    });
+
+    expect(mockReconciliationRunCreate).toHaveBeenCalledWith({
+      data: {
+        itemsChecked: 1,
+        discrepanciesFound: 0,
+        frozenItems: [],
+        durationMs: expect.any(Number),
+      },
+    });
+  });
+
+  it('should not trigger warning if allocation matches active allocations', async () => {
+    // Mock ledger: Item 1 has total of 15 quantity
+    mockStockLedgerGroupBy.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        _sum: {
+          quantity: new Prisma.Decimal(15),
+        },
+      },
+    ]);
+
+    // Mock warehouse items: Item 1 has 15 on hand, qtyAllocated is 5
+    mockWarehouseItemFindMany.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        qtyOnHand: new Prisma.Decimal(15),
+        qtyAllocated: new Prisma.Decimal(5),
+        item: { sku: 'SKU1' },
+        warehouse: { name: 'HQ', code: 'HQ-01' },
+      },
+    ]);
+
+    // Mock in-transit allocations: total of 5 for wh-1 and item-1
+    mockLotAllocationFindMany.mockResolvedValue([
+      {
+        quantityAllocated: new Prisma.Decimal(5),
+        transferLine: {
+          itemId: 'item-1',
+          transfer: {
+            toWarehouseId: 'wh-1',
+          },
+        },
+      },
+    ]);
+
+    await job.runReconciliation();
+
+    // No freeze, no warnings
+    expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
+    expect(mockCreateNotification).not.toHaveBeenCalled();
+
+    expect(mockReconciliationRunCreate).toHaveBeenCalledWith({
+      data: {
+        itemsChecked: 1,
+        discrepanciesFound: 0,
+        frozenItems: [],
+        durationMs: expect.any(Number),
+      },
     });
   });
 });

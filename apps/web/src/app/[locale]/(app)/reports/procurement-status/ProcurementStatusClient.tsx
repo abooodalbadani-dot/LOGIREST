@@ -85,6 +85,7 @@ export default function ProcurementStatusClient() {
  data={data || []}
  filename="Procurement_Status_Report"
  title={t('procurement_status')}
+ exportRoute="/reports/procurement-status/export"
  />
  }
  collectionName="reports"
