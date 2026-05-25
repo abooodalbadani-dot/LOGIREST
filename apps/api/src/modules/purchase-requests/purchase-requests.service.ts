@@ -129,6 +129,24 @@ export class PurchaseRequestsService {
     );
   }
 
+  async cancel(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: { comments?: string; version?: number; ipAddress?: string },
+  ) {
+    return this.workflowService.executeTransition(
+      id,
+      'purchaseRequest',
+      'CANCEL',
+      userId,
+      userRole,
+      body.comments,
+      body.version,
+      body.ipAddress,
+    );
+  }
+
   async convertToPo(
     id: string,
     userId: string,

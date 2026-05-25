@@ -1,60 +1,19 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { Prisma, Role } from '@prisma/client';
 
 @Injectable()
-export class ReconciliationJob implements OnModuleInit, OnModuleDestroy {
+export class ReconciliationJob {
   private readonly logger = new Logger(ReconciliationJob.name);
-  private timeoutId: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
   ) {}
 
-  onModuleInit() {
-    this.scheduleNextRun();
-  }
-
-  onModuleDestroy() {
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-    }
-  }
-
-  scheduleNextRun() {
-    const now = new Date();
-    const nextRun = new Date(now);
-    nextRun.setHours(1, 0, 0, 0); // 01:00 AM
-
-    if (now >= nextRun) {
-      nextRun.setDate(nextRun.getDate() + 1);
-    }
-
-    const delay = nextRun.getTime() - now.getTime();
-    this.logger.log(
-      `Scheduling next reconciliation job run in ${delay} ms (at ${nextRun.toISOString()})`,
-    );
-
-    this.timeoutId = setTimeout(() => {
-      void (async () => {
-        try {
-          await this.runReconciliation();
-        } catch (error) {
-          this.logger.error('Error running reconciliation job', error);
-        } finally {
-          this.scheduleNextRun();
-        }
-      })();
-    }, delay);
-  }
-
+  @Cron('0 1 * * *', { name: 'daily-reconciliation' })
   async runReconciliation() {
     const startTime = Date.now();
     this.logger.log('Starting daily stock-to-ledger reconciliation job...');

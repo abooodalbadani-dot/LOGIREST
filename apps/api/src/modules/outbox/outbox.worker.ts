@@ -22,6 +22,10 @@ interface OutboxPayload {
   sessionId?: string;
   ipAddress?: string | null;
   timestamp?: string;
+  issueId?: string;
+  issueNumber?: string;
+  postedByUserId?: string;
+  totalLines?: number;
 }
 
 @Processor('outbox')
@@ -75,10 +79,41 @@ export class OutboxWorker extends WorkerHost {
           event.payload,
         );
         // 2. Dispatch email notifications
-        await this.email.sendEmail(recipients, subject, body);
+        const result = await this.email.sendEmail(recipients, subject, body);
+
+        // 3. Handle email result
+        if (!result.ok) {
+          if (result.reason === 'SMTP_UNCONFIGURED') {
+            await this.prisma.outboxEvent.update({
+              where: { id: eventId },
+              data: {
+                status: 'FAILED',
+                attempts: { increment: 1 },
+                processedAt: new Date(),
+                lastError: 'SMTP_NOT_CONFIGURED',
+              },
+            });
+
+            await this.prisma.notificationLog.create({
+              data: {
+                targetRole: Role.ADMIN,
+                message:
+                  'System email server is not configured. Outbox events are failing.',
+                isRead: false,
+              },
+            });
+
+            this.logger.warn(
+              `Event ${eventId} marked FAILED: SMTP not configured. Admin notified.`,
+            );
+            return;
+          }
+
+          throw new Error(result.error ?? 'SEND_FAILED');
+        }
       }
 
-      // 3. Mark success
+      // 4. Mark success
       await this.prisma.outboxEvent.update({
         where: { id: eventId },
         data: {
@@ -98,7 +133,6 @@ export class OutboxWorker extends WorkerHost {
       const nextAttempts = event.attempts + 1;
       const finalStatus = nextAttempts >= 5 ? 'FAILED' : 'PENDING';
 
-      // Update state for retrying or flagging failure
       await this.prisma.outboxEvent.update({
         where: { id: eventId },
         data: {
@@ -108,7 +142,6 @@ export class OutboxWorker extends WorkerHost {
         },
       });
 
-      // Propagate error to let BullMQ handle job retries when PENDING
       if (finalStatus === 'PENDING') {
         throw error;
       }
@@ -128,6 +161,9 @@ export class OutboxWorker extends WorkerHost {
     switch (eventType) {
       case 'SECURITY_ALERT_REPLAY_ATTACK':
         targetRoles = [Role.ADMIN];
+        break;
+      case 'ISSUE_POSTED':
+        targetRoles = [Role.ADMIN, Role.INV_MGR];
         break;
       case 'PR_SUBMITTED':
         targetRoles = [Role.APPROVER];
@@ -210,6 +246,19 @@ export class OutboxWorker extends WorkerHost {
           <p><strong>Session ID:</strong> ${data.sessionId || 'N/A'}</p>
           <p><strong>IP Address:</strong> ${data.ipAddress ?? 'Unknown'}</p>
           <p>All tokens for this session have been revoked. Investigate immediately.</p>
+        `;
+        break;
+      case 'ISSUE_POSTED':
+        subject = `Stock Issue Posted — ${data.issueNumber || docNo} / تم ترحيل صرف مخزون`;
+        body = `
+          <h2>Inventory Issue Posted / تم ترحيل صرف مخزون</h2>
+          <p>Issue <strong>${data.issueNumber || docNo}</strong> has been posted.</p>
+          <p>تم ترحيل مستند الصرف رقم <strong>${data.issueNumber || docNo}</strong> بنجاح في النظام.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p><strong>Total Lines / إجمالي البنود:</strong> ${data.totalLines || 0}</p>
+          <p><strong>Warehouse ID / معرف المستودع:</strong> ${data.warehouseId || 'N/A'}</p>
+          <p><strong>Posted By / تم الترحيل بواسطة:</strong> ${data.postedByUserId || 'N/A'}</p>
+          <p><strong>Timestamp / وقت الترحيل:</strong> ${data.timestamp || 'N/A'}</p>
         `;
         break;
       case 'PR_SUBMITTED':

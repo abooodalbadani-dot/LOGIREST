@@ -114,6 +114,7 @@ export const ALL_STATUSES = [
   'COUNTING',
   'IN_TRANSIT',
   'OPEN',
+  'VOIDED',
   'REVIEW',
   'CLOSED',
   'VARIANCE_SUBMITTED',

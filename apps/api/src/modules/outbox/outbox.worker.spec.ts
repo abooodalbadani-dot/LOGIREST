@@ -284,4 +284,53 @@ describe('OutboxWorker', () => {
       expect.stringContaining('Unknown'),
     );
   });
+
+  it('should process ISSUE_POSTED event, resolve recipients, and render bilingual template', async () => {
+    const mockEvent = {
+      id: 'event-4',
+      eventType: 'ISSUE_POSTED',
+      payload: {
+        issueId: 'issue-123',
+        issueNumber: 'ISS-2026-001',
+        warehouseId: 'warehouse-456',
+        postedByUserId: 'user-789',
+        totalLines: 5,
+        timestamp: '2026-05-25T12:00:00Z',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'admin@example.com' },
+      { email: 'manager@example.com' },
+    ]);
+
+    const mockJob = {
+      id: 'job-4',
+      data: { eventId: 'event-4' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+      where: {
+        role: { in: [Role.ADMIN, Role.INV_MGR] },
+        isActive: true,
+      },
+      select: { email: true },
+    });
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['admin@example.com', 'manager@example.com'],
+      'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
+      expect.stringContaining('Inventory Issue Posted / تم ترحيل صرف مخزون'),
+    );
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['admin@example.com', 'manager@example.com'],
+      'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
+      expect.stringContaining('ISS-2026-001'),
+    );
+  });
 });

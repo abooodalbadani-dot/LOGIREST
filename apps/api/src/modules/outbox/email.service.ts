@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
+export type EmailResult =
+  | { ok: true }
+  | { ok: false; reason: 'SMTP_UNCONFIGURED' | 'SEND_FAILED'; error?: string };
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
@@ -9,6 +13,10 @@ export class EmailService {
 
   constructor(private readonly config: ConfigService) {
     this.initializeTransporter();
+  }
+
+  get isSmtpConfigured(): boolean {
+    return this.transporter !== null;
   }
 
   private initializeTransporter() {
@@ -27,7 +35,7 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       host,
       port,
-      secure: port === 465, // True for 465, false for other ports
+      secure: port === 465,
       auth: user && pass ? { user, pass } : undefined,
     });
   }
@@ -39,10 +47,10 @@ export class EmailService {
     to: string | string[],
     subject: string,
     htmlContent: string,
-  ): Promise<boolean> {
+  ): Promise<EmailResult> {
     if (!this.transporter) {
       this.logger.log(`SMTP skipped send for subject: "${subject}"`);
-      return true; // Return success so worker doesn't endlessly retry unconfigured SMTP
+      return { ok: false, reason: 'SMTP_UNCONFIGURED' };
     }
 
     const from = this.config.get<string>('SMTP_FROM', 'noreply@logirest.app');
@@ -56,12 +64,11 @@ export class EmailService {
         html: this.wrapInBrandTemplate(subject, htmlContent),
       });
       this.logger.log(`Successfully dispatched email to: ${recipients}`);
-      return true;
+      return { ok: true };
     } catch (error) {
-      this.logger.error(
-        `SMTP transmission failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      throw error;
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`SMTP transmission failed: ${msg}`);
+      return { ok: false, reason: 'SEND_FAILED', error: msg };
     }
   }
 

@@ -69,16 +69,7 @@ export default function SearchClient() {
  metadata: { [isRtl ? 'المخزون' : 'Stock']: '1,200 KG', [isRtl ? 'الموقع' : 'Location']: 'WH-01' },
  link: `/inventory/balance`,
  },
- {
- id: '2',
- type: 'document',
- title: 'PO-2024-0042',
- subtitle: isRtl ? 'مورد: بهارات العالم' : 'Vendor: Global Spice',
- status: 'PENDING',
- metadata: { [isRtl ? 'التاريخ' : 'Date']: '2024-04-20', [isRtl ? 'الإجمالي' : 'Total']: '4,250 SAR' },
- link: `/purchase-orders/PO-2024-0042`,
- },
- {
+      {
  id: '3',
  type: 'lot',
  title: 'LOT-9942-A',

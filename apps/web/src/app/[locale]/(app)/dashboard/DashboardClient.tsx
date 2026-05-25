@@ -14,17 +14,19 @@ import { KitchenDashboard } from '@/features/dashboard/components/KitchenDashboa
 import { StoreManagerDashboard } from '@/features/dashboard/components/StoreManagerDashboard';
 import { NearExpiryWidget } from '@/features/dashboard/components/NearExpiryWidget';
 import { PendingDocumentsWidget } from '@/features/dashboard/components/PendingDocumentsWidget';
+import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
 
 export default function DashboardClient() {
  const t = useTranslations('dashboard');
  const tc = useTranslations('common');
  const { locale } = useLocale();
   const { user } = useAuth();
+  const { data: settings } = useAdminSettings();
 
  // Mock static data as per Phase 8 planning
  const stats = {
  totalStockValue: 1245300.50,
- baseCurrency: 'SAR',
+ baseCurrency: settings?.base_currency ?? 'SAR',
  pendingPRs: 7,
  activeStocktakes: 2,
  lowStockItems: 14,

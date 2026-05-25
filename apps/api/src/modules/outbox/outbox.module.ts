@@ -12,6 +12,6 @@ import { OutboxCleanupJob } from './outbox-cleanup.job';
     }),
   ],
   providers: [OutboxService, OutboxWorker, EmailService, OutboxCleanupJob],
-  exports: [OutboxService],
+  exports: [OutboxService, EmailService],
 })
 export class OutboxModule {}

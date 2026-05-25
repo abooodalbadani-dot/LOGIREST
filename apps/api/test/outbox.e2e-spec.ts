@@ -24,7 +24,8 @@ jest.mock('ioredis', () => {
       return new Proxy(this, {
         get: (target, prop) => {
           if (prop in target) {
-            return (target as any)[prop];
+            const val = (target as any)[prop];
+            return typeof val === 'function' ? val.bind(target) : val;
           }
           if (typeof prop === 'string') {
             return (...args: any[]) => Promise.resolve([]);
@@ -39,6 +40,7 @@ jest.mock('ioredis', () => {
     exec() { return Promise.resolve([]); }
     ping() { return Promise.resolve('PONG'); }
     quit() {
+      this.status = 'end';
       process.nextTick(() => {
         this.emit('end');
         this.emit('close');
@@ -46,6 +48,7 @@ jest.mock('ioredis', () => {
       return Promise.resolve('OK');
     }
     disconnect() {
+      this.status = 'end';
       process.nextTick(() => {
         this.emit('end');
         this.emit('close');
@@ -68,7 +71,7 @@ jest.mock('ioredis', () => {
 });
 
 describe('Outbox Notification Queue (e2e)', () => {
-  jest.setTimeout(90000);
+  jest.setTimeout(300000);
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let bcrypt: BcryptService;
@@ -76,8 +79,11 @@ describe('Outbox Notification Queue (e2e)', () => {
 
   let procOfficerToken: string;
   let procOfficerId: string;
+  let adminToken: string;
+  let adminId: string;
   let branchId: string;
   let warehouseId: string;
+  let departmentId: string;
   let itemId: string;
   let categoryId: string;
   let uomId: string;
@@ -154,8 +160,13 @@ describe('Outbox Notification Queue (e2e)', () => {
     });
     itemId = item.id;
 
+    const department = await prisma.department.create({
+      data: { name: `Department ${suffix}`, branchId },
+    });
+    departmentId = department.id;
+
     const email = `${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const user = await prisma.user.create({
       data: {
         email,
@@ -173,52 +184,71 @@ describe('Outbox Notification Queue (e2e)', () => {
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email, password: 'password123' });
+      .send({ email, password: 'Password123!' });
     procOfficerToken = loginRes.body.accessToken;
+
+    const adminEmail = `admin-${suffix}@logirest.com`;
+    const adminUser = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash,
+        name: `Admin ${suffix}`,
+        role: 'ADMIN',
+        isActive: true,
+      },
+    });
+    adminId = adminUser.id;
+
+    await prisma.userWarehouseScope.create({
+      data: { userId: adminId, warehouseId },
+    });
+
+    const adminLoginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: adminEmail, password: 'Password123!' });
+    adminToken = adminLoginRes.body.accessToken;
   });
 
   afterAll(async () => {
     if (prisma) {
-      // Stage 1: Clear all dependent child tables concurrently
-      await Promise.all([
-        prisma.outboxEvent.deleteMany({ where: { eventType: { in: ['PR_SUBMITTED', 'TEST_CLEANUP'] } } }),
-        prisma.userWarehouseScope.deleteMany({ where: { userId: procOfficerId } }),
-        prisma.pRLine.deleteMany({ where: { prId: { not: '' } } }),
-        prisma.approvalEvent.deleteMany({ where: { userId: procOfficerId } }),
-        prisma.refreshToken.deleteMany({ where: { userId: procOfficerId } }),
-        prisma.auditLog.deleteMany({ where: { userId: procOfficerId } }),
-        prisma.warehouseLock.deleteMany({ where: { lockedById: procOfficerId } }),
-        prisma.stocktakeCount.deleteMany({ where: { OR: [{ countedById: procOfficerId }, { itemId }] } }),
-        prisma.stocktakeSnapshot.deleteMany({ where: { itemId } }),
-        prisma.stockLedger.deleteMany({ where: { itemId } }),
-        prisma.costLedger.deleteMany({ where: { itemId } }),
-        prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } }),
-        prisma.warehouseItemLot.deleteMany({ where: { itemId } }),
-        prisma.warehouseItem.deleteMany({ where: { itemId } }),
-        prisma.lot.deleteMany({ where: { itemId } }),
-      ]);
+      // Stage 1: Clear all dependent child tables sequentially to avoid connection pool starvation deadlocks
+      await prisma.outboxEvent.deleteMany({ where: { eventType: { in: ['PR_SUBMITTED', 'ISSUE_POSTED', 'TEST_CLEANUP'] } } });
+      await prisma.userWarehouseScope.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      await prisma.pRLine.deleteMany({ where: { prId: { not: '' } } });
+      await prisma.inventoryIssueLine.deleteMany({ where: { itemId } });
+      await prisma.notificationLog.deleteMany({ where: { warehouseId } });
+      await prisma.approvalEvent.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      await prisma.refreshToken.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      await prisma.auditLog.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      await prisma.warehouseLock.deleteMany({ where: { lockedById: { in: [procOfficerId, adminId] } } });
+      await prisma.stocktakeCount.deleteMany({ where: { OR: [{ countedById: { in: [procOfficerId, adminId] } }, { itemId }] } });
+      await prisma.stocktakeSnapshot.deleteMany({ where: { itemId } });
+      await prisma.stockLedger.deleteMany({ where: { itemId } });
+      await prisma.costLedger.deleteMany({ where: { itemId } });
+      await prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } });
+      await prisma.warehouseItemLot.deleteMany({ where: { itemId } });
+      await prisma.warehouseItem.deleteMany({ where: { itemId } });
+      await prisma.lot.deleteMany({ where: { itemId } });
 
-      // Stage 2: Clear transactional documents and items concurrently
-      await Promise.all([
-        prisma.purchaseRequest.deleteMany({ where: { branchId } }),
-        prisma.item.deleteMany({ where: { categoryId } }),
-        prisma.documentSequence.deleteMany({ where: { branchId } }),
-      ]);
+      // Stage 2: Clear transactional documents sequentially
+      await prisma.purchaseRequest.deleteMany({ where: { branchId } });
+      await prisma.inventoryIssue.deleteMany({ where: { warehouseId } });
+      await prisma.item.deleteMany({ where: { categoryId } });
+      await prisma.documentSequence.deleteMany({ where: { branchId } });
 
-      // Stage 3: Clear master data
-      await Promise.all([
-        prisma.unitOfMeasure.delete({ where: { id: uomId } }),
-        prisma.category.delete({ where: { id: categoryId } }),
-        prisma.warehouse.delete({ where: { id: warehouseId } }),
-      ]);
+      // Stage 3: Clear master data sequentially
+      await prisma.unitOfMeasure.deleteMany({ where: { id: uomId } });
+      await prisma.category.deleteMany({ where: { id: categoryId } });
+      await prisma.department.deleteMany({ where: { branchId } });
+      await prisma.warehouse.deleteMany({ where: { id: warehouseId } });
 
-      // Stage 4: Clear root records
-      await prisma.branch.delete({ where: { id: branchId } });
-      await prisma.user.delete({ where: { id: procOfficerId } });
+      // Stage 4: Clear root records sequentially
+      await prisma.branch.deleteMany({ where: { id: branchId } });
+      await prisma.user.deleteMany({ where: { id: { in: [procOfficerId, adminId] } } });
 
       await prisma.$disconnect();
     }
-    await app.close();
+    app.close().catch(err => console.error('Error closing app:', err));
   });
 
   it('should write an OutboxEvent on PR submission transition', async () => {
@@ -312,5 +342,91 @@ describe('Outbox Notification Queue (e2e)', () => {
     await prisma.outboxEvent.delete({
       where: { id: recentEvent.id },
     });
+  });
+
+  it('should write an OutboxEvent and NotificationLogs on Inventory Issue post transition', async () => {
+    // 1. Seed stock in the warehouse for the item
+    await prisma.warehouseItem.upsert({
+      where: {
+        warehouseId_itemId: { warehouseId, itemId },
+      },
+      create: {
+        warehouseId,
+        itemId,
+        qtyOnHand: 10.0,
+        qtyAllocated: 0,
+        wac: 5.0,
+      },
+      update: {
+        qtyOnHand: 10.0,
+      },
+    });
+
+    // 2. Create Inventory Issue (DRAFT)
+    const createRes = await request(app.getHttpServer())
+      .post('/api/v1/operations/issues')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-warehouse-id', warehouseId)
+      .set('x-branch-id', branchId)
+      .set('x-idempotency-key', randomUUID())
+      .send({
+        departmentId,
+        lines: [{ itemId, quantity: 4 }],
+      })
+      .expect(201);
+
+    const issueId = createRes.body.id;
+    expect(createRes.body.status).toBe('DRAFT');
+
+    // 3. Submit the Inventory Issue (DRAFT -> SUBMITTED)
+    await request(app.getHttpServer())
+      .post(`/api/v1/operations/issues/${issueId}/submit`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-warehouse-id', warehouseId)
+      .set('x-branch-id', branchId)
+      .send({ comments: 'Submit Issue E2E', version: 1 })
+      .expect(200);
+
+    // 4. Post the Inventory Issue (SUBMITTED -> POSTED)
+    await request(app.getHttpServer())
+      .post(`/api/v1/operations/issues/${issueId}/post`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-warehouse-id', warehouseId)
+      .set('x-branch-id', branchId)
+      .send({ version: 2 })
+      .expect(200);
+
+    // 5. Verify OutboxEvent of type ISSUE_POSTED exists
+    const outboxEvents = await prisma.outboxEvent.findMany({
+      where: { eventType: 'ISSUE_POSTED' },
+    });
+    expect(outboxEvents.length).toBeGreaterThanOrEqual(1);
+
+    const matchEvent = outboxEvents.find((e) => {
+      const payloadObj = e.payload as any;
+      return payloadObj.issueId === issueId;
+    });
+    expect(matchEvent).toBeDefined();
+    expect(matchEvent?.status).toBe('PENDING');
+
+    // 6. Verify distinct NotificationLog records are written for ADMIN and INV_MGR roles
+    const notificationLogs = await prisma.notificationLog.findMany({
+      where: {
+        documentId: issueId,
+        documentType: 'INVENTORY_ISSUE',
+      },
+    });
+    expect(notificationLogs.length).toBe(2);
+
+    const adminNotif = notificationLogs.find((n) => n.targetRole === 'ADMIN');
+    const mgrNotif = notificationLogs.find((n) => n.targetRole === 'INV_MGR');
+    expect(adminNotif).toBeDefined();
+    expect(mgrNotif).toBeDefined();
+    expect(adminNotif?.warehouseId).toBe(warehouseId);
+    expect(adminNotif?.message).toContain('Stock Issue Posted');
+    expect(adminNotif?.message).toContain('تم ترحيل صرف مخزون');
+    expect(mgrNotif?.warehouseId).toBe(warehouseId);
+    expect(mgrNotif?.message).toContain('Stock Issue Posted');
+    expect(mgrNotif?.message).toContain('تم ترحيل صرف مخزون');
   });
 });

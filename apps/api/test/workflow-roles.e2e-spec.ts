@@ -56,6 +56,10 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
   let whKeeperId: string;
   let adminToken: string;
   let adminId: string;
+  let destWarehouseId: string;
+  let whKeeperDestToken: string;
+  let whKeeperDestId: string;
+  let testItemId: string;
 
   let branchId: string;
   let warehouseId: string;
@@ -119,13 +123,14 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
     });
     uomId = uom.id;
 
-    await prisma.item.create({
+    const item = await prisma.item.create({
       data: { name: `Item ${suffix}`, sku: `SKU-${suffix}`, categoryId, uomId },
     });
+    testItemId = item.id;
 
     // Users: Proc Officer (Allowed to submit PR, but not allowed to approve PR)
     const procEmail = `proc-${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const procUser = await prisma.user.create({
       data: {
         email: procEmail,
@@ -143,7 +148,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
 
     const procLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: procEmail, password: 'password123' });
+      .send({ email: procEmail, password: 'Password123!' });
     procOfficerToken = procLogin.body.accessToken;
 
     // Users: Warehouse Keeper (NOT allowed to submit PR)
@@ -165,7 +170,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
 
     const whLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: whEmail, password: 'password123' });
+      .send({ email: whEmail, password: 'Password123!' });
     whKeeperToken = whLogin.body.accessToken;
 
     // Users: Admin (Allowed to post GRN)
@@ -187,29 +192,80 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
 
     const adminLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: adminEmail, password: 'password123' });
+      .send({ email: adminEmail, password: 'Password123!' });
     adminToken = adminLogin.body.accessToken;
+
+    // Create destination warehouse
+    const destWarehouse = await prisma.warehouse.create({
+      data: {
+        name: `Dest Warehouse ${suffix}`,
+        code: `WH-DST-${suffix}`,
+        branchId,
+      },
+    });
+    destWarehouseId = destWarehouse.id;
+
+    // Seed warehouseItem stock in origin warehouse
+    await prisma.warehouseItem.create({
+      data: {
+        warehouseId,
+        itemId: testItemId,
+        qtyOnHand: 100,
+        qtyAllocated: 0,
+        wac: 10.0,
+      },
+    });
+
+    // Users: WH Keeper for Dest Warehouse
+    const whDestEmail = `wh-dst-${suffix}@logirest.com`;
+    const whDestUser = await prisma.user.create({
+      data: {
+        email: whDestEmail,
+        passwordHash,
+        name: `WH Keeper Dest ${suffix}`,
+        role: 'WH_KEEPER',
+        isActive: true,
+      },
+    });
+    whKeeperDestId = whDestUser.id;
+
+    await prisma.userWarehouseScope.create({
+      data: { userId: whKeeperDestId, warehouseId: destWarehouseId },
+    });
+
+    const whDestLogin = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: whDestEmail, password: 'Password123!' });
+    whKeeperDestToken = whDestLogin.body.accessToken;
   });
 
   afterAll(async () => {
     // Teardown everything
+    await prisma.transferLine.deleteMany({
+      where: { transfer: { fromWarehouseId: warehouseId } },
+    });
+    await prisma.transfer.deleteMany({
+      where: { fromWarehouseId: warehouseId },
+    });
     await prisma.warehouseItemLot.deleteMany({
-      where: { warehouseId },
+      where: { warehouseId: { in: [warehouseId, destWarehouseId] } },
     });
     await prisma.warehouseItem.deleteMany({
-      where: { warehouseId },
+      where: { warehouseId: { in: [warehouseId, destWarehouseId] } },
     });
     await prisma.userWarehouseScope.deleteMany({
-      where: { userId: { in: [procOfficerId, whKeeperId, adminId] } },
+      where: {
+        userId: { in: [procOfficerId, whKeeperId, adminId, whKeeperDestId] },
+      },
     });
     await prisma.warehouseLock.deleteMany({
-      where: { warehouseId },
+      where: { warehouseId: { in: [warehouseId, destWarehouseId] } },
     });
     await prisma.gRNLine.deleteMany({
       where: { item: { categoryId } },
     });
     await prisma.goodsReceivedNote.deleteMany({
-      where: { warehouseId },
+      where: { warehouseId: { in: [warehouseId, destWarehouseId] } },
     });
     await prisma.pOLine.deleteMany({
       where: { item: { categoryId } },
@@ -221,10 +277,14 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
       where: { item: { categoryId } },
     });
     await prisma.approvalEvent.deleteMany({
-      where: { userId: { in: [procOfficerId, whKeeperId, adminId] } },
+      where: {
+        userId: { in: [procOfficerId, whKeeperId, adminId, whKeeperDestId] },
+      },
     });
     await prisma.auditLog.deleteMany({
-      where: { userId: { in: [procOfficerId, whKeeperId, adminId] } },
+      where: {
+        userId: { in: [procOfficerId, whKeeperId, adminId, whKeeperDestId] },
+      },
     });
     await prisma.purchaseRequest.deleteMany({
       where: { branchId },
@@ -244,8 +304,8 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
     await prisma.currency.delete({
       where: { id: currencyId },
     });
-    await prisma.warehouse.delete({
-      where: { id: warehouseId },
+    await prisma.warehouse.deleteMany({
+      where: { id: { in: [warehouseId, destWarehouseId] } },
     });
     await prisma.documentSequence.deleteMany({
       where: { branchId },
@@ -254,7 +314,9 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
       where: { id: branchId },
     });
     await prisma.user.deleteMany({
-      where: { id: { in: [procOfficerId, whKeeperId, adminId] } },
+      where: {
+        id: { in: [procOfficerId, whKeeperId, adminId, whKeeperDestId] },
+      },
     });
 
     await prisma.$disconnect();
@@ -451,6 +513,167 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
       } finally {
         await prisma.warehouseLock.delete({ where: { id: lock.id } });
       }
+    });
+  });
+
+  describe('Transfer Workflow Roles and Scopes', () => {
+    let transferId: string;
+
+    beforeEach(async () => {
+      // Create a DRAFT transfer from origin to destination
+      const transfer = await prisma.transfer.create({
+        data: {
+          transferNumber: `TR-TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          fromWarehouseId: warehouseId,
+          toWarehouseId: destWarehouseId,
+          status: 'DRAFT',
+          lines: {
+            create: {
+              itemId: testItemId,
+              quantityShipped: 5,
+            },
+          },
+        },
+      });
+      transferId = transfer.id;
+    });
+
+    afterEach(async () => {
+      // Clean up local transfers and lines
+      await prisma.transferLine.deleteMany({
+        where: { transferId },
+      });
+      await prisma.transfer.deleteMany({
+        where: { id: transferId },
+      });
+    });
+
+    it('should block unauthorized user role (PROC_OFFICER) from shipping a transfer (403 Forbidden)', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/ship`)
+        .set('Authorization', `Bearer ${procOfficerToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 1 })
+        .expect(403);
+
+      expect(res.body.message).toContain('is not authorized');
+
+      // Verify persistent security AuditLog is written
+      const audit = await prisma.auditLog.findFirst({
+        where: {
+          userId: procOfficerId,
+          action: 'WORKFLOW_SHIP_FAILED',
+        },
+      });
+      expect(audit).toBeDefined();
+    });
+
+    it('should block WAREHOUSE_KEEPER not scoped to origin from shipping a transfer (403 Forbidden)', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/ship`)
+        .set('Authorization', `Bearer ${whKeeperDestToken}`)
+        .set('x-warehouse-id', destWarehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 1 })
+        .expect(403);
+
+      expect(res.body.message).toContain(
+        'not authorized for the origin warehouse branch',
+      );
+
+      // Verify persistent security AuditLog is written
+      const audit = await prisma.auditLog.findFirst({
+        where: {
+          userId: whKeeperDestId,
+          action: 'UNAUTHORIZED_TRANSFER_SHIP',
+        },
+      });
+      expect(audit).toBeDefined();
+    });
+
+    it('should allow WAREHOUSE_KEEPER scoped to origin to ship a transfer successfully (200 OK)', async () => {
+      await request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/ship`)
+        .set('Authorization', `Bearer ${whKeeperToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 1 })
+        .expect(200);
+
+      const updated = await prisma.transfer.findUnique({
+        where: { id: transferId },
+      });
+      expect(updated!.status).toBe('IN_TRANSIT');
+    });
+
+    it('should block WAREHOUSE_KEEPER not scoped to destination from receiving a transfer (403 Forbidden)', async () => {
+      // 1. Ship it first using Admin/authorized role
+      await prisma.transfer.update({
+        where: { id: transferId },
+        data: { status: 'IN_TRANSIT', version: 2 },
+      });
+
+      // 2. Attempt to receive using keeper who is only scoped to the origin
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/receive`)
+        .set('Authorization', `Bearer ${whKeeperToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 2 })
+        .expect(403);
+
+      expect(res.body.message).toContain(
+        'not authorized for the destination warehouse branch',
+      );
+
+      // Verify persistent security AuditLog is written
+      const audit = await prisma.auditLog.findFirst({
+        where: {
+          userId: whKeeperId,
+          action: 'UNAUTHORIZED_TRANSFER_RECEIVE',
+        },
+      });
+      expect(audit).toBeDefined();
+    });
+
+    it('should allow WAREHOUSE_KEEPER scoped to destination to receive a transfer successfully (200 OK)', async () => {
+      // 1. Ship it first
+      await prisma.transfer.update({
+        where: { id: transferId },
+        data: { status: 'IN_TRANSIT', version: 2 },
+      });
+
+      // 2. Receive using destination keeper
+      await request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/receive`)
+        .set('Authorization', `Bearer ${whKeeperDestToken}`)
+        .set('x-warehouse-id', destWarehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 2 })
+        .expect(200);
+
+      const updated = await prisma.transfer.findUnique({
+        where: { id: transferId },
+      });
+      expect(updated!.status).toBe('RECEIVED');
+    });
+
+    it('should enforce status check defense-in-depth: block ship action on already received transfer (400 Bad Request)', async () => {
+      // 1. Set status to RECEIVED
+      await prisma.transfer.update({
+        where: { id: transferId },
+        data: { status: 'RECEIVED', version: 3 },
+      });
+
+      // 2. Attempt to ship
+      await request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/ship`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 3 })
+        .expect(400);
     });
   });
 });

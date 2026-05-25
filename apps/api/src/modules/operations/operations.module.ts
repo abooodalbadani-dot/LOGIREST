@@ -11,9 +11,10 @@ import { TransfersService } from './transfers/transfers.service';
 import { AdjustmentPostService } from './adjustment-post.service';
 import { AdjustmentsController } from './adjustments/adjustments.controller';
 import { AdjustmentsService } from './adjustments/adjustments.service';
+import { OutboxModule } from '../outbox/outbox.module';
 
 @Module({
-  imports: [PrismaModule, LedgerModule, DocumentSequenceModule],
+  imports: [PrismaModule, LedgerModule, DocumentSequenceModule, OutboxModule],
   controllers: [IssuesController, TransfersController, AdjustmentsController],
   providers: [
     IssuePostService,

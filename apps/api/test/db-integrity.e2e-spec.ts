@@ -199,6 +199,77 @@ describe('Database Integrity Constraints (US2)', () => {
     });
   });
 
+  describe('Check constraints — non-negative quantities', () => {
+    it('should reject negative qty_on_hand on WarehouseItem', async () => {
+      const item = await prisma.item.create({
+        data: { name: 'Item NH', sku: `SKU-NH-${Date.now()}`, categoryId, uomId },
+      });
+      await expect(
+        prisma.warehouseItem.create({
+          data: { warehouseId, itemId: item.id, qtyOnHand: -1 },
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('should reject negative qty_allocated on WarehouseItem', async () => {
+      const item = await prisma.item.create({
+        data: { name: 'Item NA', sku: `SKU-NA-${Date.now()}`, categoryId, uomId },
+      });
+      await expect(
+        prisma.warehouseItem.create({
+          data: { warehouseId, itemId: item.id, qtyAllocated: -5 },
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('should reject negative qty_on_hand on WarehouseItemLot', async () => {
+      const item = await prisma.item.create({
+        data: { name: 'Item Lot NQ', sku: `SKU-LNQ-${Date.now()}`, categoryId, uomId },
+      });
+      const lot = await prisma.lot.create({
+        data: {
+          lotNumber: `LOT-CHK-${Date.now()}`,
+          itemId: item.id,
+          status: LotStatus.ACTIVE,
+        },
+      });
+
+      await expect(
+        prisma.warehouseItemLot.create({
+          data: { warehouseId, itemId: item.id, lotId: lot.id, qtyOnHand: -1 },
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('Check constraints — valid outbox status', () => {
+    it('should reject invalid status on OutboxEvent', async () => {
+      await expect(
+        prisma.outboxEvent.create({
+          data: {
+            eventType: 'TEST',
+            payload: {},
+            status: 'INVALID_STATUS',
+            expiresAt: new Date(),
+          },
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('should accept valid statuses on OutboxEvent', async () => {
+      const event = await prisma.outboxEvent.create({
+        data: {
+          eventType: 'TEST',
+          payload: {},
+          status: 'PENDING',
+          expiresAt: new Date(),
+        },
+      });
+      expect(event.status).toBe('PENDING');
+      await prisma.outboxEvent.delete({ where: { id: event.id } });
+    });
+  });
+
   describe('Delete restrictions on master data', () => {
     it('should restrict deleting a Branch that has Warehouses', async () => {
       await expect(

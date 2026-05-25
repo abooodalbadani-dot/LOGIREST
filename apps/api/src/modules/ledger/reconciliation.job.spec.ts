@@ -47,11 +47,6 @@ describe('ReconciliationJob', () => {
   } as unknown as NotificationService;
 
   beforeEach(async () => {
-    // Avoid running scheduleNextRun immediately on test initialization
-    jest
-      .spyOn(ReconciliationJob.prototype, 'scheduleNextRun')
-      .mockImplementation(() => {});
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReconciliationJob,

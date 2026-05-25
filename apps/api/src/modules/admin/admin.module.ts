@@ -3,9 +3,10 @@ import { PrismaModule } from '../../database/database.module';
 import { AuditLogsController } from './audit-logs.controller';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { OutboxModule } from '../outbox/outbox.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, OutboxModule],
   controllers: [AuditLogsController, AdminController],
   providers: [AdminService],
 })

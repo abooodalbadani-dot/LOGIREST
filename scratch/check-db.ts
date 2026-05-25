@@ -1,18 +1,38 @@
 import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
+
 async function main() {
-  const prisma = new PrismaClient();
-  try {
-    console.log('Connecting to database...');
-    await prisma.$connect();
-    console.log('Connected! Running query...');
-    const result = await prisma.$queryRaw`SELECT 1 as test`;
-    console.log('Success:', result);
-  } catch (err) {
-    console.error('Connection failed:', err);
-  } finally {
-    await prisma.$disconnect();
-  }
+  const negativeItems = await prisma.warehouseItem.findMany({
+    where: {
+      OR: [
+        { qtyOnHand: { lt: 0 } },
+        { qtyAllocated: { lt: 0 } }
+      ]
+    },
+    include: {
+      item: true,
+      warehouse: true
+    }
+  });
+
+  console.log('--- NEGATIVE WAREHOUSE ITEMS ---');
+  console.log(JSON.stringify(negativeItems, null, 2));
+
+  const negativeLots = await prisma.warehouseItemLot.findMany({
+    where: {
+      qtyOnHand: { lt: 0 }
+    },
+    include: {
+      item: true,
+      warehouse: true
+    }
+  });
+
+  console.log('--- NEGATIVE WAREHOUSE ITEM LOTS ---');
+  console.log(JSON.stringify(negativeLots, null, 2));
 }
 
-main();
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

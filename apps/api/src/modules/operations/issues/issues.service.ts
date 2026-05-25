@@ -21,45 +21,48 @@ export class IssuesService {
     userId: string,
     activeWarehouseId: string,
   ) {
-    return this.prisma.$transaction(async (tx) => {
-      const warehouse = await tx.warehouse.findUnique({
-        where: { id: activeWarehouseId },
-        select: { branchId: true },
-      });
-      if (!warehouse) {
-        throw new NotFoundException(
-          `Warehouse with ID ${activeWarehouseId} not found`,
+    return this.prisma.$transaction(
+      async (tx) => {
+        const warehouse = await tx.warehouse.findUnique({
+          where: { id: activeWarehouseId },
+          select: { branchId: true },
+        });
+        if (!warehouse) {
+          throw new NotFoundException(
+            `Warehouse with ID ${activeWarehouseId} not found`,
+          );
+        }
+
+        const issueNumber = await this.documentSequenceService.generateNext(
+          tx,
+          DocumentType.INVENTORY_ISSUE,
+          warehouse.branchId,
         );
-      }
 
-      const issueNumber = await this.documentSequenceService.generateNext(
-        tx,
-        DocumentType.INVENTORY_ISSUE,
-        warehouse.branchId,
-      );
-
-      return tx.inventoryIssue.create({
-        data: {
-          issueNumber,
-          warehouseId: activeWarehouseId,
-          departmentId: body.departmentId,
-          status: 'DRAFT',
-          lines: {
-            create: body.lines.map((line) => ({
-              itemId: line.itemId,
-              quantity: line.quantity,
-            })),
-          },
-        },
-        include: {
-          lines: {
-            include: {
-              item: true,
+        return tx.inventoryIssue.create({
+          data: {
+            issueNumber,
+            warehouseId: activeWarehouseId,
+            departmentId: body.departmentId,
+            status: 'DRAFT',
+            lines: {
+              create: body.lines.map((line) => ({
+                itemId: line.itemId,
+                quantity: line.quantity,
+              })),
             },
           },
-        },
-      });
-    });
+          include: {
+            lines: {
+              include: {
+                item: true,
+              },
+            },
+          },
+        });
+      },
+      { timeout: 30000 },
+    );
   }
 
   async findOne(id: string) {

@@ -128,6 +128,33 @@ export class PurchaseRequestsController {
     });
   }
 
+  @Post(':id/cancel')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'pr',
+    action: 'CANCEL',
+    modelName: 'purchaseRequest',
+  })
+  @HttpCode(HttpStatus.OK)
+  async cancel(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: any,
+    @Body() body: { comments?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+    return this.prService.cancel(id, userId, role as Role, {
+      ...body,
+      ipAddress,
+    });
+  }
+
   @Post(':id/convert-to-po')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({

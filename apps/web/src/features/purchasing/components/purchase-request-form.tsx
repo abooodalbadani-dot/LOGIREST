@@ -38,6 +38,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useCreatePR } from '@/features/purchasing/hooks/useCreatePR';
 import { useUpdatePR } from '@/features/purchasing/hooks/useUpdatePR';
 import { useSubmitPR } from '@/features/purchasing/hooks/useSubmitPR';
+import { useCancelPR } from '@/features/purchasing/hooks/useCancelPR';
 import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -104,6 +105,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const createPR = useCreatePR();
   const updatePR = useUpdatePR({ onConflict });
   const submitPR = useSubmitPR({ onConflict });
+  const cancelPR = useCancelPR({ onConflict });
   const { playSound } = useAudioFeedback();
 
   const departmentItems = React.useMemo(() => {
@@ -279,6 +281,30 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             )}
           </Button>
         </>
+      )}
+
+      {/* Cancel Button for Draft Documents */}
+      {!isLocked && initialData?.id && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={cancelPR.isPending}
+          onClick={async () => {
+            const confirmed = window.confirm(t('cancel_confirm') || 'Are you sure you want to cancel this request?');
+            if (!confirmed) return;
+            try {
+              await cancelPR.mutateAsync({ id: initialData.id, version: initialData.version ?? 0 });
+              toast.success(t('cancel_success'));
+              router.push('/purchase-requests', { skipGuard: true });
+            } catch {
+              toast.error(tc('error'));
+            }
+          }}
+          className="h-12 px-8 border-none bg-red-500/10 text-red-500 text-label-xs font-semibold uppercase rounded-xl hover:bg-red-500/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+        >
+          <Trash2 className="w-3.5 h-3.5 me-2" />
+          {t('cancel')}
+        </Button>
       )}
 
       {/* Workflow Actions for Locked Documents */}
