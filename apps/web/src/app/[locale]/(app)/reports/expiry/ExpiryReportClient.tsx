@@ -88,13 +88,14 @@ export default function ExpiryReportClient() {
  columns={columns}
  isLoading={isLoading}
  exportComponent={
- <ReportExportMenu 
- columns={exportColumns}
- data={data || []}
- filename="Expiry_Report"
- title={t('expiry')}
- exportRoute="/reports/expiry/export"
- />
+  <ReportExportMenu 
+  columns={exportColumns}
+  data={data || []}
+  filename="Expiry_Report"
+  title={t('expiry')}
+  exportRoute="/reports/expiry/export"
+  countCheckParams={{ type: 'expiry' }}
+  />
  }
  collectionName="reports"
  />

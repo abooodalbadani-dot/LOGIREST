@@ -495,6 +495,30 @@ export class WorkflowService {
               warehouseId: updatedDoc.warehouseId,
             });
           } else if (docType === 'transfer' && targetStatus === 'RECEIVED') {
+            const destWarehouse = await tx.warehouse.findUnique({
+              where: { id: updatedDoc.toWarehouseId },
+              select: { name: true },
+            });
+            const warehouseName =
+              destWarehouse?.name || updatedDoc.toWarehouseId;
+            await tx.notificationLog.createMany({
+              data: [
+                {
+                  targetRole: 'ADMIN',
+                  warehouseId: updatedDoc.toWarehouseId,
+                  message: `Transfer ${updatedDoc.transferNumber} successfully received at ${warehouseName}.`,
+                  documentType: 'TRANSFER',
+                  documentId: updatedDoc.id,
+                },
+                {
+                  targetRole: 'INV_MGR',
+                  warehouseId: updatedDoc.toWarehouseId,
+                  message: `Transfer ${updatedDoc.transferNumber} successfully received at ${warehouseName}.`,
+                  documentType: 'TRANSFER',
+                  documentId: updatedDoc.id,
+                },
+              ],
+            });
             await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
               id: updatedDoc.id,
               documentNumber: updatedDoc.transferNumber,

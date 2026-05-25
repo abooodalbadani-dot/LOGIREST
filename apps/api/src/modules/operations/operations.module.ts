@@ -11,11 +11,20 @@ import { TransfersService } from './transfers/transfers.service';
 import { AdjustmentPostService } from './adjustment-post.service';
 import { AdjustmentsController } from './adjustments/adjustments.controller';
 import { AdjustmentsService } from './adjustments/adjustments.service';
+import { GrnVoidService } from './grn-void.service';
+import { IssueVoidService } from './issue-void.service';
+import { AdjustmentVoidService } from './adjustment-void.service';
+import { OperationsController } from './operations.controller';
 import { OutboxModule } from '../outbox/outbox.module';
 
 @Module({
   imports: [PrismaModule, LedgerModule, DocumentSequenceModule, OutboxModule],
-  controllers: [IssuesController, TransfersController, AdjustmentsController],
+  controllers: [
+    IssuesController,
+    TransfersController,
+    AdjustmentsController,
+    OperationsController,
+  ],
   providers: [
     IssuePostService,
     IssuesService,
@@ -23,6 +32,9 @@ import { OutboxModule } from '../outbox/outbox.module';
     TransfersService,
     AdjustmentPostService,
     AdjustmentsService,
+    GrnVoidService,
+    IssueVoidService,
+    AdjustmentVoidService,
   ],
   exports: [
     IssuePostService,
@@ -31,6 +43,9 @@ import { OutboxModule } from '../outbox/outbox.module';
     TransfersService,
     AdjustmentPostService,
     AdjustmentsService,
+    GrnVoidService,
+    IssueVoidService,
+    AdjustmentVoidService,
   ],
 })
 export class OperationsModule {}

@@ -72,6 +72,7 @@ export class ReconciliationJob {
 
     let processedCount = 0;
     let discrepancyCount = 0;
+    let lotDiscrepanciesFound = 0;
     const frozenItems: string[] = [];
 
     for (const whItem of warehouseItems) {
@@ -130,6 +131,51 @@ export class ReconciliationJob {
       }
     }
 
+    // Check C: Lot-level drift — compare warehouse_item_lots.qty_on_hand against stock_ledger SUM by lotId and warehouseId
+    const lotLedgerTotals = await this.prisma.stockLedger.groupBy({
+      by: ['lotId', 'warehouseId'],
+      where: {
+        lotId: { not: null },
+      },
+      _sum: {
+        quantity: true,
+      },
+    });
+
+    const lotLedgerMap = new Map<string, Prisma.Decimal>();
+    for (const total of lotLedgerTotals) {
+      if (!total.lotId) continue;
+      const key = `${total.warehouseId}_${total.lotId}`;
+      lotLedgerMap.set(key, total._sum.quantity || new Prisma.Decimal(0));
+    }
+
+    const warehouseItemLots = await this.prisma.warehouseItemLot.findMany({
+      include: {
+        item: { select: { sku: true } },
+        lot: { select: { lotNumber: true } },
+        warehouse: { select: { name: true, code: true } },
+      },
+    });
+
+    for (const wil of warehouseItemLots) {
+      const key = `${wil.warehouseId}_${wil.lotId}`;
+      const ledgerLotQty = lotLedgerMap.get(key) || new Prisma.Decimal(0);
+      const currentLotQty = new Prisma.Decimal(wil.qtyOnHand);
+
+      if (!currentLotQty.equals(ledgerLotQty)) {
+        lotDiscrepanciesFound++;
+        this.logger.warn(
+          `Lot-level discrepancy for Lot ${wil.lot.lotNumber} (SKU: ${wil.item.sku}) in Warehouse ${wil.warehouse.name} (${wil.warehouse.code}). qtyOnHand: ${currentLotQty.toString()}, ledgerQty: ${ledgerLotQty.toString()}`,
+        );
+
+        await this.notificationService.createNotification({
+          targetRole: Role.ADMIN,
+          warehouseId: wil.warehouseId,
+          message: `Lot drift detected: Lot ${wil.lot.lotNumber} (SKU: ${wil.item.sku}) in Warehouse ${wil.warehouse.name} (${wil.warehouse.code}) has qty_on_hand ${currentLotQty.toString()} but stock_ledger sums to ${ledgerLotQty.toString()}.`,
+        });
+      }
+    }
+
     const durationMs = Date.now() - startTime;
 
     // Log the run in reconciliation_runs table
@@ -137,13 +183,14 @@ export class ReconciliationJob {
       data: {
         itemsChecked: processedCount,
         discrepanciesFound: discrepancyCount,
+        lotDiscrepanciesFound,
         frozenItems,
         durationMs,
       },
     });
 
     this.logger.log(
-      `Reconciliation job completed in ${durationMs}ms. Processed ${processedCount} items, found and resolved ${discrepancyCount} discrepancies.`,
+      `Reconciliation job completed in ${durationMs}ms. Processed ${processedCount} items, found ${discrepancyCount} discrepancies, detected ${lotDiscrepanciesFound} lot-level drifts.`,
     );
   }
 }

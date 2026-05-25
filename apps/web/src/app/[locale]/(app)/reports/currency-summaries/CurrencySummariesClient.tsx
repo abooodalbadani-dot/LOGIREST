@@ -62,12 +62,13 @@ export default function CurrencySummariesClient() {
  columns={columns}
  isLoading={isLoading}
  exportComponent={
- <ReportExportMenu 
- columns={exportColumns}
- data={data || []}
- filename="Currency_Summary_Report"
- title={t('currency_summaries')}
- />
+  <ReportExportMenu 
+  columns={exportColumns}
+  data={data || []}
+  filename="Currency_Summary_Report"
+  title={t('currency_summaries')}
+  countCheckParams={{ type: 'currency-summaries' }}
+  />
  }
  collectionName="reports"
  />

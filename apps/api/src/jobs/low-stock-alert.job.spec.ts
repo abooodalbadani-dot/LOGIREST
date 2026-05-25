@@ -2,9 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LowStockAlertJob } from './low-stock-alert.job';
 import { PrismaService } from '../database/prisma.service';
 import { OutboxService } from '../modules/outbox/outbox.service';
+import { REDIS_CLIENT } from '../redis/redis.module';
 
 describe('LowStockAlertJob', () => {
   let job: LowStockAlertJob;
+  let mockRedis: {
+    get: jest.Mock;
+    set: jest.Mock;
+  };
   let mockPrisma: {
     warehouseItem: {
       findMany: jest.Mock;
@@ -15,7 +20,23 @@ describe('LowStockAlertJob', () => {
     writeEvent: jest.Mock;
   };
 
+  const redisStore = new Map<string, string>();
+
   beforeEach(async () => {
+    redisStore.clear();
+    mockRedis = {
+      get: jest.fn().mockImplementation((key: string) => {
+        return Promise.resolve(redisStore.get(key) || null);
+      }),
+      set: jest
+        .fn()
+        .mockImplementation(
+          (key: string, value: string) => {
+            redisStore.set(key, value);
+            return Promise.resolve('OK');
+          },
+        ),
+    };
     mockPrisma = {
       warehouseItem: {
         findMany: jest.fn(),
@@ -45,6 +66,10 @@ describe('LowStockAlertJob', () => {
         {
           provide: OutboxService,
           useValue: mockOutbox,
+        },
+        {
+          provide: REDIS_CLIENT,
+          useValue: mockRedis,
         },
       ],
     }).compile();
@@ -148,15 +173,11 @@ describe('LowStockAlertJob', () => {
     await job.checkLowStockThresholds();
     expect(mockOutbox.writeEvent).toHaveBeenCalledTimes(1);
 
-    // Mock date advance by 24h + 1s
-    const nowSpy = jest
-      .spyOn(Date, 'now')
-      .mockReturnValue(Date.now() + 24 * 60 * 60 * 1000 + 1000);
+    // Clear redis store to simulate TTL expiry (24h passed)
+    redisStore.clear();
 
     // 3rd run: Alert should be written again after 24h debounce expires
     await job.checkLowStockThresholds();
     expect(mockOutbox.writeEvent).toHaveBeenCalledTimes(2);
-
-    nowSpy.mockRestore();
   });
 });

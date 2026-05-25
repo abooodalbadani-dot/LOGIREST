@@ -3547,7 +3547,28 @@
     },
     "title": "Reports Hub",
     "view_report": "View Report",
-    "select_session": "Select Session"
+    "select_session": "Select Session",
+    "wac_history": "WAC History",
+    "wac_history_desc": "Weighted average cost history and unit cost evolution",
+    "lot_trace": "Lot Trace",
+    "lot_trace_desc": "Full traceability of inventory lots from receipt to consumption",
+    "wac_history_table": {
+      "date": "Date",
+      "document_type": "Doc Type",
+      "document_number": "Doc #",
+      "item": "Item",
+      "quantity": "Qty",
+      "unit_cost": "Unit Cost",
+      "new_wac": "New WAC"
+    },
+    "lot_trace_table": {
+      "lot_number": "Lot Number",
+      "item": "Item",
+      "received_date": "Received Date",
+      "expiry_date": "Expiry Date",
+      "quantity": "Quantity",
+      "source_document": "Source Document"
+    }
   },
   "transfers": {
     "capacity": {

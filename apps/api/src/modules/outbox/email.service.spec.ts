@@ -57,7 +57,7 @@ describe('EmailService', () => {
       'Test Subject',
       '<p>Test</p>',
     );
-    expect(result).toBe(true);
+    expect(result).toEqual({ ok: false, reason: 'SMTP_UNCONFIGURED' });
     expect(mockTransporter.sendMail).not.toHaveBeenCalled();
   });
 

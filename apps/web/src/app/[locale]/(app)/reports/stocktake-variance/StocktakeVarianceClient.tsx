@@ -146,6 +146,7 @@ export default function StocktakeVarianceClient() {
               filename="Stocktake_Variance_Report"
               title={t('stocktake_variance')}
               exportRoute={`/reports/stocktake-variance/export?sessionId=${activeSessionId}`}
+              countCheckParams={{ type: 'stocktake-variance', sessionId: activeSessionId }}
             />
           ) : undefined
         }

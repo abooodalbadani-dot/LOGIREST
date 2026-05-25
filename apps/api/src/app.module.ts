@@ -36,6 +36,7 @@ import { TokenCleanupJob } from './jobs/token-cleanup.job';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OutboxModule } from './modules/outbox/outbox.module';
+import { RedisModule } from './redis/redis.module';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
 
@@ -72,8 +73,9 @@ import * as crypto from 'crypto';
         url: process.env.REDIS_URL || 'redis://localhost:6379',
       },
     }),
-    // Rate limiting: 10 requests per 60 seconds per IP (applied globally)
-    ThrottlerModule.forRoot([{ name: 'short', ttl: 60000, limit: 10 }]),
+    // General API rate limit: 100 requests per 60 seconds per IP (applied globally)
+    // Auth/login routes override to 10/60s via @Throttle() decorator
+    ThrottlerModule.forRoot([{ name: 'short', ttl: 60000, limit: 100 }]),
     PrismaModule,
     HealthModule,
     AuthModule,
@@ -92,6 +94,7 @@ import * as crypto from 'crypto';
     AdminModule,
     DocumentSequenceModule,
     OutboxModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [

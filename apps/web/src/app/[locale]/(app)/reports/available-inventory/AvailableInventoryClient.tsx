@@ -80,13 +80,14 @@ export default function AvailableInventoryClient() {
  columns={columns}
  isLoading={isLoading}
  exportComponent={
- <ReportExportMenu 
- columns={exportColumns}
- data={data || []}
- filename="Available_Inventory_Report"
- title={t('available_inventory')}
- exportRoute="/reports/available-inventory/export"
- />
+  <ReportExportMenu 
+  columns={exportColumns}
+  data={data || []}
+  filename="Available_Inventory_Report"
+  title={t('available_inventory')}
+  exportRoute="/reports/available-inventory/export"
+  countCheckParams={{ type: 'available-inventory' }}
+  />
  }
  collectionName="reports"
  />

@@ -1,20 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { OutboxService } from '../modules/outbox/outbox.service';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.module';
 
 @Injectable()
 export class LowStockAlertJob {
   private readonly logger = new Logger(LowStockAlertJob.name);
 
-  // In-memory alert debounce registry
-  // Key format: `${warehouseId}-${itemId}` -> value: Timestamp (ms)
-  private readonly alertDebounceRegistry = new Map<string, number>();
-  private readonly DEBOUNCE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 Hours
+  private readonly DEBOUNCE_TTL_SECONDS = 86400; // 24 hours
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
   /**
@@ -55,19 +55,21 @@ export class LowStockAlertJob {
         const qtyOnHand = Number(whItem.qtyOnHand);
 
         if (qtyOnHand <= reorderPoint) {
-          const debounceKey = `${whItem.warehouseId}-${whItem.itemId}`;
-          const lastAlertTime = this.alertDebounceRegistry.get(debounceKey);
-          const now = Date.now();
+          const debounceKey = `low_stock_debounce:${whItem.warehouseId}:${whItem.itemId}`;
 
-          // Enforce 24-hour debouncing block
-          if (
-            lastAlertTime &&
-            now - lastAlertTime < this.DEBOUNCE_DURATION_MS
-          ) {
-            this.logger.debug(
-              `Alert for item ${whItem.item.sku} in ${whItem.warehouse.code} debounced (sent less than 24h ago).`,
+          // Check Redis debounce cache
+          try {
+            const lastAlert = await this.redis.get(debounceKey);
+            if (lastAlert) {
+              this.logger.debug(
+                `Alert for item ${whItem.item.sku} in ${whItem.warehouse.code} debounced (sent less than 24h ago).`,
+              );
+              continue;
+            }
+          } catch (err) {
+            this.logger.warn(
+              `Redis unreachable for debounce check on key ${debounceKey}, bypassing cache. Error: ${err instanceof Error ? err.message : String(err)}`,
             );
-            continue;
           }
 
           this.logger.log(
@@ -88,8 +90,19 @@ export class LowStockAlertJob {
             });
           });
 
-          // Registry update to debounce subsequent alerts
-          this.alertDebounceRegistry.set(debounceKey, now);
+          // Set Redis debounce with 24h TTL
+          try {
+            await this.redis.set(
+              debounceKey,
+              '1',
+              'EX',
+              this.DEBOUNCE_TTL_SECONDS,
+            );
+          } catch (err) {
+            this.logger.warn(
+              `Redis unreachable for debounce set on key ${debounceKey}. Error: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          }
           alertCount++;
         }
       }

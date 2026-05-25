@@ -33,10 +33,11 @@ export const GRN_STATUS = {
   RECEIVED: 'RECEIVED',
   POSTED: 'POSTED',
   CANCELLED: 'CANCELLED',
+  VOIDED: 'VOIDED',
 } as const;
 
 export type GRNStatus = typeof GRN_STATUS[keyof typeof GRN_STATUS];
-export const ALL_GRN_STATUSES = ['DRAFT', 'RECEIVED', 'POSTED', 'CANCELLED'] as const;
+export const ALL_GRN_STATUSES = ['DRAFT', 'RECEIVED', 'POSTED', 'CANCELLED', 'VOIDED'] as const;
 
 export const STOCKTAKE_STATUS = {
   DRAFT: 'DRAFT',
@@ -47,10 +48,11 @@ export const STOCKTAKE_STATUS = {
   POSTED: 'POSTED',
   CLOSED: 'CLOSED',
   CANCELLED: 'CANCELLED',
+  VOIDED: 'VOIDED',
 } as const;
 
 export type StocktakeStatus = typeof STOCKTAKE_STATUS[keyof typeof STOCKTAKE_STATUS];
-export const ALL_STOCKTAKE_STATUSES = ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW', 'APPROVED', 'POSTED', 'CLOSED', 'CANCELLED'] as const;
+export const ALL_STOCKTAKE_STATUSES = ['DRAFT', 'STARTED', 'COUNTING', 'REVIEW', 'APPROVED', 'POSTED', 'CLOSED', 'CANCELLED', 'VOIDED'] as const;
 
 export const TRANSFER_STATUS = {
   DRAFT: 'DRAFT',
@@ -58,20 +60,22 @@ export const TRANSFER_STATUS = {
   RECEIVED: 'RECEIVED',
   POSTED: 'POSTED',
   CANCELLED: 'CANCELLED',
+  VOIDED: 'VOIDED',
 } as const;
 
 export type TransferStatus = typeof TRANSFER_STATUS[keyof typeof TRANSFER_STATUS];
-export const ALL_TRANSFER_STATUSES = ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'POSTED', 'CANCELLED'] as const;
+export const ALL_TRANSFER_STATUSES = ['DRAFT', 'IN_TRANSIT', 'RECEIVED', 'POSTED', 'CANCELLED', 'VOIDED'] as const;
 
 export const ISSUE_STATUS = {
   DRAFT: 'DRAFT',
   SUBMITTED: 'SUBMITTED',
   POSTED: 'POSTED',
   CANCELLED: 'CANCELLED',
+  VOIDED: 'VOIDED',
 } as const;
 
 export type IssueStatus = typeof ISSUE_STATUS[keyof typeof ISSUE_STATUS];
-export const ALL_ISSUE_STATUSES = ['DRAFT', 'SUBMITTED', 'POSTED', 'CANCELLED'] as const;
+export const ALL_ISSUE_STATUSES = ['DRAFT', 'SUBMITTED', 'POSTED', 'CANCELLED', 'VOIDED'] as const;
 
 export const ADJUSTMENT_STATUS = {
   DRAFT: 'DRAFT',
@@ -80,10 +84,11 @@ export const ADJUSTMENT_STATUS = {
   REJECTED: 'REJECTED',
   POSTED: 'POSTED',
   CANCELLED: 'CANCELLED',
+  VOIDED: 'VOIDED',
 } as const;
 
 export type AdjustmentStatus = typeof ADJUSTMENT_STATUS[keyof typeof ADJUSTMENT_STATUS];
-export const ALL_ADJUSTMENT_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'POSTED', 'CANCELLED'] as const;
+export const ALL_ADJUSTMENT_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'POSTED', 'CANCELLED', 'VOIDED'] as const;
 
 export const KITCHEN_REQUEST_STATUS = {
   DRAFT: 'DRAFT',

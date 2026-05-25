@@ -54,7 +54,18 @@ export class AdjustmentPostService {
         throw new BadRequestException('Version conflict detected');
       }
 
-      // 2. Process each line
+      // 2. Validate all lines before processing
+      for (const line of adj.lines) {
+        if (line.direction === AdjustmentDirection.IN) {
+          if (line.unitCost === null || line.unitCost === undefined || Number(line.unitCost) <= 0) {
+            throw new BadRequestException(
+              `Unit cost is required and must be positive for INCREASE adjustment line on item ${line.item.sku}`,
+            );
+          }
+        }
+      }
+
+      // 3. Process each line
       for (const line of adj.lines) {
         const item = line.item;
         const lotId = line.lotId;
@@ -303,7 +314,7 @@ export class AdjustmentPostService {
         }
       }
 
-      // 3. Update Adjustment status to POSTED
+      // 4. Update Adjustment status to POSTED
       const updatedAdj = await tx.adjustment.update({
         where: { id: adjustmentId },
         data: {
@@ -312,7 +323,7 @@ export class AdjustmentPostService {
         },
       });
 
-      // 4. Record ApprovalEvent
+      // 5. Record ApprovalEvent
       const stepNumber =
         (await tx.approvalEvent.count({
           where: {
@@ -334,7 +345,7 @@ export class AdjustmentPostService {
         },
       });
 
-      // 5. Record AuditLog
+      // 6. Record AuditLog
       await tx.auditLog.create({
         data: {
           userId,

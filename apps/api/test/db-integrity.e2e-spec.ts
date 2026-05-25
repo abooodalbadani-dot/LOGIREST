@@ -202,7 +202,12 @@ describe('Database Integrity Constraints (US2)', () => {
   describe('Check constraints — non-negative quantities', () => {
     it('should reject negative qty_on_hand on WarehouseItem', async () => {
       const item = await prisma.item.create({
-        data: { name: 'Item NH', sku: `SKU-NH-${Date.now()}`, categoryId, uomId },
+        data: {
+          name: 'Item NH',
+          sku: `SKU-NH-${Date.now()}`,
+          categoryId,
+          uomId,
+        },
       });
       await expect(
         prisma.warehouseItem.create({
@@ -213,7 +218,12 @@ describe('Database Integrity Constraints (US2)', () => {
 
     it('should reject negative qty_allocated on WarehouseItem', async () => {
       const item = await prisma.item.create({
-        data: { name: 'Item NA', sku: `SKU-NA-${Date.now()}`, categoryId, uomId },
+        data: {
+          name: 'Item NA',
+          sku: `SKU-NA-${Date.now()}`,
+          categoryId,
+          uomId,
+        },
       });
       await expect(
         prisma.warehouseItem.create({
@@ -224,7 +234,12 @@ describe('Database Integrity Constraints (US2)', () => {
 
     it('should reject negative qty_on_hand on WarehouseItemLot', async () => {
       const item = await prisma.item.create({
-        data: { name: 'Item Lot NQ', sku: `SKU-LNQ-${Date.now()}`, categoryId, uomId },
+        data: {
+          name: 'Item Lot NQ',
+          sku: `SKU-LNQ-${Date.now()}`,
+          categoryId,
+          uomId,
+        },
       });
       const lot = await prisma.lot.create({
         data: {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { BarChart3, Clock, ShoppingCart, ClipboardCheck, Wallet, Activity, ArrowRight } from 'lucide-react';
+import { BarChart3, Clock, ShoppingCart, ClipboardCheck, Wallet, Activity, ArrowRight, TrendingUp, Hash } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { usePathname } from '@/i18n/navigation';
 
@@ -86,13 +86,25 @@ export function ReportsHubClient() {
  icon: <ShoppingCart className="w-6 h-6" />,
  href: `${pathname}/procurement-status`,
  },
- {
- title: t('currency_summaries'),
- description: t('currency_summaries_desc'),
- icon: <Wallet className="w-6 h-6" />,
- href: `${pathname}/currency-summaries`,
- },
- ];
+  {
+  title: t('currency_summaries'),
+  description: t('currency_summaries_desc'),
+  icon: <Wallet className="w-6 h-6" />,
+  href: `${pathname}/currency-summaries`,
+  },
+  {
+  title: t('wac_history'),
+  description: t('wac_history_desc'),
+  icon: <TrendingUp className="w-6 h-6" />,
+  href: `${pathname}/wac-history`,
+  },
+  {
+  title: t('lot_trace'),
+  description: t('lot_trace_desc'),
+  icon: <Hash className="w-6 h-6" />,
+  href: `${pathname}/lot-trace`,
+  },
+  ];
 
  return (
  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

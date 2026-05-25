@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ReportsController } from './reports.controller';
+import { ReportsService } from './reports.service';
 import { PrismaService } from '../../database/prisma.service';
 import type { Response } from 'express';
 
@@ -69,7 +70,10 @@ describe('ReportsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReportsController],
-      providers: [{ provide: PrismaService, useValue: mockPrismaService }],
+      providers: [
+        { provide: PrismaService, useValue: mockPrismaService },
+        ReportsService,
+      ],
     }).compile();
 
     controller = module.get<ReportsController>(ReportsController);

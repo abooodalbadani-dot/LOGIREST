@@ -792,8 +792,9 @@ model ReconciliationRun {
   id                 String   @id @default(uuid())
   ranAt              DateTime @default(now())
   itemsChecked       Int
-  discrepanciesFound Int
-  frozenItems        String[]
+  discrepanciesFound   Int
+  lotDiscrepanciesFound Int @default(0) @map("lot_discrepancies_found")
+  frozenItems          String[]
   durationMs         Int
 
   @@map("reconciliation_runs")

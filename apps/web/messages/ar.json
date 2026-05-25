@@ -3547,7 +3547,28 @@
     },
     "title": "مركز التقارير",
     "view_report": "عرض التقرير",
-    "select_session": "اختر الجلسة"
+    "select_session": "اختر الجلسة",
+    "wac_history": "سجل متوسط التكلفة المرجح",
+    "wac_history_desc": "تاريخ متوسط التكلفة المرجح وتطور تكلفة الوحدة",
+    "lot_trace": "تتبع الدفعات",
+    "lot_trace_desc": "إمكانية التتبع الكامل لدفعات المخزون من الاستلام إلى الاستهلاك",
+    "wac_history_table": {
+      "date": "التاريخ",
+      "document_type": "نوع المستند",
+      "document_number": "رقم المستند",
+      "item": "الصنف",
+      "quantity": "الكمية",
+      "unit_cost": "تكلفة الوحدة",
+      "new_wac": "متوسط التكلفة الجديد"
+    },
+    "lot_trace_table": {
+      "lot_number": "رقم الدفعة",
+      "item": "الصنف",
+      "received_date": "تاريخ الاستلام",
+      "expiry_date": "تاريخ الانتهاء",
+      "quantity": "الكمية",
+      "source_document": "المصدر"
+    }
   },
   "transfers": {
     "capacity": {

@@ -80,13 +80,14 @@ export default function ProcurementStatusClient() {
  columns={columns}
  isLoading={isLoading}
  exportComponent={
- <ReportExportMenu 
- columns={exportColumns}
- data={data || []}
- filename="Procurement_Status_Report"
- title={t('procurement_status')}
- exportRoute="/reports/procurement-status/export"
- />
+  <ReportExportMenu 
+  columns={exportColumns}
+  data={data || []}
+  filename="Procurement_Status_Report"
+  title={t('procurement_status')}
+  exportRoute="/reports/procurement-status/export"
+  countCheckParams={{ type: 'procurement-status' }}
+  />
  }
  collectionName="reports"
  />

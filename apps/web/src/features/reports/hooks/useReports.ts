@@ -65,6 +65,54 @@ export type StocktakeVarianceReport = z.infer<typeof StocktakeVarianceReportSche
 export type ProcurementStatusReport = z.infer<typeof ProcurementStatusReportSchema>;
 export type CurrencySummaryReport = z.infer<typeof CurrencySummaryReportSchema>;
 
+// --- WAC History ---
+
+export const WacHistoryReportSchema = z.object({
+  id: z.string(),
+  date: z.string(),
+  document_type: z.string(),
+  document_number: z.string(),
+  document_id: z.string(),
+  item: z.string(),
+  quantity: z.number(),
+  unit_cost: z.number(),
+  new_wac: z.number(),
+});
+
+export type WacHistoryReport = z.infer<typeof WacHistoryReportSchema>;
+
+export function useWacHistoryReport() {
+  return useQuery({
+    queryKey: ['reports', 'wac-history'],
+    queryFn: ({ signal }) => apiClient.get('/reports/wac-history', z.array(WacHistoryReportSchema), { signal }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// --- Lot Trace ---
+
+export const LotTraceReportSchema = z.object({
+  id: z.string(),
+  lot_number: z.string(),
+  item: z.string(),
+  received_date: z.string(),
+  expiry_date: z.string(),
+  quantity: z.number(),
+  source_document: z.string(),
+  source_document_type: z.string(),
+  source_document_id: z.string(),
+});
+
+export type LotTraceReport = z.infer<typeof LotTraceReportSchema>;
+
+export function useLotTraceReport() {
+  return useQuery({
+    queryKey: ['reports', 'lot-trace'],
+    queryFn: ({ signal }) => apiClient.get('/reports/lot-trace', z.array(LotTraceReportSchema), { signal }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // --- Hooks ---
 
 export function useAvailableInventoryReport() {
