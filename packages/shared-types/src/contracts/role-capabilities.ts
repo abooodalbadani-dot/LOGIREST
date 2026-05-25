@@ -126,3 +126,66 @@ export function canRolePerformAction(
   if (!allowedRoles) return false;
   return (allowedRoles as readonly UserRole[]).includes(role);
 }
+
+export interface Permission {
+  module: string;
+  actions: {
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    approve: boolean;
+    post: boolean;
+  };
+}
+
+export interface RoleDescriptor {
+  id: UserRole;
+  displayName: string;
+  description: string;
+  userCount: number;
+  permissions: Permission[];
+}
+
+export const ROLE_METADATA: Record<UserRole, { displayName: string; description: string }> = {
+  ADMIN: {
+    displayName: 'Administrator',
+    description: 'Full system access with immutable security protocols',
+  },
+  GM: {
+    displayName: 'General Manager',
+    description: 'Cross-branch operational visibility and system oversight',
+  },
+  INV_MGR: {
+    displayName: 'Inventory Manager',
+    description: 'Manages stock levels, adjustments and stocktake workflows',
+  },
+  WH_KEEPER: {
+    displayName: 'Warehouse Keeper',
+    description: 'Operational execution of transfers and goods receiving',
+  },
+  PROC_OFFICER: {
+    displayName: 'Procurement Officer',
+    description: 'Handles purchase requests and order cycles',
+  },
+  APPROVER: {
+    displayName: 'Executive Approver',
+    description: 'Strategic approval authority for procurement and financial documents',
+  },
+  AUDITOR: {
+    displayName: 'System Auditor',
+    description: 'Read-only access to all modules for compliance tracking',
+  },
+  VIEWER: {
+    displayName: 'System Viewer',
+    description: 'Read-only access to basic dashboards and operational modules',
+  },
+  KITCHEN_CHIEF: {
+    displayName: 'Kitchen Chief',
+    description: 'Manages kitchen-level requests and direct consumption issues',
+  },
+  STORE_MGR: {
+    displayName: 'Store Manager',
+    description: 'Branch-level operational management and cost analysis',
+  },
+};
+

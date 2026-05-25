@@ -8,7 +8,7 @@ export default async function RoleEditPage(props: { params: Promise<{ locale: st
   
   return (
     <ProtectedRoute requiredAction="edit" requiredResource="admin">
-      <RoleDetailClient locale={locale} id={id} isReadOnly={false} />
+      <RoleDetailClient locale={locale} id={id} isReadOnly={true} />
     </ProtectedRoute>
   );
 }

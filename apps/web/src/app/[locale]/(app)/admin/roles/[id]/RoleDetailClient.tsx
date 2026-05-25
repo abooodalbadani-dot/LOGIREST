@@ -9,6 +9,7 @@ import { ShieldCheck, Lock, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { ROLE_CAPABILITIES, ROLE_METADATA, type UserRole } from '@logirest/shared-types';
 
 const ACTION_KEYS: RoleAction[] = ['view', 'create', 'edit', 'approve', 'post'];
 
@@ -85,7 +86,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
 
   return (
     <MasterDataFormLayout
-      title={role?.name || t('roles_title')}
+      title={(id && ROLE_METADATA[id as UserRole]?.displayName) || role?.name || t('roles_title')}
       backHref="/admin/roles"
       isSaving={isPending}
       onSubmit={() => setIsConfirmOpen(true)}
@@ -98,10 +99,10 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-4">
              {isAdmin ? <Lock className="w-8 h-8 text-rose-500" /> : <ShieldCheck className="w-8 h-8 text-cyan-500" />}
-             <h1 className="text-headline-lg font-semibold uppercase text-foreground">{role?.name}</h1>
+             <h1 className="text-headline-lg font-semibold uppercase text-foreground">{(id && ROLE_METADATA[id as UserRole]?.displayName) || role?.name}</h1>
           </div>
           <p className="text-label-sm text-muted-foreground/60 uppercase font-bold max-w-xl">
-            {role?.description}
+            {(id && ROLE_METADATA[id as UserRole]?.description) || role?.description}
           </p>
         </div>
 

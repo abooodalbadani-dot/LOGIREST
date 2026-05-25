@@ -347,6 +347,7 @@ describe('End-to-End Workflow Integration', () => {
     // 16. Run Reconciliation and verify no discrepancies found
     const lastRunBefore = await prisma.reconciliationRun.findFirst({
       orderBy: { ranAt: 'desc' },
+    });
 
     await reconciliationJob.runReconciliation();
 

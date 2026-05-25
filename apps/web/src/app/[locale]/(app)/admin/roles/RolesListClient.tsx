@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Edit2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ROLE_METADATA, type UserRole } from '@logirest/shared-types';
 
 export function RolesListClient({ locale: _locale }: { locale: string }) {
   const t = useTranslations('admin.roles');
@@ -42,8 +43,8 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
                 <TableRow key={role.id} className="border-outline-low hover:bg-surface-container-highest/10 transition-colors group">
                   <TableCell className="py-8 px-8">
                     <div className="flex flex-col gap-1">
-                      <span className="text-body-md font-semibold uppercase text-foreground group-hover:text-cyan-500 transition-colors">
-                        {role.id}
+                      <span className="text-body-md font-semibold text-foreground group-hover:text-cyan-500 transition-colors">
+                        {ROLE_METADATA[role.id as UserRole]?.displayName || role.name}
                       </span>
                       <span className="text-label-xs text-muted-foreground/40 font-bold uppercase">
                         System Identifier: {role.id}
@@ -52,7 +53,7 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
                   </TableCell>
                   <TableCell className="py-8 px-8">
                     <span className="text-label-sm text-muted-foreground font-medium leading-relaxed max-w-md block">
-                      {role.description}
+                      {ROLE_METADATA[role.id as UserRole]?.description || role.description}
                     </span>
                   </TableCell>
                   <TableCell className="py-8 px-8 text-center">

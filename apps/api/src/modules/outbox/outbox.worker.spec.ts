@@ -138,7 +138,7 @@ describe('OutboxWorker', () => {
     });
   });
 
-  it('should increment attempts and remain PENDING when delivery fails (attempts < 3)', async () => {
+  it('should increment attempts and remain PENDING when delivery fails (attempts < 5)', async () => {
     const mockEvent = {
       id: 'event-1',
       eventType: 'PR_SUBMITTED',
@@ -172,13 +172,13 @@ describe('OutboxWorker', () => {
     });
   });
 
-  it('should mark as FAILED when delivery fails and attempts reach limit (attempts >= 3)', async () => {
+  it('should mark as FAILED when delivery fails and attempts reach limit (attempts >= 5)', async () => {
     const mockEvent = {
       id: 'event-1',
       eventType: 'PR_SUBMITTED',
       payload: { id: 'pr-1' },
       status: 'PENDING',
-      attempts: 2,
+      attempts: 4,
     };
 
     mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
@@ -199,9 +199,89 @@ describe('OutboxWorker', () => {
       where: { id: 'event-1' },
       data: {
         status: 'FAILED',
-        attempts: 3,
+        attempts: 5,
         lastError: 'SMTP connection down',
       },
     });
+  });
+
+  it('should process SECURITY_ALERT_REPLAY_ATTACK event and send emails to admins dynamically', async () => {
+    const mockEvent = {
+      id: 'event-2',
+      eventType: 'SECURITY_ALERT_REPLAY_ATTACK',
+      payload: {
+        userId: 'user-123',
+        sessionId: 'session-456',
+        ipAddress: '192.168.1.1',
+        timestamp: '2026-05-25T12:00:00Z',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'admin1@example.com' },
+      { email: 'admin2@example.com' },
+    ]);
+
+    const mockJob = {
+      id: 'job-2',
+      data: { eventId: 'event-2' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+      where: {
+        role: { in: [Role.ADMIN] },
+        isActive: true,
+      },
+      select: { email: true },
+    });
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['admin1@example.com', 'admin2@example.com'],
+      '🚨 SECURITY ALERT: Token Replay Attack Detected',
+      expect.stringContaining('user-123'),
+    );
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['admin1@example.com', 'admin2@example.com'],
+      '🚨 SECURITY ALERT: Token Replay Attack Detected',
+      expect.stringContaining('192.168.1.1'),
+    );
+  });
+
+  it('should format SECURITY_ALERT_REPLAY_ATTACK email template with Unknown IP when null', async () => {
+    const mockEvent = {
+      id: 'event-3',
+      eventType: 'SECURITY_ALERT_REPLAY_ATTACK',
+      payload: {
+        userId: 'user-123',
+        sessionId: 'session-456',
+        ipAddress: null,
+        timestamp: '2026-05-25T12:00:00Z',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'admin1@example.com' },
+    ]);
+
+    const mockJob = {
+      id: 'job-3',
+      data: { eventId: 'event-3' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['admin1@example.com'],
+      '🚨 SECURITY ALERT: Token Replay Attack Detected',
+      expect.stringContaining('Unknown'),
+    );
   });
 });

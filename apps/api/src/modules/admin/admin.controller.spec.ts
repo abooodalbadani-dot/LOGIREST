@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { PrismaService } from '../../database/prisma.service';
+import { AdminService } from './admin.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
@@ -10,54 +11,57 @@ describe('AdminController', () => {
   const mockPrismaService = {
     reconciliationRun: {
       count: jest.fn(),
-      findMany: jest.fn(),
     },
+  };
+
+  const mockAdminService = {
+    getRoles: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
-      providers: [{ provide: PrismaService, useValue: mockPrismaService }],
+      providers: [
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AdminService, useValue: mockAdminService },
+      ],
     }).compile();
 
     controller = module.get<AdminController>(AdminController);
     jest.clearAllMocks();
   });
 
-  it('should throw ForbiddenException if user role is not ADMIN', async () => {
-    await expect(
-      controller.getReconciliationRuns(Role.INV_MGR, '1', '50'),
-    ).rejects.toThrow(ForbiddenException);
-
-    expect(mockPrismaService.reconciliationRun.findMany).not.toHaveBeenCalled();
+  describe('getReconciliationRuns', () => {
+    it('should throw ForbiddenException if user role is not ADMIN', async () => {
+      await expect(
+        controller.getReconciliationRuns(Role.INV_MGR, '1', '50'),
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
-  it('should return paginated reconciliation runs for ADMIN', async () => {
-    const mockRun = {
-      id: 'run-1',
-      ranAt: new Date(),
-      itemsChecked: 10,
-      discrepanciesFound: 1,
-      frozenItems: ['SKU1'],
-      durationMs: 150,
-    };
+  describe('getRoles', () => {
+    it('should throw ForbiddenException if user role is not ADMIN', async () => {
+      await expect(controller.getRoles(Role.INV_MGR)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(mockAdminService.getRoles).not.toHaveBeenCalled();
+    });
 
-    mockPrismaService.reconciliationRun.count.mockResolvedValue(1);
-    mockPrismaService.reconciliationRun.findMany.mockResolvedValue([mockRun]);
+    it('should return roles list from AdminService for ADMIN', async () => {
+      const mockRoles = [
+        {
+          id: 'ADMIN',
+          displayName: 'Administrator',
+          userCount: 2,
+          permissions: [],
+        },
+      ];
+      mockAdminService.getRoles.mockResolvedValue(mockRoles);
 
-    const result = await controller.getReconciliationRuns(
-      Role.ADMIN,
-      '1',
-      '50',
-    );
+      const result = await controller.getRoles(Role.ADMIN);
 
-    expect(result.data).toHaveLength(1);
-    expect(result.data[0]).toEqual(mockRun);
-    expect(result.meta).toEqual({
-      total: 1,
-      page: 1,
-      limit: 50,
-      totalPages: 1,
+      expect(result).toEqual(mockRoles);
+      expect(mockAdminService.getRoles).toHaveBeenCalled();
     });
   });
 });

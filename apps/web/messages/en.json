@@ -215,7 +215,7 @@
       "permissions_updated": "Permissions updated successfully",
       "post": "Post",
       "procurement": "Procurement",
-      "read_only_desc": "You are currently viewing this role in read-only mode",
+      "read_only_desc": "You are currently viewing this role in read-only mode. Role permissions are statically code-managed for security and compliance.",
       "read_only_mode": "Read-Only Mode",
       "role_detail_title": "Permission Matrix",
       "role_name": "Role Name",
