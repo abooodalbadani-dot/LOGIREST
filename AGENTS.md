@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\025-observability-security-deployment-hardening\plan.md
+E:\Kitchen‑Store Inventory System\specs\026-wire-admin-roles-ui\plan.md
 <!-- SPECKIT END -->
 
 # PROTOCOL — GRAPHIFY-DRIVEN NAVIGATION (TOKEN OPTIMIZATION)
@@ -23,8 +23,9 @@ CRITICAL RULE:
 - Do NOT perform blind recursive directory searches.
 - Do NOT guess file paths or rely on your training data for Next.js/NestJS file structures.
 - Resolve file locations and dependency chains through the Graphify map FIRST, then explicitly read ONLY the specific files necessary for the task.
+<!--
 - the update command must be run manually in the terminal: `graphify update .`
- after any session where code files are created or modified to ensure subsequent tasks navigate the codebase accurately.
+ after any session where code files are created or modified to ensure subsequent tasks navigate the codebase accurately. -->
 # CRITICAL RULES - MUST FOLLOW
 
 ## RESPONSES

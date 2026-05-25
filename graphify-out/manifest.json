@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.specify\\feature.json": {
-    "mtime": 1779669295.2296312,
-    "ast_hash": "c5066c9d6ddc11c3d02633c1756bd972",
+    "mtime": 1779670218.4103303,
+    "ast_hash": "99d18f6374218c76abbd814b087d7678",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.specify\\init-options.json": {
@@ -5485,8 +5485,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\AGENTS.md": {
-    "mtime": 1779669295.2306294,
-    "ast_hash": "abcf40a0f8a9c593be5c37d7e55dd613",
+    "mtime": 1779671614.3497787,
+    "ast_hash": "0abf547442b3cc619dbd138dc3fcb02f",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\all_conflicted_files.txt": {
@@ -10112,6 +10112,46 @@
   "E:\\Kitchen\u2011Store Inventory System\\.kilo\\agent-manager.json": {
     "mtime": 1779666513.50952,
     "ast_hash": "59d79d9088d944a0b7689fae47b9beb5",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\spec.md": {
+    "mtime": 1779671294.952241,
+    "ast_hash": "a31a22a80c9c9391481f939f2c85238d",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\checklists\\requirements.md": {
+    "mtime": 1779670700.8307192,
+    "ast_hash": "bec1b2ff982c564795a0fe161b175624",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\contracts\\index.ts": {
+    "mtime": 1779671572.3347032,
+    "ast_hash": "cc542283255fc3b8e9ec909458fd253e",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\data-model.md": {
+    "mtime": 1779671547.1001954,
+    "ast_hash": "c383ef5bfd7530fc6b289183540b0fb1",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\plan.md": {
+    "mtime": 1779671504.0083833,
+    "ast_hash": "f7c56dc2bfa1ca94a7aabb37691d8d19",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\quickstart.md": {
+    "mtime": 1779671599.005051,
+    "ast_hash": "92921824f337ad3a4bed7f2deb858949",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\research.md": {
+    "mtime": 1779671528.601611,
+    "ast_hash": "4d655b30b56638974f698cd9ec24826a",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\026-wire-admin-roles-ui\\tasks.md": {
+    "mtime": 1779671797.3831291,
+    "ast_hash": "217e3c10bcaa293b00864065d44d4640",
     "semantic_hash": ""
   }
 }

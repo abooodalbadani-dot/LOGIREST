@@ -11,13 +11,28 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 
-@Controller('admin/reconciliation-runs')
+import { AdminService } from './admin.service';
+
+@Controller('admin')
 @UseGuards(JwtAuthGuard)
 @ApiSecureController()
 export class AdminController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly adminService: AdminService,
+  ) {}
 
-  @Get()
+  @Get('roles')
+  async getRoles(@CurrentUser('role') role: Role) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to access system roles configuration.',
+      );
+    }
+    return this.adminService.getRoles();
+  }
+
+  @Get('reconciliation-runs')
   async getReconciliationRuns(
     @CurrentUser('role') role: Role,
     @Query('page') page?: string,
@@ -55,3 +70,4 @@ export class AdminController {
     };
   }
 }
+
