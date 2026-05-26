@@ -1,83 +1,37 @@
-# Quickstart & Verification Guide: Sprint 0 Readiness Hardening
+# Quickstart Guide: Sprint 0 Readiness Hardening
 
-This guide helps you verify and test the implemented Sprint 0 readiness features.
+This guide provides steps to configure, run, and verify the Sprint 0 fixes in your local development environment.
 
----
-
-## Prerequisites & Initial Startup
-
-Make sure your environment is up and running:
-
-1. **Start the API Server**:
-   ```bash
-   npm run start:dev --workspace=apps/api
-   ```
-2. **Start the Web App**:
-   ```bash
-   npm run dev --workspace=apps/web
-   ```
-
----
-
-## 1. Verify Daily Reconciliation Job Scheduler (TASK-005)
-
-### Verification
-Run the unit tests targeting the new `@Cron` scheduling logic:
+## 1. Environment & Container Secrets Setup
+Copy the example environment file to your root directory:
 ```bash
-npm run test -- apps/api/src/modules/ledger/reconciliation.job.spec.ts
+cp docker-compose.env.example .env
 ```
-
----
-
-## 2. Verify SMTP Delivery health & Dashboard (TASK-006)
-
-### Local Configuration Test
-1. Set the email server to an unconfigured state in `.env` (remove `SMTP_HOST` or set it to an empty value).
-2. Trigger an outbox event (e.g. login security warning or mock replay attack).
-3. Query the status endpoint to verify the health dashboard displays unconfigured state:
-   ```bash
-   curl -X GET http://localhost:3000/admin/system/email-status -H "Authorization: Bearer <ADMIN_TOKEN>"
-   ```
-4. Verify the database `outbox_events` table contains status `FAILED` and `lastError: 'SMTP_NOT_CONFIGURED'`.
-
----
-
-## 3. Verify Database Positive Constraints (TASK-007)
-
-### Verification
-Execute the automated E2E tests checking positive constraint enforcement:
+Populate `.env` with actual development passwords and secrets. Launch containers:
 ```bash
-npx jest --config apps/api/test/jest-e2e.json apps/api/test/db-integrity.e2e-spec.ts
+docker compose up -d
 ```
 
-### Manual Database Check
-Attempt to insert a negative quantity on hand directly:
-```sql
-INSERT INTO "warehouse_items" ("warehouseId", "itemId", "qty_on_hand", "qty_allocated")
-VALUES ('wh-uuid-1', 'item-uuid-1', -5, 0);
--- Expected: Error constraint "warehouse_items_qty_on_hand_nonneg" violation
-```
-
----
-
-## 4. Verify Currency Configuration Rendering (TASK-008)
-
-### Verification
-1. Access the Store Manager Dashboard page.
-2. In database settings, change `base_currency` to `'AED'`.
-3. Reload the browser and verify that all currency numbers render as `XXX AED` dynamically.
-
----
-
-## 5. Verify Document Cancellation (TASK-009)
-
-### Automated Test
-Run the E2E tests:
+## 2. Apply Database Constraints & Migrations
+Ensure PostgreSQL check constraints and enum updates are applied:
 ```bash
-npx jest --config apps/api/test/jest-e2e.json apps/api/test/workflow-transitions.e2e-spec.ts
+npx prisma migrate dev --name add_voided_status_and_check_constraints
 ```
 
-### Manual verification
-1. Open a saved draft Purchase Request.
-2. Verify the "Cancel" button is visible.
-3. Click "Cancel". The page should redirect to the lists, and the document status must read "Cancelled" and be read-only.
+## 3. Verify SMTP Error Warnings
+1. Temporarily clear SMTP settings in Admin settings or `.env`.
+2. Trigger an action that initiates an outbox event (e.g., submit a workflow document).
+3. Verify that:
+   - The outbox worker fails.
+   - An administrator notification alert appears in the database `NotificationLog`.
+
+## 4. Test Role API Connection
+Ensure the Admin Roles page shows live data:
+1. Navigate to `/admin/roles` in the browser.
+2. Verify the browser network inspector shows a request to `/api/v1/admin/roles` returning a JSON list rather than using a mock client array.
+
+## 5. Verify Document Voiding Workflow
+1. Navigate to a posted Goods Received Note or Issue.
+2. Log in as an Administrator (`ADMIN`) or Inventory Manager (`INV_MGR`).
+3. Click the "Void Document" button, enter a mandatory comment, and click confirm.
+4. Verify the document status badge is `VOIDED`, and new negative adjustment rows appear in the Stock Ledger.

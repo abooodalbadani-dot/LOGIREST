@@ -60,7 +60,9 @@ export class OutboxWorker extends WorkerHost {
       });
 
       if (!event) {
-        this.logger.warn(`Outbox event with ID ${eventId} not found. Skipping.`);
+        this.logger.warn(
+          `Outbox event with ID ${eventId} not found. Skipping.`,
+        );
         return;
       }
 
@@ -71,99 +73,99 @@ export class OutboxWorker extends WorkerHost {
         return;
       }
 
-    try {
-      // 1. Resolve target recipients and templates based on the event type
-      const recipients = await this.resolveRecipients(
-        event.eventType,
-        event.payload,
-      );
-      if (recipients.length === 0) {
-        this.logger.log(
-          `No active recipients resolved for event ${eventId}. Skipping dispatch.`,
-        );
-      } else {
-        const { subject, body } = this.renderTemplate(
+      try {
+        // 1. Resolve target recipients and templates based on the event type
+        const recipients = await this.resolveRecipients(
           event.eventType,
           event.payload,
         );
-        // 2. Dispatch email notifications
-        const result = await this.email.sendEmail(recipients, subject, body);
+        if (recipients.length === 0) {
+          this.logger.log(
+            `No active recipients resolved for event ${eventId}. Skipping dispatch.`,
+          );
+        } else {
+          const { subject, body } = this.renderTemplate(
+            event.eventType,
+            event.payload,
+          );
+          // 2. Dispatch email notifications
+          const result = await this.email.sendEmail(recipients, subject, body);
 
-        // 3. Handle email result
-        if (!result.ok) {
-          if (result.reason === 'SMTP_UNCONFIGURED') {
-            await this.prisma.outboxEvent.update({
-              where: { id: eventId },
-              data: {
-                status: 'FAILED',
-                attempts: { increment: 1 },
-                processedAt: new Date(),
-                lastError: 'SMTP_NOT_CONFIGURED',
-              },
-            });
+          // 3. Handle email result
+          if (!result.ok) {
+            if (result.reason === 'SMTP_UNCONFIGURED') {
+              await this.prisma.outboxEvent.update({
+                where: { id: eventId },
+                data: {
+                  status: 'FAILED',
+                  attempts: { increment: 1 },
+                  processedAt: new Date(),
+                  lastError: 'SMTP_NOT_CONFIGURED',
+                },
+              });
 
-            await this.prisma.notificationLog.create({
-              data: {
-                targetRole: Role.ADMIN,
-                message:
-                  'System email server is not configured. Outbox events are failing.',
-                isRead: false,
-              },
-            });
+              await this.prisma.notificationLog.create({
+                data: {
+                  targetRole: Role.ADMIN,
+                  message:
+                    'System email server is not configured. Outbox events are failing.',
+                  isRead: false,
+                },
+              });
 
-            this.logger.warn(
-              `Event ${eventId} marked FAILED: SMTP not configured. Admin notified.`,
-            );
-            return;
+              this.logger.warn(
+                `Event ${eventId} marked FAILED: SMTP not configured. Admin notified.`,
+              );
+              return;
+            }
+
+            throw new Error(result.error ?? 'SEND_FAILED');
           }
+        }
 
-          throw new Error(result.error ?? 'SEND_FAILED');
+        // 4. Mark success
+        await this.prisma.outboxEvent.update({
+          where: { id: eventId },
+          data: {
+            status: 'SUCCEEDED',
+            attempts: { increment: 1 },
+            processedAt: new Date(),
+            lastError: null,
+          },
+        });
+        this.logger.log(`Event ${eventId} successfully processed.`);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Failed to process event ${eventId}. Error: ${errorMsg}`,
+        );
+
+        this.metricsService.failedOutboxEventsCounter.inc();
+
+        const nextAttempts = event.attempts + 1;
+        const finalStatus = nextAttempts >= 5 ? 'FAILED' : 'PENDING';
+
+        await this.prisma.outboxEvent.update({
+          where: { id: eventId },
+          data: {
+            status: finalStatus,
+            attempts: nextAttempts,
+            lastError: errorMsg,
+          },
+        });
+
+        if (finalStatus === 'PENDING') {
+          throw error;
         }
       }
+    };
 
-      // 4. Mark success
-      await this.prisma.outboxEvent.update({
-        where: { id: eventId },
-        data: {
-          status: 'SUCCEEDED',
-          attempts: { increment: 1 },
-          processedAt: new Date(),
-          lastError: null,
-        },
-      });
-      this.logger.log(`Event ${eventId} successfully processed.`);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        `Failed to process event ${eventId}. Error: ${errorMsg}`,
-      );
-
-      this.metricsService.failedOutboxEventsCounter.inc();
-
-      const nextAttempts = event.attempts + 1;
-      const finalStatus = nextAttempts >= 5 ? 'FAILED' : 'PENDING';
-
-      await this.prisma.outboxEvent.update({
-        where: { id: eventId },
-        data: {
-          status: finalStatus,
-          attempts: nextAttempts,
-          lastError: errorMsg,
-        },
-      });
-
-      if (finalStatus === 'PENDING') {
-        throw error;
-      }
+    if (correlationId) {
+      await correlationStorage.run(correlationId, runInContext);
+    } else {
+      await runInContext();
     }
-  };
-
-  if (correlationId) {
-    await correlationStorage.run(correlationId, runInContext);
-  } else {
-    await runInContext();
   }
-}
 
   /**
    * Resolves email addresses dynamically from active database roles matching the event's scopes.

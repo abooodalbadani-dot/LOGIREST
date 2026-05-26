@@ -1,69 +1,32 @@
-# Research and Design Decisions: Sprint 0 Readiness Hardening
+# Research: Sprint 0 Readiness Hardening
 
-## 1. Reconciliation Job Scheduler Migration (TASK-005)
+This document records architectural decisions, rationales, and investigated alternatives for critical pre-production blockers.
 
-- **Decision**: Migrate `ReconciliationJob` from custom `setTimeout` scheduling to NestJS `@nestjs/schedule` module with `@Cron('0 1 * * *')`.
-- **Rationale**: 
-  - The custom `setTimeout` is unstable because server restarts wipe out the scheduled task, leading to silent gaps in reconciliation execution.
-  - NestJS `@Cron` relies on the internal cron runner of the NestJS container, ensuring the job executes reliably at exactly 1:00 AM daily.
-  - Graceful shutdowns will be handled via NestJS lifecycle hooks.
-- **Alternatives considered**: 
-  - *BullMQ schedule*: Overkill for a simple single-server daily batch job when `@nestjs/schedule` is already installed and fully integrated.
-  - *Keep setTimeout*: Rejected because it lacks persistence and error recovery across process restarts.
+## Decisions & Rationales
 
----
+### 1. Secrets Externalization in docker-compose
+- **Decision**: Externalize all secrets (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `POSTGRES_PASSWORD`, `DATABASE_URL`) to an environment variable configuration file (`.env`) that is ignored by Git, and reference them dynamically inside `docker-compose.yml`.
+- **Rationale**: Alignment with the 12-Factor App methodology for configuration management. Commit history remains secure, and secrets are configured only at deploy-time.
+- **Alternatives Considered**: 
+  - *Hardcoded default passwords with runtime warning overrides*: High risk of developer oversight deploying defaults to production.
+  - *Docker Secrets*: Required Docker Swarm or Kubernetes clusters, adding unnecessary infrastructure complexity.
 
-## 2. SMTP Delivery Transparency (TASK-006)
+### 2. Database-Level Stock Quantity Constraints
+- **Decision**: Add custom PostgreSQL `CHECK` constraints on tables `warehouse_items` and `warehouse_item_lots` ensuring `qty_on_hand` and `qty_allocated` are strictly non-negative.
+- **Rationale**: Serves as the ultimate fail-safe. If application validation fails, has race conditions, or if raw SQL queries bypass business logic, PostgreSQL natively rejects negative inventory states.
+- **Alternatives Considered**: 
+  - *Application-Only Validation*: Vulnerable to concurrency race conditions (e.g. double-spending/issuing the same lot concurrently).
 
-- **Decision**:
-  - Implement a discriminated union return type for `EmailService.sendEmail()`:
-    ```ts
-    export type EmailResult =
-      | { ok: true }
-      | { ok: false; reason: 'SMTP_UNCONFIGURED' | 'SEND_FAILED'; error?: string };
-    ```
-  - In `OutboxWorker.process()`, when email fails with `SMTP_UNCONFIGURED`, transition outbox event to status `FAILED` and `lastError: 'SMTP_NOT_CONFIGURED'`.
-  - Create a NestJS interceptor/service to create an administrative NotificationLog alert.
-  - Add a dedicated `/admin/system/email-status` endpoint in `AdminController` returning email health metrics.
-- **Rationale**:
-  - Raw boolean returns are ambiguous and conceal configuration issues.
-  - Quiet swallows of email delivery failures lead to missed operational alerts.
-  - Distinguishing unconfigured SMTP prevents infinite retry loops on non-transient configuration issues.
-- **Alternatives considered**: 
-  - *Throw exception inside sendEmail*: Rejected because outbox processor is a background worker; throwing exceptions directly would trigger default retry middleware instead of custom state mapping.
+### 3. SMTP Configuration Error Propagation
+- **Decision**: Make `EmailService.sendEmail()` explicitly return a boolean status (`false`) or error when SMTP configurations are unconfigured, and have the outbox worker capture this, transition status to `FAILED` with error metadata, and write to the internal `NotificationLog` targeting system administrators.
+- **Rationale**: Preserves outbox durability and alerts administrators immediately to unconfigured notification delivery pathways instead of silent drops.
+- **Alternatives Considered**: 
+  - *Throwing exception*: Could halt the background worker loop entirely or cause crash loops.
+  - *Quiet logging*: Logs are easily ignored by business managers; in-system alerts ensure visibility.
 
----
-
-## 3. Database Check Constraints (TASK-007)
-
-- **Decision**: Add raw PostgreSQL `CHECK` constraints to `warehouse_items`, `warehouse_item_lots`, and `outbox_events` tables using a custom Prisma migration file generated via `npx prisma migrate dev --create-only --name add_nonneg_qty_constraints`.
-- **Rationale**:
-  - Application-level validation can be bypassed by direct SQL queries, migration scripts, or concurrency races.
-  - DB-level constraints serve as the final P0 line of defense for database state integrity.
-- **Alternatives considered**:
-  - *Application-only validation*: Rejected because concurrency bugs or developer oversights could still write negative inventory values to the database.
-
----
-
-## 4. Remove Hardcoded Currency Displays (TASK-008)
-
-- **Decision**: Refactor frontend components `StoreManagerDashboard.tsx` and `DashboardClient.tsx` to read the base currency dynamically via the `useAdminSettings` hook. Remove the hardcoded PO demo record from `SearchClient.tsx`.
-- **Rationale**:
-  - System currency must not be hardcoded to `'SAR'` so that the software remains localized and customizable for multi-regional setups.
-- **Alternatives considered**:
-  - *Query base currency inside each component via API call*: Rejected as `useAdminSettings` already caches system configurations efficiently.
-
----
-
-## 5. Document Cancellation Workflow (TASK-009)
-
-- **Decision**:
-  - Add `'CANCELLED'` and `'VOIDED'` states to standard document statuses in `shared-types` contracts.
-  - Expose a `POST /purchase-requests/:id/cancel` endpoint mapped through a `WorkflowStateGuard` verifying role capabilities.
-  - Invoke `workflowService.executeTransition(id, 'purchaseRequest', 'CANCEL', userId, role)`.
-  - Add a dynamic Cancel button in `purchase-request-form.tsx` visible only when a document is in DRAFT state.
-- **Rationale**:
-  - Operators need a standard way to cancel draft documents.
-  - Restricting the transition strictly to DRAFT stage (Phase 1) ensures zero impact on inventory stock ledgers, eliminating risk of financial or ledger drift.
-- **Alternatives considered**:
-  - *Delete documents*: Rejected because complete audit trails are required by our constitution (immutable audit records). Documents must never be deleted, only transitioned to a cancelled state.
+### 4. Posted Document Void/Reversal Ledger Workflow
+- **Decision**: Implement a database transaction-isolated ledger reversal engine that creates corresponding offsetting negative/positive entries in the `StockLedger` and `CostLedger`, recalculates Weighted Average Cost (WAC) history dynamically, and updates status to `VOIDED`.
+- **Rationale**: Ledger integrity dictates that historical records cannot be deleted. Corrections must be recorded as new ledger entries that bring the cumulative sum back to the original balance.
+- **Alternatives Considered**:
+  - *Document Deletion*: Rejects auditing compliance, corrupts stock tracking history, and leaves ledger mismatches.
+  - *State-Only Update*: If status is changed without ledger corrections, stock levels will remain incorrect.

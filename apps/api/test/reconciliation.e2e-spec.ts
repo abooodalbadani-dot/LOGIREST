@@ -108,11 +108,15 @@ describe('Reconciliation Drift (e2e)', () => {
     let afterRuns = await prisma.reconciliationRun.findMany();
 
     expect(afterRuns.length - beforeRuns.length).toBe(1);
-    const run1 = afterRuns.reduce((prev, curr) => (curr.ranAt > prev.ranAt ? curr : prev), afterRuns[0]);
+    const run1 = afterRuns.reduce(
+      (prev, curr) => (curr.ranAt > prev.ranAt ? curr : prev),
+      afterRuns[0],
+    );
     expect(run1.discrepanciesFound).toBe(0);
 
     let whItem = await prisma.warehouseItem.findUnique({
       where: { warehouseId_itemId: { warehouseId, itemId } },
+      include: { item: true },
     });
     expect(whItem?.isFrozen).toBe(false);
 
@@ -128,7 +132,10 @@ describe('Reconciliation Drift (e2e)', () => {
     afterRuns = await prisma.reconciliationRun.findMany();
 
     expect(afterRuns.length - beforeRuns.length).toBe(1);
-    const run2 = afterRuns.reduce((prev, curr) => (curr.ranAt > prev.ranAt ? curr : prev), afterRuns[0]);
+    const run2 = afterRuns.reduce(
+      (prev, curr) => (curr.ranAt > prev.ranAt ? curr : prev),
+      afterRuns[0],
+    );
     expect(run2.discrepanciesFound).toBe(1);
     expect(run2.frozenItems).toContain(whItem?.item?.sku || `SKU-${itemId}`);
 
@@ -148,7 +155,9 @@ describe('Reconciliation Drift (e2e)', () => {
     });
     expect(notifications.length).toBeGreaterThan(0);
     const matchedNotification = notifications.find((n) =>
-      n.message.includes(`CRITICAL: Stock reconciliation discrepancy for SKU ${whItem?.item.sku}`),
+      n.message.includes(
+        `CRITICAL: Stock reconciliation discrepancy for SKU ${whItem?.item.sku}`,
+      ),
     );
     expect(matchedNotification).toBeDefined();
   });

@@ -25,6 +25,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
   let categoryId: string;
   let uomId: string;
   let itemId: string;
+  let supplierId: string;
+  let currencyId: string;
+  let poId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -33,7 +36,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -75,6 +80,29 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       data: { name: `Item ${suffix}`, sku: `SKU-${suffix}`, categoryId, uomId },
     });
     itemId = item.id;
+
+    const supplier = await prisma.supplier.create({
+      data: { name: `Supplier ${suffix}`, code: `SUP-${suffix}` },
+    });
+    supplierId = supplier.id;
+
+    const currency = await prisma.currency.create({
+      data: { name: `Currency ${suffix}`, code: `CUR-${suffix}`, isBase: true },
+    });
+    currencyId = currency.id;
+
+    const po = await prisma.purchaseOrder.create({
+      data: {
+        poNumber: `PO-${suffix}`,
+        status: 'APPROVED',
+        supplierId,
+        currencyId,
+        lines: {
+          create: [{ itemId, quantity: 100, unitPrice: 10.0 }],
+        },
+      },
+    });
+    poId = po.id;
 
     const passwordHash = await bcrypt.hash('Password123!');
     const adminEmail = `admin-${suffix}@logirest.com`;
@@ -123,23 +151,41 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
 
   afterAll(async () => {
     if (prisma) {
-      await prisma.userWarehouseScope.deleteMany({ where: { userId: { in: [adminId, procOfficerId] } } });
+      await prisma.userWarehouseScope.deleteMany({
+        where: { userId: { in: [adminId, procOfficerId] } },
+      });
       await prisma.costLedger.deleteMany({ where: { itemId } });
       await prisma.stockLedger.deleteMany({ where: { itemId } });
-      await prisma.lotAllocation.deleteMany({ where: { transferLine: { itemId } } });
+      await prisma.lotAllocation.deleteMany({
+        where: { transferLine: { itemId } },
+      });
       await prisma.transferLine.deleteMany({ where: { itemId } });
-      await prisma.transfer.deleteMany({ where: { fromWarehouseId: warehouseAId } });
+      await prisma.transfer.deleteMany({
+        where: { fromWarehouseId: warehouseAId },
+      });
       await prisma.inventoryIssueLine.deleteMany({ where: { itemId } });
-      await prisma.inventoryIssue.deleteMany({ where: { warehouseId: warehouseAId } });
+      await prisma.inventoryIssue.deleteMany({
+        where: { warehouseId: warehouseAId },
+      });
       await prisma.gRNLine.deleteMany({ where: { itemId } });
-      await prisma.goodsReceivedNote.deleteMany({ where: { warehouseId: { in: [warehouseAId, warehouseBId] } } });
+      await prisma.pOLine.deleteMany({ where: { itemId } });
+      await prisma.goodsReceivedNote.deleteMany({
+        where: { warehouseId: { in: [warehouseAId, warehouseBId] } },
+      });
+      await prisma.purchaseOrder.deleteMany({ where: { supplierId } });
       await prisma.warehouseItem.deleteMany({ where: { itemId } });
       await prisma.item.deleteMany({ where: { categoryId } });
       await prisma.unitOfMeasure.delete({ where: { id: uomId } });
       await prisma.category.delete({ where: { id: categoryId } });
-      await prisma.warehouse.deleteMany({ where: { id: { in: [warehouseAId, warehouseBId] } } });
+      await prisma.supplier.delete({ where: { id: supplierId } });
+      await prisma.currency.delete({ where: { id: currencyId } });
+      await prisma.warehouse.deleteMany({
+        where: { id: { in: [warehouseAId, warehouseBId] } },
+      });
       await prisma.branch.delete({ where: { id: branchId } });
-      await prisma.user.deleteMany({ where: { id: { in: [adminId, procOfficerId] } } });
+      await prisma.user.deleteMany({
+        where: { id: { in: [adminId, procOfficerId] } },
+      });
       await prisma.$disconnect();
     }
     await app.close();
@@ -150,6 +196,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
     const grnA = await prisma.goodsReceivedNote.create({
       data: {
         grnNumber: `GRN-A-${Date.now()}`,
+        poId,
         warehouseId: warehouseAId,
         status: 'RECEIVED',
         lines: {
@@ -177,6 +224,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
     const grnB = await prisma.goodsReceivedNote.create({
       data: {
         grnNumber: `GRN-B-${Date.now()}`,
+        poId,
         warehouseId: warehouseBId,
         status: 'RECEIVED',
         lines: {

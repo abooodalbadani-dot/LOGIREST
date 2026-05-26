@@ -14,6 +14,8 @@ import { AdjustmentsService } from './adjustments/adjustments.service';
 import { GrnVoidService } from './grn-void.service';
 import { IssueVoidService } from './issue-void.service';
 import { AdjustmentVoidService } from './adjustment-void.service';
+import { TransferVoidService } from './transfer-void.service';
+import { KitchenRequestVoidService } from './kitchen-request-void.service';
 import { OperationsController } from './operations.controller';
 import { OutboxModule } from '../outbox/outbox.module';
 
@@ -35,6 +37,8 @@ import { OutboxModule } from '../outbox/outbox.module';
     GrnVoidService,
     IssueVoidService,
     AdjustmentVoidService,
+    TransferVoidService,
+    KitchenRequestVoidService,
   ],
   exports: [
     IssuePostService,
@@ -46,6 +50,8 @@ import { OutboxModule } from '../outbox/outbox.module';
     GrnVoidService,
     IssueVoidService,
     AdjustmentVoidService,
+    TransferVoidService,
+    KitchenRequestVoidService,
   ],
 })
 export class OperationsModule {}

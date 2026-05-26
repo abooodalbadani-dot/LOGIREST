@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OutboxWorker } from './outbox.worker';
 import { PrismaService } from '../../database/prisma.service';
 import { EmailService } from './email.service';
+import { MetricsService } from '../metrics/metrics.service';
 import { Role } from '@prisma/client';
 import { Job } from 'bullmq';
 
@@ -17,9 +18,17 @@ describe('OutboxWorker', () => {
       findUnique: jest.Mock;
       findMany: jest.Mock;
     };
+    notificationLog: {
+      create: jest.Mock;
+    };
   };
   let mockEmail: {
     sendEmail: jest.Mock;
+  };
+  const mockMetricsService = {
+    failedOutboxEventsCounter: {
+      inc: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -31,6 +40,9 @@ describe('OutboxWorker', () => {
       user: {
         findUnique: jest.fn(),
         findMany: jest.fn(),
+      },
+      notificationLog: {
+        create: jest.fn(),
       },
     };
 
@@ -48,6 +60,10 @@ describe('OutboxWorker', () => {
         {
           provide: EmailService,
           useValue: mockEmail,
+        },
+        {
+          provide: MetricsService,
+          useValue: mockMetricsService,
         },
       ],
     }).compile();
@@ -332,5 +348,50 @@ describe('OutboxWorker', () => {
       'Stock Issue Posted — ISS-2026-001 / تم ترحيل صرف مخزون',
       expect.stringContaining('ISS-2026-001'),
     );
+  });
+
+  it('should mark outboxEvent as FAILED and create notificationLog when email returns SMTP_UNCONFIGURED', async () => {
+    const mockEvent = {
+      id: 'event-5',
+      eventType: 'ISSUE_POSTED',
+      payload: { id: 'issue-123' },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'admin@example.com' },
+    ]);
+    mockEmail.sendEmail.mockResolvedValue({
+      ok: false,
+      reason: 'SMTP_UNCONFIGURED',
+    });
+
+    const mockJob = {
+      id: 'job-5',
+      data: { eventId: 'event-5' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.outboxEvent.update).toHaveBeenCalledWith({
+      where: { id: 'event-5' },
+      data: {
+        status: 'FAILED',
+        attempts: { increment: 1 },
+        processedAt: expect.any(Date),
+        lastError: 'SMTP_NOT_CONFIGURED',
+      },
+    });
+
+    expect(mockPrisma.notificationLog.create).toHaveBeenCalledWith({
+      data: {
+        targetRole: Role.ADMIN,
+        message:
+          'System email server is not configured. Outbox events are failing.',
+        isRead: false,
+      },
+    });
   });
 });

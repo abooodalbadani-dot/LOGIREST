@@ -54,16 +54,22 @@ describe('HealthController', () => {
 
   it('should throw ServiceUnavailableException if DB query fails', async () => {
     prismaMock.$queryRaw.mockRejectedValue(new Error('DB Down'));
-    await expect(controller.check()).rejects.toThrow(ServiceUnavailableException);
+    await expect(controller.check()).rejects.toThrow(
+      ServiceUnavailableException,
+    );
   });
 
   it('should throw ServiceUnavailableException if Redis ping fails', async () => {
     redisMock.ping.mockRejectedValue(new Error('Redis Down'));
-    await expect(controller.check()).rejects.toThrow(ServiceUnavailableException);
+    await expect(controller.check()).rejects.toThrow(
+      ServiceUnavailableException,
+    );
   });
 
   it('should throw ServiceUnavailableException if BullMQ check fails', async () => {
     queueMock.isPaused.mockRejectedValue(new Error('BullMQ Down'));
-    await expect(controller.check()).rejects.toThrow(ServiceUnavailableException);
+    await expect(controller.check()).rejects.toThrow(
+      ServiceUnavailableException,
+    );
   });
 });

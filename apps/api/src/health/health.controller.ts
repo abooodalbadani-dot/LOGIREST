@@ -21,8 +21,14 @@ export class HealthController {
 
   @Public()
   @Get()
-  async check() {
-    const checks: Record<string, string> = {
+  async check(): Promise<{
+    status: string;
+    db: string;
+    redis: string;
+    bullmq: string;
+    timestamp: string;
+  }> {
+    const checks = {
       db: 'disconnected',
       redis: 'disconnected',
       bullmq: 'disconnected',

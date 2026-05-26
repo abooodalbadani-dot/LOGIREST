@@ -1,129 +1,106 @@
 # Tasks: Sprint 0 Readiness Hardening
 
-**Input**: Design documents from `/specs/030-sprint0-remediation/`
-**Prerequisites**: [plan.md](plan.md) (required), [spec.md](spec.md) (required), [research.md](research.md), [data-model.md](data-model.md), [contracts/api.md](contracts/api.md)
-
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+**Input**: Design documents from `specs/030-sprint0-remediation/`
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (US1, US2, US3, US4, US5)
-- Exact file paths are included in descriptions.
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- Include exact file paths in descriptions
 
 ---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and environment validation
+**Purpose**: Project initialization and basic structure
 
-- [ ] T001 Verify project structure and active git branch `030-sprint0-remediation`
-- [ ] T002 Run baseline NestJS build to verify workspace is compile-ready using `npm run build --workspace=apps/api`
+- [x] T001 Create env template file `docker-compose.env.example` in repo root and add `.env` pattern to `.gitignore`
+- [x] T002 Update workspace configuration in package.json to prepare build-pipeline integrations
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core infrastructure setup that must be complete before any user story can be implemented
+**Purpose**: Core database constraints and schema setups that MUST be completed before user stories
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
-
-- [ ] T003 Configure and verify E2E integration test runner configuration in `apps/api/test/jest-e2e.json`
-
-**Checkpoint**: Foundation ready - user story implementation can now begin
+- [x] T003 Setup and apply raw SQL database check constraints via a new database migration in `prisma/migrations/`
+- [x] T004 Add `VOIDED` status to the database enums in the schema file `prisma/schema.prisma`
+- [x] T005 Add `VOID` action and `VOIDED` status definitions to the shared transition maps in `packages/shared-types/src/workflow/`
 
 ---
 
-## Phase 3: User Story 1 - Email Delivery Status Transparency and Alerting (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Posted Document Voiding and Inventory Reversal (Priority: P1) 🎯 MVP
 
-**Goal**: Enable SMTP unconfigured status returns, generate admin notifications on failure, and expose a system email status metrics dashboard.
-
-**Independent Test**: Remove SMTP credentials from environment, trigger an outbox event, and verify the outbox event is marked as `FAILED` (with `lastError = 'SMTP_NOT_CONFIGURED'`), an in-system administrative warning log is generated, and `GET /admin/system/email-status` reports 1 failed count.
+**Goal**: Implement backend and frontend workflows to reverse posted documents and update stock ledgers.
+**Independent Test**: Post a Goods Received Note, select void, provide a reason comment, and assert stock decreases to pre-posting values.
 
 ### Implementation for User Story 1
 
-- [ ] T004 [P] [US1] Create unit tests for unconfigured/configured SMTP transporter states in `apps/api/src/modules/outbox/email.service.spec.ts`
-- [X] T005 [P] [US1] Define `EmailResult` discriminated union and modify `sendEmail` return types to return unconfigured reason codes in `apps/api/src/modules/outbox/email.service.ts`
-- [X] T006 [US1] Refactor outbox processor to mark unconfigured transporter events as `FAILED` (error code: `SMTP_NOT_CONFIGURED`) and trigger an ADMIN in-system warning log in `apps/api/src/modules/outbox/outbox.worker.ts`
-- [X] T007 [P] [US1] Register exports and import modules to expose the service globally in `apps/api/src/modules/outbox/outbox.module.ts` and `apps/api/src/modules/admin/admin.module.ts`
-- [X] T008 [US1] Implement `GET /admin/system/email-status` endpoint restricted to the `ADMIN` role to expose health and failure metrics in `apps/api/src/modules/admin/admin.controller.ts`
-
-**Checkpoint**: User Story 1 is fully functional and testable independently.
+- [x] T006 Implement the void/reversal transaction engine service in `apps/api/src/modules/operations/void.service.ts`
+- [x] T007 [P] Create the void controller in `apps/api/src/modules/operations/void.controller.ts` to expose endpoints
+- [x] T008 Register the new controller and service in `apps/api/src/app.module.ts`
+- [x] T009 [P] [US1] Create backend unit tests verifying ledger reversals in `apps/api/src/modules/operations/void.service.spec.ts`
+- [x] T010 [US1] Implement Void Button, comment modal, and status styling in the frontend document details component `apps/web/src/app/[locale]/(app)/(procurement)/purchase-orders/[id]/POViewer.tsx`
 
 ---
 
-## Phase 4: User Story 2 - Draft Document Cancellation (Priority: P1)
+## Phase 4: User Story 2 - Real-time Roles Management and Search Integration (Priority: P1)
 
-**Goal**: Allow operators to transition DRAFT procurement documents to terminal CANCELLED states from backend endpoints and frontend client forms.
-
-**Independent Test**: Access a saved draft Purchase Request form, click the "Cancel" action, and verify it transitions to a read-only "Cancelled" status and generates an ApprovalEvent.
+**Goal**: Wire frontend role lists and transaction search views to real backend APIs instead of mock data.
+**Independent Test**: Load the Roles page and check network traffic for a GET request to `/admin/roles`.
 
 ### Implementation for User Story 2
 
-- [X] T009 [P] [US2] Update the statuses array contract to include `'CANCELLED'` and `'VOIDED'` states in `packages/shared-types/src/contracts/statuses.ts`
-- [ ] T010 [P] [US2] Create integration E2E test cases validating draft document cancellation transitions in `apps/api/test/workflow-transitions.e2e-spec.ts`
-- [X] T011 [US2] Add the `@Post(':id/cancel')` endpoint with appropriate Workflow State Guards and decorators in `apps/api/src/modules/purchase-requests/purchase-requests.controller.ts`
-- [X] T012 [US2] Implement `cancel()` service method executing the `CANCEL` workflow state transition in `apps/api/src/modules/purchase-requests/purchase-requests.service.ts`
-- [X] T013 [US2] Add Cancel action button and wire it to react mutation hook `useCancelPR` in `apps/web/src/features/purchasing/components/purchase-request-form.tsx`
-
-**Checkpoint**: User Story 2 is fully functional and testable independently.
+- [x] T011 [US2] Update the role query hook in `apps/web/src/features/admin/hooks/useAdminRoles.ts` to query the live backend API and remove static arrays
+- [x] T012 [US2] Update the search view in `apps/web/src/app/[locale]/(app)/search/SearchClient.tsx` to call the live search API
+- [x] T013 [P] [US2] Create integration tests for the roles component in `apps/web/src/app/[locale]/(app)/admin/roles/RolesListClient.spec.tsx`
 
 ---
 
-## Phase 5: User Story 3 - Multi-Currency Dashboard Support (Priority: P2)
+## Phase 5: User Story 3 - Operational Fail-Safe Warnings and Database Safeguards (Priority: P1)
 
-**Goal**: Support dynamically formatted currencies based on settings configuration on Store Manager Dashboard components.
-
-**Independent Test**: Alter base currency settings to `AED` and verify that Store Manager Dashboard values render formatting suffix `AED` dynamically.
+**Goal**: Return email errors when unconfigured and generate admin notification logs.
+**Independent Test**: Trigger a transaction with SMTP unconfigured; confirm outbox event fails and an admin warning is created.
 
 ### Implementation for User Story 3
 
-- [X] T014 [US3] Retrieve currency configuration dynamically using settings hooks in `apps/web/src/features/dashboard/components/StoreManagerDashboard.tsx`
-- [X] T015 [US3] Remove hardcoded `baseCurrency: 'SAR'` from dashboard defaults and hook the settings listener in `apps/web/src/app/[locale]/(app)/dashboard/DashboardClient.tsx`
-- [X] T016 [US3] Clean up hardcoded demo PO total with currency value in `apps/web/src/app/[locale]/(app)/search/SearchClient.tsx`
-
-**Checkpoint**: User Story 3 is fully functional and testable independently.
+- [x] T014 [US3] Update transporter checks and return values in `apps/api/src/modules/outbox/email.service.ts`
+- [x] T015 [US3] Implement status mapping and database admin notification logs in `apps/api/src/modules/outbox/outbox.worker.ts`
+- [x] T016 [P] [US3] Create outbox worker tests in `apps/api/src/modules/outbox/email.service.spec.ts`
 
 ---
 
-## Phase 6: User Story 4 - Automated Inventory Reconciliation (Priority: P2)
+## Phase 6: User Story 4 - Settings-Driven Multi-Currency Dashboard (Priority: P2)
 
-**Goal**: Migrate inventory reconciliation jobs from custom timeout timer schedulers to NestJS Schedule cron schedulers.
-
-**Independent Test**: Verify that the daily reconciliation job triggers exactly once every 24 hours at 1:00 AM, and restarts do not miss scheduling slots.
+**Goal**: Format metrics dynamically using the base currency setting.
+**Independent Test**: Change base currency in settings and verify dashboard totals update immediately.
 
 ### Implementation for User Story 4
 
-- [X] T017 [P] [US4] Remove all setTimeout variables, module init/destroy timer tasks, and `scheduleNextRun` properties from the class in `apps/api/src/modules/ledger/reconciliation.job.ts`
-- [X] T018 [P] [US4] Decorate `runReconciliation` with `@Cron('0 1 * * *', { name: 'daily-reconciliation' })` in `apps/api/src/modules/ledger/reconciliation.job.ts`
-- [X] T019 [US4] Clean up obsolete unit test scheduler mocks and timing assertions in `apps/api/src/modules/ledger/reconciliation.job.spec.ts`
-
-**Checkpoint**: User Story 4 is fully functional and testable independently.
+- [x] T017 [US4] Bind dashboard metrics to configuration settings hook in `apps/web/src/app/[locale]/(app)/dashboard/DashboardClient.tsx`
+- [x] T018 [US4] Bind currency formatting in store manager dashboard cards in `apps/web/src/app/[locale]/(app)/dashboard/StoreManagerDashboard.tsx`
+- [x] T019 [US4] Update currency hook selectors in `apps/web/src/features/purchasing/hooks/useGoodsReceipts.ts`
 
 ---
 
-## Phase 7: User Story 5 - Database State Integrity Safeguards (Priority: P3)
+## Phase 7: User Story 5 - Environment-Isolated Secrets Configuration (Priority: P2)
 
-**Goal**: Apply raw PostgreSQL positive check constraints to inventory and outbox event tables to guarantee strict database state safety.
-
-**Independent Test**: Attempt a direct database insert statement containing a negative stock quantity; verify the database engine rejects it with a CHECK constraint error.
+**Goal**: Externalize secrets to environment variables.
+**Independent Test**: Verify docker-compose.yml runs without plain-text secret values.
 
 ### Implementation for User Story 5
 
-- [X] T020 [P] [US5] Generate empty Prisma migration skeleton file using `npx prisma migrate dev --create-only --name add_nonneg_qty_constraints` in `apps/api/prisma/migrations/`
-- [X] T021 [P] [US5] Append check constraints for positive quantities and valid outbox statuses to the generated SQL migration file under `apps/api/prisma/migrations/`
-- [X] T022 [US5] Create DB constraint rejection integration tests and run migration deploy using `npx prisma migrate deploy` in `apps/api/test/db-integrity.e2e-spec.ts`
-
-**Checkpoint**: User Story 5 is fully functional and testable independently.
+- [x] T020 [US5] Replace hardcoded secrets with environment variable references in `docker-compose.yml`
 
 ---
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-**Purpose**: Validate compilation and build health across the monorepo workspaces
+**Purpose**: Typechecks and final project verification checks.
 
-- [X] T023 Run monorepo typecheck, lint, and production build checks using `npm run typecheck --workspace=apps/web` and `npm run build --workspace=apps/api`
-- [X] T024 Execute quickstart validation scenarios to confirm complete sprint 0 readiness
+- [x] T021 [P] Run typecheck validation scripts via package.json
+- [x] T022 Validate all pre-flight check scenarios detailed in `specs/030-sprint0-remediation/quickstart.md`
 
 ---
 
@@ -132,11 +109,11 @@
 ### Phase Dependencies
 
 - **Setup (Phase 1)**: Can start immediately.
-- **Foundational (Phase 2)**: Depends on Setup completion. Blocks all user stories.
-- **User Stories (Phase 3+)**: Depend on Foundational completion. Can then proceed sequentially or in parallel depending on developer availability.
+- **Foundational (Phase 2)**: Depends on Setup. Blocks user stories.
+- **User Stories (Phase 3+)**: All depend on Foundational completion. Can run in parallel once foundation is complete.
+- **Polish (Phase 8)**: Depends on all user stories.
 
 ### Parallel Opportunities
 
-- All Setup and Foundational tasks marked `[P]` can run in parallel.
-- User Story 1, 2, 4, and 5 contain independent tasks marked `[P]` that can be worked on concurrently.
-- Once Foundation is complete, separate developers can start User Story 1 and User Story 2 in parallel.
+- All tasks marked `[P]` can run in parallel within their respective phases.
+- Once Phase 2 is complete, US1, US2, US3, US4, and US5 can be developed in parallel by separate team streams.

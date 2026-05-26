@@ -25,6 +25,7 @@ import { NotificationModule } from './modules/notifications/notification.module'
 import { AdminModule } from './modules/admin/admin.module';
 import { DocumentSequenceModule } from './modules/sequencing/document-sequence.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
+import { SearchModule } from './modules/search/search.module';
 import { IdempotencyService } from './services/idempotency.service';
 import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
@@ -104,6 +105,7 @@ import { CorrelationMiddleware } from './common/correlation.middleware';
     OutboxModule,
     RedisModule,
     MetricsModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [

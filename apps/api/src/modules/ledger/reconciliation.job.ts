@@ -193,7 +193,9 @@ export class ReconciliationJob {
 
     const totalDiscrepancies = discrepancyCount + lotDiscrepanciesFound;
     if (totalDiscrepancies > 0) {
-      this.metricsService.reconciliationDiscrepanciesCounter.inc(totalDiscrepancies);
+      this.metricsService.reconciliationDiscrepanciesCounter.inc(
+        totalDiscrepancies,
+      );
     }
 
     this.logger.log(

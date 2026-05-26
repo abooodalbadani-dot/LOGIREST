@@ -10,5 +10,10 @@ export default defineConfig({
     globals: true,
     exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**']
   },
-  resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@logirest/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+    },
+  },
 });

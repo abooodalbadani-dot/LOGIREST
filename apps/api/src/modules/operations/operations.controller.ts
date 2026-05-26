@@ -12,11 +12,19 @@ import {
 import { GrnVoidService } from './grn-void.service';
 import { IssueVoidService } from './issue-void.service';
 import { AdjustmentVoidService } from './adjustment-void.service';
+import { TransferVoidService } from './transfer-void.service';
+import { KitchenRequestVoidService } from './kitchen-request-void.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
-const VALID_DOC_TYPES = ['grn', 'issue', 'adjustment'] as const;
+const VALID_DOC_TYPES = [
+  'grn',
+  'issue',
+  'adjustment',
+  'transfer',
+  'kitchen-request',
+] as const;
 
 @Controller('operations')
 export class OperationsController {
@@ -24,6 +32,8 @@ export class OperationsController {
     private readonly grnVoidService: GrnVoidService,
     private readonly issueVoidService: IssueVoidService,
     private readonly adjustmentVoidService: AdjustmentVoidService,
+    private readonly transferVoidService: TransferVoidService,
+    private readonly kitchenRequestVoidService: KitchenRequestVoidService,
   ) {}
 
   @Post(':documentType/:id/void')
@@ -36,8 +46,10 @@ export class OperationsController {
     @Body() body: { version?: number },
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN) {
-      throw new ForbiddenException('Only admins can void documents');
+    if (role !== Role.ADMIN && role !== Role.INV_MGR) {
+      throw new ForbiddenException(
+        'Only administrators and inventory managers can void documents',
+      );
     }
 
     if (
@@ -76,6 +88,22 @@ export class OperationsController {
         );
       case 'adjustment':
         return this.adjustmentVoidService.void(
+          id,
+          userId,
+          role,
+          body.version,
+          ipAddress,
+        );
+      case 'transfer':
+        return this.transferVoidService.void(
+          id,
+          userId,
+          role,
+          body.version,
+          ipAddress,
+        );
+      case 'kitchen-request':
+        return this.kitchenRequestVoidService.void(
           id,
           userId,
           role,

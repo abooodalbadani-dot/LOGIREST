@@ -18,73 +18,74 @@ export class ArchivalJob {
     twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
 
     try {
-      const { archivedLogsCount, archivedLedgersCount } = await this.prisma.$transaction(
-        async (tx) => {
-          // 1. Archive Audit Logs
-          const oldLogs = await tx.auditLog.findMany({
-            where: {
-              createdAt: { lt: twoYearsAgo },
-            },
-          });
-
-          if (oldLogs.length > 0) {
-            await tx.auditLogArchive.createMany({
-              data: oldLogs.map((log) => ({
-                id: log.id,
-                userId: log.userId,
-                action: log.action,
-                targetTable: log.targetTable,
-                targetId: log.targetId,
-                beforeStateJson: log.beforeStateJson,
-                afterStateJson: log.afterStateJson,
-                ipAddress: log.ipAddress,
-                createdAt: log.createdAt,
-              })),
-            });
-
-            await tx.auditLog.deleteMany({
+      const { archivedLogsCount, archivedLedgersCount } =
+        await this.prisma.$transaction(
+          async (tx) => {
+            // 1. Archive Audit Logs
+            const oldLogs = await tx.auditLog.findMany({
               where: {
-                id: { in: oldLogs.map((log) => log.id) },
+                createdAt: { lt: twoYearsAgo },
               },
             });
-          }
 
-          // 2. Archive Stock Ledger entries
-          const oldLedgers = await tx.stockLedger.findMany({
-            where: {
-              postedAt: { lt: twoYearsAgo },
-            },
-          });
+            if (oldLogs.length > 0) {
+              await tx.auditLogArchive.createMany({
+                data: oldLogs.map((log) => ({
+                  id: log.id,
+                  userId: log.userId,
+                  action: log.action,
+                  targetTable: log.targetTable,
+                  targetId: log.targetId,
+                  beforeStateJson: log.beforeStateJson,
+                  afterStateJson: log.afterStateJson,
+                  ipAddress: log.ipAddress,
+                  createdAt: log.createdAt,
+                })),
+              });
 
-          if (oldLedgers.length > 0) {
-            await tx.stockLedgerArchive.createMany({
-              data: oldLedgers.map((ledger) => ({
-                id: ledger.id,
-                postedAt: ledger.postedAt,
-                warehouseId: ledger.warehouseId,
-                itemId: ledger.itemId,
-                lotId: ledger.lotId,
-                quantity: ledger.quantity,
-                documentId: ledger.documentId,
-                documentType: ledger.documentType,
-                idempotencyKey: ledger.idempotencyKey,
-              })),
-            });
+              await tx.auditLog.deleteMany({
+                where: {
+                  id: { in: oldLogs.map((log) => log.id) },
+                },
+              });
+            }
 
-            await tx.stockLedger.deleteMany({
+            // 2. Archive Stock Ledger entries
+            const oldLedgers = await tx.stockLedger.findMany({
               where: {
-                id: { in: oldLedgers.map((ledger) => ledger.id) },
+                postedAt: { lt: twoYearsAgo },
               },
             });
-          }
 
-          return {
-            archivedLogsCount: oldLogs.length,
-            archivedLedgersCount: oldLedgers.length,
-          };
-        },
-        { timeout: 60000 }, // 1 minute timeout for large transaction
-      );
+            if (oldLedgers.length > 0) {
+              await tx.stockLedgerArchive.createMany({
+                data: oldLedgers.map((ledger) => ({
+                  id: ledger.id,
+                  postedAt: ledger.postedAt,
+                  warehouseId: ledger.warehouseId,
+                  itemId: ledger.itemId,
+                  lotId: ledger.lotId,
+                  quantity: ledger.quantity,
+                  documentId: ledger.documentId,
+                  documentType: ledger.documentType,
+                  idempotencyKey: ledger.idempotencyKey,
+                })),
+              });
+
+              await tx.stockLedger.deleteMany({
+                where: {
+                  id: { in: oldLedgers.map((ledger) => ledger.id) },
+                },
+              });
+            }
+
+            return {
+              archivedLogsCount: oldLogs.length,
+              archivedLedgersCount: oldLedgers.length,
+            };
+          },
+          { timeout: 60000 }, // 1 minute timeout for large transaction
+        );
 
       const durationMs = Date.now() - startTime;
       this.logger.log(

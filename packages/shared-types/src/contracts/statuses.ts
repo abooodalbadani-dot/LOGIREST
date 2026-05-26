@@ -97,10 +97,11 @@ export const KITCHEN_REQUEST_STATUS = {
   REJECTED: 'REJECTED',
   FULFILLED: 'FULFILLED',
   CANCELLED: 'CANCELLED',
+  VOIDED: 'VOIDED',
 } as const;
 
 export type KitchenRequestStatus = typeof KITCHEN_REQUEST_STATUS[keyof typeof KITCHEN_REQUEST_STATUS];
-export const ALL_KITCHEN_REQUEST_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'FULFILLED', 'CANCELLED'] as const;
+export const ALL_KITCHEN_REQUEST_STATUSES = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'FULFILLED', 'CANCELLED', 'VOIDED'] as const;
 
 /**
  * Union of all possible document statuses (Static Tuple for Zod)

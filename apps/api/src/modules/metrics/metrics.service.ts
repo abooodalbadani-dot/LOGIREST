@@ -42,7 +42,11 @@ export class MetricsService {
   async getMetrics(): Promise<string> {
     // Dynamically update active warehouse locks gauge
     const activeLocks = await this.prisma.warehouseLock.count({
-      where: { status: 'ACTIVE', isActive: true, expiresAt: { gt: new Date() } },
+      where: {
+        status: 'ACTIVE',
+        isActive: true,
+        expiresAt: { gt: new Date() },
+      },
     });
     this.activeWarehouseLocksGauge.set(activeLocks);
 

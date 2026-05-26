@@ -1,104 +1,60 @@
-# Data Model Design: Sprint 0 Readiness Hardening
+# Data Model: Sprint 0 Readiness Hardening
 
-This document outlines the persistence design, field definitions, and database constraints introduced for Sprint 0 readiness.
+This document outlines the database modifications and constraint schema details required for Sprint 0.
 
----
+## Database Constraints
 
-## 1. Inventory & Stock Consistency (TASK-007)
+### 1. Non-Negative Inventory Check Constraints (PostgreSQL Raw SQL)
+Check constraints will be added directly to the inventory tables.
 
-We are introducing strict database-level positive check constraints on inventory tables to safeguard physical stock records against negative quantities.
+#### Table: `warehouse_items`
+- **Constraint Name**: `chk_warehouse_items_qty_on_hand_nonneg`
+  - **SQL**: `CHECK ("qty_on_hand" >= 0)`
+- **Constraint Name**: `chk_warehouse_items_qty_allocated_nonneg`
+  - **SQL**: `CHECK ("qty_allocated" >= 0)`
 
-### Entity: `WarehouseItem` (`warehouse_items`)
+#### Table: `warehouse_item_lots`
+- **Constraint Name**: `chk_warehouse_item_lots_qty_on_hand_nonneg`
+  - **SQL**: `CHECK ("qty_on_hand" >= 0)`
 
-Represents the total inventory level of a specific item within a specific warehouse.
+### 2. Outbox Status Validation Check Constraints
+Ensures the status field contains only valid state machine keys.
 
-- **Primary Key**: `(warehouseId, itemId)`
-- **Fields**:
-  - `warehouseId` (String, foreign key)
-  - `itemId` (String, foreign key)
-  - `qtyOnHand` (Decimal, default 0, precision 18, scale 4)
-  - `qtyAllocated` (Decimal, default 0, precision 18, scale 4)
-  - `wac` (Decimal, default 0, precision 18, scale 4)
-  - `isFrozen` (Boolean, default false)
-- **Database CHECK Constraints**:
-  - `warehouse_items_qty_on_hand_nonneg`: `qtyOnHand >= 0`
-  - `warehouse_items_qty_allocated_nonneg`: `qtyAllocated >= 0`
-
-### Entity: `WarehouseItemLot` (`warehouse_item_lots`)
-
-Represents lot-specific stock splits within a warehouse.
-
-- **Primary Key**: `(warehouseId, itemId, lotId)`
-- **Fields**:
-  - `warehouseId` (String, foreign key)
-  - `itemId` (String, foreign key)
-  - `lotId` (String, foreign key)
-  - `qtyOnHand` (Decimal, default 0, precision 18, scale 4)
-  - `qtyAllocated` (Decimal, default 0, precision 18, scale 4)
-- **Database CHECK Constraints**:
-  - `warehouse_item_lots_qty_on_hand_nonneg`: `qtyOnHand >= 0`
+#### Table: `outbox_events`
+- **Constraint Name**: `chk_outbox_events_status_valid`
+  - **SQL**: `CHECK ("status" IN ('PENDING', 'SUCCEEDED', 'FAILED'))`
 
 ---
 
-## 2. Background Event System & Logging (TASK-006)
+## State Machine Updates
 
-We are adding database constraints to the transactional outbox system and tracking notification messages targeted at specific system roles.
+All status enums for posted inventory transactions must support the `VOIDED` state:
 
-### Entity: `OutboxEvent` (`outbox_events`)
+### Affected Enums (Prisma Schema):
+- `PurchaseOrderStatus`
+- `GoodsReceivedNoteStatus`
+- `InventoryIssueStatus`
+- `TransferStatus`
+- `AdjustmentStatus`
+- `KitchenRequestStatus`
 
-Tracks asynchronous events generated inside main business transactions to be processed in the background (e.g. emails, system alerts).
-
-- **Primary Key**: `id` (String)
-- **Fields**:
-  - `id` (String)
-  - `eventType` (String)
-  - `payload` (Json)
-  - `status` (String, default "PENDING")
-  - `attempts` (Int, default 0)
-  - `lastError` (String, nullable)
-  - `processedAt` (DateTime, nullable)
-  - `createdAt` (DateTime)
-  - `expiresAt` (DateTime)
-- **Database CHECK Constraints**:
-  - `outbox_events_status_valid`: `status IN ('PENDING', 'SUCCEEDED', 'FAILED')`
-- **Validation**:
-  - Unconfigured SMTP dispatches transition `status` to `FAILED` with `lastError = 'SMTP_NOT_CONFIGURED'`.
-
-### Entity: `NotificationLog` (`notification_logs`)
-
-Stores in-system alert records targeting specific roles.
-
-- **Primary Key**: `id` (String)
-- **Fields**:
-  - `id` (String)
-  - `targetRole` (Role enum)
-  - `warehouseId` (String, nullable)
-  - `message` (String)
-  - `isRead` (Boolean, default false)
-  - `createdAt` (DateTime)
-  - `documentType` (DocumentType enum, nullable)
-  - `documentId` (String, nullable)
+### Transition Definitions:
+- `POSTED` → `VOIDED` (via `VOID` action, permitted only for roles: `ADMIN`, `INV_MGR`)
+- `RECEIVED` → `VOIDED` (for Transfers, via `VOID` action, permitted only for roles: `ADMIN`, `INV_MGR`)
+- `VOIDED` is a terminal state (no outgoing transitions allowed).
 
 ---
 
-## 3. Workflow & Document Lifecycle (TASK-009)
+## Ledger Reversal Entries Shape
 
-We are introducing document cancellation terminal states to the state machines.
+When voiding a document, offsetting ledger lines are appended with inverse values.
 
-### Entity: `PurchaseRequest` (`purchase_requests`)
+### `StockLedger` Reversal Entry:
+- `qty`: `-OriginalQuantity`
+- `transactionType`: `REVERSAL` or original type (e.g. `ISSUE`) with negative value.
+- `documentId`: Reference to the voided document.
 
-Tracks draft and active procurement requests.
-
-- **Primary Key**: `id` (String)
-- **Fields**:
-  - `id` (String)
-  - `requestNumber` (String, unique)
-  - `branchId` (String)
-  - `warehouseId` (String)
-  - `status` (String, default "DRAFT")
-  - `createdById` (String)
-  - `version` (Int, default 1)
-- **Lifecycle Transitions (Phase 1)**:
-  - `DRAFT` -> `CANCELLED` (Terminal State)
-  - Authorized actors: Creator or `ADMIN`.
-  - Action writes an `ApprovalEvent` with `fromStatus="DRAFT"` and `toStatus="CANCELLED"`.
+### `CostLedger` Reversal Entry:
+- `value`: `-OriginalValue`
+- `unitCost`: Original cost recorded.
+- `documentId`: Reference to the voided document.

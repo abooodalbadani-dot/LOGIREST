@@ -7,7 +7,10 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { DEPRECATED_METADATA_KEY, DeprecatedOptions } from '../decorators/deprecated.decorator';
+import {
+  DEPRECATED_METADATA_KEY,
+  DeprecatedOptions,
+} from '../decorators/deprecated.decorator';
 
 @Injectable()
 export class DeprecationInterceptor implements NestInterceptor {
@@ -18,11 +21,9 @@ export class DeprecationInterceptor implements NestInterceptor {
     const controller = context.getClass();
 
     // Check if the handler or class is decorated with @Deprecated
-    const deprecatedOptions =
-      this.reflector.getAllAndOverride<DeprecatedOptions & { deprecated?: boolean }>(
-        DEPRECATED_METADATA_KEY,
-        [handler, controller],
-      );
+    const deprecatedOptions = this.reflector.getAllAndOverride<
+      DeprecatedOptions & { deprecated?: boolean }
+    >(DEPRECATED_METADATA_KEY, [handler, controller]);
 
     return next.handle().pipe(
       tap(() => {

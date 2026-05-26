@@ -9,6 +9,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { GRNForm } from '@/features/purchasing/components/grn-form';
 import { GRNViewer, type GRNViewerDocument } from './GRNViewer';
 import { Button } from '@/components/ui/button';
+import { VoidButton } from '@/components/shared/VoidButton';
 import { Send, Scan } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
@@ -72,6 +73,12 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
             {t('post_grn')}
           </Button>
         </ActionGuard>
+        <VoidButton
+          documentId={id}
+          documentType="GRN"
+          status={status}
+          version={grn?.version || 1}
+        />
       </div>
   );
 

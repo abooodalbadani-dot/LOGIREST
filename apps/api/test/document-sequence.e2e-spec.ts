@@ -28,7 +28,9 @@ describe('Document Sequence Concurrency (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -86,7 +88,9 @@ describe('Document Sequence Concurrency (e2e)', () => {
 
   afterAll(async () => {
     if (prisma) {
-      await prisma.userWarehouseScope.deleteMany({ where: { userId: procOfficerId } });
+      await prisma.userWarehouseScope.deleteMany({
+        where: { userId: procOfficerId },
+      });
       await prisma.pRLine.deleteMany({ where: { itemId } });
       await prisma.purchaseRequest.deleteMany({ where: { warehouseId } });
       await prisma.item.deleteMany({ where: { categoryId } });
@@ -114,7 +118,7 @@ describe('Document Sequence Concurrency (e2e)', () => {
           branchId,
           warehouseId,
           lines: [{ itemId, quantity: 10 }],
-        })
+        }),
     );
 
     const responses = await Promise.all(reqPromises);

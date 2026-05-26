@@ -26,6 +26,7 @@ export const STATUS_UI_CONFIG: Record<string, StatusConfig> = {
   REJECTED: { variant: 'error', labelKey: 'statuses.rejected' },
   PENDING: { variant: 'warning', labelKey: 'statuses.pending' },
   COMPLETED: { variant: 'success', labelKey: 'statuses.completed' },
+  VOIDED: { variant: 'error', labelKey: 'statuses.voided' },
   
   // PR/PO Specific
   CLOSED: { variant: 'default', labelKey: 'statuses.closed' },
