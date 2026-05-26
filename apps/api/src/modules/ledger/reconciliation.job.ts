@@ -76,6 +76,12 @@ export class ReconciliationJob {
     let discrepancyCount = 0;
     let lotDiscrepanciesFound = 0;
     const frozenItems: string[] = [];
+    const discrepanciesToFreeze: { warehouseId: string; itemId: string }[] = [];
+    const notificationsToCreate: {
+      targetRole: Role;
+      warehouseId?: string;
+      message: string;
+    }[] = [];
 
     for (const whItem of warehouseItems) {
       processedCount++;
@@ -91,26 +97,15 @@ export class ReconciliationJob {
         );
 
         frozenItems.push(whItem.item.sku);
+        discrepanciesToFreeze.push({
+          warehouseId: whItem.warehouseId,
+          itemId: whItem.itemId,
+        });
 
-        // Freeze the item and raise notification inside transaction
-        await this.prisma.$transaction(async (tx) => {
-          await tx.warehouseItem.update({
-            where: {
-              warehouseId_itemId: {
-                warehouseId: whItem.warehouseId,
-                itemId: whItem.itemId,
-              },
-            },
-            data: {
-              isFrozen: true,
-            },
-          });
-
-          await this.notificationService.createNotification({
-            targetRole: Role.ADMIN,
-            warehouseId: whItem.warehouseId,
-            message: `CRITICAL: Stock reconciliation discrepancy for SKU ${whItem.item.sku} in Warehouse ${whItem.warehouse.name}. System has frozen the item to prevent further operations. Qty On Hand: ${currentQty.toString()}, Ledger Qty: ${ledgerQty.toString()}`,
-          });
+        notificationsToCreate.push({
+          targetRole: Role.ADMIN,
+          warehouseId: whItem.warehouseId,
+          message: `CRITICAL: Stock reconciliation discrepancy for SKU ${whItem.item.sku} in Warehouse ${whItem.warehouse.name}. System has frozen the item to prevent further operations. Qty On Hand: ${currentQty.toString()}, Ledger Qty: ${ledgerQty.toString()}`,
         });
       }
 
@@ -125,7 +120,7 @@ export class ReconciliationJob {
         );
 
         // Raise soft notification
-        await this.notificationService.createNotification({
+        notificationsToCreate.push({
           targetRole: Role.ADMIN,
           warehouseId: whItem.warehouseId,
           message: `WARNING: Stock allocation discrepancy for SKU ${whItem.item.sku} in Warehouse ${whItem.warehouse.name}. Qty Allocated: ${currentQtyAllocated.toString()}, Expected (In-transit): ${expectedQtyAllocated.toString()}`,
@@ -170,12 +165,38 @@ export class ReconciliationJob {
           `Lot-level discrepancy for Lot ${wil.lot.lotNumber} (SKU: ${wil.item.sku}) in Warehouse ${wil.warehouse.name} (${wil.warehouse.code}). qtyOnHand: ${currentLotQty.toString()}, ledgerQty: ${ledgerLotQty.toString()}`,
         );
 
-        await this.notificationService.createNotification({
+        notificationsToCreate.push({
           targetRole: Role.ADMIN,
           warehouseId: wil.warehouseId,
           message: `Lot drift detected: Lot ${wil.lot.lotNumber} (SKU: ${wil.item.sku}) in Warehouse ${wil.warehouse.name} (${wil.warehouse.code}) has qty_on_hand ${currentLotQty.toString()} but stock_ledger sums to ${ledgerLotQty.toString()}.`,
         });
       }
+    }
+
+    // 4. Batch update database freezes in a single O(1) transaction
+    if (discrepanciesToFreeze.length > 0) {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.warehouseItem.updateMany({
+          where: {
+            OR: discrepanciesToFreeze.map((d) => ({
+              warehouseId: d.warehouseId,
+              itemId: d.itemId,
+            })),
+          },
+          data: {
+            isFrozen: true,
+          },
+        });
+      });
+    }
+
+    // 5. Trigger all notifications concurrently
+    if (notificationsToCreate.length > 0) {
+      await Promise.all(
+        notificationsToCreate.map((n) =>
+          this.notificationService.createNotification(n),
+        ),
+      );
     }
 
     const durationMs = Date.now() - startTime;

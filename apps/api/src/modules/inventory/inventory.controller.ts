@@ -12,6 +12,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { InventoryService } from './inventory.service';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -30,6 +31,7 @@ import type {
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Get('balance')
   async getBalance(
     @ActiveScope('warehouseId') warehouseId: string,
@@ -90,6 +92,7 @@ export class InventoryController {
 export class ItemsController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Get('scan')
   async scanBarcode(
     @ActiveScope('warehouseId') warehouseId: string,

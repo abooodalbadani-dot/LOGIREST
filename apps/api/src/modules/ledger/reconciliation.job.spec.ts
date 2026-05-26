@@ -4,6 +4,7 @@ import { ReconciliationJob } from './reconciliation.job';
 import { PrismaService } from '../../database/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { Prisma, Role } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
 
 describe('ReconciliationJob', () => {
   let job: ReconciliationJob;
@@ -11,14 +12,22 @@ describe('ReconciliationJob', () => {
   const mockStockLedgerGroupBy = jest.fn();
   const mockWarehouseItemFindMany = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
+  const mockWarehouseItemUpdateMany = jest.fn();
   const mockCreateNotification = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
   const mockReconciliationRunCreate = jest.fn();
   const mockWarehouseItemLotFindMany = jest.fn();
 
+  const mockMetricsService = {
+    reconciliationDiscrepanciesCounter: {
+      inc: jest.fn(),
+    },
+  };
+
   const mockPrismaTx = {
     warehouseItem: {
       update: mockWarehouseItemUpdate,
+      updateMany: mockWarehouseItemUpdateMany,
     },
   } as unknown as Prisma.TransactionClient;
 
@@ -56,6 +65,7 @@ describe('ReconciliationJob', () => {
         ReconciliationJob,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 
@@ -93,7 +103,7 @@ describe('ReconciliationJob', () => {
 
     await job.runReconciliation();
 
-    expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
+    expect(mockWarehouseItemUpdateMany).not.toHaveBeenCalled();
     expect(mockCreateNotification).not.toHaveBeenCalled();
 
     expect(mockReconciliationRunCreate).toHaveBeenCalledWith({
@@ -136,12 +146,14 @@ describe('ReconciliationJob', () => {
 
     await job.runReconciliation();
 
-    expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+    expect(mockWarehouseItemUpdateMany).toHaveBeenCalledWith({
       where: {
-        warehouseId_itemId: {
-          warehouseId: 'wh-1',
-          itemId: 'item-1',
-        },
+        OR: [
+          {
+            warehouseId: 'wh-1',
+            itemId: 'item-1',
+          },
+        ],
       },
       data: {
         isFrozen: true,
@@ -197,7 +209,7 @@ describe('ReconciliationJob', () => {
     await job.runReconciliation();
 
     // Should NOT freeze (update isFrozen)
-    expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
+    expect(mockWarehouseItemUpdateMany).not.toHaveBeenCalled();
 
     // Should create soft warning notification
     expect(mockCreateNotification).toHaveBeenCalledWith({
@@ -259,7 +271,7 @@ describe('ReconciliationJob', () => {
     await job.runReconciliation();
 
     // No freeze, no warnings
-    expect(mockWarehouseItemUpdate).not.toHaveBeenCalled();
+    expect(mockWarehouseItemUpdateMany).not.toHaveBeenCalled();
     expect(mockCreateNotification).not.toHaveBeenCalled();
 
     expect(mockReconciliationRunCreate).toHaveBeenCalledWith({

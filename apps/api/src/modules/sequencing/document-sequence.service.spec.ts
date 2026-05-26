@@ -103,4 +103,39 @@ describe('DocumentSequenceService', () => {
       },
     });
   });
+
+  it('should retry and increment if creation fails due to concurrent insert (race condition)', async () => {
+    const branchId = 'branch-hq';
+    const currentYear = new Date().getFullYear();
+
+    mockBranchFindUnique.mockResolvedValue({ code: 'HQ' });
+    
+    // First query returns empty (no sequence found)
+    // Second query (retry) returns the concurrently created row
+    mockQueryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 'seq-concurrent', current_sequence: 1 }]);
+
+    // Creation throws error due to concurrent insert (unique constraint violation)
+    mockDocumentSequenceCreate.mockRejectedValue(new Error('PrismaClientKnownRequestError: Unique constraint failed'));
+
+    mockDocumentSequenceUpdate.mockResolvedValue({
+      id: 'seq-concurrent',
+      currentSequence: 2,
+    });
+
+    const result = await service.generateNext(
+      mockPrismaTx,
+      DocumentType.PURCHASE_ORDER,
+      branchId,
+    );
+
+    expect(result).toBe(`PO-${currentYear}-HQ-00002`);
+    expect(mockDocumentSequenceCreate).toHaveBeenCalled();
+    expect(mockQueryRaw).toHaveBeenCalledTimes(2);
+    expect(mockDocumentSequenceUpdate).toHaveBeenCalledWith({
+      where: { id: 'seq-concurrent' },
+      data: { currentSequence: { increment: 1 } },
+    });
+  });
 });

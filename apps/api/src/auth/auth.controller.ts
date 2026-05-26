@@ -26,7 +26,7 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Throttle({ short: { limit: 10, ttl: 60000 } })
+  @Throttle({ short: { limit: 5, ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(

@@ -2,13 +2,29 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminService } from './admin.service';
 import { PrismaService } from '../../database/prisma.service';
 import { Role } from '@prisma/client';
+import { encrypt, decrypt } from './crypto.util';
 
 describe('AdminService', () => {
   let service: AdminService;
 
+  const mockSystemSettingFindUnique = jest.fn();
+  const mockSystemSettingUpsert = jest.fn();
+  const mockGrnCount = jest.fn();
+  const mockIssueCount = jest.fn();
+
   const mockPrismaService = {
     user: {
       groupBy: jest.fn(),
+    },
+    systemSetting: {
+      findUnique: mockSystemSettingFindUnique,
+      upsert: mockSystemSettingUpsert,
+    },
+    goodsReceivedNote: {
+      count: mockGrnCount,
+    },
+    inventoryIssue: {
+      count: mockIssueCount,
     },
   };
 
@@ -65,6 +81,94 @@ describe('AdminService', () => {
       by: ['role'],
       _count: true,
       where: { isActive: true },
+    });
+  });
+
+  describe('System Settings', () => {
+    it('should return default settings if none are saved in database', async () => {
+      mockSystemSettingFindUnique.mockResolvedValue(null);
+      mockGrnCount.mockResolvedValue(0);
+      mockIssueCount.mockResolvedValue(0);
+
+      const settings = await service.getSettings();
+      expect(settings.system_name).toBe('LogiRest System');
+      expect(settings.base_currency).toBe('SAR');
+      expect(settings.smtp_password).toBe('');
+    });
+
+    it('should return saved settings with masked password', async () => {
+      const encryptedPassword = encrypt('my-secret-password');
+      const mockSavedSettings = {
+        system_name: 'Custom Rest',
+        base_currency: 'USD',
+        smtp_password: encryptedPassword,
+      };
+      
+      mockSystemSettingFindUnique.mockResolvedValue({
+        value: JSON.stringify(mockSavedSettings),
+        version: 1,
+        updatedAt: new Date(),
+      });
+      mockGrnCount.mockResolvedValue(0);
+      mockIssueCount.mockResolvedValue(0);
+
+      const settings = await service.getSettings();
+      expect(settings.system_name).toBe('Custom Rest');
+      expect(settings.base_currency).toBe('USD');
+      expect(settings.smtp_password).toBe('********');
+    });
+
+    it('should encrypt new password on update', async () => {
+      mockSystemSettingFindUnique.mockResolvedValue(null);
+      mockSystemSettingUpsert.mockResolvedValue({});
+
+      const dto = {
+        system_name: 'Resto',
+        base_currency: 'SAR',
+        smtp_password: 'supersecretpass',
+      };
+
+      await service.updateSettings(dto, 'user-admin');
+
+      expect(mockSystemSettingUpsert).toHaveBeenCalled();
+      const upsertArgs = mockSystemSettingUpsert.mock.calls[0][0];
+      const savedConfig = JSON.parse(upsertArgs.create.value);
+      
+      expect(savedConfig.system_name).toBe('Resto');
+      // Password must be encrypted (not plaintext)
+      expect(savedConfig.smtp_password).not.toBe('supersecretpass');
+      expect(savedConfig.smtp_password).toBeDefined();
+    });
+
+    it('should retain existing encrypted password if update request sends masking stars', async () => {
+      const encryptedPassword = encrypt('my-secret-password');
+      const mockSavedSettings = {
+        system_name: 'Custom Rest',
+        base_currency: 'USD',
+        smtp_password: encryptedPassword,
+      };
+
+      mockSystemSettingFindUnique.mockResolvedValue({
+        value: JSON.stringify(mockSavedSettings),
+        version: 1,
+        updatedAt: new Date(),
+      });
+      mockSystemSettingUpsert.mockResolvedValue({});
+
+      const dto = {
+        system_name: 'Custom Rest Updated',
+        base_currency: 'USD',
+        smtp_password: '********',
+      };
+
+      await service.updateSettings(dto, 'user-admin');
+
+      expect(mockSystemSettingUpsert).toHaveBeenCalled();
+      const upsertArgs = mockSystemSettingUpsert.mock.calls[0][0];
+      const savedConfig = JSON.parse(upsertArgs.update.value);
+
+      expect(savedConfig.system_name).toBe('Custom Rest Updated');
+      expect(decrypt(savedConfig.smtp_password)).toBe('my-secret-password');
     });
   });
 });

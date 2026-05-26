@@ -1,6 +1,6 @@
 # Feature Specification: Sprint 1 — High-Priority Hardening
 
-**Feature Branch**: `031-sprint-1-remediation`  
+**Feature Branch**: `032-sprint-1-remediation`  
 **Created**: 2026-05-26  
 **Status**: Draft  
 **Input**: User description: "read this file @[c:\Users\Qursan\.gemini\antigravity-ide\brain\155f7477-4d03-4aed-b7e5-83f096d2c9d7\engineering_tasks.md] and creat a specification for the Sprint 1 — High-Priority Hardening only"

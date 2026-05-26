@@ -4,6 +4,7 @@ import { AdjustmentPostService } from './adjustment-post.service';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
+import { MetricsService } from '../metrics/metrics.service';
 import {
   Prisma,
   Role,
@@ -62,9 +63,9 @@ describe('AdjustmentPostService', () => {
     $transaction: jest
       .fn()
       .mockImplementation(
-        (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-          cb(mockPrismaTx),
-      ),
+          (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
+            cb(mockPrismaTx),
+        ),
   } as unknown as PrismaService;
 
   const mockLockService = {
@@ -78,6 +79,12 @@ describe('AdjustmentPostService', () => {
     handlePositiveAdjustment: jest.fn(),
   } as unknown as WacService;
 
+  const mockMetricsService = {
+    postingOperationsCounter: {
+      inc: jest.fn(),
+    },
+  } as unknown as MetricsService;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -85,6 +92,7 @@ describe('AdjustmentPostService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LedgerLockService, useValue: mockLockService },
         { provide: WacService, useValue: mockWacService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 
@@ -231,6 +239,35 @@ describe('AdjustmentPostService', () => {
 
     await expect(service.post('adj-1', 'user-1', Role.INV_MGR)).rejects.toThrow(
       BadRequestException,
+    );
+  });
+
+  it('should throw BadRequestException if direction is IN and unitCost is zero or negative', async () => {
+    mockAdjFindUnique.mockResolvedValue({
+      id: 'adj-1',
+      status: 'APPROVED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          lotId: 'lot-1',
+          quantity: new Prisma.Decimal(5),
+          direction: AdjustmentDirection.IN,
+          reason: AdjustmentReason.CORRECTION,
+          unitCost: new Prisma.Decimal(0),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: true,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
+      new BadRequestException('Unit cost is required and must be > 0. For promotional items, enter the standard market value or 0.0001 if strictly required by finance.'),
     );
   });
 

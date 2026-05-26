@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Body,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { IssuePostService } from '../issue-post.service';
 import { IssuesService } from './issues.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
@@ -32,6 +33,7 @@ export class IssuesController {
     private readonly issuesService: IssuesService,
   ) {}
 
+  @Throttle({ short: { limit: 50, ttl: 1000 } })
   @Post()
   @Idempotent()
   @ApiIdempotentHeader()

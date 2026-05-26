@@ -65,7 +65,7 @@ export class AdjustmentPostService {
             Number(line.unitCost) <= 0
           ) {
             throw new BadRequestException(
-              `Unit cost is required and must be positive for INCREASE adjustment line on item ${line.item.sku}`,
+              `Unit cost is required and must be > 0. For promotional items, enter the standard market value or 0.0001 if strictly required by finance.`,
             );
           }
         }

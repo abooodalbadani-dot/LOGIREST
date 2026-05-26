@@ -20,6 +20,7 @@ const CreateAdjustmentPayloadSchema = z.object({
  qty: z.number().positive(),
  uom_id: z.string(),
  direction: z.enum(['INCREASE', 'DECREASE']),
+ unit_cost: z.number().nullable().optional(),
  lot_allocations: z.array(LotAllocationSchema).optional(),
  is_custom: z.boolean().optional()
  })).min(1, 'At least one item is required')

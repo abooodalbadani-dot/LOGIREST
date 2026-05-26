@@ -103,6 +103,11 @@ export function AdjustmentForm({
     [lines]
   );
 
+  const hasInvalidCosts = useMemo(
+    () => lines.some(line => line.direction === 'INCREASE' && (line.unit_cost === null || line.unit_cost === undefined || line.unit_cost <= 0)),
+    [lines]
+  );
+
   const warehouseItems = useMemo(() => 
     warehouses.map(w => ({ id: w.id, name_en: w.name_en, name_ar: w.name_ar })),
   [warehouses]);
@@ -200,6 +205,10 @@ export function AdjustmentForm({
       toast.error(t('errors.negative_stock_not_allowed'));
       return;
     }
+    if (hasInvalidCosts) {
+      toast.error(locale === 'ar' ? 'تكلفة الوحدة مطلوبة ويجب أن تكون أكبر من 0 لبنود الزيادة' : 'Unit cost is required and must be > 0 for increase lines.');
+      return;
+    }
     try {
       const payload = {
         version: document?.version || 0,
@@ -212,6 +221,7 @@ export function AdjustmentForm({
           qty: l.qty_adjusted,
           uom_id: l.uom_id,
           direction: l.direction,
+          unit_cost: l.direction === 'INCREASE' ? l.unit_cost : null,
           lot_allocations: l.lot_allocations?.length ? l.lot_allocations : undefined,
         }))
       };
@@ -344,6 +354,7 @@ export function AdjustmentForm({
             direction: 'INCREASE',
             qty_before: currentQty,
             qty_adjusted: 1,
+            unit_cost: null,
             uom_id: item.primary_uom.id,
             reason_notes: ''
           }];
@@ -554,6 +565,33 @@ export function AdjustmentForm({
                   )}
                   extraColumns={[
                     {
+                      header: locale === 'ar' ? 'تكلفة الوحدة' : 'Unit Cost',
+                      cell: (line: AdjustmentLine) => {
+                        const isIncrease = line.direction === 'INCREASE';
+                        return (
+                          <div className="flex justify-center">
+                            <input
+                              type="number"
+                              min="0.0001"
+                              step="0.01"
+                              value={line.unit_cost ?? ''}
+                              readOnly={!canEdit || !isIncrease}
+                              disabled={!isIncrease}
+                              placeholder={isIncrease ? (locale === 'ar' ? 'مطلوب' : 'Required') : '-'}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                updateLine(line.id, { unit_cost: isNaN(val) ? null : val });
+                              }}
+                              className={cn(
+                                "w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-30",
+                                isIncrease && (line.unit_cost === null || line.unit_cost === undefined || line.unit_cost <= 0) && "border-red-500/50 focus:ring-red-500/30"
+                              )}
+                            />
+                          </div>
+                        );
+                      }
+                    },
+                    {
                       header: t('direction') || 'Direction',
                       cell: (line: AdjustmentLine) => (
                         <div className="flex justify-center bg-surface-container-low/40 rounded-lg p-0.5 h-9 w-36 mx-auto">
@@ -689,7 +727,7 @@ export function AdjustmentForm({
           isSaving={createAdjustment.isPending || updateAdjustment.isPending}
           isLocked={isLocked}
           isDirty={lines.length > 0}
-          isValid={!hasNegativeStock && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
+          isValid={!hasNegativeStock && !hasInvalidCosts && lines.length > 0 && notes.trim().length >= 10 && !isRefreshingStock}
           className="print-hidden"
           actions={
             !isNew && (
