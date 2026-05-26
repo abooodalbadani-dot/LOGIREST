@@ -25,6 +25,7 @@ describe('TransferPostService', () => {
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockUserWarehouseScopeFindUnique = jest.fn();
 
   const mockPrismaTx = {
     transfer: {
@@ -54,6 +55,9 @@ describe('TransferPostService', () => {
     warehouse: {
       findUnique: mockWarehouseFindUnique,
       create: mockWarehouseCreate,
+    },
+    userWarehouseScope: {
+      findUnique: mockUserWarehouseScopeFindUnique,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -97,6 +101,7 @@ describe('TransferPostService', () => {
     mockWarehouseItemFindUnique.mockResolvedValue({ wac: new Prisma.Decimal(10.0), isFrozen: false });
     mockWarehouseFindUnique.mockResolvedValue({ id: 'wh-loss-id', branchId: 'branch-1' });
     mockWarehouseCreate.mockResolvedValue({ id: 'wh-loss-id', branchId: 'branch-1' });
+    mockUserWarehouseScopeFindUnique.mockResolvedValue({ id: 'scope-1' });
   });
 
   describe('ship', () => {

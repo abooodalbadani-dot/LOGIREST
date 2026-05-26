@@ -3,6 +3,8 @@ import { Prisma, OutboxEvent } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 
+import { correlationStorage } from '../../common/correlation.context';
+
 @Injectable()
 export class OutboxService {
   private readonly logger = new Logger(OutboxService.name);
@@ -32,12 +34,14 @@ export class OutboxService {
       },
     });
 
+    const correlationId = correlationStorage.getStore();
+
     // Enqueue background processing job in BullMQ.
     // A 500ms delay is added to ensure the enclosing database transaction
     // has completed committing before the worker attempts to fetch this record.
     await this.outboxQueue.add(
       'process-event',
-      { eventId: event.id },
+      { eventId: event.id, correlationId },
       {
         delay: 500,
         attempts: 3,

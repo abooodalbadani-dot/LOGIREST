@@ -271,4 +271,76 @@ export class InventoryService {
       return updated;
     });
   }
+
+  async quarantineLot(lotId: string, userId: string) {
+    const lot = await this.prisma.lot.findUnique({
+      where: { id: lotId },
+    });
+
+    if (!lot) {
+      throw new NotFoundException(`Lot with ID ${lotId} not found.`);
+    }
+
+    if (lot.status === 'QUARANTINE') {
+      return lot;
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.lot.update({
+        where: { id: lotId },
+        data: {
+          status: 'QUARANTINE',
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'LOT_QUARANTINE',
+          targetTable: 'lots',
+          targetId: lotId,
+          beforeStateJson: JSON.stringify({ status: lot.status }),
+          afterStateJson: JSON.stringify({ status: 'QUARANTINE' }),
+        },
+      });
+
+      return updated;
+    });
+  }
+
+  async releaseQuarantineLot(lotId: string, userId: string) {
+    const lot = await this.prisma.lot.findUnique({
+      where: { id: lotId },
+    });
+
+    if (!lot) {
+      throw new NotFoundException(`Lot with ID ${lotId} not found.`);
+    }
+
+    if (lot.status !== 'QUARANTINE') {
+      throw new BadRequestException('Lot is not currently quarantined.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.lot.update({
+        where: { id: lotId },
+        data: {
+          status: 'ACTIVE',
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'LOT_RELEASE_QUARANTINE',
+          targetTable: 'lots',
+          targetId: lotId,
+          beforeStateJson: JSON.stringify({ status: 'QUARANTINE' }),
+          afterStateJson: JSON.stringify({ status: 'ACTIVE' }),
+        },
+      });
+
+      return updated;
+    });
+  }
 }

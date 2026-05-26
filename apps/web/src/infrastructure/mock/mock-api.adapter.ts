@@ -1417,18 +1417,29 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'GET') {
       const movements = await db.movements.findAll();
       return {
+        id: 'system_settings',
         system_name: 'LogiRest Enterprise',
         base_currency: 'SAR',
-        default_language: 'en',
+        branch_id: 'HQ',
+        timezone: 'Asia/Riyadh',
+        locale_default: 'en' as const,
         sender_name: 'LogiRest System',
         reply_to_email: 'no-reply@logirest.com',
-        has_transactions: movements.length > 0
+        has_transactions: movements.length > 0,
+        mail_provider: 'smtp' as const,
+        smtp_host: 'smtp.mailtrap.io',
+        smtp_port: 587,
+        smtp_user: 'user',
+        smtp_password: 'password',
+        smtp_encryption: 'tls' as const,
+        version: 1,
+        updated_at: new Date().toISOString()
       };
     }
     if (method === 'PUT') {
       const movements = await db.movements.findAll();
       const currentSettings = { base_currency: 'SAR' }; // Mocked existing state
-      const newSettings = body as Record<string, string>;
+      const newSettings = body as Record<string, any>;
 
       if (movements.length > 0 && newSettings.base_currency && newSettings.base_currency !== currentSettings.base_currency) {
         return {
@@ -1438,8 +1449,146 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           }
         };
       }
-      return newSettings;
+      return {
+        id: 'system_settings',
+        system_name: newSettings.system_name || 'LogiRest Enterprise',
+        base_currency: newSettings.base_currency || 'SAR',
+        branch_id: newSettings.branch_id || 'HQ',
+        timezone: newSettings.timezone || 'Asia/Riyadh',
+        locale_default: newSettings.locale_default || 'en',
+        sender_name: newSettings.sender_name || 'LogiRest System',
+        reply_to_email: newSettings.reply_to_email || 'no-reply@logirest.com',
+        has_transactions: movements.length > 0,
+        mail_provider: newSettings.mail_provider || 'smtp',
+        smtp_host: newSettings.smtp_host || '',
+        smtp_port: Number(newSettings.smtp_port) || 587,
+        smtp_user: newSettings.smtp_user || '',
+        smtp_password: newSettings.smtp_password || '',
+        smtp_encryption: newSettings.smtp_encryption || 'tls',
+        version: (newSettings.version || 1) + 1,
+        updated_at: new Date().toISOString()
+      };
     }
+  }
+
+  if (normalizedPath === '/admin/settings/test-email' && method === 'POST') {
+    return { ok: true };
+  }
+
+  if (normalizedPath.startsWith('/lots/') && normalizedPath.endsWith('/quarantine') && method === 'PATCH') {
+    const lotId = normalizedPath.split('/')[2];
+    const lot = await db.lots.findById(lotId);
+    if (lot) {
+      const updated = { ...lot, status: 'QUARANTINE' };
+      await db.lots.save(updated);
+    }
+    return { ok: true };
+  }
+
+  if (normalizedPath.startsWith('/lots/') && normalizedPath.endsWith('/release-quarantine') && method === 'PATCH') {
+    const lotId = normalizedPath.split('/')[2];
+    const lot = await db.lots.findById(lotId);
+    if (lot) {
+      const updated = { ...lot, status: 'ACTIVE' };
+      await db.lots.save(updated);
+    }
+    return { ok: true };
+  }
+
+  if (normalizedPath === '/admin/outbox/failed' && method === 'GET') {
+    return {
+      data: [
+        {
+          id: 'outbox-1',
+          eventType: 'EXPIRY_WARNING',
+          payload: {
+            to: 'admin@kitchen.io',
+            subject: 'Expiring Stock Alert: LOT-100223',
+            sku: 'SKU-EGGS-01',
+            qty: 120,
+            warehouse: 'wh-central'
+          },
+          status: 'FAILED',
+          attempts: 5,
+          lastError: 'SMTP connection timed out after 5000ms. Could not reach mailtrap.io.',
+          processedAt: new Date().toISOString(),
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          expiresAt: new Date(Date.now() + 86400000).toISOString()
+        },
+        {
+          id: 'outbox-2',
+          eventType: 'WAC_DISCREPANCY',
+          payload: {
+            to: 'manager@kitchen.io',
+            subject: 'Cost consistency variance detected for SKU-BEEF-02',
+            discrepancy: '0.04%'
+          },
+          status: 'FAILED',
+          attempts: 3,
+          lastError: 'Authentication failed. Invalid SMTP user/pass credentials.',
+          processedAt: new Date().toISOString(),
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+          expiresAt: new Date(Date.now() + 86400000).toISOString()
+        }
+      ],
+      meta: {
+        total: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1
+      }
+    };
+  }
+
+  if (normalizedPath.startsWith('/admin/outbox/') && normalizedPath.endsWith('/retry') && method === 'POST') {
+    return { ok: true };
+  }
+
+  if (normalizedPath === '/admin/inventory/frozen' && method === 'GET') {
+    return [
+      {
+        warehouseId: 'wh-central',
+        itemId: 'item-beef-02',
+        qtyOnHand: 450.5,
+        qtyAllocated: 20.0,
+        wac: 35.50,
+        isFrozen: true,
+        updatedAt: new Date().toISOString(),
+        warehouse: {
+          id: 'wh-central',
+          name: 'Central Kitchen Store',
+          code: 'WH-CENTRAL'
+        },
+        item: {
+          id: 'item-beef-02',
+          name: 'Fresh Premium Angus Beef (KG)',
+          sku: 'SKU-BEEF-02'
+        }
+      },
+      {
+        warehouseId: 'wh-cold',
+        itemId: 'item-salmon-01',
+        qtyOnHand: 120.0,
+        qtyAllocated: 5.0,
+        wac: 82.00,
+        isFrozen: true,
+        updatedAt: new Date().toISOString(),
+        warehouse: {
+          id: 'wh-cold',
+          name: 'Cold Storage Room B',
+          code: 'WH-COLD-B'
+        },
+        item: {
+          id: 'item-salmon-01',
+          name: 'Frozen Norwegian Salmon Fillet (KG)',
+          sku: 'SKU-SALMON-01'
+        }
+      }
+    ];
+  }
+
+  if (normalizedPath.startsWith('/admin/inventory/') && normalizedPath.endsWith('/unfreeze') && method === 'POST') {
+    return { ok: true };
   }
 
   if (normalizedPath === '/dashboard/stats') {

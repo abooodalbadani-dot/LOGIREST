@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { PrismaService } from '../../database/prisma.service';
+import { decrypt } from '../admin/crypto.util';
 
 export type EmailResult =
   | { ok: true }
@@ -9,35 +11,102 @@ export type EmailResult =
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter | null = null;
+  private hasDbConfig = false;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     this.initializeTransporter();
   }
 
   get isSmtpConfigured(): boolean {
-    return this.transporter !== null;
+    return (
+      this.hasDbConfig || this.config.get<string>('SMTP_HOST') !== undefined
+    );
   }
 
-  private initializeTransporter() {
+  private async initializeTransporter() {
+    try {
+      const setting = await this.prisma.systemSetting.findUnique({
+        where: { key: 'system_settings' },
+      });
+      if (setting) {
+        const config = JSON.parse(setting.value);
+        if (config.mail_provider === 'smtp' && config.smtp_host) {
+          this.hasDbConfig = true;
+          this.logger.log('SMTP dynamic configuration detected from database.');
+          return;
+        }
+      }
+    } catch (err) {
+      // Database might not be fully initialized on startup
+    }
+
+    const host = this.config.get<string>('SMTP_HOST');
+    if (!host) {
+      this.logger.warn(
+        'SMTP_HOST is not configured. Email notifications will be skipped.',
+      );
+    }
+  }
+
+  private async getTransporter(): Promise<nodemailer.Transporter | null> {
+    try {
+      const setting = await this.prisma.systemSetting.findUnique({
+        where: { key: 'system_settings' },
+      });
+
+      if (setting) {
+        const config = JSON.parse(setting.value);
+        if (config.mail_provider === 'smtp' && config.smtp_host) {
+          this.hasDbConfig = true;
+          let password = '';
+          if (config.smtp_password) {
+            try {
+              password = decrypt(config.smtp_password);
+            } catch (err) {
+              this.logger.error(
+                `Failed to decrypt SMTP password: ${err instanceof Error ? err.message : String(err)}`,
+              );
+            }
+          }
+
+          const port = Number(config.smtp_port) || 587;
+          return nodemailer.createTransport({
+            host: config.smtp_host,
+            port,
+            secure: port === 465 || config.smtp_encryption === 'ssl',
+            auth:
+              config.smtp_user && password
+                ? { user: config.smtp_user, pass: password }
+                : undefined,
+          });
+        }
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Failed to read SMTP configuration from database: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    // Fallback to environment variables
     const host = this.config.get<string>('SMTP_HOST');
     const port = this.config.get<number>('SMTP_PORT', 587);
     const user = this.config.get<string>('SMTP_USER');
     const pass = this.config.get<string>('SMTP_PASS');
 
-    if (!host) {
-      this.logger.warn(
-        'SMTP_HOST is not configured. Email notifications will be skipped.',
-      );
-      return;
+    if (host) {
+      this.hasDbConfig = false;
+      return nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: user && pass ? { user, pass } : undefined,
+      });
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: user && pass ? { user, pass } : undefined,
-    });
+    return null;
   }
 
   /**
@@ -48,7 +117,8 @@ export class EmailService {
     subject: string,
     htmlContent: string,
   ): Promise<EmailResult> {
-    if (!this.transporter) {
+    const transporter = await this.getTransporter();
+    if (!transporter) {
       this.logger.log(`SMTP skipped send for subject: "${subject}"`);
       return { ok: false, reason: 'SMTP_UNCONFIGURED' };
     }
@@ -57,7 +127,7 @@ export class EmailService {
     const recipients = Array.isArray(to) ? to.join(', ') : to;
 
     try {
-      await this.transporter.sendMail({
+      await transporter.sendMail({
         from,
         to: recipients,
         subject,
@@ -158,5 +228,41 @@ export class EmailService {
       </body>
       </html>
     `;
+  }
+
+  async testConnection(config: any): Promise<{ ok: boolean; error?: string }> {
+    try {
+      let password = config.smtp_password;
+      if (password === '********') {
+        const setting = await this.prisma.systemSetting.findUnique({
+          where: { key: 'system_settings' },
+        });
+        if (setting) {
+          const saved = JSON.parse(setting.value);
+          if (saved.smtp_password) {
+            password = decrypt(saved.smtp_password);
+          }
+        }
+      }
+      const port = Number(config.smtp_port) || 587;
+      const transporter = nodemailer.createTransport({
+        host: config.smtp_host,
+        port,
+        secure: port === 465 || config.smtp_encryption === 'ssl',
+        auth:
+          config.smtp_user && password
+            ? { user: config.smtp_user, pass: password }
+            : undefined,
+        connectionTimeout: 5000,
+      });
+
+      await transporter.verify();
+      return { ok: true };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 }

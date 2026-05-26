@@ -4,6 +4,9 @@ import { Job } from 'bullmq';
 import { PrismaService } from '../../database/prisma.service';
 import { EmailService } from './email.service';
 import { Role } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
+
+import { correlationStorage } from '../../common/correlation.context';
 
 interface OutboxPayload {
   id?: string;
@@ -35,6 +38,7 @@ export class OutboxWorker extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
+    private readonly metricsService: MetricsService,
   ) {
     super();
   }
@@ -42,26 +46,30 @@ export class OutboxWorker extends WorkerHost {
   /**
    * BullMQ worker job processing entrypoint.
    */
-  async process(job: Job<{ eventId: string }>): Promise<void> {
-    const { eventId } = job.data;
-    this.logger.log(`Processing outbox job: ${job.id} for event: ${eventId}`);
+  async process(
+    job: Job<{ eventId: string; correlationId?: string }>,
+  ): Promise<void> {
+    const { eventId, correlationId } = job.data;
 
-    // Fetch the OutboxEvent database log
-    const event = await this.prisma.outboxEvent.findUnique({
-      where: { id: eventId },
-    });
+    const runInContext = async () => {
+      this.logger.log(`Processing outbox job: ${job.id} for event: ${eventId}`);
 
-    if (!event) {
-      this.logger.warn(`Outbox event with ID ${eventId} not found. Skipping.`);
-      return;
-    }
+      // Fetch the OutboxEvent database log
+      const event = await this.prisma.outboxEvent.findUnique({
+        where: { id: eventId },
+      });
 
-    if (event.status === 'SUCCEEDED') {
-      this.logger.log(
-        `Event ${eventId} has already been processed successfully.`,
-      );
-      return;
-    }
+      if (!event) {
+        this.logger.warn(`Outbox event with ID ${eventId} not found. Skipping.`);
+        return;
+      }
+
+      if (event.status === 'SUCCEEDED') {
+        this.logger.log(
+          `Event ${eventId} has already been processed successfully.`,
+        );
+        return;
+      }
 
     try {
       // 1. Resolve target recipients and templates based on the event type
@@ -130,6 +138,8 @@ export class OutboxWorker extends WorkerHost {
         `Failed to process event ${eventId}. Error: ${errorMsg}`,
       );
 
+      this.metricsService.failedOutboxEventsCounter.inc();
+
       const nextAttempts = event.attempts + 1;
       const finalStatus = nextAttempts >= 5 ? 'FAILED' : 'PENDING';
 
@@ -146,7 +156,14 @@ export class OutboxWorker extends WorkerHost {
         throw error;
       }
     }
+  };
+
+  if (correlationId) {
+    await correlationStorage.run(correlationId, runInContext);
+  } else {
+    await runInContext();
   }
+}
 
   /**
    * Resolves email addresses dynamically from active database roles matching the event's scopes.

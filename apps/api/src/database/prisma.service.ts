@@ -28,6 +28,30 @@ export class PrismaService
         { emit: 'stdout', level: 'error' },
       ],
     });
+
+    const extended = this.$extends({
+      query: {
+        $allModels: {
+          async findMany({ model, args, query }) {
+            const softDeleteModels = ['Item', 'Supplier', 'Warehouse', 'User'];
+            if (softDeleteModels.includes(model)) {
+              args.where = { ...args.where, isActive: true };
+            }
+            return query(args);
+          },
+        },
+      },
+    });
+
+    return new Proxy(this, {
+      get: (target, prop, receiver) => {
+        if (prop in extended) {
+          const value = Reflect.get(extended, prop);
+          return typeof value === 'function' ? value.bind(extended) : value;
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+    });
   }
 
   async onModuleInit() {

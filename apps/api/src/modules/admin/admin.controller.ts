@@ -1,6 +1,11 @@
 import {
   Controller,
   Get,
+  Put,
+  Post,
+  Patch,
+  Body,
+  Param,
   Query,
   UseGuards,
   ForbiddenException,
@@ -95,5 +100,98 @@ export class AdminController {
         totalPages: Math.ceil(total / limitNum),
       },
     };
+  }
+
+  @Get('settings')
+  async getSettings(@CurrentUser('role') role: Role) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to view system settings.',
+      );
+    }
+    return this.adminService.getSettings();
+  }
+
+  @Put('settings')
+  async updateSettings(
+    @CurrentUser('role') role: Role,
+    @CurrentUser('id') userId: string,
+    @Body() dto: any,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to update system settings.',
+      );
+    }
+    return this.adminService.updateSettings(dto, userId);
+  }
+
+  @Post('settings/test-email')
+  async testEmail(@CurrentUser('role') role: Role, @Body() dto: any) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to test email settings.',
+      );
+    }
+    return this.emailService.testConnection(dto);
+  }
+
+  @Get('outbox/failed')
+  async getFailedOutboxEvents(
+    @CurrentUser('role') role: Role,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to view failed outbox events.',
+      );
+    }
+    const pageNum = Math.max(1, parseInt(page || '1', 10));
+    const limitNum = Math.max(1, parseInt(limit || '50', 10));
+    return this.adminService.getFailedOutboxEvents(pageNum, limitNum);
+  }
+
+  @Post('outbox/:id/retry')
+  async retryOutboxEvent(
+    @CurrentUser('role') role: Role,
+    @Param('id') id: string,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to retry failed outbox events.',
+      );
+    }
+    return this.adminService.retryOutboxEvent(id);
+  }
+
+  @Get('inventory/frozen')
+  async getFrozenItems(@CurrentUser('role') role: Role) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to view frozen items.',
+      );
+    }
+    return this.adminService.getFrozenItems();
+  }
+
+  @Post('inventory/:id/unfreeze')
+  async unfreezeItem(
+    @CurrentUser('role') role: Role,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to unfreeze items.',
+      );
+    }
+    const [warehouseId, itemId] = id.split('_');
+    if (!warehouseId || !itemId) {
+      throw new ForbiddenException(
+        'Invalid composite ID format. Expected warehouseId_itemId',
+      );
+    }
+    return this.adminService.unfreezeItem(warehouseId, itemId, userId);
   }
 }

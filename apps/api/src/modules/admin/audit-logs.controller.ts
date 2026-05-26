@@ -80,7 +80,7 @@ export class AuditLogsController {
         id: log.id,
         createdAt: log.createdAt,
         performedByUserId: log.userId,
-        performedByRole: log.user.role,
+        performedByRole: log.user?.role ?? null,
         beforeStateJson,
         afterStateJson,
       };

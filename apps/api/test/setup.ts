@@ -16,6 +16,9 @@ jest.mock('ioredis', () => {
       });
       return new Proxy(this, {
         get: (target, prop) => {
+          if (prop === 'then') {
+            return undefined;
+          }
           if (prop in target) {
             return (target as any)[prop];
           }

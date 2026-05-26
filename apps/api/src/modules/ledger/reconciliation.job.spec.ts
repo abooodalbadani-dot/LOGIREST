@@ -14,6 +14,7 @@ describe('ReconciliationJob', () => {
   const mockCreateNotification = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
   const mockReconciliationRunCreate = jest.fn();
+  const mockWarehouseItemLotFindMany = jest.fn();
 
   const mockPrismaTx = {
     warehouseItem: {
@@ -33,6 +34,9 @@ describe('ReconciliationJob', () => {
     },
     reconciliationRun: {
       create: mockReconciliationRunCreate,
+    },
+    warehouseItemLot: {
+      findMany: mockWarehouseItemLotFindMany,
     },
     $transaction: jest
       .fn()
@@ -57,6 +61,7 @@ describe('ReconciliationJob', () => {
 
     job = module.get<ReconciliationJob>(ReconciliationJob);
     jest.clearAllMocks();
+    mockWarehouseItemLotFindMany.mockResolvedValue([]);
   });
 
   it('should run reconciliation and do nothing if no discrepancy is found', async () => {
@@ -95,6 +100,7 @@ describe('ReconciliationJob', () => {
       data: {
         itemsChecked: 1,
         discrepanciesFound: 0,
+        lotDiscrepanciesFound: 0,
         frozenItems: [],
         durationMs: expect.any(Number),
       },
@@ -154,6 +160,7 @@ describe('ReconciliationJob', () => {
       data: {
         itemsChecked: 1,
         discrepanciesFound: 1,
+        lotDiscrepanciesFound: 0,
         frozenItems: ['SKU1'],
         durationMs: expect.any(Number),
       },
@@ -205,6 +212,7 @@ describe('ReconciliationJob', () => {
       data: {
         itemsChecked: 1,
         discrepanciesFound: 0,
+        lotDiscrepanciesFound: 0,
         frozenItems: [],
         durationMs: expect.any(Number),
       },
@@ -258,6 +266,7 @@ describe('ReconciliationJob', () => {
       data: {
         itemsChecked: 1,
         discrepanciesFound: 0,
+        lotDiscrepanciesFound: 0,
         frozenItems: [],
         durationMs: expect.any(Number),
       },

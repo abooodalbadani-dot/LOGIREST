@@ -12,6 +12,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { ConcurrencyService } from '../../services/concurrency.service';
 import { DocumentType as PrismaDocType } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
+import { MetricsService } from '../metrics/metrics.service';
 import {
   DocumentType,
   DocumentStatus,
@@ -40,6 +41,7 @@ export class WorkflowService {
     private readonly prisma: PrismaService,
     private readonly concurrencyService: ConcurrencyService,
     private readonly outboxService: OutboxService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   /**
@@ -481,6 +483,9 @@ export class WorkflowService {
               id: updatedDoc.id,
               documentNumber: updatedDoc.requestNumber,
               warehouseId: updatedDoc.warehouseId,
+            });
+            this.metricsService.postingOperationsCounter.inc({
+              document_type: 'KITCHEN_REQUEST',
             });
           } else if (docType === 'stocktake' && targetStatus === 'STARTED') {
             await this.outboxService.writeEvent(tx, 'STOCKTAKE_STARTED', {

@@ -60,9 +60,13 @@ describe('AuthController', () => {
       };
       mockAuthService.login.mockResolvedValue(expectedResult);
 
-      const result = await controller.login(dto, mockResponse);
+      const result = await controller.login(dto, mockResponse, '127.0.0.1');
       expect(result).toEqual(expectedResult);
-      expect(mockAuthService.login).toHaveBeenCalledWith(dto, mockResponse);
+      expect(mockAuthService.login).toHaveBeenCalledWith(
+        dto,
+        mockResponse,
+        '127.0.0.1',
+      );
     });
   });
 

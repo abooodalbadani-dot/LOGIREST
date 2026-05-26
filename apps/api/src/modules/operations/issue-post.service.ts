@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
 import { Role, DocumentType } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class IssuePostService {
@@ -15,6 +16,7 @@ export class IssuePostService {
     private readonly prisma: PrismaService,
     private readonly allocationService: AllocationService,
     private readonly outboxService: OutboxService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async post(
@@ -127,6 +129,10 @@ export class IssuePostService {
             status: 'POSTED',
             version: issue.version + 1,
           },
+        });
+
+        this.metricsService.postingOperationsCounter.inc({
+          document_type: 'INVENTORY_ISSUE',
         });
 
         // 4. Record ApprovalEvent

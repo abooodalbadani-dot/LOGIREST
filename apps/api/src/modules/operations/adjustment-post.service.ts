@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
 import { Role, DocumentType, AdjustmentDirection } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class AdjustmentPostService {
@@ -15,6 +16,7 @@ export class AdjustmentPostService {
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
     private readonly wacService: WacService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async post(
@@ -57,7 +59,11 @@ export class AdjustmentPostService {
       // 2. Validate all lines before processing
       for (const line of adj.lines) {
         if (line.direction === AdjustmentDirection.IN) {
-          if (line.unitCost === null || line.unitCost === undefined || Number(line.unitCost) <= 0) {
+          if (
+            line.unitCost === null ||
+            line.unitCost === undefined ||
+            Number(line.unitCost) <= 0
+          ) {
             throw new BadRequestException(
               `Unit cost is required and must be positive for INCREASE adjustment line on item ${line.item.sku}`,
             );
@@ -321,6 +327,10 @@ export class AdjustmentPostService {
           status: 'POSTED',
           version: adj.version + 1,
         },
+      });
+
+      this.metricsService.postingOperationsCounter.inc({
+        document_type: 'ADJUSTMENT',
       });
 
       // 5. Record ApprovalEvent

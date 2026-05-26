@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IssuePostService } from './issue-post.service';
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
+import { OutboxService } from '../outbox/outbox.service';
 import { Prisma, Role, DocumentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
@@ -39,6 +40,9 @@ describe('IssuePostService', () => {
     warehouseItem: {
       findUnique: mockWarehouseItemFindUnique,
     },
+    notificationLog: {
+      create: jest.fn(),
+    },
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {
@@ -54,12 +58,17 @@ describe('IssuePostService', () => {
     allocate: jest.fn(),
   } as unknown as AllocationService;
 
+  const mockOutboxService = {
+    writeEvent: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IssuePostService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AllocationService, useValue: mockAllocationService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 

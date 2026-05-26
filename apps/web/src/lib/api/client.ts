@@ -38,6 +38,13 @@ async function attemptRefresh(): Promise<boolean> {
   return refreshPromise;
 }
 
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  if (match) return decodeURIComponent(match[2]);
+  return null;
+}
+
 async function request<T>(method: string, path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions): Promise<T> {
   const token = typeof window !== 'undefined' ? getTokenCookie() : null;
   const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
@@ -87,6 +94,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
     }
   }
 
+  const csrfToken = getCookie('XSRF-TOKEN');
+
   try {
     const res = await fetch(`${BASE}${path}`, {
       method,
@@ -96,6 +105,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
         'Content-Type': 'application/json',
         'Accept-Language': locale,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
         ...customHeaders,
       },
       body: body ? JSON.stringify(body) : undefined,

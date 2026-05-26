@@ -47,7 +47,9 @@ export class IssueVoidService {
         throw new BadRequestException('Version conflict detected');
       }
 
-      const sortedLines = [...issue.lines].sort((a, b) => a.itemId.localeCompare(b.itemId));
+      const sortedLines = [...issue.lines].sort((a, b) =>
+        a.itemId.localeCompare(b.itemId),
+      );
 
       for (const line of sortedLines) {
         const item = line.item;
@@ -59,7 +61,9 @@ export class IssueVoidService {
           });
 
           // Deterministic lock ordering for lots
-          const sortedAllocations = [...allocations].sort((a, b) => a.lotId.localeCompare(b.lotId));
+          const sortedAllocations = [...allocations].sort((a, b) =>
+            a.lotId.localeCompare(b.lotId),
+          );
 
           for (const alloc of sortedAllocations) {
             await this.lockService.lockLots(tx, issue.warehouseId, item.id, [

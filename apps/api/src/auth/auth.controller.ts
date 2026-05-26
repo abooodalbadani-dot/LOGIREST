@@ -32,8 +32,9 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
+    @Ip() ipAddress: string,
   ) {
-    return this.authService.login(dto, res);
+    return this.authService.login(dto, res, ipAddress);
   }
 
   @Public()

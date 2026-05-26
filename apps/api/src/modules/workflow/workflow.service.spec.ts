@@ -4,6 +4,7 @@ import { WorkflowService } from './workflow.service';
 import { PrismaService } from '../../database/prisma.service';
 import { ConcurrencyService } from '../../services/concurrency.service';
 import { VersionConflictException } from '../../exceptions/version-conflict.exception';
+import { OutboxService } from '../outbox/outbox.service';
 import {
   ForbiddenException,
   BadRequestException,
@@ -37,6 +38,9 @@ describe('WorkflowService', () => {
     notificationLog: {
       create: jest.fn(),
     },
+    supplier: {
+      findUnique: jest.fn(),
+    },
   };
 
   const mockConcurrencyService = {
@@ -45,12 +49,17 @@ describe('WorkflowService', () => {
     }),
   };
 
+  const mockOutboxService = {
+    writeEvent: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkflowService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ConcurrencyService, useValue: mockConcurrencyService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 
@@ -170,8 +179,7 @@ describe('WorkflowService', () => {
         data: {
           targetRole: 'APPROVER',
           warehouseId: 'wh-1',
-          message:
-            'Purchase Request PR-2026-0001 is submitted and requires approval.',
+          message: 'Purchase Request PR-2026-0001 is awaiting approval.',
           documentType: 'PURCHASE_REQUEST',
           documentId: 'doc-1',
         },

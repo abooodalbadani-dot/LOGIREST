@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpException, HttpStatus, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ReportsService } from '../reports.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { MAX_EXPORT_ROWS } from '../reports.service';
@@ -60,7 +65,12 @@ describe('ReportsService', () => {
     it('should return paginated movements with total count', async () => {
       mockPrismaService.stockLedger.count.mockResolvedValue(100);
       mockPrismaService.stockLedger.findMany.mockResolvedValue([
-        { id: '1', quantity: 10, postedAt: new Date(), item: { name: 'Item A', sku: 'SKU-A' } },
+        {
+          id: '1',
+          quantity: 10,
+          postedAt: new Date(),
+          item: { name: 'Item A', sku: 'SKU-A' },
+        },
       ]);
 
       const result = await service.getMovements('wh-1', '1', '10');
@@ -73,12 +83,25 @@ describe('ReportsService', () => {
 
   describe('getWacHistory', () => {
     it('should throw BadRequestException if itemId is missing', async () => {
-      await expect(service.getWacHistory('wh-1', '')).rejects.toThrow(BadRequestException);
+      await expect(service.getWacHistory('wh-1', '')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should query cost ledger with correct filters', async () => {
       mockPrismaService.costLedger.findMany.mockResolvedValue([
-        { id: '1', postedAt: new Date(), warehouseId: 'wh-1', itemId: 'item-1', quantity: 10, unitPrice: 5, newWac: 5, documentId: 'doc-1', documentType: 'GOODS_RECEIVED_NOTE', item: { sku: 'SKU-1', name: 'Item 1' } },
+        {
+          id: '1',
+          postedAt: new Date(),
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          quantity: 10,
+          unitPrice: 5,
+          newWac: 5,
+          documentId: 'doc-1',
+          documentType: 'GOODS_RECEIVED_NOTE',
+          item: { sku: 'SKU-1', name: 'Item 1' },
+        },
       ]);
 
       const result = await service.getWacHistory('wh-1', 'item-1');
@@ -89,12 +112,16 @@ describe('ReportsService', () => {
 
   describe('getLotTrace', () => {
     it('should throw BadRequestException if lotId is missing', async () => {
-      await expect(service.getLotTrace('wh-1', '')).rejects.toThrow(BadRequestException);
+      await expect(service.getLotTrace('wh-1', '')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if lot not found', async () => {
       mockPrismaService.lot.findFirst.mockResolvedValue(null);
-      await expect(service.getLotTrace('wh-1', 'invalid')).rejects.toThrow(BadRequestException);
+      await expect(service.getLotTrace('wh-1', 'invalid')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -108,7 +135,9 @@ describe('ReportsService', () => {
     });
 
     it('should return isExportable false when count exceeds limit', async () => {
-      mockPrismaService.stockLedger.count.mockResolvedValue(MAX_EXPORT_ROWS + 1);
+      mockPrismaService.stockLedger.count.mockResolvedValue(
+        MAX_EXPORT_ROWS + 1,
+      );
       const result = await service.getReportCount('movements', 'wh-1', {});
       expect(result.isExportable).toBe(false);
     });
@@ -120,7 +149,9 @@ describe('ReportsService', () => {
     });
 
     it('should throw BadRequestException for unknown report type', async () => {
-      await expect(service.getReportCount('unknown', 'wh-1', {})).rejects.toThrow(BadRequestException);
+      await expect(
+        service.getReportCount('unknown', 'wh-1', {}),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -135,7 +166,9 @@ describe('ReportsService', () => {
         fail('Expected HttpException to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
-        expect((error as HttpException).getStatus()).toBe(HttpStatus.PAYLOAD_TOO_LARGE);
+        expect((error as HttpException).getStatus()).toBe(
+          HttpStatus.PAYLOAD_TOO_LARGE,
+        );
         expect((error as HttpException).message).toContain('Payload Too Large');
         expect((error as HttpException).message).toContain('50');
       }
@@ -156,7 +189,10 @@ describe('ReportsService', () => {
 
       const result = await service.exportMovementsCursor('wh-1');
       expect(result.data.length).toBe(1000);
-      expect(result.nextCursor).toBe('id-999');
+      const expectedCursor = Buffer.from(
+        JSON.stringify({ id: 'id-999', offset: 1000 }),
+      ).toString('base64');
+      expect(result.nextCursor).toBe(expectedCursor);
       expect(result.hasMore).toBe(true);
     });
 
@@ -187,7 +223,10 @@ describe('ReportsService', () => {
         id: `lot-${i}`,
         qtyOnHand: i + 10,
         item: { sku: `SKU-${i}`, name: `Item ${i}` },
-        lot: { lotNumber: `LOT-${i}`, expiryDate: new Date(Date.now() + (i + 1) * 86400000) },
+        lot: {
+          lotNumber: `LOT-${i}`,
+          expiryDate: new Date(Date.now() + (i + 1) * 86400000),
+        },
       }));
       mockPrismaService.warehouseItemLot.findMany.mockResolvedValue(lots);
 
@@ -214,7 +253,13 @@ describe('ReportsService', () => {
         {
           id: 'alloc-1',
           quantityAllocated: 5,
-          issueLine: { inventoryIssue: { issueNumber: 'ISSUE-0001', createdAt: new Date(), status: 'POSTED' } },
+          issueLine: {
+            inventoryIssue: {
+              issueNumber: 'ISSUE-0001',
+              createdAt: new Date(),
+              status: 'POSTED',
+            },
+          },
           transferLine: null,
         },
       ]);

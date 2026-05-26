@@ -7,12 +7,14 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Role, DocumentType, StocktakeStatus } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class StocktakePostService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async post(
@@ -246,6 +248,10 @@ export class StocktakePostService {
           status: StocktakeStatus.POSTED,
           version: session.version + 1,
         },
+      });
+
+      this.metricsService.postingOperationsCounter.inc({
+        document_type: 'STOCKTAKE',
       });
 
       // 6. Record ApprovalEvent

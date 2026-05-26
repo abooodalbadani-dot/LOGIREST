@@ -35,7 +35,7 @@ describe('OutboxWorker', () => {
     };
 
     mockEmail = {
-      sendEmail: jest.fn().mockResolvedValue(true),
+      sendEmail: jest.fn().mockResolvedValue({ ok: true }),
     };
 
     const module: TestingModule = await Test.createTestingModule({

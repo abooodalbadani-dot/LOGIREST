@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from './email.service';
+import { PrismaService } from '../../database/prisma.service';
 import * as nodemailer from 'nodemailer';
 
 jest.mock('nodemailer');
@@ -13,6 +14,12 @@ describe('EmailService', () => {
   };
   let mockTransporter: {
     sendMail: jest.Mock;
+  };
+
+  const mockPrisma = {
+    systemSetting: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
   };
 
   beforeEach(() => {
@@ -40,6 +47,10 @@ describe('EmailService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: PrismaService,
+          useValue: mockPrisma,
         },
       ],
     }).compile();
@@ -70,19 +81,18 @@ describe('EmailService', () => {
       SMTP_FROM: 'noreply@logirest.app',
     });
 
+    const result = await service.sendEmail(
+      'test@example.com',
+      'Test Subject',
+      '<p>Test</p>',
+    );
+    expect(result).toEqual({ ok: true });
     expect(nodemailer.createTransport).toHaveBeenCalledWith({
       host: 'smtp.example.com',
       port: 587,
       secure: false,
       auth: { user: 'user', pass: 'pass' },
     });
-
-    const result = await service.sendEmail(
-      'test@example.com',
-      'Test Subject',
-      '<p>Test</p>',
-    );
-    expect(result).toBe(true);
     expect(mockTransporter.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         from: 'noreply@logirest.app',
@@ -93,7 +103,7 @@ describe('EmailService', () => {
     );
   });
 
-  it('should rethrow SMTP errors', async () => {
+  it('should return SEND_FAILED on SMTP errors', async () => {
     await setupService({
       SMTP_HOST: 'smtp.example.com',
     });
@@ -102,8 +112,15 @@ describe('EmailService', () => {
       new Error('SMTP connection timed out'),
     );
 
-    await expect(
-      service.sendEmail('test@example.com', 'Test Subject', '<p>Test</p>'),
-    ).rejects.toThrow('SMTP connection timed out');
+    const result = await service.sendEmail(
+      'test@example.com',
+      'Test Subject',
+      '<p>Test</p>',
+    );
+    expect(result).toEqual({
+      ok: false,
+      reason: 'SEND_FAILED',
+      error: 'SMTP connection timed out',
+    });
   });
 });

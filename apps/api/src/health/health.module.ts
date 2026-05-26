@@ -4,10 +4,7 @@ import { HealthController } from './health.controller';
 import { PrismaModule } from '../database/database.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    BullModule.registerQueue({ name: 'outbox' }),
-  ],
+  imports: [PrismaModule, BullModule.registerQueue({ name: 'outbox' })],
   controllers: [HealthController],
 })
 export class HealthModule {}

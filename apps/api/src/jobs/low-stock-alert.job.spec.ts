@@ -28,14 +28,10 @@ describe('LowStockAlertJob', () => {
       get: jest.fn().mockImplementation((key: string) => {
         return Promise.resolve(redisStore.get(key) || null);
       }),
-      set: jest
-        .fn()
-        .mockImplementation(
-          (key: string, value: string) => {
-            redisStore.set(key, value);
-            return Promise.resolve('OK');
-          },
-        ),
+      set: jest.fn().mockImplementation((key: string, value: string) => {
+        redisStore.set(key, value);
+        return Promise.resolve('OK');
+      }),
     };
     mockPrisma = {
       warehouseItem: {

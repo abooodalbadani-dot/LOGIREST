@@ -11,6 +11,7 @@ import { AllocationService } from '../ledger/allocation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Role, DocumentType, Prisma } from '@prisma/client';
 import { canPerformActionV2, DocumentStatus } from '@logirest/shared-types';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class TransferPostService {
@@ -18,6 +19,7 @@ export class TransferPostService {
     private readonly prisma: PrismaService,
     private readonly allocationService: AllocationService,
     private readonly lockService: LedgerLockService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   /**
@@ -164,6 +166,10 @@ export class TransferPostService {
               status: 'IN_TRANSIT',
               version: transfer.version + 1,
             },
+          });
+
+          this.metricsService.postingOperationsCounter.inc({
+            document_type: 'TRANSFER',
           });
 
           // 4. Record ApprovalEvent
@@ -636,6 +642,10 @@ export class TransferPostService {
               status: 'RECEIVED',
               version: transfer.version + 1,
             },
+          });
+
+          this.metricsService.postingOperationsCounter.inc({
+            document_type: 'TRANSFER',
           });
 
           // 4. Record ApprovalEvent

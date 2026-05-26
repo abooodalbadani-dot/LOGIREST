@@ -78,7 +78,7 @@ describe('Void Workflow (e2e)', () => {
         BullModule.forRoot({
           connection: {
             lazyConnect: true,
-          } as any,
+          },
         }),
         PrismaModule,
         AuthModule,
@@ -193,23 +193,51 @@ describe('Void Workflow (e2e)', () => {
 
   afterAll(async () => {
     if (prisma) {
-      await prisma.stockLedger.deleteMany({ where: { warehouseId } }).catch(() => {});
-      await prisma.costLedger.deleteMany({ where: { warehouseId } }).catch(() => {});
-      await prisma.warehouseItemLot.deleteMany({ where: { warehouseId } }).catch(() => {});
-      await prisma.warehouseItem.deleteMany({ where: { warehouseId } }).catch(() => {});
+      await prisma.stockLedger
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
+      await prisma.costLedger
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
+      await prisma.warehouseItemLot
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
+      await prisma.warehouseItem
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
       await prisma.lotAllocation.deleteMany({}).catch(() => {});
-      await prisma.approvalEvent.deleteMany({ where: { userId: adminId } }).catch(() => {});
-      await prisma.auditLog.deleteMany({ where: { userId: adminId } }).catch(() => {});
-      await prisma.goodsReceivedNote.deleteMany({ where: { warehouseId } }).catch(() => {});
-      await prisma.inventoryIssue.deleteMany({ where: { warehouseId } }).catch(() => {});
-      await prisma.adjustment.deleteMany({ where: { warehouseId } }).catch(() => {});
+      await prisma.approvalEvent
+        .deleteMany({ where: { userId: adminId } })
+        .catch(() => {});
+      await prisma.auditLog
+        .deleteMany({ where: { userId: adminId } })
+        .catch(() => {});
+      await prisma.goodsReceivedNote
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
+      await prisma.inventoryIssue
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
+      await prisma.adjustment
+        .deleteMany({ where: { warehouseId } })
+        .catch(() => {});
       await prisma.lot.deleteMany({ where: { itemId } }).catch(() => {});
       await prisma.item.deleteMany({ where: { categoryId } }).catch(() => {});
-      await prisma.unitOfMeasure.delete({ where: { id: uomId } }).catch(() => {});
-      await prisma.category.delete({ where: { id: categoryId } }).catch(() => {});
-      await prisma.userWarehouseScope.deleteMany({ where: { userId: adminId } }).catch(() => {});
-      await prisma.warehouse.delete({ where: { id: warehouseId } }).catch(() => {});
-      await prisma.documentSequence.deleteMany({ where: { branchId } }).catch(() => {});
+      await prisma.unitOfMeasure
+        .delete({ where: { id: uomId } })
+        .catch(() => {});
+      await prisma.category
+        .delete({ where: { id: categoryId } })
+        .catch(() => {});
+      await prisma.userWarehouseScope
+        .deleteMany({ where: { userId: adminId } })
+        .catch(() => {});
+      await prisma.warehouse
+        .delete({ where: { id: warehouseId } })
+        .catch(() => {});
+      await prisma.documentSequence
+        .deleteMany({ where: { branchId } })
+        .catch(() => {});
       await prisma.branch.delete({ where: { id: branchId } }).catch(() => {});
       await prisma.user.delete({ where: { id: adminId } }).catch(() => {});
       await prisma.$disconnect().catch(() => {});
@@ -283,7 +311,10 @@ describe('Void Workflow (e2e)', () => {
         });
 
       if (createRes.status !== 201) {
-        console.error('Adjustment create error:', JSON.stringify(createRes.body));
+        console.error(
+          'Adjustment create error:',
+          JSON.stringify(createRes.body),
+        );
       }
       expect(createRes.status).toBe(201);
       expect(createRes.body.status).toBe('DRAFT');

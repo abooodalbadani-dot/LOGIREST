@@ -9,6 +9,7 @@ import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
 import { DocumentType, Role } from '@logirest/shared-types';
 import { DocumentType as PrismaDocType } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class GrnPostService {
@@ -16,6 +17,7 @@ export class GrnPostService {
     private readonly prisma: PrismaService,
     private readonly lockService: LedgerLockService,
     private readonly wacService: WacService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async post(
@@ -162,6 +164,10 @@ export class GrnPostService {
           status: 'POSTED',
           version: grn.version + 1,
         },
+      });
+
+      this.metricsService.postingOperationsCounter.inc({
+        document_type: 'GOODS_RECEIVED_NOTE',
       });
 
       // 4. Record ApprovalEvent

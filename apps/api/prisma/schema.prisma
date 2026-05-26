@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["tracing"]
 }
 
 datasource db {
@@ -675,7 +676,7 @@ model IdempotencyLog {
 
 model AuditLog {
   id              String   @id @default(uuid())
-  userId          String
+  userId          String?
   action          String
   targetTable     String
   targetId        String
@@ -684,7 +685,7 @@ model AuditLog {
   ipAddress       String?
   createdAt       DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   // Indexes for incident investigation and audit queries
   @@index([targetTable, targetId])
@@ -799,4 +800,43 @@ model ReconciliationRun {
 
   @@map("reconciliation_runs")
 }
+
+model SystemSetting {
+  key       String   @id
+  value     String   // Encrypted configuration string
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model AuditLogArchive {
+  id              String   @id
+  userId          String?
+  action          String
+  targetTable     String
+  targetId        String
+  beforeStateJson String
+  afterStateJson  String
+  ipAddress       String?
+  createdAt       DateTime
+
+  @@map("audit_logs_archive")
+}
+
+model StockLedgerArchive {
+  id             String       @id
+  postedAt       DateTime
+  warehouseId    String
+  itemId         String
+  lotId          String?
+  quantity       Decimal      @db.Decimal(18, 4)
+  documentId     String
+  documentType   DocumentType
+  idempotencyKey String?
+
+  @@map("stock_ledger_archive")
+}
+
 

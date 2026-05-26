@@ -2,7 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdjustmentVoidService } from '../adjustment-void.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { LedgerLockService } from '../../ledger/ledger-lock.service';
-import { Prisma, Role, DocumentType, AdjustmentDirection, AdjustmentReason } from '@prisma/client';
+import {
+  Prisma,
+  Role,
+  DocumentType,
+  AdjustmentDirection,
+  AdjustmentReason,
+} from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('AdjustmentVoidService', () => {
@@ -226,9 +232,9 @@ describe('AdjustmentVoidService', () => {
       qtyOnHand: new Prisma.Decimal(2),
     });
 
-    await expect(
-      service.void(adjId, 'user-1', Role.ADMIN, 1),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.void(adjId, 'user-1', Role.ADMIN, 1)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should void a POSTED INCREASE adjustment for batched item with lot', async () => {
@@ -353,9 +359,9 @@ describe('AdjustmentVoidService', () => {
   it('should throw NotFoundException if Adjustment does not exist', async () => {
     mockAdjFindUnique.mockResolvedValue(null);
 
-    await expect(
-      service.void('invalid', 'user-1', Role.ADMIN),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.void('invalid', 'user-1', Role.ADMIN)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException if Adjustment is not POSTED', async () => {
@@ -364,9 +370,9 @@ describe('AdjustmentVoidService', () => {
       status: 'DRAFT',
     });
 
-    await expect(
-      service.void('adj-1', 'user-1', Role.ADMIN),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.void('adj-1', 'user-1', Role.ADMIN)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw BadRequestException on version conflict', async () => {

@@ -99,7 +99,12 @@ export class ReportsController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.reportsService.getWacHistory(warehouseId, itemId, startDate, endDate);
+    return this.reportsService.getWacHistory(
+      warehouseId,
+      itemId,
+      startDate,
+      endDate,
+    );
   }
 
   @Get('lot-trace')
@@ -153,13 +158,17 @@ export class ReportsController {
       throw new BadRequestException('type query parameter is required');
     }
 
-    const countResult = await this.reportsService.getReportCount(type, warehouseId, {
-      itemId,
-      startDate,
-      endDate,
-      transactionType,
-      lotId,
-    });
+    const countResult = await this.reportsService.getReportCount(
+      type,
+      warehouseId,
+      {
+        itemId,
+        startDate,
+        endDate,
+        transactionType,
+        lotId,
+      },
+    );
 
     this.reportsService.checkExportLimit(countResult.count);
 
@@ -180,7 +189,10 @@ export class ReportsController {
           endDate,
         });
       case 'lot-trace':
-        if (!lotId) throw new BadRequestException('lotId is required for lot-trace export');
+        if (!lotId)
+          throw new BadRequestException(
+            'lotId is required for lot-trace export',
+          );
         return this.reportsService.exportLotTraceCursor(warehouseId, lotId);
       case 'available-inventory':
       case 'stocktake-variance':
@@ -203,14 +215,36 @@ export class ReportsController {
     filename: string,
     title: string,
     userName: string,
-    columns: { header: string; key: string; width: number; isNumber?: boolean; isDate?: boolean }[],
+    columns: {
+      header: string;
+      key: string;
+      width: number;
+      isNumber?: boolean;
+      isDate?: boolean;
+    }[],
     customStyler?: (worksheet: ExcelJS.Worksheet) => void,
   ) {
     let data = await fetchData();
     if (data.length > MAX_EXPORT_ROWS) {
       data = data.slice(0, MAX_EXPORT_ROWS);
     }
-    await this.generateXlsxResponse(res, filename, title, userName, columns, data, customStyler);
+    const branchName = res.req
+      ? (res.req.query.branchName as string)
+      : undefined;
+    const warehouseName = res.req
+      ? (res.req.query.warehouseName as string)
+      : undefined;
+    await this.generateXlsxResponse(
+      res,
+      filename,
+      title,
+      userName,
+      columns,
+      data,
+      customStyler,
+      branchName,
+      warehouseName,
+    );
   }
 
   @Get('movements/export')
@@ -278,7 +312,12 @@ export class ReportsController {
         { header: 'Lot Number', key: 'lot_no', width: 25 },
         { header: 'Expiry Date', key: 'expiry_date', width: 25, isDate: true },
         { header: 'Qty On Hand', key: 'qtyOnHand', width: 15, isNumber: true },
-        { header: 'Days Remaining', key: 'days_remaining', width: 18, isNumber: true },
+        {
+          header: 'Days Remaining',
+          key: 'days_remaining',
+          width: 18,
+          isNumber: true,
+        },
         { header: 'Status', key: 'status', width: 15 },
       ],
       (ws) => {
@@ -316,7 +355,8 @@ export class ReportsController {
     await this.checkAndExport(
       warehouseId,
       async () => {
-        const data = await this.reportsService.getAvailableInventory(warehouseId);
+        const data =
+          await this.reportsService.getAvailableInventory(warehouseId);
         return data.map((d: any) => ({
           ...d,
           total_value: d.qty_physical * d.wac,
@@ -331,11 +371,31 @@ export class ReportsController {
         { header: 'Item Name', key: 'name', width: 35 },
         { header: 'SKU', key: 'sku', width: 20 },
         { header: 'UoM', key: 'uom', width: 12 },
-        { header: 'Qty On Hand', key: 'qty_physical', width: 18, isNumber: true },
-        { header: 'Qty Allocated', key: 'qty_reserved', width: 18, isNumber: true },
-        { header: 'Qty Available', key: 'qty_available', width: 18, isNumber: true },
+        {
+          header: 'Qty On Hand',
+          key: 'qty_physical',
+          width: 18,
+          isNumber: true,
+        },
+        {
+          header: 'Qty Allocated',
+          key: 'qty_reserved',
+          width: 18,
+          isNumber: true,
+        },
+        {
+          header: 'Qty Available',
+          key: 'qty_available',
+          width: 18,
+          isNumber: true,
+        },
         { header: 'WAC', key: 'wac', width: 15, isNumber: true },
-        { header: 'Total Value', key: 'total_value', width: 18, isNumber: true },
+        {
+          header: 'Total Value',
+          key: 'total_value',
+          width: 18,
+          isNumber: true,
+        },
       ],
       (ws) => {
         const lastRowIndex = ws.rowCount;
@@ -359,7 +419,10 @@ export class ReportsController {
     await this.checkAndExport(
       warehouseId,
       async () => {
-        const data = await this.reportsService.getStocktakeVariance(warehouseId, sessionId);
+        const data = await this.reportsService.getStocktakeVariance(
+          warehouseId,
+          sessionId,
+        );
         return data.map((d: any) => ({
           ...d,
           variance_value: d.variance * d.wac,
@@ -374,10 +437,20 @@ export class ReportsController {
         { header: 'Item Name', key: 'name', width: 35 },
         { header: 'Lot Number', key: 'lotNumber', width: 25 },
         { header: 'System Qty', key: 'system_qty', width: 15, isNumber: true },
-        { header: 'Counted Qty', key: 'counted_qty', width: 15, isNumber: true },
+        {
+          header: 'Counted Qty',
+          key: 'counted_qty',
+          width: 15,
+          isNumber: true,
+        },
         { header: 'Variance', key: 'variance', width: 15, isNumber: true },
         { header: 'WAC', key: 'wac', width: 15, isNumber: true },
-        { header: 'Variance Value', key: 'variance_value', width: 18, isNumber: true },
+        {
+          header: 'Variance Value',
+          key: 'variance_value',
+          width: 18,
+          isNumber: true,
+        },
       ],
       (ws) => {
         ws.eachRow((row, rowNum) => {
@@ -440,7 +513,12 @@ export class ReportsController {
     await this.checkAndExport(
       warehouseId,
       async () => {
-        const data = await this.reportsService.getWacHistory(warehouseId, itemId, startDate, endDate);
+        const data = await this.reportsService.getWacHistory(
+          warehouseId,
+          itemId,
+          startDate,
+          endDate,
+        );
         return data.map((d: any) => ({
           postedAt: d.postedAt,
           documentType: d.documentType,
@@ -480,7 +558,7 @@ export class ReportsController {
       warehouseId,
       async () => {
         const trace = await this.reportsService.getLotTrace(warehouseId, lotId);
-        return trace.allocations as Record<string, unknown>[];
+        return trace.allocations;
       },
       res,
       'lot-traceability',
@@ -511,6 +589,8 @@ export class ReportsController {
     }[],
     data: Record<string, unknown>[],
     customStyler?: (worksheet: ExcelJS.Worksheet) => void,
+    branchName?: string,
+    warehouseName?: string,
   ) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(title);
@@ -530,7 +610,7 @@ export class ReportsController {
 
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const metaRow = worksheet.addRow([
-      `Generated At: ${nowStr} | Generated By: ${userName || 'System'}`,
+      `Generated At: ${nowStr} | Generated By: ${userName || 'System'}${branchName ? ` | Branch: ${branchName}` : ''}${warehouseName ? ` | Warehouse: ${warehouseName}` : ''}`,
     ]);
     metaRow.font = {
       name: 'Helvetica Neue',

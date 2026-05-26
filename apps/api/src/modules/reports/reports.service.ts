@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 import {
   Injectable,
   HttpException,
@@ -611,7 +612,9 @@ export class ReportsService {
         break;
       }
       case 'available-inventory': {
-        count = await this.prisma.warehouseItem.count({ where: { warehouseId } });
+        count = await this.prisma.warehouseItem.count({
+          where: { warehouseId },
+        });
         break;
       }
       case 'wac-history': {
@@ -679,7 +682,11 @@ export class ReportsService {
     try {
       const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
       const parsed = JSON.parse(decoded);
-      if (parsed && typeof parsed.id === 'string' && typeof parsed.offset === 'number') {
+      if (
+        parsed &&
+        typeof parsed.id === 'string' &&
+        typeof parsed.offset === 'number'
+      ) {
         return parsed;
       }
     } catch {
@@ -730,12 +737,18 @@ export class ReportsService {
       queryOpts.skip = 1;
     }
 
-    const results = await this.prisma.stockLedger.findMany(queryOpts) as any[];
-    const hasMore = results.length > currentChunkSize && (currentOffset + currentChunkSize) < MAX_EXPORT_ROWS;
+    const results = (await this.prisma.stockLedger.findMany(
+      queryOpts,
+    )) as any[];
+    const hasMore =
+      results.length > currentChunkSize &&
+      currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
     const data = results.slice(0, currentChunkSize);
 
     const newOffset = currentOffset + data.length;
-    const nextCursor = hasMore ? this.encodeCursor(data[data.length - 1].id, newOffset) : null;
+    const nextCursor = hasMore
+      ? this.encodeCursor(data[data.length - 1].id, newOffset)
+      : null;
 
     return {
       data: data.map((m) => ({
@@ -781,12 +794,18 @@ export class ReportsService {
       queryOpts.skip = 1;
     }
 
-    const results = await this.prisma.warehouseItemLot.findMany(queryOpts) as any[];
-    const hasMore = results.length > currentChunkSize && (currentOffset + currentChunkSize) < MAX_EXPORT_ROWS;
+    const results = (await this.prisma.warehouseItemLot.findMany(
+      queryOpts,
+    )) as any[];
+    const hasMore =
+      results.length > currentChunkSize &&
+      currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
     const data = results.slice(0, currentChunkSize);
 
     const newOffset = currentOffset + data.length;
-    const nextCursor = hasMore ? this.encodeCursor(data[data.length - 1].id, newOffset) : null;
+    const nextCursor = hasMore
+      ? this.encodeCursor(data[data.length - 1].id, newOffset)
+      : null;
 
     const now = new Date();
     return {
@@ -839,12 +858,16 @@ export class ReportsService {
       queryOpts.skip = 1;
     }
 
-    const results = await this.prisma.costLedger.findMany(queryOpts) as any[];
-    const hasMore = results.length > currentChunkSize && (currentOffset + currentChunkSize) < MAX_EXPORT_ROWS;
+    const results = (await this.prisma.costLedger.findMany(queryOpts)) as any[];
+    const hasMore =
+      results.length > currentChunkSize &&
+      currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
     const data = results.slice(0, currentChunkSize);
 
     const newOffset = currentOffset + data.length;
-    const nextCursor = hasMore ? this.encodeCursor(data[data.length - 1].id, newOffset) : null;
+    const nextCursor = hasMore
+      ? this.encodeCursor(data[data.length - 1].id, newOffset)
+      : null;
 
     return {
       data: data.map((d) => ({
@@ -878,11 +901,7 @@ export class ReportsService {
 
   // ─── Private Helpers ─────────────────────────────────────────
 
-  private applyDateFilter(
-    where: any,
-    startDate?: string,
-    endDate?: string,
-  ) {
+  private applyDateFilter(where: any, startDate?: string, endDate?: string) {
     if (startDate || endDate) {
       where.postedAt = {};
       if (startDate) {

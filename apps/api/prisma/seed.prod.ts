@@ -7,10 +7,13 @@ async function main() {
   console.log('Seeding production database reference data...');
 
   // 1. Currencies
-  const sar = await prisma.currency.upsert({
-    where: { code: 'SAR' },
+  const BASE_CURRENCY_CODE = process.env.BASE_CURRENCY_CODE || 'SAR';
+  const BASE_CURRENCY_NAME = process.env.BASE_CURRENCY_NAME || 'Saudi Riyal';
+
+  const baseCurrency = await prisma.currency.upsert({
+    where: { code: BASE_CURRENCY_CODE },
     update: {},
-    create: { code: 'SAR', name: 'Saudi Riyal', isBase: true },
+    create: { code: BASE_CURRENCY_CODE, name: BASE_CURRENCY_NAME, isBase: true },
   });
 
   const usd = await prisma.currency.upsert({
@@ -25,30 +28,7 @@ async function main() {
     create: { code: 'EUR', name: 'Euro', isBase: false },
   });
 
-  // 2. FX Rates
-  await prisma.fXRate.upsert({
-    where: { id: 'fx-sar-usd-1' },
-    update: {},
-    create: {
-      id: 'fx-sar-usd-1',
-      fromCurrencyId: sar.id,
-      toCurrencyId: usd.id,
-      rate: 0.266667,
-      effectiveFrom: new Date(),
-    },
-  });
-
-  await prisma.fXRate.upsert({
-    where: { id: 'fx-usd-sar-1' },
-    update: {},
-    create: {
-      id: 'fx-usd-sar-1',
-      fromCurrencyId: usd.id,
-      toCurrencyId: sar.id,
-      rate: 3.75,
-      effectiveFrom: new Date(),
-    },
-  });
+  // 2. FX Rates (Entered via admin UI post-deployment, skipped in production seed)
 
   // 3. Units of Measure
   const uoms = [

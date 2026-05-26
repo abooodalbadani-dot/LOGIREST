@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { PrismaService } from '../../database/prisma.service';
 import { AdminService } from './admin.service';
+import { EmailService } from '../outbox/email.service';
 import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
@@ -18,12 +19,18 @@ describe('AdminController', () => {
     getRoles: jest.fn(),
   };
 
+  const mockEmailService = {
+    isSmtpConfigured: true,
+    testConnection: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
       providers: [
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: AdminService, useValue: mockAdminService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 

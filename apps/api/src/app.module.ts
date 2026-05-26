@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -24,21 +24,29 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { DocumentSequenceModule } from './modules/sequencing/document-sequence.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 import { IdempotencyService } from './services/idempotency.service';
 import { IdempotencyGuard } from './guards/idempotency.guard';
 import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
+import { CsrfGuard } from './guards/csrf.guard';
 import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
+import { DeprecationInterceptor } from './common/interceptors/deprecation.interceptor';
 import { LockCleanupJob } from './jobs/lock-cleanup.job';
 import { LowStockAlertJob } from './jobs/low-stock-alert.job';
+import { ExpiryAlertJob } from './jobs/expiry-alert.job';
+import { WacConsistencyJob } from './jobs/wac-consistency.job';
 import { NotificationCleanupJob } from './jobs/notification-cleanup.job';
 import { IdempotencyCleanupJob } from './jobs/idempotency-cleanup.job';
 import { TokenCleanupJob } from './jobs/token-cleanup.job';
+import { ArchivalJob } from './jobs/archival.job';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OutboxModule } from './modules/outbox/outbox.module';
 import { RedisModule } from './redis/redis.module';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
+
+import { CorrelationMiddleware } from './common/correlation.middleware';
 
 @Module({
   imports: [
@@ -95,6 +103,7 @@ import * as crypto from 'crypto';
     DocumentSequenceModule,
     OutboxModule,
     RedisModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -102,12 +111,19 @@ import * as crypto from 'crypto';
     IdempotencyService,
     LockCleanupJob,
     LowStockAlertJob,
+    ExpiryAlertJob,
+    WacConsistencyJob,
     NotificationCleanupJob,
     IdempotencyCleanupJob,
     TokenCleanupJob,
+    ArchivalJob,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
     },
     {
       provide: APP_GUARD,
@@ -129,6 +145,14 @@ import * as crypto from 'crypto';
       provide: APP_INTERCEPTOR,
       useClass: IdempotencyInterceptor,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: DeprecationInterceptor,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationMiddleware).forRoutes('*');
+  }
+}

@@ -1,6 +1,7 @@
+import './otel';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, VersioningType } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -34,9 +35,15 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Set global API prefix, excluding /health
-  app.setGlobalPrefix('api/v1', {
-    exclude: ['health'],
+  // Set global API prefix, excluding /health and /metrics
+  app.setGlobalPrefix('api', {
+    exclude: ['health', 'metrics'],
+  });
+
+  // Enable URI-based versioning globally (defaulting to version '1')
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   // Swagger: only expose API docs in non-production environments

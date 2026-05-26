@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { RtrService } from './rtr.service';
 import { PrismaService } from '../database/prisma.service';
+import { OutboxService } from '../modules/outbox/outbox.service';
 import type { Response } from 'express';
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/unbound-method */
@@ -20,6 +21,10 @@ describe('RtrService', () => {
     auditLog: {
       create: jest.fn(),
     },
+    notificationLog: {
+      create: jest.fn(),
+    },
+    $transaction: jest.fn().mockImplementation((cb) => cb(mockPrisma)),
   };
 
   const mockJwtService = {
@@ -31,12 +36,17 @@ describe('RtrService', () => {
     clearCookie: jest.fn(),
   } as unknown as Response;
 
+  const mockOutboxService = {
+    writeEvent: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RtrService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 

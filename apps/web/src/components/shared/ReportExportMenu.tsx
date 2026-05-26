@@ -69,7 +69,7 @@ export function ReportExportMenu({
 
   useEffect(() => {
     if (countCheckParams) {
-      checkReportCount(countCheckParams.type, countCheckParams)
+      checkReportCount(countCheckParams.type, countCheckParams as any)
         .then((result) => {
           setCountState({
             count: result.count,

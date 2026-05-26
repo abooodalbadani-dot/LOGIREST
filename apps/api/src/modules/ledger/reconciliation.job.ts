@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { Prisma, Role } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class ReconciliationJob {
@@ -11,6 +12,7 @@ export class ReconciliationJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   @Cron('0 1 * * *', { name: 'daily-reconciliation' })
@@ -188,6 +190,11 @@ export class ReconciliationJob {
         durationMs,
       },
     });
+
+    const totalDiscrepancies = discrepancyCount + lotDiscrepanciesFound;
+    if (totalDiscrepancies > 0) {
+      this.metricsService.reconciliationDiscrepanciesCounter.inc(totalDiscrepancies);
+    }
 
     this.logger.log(
       `Reconciliation job completed in ${durationMs}ms. Processed ${processedCount} items, found ${discrepancyCount} discrepancies, detected ${lotDiscrepanciesFound} lot-level drifts.`,

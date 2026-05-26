@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { z } from 'zod';
+import { apiClient } from '@/lib/api/client';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,7 +55,7 @@ export function MailSettingsClient() {
   const [isTesting, setIsTesting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isDirty }, setValue, reset, control } = useForm<AdminSettings>({
+  const { register, handleSubmit, formState: { errors, isDirty }, setValue, reset, control, getValues } = useForm<AdminSettings>({
     resolver: zodResolver(AdminSettingsSchema),
     values: currentSettings as AdminSettings,
   });
@@ -77,11 +79,26 @@ export function MailSettingsClient() {
 
   const handleTestConnection = async () => {
     setIsTesting(true);
-    // Simulate API call for testing SMTP
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsTesting(false);
-    playSound('success');
-    toast.success(t('connection_success'));
+    try {
+      const formValues = getValues();
+      const res = await apiClient.post(
+        '/admin/settings/test-email',
+        z.object({ ok: z.boolean(), error: z.string().optional() }),
+        formValues
+      );
+      setIsTesting(false);
+      if (res.ok) {
+        playSound('success');
+        toast.success(t('connection_success'));
+      } else {
+        playSound('error');
+        toast.error(res.error || 'Failed to verify SMTP connection.');
+      }
+    } catch (err: any) {
+      setIsTesting(false);
+      playSound('error');
+      toast.error(err.message || 'SMTP connection test failed.');
+    }
   };
 
   if (isLoading) {

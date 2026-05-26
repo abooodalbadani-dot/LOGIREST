@@ -60,7 +60,7 @@ describe('DocumentSequenceService', () => {
       branchId,
     );
 
-    expect(result).toBe(`PURCHASE_ORDER-${currentYear}-HQ-00006`);
+    expect(result).toBe(`PO-${currentYear}-HQ-00006`);
     expect(mockBranchFindUnique).toHaveBeenCalledWith({
       where: { id: branchId },
       select: { code: true },
@@ -92,14 +92,14 @@ describe('DocumentSequenceService', () => {
       branchId,
     );
 
-    expect(result).toBe(`PURCHASE_ORDER-${currentYear}-HQ-00001`);
+    expect(result).toBe(`PO-${currentYear}-HQ-00001`);
     expect(mockDocumentSequenceCreate).toHaveBeenCalledWith({
       data: {
         branchId,
         documentType: DocumentType.PURCHASE_ORDER,
         year: currentYear,
         currentSequence: 1,
-        prefix: `PURCHASE_ORDER-${currentYear}-HQ`,
+        prefix: `PO-${currentYear}-HQ`,
       },
     });
   });
