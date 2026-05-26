@@ -1,0 +1,12 @@
+import { DocumentStatus } from '../contracts/statuses';
+import { DocumentType } from '../contracts/role-capabilities';
+import { UserRole as Role } from '../rbac';
+export type { DocumentStatus, DocumentType, Role };
+export type DocumentAction = 'EDIT' | 'SUBMIT' | 'APPROVE' | 'REJECT' | 'POST' | 'CANCEL' | 'VOID' | 'CONVERT_TO_PO' | 'VIEW' | 'START' | 'COUNT' | 'REVIEW_VARIANCE' | 'FULFILL' | 'DOWNLOAD_PDF' | 'INTERNAL_MOVEMENT' | 'SHIP' | 'RECEIVE' | 'CLOSE';
+export declare function canPerformActionV2(documentType: DocumentType, status: DocumentStatus, action: DocumentAction, role?: Role | string): boolean;
+export declare function isDocumentLocked(type: DocumentType, status: string): boolean;
+export declare function isPendingStatus(type: DocumentType, status: string): boolean;
+export declare function isApprovedStatus(type: DocumentType, status: string): boolean;
+export declare function isPostedStatus(type: DocumentType, status: string): boolean;
+export declare function isCompletedStatus(type: DocumentType, status: string): boolean;
+export declare function getNextStatusV2(documentType: DocumentType, status: DocumentStatus, action: DocumentAction): DocumentStatus | null;

@@ -1,0 +1,14 @@
+export declare const ROLES: readonly ["ADMIN", "GM", "INV_MGR", "WH_KEEPER", "PROC_OFFICER", "APPROVER", "AUDITOR", "VIEWER", "KITCHEN_CHIEF", "STORE_MGR"];
+export type Role = (typeof ROLES)[number];
+export declare const LOT_STATUSES: readonly ["ACTIVE", "HOLD", "EXPIRED", "QUARANTINE"];
+export type LotStatus = (typeof LOT_STATUSES)[number];
+export declare const ADJUSTMENT_DIRECTIONS: readonly ["IN", "OUT"];
+export type AdjustmentDirection = (typeof ADJUSTMENT_DIRECTIONS)[number];
+export declare const ADJUSTMENT_REASONS: readonly ["THEFT", "DAMAGE", "SPOILAGE", "CORRECTION", "ADMIN_OVERRIDE"];
+export type AdjustmentReason = (typeof ADJUSTMENT_REASONS)[number];
+export declare const DOCUMENT_TYPES: readonly ["PURCHASE_REQUEST", "PURCHASE_ORDER", "GOODS_RECEIVED_NOTE", "INVENTORY_ISSUE", "TRANSFER", "ADJUSTMENT", "KITCHEN_REQUEST", "STOCKTAKE"];
+export type DocumentType = (typeof DOCUMENT_TYPES)[number];
+export declare const LOCK_TYPES: readonly ["STOCKTAKE", "MANUAL"];
+export type LockType = (typeof LOCK_TYPES)[number];
+export declare const STOCKTAKE_STATUSES: readonly ["DRAFT", "STARTED", "COUNTING", "REVIEW", "APPROVED", "POSTED", "CLOSED", "CANCELLED"];
+export type StocktakeStatusEnum = (typeof STOCKTAKE_STATUSES)[number];

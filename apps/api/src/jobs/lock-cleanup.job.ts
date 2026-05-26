@@ -1,31 +1,17 @@
 import {
   Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
   Logger,
 } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
-export class LockCleanupJob implements OnModuleInit, OnModuleDestroy {
+export class LockCleanupJob {
   private readonly logger = new Logger(LockCleanupJob.name);
-  private intervalId: NodeJS.Timeout | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
-  onModuleInit() {
-    // Run lock cleanup check every 60 seconds
-    this.intervalId = setInterval(() => this.cleanupExpiredLocks(), 60000);
-    // Execute immediate cleanup check on startup
-    void this.cleanupExpiredLocks();
-  }
-
-  onModuleDestroy() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-  }
-
+  @Cron('*/1 * * * *', { name: 'lock-cleanup' })
   async cleanupExpiredLocks() {
     try {
       this.logger.log('Running expired stocktake locks cleanup...');

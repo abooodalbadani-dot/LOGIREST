@@ -25,12 +25,10 @@ describe('LockCleanupJob', () => {
 
     job = module.get<LockCleanupJob>(LockCleanupJob);
     jest.clearAllMocks();
-    jest.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    job.onModuleDestroy();
+    // Timers removed
   });
 
   it('should do nothing if no expired locks are found', async () => {

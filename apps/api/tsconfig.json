@@ -16,8 +16,12 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@logirest/shared-types": ["../../packages/shared-types/src/index.ts"],
-      "@logirest/shared-types/*": ["../../packages/shared-types/src/*"]
+      "@logirest/shared-types": [
+        "../../packages/shared-types/src/index.ts"
+      ],
+      "@logirest/shared-types/*": [
+        "../../packages/shared-types/src/*"
+      ]
     },
     "incremental": true,
     "skipLibCheck": true,
@@ -25,6 +29,7 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
+    "noEmit": false,
     "noFallthroughCasesInSwitch": false
   },
   "include": [

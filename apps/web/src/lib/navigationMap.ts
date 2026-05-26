@@ -102,6 +102,8 @@ export const navigationMap: NavGroup[] = [
     items: [
       { key: 'users', href: '/admin/users', resource: 'admin', labelKey: 'users', icon: ShieldCheck },
       { key: 'roles', href: '/admin/roles', resource: 'admin', labelKey: 'roles', icon: Shield },
+      { key: 'frozen_items', href: '/admin/frozen-items', resource: 'admin', labelKey: 'frozen_items', icon: Layers },
+      { key: 'outbox', href: '/admin/outbox', resource: 'admin', labelKey: 'outbox', icon: Mail },
       { key: 'audit', href: '/admin/audit-logs', resource: 'admin', labelKey: 'audit_log', icon: History },
       { key: 'restaurant_profile', href: '/admin/restaurant-profile', resource: 'admin', labelKey: 'restaurant_profile', icon: Store },
     ]

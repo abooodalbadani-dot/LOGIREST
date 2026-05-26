@@ -165,6 +165,8 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'roles_matrix', href: '/admin/roles/matrix', resource: 'admin', labelKey: 'roles_matrix', icon: Shield },
         { key: 'settings', href: '/admin/settings', resource: 'admin', labelKey: 'settings', icon: Sliders },
         { key: 'mail_settings', href: '/admin/mail-settings', resource: 'admin', labelKey: 'mail_settings', icon: Sliders },
+        { key: 'frozen_items', href: '/admin/frozen-items', resource: 'admin', labelKey: 'frozen_items', icon: Layers },
+        { key: 'outbox', href: '/admin/outbox', resource: 'admin', labelKey: 'outbox', icon: Mail },
         { key: 'restaurant_profile', href: '/admin/restaurant-profile', resource: 'admin', labelKey: 'restaurant_profile', icon: Store },
         { key: 'audit', href: '/admin/audit-logs', resource: 'admin', labelKey: 'audit_log', icon: History },
       ]
