@@ -6,6 +6,36 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding production database reference data...');
 
+  // ─── System Settings (M5) ────────────────────────────────────
+  const baseCurrencyCode = process.env.BASE_CURRENCY_CODE || 'SAR';
+  const systemSettingsConfig = {
+    system_name: 'LogiRest System',
+    base_currency: baseCurrencyCode,
+    branch_id: 'HQ',
+    timezone: 'Asia/Riyadh',
+    locale_default: 'en',
+    sender_name: 'LogiRest Alerts',
+    reply_to_email: 'alerts@logirest.app',
+    mail_provider: 'smtp',
+    smtp_host: process.env.SMTP_HOST || '',
+    smtp_port: Number(process.env.SMTP_PORT) || 587,
+    smtp_user: process.env.SMTP_USER || '',
+    smtp_password: '',
+    smtp_encryption: 'tls',
+  };
+
+  await prisma.systemSetting.upsert({
+    where: { key: 'system_settings' },
+    update: {
+      value: JSON.stringify(systemSettingsConfig),
+    },
+    create: {
+      key: 'system_settings',
+      value: JSON.stringify(systemSettingsConfig),
+      version: 1,
+    },
+  });
+
   // 1. Currencies
   const BASE_CURRENCY_CODE = process.env.BASE_CURRENCY_CODE || 'SAR';
   const BASE_CURRENCY_NAME = process.env.BASE_CURRENCY_NAME || 'Saudi Riyal';

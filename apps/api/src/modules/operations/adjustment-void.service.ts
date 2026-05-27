@@ -164,6 +164,70 @@ export class AdjustmentVoidService {
               },
             });
           }
+
+          // WAC recalculation & Cost Ledger entry for IN adjustment void
+          const costEntries = await tx.costLedger.findMany({
+            where: {
+              warehouseId: adj.warehouseId,
+              itemId: item.id,
+            },
+            orderBy: { postedAt: 'asc' },
+          });
+
+          let recalcQty = new Prisma.Decimal(0);
+          let recalcWac = new Prisma.Decimal(0);
+
+          for (const entry of costEntries) {
+            if (
+              entry.documentId === adj.id &&
+              entry.documentType === DocumentType.ADJUSTMENT
+            ) {
+              continue;
+            }
+
+            const entryQty = new Prisma.Decimal(entry.quantity);
+            if (entryQty.isZero()) continue;
+
+            if (entryQty.gt(0)) {
+              const entryPrice = new Prisma.Decimal(entry.unitPrice);
+              if (recalcQty.lte(0)) {
+                recalcWac = entryPrice;
+              } else {
+                recalcWac = recalcQty
+                  .mul(recalcWac)
+                  .add(entryQty.mul(entryPrice))
+                  .div(recalcQty.add(entryQty));
+              }
+            }
+
+            recalcQty = recalcQty.add(entryQty);
+          }
+
+          const newWac = recalcQty.lte(0) ? new Prisma.Decimal(0) : recalcWac;
+          const roundedWac = newWac.toDecimalPlaces(4);
+
+          await tx.warehouseItem.update({
+            where: {
+              warehouseId_itemId: {
+                warehouseId: adj.warehouseId,
+                itemId: item.id,
+              },
+            },
+            data: { wac: roundedWac },
+          });
+
+          const unitCost = line.unitCost ? Number(line.unitCost) : 0;
+          await tx.costLedger.create({
+            data: {
+              warehouseId: adj.warehouseId,
+              itemId: item.id,
+              quantity: -qtyVal,
+              unitPrice: unitCost,
+              newWac: roundedWac,
+              documentId: adj.id,
+              documentType: DocumentType.ADJUSTMENT,
+            },
+          });
         } else {
           if (item.isBatched || item.hasExpiry) {
             const lotId = line.lotId;

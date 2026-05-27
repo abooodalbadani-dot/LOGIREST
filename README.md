@@ -77,3 +77,19 @@ npm run test:e2e --workspace=api
 # Run backend unit tests
 npm run test --workspace=api
 ```
+
+---
+
+## 🔒 Security Warning: Production Secrets Management
+
+> [!CAUTION]
+> **CRITICAL SECURITY REQUIREMENT FOR PRODUCTION**
+> 
+> Never check in, expose, or share plaintext production secrets. In production environments, critical environment variables **MUST** be managed securely via an enterprise secrets vault (e.g., **AWS Secrets Manager**, **Vercel Environment Variables**, **Docker Secrets**, **Google Secret Manager**, or **Azure Key Vault**).
+> 
+> The affected secrets are:
+> 1. `JWT_ACCESS_SECRET` - Protects secure session and access token generation.
+> 2. `JWT_REFRESH_SECRET` - Secures token rotation and user session validation.
+> 3. `ENCRYPTION_KEY` - Used to encrypt sensitive DB configurations (e.g., SMTP passwords).
+> 
+> Failing to manage these securely in production puts user sessions and system integrity at risk.

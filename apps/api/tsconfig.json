@@ -17,7 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "@logirest/shared-types": [
-        "../../packages/shared-types/src/index.ts"
+        "../../packages/shared-types/src/index"
       ],
       "@logirest/shared-types/*": [
         "../../packages/shared-types/src/*"
@@ -34,7 +34,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts",
-    "../../packages/shared-types/src/**/*.ts"
+    "test/**/*.ts"
   ]
 }

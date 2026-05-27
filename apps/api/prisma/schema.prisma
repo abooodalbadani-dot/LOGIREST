@@ -624,6 +624,7 @@ model StockLedger {
   lot       Lot?      @relation(fields: [lotId], references: [id], onDelete: Restrict)
 
   @@index([warehouseId, itemId, postedAt(sort: Desc)])
+  @@index([warehouseId, itemId])
   @@map("stock_ledger")
 }
 

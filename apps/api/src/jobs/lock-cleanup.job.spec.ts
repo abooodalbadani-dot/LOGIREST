@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LockCleanupJob } from './lock-cleanup.job';
 import { PrismaService } from '../database/prisma.service';
+import { RedisLockService } from '../redis/redis-lock.service';
 
 describe('LockCleanupJob', () => {
   let job: LockCleanupJob;
@@ -15,11 +16,16 @@ describe('LockCleanupJob', () => {
     },
   };
 
+  const mockRedisLockService = {
+    runWithLock: jest.fn().mockImplementation((key, ttl, cb) => cb()),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LockCleanupJob,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: RedisLockService, useValue: mockRedisLockService },
       ],
     }).compile();
 

@@ -19,6 +19,8 @@ describe('AdjustmentVoidService', () => {
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockStockLedgerCreate = jest.fn();
+  const mockCostLedgerFindMany = jest.fn();
+  const mockCostLedgerCreate = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -36,6 +38,10 @@ describe('AdjustmentVoidService', () => {
     },
     stockLedger: {
       create: mockStockLedgerCreate,
+    },
+    costLedger: {
+      findMany: mockCostLedgerFindMany,
+      create: mockCostLedgerCreate,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -71,6 +77,7 @@ describe('AdjustmentVoidService', () => {
 
     service = module.get<AdjustmentVoidService>(AdjustmentVoidService);
     jest.clearAllMocks();
+    mockCostLedgerFindMany.mockResolvedValue([]);
   });
 
   it('should void a POSTED INCREASE adjustment successfully (unbatched item)', async () => {
