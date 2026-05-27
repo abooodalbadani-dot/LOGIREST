@@ -6,6 +6,8 @@ import { AllocationService } from '../ledger/allocation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Prisma, Role, DocumentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { OutboxService } from '../outbox/outbox.service';
+import { MetricsService } from '../metrics/metrics.service';
 
 describe('TransferPostService', () => {
   let service: TransferPostService;
@@ -26,6 +28,7 @@ describe('TransferPostService', () => {
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
   const mockUserWarehouseScopeFindUnique = jest.fn();
+  const mockNotificationLogCreate = jest.fn();
 
   const mockPrismaTx = {
     transfer: {
@@ -66,6 +69,9 @@ describe('TransferPostService', () => {
     auditLog: {
       create: mockAuditLogCreate,
     },
+    notificationLog: {
+      create: mockNotificationLogCreate,
+    },
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {
@@ -86,6 +92,16 @@ describe('TransferPostService', () => {
     lockItem: jest.fn(),
   } as unknown as LedgerLockService;
 
+  const mockOutboxService = {
+    writeEvent: jest.fn().mockResolvedValue({ id: 'event-outbox-1' }),
+  };
+
+  const mockMetricsService = {
+    postingOperationsCounter: {
+      inc: jest.fn(),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -93,6 +109,8 @@ describe('TransferPostService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AllocationService, useValue: mockAllocationService },
         { provide: LedgerLockService, useValue: mockLockService },
+        { provide: OutboxService, useValue: mockOutboxService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 
@@ -262,6 +280,34 @@ describe('TransferPostService', () => {
           documentId: transferId,
           documentType: DocumentType.TRANSFER,
         },
+      });
+
+      expect(mockOutboxService.writeEvent).toHaveBeenCalledWith(
+        mockPrismaTx,
+        'TRANSFER_RECEIVED',
+        expect.objectContaining({
+          id: transferId,
+          fromWarehouseId: 'wh-source',
+          toWarehouseId: 'wh-dest',
+        }),
+      );
+
+      expect(mockNotificationLogCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          targetRole: Role.WH_KEEPER,
+          warehouseId: 'wh-source',
+          documentType: DocumentType.TRANSFER,
+          documentId: transferId,
+        }),
+      });
+
+      expect(mockNotificationLogCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          targetRole: Role.WH_KEEPER,
+          warehouseId: 'wh-dest',
+          documentType: DocumentType.TRANSFER,
+          documentId: transferId,
+        }),
       });
     });
 

@@ -394,4 +394,59 @@ describe('OutboxWorker', () => {
       },
     });
   });
+
+  it('should process EXPIRY_WARNING event, resolve recipients, and render bilingual template with lot details', async () => {
+    const mockEvent = {
+      id: 'event-expiry-1',
+      eventType: 'EXPIRY_WARNING',
+      payload: {
+        id: 'lot-123',
+        itemName: 'Milk 1L',
+        sku: 'SKU-MILK-1',
+        lotNumber: 'LOT-2026-05',
+        warehouseName: 'Main Store',
+        qtyOnHand: 150,
+        uomCode: 'PCS',
+        expiryDate: '2026-06-03T00:00:00Z',
+      },
+      status: 'PENDING',
+      attempts: 0,
+    };
+
+    mockPrisma.outboxEvent.findUnique.mockResolvedValue(mockEvent);
+    mockPrisma.user.findMany.mockResolvedValue([
+      { email: 'manager@example.com' },
+    ]);
+
+    const mockJob = {
+      id: 'job-expiry',
+      data: { eventId: 'event-expiry-1' },
+    } as unknown as Job<{ eventId: string }>;
+
+    await worker.process(mockJob);
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+      where: {
+        role: { in: [Role.INV_MGR] },
+        isActive: true,
+      },
+      select: { email: true },
+    });
+
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['manager@example.com'],
+      '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
+      expect.stringContaining('Expiry Warning / تحذير انتهاء الصلاحية'),
+    );
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['manager@example.com'],
+      '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
+      expect.stringContaining('LOT-2026-05'),
+    );
+    expect(mockEmail.sendEmail).toHaveBeenCalledWith(
+      ['manager@example.com'],
+      '⚠️ Expiry Alert: Milk 1L in Main Store expiring soon',
+      expect.stringContaining('150 PCS'),
+    );
+  });
 });

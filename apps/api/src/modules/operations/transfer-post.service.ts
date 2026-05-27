@@ -12,6 +12,7 @@ import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Role, DocumentType, Prisma } from '@prisma/client';
 import { canPerformActionV2, DocumentStatus } from '@logirest/shared-types';
 import { MetricsService } from '../metrics/metrics.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 @Injectable()
 export class TransferPostService {
@@ -20,6 +21,7 @@ export class TransferPostService {
     private readonly allocationService: AllocationService,
     private readonly lockService: LedgerLockService,
     private readonly metricsService: MetricsService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   /**
@@ -686,6 +688,39 @@ export class TransferPostService {
                 version: transfer.version + 1,
               }),
               ipAddress: ipAddress || null,
+            },
+          });
+
+          // Dispatch TRANSFER_RECEIVED outbox event
+          await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
+            id: transfer.id,
+            documentNumber: transfer.transferNumber || transfer.id,
+            fromWarehouseId: transfer.fromWarehouseId,
+            toWarehouseId: transfer.toWarehouseId,
+            timestamp: new Date().toISOString(),
+          });
+
+          // Notification log for source warehouse keeper
+          await tx.notificationLog.create({
+            data: {
+              targetRole: Role.WH_KEEPER,
+              warehouseId: transfer.fromWarehouseId,
+              message: `Transfer ${transfer.transferNumber || transfer.id} has been received by destination warehouse.`,
+              isRead: false,
+              documentType: DocumentType.TRANSFER,
+              documentId: transfer.id,
+            },
+          });
+
+          // Notification log for destination warehouse keeper
+          await tx.notificationLog.create({
+            data: {
+              targetRole: Role.WH_KEEPER,
+              warehouseId: transfer.toWarehouseId,
+              message: `Transfer ${transfer.transferNumber || transfer.id} has been successfully received and stocked.`,
+              isRead: false,
+              documentType: DocumentType.TRANSFER,
+              documentId: transfer.id,
             },
           });
 

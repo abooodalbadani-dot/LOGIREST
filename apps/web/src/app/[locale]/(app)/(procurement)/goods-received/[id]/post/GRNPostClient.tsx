@@ -12,7 +12,7 @@ import { useGRN } from '@/features/purchasing/hooks/useGRN';
 import { useAuth } from '@/providers/AuthProvider';
 import { canPerformActionV2, isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useSettings } from '@/hooks/useSettings';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
 import { formatCurrency, formatRate, formatNumber } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
@@ -63,8 +63,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
   const postMutation = usePostGRN();
 
-  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency;
+  const { baseCurrency, isLoading: loadingSettings } = useSettings();
   const supplierCurrency = grn?.currency_id;
 
   // Live FX conversion logic for display
@@ -275,7 +274,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="space-y-6">
  <div className="flex justify-between items-center">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('total')} ({supplierCurrency})</p>
- <p dir="ltr" className="font-mono font-semibold text-title-sm">{formatCurrency(totalSupplier, supplierCurrency || 'USD', locale)}</p>
+ <p dir="ltr" className="font-mono font-semibold text-title-sm">{formatCurrency(totalSupplier, supplierCurrency, locale)}</p>
  </div>
  
  <div className="space-y-3 bg-surface-container-highest/50 p-6 rounded-2xl border border-white/5">
@@ -298,7 +297,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
  <div className="relative z-10 flex flex-col gap-1">
  <p className="text-label-xs font-semibold uppercase text-primary/60">{tc('base_currency')}</p>
- <p dir="ltr" className="font-mono font-semibold text-headline-lg text-primary">{formatCurrency(totalBase, baseCurrency || 'SAR', locale)}</p>
+ <p dir="ltr" className="font-mono font-semibold text-headline-lg text-primary">{formatCurrency(totalBase, baseCurrency, locale)}</p>
  </div>
  </div>
  </div>

@@ -18,6 +18,7 @@ import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { EmailService } from '../outbox/email.service';
 
 import { AdminService } from './admin.service';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
@@ -116,7 +117,7 @@ export class AdminController {
   async updateSettings(
     @CurrentUser('role') role: Role,
     @CurrentUser('id') userId: string,
-    @Body() dto: any,
+    @Body() dto: UpdateSettingsDto,
   ) {
     if (role !== 'ADMIN') {
       throw new ForbiddenException(

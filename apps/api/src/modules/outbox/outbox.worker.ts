@@ -29,6 +29,8 @@ interface OutboxPayload {
   issueNumber?: string;
   postedByUserId?: string;
   totalLines?: number;
+  lotNumber?: string;
+  expiryDate?: string;
 }
 
 @Processor('outbox')
@@ -201,6 +203,7 @@ export class OutboxWorker extends WorkerHost {
       case 'ADJUSTMENT_POSTED':
       case 'STOCKTAKE_POSTED':
       case 'LOW_STOCK_ALERT':
+      case 'EXPIRY_WARNING':
         targetRoles = [Role.INV_MGR];
         if (
           eventType === 'ADJUSTMENT_POSTED' ||
@@ -329,6 +332,20 @@ export class OutboxWorker extends WorkerHost {
           <p><strong>Current Balance</strong>: ${data.qtyOnHand || 0} ${data.uomCode || ''}</p>
           <p><strong>Reorder Threshold</strong>: ${data.reorderPoint || 0} ${data.uomCode || ''}</p>
           <p>Please initiate a new purchase request to replenish stock immediately.</p>
+        `;
+        break;
+      case 'EXPIRY_WARNING':
+        subject = `⚠️ Expiry Alert: ${data.itemName || 'Item'} in ${data.warehouseName || 'Warehouse'} expiring soon`;
+        body = `
+          <div class="alert-badge">
+            <strong>Expiry Warning / تحذير انتهاء الصلاحية:</strong> A lot is approaching its expiry date within 7 days!
+          </div>
+          <p><strong>Item / الصنف</strong>: ${data.itemName || 'N/A'} (SKU: ${data.sku || 'N/A'})</p>
+          <p><strong>Lot Number / رقم التشغيلة</strong>: ${data.lotNumber || 'N/A'}</p>
+          <p><strong>Warehouse / المستودع</strong>: ${data.warehouseName || 'N/A'}</p>
+          <p><strong>Qty On Hand / الكمية المتوفرة</strong>: ${data.qtyOnHand || 0} ${data.uomCode || ''}</p>
+          <p><strong>Expiry Date / تاريخ انتهاء الصلاحية</strong>: ${data.expiryDate ? new Date(data.expiryDate).toLocaleDateString() : 'N/A'}</p>
+          <p>Please take immediate action to consume or write off this stock / يرجى اتخاذ إجراء فوري لاستهلاك أو شطب هذا المخزون.</p>
         `;
         break;
       case 'SUPPLIER_PO_NOTIFIED':
