@@ -12,6 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { DocumentType as PrismaDocType } from '@prisma/client';
+import { MetricsService } from '../metrics/metrics.service';
 
 describe('WorkflowService', () => {
   let service: WorkflowService;
@@ -53,6 +54,12 @@ describe('WorkflowService', () => {
     writeEvent: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockMetricsService = {
+    postingOperationsCounter: {
+      inc: jest.fn(),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -60,6 +67,7 @@ describe('WorkflowService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ConcurrencyService, useValue: mockConcurrencyService },
         { provide: OutboxService, useValue: mockOutboxService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 

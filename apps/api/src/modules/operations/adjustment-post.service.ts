@@ -7,7 +7,12 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
-import { Role, DocumentType, AdjustmentDirection } from '@prisma/client';
+import {
+  Role,
+  DocumentType,
+  AdjustmentDirection,
+  Prisma,
+} from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
@@ -64,9 +69,26 @@ export class AdjustmentPostService {
             line.unitCost === undefined ||
             Number(line.unitCost) <= 0
           ) {
-            throw new BadRequestException(
-              `Unit cost is required and must be > 0. For promotional items, enter the standard market value or 0.0001 if strictly required by finance.`,
-            );
+            const whItem = await tx.warehouseItem.findUnique({
+              where: {
+                warehouseId_itemId: {
+                  warehouseId: adj.warehouseId,
+                  itemId: line.itemId,
+                },
+              },
+            });
+            const currentWac = whItem ? Number(whItem.wac) : 0;
+            if (currentWac > 0) {
+              await tx.adjustmentLine.update({
+                where: { id: line.id },
+                data: { unitCost: currentWac },
+              });
+              line.unitCost = new Prisma.Decimal(currentWac);
+            } else {
+              throw new BadRequestException(
+                `Unit cost is required for manual Adjustment IN because no prior WAC history exists in this warehouse for SKU ${line.item.sku}.`,
+              );
+            }
           }
         }
       }

@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
@@ -21,6 +22,11 @@ export class TransferVoidService {
     clientVersion?: number,
     ipAddress?: string,
   ): Promise<any> {
+    if (userRole !== Role.ADMIN && userRole !== Role.INV_MGR) {
+      throw new ForbiddenException(
+        'Only System Administrators or Inventory Managers can void documents',
+      );
+    }
     return this.prisma.$transaction(async (tx) => {
       const transfer = await tx.transfer.findUnique({
         where: { id: transferId },

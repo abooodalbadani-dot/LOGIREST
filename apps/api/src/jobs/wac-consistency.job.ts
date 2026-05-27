@@ -31,21 +31,28 @@ export class WacConsistencyJob {
         },
       });
 
+      // O(2) queries regardless of item count
+      const latestWacByItem = await this.prisma.$queryRaw<
+        Array<{ warehouseId: string; itemId: string; newWac: any }>
+      >`
+        SELECT DISTINCT ON ("warehouseId", "itemId")
+          "warehouseId", "itemId", "newWac"
+        FROM "cost_ledger"
+        ORDER BY "warehouseId", "itemId", "postedAt" DESC
+      `;
+
+      const wacMap = new Map<string, number>();
+      for (const row of latestWacByItem) {
+        wacMap.set(`${row.warehouseId}:${row.itemId}`, Number(row.newWac));
+      }
+
       let discrepancyCount = 0;
 
       for (const whItem of warehouseItems) {
-        // Retrieve the latest CostLedger transaction for this warehouse item
-        const latestCostLedger = await this.prisma.costLedger.findFirst({
-          where: {
-            warehouseId: whItem.warehouseId,
-            itemId: whItem.itemId,
-          },
-          orderBy: {
-            postedAt: 'desc',
-          },
-        });
+        const key = `${whItem.warehouseId}:${whItem.itemId}`;
+        const hasLedgerEntry = wacMap.has(key);
 
-        if (!latestCostLedger) {
+        if (!hasLedgerEntry) {
           // If no cost ledger entries exist, WAC should be 0.
           const wac = Number(whItem.wac);
           if (wac > 0) {
@@ -64,7 +71,7 @@ export class WacConsistencyJob {
         }
 
         const wac = Number(whItem.wac);
-        const ledgerWac = Number(latestCostLedger.newWac);
+        const ledgerWac = wacMap.get(key) ?? 0;
 
         let variance = 0;
         if (ledgerWac > 0) {

@@ -14,7 +14,7 @@ import { OperationsModule } from '../src/modules/operations/operations.module';
 import { DocumentSequenceModule } from '../src/modules/sequencing/document-sequence.module';
 import { WarehouseLockModule } from '../src/modules/warehouse-lock/warehouse-lock.module';
 import { OutboxModule } from '../src/modules/outbox/outbox.module';
-import { RedisModule } from '../src/redis/redis.module';
+import { MetricsModule } from '../src/modules/metrics/metrics.module';
 import { BullModule } from '@nestjs/bullmq';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard';
@@ -88,6 +88,7 @@ describe('Void Workflow (e2e)', () => {
         OperationsModule,
         DocumentSequenceModule,
         OutboxModule,
+        MetricsModule,
       ],
       providers: [
         IdempotencyService,
@@ -248,8 +249,6 @@ describe('Void Workflow (e2e)', () => {
   }, 120000);
 
   describe('GRN Void (POST /api/v1/operations/grn/:id/void)', () => {
-    let grnId: string;
-
     it('should create and POST a GRN', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/purchase-orders')

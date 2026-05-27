@@ -5,6 +5,30 @@ import { ReportsService } from './reports.service';
 import { PrismaService } from '../../database/prisma.service';
 import type { Response } from 'express';
 
+jest.mock('exceljs', () => {
+  return {
+    stream: {
+      xlsx: {
+        WorkbookWriter: jest.fn().mockImplementation(() => {
+          return {
+            addWorksheet: jest.fn().mockImplementation(() => {
+              return {
+                addRow: jest.fn().mockReturnValue({
+                  font: {},
+                  commit: jest.fn(),
+                  eachCell: jest.fn(),
+                }),
+                getColumn: jest.fn().mockReturnValue({}),
+              };
+            }),
+            commit: jest.fn().mockResolvedValue(undefined),
+          };
+        }),
+      },
+    },
+  };
+});
+
 describe('ReportsController', () => {
   let controller: ReportsController;
 
@@ -64,6 +88,9 @@ describe('ReportsController', () => {
     },
     lotAllocation: {
       findMany: jest.fn(),
+    },
+    systemSetting: {
+      findUnique: jest.fn(),
     },
   };
 
@@ -458,6 +485,9 @@ describe('ReportsController', () => {
         return true;
       }),
       end: jest.fn(),
+      on: jest.fn().mockReturnThis(),
+      once: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
     };
 
     it('should set headers and return valid movements spreadsheet', async () => {

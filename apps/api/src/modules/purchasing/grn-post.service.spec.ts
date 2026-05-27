@@ -6,9 +6,16 @@ import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
 import { Prisma, Role } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { MetricsService } from '../metrics/metrics.service';
 
 describe('GrnPostService', () => {
   let service: GrnPostService;
+
+  const mockMetricsService = {
+    postingOperationsCounter: {
+      inc: jest.fn(),
+    },
+  };
 
   const mockGrnFindUnique = jest.fn();
   const mockGrnUpdate = jest.fn();
@@ -69,6 +76,7 @@ describe('GrnPostService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LedgerLockService, useValue: mockLockService },
         { provide: WacService, useValue: mockWacService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 

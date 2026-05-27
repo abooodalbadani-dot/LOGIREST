@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Body,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { GrnPostService } from '../grn-post.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
@@ -22,6 +23,7 @@ import type { Request } from 'express';
 export class GrnController {
   constructor(private readonly grnPostService: GrnPostService) {}
 
+  @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/post')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({

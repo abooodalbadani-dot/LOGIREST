@@ -216,4 +216,10 @@ describe('TransferVoidService', () => {
       BadRequestException,
     );
   });
+
+  it('should throw ForbiddenException if userRole is not ADMIN or INV_MGR', async () => {
+    await expect(
+      service.void('transfer-1', 'user-1', Role.WH_KEEPER),
+    ).rejects.toThrow('Only System Administrators or Inventory Managers can void documents');
+  });
 });

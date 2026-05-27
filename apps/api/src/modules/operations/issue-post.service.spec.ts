@@ -6,9 +6,16 @@ import { AllocationService } from '../ledger/allocation.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { Prisma, Role, DocumentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { MetricsService } from '../metrics/metrics.service';
 
 describe('IssuePostService', () => {
   let service: IssuePostService;
+
+  const mockMetricsService = {
+    postingOperationsCounter: {
+      inc: jest.fn(),
+    },
+  };
 
   const mockIssueFindUnique = jest.fn();
   const mockIssueUpdate = jest.fn();
@@ -69,6 +76,7 @@ describe('IssuePostService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AllocationService, useValue: mockAllocationService },
         { provide: OutboxService, useValue: mockOutboxService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 

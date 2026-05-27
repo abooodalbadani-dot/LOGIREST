@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { Role, DocumentType } from '@prisma/client';
@@ -17,6 +18,11 @@ export class KitchenRequestVoidService {
     clientVersion?: number,
     ipAddress?: string,
   ): Promise<any> {
+    if (userRole !== Role.ADMIN && userRole !== Role.INV_MGR) {
+      throw new ForbiddenException(
+        'Only System Administrators or Inventory Managers can void documents',
+      );
+    }
     return this.prisma.$transaction(async (tx) => {
       const request = await tx.kitchenRequest.findUnique({
         where: { id: kitchenRequestId },

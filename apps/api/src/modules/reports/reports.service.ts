@@ -899,6 +899,87 @@ export class ReportsService {
     };
   }
 
+  async getSystemName(): Promise<string> {
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key: 'system_settings' },
+    });
+    if (setting) {
+      try {
+        const parsed = JSON.parse(setting.value);
+        return parsed.system_name || 'LogiRest System';
+      } catch {
+        return 'LogiRest System';
+      }
+    }
+    return 'LogiRest System';
+  }
+
+  async exportMovementsCursorChunk(
+    warehouseId: string,
+    cursor?: string,
+    chunkSize: number = 500,
+    filters?: {
+      itemId?: string;
+      startDate?: string;
+      endDate?: string;
+      transactionType?: string;
+    },
+  ): Promise<ExportCursorResult<any>> {
+    const decoded = this.decodeCursor(cursor);
+    const currentOffset = decoded ? decoded.offset : 0;
+
+    const remainingLimit = MAX_EXPORT_ROWS - currentOffset;
+    const currentChunkSize = Math.min(chunkSize, remainingLimit);
+
+    if (currentChunkSize <= 0) {
+      return { data: [], nextCursor: null, hasMore: false };
+    }
+
+    const where: Prisma.StockLedgerWhereInput = { warehouseId };
+    if (filters?.itemId) where.itemId = filters.itemId;
+    if (filters?.transactionType)
+      where.documentType = filters.transactionType as DocumentType;
+    this.applyDateFilter(where, filters?.startDate, filters?.endDate);
+
+    const queryOpts: any = {
+      where,
+      include: { item: true },
+      orderBy: { postedAt: 'desc' as const },
+      take: currentChunkSize + 1,
+    };
+
+    if (decoded) {
+      queryOpts.cursor = { id: decoded.id };
+      queryOpts.skip = 1;
+    }
+
+    const results = (await this.prisma.stockLedger.findMany(
+      queryOpts,
+    )) as any[];
+    const hasMore =
+      results.length > currentChunkSize &&
+      currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
+    const data = results.slice(0, currentChunkSize);
+
+    const newOffset = currentOffset + data.length;
+    const nextCursor = hasMore
+      ? this.encodeCursor(data[data.length - 1].id, newOffset)
+      : null;
+
+    return {
+      data: data.map((m) => ({
+        postedAt: m.postedAt,
+        itemName: m.item.name,
+        sku: m.item.sku,
+        documentType: m.documentType,
+        documentId: m.documentId,
+        quantity: Number(m.quantity),
+      })),
+      nextCursor,
+      hasMore,
+    };
+  }
+
   // ─── Private Helpers ─────────────────────────────────────────
 
   private applyDateFilter(where: any, startDate?: string, endDate?: string) {

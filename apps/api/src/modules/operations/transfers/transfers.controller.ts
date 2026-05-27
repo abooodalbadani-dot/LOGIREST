@@ -53,6 +53,7 @@ export class TransfersController {
     return this.transfersService.findOne(id);
   }
 
+  @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/ship')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
@@ -84,6 +85,7 @@ export class TransfersController {
     );
   }
 
+  @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/receive')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({

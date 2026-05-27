@@ -284,4 +284,77 @@ describe('ReconciliationJob', () => {
       },
     });
   });
+
+  it('should detect lot-level discrepancy and notify admin', async () => {
+    // Mock ledger: Item 1 has total of 15 quantity
+    mockStockLedgerGroupBy.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        _sum: {
+          quantity: new Prisma.Decimal(15),
+        },
+      },
+      // Lot ledger groupBy mock:
+      {
+        warehouseId: 'wh-1',
+        lotId: 'lot-1',
+        _sum: {
+          quantity: new Prisma.Decimal(10),
+        },
+      },
+    ]);
+
+    // Mock warehouse items: matches
+    mockWarehouseItemFindMany.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        itemId: 'item-1',
+        qtyOnHand: new Prisma.Decimal(15),
+        qtyAllocated: new Prisma.Decimal(0),
+        item: { sku: 'SKU1' },
+        warehouse: { name: 'HQ', code: 'HQ-01' },
+      },
+    ]);
+
+    // Mock in-transit allocations: none
+    mockLotAllocationFindMany.mockResolvedValue([]);
+
+    // Mock warehouse item lot: qtyOnHand is 15 but ledger sums to 10 (discrepancy!)
+    mockWarehouseItemLotFindMany.mockResolvedValue([
+      {
+        warehouseId: 'wh-1',
+        lotId: 'lot-1',
+        qtyOnHand: new Prisma.Decimal(15),
+        item: { sku: 'SKU1' },
+        lot: { lotNumber: 'LOT-A' },
+        warehouse: { name: 'HQ', code: 'HQ-01' },
+      },
+    ]);
+
+    await job.runReconciliation();
+
+    // Verify notification is sent for lot drift
+    expect(mockCreateNotification).toHaveBeenCalledWith({
+      targetRole: Role.ADMIN,
+      warehouseId: 'wh-1',
+      message: expect.stringContaining(
+        'Lot drift detected: Lot LOT-A (SKU: SKU1) in Warehouse HQ (HQ-01) has qty_on_hand 15 but stock_ledger sums to 10.',
+      ),
+    });
+
+    // Verify run logged 1 lot discrepancy
+    expect(mockReconciliationRunCreate).toHaveBeenCalledWith({
+      data: {
+        itemsChecked: 1,
+        discrepanciesFound: 0,
+        lotDiscrepanciesFound: 1,
+        frozenItems: [],
+        durationMs: expect.any(Number),
+      },
+    });
+
+    // Verify counter incremented
+    expect(mockMetricsService.reconciliationDiscrepanciesCounter.inc).toHaveBeenCalledWith(1);
+  });
 });

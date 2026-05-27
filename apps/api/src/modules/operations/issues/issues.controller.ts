@@ -110,6 +110,7 @@ export class IssuesController {
     });
   }
 
+  @Throttle({ short: { limit: 100, ttl: 60000 } })
   @Post(':id/post')
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({

@@ -109,7 +109,7 @@ describe('DocumentSequenceService', () => {
     const currentYear = new Date().getFullYear();
 
     mockBranchFindUnique.mockResolvedValue({ code: 'HQ' });
-    
+
     // First query returns empty (no sequence found)
     // Second query (retry) returns the concurrently created row
     mockQueryRaw
@@ -117,7 +117,9 @@ describe('DocumentSequenceService', () => {
       .mockResolvedValueOnce([{ id: 'seq-concurrent', current_sequence: 1 }]);
 
     // Creation throws error due to concurrent insert (unique constraint violation)
-    mockDocumentSequenceCreate.mockRejectedValue(new Error('PrismaClientKnownRequestError: Unique constraint failed'));
+    mockDocumentSequenceCreate.mockRejectedValue(
+      new Error('PrismaClientKnownRequestError: Unique constraint failed'),
+    );
 
     mockDocumentSequenceUpdate.mockResolvedValue({
       id: 'seq-concurrent',

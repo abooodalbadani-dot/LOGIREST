@@ -18,7 +18,9 @@ export class ArchivalJob {
   async runArchival() {
     // Mutex lock for 10 minutes (600 seconds)
     await this.lockService.runWithLock('db-archival', 600, async () => {
-      this.logger.log('Starting monthly database archival job with distributed lock...');
+      this.logger.log(
+        'Starting monthly database archival job with distributed lock...',
+      );
       const startTime = Date.now();
 
       const twoYearsAgo = new Date();
@@ -66,7 +68,9 @@ export class ArchivalJob {
             );
 
             archivedLogsCount += oldLogs.length;
-            this.logger.log(`Archived a batch of ${oldLogs.length} audit logs. Total so far: ${archivedLogsCount}`);
+            this.logger.log(
+              `Archived a batch of ${oldLogs.length} audit logs. Total so far: ${archivedLogsCount}`,
+            );
           } else {
             hasMoreLogs = false;
           }
@@ -110,7 +114,9 @@ export class ArchivalJob {
             );
 
             archivedLedgersCount += oldLedgers.length;
-            this.logger.log(`Archived a batch of ${oldLedgers.length} stock ledgers. Total so far: ${archivedLedgersCount}`);
+            this.logger.log(
+              `Archived a batch of ${oldLedgers.length} stock ledgers. Total so far: ${archivedLedgersCount}`,
+            );
           } else {
             hasMoreLedgers = false;
           }

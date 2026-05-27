@@ -1,16 +1,19 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
+import { useState, useMemo } from 'react';
 import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { useWacHistoryReport, type WacHistoryReport } from '@/features/reports/hooks/useReports';
+import { useWacHistory } from '@/features/reports/hooks/useWacHistory';
+import { useItems } from '@/features/items/hooks/useItems';
+import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate, formatQuantity } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 
-function getDocumentHref(row: WacHistoryReport): string {
-  const type = row.document_type.toLowerCase();
+function getDocumentHref(row: any): string {
+  const type = (row.document_type || '').toLowerCase();
   if (type.includes('goods receipt') || type.includes('grn')) {
     return `/goods-receipts/${row.document_id}`;
   }
@@ -32,9 +35,39 @@ function getDocumentHref(row: WacHistoryReport): string {
 export default function WacHistoryReportClient() {
   const t = useTranslations('reports');
   const locale = useLocale() as 'ar' | 'en';
-  const { data, isLoading } = useWacHistoryReport();
 
-  const columns: ColumnDef<WacHistoryReport>[] = [
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [itemSearch, setItemSearch] = useState('');
+
+  const { data: itemsData, isLoading: isLoadingItems } = useItems({ search: itemSearch });
+  const items = useMemo(() => {
+    return (itemsData?.data || []).map((item) => ({
+      id: item.id,
+      code: item.sku,
+      barcode: undefined,
+      name_en: item.name,
+      name_ar: item.name,
+    }));
+  }, [itemsData]);
+
+  const { data: wacHistoryData, isLoading: isLoadingWac } = useWacHistory(selectedItemId);
+
+  const mappedData = useMemo(() => {
+    if (!wacHistoryData) return [];
+    return wacHistoryData.map((d, index) => ({
+      id: d.documentId || String(index),
+      date: d.postedAt,
+      document_type: d.documentType || 'N/A',
+      document_number: d.documentId || 'N/A',
+      document_id: d.documentId || '',
+      item: d.item ? `${d.item.name} (${d.item.sku})` : 'N/A',
+      quantity: d.quantity || 0,
+      unit_cost: d.unitPrice || 0,
+      new_wac: d.newWac,
+    }));
+  }, [wacHistoryData]);
+
+  const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'date',
       header: t('wac_history_table.date'),
@@ -118,24 +151,48 @@ export default function WacHistoryReportClient() {
         backHref="/reports"
       />
 
-      <DataTable
-        data={data || []}
-        columns={columns}
-        isLoading={isLoading}
-        exportComponent={
-          <ReportExportMenu
-            columns={exportColumns}
-            data={data || []}
-            filename="WAC_History_Report"
-            title={t('wac_history')}
-            exportRoute="/reports/wac-history/export"
-            countCheckParams={{ type: 'wac-history' }}
+      <div className="p-6 rounded-3xl border border-border-muted/20 bg-surface-container-low/90 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex-1 max-w-md">
+          <label className="text-label-xs font-bold text-muted-foreground/60 uppercase tracking-wider block mb-2">
+            {t('wac_history_table.item')}
+          </label>
+          <SmartCombobox
+            items={items}
+            value={selectedItemId || ''}
+            onSelect={(item) => setSelectedItemId(item.id as string)}
+            onSearchChange={setItemSearch}
+            placeholder={t('search_placeholder') || 'Select item...'}
+            isLoading={isLoadingItems}
           />
-        }
-        collectionName="reports"
-        enableVirtualization={true}
-        containerHeight="600px"
-      />
+        </div>
+      </div>
+
+      {selectedItemId ? (
+        <DataTable
+          data={mappedData}
+          columns={columns}
+          isLoading={isLoadingWac}
+          exportComponent={
+            <ReportExportMenu
+              columns={exportColumns}
+              data={mappedData}
+              filename="WAC_History_Report"
+              title={t('wac_history')}
+              exportRoute="/reports/wac-history/export"
+              countCheckParams={{ type: 'wac-history', itemId: selectedItemId }}
+            />
+          }
+          collectionName="reports"
+          enableVirtualization={true}
+          containerHeight="600px"
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border-muted/20 rounded-3xl bg-surface-container-low/40">
+          <p className="text-muted-foreground/50 font-semibold text-body-md uppercase tracking-wider">
+            Please select an item to view its cost history timeline.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

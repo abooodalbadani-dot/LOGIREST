@@ -6,9 +6,7 @@ import { REDIS_CLIENT } from './redis.module';
 export class RedisLockService {
   private readonly logger = new Logger(RedisLockService.name);
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   /**
    * Tries to acquire a lock for a given key and TTL (in seconds).
@@ -16,12 +14,22 @@ export class RedisLockService {
    */
   async acquireLock(key: string, ttlSeconds: number): Promise<boolean> {
     const lockKey = `lock:cron:${key}`;
-    const result = await this.redis.set(lockKey, 'locked', 'EX', ttlSeconds, 'NX');
+    const result = await this.redis.set(
+      lockKey,
+      'locked',
+      'EX',
+      ttlSeconds,
+      'NX',
+    );
     const acquired = result === 'OK';
     if (acquired) {
-      this.logger.log(`Acquired lock for key: ${lockKey} with TTL ${ttlSeconds}s`);
+      this.logger.log(
+        `Acquired lock for key: ${lockKey} with TTL ${ttlSeconds}s`,
+      );
     } else {
-      this.logger.log(`Failed to acquire lock for key: ${lockKey} (already locked)`);
+      this.logger.log(
+        `Failed to acquire lock for key: ${lockKey} (already locked)`,
+      );
     }
     return acquired;
   }
@@ -45,7 +53,9 @@ export class RedisLockService {
   ): Promise<T | null> {
     const acquired = await this.acquireLock(key, ttlSeconds);
     if (!acquired) {
-      this.logger.log(`Skipping job execution because lock for "${key}" is already held.`);
+      this.logger.log(
+        `Skipping job execution because lock for "${key}" is already held.`,
+      );
       return null;
     }
     try {

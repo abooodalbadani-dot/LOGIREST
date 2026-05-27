@@ -5,9 +5,16 @@ import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Prisma, Role, DocumentType, StocktakeStatus } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { MetricsService } from '../metrics/metrics.service';
 
 describe('StocktakePostService', () => {
   let service: StocktakePostService;
+
+  const mockMetricsService = {
+    postingOperationsCounter: {
+      inc: jest.fn(),
+    },
+  };
 
   const mockSessionFindUnique = jest.fn();
   const mockSessionUpdate = jest.fn();
@@ -81,6 +88,7 @@ describe('StocktakePostService', () => {
         StocktakePostService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LedgerLockService, useValue: mockLockService },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 

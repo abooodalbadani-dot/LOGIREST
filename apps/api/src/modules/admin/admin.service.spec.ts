@@ -126,7 +126,7 @@ describe('AdminService', () => {
         base_currency: 'USD',
         smtp_password: encryptedPassword,
       };
-      
+
       mockSystemSettingFindUnique.mockResolvedValue({
         value: JSON.stringify(mockSavedSettings),
         version: 1,
@@ -156,7 +156,7 @@ describe('AdminService', () => {
       expect(mockSystemSettingUpsert).toHaveBeenCalled();
       const upsertArgs = mockSystemSettingUpsert.mock.calls[0][0];
       const savedConfig = JSON.parse(upsertArgs.create.value);
-      
+
       expect(savedConfig.system_name).toBe('Resto');
       // Password must be encrypted (not plaintext)
       expect(savedConfig.smtp_password).not.toBe('supersecretpass');
@@ -209,7 +209,9 @@ describe('AdminService', () => {
         expect(result.meta.total).toBe(2);
         expect(result.meta.page).toBe(1);
         expect(result.meta.totalPages).toBe(1);
-        expect(mockOutboxEventCount).toHaveBeenCalledWith({ where: { status: 'FAILED' } });
+        expect(mockOutboxEventCount).toHaveBeenCalledWith({
+          where: { status: 'FAILED' },
+        });
         expect(mockOutboxEventFindMany).toHaveBeenCalledWith({
           where: { status: 'FAILED' },
           orderBy: { createdAt: 'desc' },
@@ -231,7 +233,10 @@ describe('AdminService', () => {
       it('should successfully update outbox event to PENDING status', async () => {
         const mockEvent = { id: 'evt-123', status: 'FAILED' };
         mockOutboxEventFindUnique.mockResolvedValue(mockEvent);
-        mockOutboxEventUpdate.mockResolvedValue({ ...mockEvent, status: 'PENDING' });
+        mockOutboxEventUpdate.mockResolvedValue({
+          ...mockEvent,
+          status: 'PENDING',
+        });
 
         const result = await service.retryOutboxEvent('evt-123');
         expect(result.status).toBe('PENDING');
