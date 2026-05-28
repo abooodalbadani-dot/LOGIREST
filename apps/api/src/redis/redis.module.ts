@@ -1,8 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import Redis from 'ioredis';
 import { RedisLockService } from './redis-lock.service';
+import { REDIS_CLIENT } from './redis.constants';
 
-export const REDIS_CLIENT = 'REDIS_CLIENT';
+export { REDIS_CLIENT } from './redis.constants';
 
 @Global()
 @Module({

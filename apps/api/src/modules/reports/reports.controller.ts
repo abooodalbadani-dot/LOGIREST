@@ -287,11 +287,11 @@ export class ReportsController {
     const worksheet = workbook.addWorksheet(title);
 
     const titleRow = worksheet.addRow([
-      systemName || 'LogiRest Inventory Management System',
+      branchName ? `${systemName} — ${branchName}` : systemName,
     ]);
     titleRow.font = {
       name: 'Helvetica Neue',
-      size: 16,
+      size: 14,
       bold: true,
       color: { argb: 'FF1E3A8A' },
     };
@@ -683,10 +683,13 @@ export class ReportsController {
 
     const sanitizedFilename = filename.replace(/[^a-zA-Z0-9-]/g, '-');
 
-    const titleRow = worksheet.addRow(['LogiRest Inventory Management System']);
+    const systemName = await this.reportsService.getSystemName();
+    const titleRow = worksheet.addRow([
+      branchName ? `${systemName} — ${branchName}` : systemName,
+    ]);
     titleRow.font = {
       name: 'Helvetica Neue',
-      size: 16,
+      size: 14,
       bold: true,
       color: { argb: 'FF1E3A8A' },
     };

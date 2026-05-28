@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from '../src/config/env.validation';
 import { PrismaModule } from '../src/database/database.module';
 import { AuthModule } from '../src/auth/auth.module';
+import { JwtService } from '@nestjs/jwt';
 import { WorkflowModule } from '../src/modules/workflow/workflow.module';
 import { PurchasingModule } from '../src/modules/purchasing/purchasing.module';
 import { OperationsModule } from '../src/modules/operations/operations.module';
@@ -59,12 +60,16 @@ describe('Void Workflow (e2e)', () => {
 
   let adminToken: string;
   let adminId: string;
+  let userToken: string;
+  let userId: string;
   let branchId: string;
   let warehouseId: string;
   let itemId: string;
   let categoryId: string;
   let uomId: string;
   let lotId: string;
+  let supplierId: string;
+  let currencyId: string;
 
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -169,6 +174,20 @@ describe('Void Workflow (e2e)', () => {
     });
     lotId = lot.id;
 
+    const supplier = await prisma.supplier.create({
+      data: { name: `Supplier Void ${suffix}`, code: `VSUP-${suffix}` },
+    });
+    supplierId = supplier.id;
+
+    const currency = await prisma.currency.create({
+      data: {
+        name: `Currency Void ${suffix}`,
+        code: `VCUR-${suffix}`,
+        isBase: true,
+      },
+    });
+    currencyId = currency.id;
+
     const email = `admin-void-${suffix}@logirest.com`;
     const passwordHash = await bcrypt.hash('password123');
     const admin = await prisma.user.create({
@@ -182,18 +201,52 @@ describe('Void Workflow (e2e)', () => {
     });
     adminId = admin.id;
 
-    await prisma.userWarehouseScope.create({
-      data: { userId: adminId, warehouseId },
+    const userEmail = `user-void-${suffix}@logirest.com`;
+    const standardUser = await prisma.user.create({
+      data: {
+        email: userEmail,
+        passwordHash,
+        name: `User Void ${suffix}`,
+        role: 'PROC_OFFICER',
+        isActive: true,
+      },
+    });
+    userId = standardUser.id;
+
+    await prisma.userWarehouseScope.createMany({
+      data: [
+        { userId: adminId, warehouseId },
+        { userId: userId, warehouseId },
+      ],
     });
 
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ email, password: 'password123' });
-    adminToken = loginRes.body.accessToken;
+    const jwtService = app.get(JwtService);
+    adminToken = jwtService.sign({
+      sub: adminId,
+      email,
+      role: 'ADMIN',
+    });
+
+    userToken = jwtService.sign({
+      sub: userId,
+      email: userEmail,
+      role: 'PROC_OFFICER',
+    });
   }, 120000);
 
   afterAll(async () => {
     if (prisma) {
+      // Delete purchaseOrder, supplier, and currency FIRST to prevent foreign key violations in item/category deletion
+      await prisma.purchaseOrder
+        .deleteMany({ where: { supplierId } })
+        .catch(() => {});
+      await prisma.supplier
+        .delete({ where: { id: supplierId } })
+        .catch(() => {});
+      await prisma.currency
+        .delete({ where: { id: currencyId } })
+        .catch(() => {});
+
       await prisma.stockLedger
         .deleteMany({ where: { warehouseId } })
         .catch(() => {});
@@ -208,10 +261,10 @@ describe('Void Workflow (e2e)', () => {
         .catch(() => {});
       await prisma.lotAllocation.deleteMany({}).catch(() => {});
       await prisma.approvalEvent
-        .deleteMany({ where: { userId: adminId } })
+        .deleteMany({ where: { userId: { in: [adminId, userId] } } })
         .catch(() => {});
       await prisma.auditLog
-        .deleteMany({ where: { userId: adminId } })
+        .deleteMany({ where: { userId: { in: [adminId, userId] } } })
         .catch(() => {});
       await prisma.goodsReceivedNote
         .deleteMany({ where: { warehouseId } })
@@ -231,7 +284,7 @@ describe('Void Workflow (e2e)', () => {
         .delete({ where: { id: categoryId } })
         .catch(() => {});
       await prisma.userWarehouseScope
-        .deleteMany({ where: { userId: adminId } })
+        .deleteMany({ where: { userId: { in: [adminId, userId] } } })
         .catch(() => {});
       await prisma.warehouse
         .delete({ where: { id: warehouseId } })
@@ -240,7 +293,9 @@ describe('Void Workflow (e2e)', () => {
         .deleteMany({ where: { branchId } })
         .catch(() => {});
       await prisma.branch.delete({ where: { id: branchId } }).catch(() => {});
-      await prisma.user.delete({ where: { id: adminId } }).catch(() => {});
+      await prisma.user
+        .deleteMany({ where: { id: { in: [adminId, userId] } } })
+        .catch(() => {});
       await prisma.$disconnect().catch(() => {});
     }
     if (app) {
@@ -257,8 +312,8 @@ describe('Void Workflow (e2e)', () => {
         .set('x-branch-id', branchId)
         .set('x-idempotency-key', randomUUID())
         .send({
-          supplierId: null,
-          currencyId: null,
+          supplierId,
+          currencyId,
           branchId,
           warehouseId,
           lines: [{ itemId, quantity: 10, unitPrice: 5 }],
@@ -274,8 +329,21 @@ describe('Void Workflow (e2e)', () => {
   describe('Issue Void (POST /api/v1/operations/issue/:id/void)', () => {
     it('should block non-admin from voiding', async () => {
       const res = await request(app.getHttpServer())
-        .post('/api/v1/operations/issue/fake-id/void')
+        .post(`/api/v1/operations/issue/${randomUUID()}/void`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: 1 });
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should allow admin to attempt and return 404 for non-existent issue', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/operations/issue/${randomUUID()}/void`)
         .set('Authorization', `Bearer ${adminToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
         .send({ version: 1 });
 
       expect(res.status).toBe(404);

@@ -5,6 +5,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { EmailService } from './email.service';
 import { Role } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
+import * as crypto from 'crypto';
 
 import { correlationStorage } from '../../common/correlation.context';
 
@@ -162,11 +163,8 @@ export class OutboxWorker extends WorkerHost {
       }
     };
 
-    if (correlationId) {
-      await correlationStorage.run(correlationId, runInContext);
-    } else {
-      await runInContext();
-    }
+    const effectiveCorrelationId = correlationId || crypto.randomUUID();
+    await correlationStorage.run(effectiveCorrelationId, runInContext);
   }
 
   /**

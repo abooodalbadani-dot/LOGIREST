@@ -36,10 +36,10 @@ describe('Secure Cookie Authentication (e2e)', () => {
     it('should set logirest_token and logirest_refresh cookies on successful login', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
       expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
+      expect(res.body.token).toBeDefined();
 
       const cookies = res.headers['set-cookie'] as any as string[];
       expect(cookies).toBeDefined();
@@ -66,7 +66,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
     it('should authenticate requests using logirest_token cookie', async () => {
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
       const cookies = loginRes.headers['set-cookie'] as any as string[];
       const tokenCookieString = cookies.find((c: string) =>
@@ -79,8 +79,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
         .set('Cookie', token);
 
       expect(profileRes.status).toBe(200);
-      expect(profileRes.body.success).toBe(true);
-      expect(profileRes.body.user.email).toBe('admin@logirest.com');
+      expect(profileRes.body.email).toBe('admin@logirest.com');
     });
   });
 
@@ -88,7 +87,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
     it('should rotate both logirest_token and logirest_refresh cookies', async () => {
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
       const cookies = loginRes.headers['set-cookie'] as any as string[];
       const refreshCookieString = cookies.find((c: string) =>
@@ -122,7 +121,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
     it('should clear both logirest_token and logirest_refresh cookies', async () => {
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
       const cookies = loginRes.headers['set-cookie'] as any as string[];
       const refreshCookieString = cookies.find((c: string) =>

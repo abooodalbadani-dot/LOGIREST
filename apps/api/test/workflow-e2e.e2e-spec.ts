@@ -8,6 +8,7 @@ import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
 import { ReconciliationJob } from '../src/modules/ledger/reconciliation.job';
 import { randomUUID } from 'crypto';
+import { JwtService } from '@nestjs/jwt';
 
 describe('End-to-End Workflow Integration', () => {
   jest.setTimeout(180000);
@@ -109,10 +110,12 @@ describe('End-to-End Workflow Integration', () => {
       data: { userId: adminId, warehouseId },
     });
 
-    const adminLoginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ email: adminEmail, password: 'Password123!' });
-    adminToken = adminLoginRes.body.accessToken;
+    const jwtService = app.get(JwtService);
+    adminToken = jwtService.sign({
+      sub: adminId,
+      email: adminEmail,
+      role: 'ADMIN',
+    });
 
     // Create Procurement Officer User
     const procEmail = `proc-${suffix}@logirest.com`;
@@ -131,11 +134,12 @@ describe('End-to-End Workflow Integration', () => {
       data: { userId: procOfficerId, warehouseId },
     });
 
-    const procLoginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ email: procEmail, password: 'Password123!' });
-    procOfficerToken = procLoginRes.body.accessToken;
-  });
+    procOfficerToken = jwtService.sign({
+      sub: procOfficerId,
+      email: procEmail,
+      role: 'PROC_OFFICER',
+    });
+  }, 180000);
 
   afterAll(async () => {
     if (prisma) {

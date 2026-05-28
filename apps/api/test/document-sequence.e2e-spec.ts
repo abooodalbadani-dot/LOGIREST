@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
 import { randomUUID } from 'crypto';
+import { JwtService } from '@nestjs/jwt';
 
 describe('Document Sequence Concurrency (e2e)', () => {
   jest.setTimeout(180000);
@@ -80,10 +81,12 @@ describe('Document Sequence Concurrency (e2e)', () => {
       data: { userId: procOfficerId, warehouseId },
     });
 
-    const procLoginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ email: procEmail, password: 'Password123!' });
-    procOfficerToken = procLoginRes.body.accessToken;
+    const jwtService = app.get(JwtService);
+    procOfficerToken = jwtService.sign({
+      sub: procOfficerId,
+      email: procEmail,
+      role: 'PROC_OFFICER',
+    });
   }, 180000);
 
   afterAll(async () => {

@@ -7,7 +7,7 @@ async function main() {
   console.log('Seeding production database reference data...');
 
   // ─── System Settings (M5) ────────────────────────────────────
-  const baseCurrencyCode = process.env.BASE_CURRENCY_CODE || 'SAR';
+  const baseCurrencyCode = process.env.SEED_BASE_CURRENCY || process.env.BASE_CURRENCY_CODE || 'SAR';
   const systemSettingsConfig = {
     system_name: 'LogiRest System',
     base_currency: baseCurrencyCode,
@@ -37,8 +37,8 @@ async function main() {
   });
 
   // 1. Currencies
-  const BASE_CURRENCY_CODE = process.env.BASE_CURRENCY_CODE || 'SAR';
-  const BASE_CURRENCY_NAME = process.env.BASE_CURRENCY_NAME || 'Saudi Riyal';
+  const BASE_CURRENCY_CODE = process.env.SEED_BASE_CURRENCY || process.env.BASE_CURRENCY_CODE || 'SAR';
+  const BASE_CURRENCY_NAME = process.env.SEED_BASE_CURRENCY_NAME || process.env.BASE_CURRENCY_NAME || 'Saudi Riyal';
 
   const baseCurrency = await prisma.currency.upsert({
     where: { code: BASE_CURRENCY_CODE },

@@ -43,10 +43,10 @@ export default function WacHistoryReportClient() {
   const items = useMemo(() => {
     return (itemsData?.data || []).map((item) => ({
       id: item.id,
-      code: item.sku,
-      barcode: undefined,
-      name_en: item.name,
-      name_ar: item.name,
+      code: item.code,
+      barcode: item.barcode,
+      name_en: item.name_en,
+      name_ar: item.name_ar,
     }));
   }, [itemsData]);
 

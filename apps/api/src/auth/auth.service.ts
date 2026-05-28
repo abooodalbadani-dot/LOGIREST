@@ -20,6 +20,13 @@ export class AuthService {
   async login(dto: LoginDto, res: Response, ipAddress?: string) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: {
+        warehouseScopes: {
+          include: {
+            warehouse: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -38,11 +45,26 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    const mappedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      scopes: (user.warehouseScopes || []).map((s) => ({
+        branch_id: s.warehouse?.branchId ?? null,
+        warehouse_id: s.warehouseId,
+        department_id: null,
+      })),
+      status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
+      language: 'en' as const,
+    };
+
     const accessToken = this.jwtService.sign(
       {
         sub: user.id,
         email: user.email,
         role: user.role,
+        user: mappedUser,
       },
       { expiresIn: '15m' },
     );
@@ -59,29 +81,18 @@ export class AuthService {
     await this.rtrService.createSession(user.id, res);
 
     return {
-      success: true,
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      token: accessToken,
+      user: mappedUser,
     };
   }
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
+      include: {
         warehouseScopes: {
-          select: {
-            warehouseId: true,
+          include: {
+            warehouse: true,
           },
         },
       },
@@ -92,15 +103,17 @@ export class AuthService {
     }
 
     return {
-      success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        isActive: user.isActive,
-        authorizedWarehouses: user.warehouseScopes.map((s) => s.warehouseId),
-      },
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      scopes: (user.warehouseScopes || []).map((s) => ({
+        branch_id: s.warehouse?.branchId ?? null,
+        warehouse_id: s.warehouseId,
+        department_id: null,
+      })),
+      status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
+      language: 'en' as const,
     };
   }
 

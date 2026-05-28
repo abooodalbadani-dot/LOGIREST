@@ -180,7 +180,7 @@ async function main() {
 
   // ─── Users ───────────────────────────────────────────────────
   const passwordHash = await bcrypt.hash('Password123!', 12);
-  const adminPasswordHash = await bcrypt.hash('Adminpassword123!', 12);
+  const adminPasswordHash = await bcrypt.hash('Password123!', 12);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.local' },

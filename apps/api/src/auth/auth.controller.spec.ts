@@ -54,9 +54,16 @@ describe('AuthController', () => {
         password: 'password',
       };
       const expectedResult = {
-        success: true,
-        accessToken: 'token',
-        user: { id: '1', email: 'test@logirest.com', role: 'WH_KEEPER' },
+        token: 'token',
+        user: {
+          id: '1',
+          name: 'Test User',
+          email: 'test@logirest.com',
+          role: 'WH_KEEPER' as const,
+          scopes: [],
+          status: 'ACTIVE' as const,
+          language: 'en' as const,
+        },
       };
       mockAuthService.login.mockResolvedValue(expectedResult);
 
@@ -127,13 +134,13 @@ describe('AuthController', () => {
   describe('getProfile', () => {
     it('should call authService.getProfile', async () => {
       const expectedProfile = {
-        success: true,
-        user: {
-          id: '1',
-          email: 'test@logirest.com',
-          role: 'WH_KEEPER',
-          authorizedWarehouses: [],
-        },
+        id: '1',
+        name: 'Test User',
+        email: 'test@logirest.com',
+        role: 'WH_KEEPER' as const,
+        scopes: [],
+        status: 'ACTIVE' as const,
+        language: 'en' as const,
       };
       mockAuthService.getProfile.mockResolvedValue(expectedProfile);
 

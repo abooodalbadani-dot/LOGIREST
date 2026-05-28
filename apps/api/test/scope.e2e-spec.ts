@@ -80,7 +80,7 @@ describe('Scope Isolation (e2e)', () => {
     beforeAll(async () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
       accessToken = res.body.accessToken;
     });
 

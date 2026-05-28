@@ -48,6 +48,7 @@ import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
 
 import { CorrelationMiddleware } from './common/correlation.middleware';
+import { correlationStorage } from './common/correlation.context';
 
 @Module({
   imports: [
@@ -69,6 +70,10 @@ import { CorrelationMiddleware } from './common/correlation.middleware';
         customProps: (req, res) => ({
           correlationId: res.getHeader('x-correlation-id'),
         }),
+        mixin: () => {
+          const correlationId = correlationStorage.getStore();
+          return correlationId ? { correlationId } : {};
+        },
         level: process.env.LOG_LEVEL || 'info',
         transport:
           process.env.NODE_ENV !== 'production'

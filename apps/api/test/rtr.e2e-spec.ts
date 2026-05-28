@@ -87,7 +87,7 @@ describe('Refresh Token Rotation (e2e)', () => {
       console.log('E2E TEST PROGRESS: Starting Step 1 (Login)...');
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'Adminpassword123!' });
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
       expect(loginRes.status).toBe(200);
       const cookies = loginRes.headers['set-cookie'];

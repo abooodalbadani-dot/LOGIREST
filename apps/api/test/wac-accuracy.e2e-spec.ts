@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
 import { randomUUID } from 'crypto';
+import { JwtService } from '@nestjs/jwt';
 
 describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
   jest.setTimeout(180000);
@@ -30,6 +31,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
   let poId: string;
 
   beforeAll(async () => {
+    console.log('[E2E Setup] beforeAll: Initializing Test Bed...');
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -40,57 +42,78 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       new ValidationPipe({ whitelist: true, transform: true }),
     );
     await app.init();
+    console.log('[E2E Setup] beforeAll: NestJS App context initialized.');
 
     prisma = app.get(PrismaService);
     bcrypt = app.get(BcryptService);
 
     const suffix = `wac-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    console.log(`[E2E Setup] Seeding master data suffix: ${suffix}`);
 
+    console.log('[E2E Setup] Creating Branch...');
     const branch = await prisma.branch.create({
       data: { name: `Branch ${suffix}`, code: `BR-${suffix}` },
     });
     branchId = branch.id;
+    console.log(`[E2E Setup] Branch created: ${branchId}`);
 
+    console.log('[E2E Setup] Creating Warehouse A...');
     const warehouseA = await prisma.warehouse.create({
       data: { name: `Warehouse A ${suffix}`, code: `WHA-${suffix}`, branchId },
     });
     warehouseAId = warehouseA.id;
+    console.log(`[E2E Setup] Warehouse A created: ${warehouseAId}`);
 
+    console.log('[E2E Setup] Creating Warehouse B...');
     const warehouseB = await prisma.warehouse.create({
       data: { name: `Warehouse B ${suffix}`, code: `WHB-${suffix}`, branchId },
     });
     warehouseBId = warehouseB.id;
+    console.log(`[E2E Setup] Warehouse B created: ${warehouseBId}`);
 
+    console.log('[E2E Setup] Creating Department...');
     const department = await prisma.department.create({
       data: { name: `Department ${suffix}`, branchId },
     });
     departmentId = department.id;
+    console.log(`[E2E Setup] Department created: ${departmentId}`);
 
+    console.log('[E2E Setup] Creating Category...');
     const category = await prisma.category.create({
       data: { name: `Category ${suffix}` },
     });
     categoryId = category.id;
+    console.log(`[E2E Setup] Category created: ${categoryId}`);
 
+    console.log('[E2E Setup] Creating UOM...');
     const uom = await prisma.unitOfMeasure.create({
       data: { name: `UOM ${suffix}`, code: `UOM-${suffix}` },
     });
     uomId = uom.id;
+    console.log(`[E2E Setup] UOM created: ${uomId}`);
 
+    console.log('[E2E Setup] Creating Item...');
     const item = await prisma.item.create({
       data: { name: `Item ${suffix}`, sku: `SKU-${suffix}`, categoryId, uomId },
     });
     itemId = item.id;
+    console.log(`[E2E Setup] Item created: ${itemId}`);
 
+    console.log('[E2E Setup] Creating Supplier...');
     const supplier = await prisma.supplier.create({
       data: { name: `Supplier ${suffix}`, code: `SUP-${suffix}` },
     });
     supplierId = supplier.id;
+    console.log(`[E2E Setup] Supplier created: ${supplierId}`);
 
+    console.log('[E2E Setup] Creating Currency...');
     const currency = await prisma.currency.create({
       data: { name: `Currency ${suffix}`, code: `CUR-${suffix}`, isBase: true },
     });
     currencyId = currency.id;
+    console.log(`[E2E Setup] Currency created: ${currencyId}`);
 
+    console.log('[E2E Setup] Creating PurchaseOrder...');
     const po = await prisma.purchaseOrder.create({
       data: {
         poNumber: `PO-${suffix}`,
@@ -103,8 +126,13 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       },
     });
     poId = po.id;
+    console.log(`[E2E Setup] PurchaseOrder created: ${poId}`);
 
+    console.log('[E2E Setup] Hashing password with bcrypt...');
     const passwordHash = await bcrypt.hash('Password123!');
+    console.log('[E2E Setup] Password hashed.');
+
+    console.log('[E2E Setup] Creating admin User...');
     const adminEmail = `admin-${suffix}@logirest.com`;
     const adminUser = await prisma.user.create({
       data: {
@@ -116,7 +144,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       },
     });
     adminId = adminUser.id;
+    console.log(`[E2E Setup] Admin User created: ${adminId}`);
 
+    console.log('[E2E Setup] Creating standard User...');
     const procEmail = `proc-${suffix}@logirest.com`;
     const procUser = await prisma.user.create({
       data: {
@@ -128,7 +158,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       },
     });
     procOfficerId = procUser.id;
+    console.log(`[E2E Setup] Standard User created: ${procOfficerId}`);
 
+    console.log('[E2E Setup] Creating WarehouseScopes...');
     await prisma.userWarehouseScope.createMany({
       data: [
         { userId: adminId, warehouseId: warehouseAId },
@@ -137,19 +169,27 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
         { userId: procOfficerId, warehouseId: warehouseBId },
       ],
     });
+    console.log('[E2E Setup] WarehouseScopes created.');
 
-    const adminLoginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ email: adminEmail, password: 'Password123!' });
-    adminToken = adminLoginRes.body.accessToken;
+    const jwtService = app.get(JwtService);
+    adminToken = jwtService.sign({
+      sub: adminId,
+      email: adminEmail,
+      role: 'ADMIN',
+    });
 
-    const procLoginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ email: procEmail, password: 'Password123!' });
-    procOfficerToken = procLoginRes.body.accessToken;
+    procOfficerToken = jwtService.sign({
+      sub: procOfficerId,
+      email: procEmail,
+      role: 'PROC_OFFICER',
+    });
+    console.log(
+      '[E2E Setup] beforeAll: Master data seeding complete. Tokens generated.',
+    );
   }, 180000);
 
   afterAll(async () => {
+    console.log('[E2E Cleanup] afterAll: Cleaning up database records...');
     if (prisma) {
       await prisma.userWarehouseScope.deleteMany({
         where: { userId: { in: [adminId, procOfficerId] } },
@@ -188,11 +228,16 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       });
       await prisma.$disconnect();
     }
+    console.log(
+      '[E2E Cleanup] afterAll: Database disconnect done. Closing App...',
+    );
     await app.close();
+    console.log('[E2E Cleanup] afterAll: App closed successfully.');
   }, 180000);
 
   it('should maintain WAC accuracy through GRN posting, Issue posting, and Transfer receipt flows', async () => {
     // 1. Post GRN to Warehouse A: Qty = 10, Price = 100.00
+    console.log('[WAC Flow] 1. Creating GRN A for Warehouse A...');
     const grnA = await prisma.goodsReceivedNote.create({
       data: {
         grnNumber: `GRN-A-${Date.now()}`,
@@ -205,13 +250,18 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       },
     });
 
+    console.log(
+      '[WAC Flow] 1. Posting GRN A (Triggering WacService recalculation on Warehouse A)...',
+    );
     await request(app.getHttpServer())
       .post(`/api/v1/procurement/goods-received/${grnA.id}/post`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-warehouse-id', warehouseAId)
       .set('x-branch-id', branchId)
       .send({ version: 1 })
+      .timeout(10000)
       .expect(200);
+    console.log('[WAC Flow] 1. GRN A Posted.');
 
     // Verify WAC at Warehouse A = 100.00
     let whItemA = await prisma.warehouseItem.findUnique({
@@ -219,8 +269,10 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
     });
     expect(Number(whItemA?.qtyOnHand)).toBe(10);
     expect(Number(whItemA?.wac)).toBe(100.0);
+    console.log('[WAC Flow] 1. WAC verified at Warehouse A = 100.00');
 
     // 2. Post GRN to Warehouse B: Qty = 5, Price = 40.00
+    console.log('[WAC Flow] 2. Creating GRN B for Warehouse B...');
     const grnB = await prisma.goodsReceivedNote.create({
       data: {
         grnNumber: `GRN-B-${Date.now()}`,
@@ -233,13 +285,18 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       },
     });
 
+    console.log(
+      '[WAC Flow] 2. Posting GRN B (Triggering WacService recalculation on Warehouse B)...',
+    );
     await request(app.getHttpServer())
       .post(`/api/v1/procurement/goods-received/${grnB.id}/post`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-warehouse-id', warehouseBId)
       .set('x-branch-id', branchId)
       .send({ version: 1 })
+      .timeout(10000)
       .expect(200);
+    console.log('[WAC Flow] 2. GRN B Posted.');
 
     // Verify WAC at Warehouse B = 40.00
     let whItemB = await prisma.warehouseItem.findUnique({
@@ -247,8 +304,10 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
     });
     expect(Number(whItemB?.qtyOnHand)).toBe(5);
     expect(Number(whItemB?.wac)).toBe(40.0);
+    console.log('[WAC Flow] 2. WAC verified at Warehouse B = 40.00');
 
     // 3. Post Inventory Issue to Warehouse A: Qty = 3. Verify WAC remains 100.00
+    console.log('[WAC Flow] 3. Creating Inventory Issue at Warehouse A...');
     const createIssueRes = await request(app.getHttpServer())
       .post('/api/v1/operations/issues')
       .set('Authorization', `Bearer ${procOfficerToken}`)
@@ -259,9 +318,13 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
         departmentId,
         lines: [{ itemId, quantity: 3 }],
       })
+      .timeout(10000)
       .expect(201);
 
     const issueId = createIssueRes.body.id;
+    console.log(
+      `[WAC Flow] 3. Inventory Issue created with ID: ${issueId}. Submitting...`,
+    );
 
     await request(app.getHttpServer())
       .post(`/api/v1/operations/issues/${issueId}/submit`)
@@ -269,7 +332,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       .set('x-warehouse-id', warehouseAId)
       .set('x-branch-id', branchId)
       .send({ comments: 'Submit Issue', version: 1 })
+      .timeout(10000)
       .expect(200);
+    console.log('[WAC Flow] 3. Inventory Issue submitted. Posting...');
 
     await request(app.getHttpServer())
       .post(`/api/v1/operations/issues/${issueId}/post`)
@@ -277,15 +342,21 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       .set('x-warehouse-id', warehouseAId)
       .set('x-branch-id', branchId)
       .send({ version: 2 })
+      .timeout(10000)
       .expect(200);
+    console.log('[WAC Flow] 3. Inventory Issue posted.');
 
     whItemA = await prisma.warehouseItem.findUnique({
       where: { warehouseId_itemId: { warehouseId: warehouseAId, itemId } },
     });
     expect(Number(whItemA?.qtyOnHand)).toBe(7); // 10 - 3
     expect(Number(whItemA?.wac)).toBe(100.0); // WAC unchanged on issues
+    console.log(
+      '[WAC Flow] 3. Verified Warehouse A WAC remains 100.00 after issue.',
+    );
 
     // 4. Create and Receive Transfer from Warehouse A to Warehouse B of Qty = 4
+    console.log('[WAC Flow] 4. Creating Transfer from Warehouse A to B...');
     const createTransferRes = await request(app.getHttpServer())
       .post('/api/v1/operations/transfers')
       .set('Authorization', `Bearer ${procOfficerToken}`)
@@ -297,9 +368,13 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
         toWarehouseId: warehouseBId,
         lines: [{ itemId, quantity: 4 }],
       })
+      .timeout(10000)
       .expect(201);
 
     const transferId = createTransferRes.body.id;
+    console.log(
+      `[WAC Flow] 4. Transfer created with ID: ${transferId}. Shipping...`,
+    );
 
     // Ship the transfer
     await request(app.getHttpServer())
@@ -308,7 +383,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       .set('x-warehouse-id', warehouseAId)
       .set('x-branch-id', branchId)
       .send({ version: 1 })
+      .timeout(10000)
       .expect(200);
+    console.log('[WAC Flow] 4. Transfer shipped. Receiving...');
 
     // Receive the transfer at Warehouse B
     await request(app.getHttpServer())
@@ -317,7 +394,9 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       .set('x-warehouse-id', warehouseBId)
       .set('x-branch-id', branchId)
       .send({ version: 2 })
+      .timeout(10000)
       .expect(200);
+    console.log('[WAC Flow] 4. Transfer received at Warehouse B.');
 
     // Verify WAC at Warehouse B
     // Initial: Qty 5, WAC 40. Received: Qty 4, Cost 100
@@ -327,5 +406,8 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
     });
     expect(Number(whItemB?.qtyOnHand)).toBe(9); // 5 + 4
     expect(Number(whItemB?.wac)).toBeCloseTo(66.6667, 4);
+    console.log(
+      '[WAC Flow] 4. Verified Warehouse B WAC updated correctly to 66.6667',
+    );
   });
 });

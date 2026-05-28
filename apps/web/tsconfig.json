@@ -16,13 +16,14 @@
 
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
     "../../packages/shared-types/src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
+    ".next",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",

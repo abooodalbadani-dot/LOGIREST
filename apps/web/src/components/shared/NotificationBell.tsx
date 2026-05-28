@@ -1,13 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import { z } from 'zod';
 import { Bell, Check, Loader2 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import { apiClient } from '@/lib/api/client';
-import { NotificationLogSchema, type NotificationLog } from '@/types/notifications';
+import { type NotificationLog } from '@/types/notifications';
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from '@/features/notifications/hooks/useNotifications';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -65,30 +67,11 @@ function getDocumentRoute(docType?: string | null, docId?: string | null): strin
 export function NotificationBell() {
   const locale = useLocale();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const isAr = locale === 'ar';
 
-  const { data: notifications = [], isLoading } = useQuery<NotificationLog[]>({
-    queryKey: ['notifications'],
-    queryFn: () => apiClient.get('/notifications', NotificationLogSchema.array()),
-    refetchInterval: 30000, // Poll every 30 seconds
-  });
-
-  const markReadMutation = useMutation({
-    mutationFn: (id: string) =>
-      apiClient.patch(`/notifications/${id}/read`, z.object({ id: z.string(), isRead: z.boolean() }), {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-  });
-
-  const markAllReadMutation = useMutation({
-    mutationFn: () =>
-      apiClient.post('/notifications/read-all', z.object({ success: z.boolean(), markedReadCount: z.number() }), {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-  });
+  const { data: notifications = [], isLoading } = useNotifications();
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
 
   const unreadNotifications = React.useMemo(() => {
     return notifications.filter((n) => !n.isRead);

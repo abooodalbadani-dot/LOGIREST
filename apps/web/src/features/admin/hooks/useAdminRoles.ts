@@ -85,23 +85,13 @@ export function useAdminRole(id: string | null) {
 }
 
 export function useUpdateRolePermissions() {
-  const queryClient = useQueryClient();
-  const t = useTranslations('admin.roles');
-
   return useMutation({
-    mutationFn: async ({ id, permissions, signal }: { id: string; permissions: Permission[]; signal?: AbortSignal }) => {
-      // Role permissions are statically code-managed under Option A
-      throw new Error('permissions_immutable');
+    mutationFn: async ({ id }: { id: string; permissions: Permission[]; signal?: AbortSignal }) => {
+      // Role permissions are statically code-managed under Option A and read-only in the UI
+      return { id };
     },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['admin/roles'] });
-      queryClient.invalidateQueries({ queryKey: ['admin/roles', data?.id] });
-      toast.success(t('permissions_updated'));
-    },
-    onError: (error: Error) => {
-      if (error.message === 'Aborted') return;
-      toast.error(t(error.message) || error.message);
-    }
+    onSuccess: () => {},
+    onError: () => {},
   });
 }
 

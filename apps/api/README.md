@@ -191,4 +191,41 @@ Run the application stack in production mode:
 docker compose -f docker-compose.yml up -d --build
 ```
 
+## Security Runbook — Initial Seeding & Admin Password Rotation
+
+To ensure a secure zero-trust operational environment, system administrators must strictly follow this post-initialization password rotation procedure:
+
+1. **Configure Initial Seeding Variables**:
+   In your container deployment environment, specify `INITIAL_ADMIN_EMAIL`, `INITIAL_ADMIN_PASSWORD` (non-default secure value), and `INITIAL_ADMIN_NAME`.
+
+2. **Trigger Database Seeding**:
+   Run `npx prisma db seed` (or deploy your container which automatically runs seeding during its entrypoint initialization).
+
+3. **Authenticate & Rotate**:
+   - Log in immediately to the system using the configured initial admin credentials.
+   - Navigate to **Profile Settings** (`/profile`) in the top navigation panel.
+   - Configure a new, strong password and update the operator key.
+
+4. **Environment Sanitation**:
+   - Under your production environment configuration (e.g. AWS ECS task definition, Kubernetes secrets, or `.env` files), **remove the `INITIAL_ADMIN_PASSWORD` variable completely**.
+   - This ensures that subsequent container restarts or redeployments cannot accidentally expose initial seed credentials.
+
+---
+
+## 🌐 API Versioning & Deprecation Policy
+
+The NestJS backend implements strict, zero-trust URI-based versioning globally.
+
+### 1. Route Routing & Scheme
+- Every NestJS controller defaults to the global prefix `/api/v1` (with the exception of core systems `/health` and `/metrics` targets).
+- Configuration is centralized in `main.ts` using NestJS `VersioningType.URI` options.
+
+### 2. Standard Deprecation Guidelines
+To deprecate outdated endpoints:
+1. Mark the controller or route handler with `@Deprecated()` or attach deprecation response interceptor meta headers.
+2. The response will automatically append the `Deprecated: true` header.
+3. Obsolete endpoints must remain fully active and regression-tested for **6 months** (Sunset Period) to prevent client disruptions, after which they are removed.
+
+
+
 

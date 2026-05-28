@@ -19,21 +19,23 @@ async function main() {
   // Attempt to check active locks in Postgres
   try {
     console.log('Checking active locks/queries in PostgreSQL...');
-    const activeQueries = await prisma.$queryRawUnsafe<any[]>(`
+    const locks = await prisma.$queryRawUnsafe<any[]>(`
       SELECT 
-        pid,
-        age(clock_timestamp(), query_start),
-        usename,
-        query,
-        state
-      FROM pg_stat_activity
-      WHERE query != '<insufficient privilege>'
-        AND query NOT LIKE '%pg_stat_activity%'
-        AND state != 'idle';
+        t.schemaname,
+        t.relname AS table_name,
+        l.mode AS lock_mode,
+        l.granted,
+        a.pid,
+        a.query AS active_query,
+        age(clock_timestamp(), a.query_start) AS query_age
+      FROM pg_locks l
+      JOIN pg_stat_activity a ON l.pid = a.pid
+      JOIN pg_stat_user_tables t ON l.relation = t.relid
+      ORDER BY a.query_start;
     `);
-    console.log('Active queries:', JSON.stringify(activeQueries, null, 2));
+    console.log('Active locks:', JSON.stringify(locks, null, 2));
   } catch (err) {
-    console.error('Failed to get active queries:', err);
+    console.error('Failed to get active locks:', err);
   }
 
   await prisma.$disconnect();

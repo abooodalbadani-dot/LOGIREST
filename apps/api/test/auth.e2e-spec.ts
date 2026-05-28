@@ -82,12 +82,12 @@ describe('AuthController (e2e)', () => {
     it('should return 401 for invalid credentials', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'nonexistent@test.com', password: 'wrongpassword' })
+        .send({ email: 'nonexistent@test.com', password: 'Wrongpassword123!' })
         .expect(401);
     });
 
     it('should return 401 for deactivated user', async () => {
-      const hash = await bcrypt.hash('deactivated123');
+      const hash = await bcrypt.hash('Deactivated123!');
       await prisma.user.upsert({
         where: { email: 'deactivated@test.com' },
         update: { passwordHash: hash, isActive: false },
@@ -102,18 +102,17 @@ describe('AuthController (e2e)', () => {
 
       return request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'deactivated@test.com', password: 'deactivated123' })
+        .send({ email: 'deactivated@test.com', password: 'Deactivated123!' })
         .expect(401);
     });
 
     it('should return 200 with access token for valid credentials', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' })
+        .send({ email: 'admin@logirest.com', password: 'Password123!' })
         .expect(200)
         .then((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.accessToken).toBeDefined();
+          expect(res.body.token).toBeDefined();
           expect(res.body.user.email).toBe('admin@logirest.com');
         });
     });
@@ -125,8 +124,8 @@ describe('AuthController (e2e)', () => {
     beforeAll(async () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.com', password: 'adminpassword' });
-      accessToken = res.body.accessToken;
+        .send({ email: 'admin@logirest.com', password: 'Password123!' });
+      accessToken = res.body.token;
     });
 
     it('should return 401 without token', () => {
@@ -139,8 +138,7 @@ describe('AuthController (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .then((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.user.email).toBe('admin@logirest.com');
+          expect(res.body.email).toBe('admin@logirest.com');
         });
     });
   });

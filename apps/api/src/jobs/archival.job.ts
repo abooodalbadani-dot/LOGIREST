@@ -26,6 +26,9 @@ export class ArchivalJob {
       const twoYearsAgo = new Date();
       twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
 
+      const threeYearsAgo = new Date();
+      threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+
       let archivedLogsCount = 0;
       let archivedLedgersCount = 0;
 
@@ -81,7 +84,7 @@ export class ArchivalJob {
         while (hasMoreLedgers) {
           const oldLedgers = await this.prisma.stockLedger.findMany({
             where: {
-              postedAt: { lt: twoYearsAgo },
+              postedAt: { lt: threeYearsAgo },
             },
             take: 1000,
             orderBy: { id: 'asc' },

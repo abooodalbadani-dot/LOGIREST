@@ -1,8 +1,5 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import {
-  ConsoleSpanExporter,
-  SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-base';
 import { PrismaInstrumentation } from '@prisma/instrumentation';
 
 const sdk = new NodeSDK({

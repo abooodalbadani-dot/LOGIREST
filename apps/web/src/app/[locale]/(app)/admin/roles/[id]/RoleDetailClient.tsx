@@ -31,7 +31,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const isAdmin = id === 'ADMIN';
-  const isAuditor = isReadOnly || isAdmin;
+  const isAuditor = true; // All roles are immutable and managed by system manifest
 
   const localPermissions = useMemo(() => {
     return basePermissions.map(p => ({
@@ -118,7 +118,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
           </div>
         )}
 
-        {isReadOnly && !isAdmin && (
+        {isAuditor && !isAdmin && (
            <div className="p-6 bg-cyan-500/5 border border-cyan-500/10 rounded-sm flex items-center gap-4">
              <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
                <ShieldCheck className="w-5 h-5 text-cyan-500" />

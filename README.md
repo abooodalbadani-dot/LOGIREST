@@ -92,4 +92,21 @@ npm run test --workspace=api
 > 2. `JWT_REFRESH_SECRET` - Secures token rotation and user session validation.
 > 3. `ENCRYPTION_KEY` - Used to encrypt sensitive DB configurations (e.g., SMTP passwords).
 > 
-> Failing to manage these securely in production puts user sessions and system integrity at risk.
+> Failing to manage these securely in production puts user sessions and system integrity at risk.
+
+---
+
+## 🌐 API Versioning & Deprecation Policy
+
+The LogiRest platform enforces a zero-trust, version-controlled REST API architecture:
+
+### 1. Versioning Scheme
+- **URI Prefixing**: Every core API endpoint is mapped under a version-controlled URI path (e.g., `/api/v1/...`).
+- **Global Default**: Global versioning is managed inside `main.ts` with URI-based routing, defaulting unresolved calls to `v1`.
+
+### 2. Deprecation Lifecycle
+To ensure smooth client integrations and prevent breaking frontend and handheld scanner systems:
+1. **Deprecation Notice**: When a route is marked for retirement, it returns a standard HTTP header `Deprecated: true` in the response, accompanied by an `x-sunset-date` header indicating when the route will be fully retired.
+2. **Support Period**: Obsolete API endpoints remain fully supported and maintained for a minimum of **6 months** (Sunset Period) post-deprecation.
+3. **Obsoletion & Removal**: Once the Sunset Period expires, the route is officially decommissioned, throwing `410 Gone` or returning `404 Not Found` upon subsequent client calls.
+
