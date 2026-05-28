@@ -82,6 +82,7 @@ export class AuthService {
 
     return {
       token: accessToken,
+      accessToken,
       user: mappedUser,
     };
   }

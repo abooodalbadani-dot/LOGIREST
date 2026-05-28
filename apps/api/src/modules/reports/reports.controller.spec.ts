@@ -35,6 +35,7 @@ describe('ReportsController', () => {
   const mockPrismaService = {
     warehouseItem: {
       findMany: jest.fn(),
+      count: jest.fn(),
     },
     warehouseLock: {
       count: jest.fn(),
@@ -210,6 +211,7 @@ describe('ReportsController', () => {
 
   describe('getAvailableInventory', () => {
     it('should return detailed item-level available inventory balances', async () => {
+      mockPrismaService.warehouseItem.count.mockResolvedValue(1);
       mockPrismaService.warehouseItem.findMany.mockResolvedValue([
         {
           qtyOnHand: 100,
@@ -224,19 +226,29 @@ describe('ReportsController', () => {
         },
       ]);
 
-      const result = await controller.getAvailableInventory('wh-1');
-      expect(result).toEqual([
-        {
-          sku: 'SKU-001',
-          name: 'Item 1',
-          category: 'Veg',
-          uom: 'PCS',
-          qty_physical: 100,
-          qty_reserved: 10,
-          qty_available: 90,
-          wac: 5.5,
-        },
-      ]);
+      const result = await controller.getAvailableInventory(
+        'wh-1',
+        '1',
+        '100',
+        'Item 1',
+      );
+      expect(result).toEqual({
+        total: 1,
+        page: 1,
+        limit: 100,
+        data: [
+          {
+            sku: 'SKU-001',
+            name: 'Item 1',
+            category: 'Veg',
+            uom: 'PCS',
+            qty_physical: 100,
+            qty_reserved: 10,
+            qty_available: 90,
+            wac: 5.5,
+          },
+        ],
+      });
     });
   });
 

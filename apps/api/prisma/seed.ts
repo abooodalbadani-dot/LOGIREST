@@ -8,6 +8,12 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Production environment detected. Redirecting to production seeder...');
+    await import('./seed.prod.js');
+    return;
+  }
+
   console.log('Seeding database...');
 
   // ─── System Settings (M5) ────────────────────────────────────
@@ -157,6 +163,7 @@ async function main() {
 
   // ─── Categories ──────────────────────────────────────────────
   const categoryNames = [
+    'Default Category',
     'Meat & Poultry',
     'Dry Goods',
     'Fresh Produce',

@@ -45,6 +45,14 @@ export class PrismaService
 
     return new Proxy(this, {
       get: (target, prop, receiver) => {
+        if (prop === '$transaction') {
+          return (arg1: any, arg2?: any) => {
+            const defaults = { timeout: 15000, maxWait: 5000 };
+            const opts =
+              typeof arg2 === 'object' ? { ...defaults, ...arg2 } : defaults;
+            return extended.$transaction(arg1, opts);
+          };
+        }
         if (prop in extended) {
           const value = Reflect.get(extended, prop);
           return typeof value === 'function' ? value.bind(extended) : value;

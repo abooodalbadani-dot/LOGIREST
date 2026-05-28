@@ -13,6 +13,16 @@ export const envSchema = z.object({
     .default('development'),
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
   IDEMPOTENCY_TTL_HOURS: z.coerce.number().default(24),
+  ENCRYPTION_KEY: z
+    .string()
+    .min(
+      32,
+      'ENCRYPTION_KEY must be at least 32 characters. Generate with: openssl rand -hex 32',
+    ),
+  TRANSFER_OVERDUE_DAYS: z.coerce.number().min(1).default(7),
+  BASE_CURRENCY_CODE: z.string().length(3).default('SAR'),
+  BASE_CURRENCY_NAME: z.string().default('Saudi Riyal'),
+  SMTP_FROM: z.string().email().default('noreply@logirest.app'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -38,6 +48,13 @@ export function validate(config: Record<string, unknown>) {
 
     console.error(JSON.stringify(errorLog));
     process.exit(1);
+  }
+
+  // Copy validated/defaulted values back to process.env so that process.env.* has correct defaults
+  for (const [key, value] of Object.entries(result.data)) {
+    if (value !== undefined) {
+      process.env[key] = String(value);
+    }
   }
 
   return result.data;

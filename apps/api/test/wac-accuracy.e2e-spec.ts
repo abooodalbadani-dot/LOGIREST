@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
@@ -153,7 +154,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
         email: procEmail,
         passwordHash,
         name: `Proc Officer ${suffix}`,
-        role: 'PROC_OFFICER',
+        role: 'INV_MGR',
         isActive: true,
       },
     });
@@ -181,7 +182,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
     procOfficerToken = jwtService.sign({
       sub: procOfficerId,
       email: procEmail,
-      role: 'PROC_OFFICER',
+      role: 'INV_MGR',
     });
     console.log(
       '[E2E Setup] beforeAll: Master data seeding complete. Tokens generated.',
@@ -191,6 +192,12 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
   afterAll(async () => {
     console.log('[E2E Cleanup] afterAll: Cleaning up database records...');
     if (prisma) {
+      await prisma.auditLog.deleteMany({
+        where: { userId: { in: [adminId, procOfficerId] } },
+      });
+      await prisma.approvalEvent.deleteMany({
+        where: { userId: { in: [adminId, procOfficerId] } },
+      });
       await prisma.userWarehouseScope.deleteMany({
         where: { userId: { in: [adminId, procOfficerId] } },
       });
@@ -221,6 +228,12 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       await prisma.currency.delete({ where: { id: currencyId } });
       await prisma.warehouse.deleteMany({
         where: { id: { in: [warehouseAId, warehouseBId] } },
+      });
+      await prisma.department.deleteMany({
+        where: { id: departmentId },
+      });
+      await prisma.documentSequence.deleteMany({
+        where: { branchId },
       });
       await prisma.branch.delete({ where: { id: branchId } });
       await prisma.user.deleteMany({
@@ -366,7 +379,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       .send({
         fromWarehouseId: warehouseAId,
         toWarehouseId: warehouseBId,
-        lines: [{ itemId, quantity: 4 }],
+        lines: [{ itemId, quantityShipped: 4 }],
       })
       .timeout(10000)
       .expect(201);

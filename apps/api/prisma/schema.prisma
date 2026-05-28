@@ -434,6 +434,8 @@ model LotAllocation {
   transferLine TransferLine?       @relation(fields: [transferLineId], references: [id], onDelete: Cascade)
   lot          Lot                 @relation(fields: [lotId], references: [id], onDelete: Restrict)
 
+  @@index([transferLineId])
+  @@index([issueLineId])
   @@map("lot_allocations")
 }
 

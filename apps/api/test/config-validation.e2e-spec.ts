@@ -33,6 +33,7 @@ describe('Config Validation', () => {
       FRONTEND_URL: 'http://localhost:3000',
       JWT_ACCESS_SECRET: 'a'.repeat(32),
       JWT_REFRESH_SECRET: 'b'.repeat(32),
+      ENCRYPTION_KEY: 'c'.repeat(32),
     };
 
     const result = validate(validConfig);

@@ -37,6 +37,7 @@ async function main() {
 
     console.log(
       `Found system settings (Version: ${setting.version}). Processing value string...`,
+    );
     const savedConfig = JSON.parse(setting.value) as {
       smtp_password?: string;
       [key: string]: any;

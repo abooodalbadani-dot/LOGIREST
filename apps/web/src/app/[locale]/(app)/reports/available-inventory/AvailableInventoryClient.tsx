@@ -11,7 +11,8 @@ import { formatQuantity } from '@/lib/utils';
 export default function AvailableInventoryClient() {
  const t = useTranslations('reports');
  const locale = useLocale() as 'ar' | 'en';
- const { data, isLoading } = useAvailableInventoryReport();
+  const { data: paginatedData, isLoading } = useAvailableInventoryReport();
+  const data = paginatedData?.data;
 
  const columns: ColumnDef<AvailableInventoryReport>[] = [
  {

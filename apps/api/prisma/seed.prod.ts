@@ -83,6 +83,7 @@ async function main() {
 
   // 4. Categories
   const categories = [
+    'Default Category',
     'Meat & Poultry',
     'Dry Goods',
     'Fresh Produce',
@@ -102,30 +103,58 @@ async function main() {
     });
   }
 
-  // 5. Optional Secure First Admin User Setup via Environment Variables
-  const adminEmail = process.env.INITIAL_ADMIN_EMAIL;
-  const adminPassword = process.env.INITIAL_ADMIN_PASSWORD;
+  // ─── Main Branch & Warehouse ──────────────────────────────────
+  const mainBranch = await prisma.branch.upsert({
+    where: { code: 'HQ' },
+    update: {},
+    create: { name: 'Main Branch - HQ', code: 'HQ' },
+  });
+
+  const mainWh = await prisma.warehouse.upsert({
+    where: { code: 'WH-HQ-01' },
+    update: {},
+    create: {
+      name: 'HQ Main Warehouse',
+      code: 'WH-HQ-01',
+      branchId: mainBranch.id,
+    },
+  });
+
+  // 5. Secure First Admin User Setup
+  const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@logirest.com';
+  const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'AdminPassword123!';
   const adminName = process.env.INITIAL_ADMIN_NAME || 'System Administrator';
 
-  if (adminEmail && adminPassword) {
-    console.log(`Found environment variables. Seeding initial admin user: ${adminEmail}`);
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
-    await prisma.user.upsert({
-      where: { email: adminEmail },
-      update: {},
-      create: {
-        email: adminEmail,
-        passwordHash,
-        name: adminName,
-        role: Role.ADMIN,
-        isActive: true,
+  console.log(`Seeding initial admin user: ${adminEmail}`);
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const adminUser = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {},
+    create: {
+      email: adminEmail,
+      passwordHash,
+      name: adminName,
+      role: Role.ADMIN,
+      isActive: true,
+    },
+  });
+  console.log('Initial admin user successfully seeded!');
+
+  // Link admin user to the main warehouse scope
+  await prisma.userWarehouseScope.upsert({
+    where: {
+      userId_warehouseId: {
+        userId: adminUser.id,
+        warehouseId: mainWh.id,
       },
-    });
-    console.log('Initial admin user successfully seeded!');
-  } else {
-    console.log('No INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD environment variables found. Skipping initial admin seeding.');
-    console.log('Tip: Set INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD to seed the first admin user securely.');
-  }
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      warehouseId: mainWh.id,
+    },
+  });
+  console.log('Admin user linked to Main Warehouse scope!');
 
   console.log('Production reference data seeding complete!');
 }

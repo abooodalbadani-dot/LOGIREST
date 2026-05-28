@@ -81,7 +81,7 @@ describe('Scope Isolation (e2e)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({ email: 'admin@logirest.com', password: 'Password123!' });
-      accessToken = res.body.accessToken;
+      accessToken = res.body.token;
     });
 
     it('should skip scope check for auth endpoints', async () => {

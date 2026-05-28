@@ -78,7 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (storedToken) {
       try {
-        const payloadStr = decodeURIComponent(escape(atob(storedToken.split('.')[1])));
+        const b64 = storedToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payloadStr = decodeURIComponent(escape(atob(b64)));
         const payload = JSON.parse(payloadStr);
         let parsedUser = AuthUserSchema.parse(payload.user);
 
@@ -150,7 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!token) return;
     try {
-      const payloadStr = decodeURIComponent(escape(atob(token.split('.')[1])));
+      const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payloadStr = decodeURIComponent(escape(atob(b64)));
       const payload = JSON.parse(payloadStr);
       const exp = payload.exp as number;
       const now = Math.floor(Date.now() / 1000);
@@ -183,7 +185,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setTokenCookie(data.token);
 
-      const payloadStr = decodeURIComponent(escape(atob(data.token.split('.')[1])));
+      const b64 = data.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payloadStr = decodeURIComponent(escape(atob(b64)));
       const payload = JSON.parse(payloadStr);
       const parsedUser = AuthUserSchema.parse(payload.user);
 

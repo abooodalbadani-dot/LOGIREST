@@ -55,7 +55,7 @@ describe('WacService', () => {
       mockLockItem.mockResolvedValue({
         warehouseId: whId,
         itemId: itemId,
-        qtyOnHand: new Prisma.Decimal(10),
+        qtyOnHand: new Prisma.Decimal(20),
         wac: new Prisma.Decimal(5.0),
       });
 
@@ -92,7 +92,7 @@ describe('WacService', () => {
       mockLockItem.mockResolvedValue({
         warehouseId: whId,
         itemId: itemId,
-        qtyOnHand: new Prisma.Decimal(0),
+        qtyOnHand: new Prisma.Decimal(10),
         wac: new Prisma.Decimal(5.0),
       });
 
@@ -116,7 +116,7 @@ describe('WacService', () => {
       mockLockItem.mockResolvedValue({
         warehouseId: whId,
         itemId: itemId,
-        qtyOnHand: new Prisma.Decimal(-5),
+        qtyOnHand: new Prisma.Decimal(5),
         wac: new Prisma.Decimal(4.0),
       });
 
@@ -146,7 +146,7 @@ describe('WacService', () => {
       mockLockItem.mockResolvedValue({
         warehouseId: whId,
         itemId: itemId,
-        qtyOnHand: new Prisma.Decimal(10),
+        qtyOnHand: new Prisma.Decimal(20),
         wac: new Prisma.Decimal(5.0),
       });
 

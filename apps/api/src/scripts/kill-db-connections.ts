@@ -39,7 +39,9 @@ async function main() {
       }
       console.log('Terminated all blocking processes.');
     } else {
-      console.log('No blocking lock conflicts found. Querying all active connections...');
+      console.log(
+        'No blocking lock conflicts found. Querying all active connections...',
+      );
       const activeConns = await prisma.$queryRaw<any[]>`
         SELECT pid, datname, state, query, age(clock_timestamp(), query_start)::text as age
         FROM pg_stat_activity

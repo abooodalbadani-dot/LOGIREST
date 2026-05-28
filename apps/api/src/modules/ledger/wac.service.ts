@@ -42,19 +42,15 @@ export class WacService {
     const rxQty = new Prisma.Decimal(receivedQty);
     const rxCost = new Prisma.Decimal(receivedCost);
 
+    const preQty = currentQty.sub(rxQty);
+
     let newWac: Prisma.Decimal;
-    if (currentQty.lte(0)) {
+    if (preQty.lte(0) || currentQty.lte(0)) {
       newWac = rxCost;
     } else {
-      const currentTotalCost = currentQty.mul(currentWac);
+      const preTotalCost = preQty.mul(currentWac);
       const receivedTotalCost = rxQty.mul(rxCost);
-      const totalQty = currentQty.add(rxQty);
-
-      if (totalQty.lte(0)) {
-        newWac = rxCost;
-      } else {
-        newWac = currentTotalCost.add(receivedTotalCost).div(totalQty);
-      }
+      newWac = preTotalCost.add(receivedTotalCost).div(currentQty);
     }
 
     // Round to 4 decimal places
@@ -113,19 +109,15 @@ export class WacService {
     const adjQty = new Prisma.Decimal(adjustedQty);
     const adjCost = new Prisma.Decimal(adjustedCost);
 
+    const preQty = currentQty.sub(adjQty);
+
     let newWac: Prisma.Decimal;
-    if (currentQty.lte(0)) {
+    if (preQty.lte(0) || currentQty.lte(0)) {
       newWac = adjCost;
     } else {
-      const currentTotalCost = currentQty.mul(currentWac);
+      const preTotalCost = preQty.mul(currentWac);
       const receivedTotalCost = adjQty.mul(adjCost);
-      const totalQty = currentQty.add(adjQty);
-
-      if (totalQty.lte(0)) {
-        newWac = adjCost;
-      } else {
-        newWac = currentTotalCost.add(receivedTotalCost).div(totalQty);
-      }
+      newWac = preTotalCost.add(receivedTotalCost).div(currentQty);
     }
 
     // Round to 4 decimal places

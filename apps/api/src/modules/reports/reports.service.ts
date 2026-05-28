@@ -178,7 +178,7 @@ export class ReportsService {
     return overdueTransfers;
   }
 
-  async getAvailableInventory(warehouseId: string) {
+  async getAvailableInventoryRaw(warehouseId: string) {
     const items = await this.prisma.warehouseItem.findMany({
       where: { warehouseId },
       include: {
@@ -201,6 +201,61 @@ export class ReportsService {
       qty_available: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
       wac: Number(wi.wac || 0),
     }));
+  }
+
+  async getAvailableInventory(
+    warehouseId: string,
+    page: string = '1',
+    limit: string = '100',
+    search?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(500, Math.max(1, parseInt(limit, 10)));
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: Prisma.WarehouseItemWhereInput = { warehouseId };
+    if (search) {
+      where.item = {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { sku: { contains: search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const [total, items] = await Promise.all([
+      this.prisma.warehouseItem.count({ where }),
+      this.prisma.warehouseItem.findMany({
+        where,
+        include: {
+          item: {
+            include: {
+              category: true,
+              unitOfMeasure: true,
+            },
+          },
+        },
+        skip,
+        take: limitNum,
+        orderBy: { item: { sku: 'asc' } },
+      }),
+    ]);
+
+    return {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      data: items.map((wi) => ({
+        sku: wi.item.sku,
+        name: wi.item.name,
+        category: wi.item.category.name,
+        uom: wi.item.unitOfMeasure.code,
+        qty_physical: Number(wi.qtyOnHand),
+        qty_reserved: Number(wi.qtyAllocated),
+        qty_available: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+        wac: Number(wi.wac || 0),
+      })),
+    };
   }
 
   async getMovements(

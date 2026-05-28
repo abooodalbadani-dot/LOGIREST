@@ -20,14 +20,6 @@ async function bootstrapTestDb() {
     console.log('[E2E Setup] testEnvPath:', testEnvPath);
     console.log('[E2E Setup] defaultEnvPath:', defaultEnvPath);
     console.log('[E2E Setup] DATABASE_URL:', process.env.DATABASE_URL);
-    const adminExists = await prisma.user.findFirst({
-      where: { email: 'admin@logirest.com' },
-    });
-
-    if (adminExists) {
-      return;
-    }
-
     console.log('[E2E Setup] Seeding core baseline dependencies for E2E tests...');
 
     const systemSettingsConfig = {
@@ -107,6 +99,12 @@ async function bootstrapTestDb() {
       create: { name: 'Main Branch - HQ', code: 'HQ' },
     });
 
+    const northBranch = await prisma.branch.upsert({
+      where: { code: 'NORTH' },
+      update: {},
+      create: { name: 'North Branch', code: 'NORTH' },
+    });
+
     const mainWh = await prisma.warehouse.upsert({
       where: { code: 'WH-HQ-01' },
       update: {},
@@ -114,6 +112,16 @@ async function bootstrapTestDb() {
         name: 'HQ Main Warehouse',
         code: 'WH-HQ-01',
         branchId: mainBranch.id,
+      },
+    });
+
+    const northWh = await prisma.warehouse.upsert({
+      where: { code: 'WH-NR-01' },
+      update: {},
+      create: {
+        name: 'North Branch Warehouse',
+        code: 'WH-NR-01',
+        branchId: northBranch.id,
       },
     });
 
@@ -129,7 +137,7 @@ async function bootstrapTestDb() {
     const passwordHash = await bcrypt.hash('Password123!', 10);
     const adminComUser = await prisma.user.upsert({
       where: { email: 'admin@logirest.com' },
-      update: {},
+      update: { passwordHash },
       create: {
         email: 'admin@logirest.com',
         passwordHash,

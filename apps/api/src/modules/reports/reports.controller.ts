@@ -44,8 +44,18 @@ export class ReportsController {
   }
 
   @Get('available-inventory')
-  async getAvailableInventory(@ActiveScope('warehouseId') warehouseId: string) {
-    return this.reportsService.getAvailableInventory(warehouseId);
+  async getAvailableInventory(
+    @ActiveScope('warehouseId') warehouseId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.reportsService.getAvailableInventory(
+      warehouseId,
+      page,
+      limit,
+      search,
+    );
   }
 
   @Get('movements')
@@ -442,7 +452,7 @@ export class ReportsController {
       warehouseId,
       async () => {
         const data =
-          await this.reportsService.getAvailableInventory(warehouseId);
+          await this.reportsService.getAvailableInventoryRaw(warehouseId);
         return data.map((d: any) => ({
           ...d,
           total_value: d.qty_physical * d.wac,

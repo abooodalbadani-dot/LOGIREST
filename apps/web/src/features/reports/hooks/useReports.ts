@@ -13,6 +13,13 @@ export const AvailableInventoryReportSchema = z.object({
  qty_available: z.number(),
 });
 
+export const PaginatedAvailableInventorySchema = z.object({
+ total: z.number(),
+ page: z.number(),
+ limit: z.number(),
+ data: z.array(AvailableInventoryReportSchema),
+});
+
 export const StockMovementsReportSchema = z.object({
  date: z.string(),
  reference: z.string(),
@@ -115,11 +122,16 @@ export function useLotTraceReport() {
 
 // --- Hooks ---
 
-export function useAvailableInventoryReport() {
+export function useAvailableInventoryReport(page = 1, limit = 100, search?: string) {
+ const queryParams = new URLSearchParams({
+   page: page.toString(),
+   limit: limit.toString(),
+   ...(search ? { search } : {}),
+ }).toString();
  return useQuery({
- queryKey: ['reports', 'available-inventory'],
- queryFn: ({ signal }) => apiClient.get('/reports/available-inventory', z.array(AvailableInventoryReportSchema), { signal }),
- staleTime: 5 * 60 * 1000,
+   queryKey: ['reports', 'available-inventory', page, limit, search],
+   queryFn: ({ signal }) => apiClient.get(`/reports/available-inventory?${queryParams}`, PaginatedAvailableInventorySchema, { signal }),
+   staleTime: 5 * 60 * 1000,
  });
 }
 
