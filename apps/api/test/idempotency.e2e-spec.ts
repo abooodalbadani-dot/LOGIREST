@@ -84,7 +84,7 @@ describe('Idempotency Subsystem E2E', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email, password: 'password123' });
-    procOfficerToken = loginRes.body.accessToken;
+    procOfficerToken = loginRes.body.token || loginRes.body.accessToken;
   });
 
   afterAll(async () => {

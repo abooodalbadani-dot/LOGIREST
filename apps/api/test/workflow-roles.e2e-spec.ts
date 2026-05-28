@@ -149,7 +149,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
     const procLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: procEmail, password: 'Password123!' });
-    procOfficerToken = procLogin.body.accessToken;
+    procOfficerToken = procLogin.body.token || procLogin.body.accessToken;
 
     // Users: Warehouse Keeper (NOT allowed to submit PR)
     const whEmail = `wh-${suffix}@logirest.com`;
@@ -171,7 +171,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
     const whLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: whEmail, password: 'Password123!' });
-    whKeeperToken = whLogin.body.accessToken;
+    whKeeperToken = whLogin.body.token || whLogin.body.accessToken;
 
     // Users: Admin (Allowed to post GRN)
     const adminEmail = `admin-${suffix}@logirest.com`;
@@ -193,7 +193,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
     const adminLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: 'Password123!' });
-    adminToken = adminLogin.body.accessToken;
+    adminToken = adminLogin.body.token || adminLogin.body.accessToken;
 
     // Create destination warehouse
     const destWarehouse = await prisma.warehouse.create({
@@ -236,7 +236,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
     const whDestLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: whDestEmail, password: 'Password123!' });
-    whKeeperDestToken = whDestLogin.body.accessToken;
+    whKeeperDestToken = whDestLogin.body.token || whDestLogin.body.accessToken;
   });
 
   afterAll(async () => {

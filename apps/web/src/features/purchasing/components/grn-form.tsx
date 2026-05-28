@@ -39,7 +39,7 @@ import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useCreateGRN } from '@/features/purchasing/hooks/useCreateGRN';
 import { useUpdateGRN } from '@/features/purchasing/hooks/useUpdateGRN';
 import { CreateCustomItemDialog } from '@/components/shared/CreateCustomItemDialog';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { formatCurrency } from '@/utils/currency';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { Item, ItemSchema } from '@/types/master-data';
@@ -145,8 +145,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const isWarehouseLocked = !!warehouseLock?.isLocked;
   const watchedLines = useWatch({ control, name: 'lines' });
 
-  const { data: settings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency;
+  const { currency: baseCurrency } = useBaseCurrency();
   const { data: fxRates } = useFXRates(currencyId, baseCurrency);
   const currentFxRate = fxRates?.[0]?.rate || 1;
 

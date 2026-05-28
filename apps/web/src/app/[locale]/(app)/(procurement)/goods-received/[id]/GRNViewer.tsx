@@ -23,7 +23,7 @@ import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { formatCurrency } from '@/utils/currency';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
@@ -57,8 +57,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
   const tc = useTranslations('common');
   const router = useRouter();
 
-  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency || 'SAR';
+  const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
 
   const totalForeign = document?.lines?.reduce((acc: number, line: GRNLineItem) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
   const currentFxRate = document?.fx_rate || 1;

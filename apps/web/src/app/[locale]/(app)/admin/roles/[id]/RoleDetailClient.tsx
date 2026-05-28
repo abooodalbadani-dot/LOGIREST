@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { useAdminRole, useUpdateRolePermissions, type RoleAction } from '@/features/admin/hooks/useAdminRoles';
+import { useAdminRole, type RoleAction } from '@/features/admin/hooks/useAdminRoles';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { ShieldCheck, Lock, AlertCircle } from 'lucide-react';
@@ -23,7 +23,6 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
   const t = useTranslations('admin.roles');
   const router = useRouter();
   const { data: role, isLoading } = useAdminRole(id);
-  const { mutateAsync: updatePermissions, isPending } = useUpdateRolePermissions();
   const { playSound } = useAudioFeedback();
 
   const basePermissions = useMemo(() => role?.permissions ?? [], [role]);
@@ -69,11 +68,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
     return localPermissions.some(p => p.actions.view);
   }, [localPermissions]);
 
-  const onSave = async () => {
-    await updatePermissions({ id, permissions: localPermissions });
-    setIsConfirmOpen(false);
-    router.push('/admin/roles');
-  };
+
 
   if (isLoading) {
     return (
@@ -88,8 +83,8 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
     <MasterDataFormLayout
       title={(id && ROLE_METADATA[id as UserRole]?.displayName) || role?.name || t('roles_title')}
       backHref="/admin/roles"
-      isSaving={isPending}
-      onSubmit={() => setIsConfirmOpen(true)}
+      isSaving={false}
+      onSubmit={() => {}}
       resource="admin"
       saveAction="edit"
       hideSave={isAuditor}
@@ -167,7 +162,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
                     </td>
                     {ACTION_KEYS.map(action => {
                       const isChecked = perm.actions[action];
-                      const isDisabled = isAuditor || isPending || (action !== 'view' && !perm.actions.view);
+                      const isDisabled = isAuditor || (action !== 'view' && !perm.actions.view);
                       
                       return (
                         <td key={action} className="py-8 px-8 text-center">
@@ -191,15 +186,7 @@ export function RoleDetailClient({ locale: _locale, id, isReadOnly = false }: Pr
           </div>
         </div>
 
-        <PostConfirmDialog
-          open={isConfirmOpen}
-          onOpenChange={setIsConfirmOpen}
-          onConfirm={onSave}
-          title={t('confirm_update_permissions')}
-          description={t('confirm_warning')}
-          isLoading={isPending}
-          confirmKeyword={id}
-        />
+
       </div>
     </MasterDataFormLayout>
   );

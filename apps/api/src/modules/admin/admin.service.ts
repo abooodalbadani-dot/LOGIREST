@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   UserRole,
@@ -11,6 +11,8 @@ import { encrypt, decrypt } from './crypto.util';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   private getPermissionsForRole(role: UserRole): Permission[] {
@@ -186,7 +188,14 @@ export class AdminService {
       return defaultSettings;
     }
 
-    const saved = JSON.parse(setting.value);
+    let saved: any = {};
+    try {
+      saved = JSON.parse(setting.value);
+    } catch (e: any) {
+      this.logger.error(
+        `Failed to parse system settings JSON from DB: ${e.message}`,
+      );
+    }
     return {
       ...defaultSettings,
       ...saved,
@@ -202,7 +211,16 @@ export class AdminService {
       where: { key: 'system_settings' },
     });
 
-    const savedConfig = existing ? JSON.parse(existing.value) : {};
+    let savedConfig: any = {};
+    if (existing) {
+      try {
+        savedConfig = JSON.parse(existing.value);
+      } catch (e: any) {
+        this.logger.error(
+          `Failed to parse existing system settings JSON from DB: ${e.message}`,
+        );
+      }
+    }
 
     let password = dto.smtp_password;
     if (password === '********') {

@@ -18,6 +18,7 @@ import { KPICard } from './KPICard';
 import { NearExpiryWidget } from './NearExpiryWidget';
 import { PendingDocumentsWidget } from './PendingDocumentsWidget';
 import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { formatCurrency, formatNumber } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 export function AdminDashboard() {
   const { data: settings, isLoading: loadingSettings } = useAdminSettings();
   const { data: stats, isLoading: loadingStats, error } = useDashboardStats();
+  const { currency: baseCurrency } = useBaseCurrency();
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
@@ -41,8 +43,6 @@ export function AdminDashboard() {
   if (error || !stats) {
     return <div className="p-8 text-status-error uppercase font-bold">{t('error_loading')}</div>;
   }
-
-  const baseCurrency = settings?.base_currency || 'SAR';
 
   // Additional derived info
   const lastBackupTime = tc('time_ago.hours', { count: 2 });

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './car
 import { Label } from './label';
 import { Input } from './input';
 import { Calculator, Lock } from 'lucide-react';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { formatNumber } from '@/utils/currency';
 
 interface FXCapturePanelProps {
@@ -24,8 +24,7 @@ export function FXCapturePanel({
 }: FXCapturePanelProps) {
   const t = useTranslations('procurement.fx_panel');
   const locale = useLocale() as 'ar' | 'en';
-  const { data: settings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency || 'SAR';
+  const { currency: baseCurrency } = useBaseCurrency();
   
   const [exchangeRate, setExchangeRate] = useState<number>(initialRate);
   

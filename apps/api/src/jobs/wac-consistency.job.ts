@@ -38,7 +38,7 @@ export class WacConsistencyJob {
         SELECT DISTINCT ON ("warehouseId", "itemId")
           "warehouseId", "itemId", "newWac"
         FROM "cost_ledger"
-        ORDER BY "warehouseId", "itemId", "postedAt" DESC
+        ORDER BY "warehouseId", "itemId", "postedAt" DESC, "id" DESC
       `;
 
       const wacMap = new Map<string, number>();

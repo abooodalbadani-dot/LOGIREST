@@ -84,14 +84,5 @@ export function useAdminRole(id: string | null) {
   });
 }
 
-export function useUpdateRolePermissions() {
-  return useMutation({
-    mutationFn: async ({ id }: { id: string; permissions: Permission[]; signal?: AbortSignal }) => {
-      // Role permissions are statically code-managed under Option A and read-only in the UI
-      return { id };
-    },
-    onSuccess: () => {},
-    onError: () => {},
-  });
-}
+
 

@@ -7,13 +7,12 @@ import { useCurrencySummaryReport, CurrencySummaryReport } from '@/features/repo
 import { ReportExportMenu } from '@/components/shared/ReportExportMenu';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatCurrency, formatRate } from '@/utils/currency';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
 export default function CurrencySummariesClient() {
   const t = useTranslations('reports');
   const locale = useLocale();
-  const { data: settings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency || 'SAR';
+  const { currency: baseCurrency } = useBaseCurrency();
   const { data, isLoading } = useCurrencySummaryReport();
 
   const columns: ColumnDef<CurrencySummaryReport>[] = [

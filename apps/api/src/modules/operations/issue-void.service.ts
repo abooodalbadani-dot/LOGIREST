@@ -102,7 +102,17 @@ export class IssueVoidService {
           }
         }
 
-        await this.lockService.lockItem(tx, issue.warehouseId, item.id);
+        const whItem = await this.lockService.lockItem(
+          tx,
+          issue.warehouseId,
+          item.id,
+        );
+        if (!whItem) {
+          throw new NotFoundException(
+            `WarehouseItem not found for warehouse ${issue.warehouseId} and item ${item.id}`,
+          );
+        }
+        const currentWac = whItem.wac;
 
         await tx.warehouseItem.update({
           where: {
@@ -112,6 +122,19 @@ export class IssueVoidService {
             },
           },
           data: { qtyOnHand: { increment: qtyVal } },
+        });
+
+        // Insert CostLedger entry for voided issue to restore volume on cost basis
+        await tx.costLedger.create({
+          data: {
+            warehouseId: issue.warehouseId,
+            itemId: item.id,
+            quantity: new Prisma.Decimal(qtyVal),
+            unitPrice: currentWac,
+            newWac: currentWac,
+            documentId: issue.id,
+            documentType: DocumentType.INVENTORY_ISSUE,
+          },
         });
 
         if (!item.isBatched && !item.hasExpiry) {

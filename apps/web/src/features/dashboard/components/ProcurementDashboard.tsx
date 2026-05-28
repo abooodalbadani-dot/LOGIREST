@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
@@ -28,9 +28,8 @@ export function ProcurementDashboard() {
   const tc = useTranslations('common');
   const { locale } = useLocale();
   
-  const { data: settings } = useAdminSettings();
+  const { currency: baseCurrency } = useBaseCurrency();
   const { data: stats, isLoading, error } = useDashboardStats();
-  const baseCurrency = settings?.base_currency || 'SAR';
 
   if (isLoading) return <PageSkeleton />;
   if (error || !stats) return <div className="p-8 text-status-error uppercase font-bold">{t('error_loading')}</div>;

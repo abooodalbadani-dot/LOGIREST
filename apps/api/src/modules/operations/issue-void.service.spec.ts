@@ -18,11 +18,15 @@ describe('IssueVoidService', () => {
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockCostLedgerCreate = jest.fn();
 
   const mockPrismaTx = {
     inventoryIssue: {
       findUnique: mockIssueFindUnique,
       update: mockIssueUpdate,
+    },
+    costLedger: {
+      create: mockCostLedgerCreate,
     },
     warehouseItemLot: {
       update: mockWarehouseItemLotUpdate,

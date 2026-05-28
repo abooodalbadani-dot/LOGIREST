@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useStocktake, useSubmitVariance, useRecountItems } from "@/features/operations/api/useStocktakes";
 import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
-import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
+import { useBaseCurrency } from "@/hooks/useBaseCurrency";
 import { mapToSessionVM } from "@/features/operations/mappers/stocktakeMapper";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -53,7 +53,7 @@ export function StocktakeVarianceClient({ id, locale }: { id: string, locale: 'a
  const { data: rawSession, isLoading, error } = useStocktake(id);
  const session = rawSession ? mapToSessionVM(rawSession) : null;
 const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
-  const { data: settings } = useAdminSettings();
+  const { currency: currencyCode } = useBaseCurrency();
   const submitVariance = useSubmitVariance();
   const recountItems = useRecountItems();
   const { playSound } = useAudioFeedback();
@@ -117,7 +117,6 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
 
  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
- const currencyCode = settings?.base_currency || 'SAR';
 
  const itemsWithVariance = session.items.filter(i => (i.countedQty || 0) - (i.snapshotQty ?? 0) !== 0);
  const totalPositiveVariance = session.items.reduce((acc, i) => {

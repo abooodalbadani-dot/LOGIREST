@@ -185,7 +185,7 @@ describe('Outbox Notification Queue (e2e)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email, password: 'Password123!' });
-    procOfficerToken = loginRes.body.accessToken;
+    procOfficerToken = loginRes.body.token || loginRes.body.accessToken;
 
     const adminEmail = `admin-${suffix}@logirest.com`;
     const adminUser = await prisma.user.create({
@@ -206,7 +206,7 @@ describe('Outbox Notification Queue (e2e)', () => {
     const adminLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: 'Password123!' });
-    adminToken = adminLoginRes.body.accessToken;
+    adminToken = adminLoginRes.body.token || adminLoginRes.body.accessToken;
   });
 
   afterAll(async () => {

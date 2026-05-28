@@ -69,7 +69,7 @@ describe('AdminRoles (e2e)', () => {
     const adminLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: 'Password123!' });
-    adminToken = adminLoginRes.body.accessToken;
+    adminToken = adminLoginRes.body.token || adminLoginRes.body.accessToken;
 
     // Create Viewer User
     const viewerEmail = `viewer-${suffix}@logirest.com`;
@@ -91,7 +91,7 @@ describe('AdminRoles (e2e)', () => {
     const viewerLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: viewerEmail, password: 'Password123!' });
-    viewerToken = viewerLoginRes.body.accessToken;
+    viewerToken = viewerLoginRes.body.token || viewerLoginRes.body.accessToken;
   });
 
   afterAll(async () => {

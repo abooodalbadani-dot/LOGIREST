@@ -64,4 +64,26 @@ describe('Config Validation', () => {
       logObj.errorDetails.some((d: any) => d.field === 'JWT_ACCESS_SECRET'),
     ).toBe(true);
   });
+
+  it('should fail if ENCRYPTION_KEY is missing or too short', () => {
+    const shortKeyConfig = {
+      DATABASE_URL: 'postgresql://localhost:5432/test',
+      PORT: '3000',
+      FRONTEND_URL: 'http://localhost:3000',
+      JWT_ACCESS_SECRET: 'a'.repeat(32),
+      JWT_REFRESH_SECRET: 'b'.repeat(32),
+      ENCRYPTION_KEY: 'too-short',
+    };
+
+    validate(shortKeyConfig);
+
+    expect(mockExit).toHaveBeenCalledWith(1);
+    expect(mockError).toHaveBeenCalled();
+
+    const loggedText = mockError.mock.calls[0][0] as string;
+    const logObj = JSON.parse(loggedText);
+    expect(
+      logObj.errorDetails.some((d: any) => d.field === 'ENCRYPTION_KEY'),
+    ).toBe(true);
+  });
 });

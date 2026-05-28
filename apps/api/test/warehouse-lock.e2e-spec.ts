@@ -86,7 +86,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
     const adminLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: 'password123' });
-    adminToken = adminLoginRes.body.accessToken;
+    adminToken = adminLoginRes.body.token || adminLoginRes.body.accessToken;
 
     // Non-Admin User (Proc Officer)
     const procEmail = `proc-${suffix}@logirest.com`;
@@ -108,7 +108,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
     const procLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: procEmail, password: 'password123' });
-    nonAdminToken = procLoginRes.body.accessToken;
+    nonAdminToken = procLoginRes.body.token || procLoginRes.body.accessToken;
   });
 
   afterAll(async () => {

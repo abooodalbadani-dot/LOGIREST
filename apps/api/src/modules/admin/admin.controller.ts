@@ -187,11 +187,16 @@ export class AdminController {
         'Only administrative users are authorized to unfreeze items.',
       );
     }
-    const [warehouseId, itemId] = id.split('_');
-    if (!warehouseId || !itemId) {
+    const parts = id.split('_');
+    if (parts.length !== 2) {
       throw new ForbiddenException(
         'Invalid composite ID format. Expected warehouseId_itemId',
       );
+    }
+    const [warehouseId, itemId] = parts;
+    const idRegex = /^[A-Za-z0-9-]+$/;
+    if (!idRegex.test(warehouseId) || !idRegex.test(itemId)) {
+      throw new ForbiddenException('Invalid ID format in composite parameters');
     }
     return this.adminService.unfreezeItem(warehouseId, itemId, userId);
   }

@@ -35,7 +35,7 @@ import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
 import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
 import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
-import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
+import { useBaseCurrency } from "@/hooks/useBaseCurrency";
 import { formatCurrency } from "@/utils/currency";
 import { PurchaseOrderLineItems } from "./purchase-order-line-items";
 import { usePRList } from "@/features/purchasing/hooks/usePRList";
@@ -272,8 +272,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     setSelectedPRId(null);
   }, [selectedPR, form, locale]);
 
-  const { data: settings, isLoading: loadingSettings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency;
+  const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
   const { data: fxRates } = useFXRates(currency, baseCurrency || 'SAR');
 
   const supplierItems = React.useMemo(() => {

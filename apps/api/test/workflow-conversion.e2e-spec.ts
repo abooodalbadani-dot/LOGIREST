@@ -124,7 +124,7 @@ describe('PR to PO Conversion (e2e)', () => {
     const procLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: procEmail, password: 'password123' });
-    procOfficerToken = procLogin.body.accessToken;
+    procOfficerToken = procLogin.body.token || procLogin.body.accessToken;
 
     // Create Admin
     const adminEmail = `admin-${suffix}@logirest.com`;
@@ -146,7 +146,7 @@ describe('PR to PO Conversion (e2e)', () => {
     const adminLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: 'password123' });
-    adminToken = adminLogin.body.accessToken;
+    adminToken = adminLogin.body.token || adminLogin.body.accessToken;
   });
 
   afterAll(async () => {

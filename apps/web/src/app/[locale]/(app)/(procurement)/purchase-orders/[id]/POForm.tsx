@@ -34,7 +34,7 @@ import { useSuppliers } from "@/features/purchasing/hooks/useSuppliers";
 import { useCurrencies } from "@/features/purchasing/hooks/useCurrencies";
 import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
-import { useAdminSettings } from "@/features/admin/hooks/useAdminSettings";
+import { useBaseCurrency } from "@/hooks/useBaseCurrency";
 import { formatCurrency } from "@/utils/currency";
 
 
@@ -149,8 +149,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  const { data: currencies, isLoading: loadingCurrencies } = useCurrencies();
   const { data: warehousesData, isLoading: loadingWarehouses } = useWarehouses(); const warehouses = warehousesData?.data || [];
 
- const { data: settings, isLoading: loadingSettings } = useAdminSettings();
- const baseCurrency = settings?.base_currency;
+ const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
  const { data: fxRates } = useFXRates(currency, baseCurrency);
  
  React.useEffect(() => {

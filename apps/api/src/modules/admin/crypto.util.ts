@@ -5,10 +5,10 @@ const IV_LENGTH = 12;
 const SALT_LENGTH = 64;
 
 function getEncryptionKey(keyString?: string): Buffer {
-  const secret =
-    keyString ||
-    process.env.ENCRYPTION_KEY ||
-    'default-secure-logirest-key-32bytes-long!';
+  const secret = keyString || process.env.ENCRYPTION_KEY;
+  if (!secret) {
+    throw new Error('Encryption key is not configured.');
+  }
   // Hash the secret to ensure it is always exactly 32 bytes
   return crypto.createHash('sha256').update(secret).digest();
 }

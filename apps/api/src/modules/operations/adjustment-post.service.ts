@@ -239,7 +239,6 @@ export class AdjustmentPostService {
               },
               data: {
                 qtyOnHand: { decrement: qtyVal },
-                isFrozen: false,
               },
             });
 
@@ -323,7 +322,6 @@ export class AdjustmentPostService {
               },
               data: {
                 qtyOnHand: { decrement: qtyVal },
-                isFrozen: false,
               },
             });
 

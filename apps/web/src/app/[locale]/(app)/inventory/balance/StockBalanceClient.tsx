@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 import { Link, useRouter } from '@/i18n/navigation';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 import { MetricCard } from '@/components/ui/metric-card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -44,8 +44,7 @@ export default function StockBalanceClient() {
   const router = useRouter();
   const isRtl = currentLocale === 'ar';
 
-  const { data: settings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency || 'SAR';
+  const { currency: baseCurrency } = useBaseCurrency();
 
   const [warehouseFilter] = useState('');
   const [searchFilter, setSearchFilter] = useState('');

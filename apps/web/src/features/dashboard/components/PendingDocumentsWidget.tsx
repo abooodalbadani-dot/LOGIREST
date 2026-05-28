@@ -2,7 +2,7 @@
 import { FileText, ChevronRight, Timer, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
 export interface PendingDocument {
   id: string;
@@ -24,8 +24,7 @@ export function PendingDocumentsWidget({
 }) {
   const t = useTranslations('dashboard.pending_approvals');
   const tc = useTranslations('common');
-  const { data: settings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency || 'SAR';
+  const { currency: baseCurrency, isLoading: loadingCurrency } = useBaseCurrency();
   
   // Map dynamic API data if available, otherwise fall back to mock data
   const docs = data
@@ -109,7 +108,7 @@ export function PendingDocumentsWidget({
                     {doc.total.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
-                    {baseCurrency}
+                    {loadingCurrency ? '...' : baseCurrency}
                   </span>
                 </div>
               )}

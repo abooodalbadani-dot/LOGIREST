@@ -104,7 +104,7 @@ describe('Stocktake Lock Lifecycle E2E', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: adminEmail, password: 'Password123!' });
-    adminToken = loginRes.body.accessToken;
+    adminToken = loginRes.body.token || loginRes.body.accessToken;
   });
 
   afterAll(async () => {

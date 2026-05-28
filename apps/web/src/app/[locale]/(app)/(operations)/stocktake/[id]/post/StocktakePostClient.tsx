@@ -29,15 +29,14 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
 export function StocktakePostClient({ id, locale }: { id: string, locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.stocktake')
   const common = useTranslations('common')
   const { router, setDirty } = useUnsavedChangesGuard()
   const { user } = useAuth();
-  const { data: settings } = useAdminSettings();
-  const baseCurrency = settings?.base_currency || 'SAR';
+  const { currency: baseCurrency } = useBaseCurrency();
   
   const { data: rawSession, isLoading, error } = useStocktake(id);
  const session = rawSession ? mapToSessionVM(rawSession) : null;

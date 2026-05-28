@@ -17,13 +17,13 @@ import { Badge } from '@/components/ui/badge';
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
-import { useAdminSettings } from '@/features/admin/hooks/useAdminSettings';
+import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
 export function StoreManagerDashboard() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
-  const { data: settings } = useAdminSettings();
+  const { currency: baseCurrency, isLoading: loadingCurrency } = useBaseCurrency();
 
   // Mock data for Store Manager
   const stats = {
@@ -93,7 +93,7 @@ export function StoreManagerDashboard() {
         />
         <KPICard
           title={t('store.asset_value')}
-          value={formatCurrency(stats.totalValue, settings?.base_currency ?? 'SAR', locale as 'ar' | 'en')}
+          value={loadingCurrency ? '...' : formatCurrency(stats.totalValue, baseCurrency, locale as 'ar' | 'en')}
           icon={Layers}
           accent="cyan"
           description={t('store.stock_valuation')}

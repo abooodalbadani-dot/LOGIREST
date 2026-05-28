@@ -3,7 +3,7 @@ import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
 import { getTokenCookie, setTokenCookie } from './cookies';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+const BASE = (typeof window === 'undefined' ? process.env.API_URL : null) ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
 let refreshPromise: Promise<boolean> | null = null;
 
