@@ -17,7 +17,7 @@ import { Role } from '@prisma/client';
 import { CreateFXRateDto } from './dto/create-fx-rate.dto';
 import type { Request } from 'express';
 
-@Controller('master-data/fx-rates')
+@Controller('currencies/fx-rates')
 @UseGuards(JwtAuthGuard)
 @ApiSecureController()
 export class FXRatesController {

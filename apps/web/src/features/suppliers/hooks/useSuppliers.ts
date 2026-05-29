@@ -41,7 +41,7 @@ export function useSupplier(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/suppliers/${id}`, SupplierSchema, { signal });
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

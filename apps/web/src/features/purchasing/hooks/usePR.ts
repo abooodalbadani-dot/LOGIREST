@@ -41,7 +41,7 @@ export function usePR(id: string | null) {
   return useQuery({
     queryKey: ['purchase-requests', id],
     queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-requests/${id}`, z.object({ data: PRDetailSchema }), { signal }).then(res => res.data),
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
     staleTime: 60_000,
   });
 }

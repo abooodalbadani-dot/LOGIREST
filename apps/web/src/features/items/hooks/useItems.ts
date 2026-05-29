@@ -42,7 +42,7 @@ export function useItem(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/items/${id}`, ItemSchema, { signal });
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

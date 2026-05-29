@@ -14,6 +14,9 @@ describe('HealthController', () => {
   beforeEach(async () => {
     prismaMock = {
       $queryRaw: jest.fn().mockResolvedValue([1]),
+      stockLedger: {
+        count: jest.fn().mockResolvedValue(100),
+      },
     };
     redisMock = {
       ping: jest.fn().mockResolvedValue('PONG'),
@@ -49,6 +52,7 @@ describe('HealthController', () => {
     expect(result.db).toBe('connected');
     expect(result.redis).toBe('connected');
     expect(result.bullmq).toBe('connected');
+    expect(result.stockLedger).toBe('connected');
     expect(result.timestamp).toBeDefined();
   });
 
@@ -68,6 +72,13 @@ describe('HealthController', () => {
 
   it('should throw ServiceUnavailableException if BullMQ check fails', async () => {
     queueMock.isPaused.mockRejectedValue(new Error('BullMQ Down'));
+    await expect(controller.check()).rejects.toThrow(
+      ServiceUnavailableException,
+    );
+  });
+
+  it('should throw ServiceUnavailableException if stockLedger count fails', async () => {
+    prismaMock.stockLedger.count.mockRejectedValue(new Error('Table Access Failure'));
     await expect(controller.check()).rejects.toThrow(
       ServiceUnavailableException,
     );

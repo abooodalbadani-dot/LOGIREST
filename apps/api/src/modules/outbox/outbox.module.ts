@@ -5,6 +5,7 @@ import { OutboxService } from './outbox.service';
 import { OutboxWorker } from './outbox.worker';
 import { EmailService } from './email.service';
 import { OutboxCleanupJob } from './outbox-cleanup.job';
+import { OutboxSweepJob } from './outbox-sweep.job';
 
 @Module({
   imports: [
@@ -13,7 +14,13 @@ import { OutboxCleanupJob } from './outbox-cleanup.job';
       name: 'outbox',
     }),
   ],
-  providers: [OutboxService, OutboxWorker, EmailService, OutboxCleanupJob],
+  providers: [
+    OutboxService,
+    OutboxWorker,
+    EmailService,
+    OutboxCleanupJob,
+    OutboxSweepJob,
+  ],
   exports: [OutboxService, EmailService],
 })
 export class OutboxModule {}

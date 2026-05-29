@@ -59,7 +59,7 @@ export function useGRN(id: string | null) {
   return useQuery({
     queryKey: ['grn', id],
     queryFn: ({ signal }) => apiClient.get(`/procurement/grns/${id}`, z.object({ data: GRNDetailSchema }), { signal }).then(res => res.data),
-    enabled: !!id && id !== 'new',
+    enabled: !!id && id !== 'new' && id !== 'undefined' && id !== 'null',
     staleTime: 60_000,
   });
 }

@@ -41,11 +41,69 @@ export class KitchenRequestsService {
       include: {
         items: {
           include: {
-            item: true,
+            item: {
+              include: {
+                unitOfMeasure: true,
+              },
+            },
           },
         },
+        department: true,
+        warehouse: true,
       },
     });
+  }
+
+  async findAll(
+    params: { status?: string; search?: string; page?: number },
+    warehouseId?: string,
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params.status) {
+      where.status = params.status;
+    }
+    if (warehouseId) {
+      where.warehouseId = warehouseId;
+    }
+    if (params.search) {
+      where.OR = [
+        { requestNumber: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.kitchenRequest.findMany({
+        where,
+        include: {
+          items: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          department: true,
+          warehouse: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.kitchenRequest.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: string) {
@@ -54,7 +112,11 @@ export class KitchenRequestsService {
       include: {
         items: {
           include: {
-            item: true,
+            item: {
+              include: {
+                unitOfMeasure: true,
+              },
+            },
           },
         },
         department: true,

@@ -24,6 +24,7 @@ describe('StocktakePostService', () => {
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpsert = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
+  const mockWarehouseItemFindUnique = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockWarehouseLockUpdateMany = jest.fn();
   const mockWarehouseUpdate = jest.fn();
@@ -49,6 +50,7 @@ describe('StocktakePostService', () => {
     warehouseItem: {
       upsert: mockWarehouseItemUpsert,
       update: mockWarehouseItemUpdate,
+      findUnique: mockWarehouseItemFindUnique,
     },
     stockLedger: {
       create: mockStockLedgerCreate,
@@ -94,6 +96,7 @@ describe('StocktakePostService', () => {
 
     service = module.get<StocktakePostService>(StocktakePostService);
     jest.clearAllMocks();
+    mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false, item: { sku: 'SKU1' } });
   });
 
   it('should post APPROVED stocktake session successfully with variances', async () => {
@@ -167,6 +170,37 @@ describe('StocktakePostService', () => {
 
     await expect(
       service.post('session-1', 'user-1', Role.INV_MGR),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException if any item is frozen', async () => {
+    const sessionId = 'session-1';
+    const warehouseId = 'wh-1';
+
+    mockSessionFindUnique.mockResolvedValue({
+      id: sessionId,
+      warehouseId,
+      status: StocktakeStatus.APPROVED,
+      version: 1,
+    });
+
+    mockSnapshotFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        qtySnapshot: new Prisma.Decimal(10),
+        item: { id: 'item-1', sku: 'SKU1', isBatched: true },
+      },
+    ]);
+
+    mockCountFindMany.mockResolvedValue([]);
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+      item: { sku: 'SKU1' },
+    });
+
+    await expect(
+      service.post(sessionId, 'user-1', Role.INV_MGR, 1),
     ).rejects.toThrow(BadRequestException);
   });
 });

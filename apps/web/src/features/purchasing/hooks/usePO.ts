@@ -67,7 +67,7 @@ export function usePO(id: string) {
   return useQuery({
     queryKey: ['purchase-orders', id],
     queryFn: ({ signal }) => apiClient.get(`/procurement/purchase-orders/${id}`, z.object({ data: PODetailSchema }), { signal }).then(res => res.data),
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
     staleTime: 30_000,
   });
 }

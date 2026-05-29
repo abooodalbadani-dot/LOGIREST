@@ -64,7 +64,7 @@ export function useAdjustment(id: string | null) {
   return useQuery({
     queryKey: ['adjustments', id],
     queryFn: ({ signal }) => apiClient.get(`/operations/adjustments/${id}`, AdjustmentDetailSchema, { signal }),
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
     staleTime: 60_000,
   });
 }

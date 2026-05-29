@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
@@ -71,9 +71,87 @@ export class AdjustmentsService {
               lot: true,
             },
           },
+          warehouse: true,
         },
       });
     });
+  }
+
+  async findAll(
+    params: { status?: string; search?: string; page?: number },
+    warehouseId?: string,
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params.status) {
+      where.status = params.status;
+    }
+    if (warehouseId) {
+      where.warehouseId = warehouseId;
+    }
+    if (params.search) {
+      where.OR = [
+        { adjustmentNumber: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.adjustment.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              item: true,
+              lot: true,
+            },
+          },
+          warehouse: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.adjustment.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async getSummary(warehouseId?: string) {
+    const where: any = {};
+    if (warehouseId) {
+      where.warehouseId = warehouseId;
+    }
+
+    const adjustments = await this.prisma.adjustment.findMany({
+      where,
+      include: {
+        lines: true,
+      },
+    });
+
+    const total = adjustments.length;
+    const pending = adjustments.filter(
+      (a) => a.status === 'DRAFT' || a.status === 'SUBMITTED',
+    ).length;
+    const criticalLosses = adjustments.filter(
+      (a) =>
+        a.lines.some((l) => l.reason === 'DAMAGE' || l.reason === 'THEFT'),
+    ).length;
+
+    return {
+      total,
+      pending,
+      critical_losses: criticalLosses,
+    };
   }
 
   async findOne(id: string) {
@@ -97,6 +175,145 @@ export class AdjustmentsService {
     }
 
     return adjustment;
+  }
+
+  async update(
+    id: string,
+    body: {
+      version: number;
+      warehouseId?: string;
+      reason?: string;
+      notes?: string;
+      lines?: Array<{
+        id?: string;
+        itemId: string;
+        qty: number;
+        direction: 'INCREASE' | 'DECREASE';
+        unitCost?: number | null;
+        lotId?: string | null;
+      }>;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.adjustment.findUnique({
+        where: { id },
+        select: { version: true, status: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Adjustment with ID ${id} not found`);
+      }
+
+      if (existing.version !== body.version) {
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
+      }
+
+      if (existing.status !== 'DRAFT') {
+        throw new BadRequestException('Only DRAFT Adjustments can be updated.');
+      }
+
+      if (body.lines) {
+        await tx.adjustmentLine.deleteMany({
+          where: { adjustmentId: id },
+        });
+      }
+
+      return tx.adjustment.update({
+        where: { id },
+        data: {
+          warehouseId: body.warehouseId,
+          version: { increment: 1 },
+          ...(body.lines && {
+            lines: {
+              create: body.lines.map((line) => ({
+                itemId: line.itemId,
+                lotId: line.lotId || null,
+                quantity: line.qty,
+                direction: line.direction === 'INCREASE' ? 'IN' : 'OUT',
+                reason: (body.reason as any) || 'CORRECTION',
+                unitCost: line.unitCost || null,
+              })),
+            },
+          }),
+        },
+        include: {
+          lines: {
+            include: {
+              item: true,
+              lot: true,
+            },
+          },
+          warehouse: true,
+        },
+      });
+    });
+  }
+
+  async edit(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: { version: number; ipAddress?: string },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.adjustment.findUnique({
+        where: { id },
+        select: { version: true, status: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Adjustment with ID ${id} not found`);
+      }
+
+      if (existing.version !== body.version) {
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
+      }
+
+      const updated = await tx.adjustment.update({
+        where: { id },
+        data: {
+          status: 'DRAFT',
+          version: { increment: 1 },
+        },
+        include: {
+          lines: {
+            include: {
+              item: true,
+              lot: true,
+            },
+          },
+          warehouse: true,
+        },
+      });
+
+      const stepNumber =
+        (await tx.approvalEvent.count({
+          where: {
+            documentId: id,
+            documentType: 'ADJUSTMENT',
+          },
+        })) + 1;
+
+      await tx.approvalEvent.create({
+        data: {
+          documentId: id,
+          documentType: 'ADJUSTMENT',
+          fromStatus: existing.status,
+          toStatus: 'DRAFT',
+          actionPerformed: 'EDIT',
+          userId,
+          userRole: userRole as any,
+          stepNumber,
+          comments: 'Reset to Draft for editing',
+        },
+      });
+
+      return updated;
+    });
   }
 
   async submit(

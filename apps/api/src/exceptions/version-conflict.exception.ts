@@ -8,6 +8,7 @@ export class VersionConflictException extends ConflictException {
   ) {
     super({
       statusCode: 409,
+      code: 'VERSION_CONFLICT',
       message:
         'Version conflict: Document has been updated by another process.',
       error: 'Conflict',

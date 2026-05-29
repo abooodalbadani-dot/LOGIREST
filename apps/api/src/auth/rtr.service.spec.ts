@@ -24,6 +24,7 @@ describe('RtrService', () => {
     notificationLog: {
       create: jest.fn(),
     },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     $transaction: jest.fn().mockImplementation((cb) => cb(mockPrisma)),
   };
 

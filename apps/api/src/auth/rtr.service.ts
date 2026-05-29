@@ -140,32 +140,37 @@ export class RtrService {
       throw new UnauthorizedException('User account has been deactivated');
     }
 
-    try {
-      await this.prisma.refreshToken.update({
-        where: {
-          id: existingToken.id,
-          version: existingToken.version,
-        },
-        data: {
-          isRevoked: true,
-          version: { increment: 1 },
-        },
-      });
-    } catch {
-      throw new UnauthorizedException('Session expired or invalid');
-    }
-
     const { token: newToken, hash: newHash } = this.generateRefreshToken();
 
-    await this.prisma.refreshToken.create({
-      data: {
-        tokenHash: newHash,
-        userId: existingToken.userId,
-        sessionId: existingToken.sessionId,
-        parentTokenId: existingToken.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.refreshToken.update({
+          where: {
+            id: existingToken.id,
+            version: existingToken.version,
+          },
+          data: {
+            isRevoked: true,
+            version: { increment: 1 },
+          },
+        });
+
+        await tx.refreshToken.create({
+          data: {
+            tokenHash: newHash,
+            userId: existingToken.userId,
+            sessionId: existingToken.sessionId,
+            parentTokenId: existingToken.id,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+        });
+      });
+    } catch (error) {
+      this.logger.error(
+        `Token rotation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new UnauthorizedException('Session expired or invalid');
+    }
 
     const accessToken = this.jwtService.sign(
       {

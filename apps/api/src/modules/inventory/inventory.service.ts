@@ -345,6 +345,7 @@ export class InventoryService {
   }
 
   async getWarehouseLock(warehouseId: string) {
+    const now = new Date();
     const warehouse = await this.prisma.warehouse.findUnique({
       where: { id: warehouseId },
       select: { isLocked: true },
@@ -354,7 +355,9 @@ export class InventoryService {
       where: {
         warehouseId,
         isActive: true,
+        expiresAt: { gt: now },
       },
+      orderBy: { createdAt: 'desc' },
     });
 
     const isLocked = !!(warehouse?.isLocked || activeLock);
@@ -363,7 +366,7 @@ export class InventoryService {
       where: {
         warehouseId,
         status: {
-          notIn: ['POSTED', 'CANCELLED'],
+          in: ['STARTED', 'COUNTING', 'REVIEW'],
         },
       },
       orderBy: { createdAt: 'desc' },

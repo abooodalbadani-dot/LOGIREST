@@ -32,6 +32,7 @@ import { WarehouseLockGuard } from './guards/warehouse-lock.guard';
 import { CsrfGuard } from './guards/csrf.guard';
 import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
 import { DeprecationInterceptor } from './common/interceptors/deprecation.interceptor';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import { LockCleanupJob } from './jobs/lock-cleanup.job';
 import { LowStockAlertJob } from './jobs/low-stock-alert.job';
 import { ExpiryAlertJob } from './jobs/expiry-alert.job';
@@ -155,6 +156,10 @@ import { correlationStorage } from './common/correlation.context';
     {
       provide: APP_INTERCEPTOR,
       useClass: DeprecationInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
     },
   ],
 })

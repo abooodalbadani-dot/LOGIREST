@@ -76,7 +76,7 @@ export function useTransfer(id: string | null) {
   return useQuery({
     queryKey: ['transfers', id],
     queryFn: ({ signal }) => apiClient.get(`/operations/transfers/${id}`, TransferDetailSchema, { signal }),
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
     staleTime: 60_000,
   });
 }

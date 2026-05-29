@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
@@ -66,17 +66,110 @@ export class PurchaseOrderService {
           },
         },
         include: {
-          lines: true,
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          supplier: true,
+          currency: true,
+          purchaseRequest: {
+            include: {
+              warehouse: true,
+            },
+          },
         },
       });
     });
+  }
+
+  async findAll(
+    params: { status?: string; supplierId?: string; search?: string; page?: number },
+    warehouseId?: string,
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params.status) {
+      where.status = params.status;
+    }
+    if (params.supplierId) {
+      where.supplierId = params.supplierId;
+    }
+    if (warehouseId) {
+      where.purchaseRequest = {
+        warehouseId,
+      };
+    }
+    if (params.search) {
+      where.OR = [
+        { poNumber: { contains: params.search, mode: 'insensitive' } },
+        { supplier: { name: { contains: params.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.purchaseOrder.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          supplier: true,
+          currency: true,
+          purchaseRequest: {
+            include: {
+              warehouse: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.purchaseOrder.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: string) {
     const po = await this.prisma.purchaseOrder.findUnique({
       where: { id },
       include: {
-        lines: true,
+        lines: {
+          include: {
+            item: {
+              include: {
+                unitOfMeasure: true,
+              },
+            },
+          },
+        },
+        supplier: true,
+        currency: true,
+        purchaseRequest: {
+          include: {
+            warehouse: true,
+          },
+        },
       },
     });
 
@@ -85,6 +178,80 @@ export class PurchaseOrderService {
     }
 
     return po;
+  }
+
+  async update(
+    id: string,
+    body: {
+      supplierId?: string;
+      currencyId?: string;
+      version: number;
+      lines?: Array<{ id?: string; itemId: string; quantity: number; unitPrice: number }>;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.purchaseOrder.findUnique({
+        where: { id },
+        select: { version: true, status: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Purchase Order with ID ${id} not found`);
+      }
+
+      if (existing.version !== body.version) {
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
+      }
+
+      if (existing.status !== 'DRAFT') {
+        throw new BadRequestException('Only DRAFT Purchase Orders can be updated.');
+      }
+
+      // Delete old lines and recreate new ones
+      if (body.lines) {
+        await tx.pOLine.deleteMany({
+          where: { poId: id },
+        });
+      }
+
+      return tx.purchaseOrder.update({
+        where: { id },
+        data: {
+          supplierId: body.supplierId,
+          currencyId: body.currencyId,
+          version: { increment: 1 },
+          ...(body.lines && {
+            lines: {
+              create: body.lines.map((line) => ({
+                itemId: line.itemId,
+                quantity: line.quantity,
+                unitPrice: line.unitPrice,
+              })),
+            },
+          }),
+        },
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          supplier: true,
+          currency: true,
+          purchaseRequest: {
+            include: {
+              warehouse: true,
+            },
+          },
+        },
+      });
+    });
   }
 
   async submit(
@@ -158,4 +325,75 @@ export class PurchaseOrderService {
       body.ipAddress,
     );
   }
+
+  async postToLedger(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: { comments?: string; version?: number; ipAddress?: string },
+  ) {
+    return this.workflowService.executeTransition(
+      id,
+      'purchaseOrder',
+      'POST',
+      userId,
+      userRole,
+      body.comments,
+      body.version,
+      body.ipAddress,
+    );
+  }
+
+  async email(id: string, userId: string, recipientEmail?: string) {
+    const po = await this.prisma.purchaseOrder.findUnique({
+      where: { id },
+      include: { supplier: true },
+    });
+
+    if (!po) {
+      throw new NotFoundException(`Purchase Order with ID ${id} not found`);
+    }
+
+    const emailTo = recipientEmail || po.supplier?.contactEmail || 'supplier@example.com';
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'PO_EMAILED',
+        targetTable: 'purchase_orders',
+        targetId: id,
+        beforeStateJson: JSON.stringify({ status: po.status }),
+        afterStateJson: JSON.stringify({ emailedTo: emailTo }),
+      },
+    });
+
+    return { success: true, message: `Purchase Order sent successfully to ${emailTo}` };
+  }
+
+  async remove(id: string, version?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.purchaseOrder.findUnique({
+        where: { id },
+        select: { version: true, status: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Purchase Order with ID ${id} not found`);
+      }
+
+      if (version !== undefined && existing.version !== version) {
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
+      }
+
+      if (existing.status !== 'DRAFT') {
+        throw new BadRequestException('Only DRAFT Purchase Orders can be deleted.');
+      }
+
+      await tx.pOLine.deleteMany({ where: { poId: id } });
+      return tx.purchaseOrder.delete({ where: { id } });
+    });
+  }
 }
+

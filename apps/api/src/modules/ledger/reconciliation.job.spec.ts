@@ -5,36 +5,44 @@ import { PrismaService } from '../../database/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { Prisma, Role } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
+import { RedisLockService } from '../../redis/redis-lock.service';
 
 describe('ReconciliationJob', () => {
   let job: ReconciliationJob;
 
-  const mockStockLedgerGroupBy = jest.fn();
+  const mockQueryRaw = jest.fn();
   const mockWarehouseItemFindMany = jest.fn();
-  const mockWarehouseItemUpdate = jest.fn();
   const mockWarehouseItemUpdateMany = jest.fn();
   const mockCreateNotification = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
   const mockReconciliationRunCreate = jest.fn();
   const mockWarehouseItemLotFindMany = jest.fn();
+  const mockGrnFindMany = jest.fn().mockResolvedValue([]);
+  const mockCostLedgerCount = jest.fn().mockResolvedValue(0);
+  const mockStockLedgerCount = jest.fn().mockResolvedValue(0);
 
   const mockMetricsService = {
     reconciliationDiscrepanciesCounter: {
       inc: jest.fn(),
     },
+    reconciliationDurationHistogram: {
+      observe: jest.fn(),
+    },
+  };
+
+  const mockRedisLockService = {
+    acquireLock: jest.fn().mockResolvedValue(true),
+    releaseLock: jest.fn().mockResolvedValue(true),
   };
 
   const mockPrismaTx = {
     warehouseItem: {
-      update: mockWarehouseItemUpdate,
       updateMany: mockWarehouseItemUpdateMany,
     },
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {
-    stockLedger: {
-      groupBy: mockStockLedgerGroupBy,
-    },
+    $queryRaw: mockQueryRaw,
     warehouseItem: {
       findMany: mockWarehouseItemFindMany,
     },
@@ -46,6 +54,15 @@ describe('ReconciliationJob', () => {
     },
     warehouseItemLot: {
       findMany: mockWarehouseItemLotFindMany,
+    },
+    goodsReceivedNote: {
+      findMany: mockGrnFindMany,
+    },
+    costLedger: {
+      count: mockCostLedgerCount,
+    },
+    stockLedger: {
+      count: mockStockLedgerCount,
     },
     $transaction: jest
       .fn()
@@ -66,25 +83,28 @@ describe('ReconciliationJob', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: MetricsService, useValue: mockMetricsService },
+        { provide: RedisLockService, useValue: mockRedisLockService },
       ],
     }).compile();
 
     job = module.get<ReconciliationJob>(ReconciliationJob);
     jest.clearAllMocks();
     mockWarehouseItemLotFindMany.mockResolvedValue([]);
+    mockGrnFindMany.mockResolvedValue([]);
   });
 
   it('should run reconciliation and do nothing if no discrepancy is found', async () => {
-    // Mock ledger grouped totals: Item 1 has total of 15 quantity
-    mockStockLedgerGroupBy.mockResolvedValue([
-      {
-        warehouseId: 'wh-1',
-        itemId: 'item-1',
-        _sum: {
-          quantity: new Prisma.Decimal(15),
+    // Mock ledger: Item 1 has total of 15 quantity
+    mockQueryRaw
+      .mockResolvedValueOnce([
+        {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          total: '15',
         },
-      },
-    ]);
+      ])
+      .mockResolvedValueOnce([]) // lotLedgerTotals
+      .mockResolvedValueOnce([]); // orphanedLots
 
     // Mock warehouse items: Item 1 has 15 on hand
     mockWarehouseItemFindMany.mockResolvedValue([
@@ -119,15 +139,16 @@ describe('ReconciliationJob', () => {
 
   it('should freeze SKU and log notification if discrepancy is detected', async () => {
     // Mock ledger: Item 1 has total of 10 quantity
-    mockStockLedgerGroupBy.mockResolvedValue([
-      {
-        warehouseId: 'wh-1',
-        itemId: 'item-1',
-        _sum: {
-          quantity: new Prisma.Decimal(10),
+    mockQueryRaw
+      .mockResolvedValueOnce([
+        {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          total: '10',
         },
-      },
-    ]);
+      ])
+      .mockResolvedValueOnce([]) // lotLedgerTotals
+      .mockResolvedValueOnce([]); // orphanedLots
 
     // Mock warehouse items: Item 1 has 15 on hand (discrepancy!)
     mockWarehouseItemFindMany.mockResolvedValue([
@@ -181,15 +202,16 @@ describe('ReconciliationJob', () => {
 
   it('should trigger soft warning notification if allocation discrepancy is detected', async () => {
     // Mock ledger: Item 1 has total of 15 quantity
-    mockStockLedgerGroupBy.mockResolvedValue([
-      {
-        warehouseId: 'wh-1',
-        itemId: 'item-1',
-        _sum: {
-          quantity: new Prisma.Decimal(15),
+    mockQueryRaw
+      .mockResolvedValueOnce([
+        {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          total: '15',
         },
-      },
-    ]);
+      ])
+      .mockResolvedValueOnce([]) // lotLedgerTotals
+      .mockResolvedValueOnce([]); // orphanedLots
 
     // Mock warehouse items: Item 1 has 15 on hand, but qtyAllocated is 5 (discrepancy!)
     mockWarehouseItemFindMany.mockResolvedValue([
@@ -233,15 +255,16 @@ describe('ReconciliationJob', () => {
 
   it('should not trigger warning if allocation matches active allocations', async () => {
     // Mock ledger: Item 1 has total of 15 quantity
-    mockStockLedgerGroupBy.mockResolvedValue([
-      {
-        warehouseId: 'wh-1',
-        itemId: 'item-1',
-        _sum: {
-          quantity: new Prisma.Decimal(15),
+    mockQueryRaw
+      .mockResolvedValueOnce([
+        {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          total: '15',
         },
-      },
-    ]);
+      ])
+      .mockResolvedValueOnce([]) // lotLedgerTotals
+      .mockResolvedValueOnce([]); // orphanedLots
 
     // Mock warehouse items: Item 1 has 15 on hand, qtyAllocated is 5
     mockWarehouseItemFindMany.mockResolvedValue([
@@ -286,24 +309,23 @@ describe('ReconciliationJob', () => {
   });
 
   it('should detect lot-level discrepancy and notify admin', async () => {
-    // Mock ledger: Item 1 has total of 15 quantity
-    mockStockLedgerGroupBy.mockResolvedValue([
-      {
-        warehouseId: 'wh-1',
-        itemId: 'item-1',
-        _sum: {
-          quantity: new Prisma.Decimal(15),
+    // Mock ledger: Item 1 has total of 15 quantity, Lot has total of 10 quantity
+    mockQueryRaw
+      .mockResolvedValueOnce([
+        {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          total: '15',
         },
-      },
-      // Lot ledger groupBy mock:
-      {
-        warehouseId: 'wh-1',
-        lotId: 'lot-1',
-        _sum: {
-          quantity: new Prisma.Decimal(10),
+      ])
+      .mockResolvedValueOnce([
+        {
+          warehouseId: 'wh-1',
+          lotId: 'lot-1',
+          total: '10',
         },
-      },
-    ]);
+      ]) // lotLedgerTotals
+      .mockResolvedValueOnce([]); // orphanedLots
 
     // Mock warehouse items: matches
     mockWarehouseItemFindMany.mockResolvedValue([
@@ -324,10 +346,11 @@ describe('ReconciliationJob', () => {
     mockWarehouseItemLotFindMany.mockResolvedValue([
       {
         warehouseId: 'wh-1',
+        itemId: 'item-1',
         lotId: 'lot-1',
         qtyOnHand: new Prisma.Decimal(15),
         item: { sku: 'SKU1' },
-        lot: { lotNumber: 'LOT-A' },
+        lot: { lotNumber: 'LOT-A', status: 'ACTIVE' },
         warehouse: { name: 'HQ', code: 'HQ-01' },
       },
     ]);

@@ -162,44 +162,21 @@ export class GrnVoidService {
           });
         }
 
-        const costEntries = await tx.costLedger.findMany({
+        // Find the most recent CostLedger entry NOT from this GRN (O(1) restoration query)
+        const lastCostEntry = await tx.costLedger.findFirst({
           where: {
             warehouseId: grn.warehouseId,
             itemId: item.id,
+            NOT: {
+              documentId: grn.id,
+            },
           },
-          orderBy: { postedAt: 'asc' },
+          orderBy: { postedAt: 'desc' },
         });
 
-        let recalcQty = new Prisma.Decimal(0);
-        let recalcWac = new Prisma.Decimal(0);
-
-        for (const entry of costEntries) {
-          if (
-            entry.documentId === grn.id &&
-            entry.documentType === DocumentType.GOODS_RECEIVED_NOTE
-          ) {
-            continue;
-          }
-
-          const entryQty = new Prisma.Decimal(entry.quantity);
-          if (entryQty.isZero()) continue;
-
-          if (entryQty.gt(0)) {
-            const entryPrice = new Prisma.Decimal(entry.unitPrice);
-            if (recalcQty.lte(0)) {
-              recalcWac = entryPrice;
-            } else {
-              recalcWac = recalcQty
-                .mul(recalcWac)
-                .add(entryQty.mul(entryPrice))
-                .div(recalcQty.add(entryQty));
-            }
-          }
-
-          recalcQty = recalcQty.add(entryQty);
-        }
-
-        const newWac = recalcQty.lte(0) ? new Prisma.Decimal(0) : recalcWac;
+        const newWac = lastCostEntry
+          ? new Prisma.Decimal(lastCostEntry.newWac)
+          : new Prisma.Decimal(0);
         const roundedWac = newWac.toDecimalPlaces(4);
 
         await tx.warehouseItem.update({

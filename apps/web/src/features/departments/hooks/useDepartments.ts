@@ -42,7 +42,7 @@ export function useDepartment(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/departments/${id}`, DepartmentSchema, { signal });
     },
-    enabled: !!id
+    enabled: !!id && id !== 'undefined' && id !== 'null'
   });
 }
 

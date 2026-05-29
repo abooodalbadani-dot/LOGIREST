@@ -18,7 +18,7 @@ export function useNotificationTemplate(id: string | null) {
   return useQuery({
     queryKey: ['notifications/templates', id],
     queryFn: ({ signal }) => apiClient.get(`/notifications/templates/${id}`, NotificationTemplateSchema, { signal }),
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

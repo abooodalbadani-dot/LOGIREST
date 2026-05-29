@@ -25,7 +25,7 @@ export function useYield(id: string | null) {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => apiClient.get(`/operations/yield/${id}`, YieldBatchSchema, { signal }),
-    enabled: !!id && id !== 'new',
+    enabled: !!id && id !== 'new' && id !== 'undefined' && id !== 'null',
     staleTime: 60_000,
   });
 }

@@ -15,16 +15,25 @@ import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import type { Request } from 'express';
 
-@Controller('master-data/warehouses')
+@Controller('warehouses')
 @ApiSecureController()
 export class WarehousesController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  async findAll(@Query('includeArchived') includeArchived?: string) {
-    const filter = includeArchived === 'true' ? {} : { isActive: true };
+  async findAll(
+    @Query('includeArchived') includeArchived?: string,
+    @Query('branch_id') branchId?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
+    const baseFilter = includeArchived === 'true' ? {} : { isActive: true };
+    const filter = branchId ? { ...baseFilter, branchId } : baseFilter;
+
     return this.prisma.warehouse.findMany({
       where: filter,
+      ...(take ? { take } : {}),
+      orderBy: { name: 'asc' },
       include: {
         branch: true,
       },

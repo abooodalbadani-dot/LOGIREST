@@ -13,6 +13,7 @@ RUN npm run build --workspace=apps/api
 
 # Stage 2: Production Runner
 FROM node:20-alpine AS production
+RUN apk add --no-cache curl
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -28,4 +29,4 @@ COPY --from=builder /app/apps/api/package.json ./package.json
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/apps/api/src/main"]
+CMD ["sh", "-c", "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; echo \"DIRECT_URL not set, falling back to DATABASE_URL\"; fi && npx prisma migrate deploy && node dist/apps/api/src/main"]

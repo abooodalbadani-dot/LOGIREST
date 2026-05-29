@@ -28,7 +28,17 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-const SCOPE_EXEMPT_ROUTES = ['/api/v1/auth/', '/health'];
+const SCOPE_EXEMPT_ROUTES = [
+  '/api/v1/auth/',
+  '/health',
+  '/api/v1/admin/',
+  '/api/v1/notifications',
+  '/api/v1/dashboard/',
+  '/api/v1/branches',
+  '/api/v1/warehouses',
+  '/api/v1/departments',
+  '/api/v1/master-data/',
+];
 
 @Injectable()
 export class ScopeInterceptor implements NestInterceptor {
@@ -56,18 +66,18 @@ export class ScopeInterceptor implements NestInterceptor {
     }
 
     const isExempt = SCOPE_EXEMPT_ROUTES.some((route) => url.startsWith(route));
-    if (isExempt) {
+    const warehouseId = request.headers['x-warehouse-id'] as string | undefined;
+    const branchId = request.headers['x-branch-id'] as string | undefined;
+    const hasHeaders = !!(warehouseId && branchId);
+
+    if (isExempt && !hasHeaders) {
       return next.handle();
     }
 
     const authenticatedUser = request.user;
-
     if (!authenticatedUser) {
       return next.handle();
     }
-
-    const warehouseId = request.headers['x-warehouse-id'] as string | undefined;
-    const branchId = request.headers['x-branch-id'] as string | undefined;
 
     if (!warehouseId || !branchId) {
       throw new BadRequestException(

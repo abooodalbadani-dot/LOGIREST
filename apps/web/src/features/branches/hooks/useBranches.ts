@@ -46,7 +46,7 @@ export function useBranch(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/branches/${id}`, BranchSchema, { signal });
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

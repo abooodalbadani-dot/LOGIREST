@@ -16,7 +16,10 @@ import { IssueVoidService } from './issue-void.service';
 import { AdjustmentVoidService } from './adjustment-void.service';
 import { TransferVoidService } from './transfer-void.service';
 import { KitchenRequestVoidService } from './kitchen-request-void.service';
+import { LotsAvailableService } from './lots-available.service';
 import { OperationsController } from './operations.controller';
+import { YieldController } from './yield/yield.controller';
+import { YieldService } from './yield/yield.service';
 import { OutboxModule } from '../outbox/outbox.module';
 
 @Module({
@@ -26,6 +29,7 @@ import { OutboxModule } from '../outbox/outbox.module';
     TransfersController,
     AdjustmentsController,
     OperationsController,
+    YieldController,
   ],
   providers: [
     IssuePostService,
@@ -39,6 +43,8 @@ import { OutboxModule } from '../outbox/outbox.module';
     AdjustmentVoidService,
     TransferVoidService,
     KitchenRequestVoidService,
+    LotsAvailableService,
+    YieldService,
   ],
   exports: [
     IssuePostService,
@@ -52,6 +58,10 @@ import { OutboxModule } from '../outbox/outbox.module';
     AdjustmentVoidService,
     TransferVoidService,
     KitchenRequestVoidService,
+    LotsAvailableService,
+    YieldService,
   ],
 })
 export class OperationsModule {}
+
+

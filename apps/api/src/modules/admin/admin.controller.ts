@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -199,5 +200,105 @@ export class AdminController {
       throw new ForbiddenException('Invalid ID format in composite parameters');
     }
     return this.adminService.unfreezeItem(warehouseId, itemId, userId);
+  }
+
+  @Get('users')
+  async getUsers(
+    @CurrentUser('role') role: Role,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to view users.',
+      );
+    }
+    const pageNum = Math.max(1, parseInt(page || '1', 10));
+    const limitNum = Math.max(1, parseInt(limit || '50', 10));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [total, users] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.findMany({
+        include: {
+          warehouseScopes: {
+            include: {
+              warehouse: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limitNum,
+      }),
+    ]);
+
+    const mappedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      scopes: (user.warehouseScopes || []).map((s) => ({
+        branch_id: s.warehouse?.branchId ?? null,
+        warehouse_id: s.warehouseId,
+        department_id: null,
+      })),
+      status: user.isActive ? 'ACTIVE' : 'INACTIVE',
+      language: 'en',
+      created_at: user.createdAt.toISOString(),
+    }));
+
+    return {
+      data: mappedUsers,
+      meta: {
+        page: pageNum,
+        page_size: limitNum,
+        total,
+        total_pages: Math.ceil(total / limitNum),
+      },
+    };
+  }
+
+  @Get('users/:id')
+  async getUser(
+    @CurrentUser('role') role: Role,
+    @Param('id') id: string,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to view users.',
+      );
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        warehouseScopes: {
+          include: {
+            warehouse: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      scopes: (user.warehouseScopes || []).map((s) => ({
+        branch_id: s.warehouse?.branchId ?? null,
+        warehouse_id: s.warehouseId,
+        department_id: null,
+      })),
+      status: user.isActive ? 'ACTIVE' : 'INACTIVE',
+      language: 'en',
+      created_at: user.createdAt.toISOString(),
+    };
   }
 }

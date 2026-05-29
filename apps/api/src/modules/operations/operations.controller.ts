@@ -1,11 +1,14 @@
 import {
   Controller,
+  Get,
   Post,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   ForbiddenException,
   BadRequestException,
+  UseGuards,
   Req,
   Body,
 } from '@nestjs/common';
@@ -14,7 +17,10 @@ import { IssueVoidService } from './issue-void.service';
 import { AdjustmentVoidService } from './adjustment-void.service';
 import { TransferVoidService } from './transfer-void.service';
 import { KitchenRequestVoidService } from './kitchen-request-void.service';
+import { LotsAvailableService } from './lots-available.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
@@ -27,6 +33,8 @@ const VALID_DOC_TYPES = [
 ] as const;
 
 @Controller('operations')
+@UseGuards(JwtAuthGuard)
+@ApiSecureController()
 export class OperationsController {
   constructor(
     private readonly grnVoidService: GrnVoidService,
@@ -34,7 +42,17 @@ export class OperationsController {
     private readonly adjustmentVoidService: AdjustmentVoidService,
     private readonly transferVoidService: TransferVoidService,
     private readonly kitchenRequestVoidService: KitchenRequestVoidService,
+    private readonly lotsAvailableService: LotsAvailableService,
   ) {}
+
+  @Get('lots-available')
+  async getLotsAvailable(
+    @Query('item_id') itemId: string,
+    @Query('warehouse_id') warehouseId: string,
+  ) {
+    return this.lotsAvailableService.getLotsAvailable(itemId, warehouseId);
+  }
+
 
   @Post(':documentType/:id/void')
   @HttpCode(HttpStatus.OK)

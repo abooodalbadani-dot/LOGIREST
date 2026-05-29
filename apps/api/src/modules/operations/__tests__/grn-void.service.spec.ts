@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Test, TestingModule } from '@nestjs/testing';
 import { GrnVoidService } from '../grn-void.service';
 import { PrismaService } from '../../../database/prisma.service';
@@ -15,6 +16,7 @@ describe('GrnVoidService', () => {
   const mockStockLedgerCreate = jest.fn();
   const mockCostLedgerFindMany = jest.fn();
   const mockCostLedgerCreate = jest.fn();
+  const mockCostLedgerFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -36,6 +38,7 @@ describe('GrnVoidService', () => {
     costLedger: {
       findMany: mockCostLedgerFindMany,
       create: mockCostLedgerCreate,
+      findFirst: mockCostLedgerFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -105,15 +108,14 @@ describe('GrnVoidService', () => {
       qtyOnHand: new Prisma.Decimal(15),
     });
 
-    mockCostLedgerFindMany.mockResolvedValue([
-      {
-        postedAt: new Date('2024-01-01'),
-        documentId: grnId,
-        documentType: DocumentType.GOODS_RECEIVED_NOTE,
-        quantity: new Prisma.Decimal(10),
-        unitPrice: new Prisma.Decimal(5),
-      },
-    ]);
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-2',
+      quantity: new Prisma.Decimal(15),
+      unitPrice: new Prisma.Decimal(12),
+      newWac: new Prisma.Decimal(12),
+      documentId: 'grn-other',
+      documentType: DocumentType.GOODS_RECEIVED_NOTE,
+    });
 
     mockGrnUpdate.mockResolvedValue({ id: grnId, status: 'VOIDED' });
     mockApprovalEventCount.mockResolvedValue(0);
@@ -244,7 +246,7 @@ describe('GrnVoidService', () => {
       qtyOnHand: new Prisma.Decimal(5),
     });
 
-    mockCostLedgerFindMany.mockResolvedValue([]);
+    mockCostLedgerFindFirst.mockResolvedValue(null);
     mockGrnUpdate.mockResolvedValue({ id: grnId, status: 'VOIDED' });
     mockApprovalEventCount.mockResolvedValue(0);
 

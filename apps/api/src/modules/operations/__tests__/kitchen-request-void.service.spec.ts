@@ -9,6 +9,7 @@ describe('KitchenRequestVoidService', () => {
 
   const mockKitchenRequestFindUnique = jest.fn();
   const mockKitchenRequestUpdate = jest.fn();
+  const mockWarehouseItemFindUnique = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -17,6 +18,9 @@ describe('KitchenRequestVoidService', () => {
     kitchenRequest: {
       findUnique: mockKitchenRequestFindUnique,
       update: mockKitchenRequestUpdate,
+    },
+    warehouseItem: {
+      findUnique: mockWarehouseItemFindUnique,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -46,6 +50,7 @@ describe('KitchenRequestVoidService', () => {
 
     service = module.get<KitchenRequestVoidService>(KitchenRequestVoidService);
     jest.clearAllMocks();
+    mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false });
   });
 
   it('should void a FULFILLED kitchen request successfully', async () => {
@@ -56,12 +61,13 @@ describe('KitchenRequestVoidService', () => {
       id: krId,
       status: 'FULFILLED',
       version: 1,
+      items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
     });
 
     mockKitchenRequestUpdate.mockResolvedValue({ id: krId, status: 'VOIDED' });
     mockApprovalEventCount.mockResolvedValue(0);
 
-    const result = await service.void(krId, userId, Role.ADMIN, 1);
+    const result: unknown = await service.void(krId, userId, Role.ADMIN, 1);
 
     expect(result).toBeDefined();
     expect(mockKitchenRequestUpdate).toHaveBeenCalledWith({
@@ -84,6 +90,7 @@ describe('KitchenRequestVoidService', () => {
     mockKitchenRequestFindUnique.mockResolvedValue({
       id: 'kr-1',
       status: 'DRAFT',
+      items: [],
     });
 
     await expect(service.void('kr-1', 'user-1', Role.ADMIN)).rejects.toThrow(
@@ -96,9 +103,30 @@ describe('KitchenRequestVoidService', () => {
       id: 'kr-1',
       status: 'FULFILLED',
       version: 2,
+      items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
     });
 
     await expect(service.void('kr-1', 'user-1', Role.ADMIN, 1)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('should throw BadRequestException if any item is frozen', async () => {
+    const krId = 'kr-1';
+    const userId = 'user-1';
+
+    mockKitchenRequestFindUnique.mockResolvedValue({
+      id: krId,
+      status: 'FULFILLED',
+      version: 1,
+      items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+    });
+
+    await expect(service.void(krId, userId, Role.ADMIN, 1)).rejects.toThrow(
       BadRequestException,
     );
   });
