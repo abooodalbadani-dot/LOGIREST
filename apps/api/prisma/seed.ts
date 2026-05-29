@@ -191,37 +191,73 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.local' },
-    update: {},
+    update: {
+      warehouseScopes: {
+        deleteMany: {},
+        create: {
+          warehouseId: mainWh.id,
+        },
+      },
+    },
     create: {
       email: 'admin@logirest.local',
       passwordHash,
       name: 'System Administrator',
       role: Role.ADMIN,
       isActive: true,
+      warehouseScopes: {
+        create: {
+          warehouseId: mainWh.id,
+        },
+      },
     },
   });
 
   const adminComUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.com' },
-    update: {},
+    update: {
+      warehouseScopes: {
+        deleteMany: {},
+        create: {
+          warehouseId: mainWh.id,
+        },
+      },
+    },
     create: {
       email: 'admin@logirest.com',
       passwordHash: adminPasswordHash,
       name: 'System Admin Com',
       role: Role.ADMIN,
       isActive: true,
+      warehouseScopes: {
+        create: {
+          warehouseId: mainWh.id,
+        },
+      },
     },
   });
 
   const managerUser = await prisma.user.upsert({
     where: { email: 'manager@logirest.local' },
-    update: {},
+    update: {
+      warehouseScopes: {
+        deleteMany: {},
+        create: {
+          warehouseId: mainWh.id,
+        },
+      },
+    },
     create: {
       email: 'manager@logirest.local',
       passwordHash,
       name: 'Inventory Manager',
       role: Role.INV_MGR,
       isActive: true,
+      warehouseScopes: {
+        create: {
+          warehouseId: mainWh.id,
+        },
+      },
     },
   });
 

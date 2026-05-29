@@ -343,4 +343,37 @@ export class InventoryService {
       return updated;
     });
   }
+
+  async getWarehouseLock(warehouseId: string) {
+    const warehouse = await this.prisma.warehouse.findUnique({
+      where: { id: warehouseId },
+      select: { isLocked: true },
+    });
+
+    const activeLock = await this.prisma.warehouseLock.findFirst({
+      where: {
+        warehouseId,
+        isActive: true,
+      },
+    });
+
+    const isLocked = !!(warehouse?.isLocked || activeLock);
+
+    const activeSession = await this.prisma.stocktakeSession.findFirst({
+      where: {
+        warehouseId,
+        status: {
+          notIn: ['POSTED', 'CANCELLED'],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      isLocked,
+      sessionId: activeSession?.id || activeLock?.id || null,
+      sessionNumber: activeSession?.sessionNumber || (activeLock ? `LOCK-${activeLock.lockType}` : null),
+      lockStartedAt: activeSession?.createdAt?.toISOString() || activeLock?.createdAt?.toISOString() || null,
+    };
+  }
 }

@@ -96,27 +96,108 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
 
   const csrfToken = getCookie('XSRF-TOKEN');
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept-Language': locale,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
+    ...customHeaders,
+  };
+
+  // Auto-inject active scope headers if not already provided (client-side only)
+  if (typeof window !== 'undefined') {
+    try {
+      const storedScope = localStorage.getItem('logirest_active_scope');
+      if (storedScope) {
+        const scope = JSON.parse(storedScope);
+        if (scope.branchId && !headers['x-branch-id']) {
+          headers['x-branch-id'] = scope.branchId;
+        }
+        if (scope.warehouseId && !headers['x-warehouse-id']) {
+          headers['x-warehouse-id'] = scope.warehouseId;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse active scope from localStorage:', e);
+    }
+  }
+
   try {
     const res = await fetch(`${BASE}${path}`, {
       method,
       signal,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept-Language': locale,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
-        ...customHeaders,
-      },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    if (res.status === 401) {
-      await handleAuthError();
-      if (path !== '/auth/login' && path !== '/auth/refresh') {
-        return request(method, path, schema, body, options);
+    if (res.status === 400 || res.status === 403) {
+      const clonedRes = res.clone();
+      const errData = await clonedRes.json().catch(() => ({}));
+      const isMissingScope = errData.message && typeof errData.message === 'string' && (
+        errData.message.includes('active scope headers') ||
+        errData.message.includes('Scope not authorized')
+      );
+
+      if (isMissingScope && typeof window !== 'undefined') {
+        localStorage.removeItem('logirest_active_scope');
+        const storedToken = getTokenCookie();
+        let resolved = false;
+
+        if (storedToken) {
+          try {
+            const b64 = storedToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+            const payloadStr = decodeURIComponent(escape(atob(b64)));
+            const payload = JSON.parse(payloadStr);
+            const user = payload.user;
+
+            if (user && Array.isArray(user.scopes) && user.scopes.length > 0) {
+              const validScope = user.scopes.find((s: any) => s.branch_id && s.warehouse_id);
+              const targetScope = validScope || user.scopes[0];
+              if (targetScope) {
+                const newScope = {
+                  branchId: targetScope.branch_id || '',
+                  warehouseId: targetScope.warehouse_id || '',
+                  departmentId: targetScope.department_id || null
+                };
+                if (newScope.branchId && newScope.warehouseId) {
+                  localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));
+                  resolved = true;
+
+                  // Notify AuthProvider to update its React state
+                  window.dispatchEvent(new CustomEvent('auth:scope-resolved', { detail: newScope }));
+
+                  // Retry the request once
+                  if (!options?.isRetry) {
+                    return request(method, path, schema, body, { ...options, isRetry: true });
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Failed to auto-resolve scope from token:', e);
+          }
+        }
+
+        if (!resolved) {
+          // Redirect the user to a fallback login or Select Branch UI by dispatching auth:expired
+          window.dispatchEvent(new CustomEvent('auth:expired'));
+        }
       }
-      const err: ApiError = { code: 'UNAUTHORIZED', message: 'errors.unauthorized', field_errors: null };
+    }
+
+    if (res.status === 401 || res.status === 403) {
+      if (path !== '/auth/login' && path !== '/auth/refresh') {
+        if (!options?.isRetry) {
+          await handleAuthError();
+          return request(method, path, schema, body, { ...options, isRetry: true });
+        }
+      }
+      const err: ApiError = {
+        code: res.status === 401 ? 'UNAUTHORIZED' : 'FORBIDDEN',
+        message: res.status === 401 ? 'errors.unauthorized' : 'errors.forbidden',
+        field_errors: null
+      };
       throw err;
     }
 
@@ -153,6 +234,7 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
 export interface RequestOptions {
   signal?: AbortSignal;
   headers?: Record<string, string>;
+  isRetry?: boolean;
 }
 
 export const apiClient = {

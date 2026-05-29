@@ -56,6 +56,11 @@ export class InventoryController {
     return this.inventoryService.getMovements(warehouseId, query);
   }
 
+  @Get('warehouses/:warehouseId/lock')
+  async getWarehouseLock(@Param('warehouseId') warehouseId: string) {
+    return this.inventoryService.getWarehouseLock(warehouseId);
+  }
+
   @Patch(':id/unfreeze')
   @HttpCode(HttpStatus.OK)
   async unfreeze(
