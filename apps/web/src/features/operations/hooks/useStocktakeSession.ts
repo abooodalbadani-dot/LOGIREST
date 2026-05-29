@@ -41,7 +41,7 @@ export function useStocktakeSession(id: string | null) {
   return useQuery({
     queryKey: ['stocktakes', id],
     queryFn: ({ signal }) => apiClient.get(`/stocktake/sessions/${id}`, StocktakeSessionSchema, { signal }),
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
     staleTime: 30_000,
   });
 }

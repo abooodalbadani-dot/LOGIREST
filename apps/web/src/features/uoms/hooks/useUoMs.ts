@@ -41,7 +41,7 @@ export function useUoM(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/units-of-measure/${id}`, UoMSchema, { signal });
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

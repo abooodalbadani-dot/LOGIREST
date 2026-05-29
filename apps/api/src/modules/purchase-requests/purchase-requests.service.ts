@@ -49,7 +49,18 @@ export class PurchaseRequestsService {
             },
           },
           include: {
-            lines: true,
+            lines: {
+              include: {
+                item: {
+                  include: {
+                    unitOfMeasure: true,
+                  },
+                },
+              },
+            },
+            createdBy: {
+              select: { id: true, name: true, email: true, role: true },
+            },
           },
         });
       },
@@ -57,11 +68,72 @@ export class PurchaseRequestsService {
     );
   }
 
+  async findAll(
+    params: { status?: string; search?: string; page?: number },
+    warehouseId?: string,
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params.status) {
+      where.status = params.status;
+    }
+    if (warehouseId) {
+      where.warehouseId = warehouseId;
+    }
+    if (params.search) {
+      where.OR = [
+        { requestNumber: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.purchaseRequest.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          createdBy: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.purchaseRequest.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
+  }
+
   async findOne(id: string) {
     const pr = await this.prisma.purchaseRequest.findUnique({
       where: { id },
       include: {
-        lines: true,
+        lines: {
+          include: {
+            item: {
+              include: {
+                unitOfMeasure: true,
+              },
+            },
+          },
+        },
         createdBy: {
           select: { id: true, name: true, email: true, role: true },
         },
@@ -73,6 +145,96 @@ export class PurchaseRequestsService {
     }
 
     return pr;
+  }
+
+  async update(
+    id: string,
+    body: {
+      version: number;
+      lines?: Array<{ itemId: string; quantity: number }>;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.purchaseRequest.findUnique({
+        where: { id },
+        select: { version: true, status: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Purchase Request with ID ${id} not found`);
+      }
+
+      if (existing.version !== body.version) {
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
+      }
+
+      if (existing.status !== 'DRAFT') {
+        throw new BadRequestException('Only DRAFT Purchase Requests can be updated.');
+      }
+
+      if (body.lines) {
+        await tx.pRLine.deleteMany({
+          where: { prId: id },
+        });
+      }
+
+      return tx.purchaseRequest.update({
+        where: { id },
+        data: {
+          version: { increment: 1 },
+          ...(body.lines && {
+            lines: {
+              create: body.lines.map((line) => ({
+                itemId: line.itemId,
+                quantity: line.quantity,
+              })),
+            },
+          }),
+        },
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          createdBy: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+        },
+      });
+    });
+  }
+
+  async remove(id: string, version?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.purchaseRequest.findUnique({
+        where: { id },
+        select: { version: true, status: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Purchase Request with ID ${id} not found`);
+      }
+
+      if (version !== undefined && existing.version !== version) {
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
+      }
+
+      if (existing.status !== 'DRAFT') {
+        throw new BadRequestException('Only DRAFT Purchase Requests can be deleted.');
+      }
+
+      await tx.pRLine.deleteMany({ where: { prId: id } });
+      return tx.purchaseRequest.delete({ where: { id } });
+    });
   }
 
   async submit(
@@ -176,7 +338,6 @@ export class PurchaseRequestsService {
       );
     }
 
-    // Check if a PO already exists referencing the given prId to prevent duplicate conversion
     const existingPo = await this.prisma.purchaseOrder.findFirst({
       where: { prId: id },
     });
@@ -186,7 +347,6 @@ export class PurchaseRequestsService {
       );
     }
 
-    // 2. Validate line pricing in body
     const priceMap = new Map<string, number>();
     if (body.lines) {
       for (const line of body.lines) {
@@ -194,7 +354,6 @@ export class PurchaseRequestsService {
       }
     }
 
-    // Ensure all PR items have a price provided, or default to 0
     for (const prLine of pr.lines) {
       if (!priceMap.has(prLine.itemId)) {
         throw new BadRequestException(
@@ -203,8 +362,6 @@ export class PurchaseRequestsService {
       }
     }
 
-    // 3. Perform the workflow transition on the Purchase Request first
-    // This logs the CONVERT_TO_PO approval event and audit log.
     await this.workflowService.executeTransition(
       id,
       'purchaseRequest',
@@ -216,7 +373,6 @@ export class PurchaseRequestsService {
       body.ipAddress,
     );
 
-    // 4. Create the Purchase Order in DRAFT status referencing the PR ID
     return this.prisma.$transaction(
       async (tx) => {
         const poNumber = await this.documentSequenceService.generateNext(
@@ -249,7 +405,6 @@ export class PurchaseRequestsService {
             },
           });
         } catch (error) {
-          // Prisma unique constraint violation code is 'P2002'
           if (
             error &&
             typeof error === 'object' &&

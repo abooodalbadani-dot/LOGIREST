@@ -62,13 +62,94 @@ export class TransfersService {
     });
   }
 
+  async findAll(
+    params: { status?: string; search?: string; page?: number },
+    warehouseId?: string,
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params.status) {
+      where.status = params.status;
+    }
+    if (warehouseId) {
+      where.OR = [
+        { fromWarehouseId: warehouseId },
+        { toWarehouseId: warehouseId },
+      ];
+    }
+    if (params.search) {
+      where.OR = [
+        { transferNumber: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.transfer.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              item: true,
+            },
+          },
+          fromWarehouse: true,
+          toWarehouse: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.transfer.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async getSummary(warehouseId?: string) {
+    const where: any = {};
+    if (warehouseId) {
+      where.OR = [
+        { fromWarehouseId: warehouseId },
+        { toWarehouseId: warehouseId },
+      ];
+    }
+
+    const transfers = await this.prisma.transfer.findMany({
+      where,
+    });
+
+    const total = transfers.length;
+    const pending = transfers.filter(
+      (t) => t.status === 'DRAFT' || t.status === 'IN_TRANSIT',
+    ).length;
+    const inTransit = transfers.filter((t) => t.status === 'IN_TRANSIT').length;
+
+    return {
+      total,
+      pending,
+      in_transit: inTransit,
+    };
+  }
+
   async findOne(id: string) {
     const transfer = await this.prisma.transfer.findUnique({
       where: { id },
       include: {
         lines: {
           include: {
-            item: true,
+            item: {
+              include: {
+                unitOfMeasure: true,
+              },
+            },
           },
         },
         fromWarehouse: true,
@@ -93,6 +174,24 @@ export class TransfersService {
       id,
       'transfer',
       'CANCEL',
+      userId,
+      userRole,
+      body.comments,
+      body.version,
+      body.ipAddress,
+    );
+  }
+
+  async postToLedger(
+    id: string,
+    userId: string,
+    userRole: Role,
+    body: { comments?: string; version?: number; ipAddress?: string },
+  ) {
+    return this.workflowService.executeTransition(
+      id,
+      'transfer',
+      'POST',
       userId,
       userRole,
       body.comments,

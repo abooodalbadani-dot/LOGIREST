@@ -16,6 +16,7 @@ RUN npm run build --workspace=apps/web
 
 # Stage 2: Production Runner
 FROM node:20-alpine AS production
+RUN apk add --no-cache curl
 WORKDIR /app
 
 ENV NODE_ENV=production

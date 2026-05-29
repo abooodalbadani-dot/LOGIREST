@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Controller,
   Post,
   Get,
+  Put,
   Param,
+  Body,
+  Query,
   UseGuards,
   Req,
   HttpCode,
   HttpStatus,
-  Body,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AdjustmentPostService } from '../adjustment-post.service';
@@ -16,6 +17,7 @@ import { AdjustmentsService } from './adjustments.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { ActiveScope } from '../../../auth/decorators/active-scope.decorator';
 import { Idempotent } from '../../../decorators/idempotent.decorator';
 import {
   ApiSecureController,
@@ -24,6 +26,49 @@ import {
 import { AdjustmentDirection, AdjustmentReason } from '@prisma/client';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
+
+function mapAdjustmentDetail(adj: any) {
+  const lines = (adj.lines || []).map((line: any) => ({
+    id: line.id,
+    item: line.item ? {
+      id: line.item.id,
+      code: line.item.sku,
+      name_ar: line.item.name,
+      name_en: line.item.name,
+      primary_uom: line.item.unitOfMeasure ? {
+        id: line.item.unitOfMeasure.id,
+        code: line.item.unitOfMeasure.code,
+      } : { id: '', code: '' },
+    } : { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: '', code: '' } },
+    direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
+    qty_before: 0,
+    qty_adjusted: Number(line.quantity),
+    uom_id: line.item?.uomId || '',
+    unit_cost: line.unitCost ? Number(line.unitCost) : null,
+    reason_notes: line.reason || '',
+    lot_allocations: line.lotId ? [{ lot_id: line.lotId, qty: Number(line.quantity) }] : [],
+  }));
+
+  const mainReason = adj.lines?.[0]?.reason || 'CORRECTION';
+
+  return {
+    id: adj.id,
+    document_number: adj.adjustmentNumber,
+    status: adj.status,
+    warehouse_id: adj.warehouseId,
+    reason: mainReason,
+    notes: '',
+    reject: null,
+    movement_id: null,
+    approved_by: null,
+    posted_at: adj.status === 'POSTED' ? adj.createdAt.toISOString() : null,
+    created_at: adj.createdAt.toISOString(),
+    updated_at: adj.createdAt.toISOString(),
+    version: adj.version,
+    lines,
+    timeline: [],
+  };
+}
 
 @Controller('operations/adjustments')
 @ApiSecureController()
@@ -52,12 +97,111 @@ export class AdjustmentsController {
     },
     @CurrentUser('id') userId: string,
   ) {
-    return this.adjustmentsService.create(body, userId);
+    const adj = await this.adjustmentsService.create(body, userId);
+    return mapAdjustmentDetail(adj);
+  }
+
+  @Get()
+  async findAll(
+    @Query() query: { status?: string; search?: string; page?: string },
+    @ActiveScope('warehouseId') warehouseId?: string,
+  ) {
+    const result = await this.adjustmentsService.findAll(
+      {
+        status: query.status,
+        search: query.search,
+        page: query.page ? Number(query.page) : 1,
+      },
+      warehouseId,
+    );
+
+    return {
+      data: result.items.map(mapAdjustmentDetail),
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit),
+      },
+    };
+  }
+
+  @Get('summary')
+  async getSummary(@ActiveScope('warehouseId') warehouseId?: string) {
+    return this.adjustmentsService.getSummary(warehouseId);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.adjustmentsService.findOne(id);
+    const adj = await this.adjustmentsService.findOne(id);
+    return mapAdjustmentDetail(adj);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      version: number;
+      warehouse_id?: string;
+      warehouseId?: string;
+      reason?: string;
+      notes?: string;
+      lines?: Array<{
+        id?: string;
+        item_id: string;
+        itemId?: string;
+        qty: number;
+        uom_id: string;
+        direction: 'INCREASE' | 'DECREASE';
+        unit_cost?: number | null;
+        unitCost?: number | null;
+        lotId?: string | null;
+        lot_id?: string | null;
+      }>;
+    },
+  ) {
+    const warehouseId = body.warehouseId || body.warehouse_id;
+    const lines = body.lines?.map((line) => ({
+      id: line.id,
+      itemId: line.itemId || line.item_id,
+      qty: line.qty,
+      direction: line.direction,
+      unitCost: line.unitCost !== undefined ? line.unitCost : line.unit_cost,
+      lotId: line.lotId !== undefined ? line.lotId : line.lot_id,
+    }));
+
+    const adj = await this.adjustmentsService.update(id, {
+      version: body.version,
+      warehouseId,
+      reason: body.reason,
+      notes: body.notes,
+      lines,
+    });
+    return mapAdjustmentDetail(adj);
+  }
+
+  @Post(':id/edit')
+  @HttpCode(HttpStatus.OK)
+  async edit(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { version: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const adj = await this.adjustmentsService.edit(id, userId, role, {
+      version: body.version,
+      ipAddress,
+    });
+    return mapAdjustmentDetail(adj);
   }
 
   @Post(':id/submit')
@@ -82,10 +226,11 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
-    return this.adjustmentsService.submit(id, userId, role, {
+    const adj = await this.adjustmentsService.submit(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return mapAdjustmentDetail(adj);
   }
 
   @Post(':id/approve')
@@ -110,10 +255,11 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
-    return this.adjustmentsService.approve(id, userId, role, {
+    const adj = await this.adjustmentsService.approve(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return mapAdjustmentDetail(adj);
   }
 
   @Post(':id/reject')
@@ -138,10 +284,11 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
-    return this.adjustmentsService.reject(id, userId, role, {
+    const adj = await this.adjustmentsService.reject(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return mapAdjustmentDetail(adj);
   }
 
   @Post(':id/cancel')
@@ -166,10 +313,11 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
-    return this.adjustmentsService.cancel(id, userId, role, {
+    const adj = await this.adjustmentsService.cancel(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return mapAdjustmentDetail(adj);
   }
 
   @Post(':id/post')
@@ -194,6 +342,7 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
-    return this.adjPostService.post(id, userId, role, body.version, ipAddress);
+    const adj = await this.adjPostService.post(id, userId, role, body.version, ipAddress);
+    return mapAdjustmentDetail(adj);
   }
 }

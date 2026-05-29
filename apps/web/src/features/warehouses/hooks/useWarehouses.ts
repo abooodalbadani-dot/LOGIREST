@@ -42,7 +42,7 @@ export function useWarehouse(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/warehouses/${id}`, WarehouseSchema, { signal });
     },
-    enabled: !!id
+    enabled: !!id && id !== 'undefined' && id !== 'null'
   });
 }
 

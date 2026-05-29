@@ -1,19 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Controller,
   Post,
   Get,
   Param,
+  Body,
+  Query,
   UseGuards,
   Req,
   HttpCode,
   HttpStatus,
-  Body,
 } from '@nestjs/common';
 import { KitchenRequestsService } from './kitchen-requests.service';
 import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { Idempotent } from '../../decorators/idempotent.decorator';
 import {
   ApiSecureController,
@@ -22,7 +23,36 @@ import {
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
 
-@Controller('kitchen-requests')
+function mapKitchenRequestDetail(kr: any) {
+  const items = (kr.items || []).map((item: any) => ({
+    id: item.id,
+    item_id: item.itemId,
+    item_name: item.item?.name || '',
+    uom: item.item?.unitOfMeasure?.code || 'PCS',
+    quantity: Number(item.quantityRequested),
+    notes: '',
+    fulfilled_quantity: Number(item.quantityFulfilled),
+  }));
+
+  return {
+    id: kr.id,
+    request_number: kr.requestNumber,
+    department_id: kr.departmentId,
+    department_name: kr.department?.name || '',
+    warehouse_id: kr.warehouseId,
+    warehouse_name: kr.warehouse?.name || '',
+    status: kr.status,
+    notes: kr.notes || '',
+    requested_by: 'System',
+    requested_at: kr.createdAt.toISOString(),
+    created_at: kr.createdAt.toISOString(),
+    updated_at: kr.createdAt.toISOString(),
+    version: kr.version,
+    items,
+  };
+}
+
+@Controller('operations/kitchen-requests')
 @ApiSecureController()
 export class KitchenRequestsController {
   constructor(private readonly krService: KitchenRequestsService) {}
@@ -39,12 +69,39 @@ export class KitchenRequestsController {
     },
     @CurrentUser('id') userId: string,
   ) {
-    return this.krService.create(body, userId);
+    const kr = await this.krService.create(body, userId);
+    return { data: mapKitchenRequestDetail(kr) };
+  }
+
+  @Get()
+  async findAll(
+    @Query() query: { status?: string; search?: string; page?: string },
+    @ActiveScope('warehouseId') warehouseId?: string,
+  ) {
+    const result = await this.krService.findAll(
+      {
+        status: query.status,
+        search: query.search,
+        page: query.page ? Number(query.page) : 1,
+      },
+      warehouseId,
+    );
+
+    return {
+      data: result.items.map(mapKitchenRequestDetail),
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit),
+      },
+    };
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.krService.findOne(id);
+    const kr = await this.krService.findOne(id);
+    return { data: mapKitchenRequestDetail(kr) };
   }
 
   @Post(':id/submit')
@@ -69,10 +126,11 @@ export class KitchenRequestsController {
       req.ip ||
       undefined;
 
-    return this.krService.submit(id, userId, role, {
+    const kr = await this.krService.submit(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return { data: mapKitchenRequestDetail(kr) };
   }
 
   @Post(':id/fulfill')
@@ -102,10 +160,11 @@ export class KitchenRequestsController {
       req.ip ||
       undefined;
 
-    return this.krService.fulfill(id, userId, role, {
+    const kr = await this.krService.fulfill(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return { data: mapKitchenRequestDetail(kr) };
   }
 
   @Post(':id/cancel')
@@ -130,9 +189,10 @@ export class KitchenRequestsController {
       req.ip ||
       undefined;
 
-    return this.krService.cancel(id, userId, role, {
+    const kr = await this.krService.cancel(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return { data: mapKitchenRequestDetail(kr) };
   }
 }

@@ -77,6 +77,34 @@ export class StocktakePostService {
         allKeys.add(key);
       }
 
+      // Check if any item is frozen/locked in target warehouse
+      const uniqueItemIds = new Set<string>();
+      for (const snap of snapshots) {
+        uniqueItemIds.add(snap.itemId);
+      }
+      for (const count of counts) {
+        uniqueItemIds.add(count.itemId);
+      }
+
+      for (const itemId of uniqueItemIds) {
+        const whItemCheck = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: session.warehouseId,
+              itemId,
+            },
+          },
+          include: {
+            item: true,
+          },
+        });
+        if (whItemCheck?.isFrozen) {
+          throw new BadRequestException(
+            `Cannot post stocktake: Item ${whItemCheck.item?.sku || itemId} is frozen/locked in target warehouse`,
+          );
+        }
+      }
+
       // 3. Reconcile variances
       for (const key of allKeys) {
         const snapshot = snapshotMap.get(key);

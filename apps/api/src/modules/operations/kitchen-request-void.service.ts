@@ -17,7 +17,7 @@ export class KitchenRequestVoidService {
     userRole: Role,
     clientVersion?: number,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (userRole !== Role.ADMIN && userRole !== Role.INV_MGR) {
       throw new ForbiddenException(
         'Only System Administrators or Inventory Managers can void documents',
@@ -26,6 +26,13 @@ export class KitchenRequestVoidService {
     return this.prisma.$transaction(async (tx) => {
       const request = await tx.kitchenRequest.findUnique({
         where: { id: kitchenRequestId },
+        include: {
+          items: {
+            include: {
+              item: true,
+            },
+          },
+        },
       });
 
       if (!request) {
@@ -42,6 +49,23 @@ export class KitchenRequestVoidService {
 
       if (clientVersion !== undefined && request.version !== clientVersion) {
         throw new BadRequestException('Version conflict detected');
+      }
+
+      // Check if any item is frozen/locked in the warehouse
+      for (const reqItem of request.items) {
+        const whItemCheck = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: request.warehouseId,
+              itemId: reqItem.itemId,
+            },
+          },
+        });
+        if (whItemCheck?.isFrozen) {
+          throw new BadRequestException(
+            `Cannot void kitchen request: Item ${reqItem.item?.sku || reqItem.itemId} is frozen/locked in warehouse`,
+          );
+        }
       }
 
       const updatedRequest = await tx.kitchenRequest.update({
@@ -65,7 +89,7 @@ export class KitchenRequestVoidService {
           toStatus: 'VOIDED',
           actionPerformed: 'VOID',
           userId,
-          userRole: userRole as any,
+          userRole,
           stepNumber,
         },
       });

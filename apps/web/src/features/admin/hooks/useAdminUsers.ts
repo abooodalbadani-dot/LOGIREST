@@ -34,11 +34,11 @@ export function useAdminUsers(filters: { page?: number } = {}) {
 }
 
 export function useAdminUser(id: string | null) {
- return useQuery({
- queryKey: ['admin/users', id],
-  queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, { signal }),
- enabled: !!id,
- });
+  return useQuery({
+  queryKey: ['admin/users', id],
+   queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, { signal }),
+  enabled: !!id && id !== 'undefined' && id !== 'null',
+  });
 }
 
 export function useAdminUserMutations() {

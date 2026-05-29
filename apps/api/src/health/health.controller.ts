@@ -19,6 +19,22 @@ export class HealthController {
     @InjectQueue('outbox') private readonly outboxQueue: Queue,
   ) {}
 
+  private async checkWithTimeout<T>(
+    check: Promise<T>,
+    timeoutMs: number,
+    name: string,
+  ): Promise<T> {
+    return Promise.race([
+      check,
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`${name} health check timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        ),
+      ),
+    ]);
+  }
+
   @Public()
   @Get()
   async check(): Promise<{
@@ -26,33 +42,50 @@ export class HealthController {
     db: string;
     redis: string;
     bullmq: string;
+    stockLedger: string;
     timestamp: string;
   }> {
     const checks = {
       db: 'disconnected',
       redis: 'disconnected',
       bullmq: 'disconnected',
+      stockLedger: 'disconnected',
     };
 
     let allHealthy = true;
 
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.checkWithTimeout(
+        this.prisma.$queryRaw`SELECT 1`,
+        2000,
+        'database',
+      );
       checks.db = 'connected';
     } catch {
       allHealthy = false;
     }
 
     try {
-      await this.redis.ping();
+      await this.checkWithTimeout(this.redis.ping(), 2000, 'redis');
       checks.redis = 'connected';
     } catch {
       allHealthy = false;
     }
 
     try {
-      await this.outboxQueue.isPaused();
+      await this.checkWithTimeout(this.outboxQueue.isPaused(), 2000, 'bullmq');
       checks.bullmq = 'connected';
+    } catch {
+      allHealthy = false;
+    }
+
+    try {
+      await this.checkWithTimeout(
+        this.prisma.stockLedger.count(),
+        3000,
+        'stock_ledger',
+      );
+      checks.stockLedger = 'connected';
     } catch {
       allHealthy = false;
     }

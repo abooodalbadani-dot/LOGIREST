@@ -14,12 +14,12 @@ export const ActiveScope = createParamDecorator(
   (
     data: keyof ActiveScope | undefined,
     ctx: ExecutionContext,
-  ): ActiveScope | string => {
+  ): ActiveScope | string | undefined => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     const scope = request.activeScope;
     if (data === undefined) {
       return scope;
     }
-    return scope[data];
+    return scope ? scope[data] : undefined;
   },
 );

@@ -42,7 +42,7 @@ export function useBarcode(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/barcodes/${id}`, BarcodeSchema, { signal });
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

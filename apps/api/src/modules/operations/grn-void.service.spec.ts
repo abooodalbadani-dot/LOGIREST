@@ -16,6 +16,7 @@ describe('GrnVoidService', () => {
   const mockStockLedgerCreate = jest.fn();
   const mockCostLedgerFindMany = jest.fn();
   const mockCostLedgerCreate = jest.fn();
+  const mockCostLedgerFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -37,6 +38,7 @@ describe('GrnVoidService', () => {
     costLedger: {
       findMany: mockCostLedgerFindMany,
       create: mockCostLedgerCreate,
+      findFirst: mockCostLedgerFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -112,22 +114,14 @@ describe('GrnVoidService', () => {
     });
 
     // Mock costLedger entries to trigger WAC recalculation
-    mockCostLedgerFindMany.mockResolvedValue([
-      {
-        id: 'cost-1',
-        quantity: new Prisma.Decimal(5),
-        unitPrice: new Prisma.Decimal(10),
-        documentId: grnId,
-        documentType: DocumentType.GOODS_RECEIVED_NOTE,
-      },
-      {
-        id: 'cost-2',
-        quantity: new Prisma.Decimal(15),
-        unitPrice: new Prisma.Decimal(12),
-        documentId: 'grn-other',
-        documentType: DocumentType.GOODS_RECEIVED_NOTE,
-      },
-    ]);
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-2',
+      quantity: new Prisma.Decimal(15),
+      unitPrice: new Prisma.Decimal(12),
+      newWac: new Prisma.Decimal(12),
+      documentId: 'grn-other',
+      documentType: DocumentType.GOODS_RECEIVED_NOTE,
+    });
 
     mockGrnUpdate.mockResolvedValue({ id: grnId, status: 'VOIDED' });
     mockApprovalEventCount.mockResolvedValue(1);

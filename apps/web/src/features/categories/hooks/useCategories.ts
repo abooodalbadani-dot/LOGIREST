@@ -41,7 +41,7 @@ export function useCategory(id: string | null) {
       if (!id) return null;
       return apiClient.get(`/categories/${id}`, CategorySchema, { signal });
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 

@@ -69,7 +69,7 @@ export function useIssue(id: string | null) {
   return useQuery({
     queryKey: ['issues', id],
     queryFn: ({ signal }) => apiClient.get(`/operations/issues/${id}`, StockIssueDetailSchema, { signal }),
-    enabled: !!id && id !== 'new',
+    enabled: !!id && id !== 'new' && id !== 'undefined' && id !== 'null',
     staleTime: 60_000,
   });
 }

@@ -55,14 +55,82 @@ export class IssuesService {
           include: {
             lines: {
               include: {
-                item: true,
+                item: {
+                  include: {
+                    unitOfMeasure: true,
+                  },
+                },
+                lotAllocations: {
+                  include: {
+                    lot: true,
+                  },
+                },
               },
             },
+            warehouse: true,
+            department: true,
           },
         });
       },
       { timeout: 30000 },
     );
+  }
+
+  async findAll(
+    params: { status?: string; search?: string; page?: number },
+    warehouseId?: string,
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params.status) {
+      where.status = params.status;
+    }
+    if (warehouseId) {
+      where.warehouseId = warehouseId;
+    }
+    if (params.search) {
+      where.OR = [
+        { issueNumber: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.inventoryIssue.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+              lotAllocations: {
+                include: {
+                  lot: true,
+                },
+              },
+            },
+          },
+          warehouse: true,
+          department: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.inventoryIssue.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: string) {
@@ -71,7 +139,16 @@ export class IssuesService {
       include: {
         lines: {
           include: {
-            item: true,
+            item: {
+              include: {
+                unitOfMeasure: true,
+              },
+            },
+            lotAllocations: {
+              include: {
+                lot: true,
+              },
+            },
           },
         },
         department: true,

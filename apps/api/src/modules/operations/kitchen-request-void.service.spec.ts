@@ -10,6 +10,7 @@ describe('KitchenRequestVoidService', () => {
 
   const mockRequestFindUnique = jest.fn();
   const mockRequestUpdate = jest.fn();
+  const mockWarehouseItemFindUnique = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -18,6 +19,9 @@ describe('KitchenRequestVoidService', () => {
     kitchenRequest: {
       findUnique: mockRequestFindUnique,
       update: mockRequestUpdate,
+    },
+    warehouseItem: {
+      findUnique: mockWarehouseItemFindUnique,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -47,6 +51,7 @@ describe('KitchenRequestVoidService', () => {
 
     service = module.get<KitchenRequestVoidService>(KitchenRequestVoidService);
     jest.clearAllMocks();
+    mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false });
   });
 
   it('should void a FULFILLED kitchen request successfully', async () => {
@@ -57,6 +62,9 @@ describe('KitchenRequestVoidService', () => {
       id: requestId,
       status: 'FULFILLED',
       version: 1,
+      items: [
+        { itemId: 'item-1', item: { sku: 'SKU1' } }
+      ]
     });
 
     mockRequestUpdate.mockResolvedValue({ id: requestId, status: 'VOIDED' });
@@ -71,10 +79,33 @@ describe('KitchenRequestVoidService', () => {
     });
   });
 
+  it('should throw BadRequestException if any item is frozen', async () => {
+    const requestId = 'req-1';
+    const userId = 'user-1';
+
+    mockRequestFindUnique.mockResolvedValue({
+      id: requestId,
+      status: 'FULFILLED',
+      version: 1,
+      items: [
+        { itemId: 'item-1', item: { sku: 'SKU1' } }
+      ]
+    });
+
+    mockWarehouseItemFindUnique.mockResolvedValue({
+      isFrozen: true,
+    });
+
+    await expect(service.void(requestId, userId, Role.ADMIN, 1)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
   it('should throw BadRequestException if status is not FULFILLED', async () => {
     mockRequestFindUnique.mockResolvedValue({
       id: 'req-1',
       status: 'DRAFT',
+      items: [],
     });
 
     await expect(service.void('req-1', 'user-1', Role.ADMIN)).rejects.toThrow(

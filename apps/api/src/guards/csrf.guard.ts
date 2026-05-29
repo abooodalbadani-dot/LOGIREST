@@ -21,6 +21,13 @@ export class CsrfGuard implements CanActivate {
     const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
     const isProduction = process.env.NODE_ENV === 'production';
 
+    // Auth endpoints are public and have no cookie/token context yet — exempt them
+    const url: string = req.url || req.originalUrl || '';
+    const CSRF_EXEMPT_PREFIXES = ['/api/v1/auth/', '/health'];
+    if (CSRF_EXEMPT_PREFIXES.some((prefix) => url.startsWith(prefix))) {
+      return true;
+    }
+
     // Generate and set XSRF-TOKEN cookie if it is missing
     let token = req.cookies?.['XSRF-TOKEN'] as string | undefined;
     if (!token) {

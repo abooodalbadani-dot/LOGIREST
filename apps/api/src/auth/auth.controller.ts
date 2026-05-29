@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Put,
   Get,
   Body,
   Req,
@@ -77,4 +78,38 @@ export class AuthController {
   async getProfile(@CurrentUser('id') userId: string) {
     return this.authService.getProfile(userId);
   }
+
+  @Put('profile')
+  async updateProfile(
+    @CurrentUser('id') userId: string,
+    @Body() body: any,
+  ) {
+    return this.authService.updateProfile(userId, body);
+  }
+
+  @Post('profile/avatar')
+  async uploadAvatar(
+    @CurrentUser('id') userId: string,
+    @Body() body: any,
+  ) {
+    return this.authService.uploadAvatar(userId, body);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.resetPassword(token, password);
+  }
 }
+

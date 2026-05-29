@@ -2,18 +2,21 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Param,
+  Body,
+  Query,
   UseGuards,
   Req,
   HttpCode,
   HttpStatus,
-  Body,
 } from '@nestjs/common';
 import { StocktakePostService } from './stocktake-post.service';
 import { StocktakeService } from './stocktake.service';
 import { WorkflowStateGuard } from '../../guards/workflow-state.guard';
 import { WorkflowAction } from '../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { Idempotent } from '../../decorators/idempotent.decorator';
 import {
   ApiSecureController,
@@ -21,6 +24,55 @@ import {
 } from '../../decorators/swagger-docs.decorator';
 import type { Role } from '@logirest/shared-types';
 import type { Request } from 'express';
+
+function mapStocktakeDetail(session: any) {
+  const items = (session.snapshots || []).map((snapshot: any) => {
+    const count = (session.counts || []).find(
+      (c: any) => c.itemId === snapshot.itemId && c.lotId === snapshot.lotId
+    );
+
+    const countedQty = count ? Number(count.qtyCounted) : null;
+    const snapshotQty = Number(snapshot.qtySnapshot);
+    const variance = countedQty !== null ? countedQty - snapshotQty : null;
+
+    return {
+      id: snapshot.id,
+      item_id: snapshot.itemId,
+      item_name: snapshot.item?.name || '',
+      barcode: snapshot.item?.barcodeMappings?.[0]?.barcode || '',
+      uom: snapshot.item?.unitOfMeasure?.code || 'PCS',
+      snapshot_qty: snapshotQty,
+      counted_qty: countedQty,
+      variance: variance,
+      variance_reason: null,
+      lot_number: snapshot.lot?.lotNumber || undefined,
+      expiry_date: snapshot.lot?.expiryDate ? snapshot.lot.expiryDate.toISOString() : undefined,
+      unit_cost: Number(snapshot.wacSnapshot),
+    };
+  });
+
+  return {
+    id: session.id,
+    session_number: session.sessionNumber,
+    session_name: `Stocktake ${session.sessionNumber}`,
+    warehouse_id: session.warehouseId,
+    warehouse_name: session.warehouse?.name || '',
+    status: session.status,
+    snapshot_at: session.createdAt.toISOString(),
+    started_by: 'System',
+    started_at: session.createdAt.toISOString(),
+    posted_at: session.status === 'POSTED' ? session.createdAt.toISOString() : null,
+    posted_by: null,
+    items,
+    version: session.version,
+    description: '',
+    approver_comment: '',
+    approved_at: undefined,
+    created_at: session.createdAt.toISOString(),
+    updated_at: session.createdAt.toISOString(),
+    audit_log: [],
+  };
+}
 
 @Controller('stocktake/sessions')
 @ApiSecureController()
@@ -34,15 +86,91 @@ export class StocktakeController {
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
-    @Body() body: { warehouseId: string },
+    @Body() body: { warehouseId?: string; warehouse_id?: string },
     @CurrentUser('id') userId: string,
   ) {
-    return this.stocktakeService.create(body, userId);
+    const warehouseId = body.warehouseId || body.warehouse_id;
+    if (!warehouseId) {
+      throw new Error('warehouseId is required');
+    }
+    const session = await this.stocktakeService.create({ warehouseId }, userId);
+    return mapStocktakeDetail(await this.stocktakeService.findOne(session.id));
+  }
+
+  @Get()
+  async findAll(
+    @Query() query: { status?: string; search?: string; page?: string },
+    @ActiveScope('warehouseId') warehouseId?: string,
+  ) {
+    const result = await this.stocktakeService.findAll(
+      {
+        status: query.status,
+        search: query.search,
+        page: query.page ? Number(query.page) : 1,
+      },
+      warehouseId,
+    );
+
+    return {
+      data: result.items.map(mapStocktakeDetail),
+      meta: {
+        page: result.page,
+        page_size: result.limit,
+        total: result.total,
+        total_pages: Math.ceil(result.total / result.limit),
+      },
+    };
+  }
+
+  @Get('summary')
+  async getSummary(@ActiveScope('warehouseId') warehouseId?: string) {
+    return this.stocktakeService.getSummary(warehouseId);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.stocktakeService.findOne(id);
+    const session = await this.stocktakeService.findOne(id);
+    return mapStocktakeDetail(session);
+  }
+
+  @Put(':stocktakeId/items/:lineId')
+  async updateLineItem(
+    @Param('stocktakeId') stocktakeId: string,
+    @Param('lineId') lineId: string,
+    @Body() body: { counted_qty?: number; countedQty?: number; variance_reason?: string; varianceReason?: string },
+    @CurrentUser('id') userId: string,
+  ) {
+    const counted_qty = body.countedQty !== undefined ? body.countedQty : body.counted_qty;
+    if (counted_qty === undefined) {
+      throw new Error('counted_qty is required');
+    }
+    const session = await this.stocktakeService.updateLineItem(
+      stocktakeId,
+      lineId,
+      { counted_qty, variance_reason: body.varianceReason || body.variance_reason },
+      userId,
+    );
+    return mapStocktakeDetail(session);
+  }
+
+  @Put(':sessionId/counts/:countId')
+  async updateCountAlias(
+    @Param('sessionId') sessionId: string,
+    @Param('countId') countId: string,
+    @Body() body: { counted_qty?: number; countedQty?: number; variance_reason?: string; varianceReason?: string },
+    @CurrentUser('id') userId: string,
+  ) {
+    const counted_qty = body.countedQty !== undefined ? body.countedQty : body.counted_qty;
+    if (counted_qty === undefined) {
+      throw new Error('counted_qty is required');
+    }
+    const session = await this.stocktakeService.updateLineItem(
+      sessionId,
+      countId,
+      { counted_qty, variance_reason: body.varianceReason || body.variance_reason },
+      userId,
+    );
+    return mapStocktakeDetail(session);
   }
 
   @Post(':id/start')
@@ -67,10 +195,11 @@ export class StocktakeController {
       req.ip ||
       undefined;
 
-    return this.stocktakeService.start(id, userId, role, {
+    const session = await this.stocktakeService.start(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return mapStocktakeDetail(session);
   }
 
   @Post(':id/count')
@@ -83,7 +212,8 @@ export class StocktakeController {
     },
     @CurrentUser('id') userId: string,
   ) {
-    return this.stocktakeService.count(id, body.counts, userId);
+    await this.stocktakeService.count(id, body.counts, userId);
+    return mapStocktakeDetail(await this.stocktakeService.findOne(id));
   }
 
   @Post(':id/submit')
@@ -108,10 +238,11 @@ export class StocktakeController {
       req.ip ||
       undefined;
 
-    return this.stocktakeService.submit(id, userId, role, {
+    const session = await this.stocktakeService.submit(id, userId, role, {
       ...body,
       ipAddress,
     });
+    return mapStocktakeDetail(session);
   }
 
   @Post(':id/approve')
@@ -126,7 +257,7 @@ export class StocktakeController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body() body: { comments?: string; version?: number },
+    @Body() body: { comments?: string; comment?: string; version?: number },
     @Req() req: Request,
   ) {
     const ipAddress =
@@ -136,10 +267,68 @@ export class StocktakeController {
       req.ip ||
       undefined;
 
-    return this.stocktakeService.approve(id, userId, role, {
-      ...body,
+    const session = await this.stocktakeService.approve(id, userId, role, {
+      comments: body.comments || body.comment,
+      version: body.version,
       ipAddress,
     });
+    return mapStocktakeDetail(session);
+  }
+
+  @Post(':id/reject')
+  @UseGuards(WorkflowStateGuard)
+  @WorkflowAction({
+    docType: 'stocktake',
+    action: 'REJECT',
+    modelName: 'stocktakeSession',
+  })
+  @HttpCode(HttpStatus.OK)
+  async reject(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Body() body: { comments?: string; comment?: string; version?: number },
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const session = await this.stocktakeService.reject(id, userId, role, {
+      comments: body.comments || body.comment,
+      version: body.version,
+      ipAddress,
+    });
+    return mapStocktakeDetail(session);
+  }
+
+  @Post(':id/recount')
+  @HttpCode(HttpStatus.OK)
+  async recount(
+    @Param('id') id: string,
+    @Body() body: { item_ids?: string[]; itemIds?: string[] },
+    @CurrentUser('id') userId: string,
+  ) {
+    const session = await this.stocktakeService.recount(
+      id,
+      { item_ids: body.itemIds || body.item_ids },
+      userId,
+    );
+    return mapStocktakeDetail(session);
+  }
+
+  @Post(':id/review_variance')
+  @HttpCode(HttpStatus.OK)
+  async reviewVariance(
+    @Param('id') id: string,
+    @Body() body: { items: Array<{ line_id: string; variance_reason?: string }> },
+    @CurrentUser('id') userId: string,
+  ) {
+    const session = await this.stocktakeService.reviewVariance(id, body, userId);
+    return mapStocktakeDetail(session);
   }
 
   @Post(':id/cancel')
@@ -154,7 +343,7 @@ export class StocktakeController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body() body: { comments?: string; version?: number },
+    @Body() body: { comments?: string; reason?: string; version?: number },
     @Req() req: Request,
   ) {
     const ipAddress =
@@ -164,10 +353,12 @@ export class StocktakeController {
       req.ip ||
       undefined;
 
-    return this.stocktakeService.cancel(id, userId, role, {
-      ...body,
+    const session = await this.stocktakeService.cancel(id, userId, role, {
+      comments: body.comments || body.reason,
+      version: body.version,
       ipAddress,
     });
+    return mapStocktakeDetail(session);
   }
 
   @Post(':id/post')
@@ -192,12 +383,13 @@ export class StocktakeController {
       req.ip ||
       undefined;
 
-    return this.stocktakePostService.post(
+    const session = await this.stocktakePostService.post(
       id,
       userId,
       role,
       body.version,
       ipAddress,
     );
+    return mapStocktakeDetail(session);
   }
 }
