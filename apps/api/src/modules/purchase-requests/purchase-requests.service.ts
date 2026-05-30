@@ -171,7 +171,9 @@ export class PurchaseRequestsService {
       }
 
       if (existing.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Purchase Requests can be updated.');
+        throw new BadRequestException(
+          'Only DRAFT Purchase Requests can be updated.',
+        );
       }
 
       if (body.lines) {
@@ -229,7 +231,9 @@ export class PurchaseRequestsService {
       }
 
       if (existing.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Purchase Requests can be deleted.');
+        throw new BadRequestException(
+          'Only DRAFT Purchase Requests can be deleted.',
+        );
       }
 
       await tx.pRLine.deleteMany({ where: { prId: id } });

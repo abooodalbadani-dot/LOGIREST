@@ -60,14 +60,14 @@ export class WarehousesDirectController {
     if (!warehouse) {
       throw new NotFoundException(`Warehouse with ID ${id} not found`);
     }
-    
+
     const stockCount = await this.prisma.warehouseItem.count({
       where: {
         warehouseId: id,
         qtyOnHand: { gt: 0 },
       },
     });
-    
+
     return {
       ...warehouse,
       has_stock: stockCount > 0,

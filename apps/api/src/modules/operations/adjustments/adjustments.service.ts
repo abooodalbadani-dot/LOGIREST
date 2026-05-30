@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
@@ -142,9 +147,8 @@ export class AdjustmentsService {
     const pending = adjustments.filter(
       (a) => a.status === 'DRAFT' || a.status === 'SUBMITTED',
     ).length;
-    const criticalLosses = adjustments.filter(
-      (a) =>
-        a.lines.some((l) => l.reason === 'DAMAGE' || l.reason === 'THEFT'),
+    const criticalLosses = adjustments.filter((a) =>
+      a.lines.some((l) => l.reason === 'DAMAGE' || l.reason === 'THEFT'),
     ).length;
 
     return {

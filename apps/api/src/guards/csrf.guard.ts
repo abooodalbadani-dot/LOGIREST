@@ -41,8 +41,15 @@ export class CsrfGuard implements CanActivate {
     }
 
     // Exempt login and refresh endpoints from CSRF check
-    const bypassPaths = ['/api/v1/auth/login', '/api/v1/auth/refresh', '/auth/login', '/auth/refresh'];
-    if (bypassPaths.some(path => req.path === path || req.path?.endsWith(path))) {
+    const bypassPaths = [
+      '/api/v1/auth/login',
+      '/api/v1/auth/refresh',
+      '/auth/login',
+      '/auth/refresh',
+    ];
+    if (
+      bypassPaths.some((path) => req.path === path || req.path?.endsWith(path))
+    ) {
       return true;
     }
 

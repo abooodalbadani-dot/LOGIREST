@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
@@ -22,7 +27,7 @@ export class UomService {
     const uoms = await this.prisma.unitOfMeasure.findMany({
       orderBy: { code: 'asc' },
     });
-    return uoms.map(uom => this.mapDbUoMToFrontend(uom));
+    return uoms.map((uom) => this.mapDbUoMToFrontend(uom));
   }
 
   async findOne(id: string) {
@@ -41,9 +46,13 @@ export class UomService {
       throw new BadRequestException('code and name are required');
     }
 
-    const existing = await this.prisma.unitOfMeasure.findUnique({ where: { code } });
+    const existing = await this.prisma.unitOfMeasure.findUnique({
+      where: { code },
+    });
     if (existing) {
-      throw new ConflictException(`Unit of Measure with code "${code}" already exists`);
+      throw new ConflictException(
+        `Unit of Measure with code "${code}" already exists`,
+      );
     }
 
     const name = name_en || name_ar;
@@ -76,13 +85,17 @@ export class UomService {
   }
 
   async update(id: string, body: any, userId: string, ipAddress?: string) {
-    const existing = await this.prisma.unitOfMeasure.findUnique({ where: { id } });
+    const existing = await this.prisma.unitOfMeasure.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Unit of Measure with ID ${id} not found`);
     }
 
     if (body.version !== undefined && existing.version !== body.version) {
-      throw new ConflictException('Optimistic locking failure: version mismatch');
+      throw new ConflictException(
+        'Optimistic locking failure: version mismatch',
+      );
     }
 
     const { code, name_en, name_ar } = body;
@@ -129,7 +142,9 @@ export class UomService {
     }
 
     if (existing.items.length > 0) {
-      throw new BadRequestException('Cannot delete Unit of Measure with associated items');
+      throw new BadRequestException(
+        'Cannot delete Unit of Measure with associated items',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {

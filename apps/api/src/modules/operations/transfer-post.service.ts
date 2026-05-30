@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   BadRequestException,
@@ -9,10 +8,11 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
-import { Role, DocumentType, Prisma } from '@prisma/client';
+import { Role, DocumentType, Prisma, Transfer } from '@prisma/client';
 import { canPerformActionV2, DocumentStatus } from '@logirest/shared-types';
 import { MetricsService } from '../metrics/metrics.service';
 import { OutboxService } from '../outbox/outbox.service';
+import { WacService } from '../ledger/wac.service';
 
 @Injectable()
 export class TransferPostService {
@@ -22,6 +22,7 @@ export class TransferPostService {
     private readonly lockService: LedgerLockService,
     private readonly metricsService: MetricsService,
     private readonly outboxService: OutboxService,
+    private readonly wacService: WacService,
   ) {}
 
   /**
@@ -33,7 +34,7 @@ export class TransferPostService {
     userRole: Role,
     clientVersion?: number,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<Transfer> {
     try {
       return await this.prisma.$transaction(
         async (tx) => {
@@ -191,7 +192,7 @@ export class TransferPostService {
               toStatus: 'IN_TRANSIT',
               actionPerformed: 'SHIP',
               userId,
-              userRole: userRole as any,
+              userRole: userRole,
               stepNumber,
             },
           });
@@ -219,16 +220,15 @@ export class TransferPostService {
         },
         { timeout: 30000 },
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       const logger = new Logger(TransferPostService.name);
-      logger.warn(`Transfer SHIP failed for user ${userId}: ${error.message}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.warn(`Transfer SHIP failed for user ${userId}: ${errorMsg}`);
 
       if (error instanceof ForbiddenException) {
         let action = 'WORKFLOW_SHIP_FAILED';
         if (
-          error.message.includes(
-            'not authorized for the origin warehouse branch',
-          )
+          errorMsg.includes('not authorized for the origin warehouse branch')
         ) {
           action = 'UNAUTHORIZED_TRANSFER_SHIP';
         }
@@ -252,16 +252,20 @@ export class TransferPostService {
                   })
                 : '{}',
               afterStateJson: JSON.stringify({
-                error: error.message,
+                error: errorMsg,
                 userRole,
                 warehouseId: transfer?.fromWarehouseId || null,
               }),
               ipAddress: ipAddress || null,
             },
           });
-        } catch (auditError: any) {
+        } catch (auditError: unknown) {
+          const auditErrorMsg =
+            auditError instanceof Error
+              ? auditError.message
+              : String(auditError);
           logger.error(
-            `Failed to write failed SHIP audit log: ${auditError.message}`,
+            `Failed to write failed SHIP audit log: ${auditErrorMsg}`,
           );
         }
       }
@@ -285,7 +289,7 @@ export class TransferPostService {
       quantityReceived: number;
       varianceReason?: string;
     }>,
-  ): Promise<any> {
+  ): Promise<Transfer> {
     try {
       return await this.prisma.$transaction(
         async (tx) => {
@@ -498,72 +502,15 @@ export class TransferPostService {
               });
             }
 
-            // Lock/fetch destination warehouse item to recalculate WAC
-            const destWhItem = await this.lockService.lockItem(
+            // Recalculate WAC and log cost ledger using central WacService
+            await this.wacService.handleTransferReceipt(
               tx,
               transfer.toWarehouseId,
               item.id,
+              receivedQty,
+              Number(sourceWac),
+              transfer.id,
             );
-            const currentQty = destWhItem
-              ? new Prisma.Decimal(destWhItem.qtyOnHand)
-              : new Prisma.Decimal(0);
-            const currentWac = destWhItem
-              ? new Prisma.Decimal(destWhItem.wac)
-              : new Prisma.Decimal(0);
-            const rxQty = new Prisma.Decimal(receivedQty);
-            const rxCost = sourceWac;
-
-            let newDestWac: Prisma.Decimal;
-            if (currentQty.lte(0)) {
-              newDestWac = rxCost;
-            } else {
-              const currentTotalCost = currentQty.mul(currentWac);
-              const receivedTotalCost = rxQty.mul(rxCost);
-              const totalQty = currentQty.add(rxQty);
-
-              if (totalQty.lte(0)) {
-                newDestWac = rxCost;
-              } else {
-                newDestWac = currentTotalCost
-                  .add(receivedTotalCost)
-                  .div(totalQty);
-              }
-            }
-            const roundedDestWac = newDestWac.toDecimalPlaces(4);
-
-            // Upsert total item balance in target warehouse
-            await tx.warehouseItem.upsert({
-              where: {
-                warehouseId_itemId: {
-                  warehouseId: transfer.toWarehouseId,
-                  itemId: item.id,
-                },
-              },
-              create: {
-                warehouseId: transfer.toWarehouseId,
-                itemId: item.id,
-                qtyOnHand: rxQty,
-                qtyAllocated: 0,
-                wac: roundedDestWac,
-              },
-              update: {
-                qtyOnHand: { increment: rxQty },
-                wac: roundedDestWac,
-              },
-            });
-
-            // Log mutation to CostLedger for destination warehouse
-            await tx.costLedger.create({
-              data: {
-                warehouseId: transfer.toWarehouseId,
-                itemId: item.id,
-                quantity: rxQty,
-                unitPrice: rxCost,
-                newWac: roundedDestWac,
-                documentId: transfer.id,
-                documentType: DocumentType.TRANSFER,
-              },
-            });
 
             // Log Transit Loss if there is a discrepancy
             const discrepancy = shippedQty - receivedQty;
@@ -667,7 +614,7 @@ export class TransferPostService {
               toStatus: 'RECEIVED',
               actionPerformed: 'RECEIVE',
               userId,
-              userRole: userRole as any,
+              userRole: userRole,
               stepNumber,
             },
           });
@@ -740,16 +687,15 @@ export class TransferPostService {
         },
         { timeout: 30000 },
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       const logger = new Logger(TransferPostService.name);
-      logger.warn(
-        `Transfer RECEIVE failed for user ${userId}: ${error.message}`,
-      );
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.warn(`Transfer RECEIVE failed for user ${userId}: ${errorMsg}`);
 
       if (error instanceof ForbiddenException) {
         let action = 'WORKFLOW_RECEIVE_FAILED';
         if (
-          error.message.includes(
+          errorMsg.includes(
             'not authorized for the destination warehouse branch',
           )
         ) {
@@ -775,16 +721,20 @@ export class TransferPostService {
                   })
                 : '{}',
               afterStateJson: JSON.stringify({
-                error: error.message,
+                error: errorMsg,
                 userRole,
                 warehouseId: transfer?.toWarehouseId || null,
               }),
               ipAddress: ipAddress || null,
             },
           });
-        } catch (auditError: any) {
+        } catch (auditError: unknown) {
+          const auditErrorMsg =
+            auditError instanceof Error
+              ? auditError.message
+              : String(auditError);
           logger.error(
-            `Failed to write failed RECEIVE audit log: ${auditError.message}`,
+            `Failed to write failed RECEIVE audit log: ${auditErrorMsg}`,
           );
         }
       }

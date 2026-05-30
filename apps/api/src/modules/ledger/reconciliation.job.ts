@@ -5,6 +5,7 @@ import { NotificationService } from '../notifications/notification.service';
 import { Prisma, Role } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 import { RedisLockService } from '../../redis/redis-lock.service';
+import { AlertService } from '../alerts/alert.service';
 
 @Injectable()
 export class ReconciliationJob {
@@ -15,6 +16,7 @@ export class ReconciliationJob {
     private readonly notificationService: NotificationService,
     private readonly metricsService: MetricsService,
     private readonly lockService: RedisLockService,
+    private readonly alertService: AlertService,
   ) {}
 
   @Cron('0 1 * * *', { name: 'daily-reconciliation' })
@@ -246,29 +248,25 @@ export class ReconciliationJob {
         if (batchLots.length < 500) break;
       }
 
-      // Check D: CostLedger orphan detection (Task-10)
-      const postedGrns = await this.prisma.goodsReceivedNote.findMany({
-        where: { status: 'POSTED' },
-        select: { id: true, grnNumber: true },
-      });
+      // Check D: CostLedger orphan detection (Task-10) - Refactored to single set-based join query (T023)
+      const orphanedGrns = await this.prisma.$queryRaw<
+        Array<{ id: string; grnNumber: string }>
+      >`
+        SELECT DISTINCT grn.id, grn."grnNumber"
+        FROM goods_received_notes grn
+        INNER JOIN stock_ledger sl ON sl."documentId" = grn.id AND sl."documentType" = 'GOODS_RECEIVED_NOTE'::"DocumentType"
+        LEFT JOIN cost_ledger cl ON cl."documentId" = grn.id AND cl."documentType" = 'GOODS_RECEIVED_NOTE'::"DocumentType"
+        WHERE grn.status = 'POSTED' AND cl.id IS NULL
+      `;
 
-      for (const grn of postedGrns) {
-        const costCount = await this.prisma.costLedger.count({
-          where: { documentId: grn.id, documentType: 'GOODS_RECEIVED_NOTE' },
+      for (const grn of orphanedGrns) {
+        this.logger.error(
+          `ORPHAN: GRN ${grn.grnNumber} has StockLedger entries but NO CostLedger entries. WAC integrity may be compromised.`,
+        );
+        notificationsToCreate.push({
+          targetRole: Role.ADMIN,
+          message: `CRITICAL: GRN ${grn.grnNumber} has stock entries but no cost ledger entries. WAC may be corrupted.`,
         });
-        const stockCount = await this.prisma.stockLedger.count({
-          where: { documentId: grn.id, documentType: 'GOODS_RECEIVED_NOTE' },
-        });
-
-        if (costCount === 0 && stockCount > 0) {
-          this.logger.error(
-            `ORPHAN: GRN ${grn.grnNumber} has StockLedger entries but NO CostLedger entries. WAC integrity may be compromised.`,
-          );
-          notificationsToCreate.push({
-            targetRole: Role.ADMIN,
-            message: `CRITICAL: GRN ${grn.grnNumber} has stock entries but no cost ledger entries. WAC may be corrupted.`,
-          });
-        }
       }
 
       // Check E: Orphaned lots (Task-11)
@@ -341,6 +339,35 @@ export class ReconciliationJob {
         this.metricsService.reconciliationDiscrepanciesCounter.inc(
           totalDiscrepancies,
         );
+      }
+
+      // Trigger Slack webhook alert for reconciliation mismatch (non-blocking)
+      if (
+        totalDiscrepancies > 0 ||
+        orphanedGrns.length > 0 ||
+        orphanedLots.length > 0
+      ) {
+        const alertMsg = `Nightly stock reconciliation run detected discrepancies!
+*Core stock discrepancies:* ${discrepancyCount} items frozen.
+*Lot-level drifts:* ${lotDiscrepanciesFound} lots.
+*Orphaned GRNs:* ${orphanedGrns.length} documents.
+*Orphaned Lots:* ${orphanedLots.length} records.
+Please review the system logs and administrator notification panel immediately.`;
+
+        this.alertService
+          .sendSlackAlert(alertMsg, '⚠️ RECONCILIATION DISCREPANCY DETECTED', {
+            itemsChecked: processedCount,
+            discrepancyCount,
+            lotDiscrepanciesFound,
+            orphanedGrnsCount: orphanedGrns.length,
+            orphanedLotsCount: orphanedLots.length,
+            durationMs,
+          })
+          .catch((err) => {
+            this.logger.error(
+              `Failed to dispatch reconciliation Slack alert: ${err.message}`,
+            );
+          });
       }
 
       // Record duration metrics in Prometheus

@@ -9,6 +9,9 @@ describe('TokenCleanupJob', () => {
     refreshToken: {
       deleteMany: jest.fn(),
     },
+    passwordResetToken: {
+      deleteMany: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -23,8 +26,11 @@ describe('TokenCleanupJob', () => {
     jest.clearAllMocks();
   });
 
-  it('should purge expired or revoked refresh tokens older than 7 days', async () => {
+  it('should purge expired or revoked refresh tokens older than 7 days and reset tokens', async () => {
     mockPrismaService.refreshToken.deleteMany.mockResolvedValue({ count: 18 });
+    mockPrismaService.passwordResetToken.deleteMany.mockResolvedValue({
+      count: 5,
+    });
 
     await job.purgeExpiredTokens();
 
@@ -33,6 +39,17 @@ describe('TokenCleanupJob', () => {
         OR: [
           { expiresAt: { lt: expect.any(Date) } },
           { isRevoked: true, createdAt: { lt: expect.any(Date) } },
+        ],
+      },
+    });
+
+    expect(
+      mockPrismaService.passwordResetToken.deleteMany,
+    ).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { expiresAt: { lt: expect.any(Date) } },
+          { usedAt: { not: null } },
         ],
       },
     });

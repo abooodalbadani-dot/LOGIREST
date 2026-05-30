@@ -9,7 +9,7 @@ import type {
   InventoryLotsQuery,
   InventoryMovementsQuery,
 } from '@logirest/shared-types';
-import { LotStatus } from '@prisma/client';
+import { LotStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class InventoryService {
@@ -97,52 +97,75 @@ export class InventoryService {
   }
 
   async getMovements(warehouseId: string, query: InventoryMovementsQuery) {
-    const whereClause: any = { warehouseId };
-
-    if (query.itemId) {
-      whereClause.itemId = query.itemId;
-    }
-
-    if (query.startDate || query.endDate) {
-      whereClause.postedAt = {};
-      if (query.startDate) {
-        whereClause.postedAt.gte = new Date(query.startDate);
-      }
-      if (query.endDate) {
-        whereClause.postedAt.lte = new Date(query.endDate);
-      }
-    }
-
     const page = query.page || 1;
     const limit = query.limit || 50;
     const skip = (page - 1) * limit;
 
-    const [total, movements] = await Promise.all([
-      this.prisma.stockLedger.count({ where: whereClause }),
-      this.prisma.stockLedger.findMany({
-        where: whereClause,
-        include: {
-          item: true,
-          lot: true,
-        },
-        orderBy: {
-          postedAt: 'desc',
-        },
-        skip,
-        take: limit,
-      }),
-    ]);
+    const itemIdFilter = query.itemId
+      ? Prisma.sql`AND sl."itemId" = ${query.itemId}`
+      : Prisma.empty;
 
-    const data = movements.map((movement) => ({
+    // Retrieve raw movements with calculated running balance using window functions (T024)
+    const rawMovements = await this.prisma.$queryRaw<any[]>`
+      WITH movements_with_balance AS (
+        SELECT 
+          sl.id,
+          sl."postedAt" as "timestamp",
+          sl."itemId",
+          i.sku as "itemCode",
+          i.name as "itemName",
+          sl."documentType" as "transactionType",
+          sl."documentId" as "documentReference",
+          sl.quantity::float as quantity,
+          SUM(sl.quantity) OVER (
+            PARTITION BY sl."itemId" 
+            ORDER BY sl."postedAt" ASC, sl.id ASC
+          )::float as "balanceAfter",
+          sl."postedAt" as raw_posted_at
+        FROM stock_ledger sl
+        INNER JOIN items i ON i.id = sl."itemId"
+        WHERE sl."warehouseId" = ${warehouseId}
+          ${itemIdFilter}
+      )
+      SELECT m.*, COALESCE(u.name, 'System User') as "performedByUserName"
+      FROM movements_with_balance m
+      LEFT JOIN LATERAL (
+        SELECT usr.name
+        FROM approval_events ae
+        INNER JOIN users usr ON usr.id = ae."userId"
+        WHERE ae."documentId" = m."documentReference" 
+          AND ae."documentType" = m."transactionType"::"DocumentType"
+        ORDER BY ae."stepNumber" DESC
+        LIMIT 1
+      ) u ON true
+      WHERE 1=1
+        ${query.startDate ? Prisma.sql`AND m.raw_posted_at >= ${new Date(query.startDate)}` : Prisma.empty}
+        ${query.endDate ? Prisma.sql`AND m.raw_posted_at <= ${new Date(query.endDate)}` : Prisma.empty}
+      ORDER BY m.raw_posted_at DESC, m.id DESC
+      LIMIT ${limit} OFFSET ${skip}
+    `;
+
+    // Retrieve total count matching the filters
+    const totalResult = await this.prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*)::bigint as count
+      FROM stock_ledger sl
+      WHERE sl."warehouseId" = ${warehouseId}
+        ${itemIdFilter}
+        ${query.startDate ? Prisma.sql`AND sl."postedAt" >= ${new Date(query.startDate)}` : Prisma.empty}
+        ${query.endDate ? Prisma.sql`AND sl."postedAt" <= ${new Date(query.endDate)}` : Prisma.empty}
+    `;
+    const total = Number(totalResult[0]?.count || 0);
+
+    const data = rawMovements.map((movement) => ({
       id: movement.id,
-      timestamp: movement.postedAt,
+      timestamp: movement.timestamp,
       itemId: movement.itemId,
-      itemName: movement.item.name,
-      transactionType: movement.documentType,
-      documentReference: movement.documentId, // Reference the triggering doc uuid/name
+      itemName: movement.itemName,
+      transactionType: movement.transactionType,
+      documentReference: movement.documentReference,
       quantity: Number(movement.quantity),
-      balanceAfter: 0, // Calculated progressively in UI or placeholder
-      performedByUserName: 'System User', // Logged user name
+      balanceAfter: Number(movement.balanceAfter),
+      performedByUserName: movement.performedByUserName,
     }));
 
     return {
@@ -375,8 +398,13 @@ export class InventoryService {
     return {
       isLocked,
       sessionId: activeSession?.id || activeLock?.id || null,
-      sessionNumber: activeSession?.sessionNumber || (activeLock ? `LOCK-${activeLock.lockType}` : null),
-      lockStartedAt: activeSession?.createdAt?.toISOString() || activeLock?.createdAt?.toISOString() || null,
+      sessionNumber:
+        activeSession?.sessionNumber ||
+        (activeLock ? `LOCK-${activeLock.lockType}` : null),
+      lockStartedAt:
+        activeSession?.createdAt?.toISOString() ||
+        activeLock?.createdAt?.toISOString() ||
+        null,
     };
   }
 }

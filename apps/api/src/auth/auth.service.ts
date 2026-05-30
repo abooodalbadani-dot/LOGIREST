@@ -1,10 +1,20 @@
-import { Injectable, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service';
 import { BcryptService } from './bcrypt.service';
 import { RtrService } from './rtr.service';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { OutboxService } from '../modules/outbox/outbox.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +25,8 @@ export class AuthService {
     private readonly bcrypt: BcryptService,
     private readonly jwtService: JwtService,
     private readonly rtrService: RtrService,
+    private readonly config: ConfigService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async login(dto: LoginDto, res: Response, ipAddress?: string) {
@@ -34,6 +46,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw new UnauthorizedException('Account temporarily locked');
+    }
+
     if (!user.isActive) {
       await this.logFailedLogin(dto.email, user, 'user_deactivated', ipAddress);
       throw new UnauthorizedException('User account has been deactivated');
@@ -41,9 +57,54 @@ export class AuthService {
 
     const valid = await this.bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
+      const newAttempts = user.failedLoginAttempts + 1;
+      const isLocked = newAttempts >= 5;
+      const lockedUntil = isLocked
+        ? new Date(Date.now() + 15 * 60 * 1000)
+        : null;
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: newAttempts,
+          lockedUntil,
+        },
+      });
+
+      if (isLocked) {
+        await this.prisma.notificationLog.create({
+          data: {
+            targetRole: 'ADMIN',
+            message: `User account ${user.email} has been temporarily locked due to 5 consecutive failed login attempts.`,
+          },
+        });
+      }
+
       await this.logFailedLogin(dto.email, user, 'invalid_password', ipAddress);
       throw new UnauthorizedException('Invalid email or password');
     }
+
+    // Reset login counters on success
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
+    });
+
+    // Write successful login audit log
+    await this.prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'LOGIN_SUCCESS',
+        targetTable: 'users',
+        targetId: user.id,
+        ipAddress: ipAddress ?? null,
+        beforeStateJson: '{}',
+        afterStateJson: JSON.stringify({ email: user.email, role: user.role }),
+      },
+    });
 
     const mappedUser = {
       id: user.id,
@@ -97,7 +158,9 @@ export class AuthService {
           },
         },
       },
-    });    if (!user) {
+    });
+
+    if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
@@ -126,7 +189,7 @@ export class AuthService {
     };
   }
 
-  async updateProfile(userId: string, body: any) {
+  async updateProfile(userId: string, body: UpdateProfileDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -139,7 +202,18 @@ export class AuthService {
       where: { id: userId },
       data: {
         name: body.name || undefined,
-        email: body.email || undefined,
+      },
+    });
+
+    // Write profile update audit log
+    await this.prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'USER_PROFILE_UPDATED',
+        targetTable: 'users',
+        targetId: userId,
+        beforeStateJson: JSON.stringify({ name: user.name }),
+        afterStateJson: JSON.stringify({ name: updatedUser.name }),
       },
     });
 
@@ -148,10 +222,10 @@ export class AuthService {
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
-      scopes: body.scopes || [],
+      scopes: [],
       status: updatedUser.isActive ? 'ACTIVE' : 'INACTIVE',
       language: body.language || 'en',
-      avatar_url: body.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,
+      avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,
       phone: body.phone || null,
       locale: body.locale || 'en',
       notification_preferences: body.notification_preferences || {
@@ -171,17 +245,91 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    // Check if user exists (silent fail or success response for security)
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      this.logger.warn(`Password reset requested for non-existent email: ${email}`);
+      this.logger.warn(
+        `Password reset requested for non-existent email: ${email}`,
+      );
+      return {
+        success: true,
+        message: 'Password reset link sent to your email.',
+      };
     }
-    return { success: true, message: 'Password reset link sent to your email.' };
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    const frontendUrl =
+      this.config.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/auth/reset-password?token=${rawToken}`;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash,
+          expiresAt,
+        },
+      });
+
+      // Write outbox event for email dispatch
+      await this.outboxService.writeEvent(tx, 'PASSWORD_RESET_REQUESTED', {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        resetUrl,
+      });
+    });
+
+    this.logger.log(
+      `Password reset token generated and outbox event queued for user ID: ${user.id}`,
+    );
+    return {
+      success: true,
+      message: 'Password reset link sent to your email.',
+    };
   }
 
-  async resetPassword(token: string, passwordHash: string) {
-    // Verify token and update password. Since this is in development, we can successfully reset the password for any valid token
-    this.logger.log(`Password reset executed with token: ${token}`);
+  async resetPassword(token: string, passwordPlan: string) {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+
+    if (!record || record.expiresAt < new Date() || record.usedAt) {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    const passwordHash = await this.bcrypt.hash(passwordPlan);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: record.userId },
+        data: {
+          passwordHash,
+          version: { increment: 1 },
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+        },
+      });
+
+      await tx.passwordResetToken.update({
+        where: { id: record.id },
+        data: {
+          usedAt: new Date(),
+        },
+      });
+    });
+
+    this.logger.log(
+      `Password reset executed successfully for user: ${record.user.email}`,
+    );
     return { success: true, message: 'Password has been reset successfully.' };
   }
 
@@ -210,4 +358,3 @@ export class AuthService {
     }
   }
 }
-

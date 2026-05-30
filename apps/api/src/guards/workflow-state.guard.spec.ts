@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkflowStateGuard } from './workflow-state.guard';
 import { Reflector } from '@nestjs/core';

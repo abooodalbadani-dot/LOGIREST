@@ -10,6 +10,8 @@ import Redis from 'ioredis';
 import { Public } from '../auth/decorators/public.decorator';
 import { PrismaService } from '../database/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.module';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Controller('health')
 export class HealthController {
@@ -28,11 +30,95 @@ export class HealthController {
       check,
       new Promise<never>((_, reject) =>
         setTimeout(
-          () => reject(new Error(`${name} health check timed out after ${timeoutMs}ms`)),
+          () =>
+            reject(
+              new Error(`${name} health check timed out after ${timeoutMs}ms`),
+            ),
           timeoutMs,
         ),
       ),
     ]);
+  }
+
+  @Public()
+  @Get('backup')
+  async checkBackup(): Promise<{
+    status: string;
+    lastSuccess: string;
+    ageHours: number;
+  }> {
+    const backupDir = process.env.BACKUP_DIR || '/backups';
+    const lastSuccessPath = path.join(backupDir, 'last_success');
+
+    let exists = false;
+    let content = '';
+
+    if (fs.existsSync(lastSuccessPath)) {
+      exists = true;
+      content = fs.readFileSync(lastSuccessPath, 'utf8').trim();
+    } else {
+      const localFallback = path.join(process.cwd(), 'backups', 'last_success');
+      if (fs.existsSync(localFallback)) {
+        exists = true;
+        content = fs.readFileSync(localFallback, 'utf8').trim();
+      }
+    }
+
+    if (!exists) {
+      throw new ServiceUnavailableException({
+        status: 'UNHEALTHY',
+        message:
+          'No backup records found. The initial backup has not run or failed.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Parse the timestamp YYYYMMDD_HHMMSS
+    if (content.length < 15) {
+      throw new ServiceUnavailableException({
+        status: 'UNHEALTHY',
+        message: 'Invalid last_success backup timestamp format.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const year = content.substring(0, 4);
+    const month = content.substring(4, 6);
+    const day = content.substring(6, 8);
+    const hour = content.substring(9, 11);
+    const minute = content.substring(11, 13);
+    const second = content.substring(13, 15);
+
+    const lastBackupDate = new Date(
+      `${year}-${month}-${day}T${hour}:${minute}:${second}`,
+    );
+    if (isNaN(lastBackupDate.getTime())) {
+      throw new ServiceUnavailableException({
+        status: 'UNHEALTHY',
+        message: 'Failed to parse last successful backup timestamp.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const now = new Date();
+    const ageMs = now.getTime() - lastBackupDate.getTime();
+    const ageHours = ageMs / (1000 * 60 * 60);
+
+    if (ageHours > 26) {
+      throw new ServiceUnavailableException({
+        status: 'UNHEALTHY',
+        message: `Last successful backup was ${ageHours.toFixed(1)} hours ago (exceeds 26h threshold).`,
+        lastSuccess: lastBackupDate.toISOString(),
+        ageHours: Number(ageHours.toFixed(1)),
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return {
+      status: 'HEALTHY',
+      lastSuccess: lastBackupDate.toISOString(),
+      ageHours: Number(ageHours.toFixed(1)),
+    };
   }
 
   @Public()

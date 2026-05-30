@@ -90,7 +90,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
       mockIssuesService.create.mockResolvedValue({ id: 'iss-1' });
 
       const result = await controller.create(body, 'user-1', 'wh-1');
-      expect(result).toEqual({ id: 'iss-1' });
+      expect(result.id).toBe('iss-1');
       expect(mockIssuesService.create).toHaveBeenCalledWith(
         body,
         'user-1',
@@ -102,7 +102,7 @@ describe('Operations and Kitchen Requests Controllers', () => {
       mockIssuesService.findOne.mockResolvedValue({ id: 'iss-1' });
 
       const result = await controller.findOne('iss-1');
-      expect(result).toEqual({ id: 'iss-1' });
+      expect(result.id).toBe('iss-1');
     });
 
     it('should call submit', async () => {
@@ -118,7 +118,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { comments: 'done', version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'iss-1', status: 'SUBMITTED' });
+      expect(result.id).toBe('iss-1');
+      expect(result.status).toBe('SUBMITTED');
     });
 
     it('should call cancel', async () => {
@@ -134,7 +135,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { comments: 'abort', version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'iss-1', status: 'CANCELLED' });
+      expect(result.id).toBe('iss-1');
+      expect(result.status).toBe('CANCELLED');
     });
 
     it('should call post', async () => {
@@ -150,7 +152,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'iss-1', status: 'POSTED' });
+      expect(result.id).toBe('iss-1');
+      expect(result.status).toBe('POSTED');
     });
   });
 
@@ -181,14 +184,14 @@ describe('Operations and Kitchen Requests Controllers', () => {
       mockTransfersService.create.mockResolvedValue({ id: 'tr-1' });
 
       const result = await controller.create(body, 'user-1');
-      expect(result).toEqual({ id: 'tr-1' });
+      expect(result.id).toBe('tr-1');
     });
 
     it('should call findOne', async () => {
       mockTransfersService.findOne.mockResolvedValue({ id: 'tr-1' });
 
       const result = await controller.findOne('tr-1');
-      expect(result).toEqual({ id: 'tr-1' });
+      expect(result.id).toBe('tr-1');
     });
 
     it('should call ship', async () => {
@@ -204,7 +207,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'tr-1', status: 'IN_TRANSIT' });
+      expect(result.id).toBe('tr-1');
+      expect(result.status).toBe('IN_TRANSIT');
     });
 
     it('should call receive', async () => {
@@ -220,7 +224,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 2, linesReceived: [] },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'tr-1', status: 'RECEIVED' });
+      expect(result.id).toBe('tr-1');
+      expect(result.status).toBe('RECEIVED');
     });
 
     it('should call cancel', async () => {
@@ -236,7 +241,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { comments: 'no', version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'tr-1', status: 'CANCELLED' });
+      expect(result.id).toBe('tr-1');
+      expect(result.status).toBe('CANCELLED');
     });
   });
 
@@ -266,14 +272,14 @@ describe('Operations and Kitchen Requests Controllers', () => {
       mockAdjustmentsService.create.mockResolvedValue({ id: 'adj-1' });
 
       const result = await controller.create(body, 'user-1');
-      expect(result).toEqual({ id: 'adj-1' });
+      expect(result.id).toBe('adj-1');
     });
 
     it('should call findOne', async () => {
       mockAdjustmentsService.findOne.mockResolvedValue({ id: 'adj-1' });
 
       const result = await controller.findOne('adj-1');
-      expect(result).toEqual({ id: 'adj-1' });
+      expect(result.id).toBe('adj-1');
     });
 
     it('should call submit', async () => {
@@ -289,7 +295,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'adj-1', status: 'SUBMITTED' });
+      expect(result.id).toBe('adj-1');
+      expect(result.status).toBe('SUBMITTED');
     });
 
     it('should call approve', async () => {
@@ -305,7 +312,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'adj-1', status: 'APPROVED' });
+      expect(result.id).toBe('adj-1');
+      expect(result.status).toBe('APPROVED');
     });
 
     it('should call reject', async () => {
@@ -321,7 +329,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'adj-1', status: 'REJECTED' });
+      expect(result.id).toBe('adj-1');
+      expect(result.status).toBe('REJECTED');
     });
 
     it('should call cancel', async () => {
@@ -337,7 +346,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'adj-1', status: 'CANCELLED' });
+      expect(result.id).toBe('adj-1');
+      expect(result.status).toBe('CANCELLED');
     });
 
     it('should call post', async () => {
@@ -353,7 +363,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 3 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'adj-1', status: 'POSTED' });
+      expect(result.id).toBe('adj-1');
+      expect(result.status).toBe('POSTED');
     });
   });
 
@@ -384,14 +395,14 @@ describe('Operations and Kitchen Requests Controllers', () => {
       mockKitchenRequestsService.create.mockResolvedValue({ id: 'kr-1' });
 
       const result = await controller.create(body, 'user-1');
-      expect(result).toEqual({ id: 'kr-1' });
+      expect(result.data.id).toBe('kr-1');
     });
 
     it('should call findOne', async () => {
       mockKitchenRequestsService.findOne.mockResolvedValue({ id: 'kr-1' });
 
       const result = await controller.findOne('kr-1');
-      expect(result).toEqual({ id: 'kr-1' });
+      expect(result.data.id).toBe('kr-1');
     });
 
     it('should call submit', async () => {
@@ -407,7 +418,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'kr-1', status: 'SUBMITTED' });
+      expect(result.data.id).toBe('kr-1');
+      expect(result.data.status).toBe('SUBMITTED');
     });
 
     it('should call fulfill', async () => {
@@ -423,7 +435,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'kr-1', status: 'FULFILLED' });
+      expect(result.data.id).toBe('kr-1');
+      expect(result.data.status).toBe('FULFILLED');
     });
 
     it('should call cancel', async () => {
@@ -439,7 +452,8 @@ describe('Operations and Kitchen Requests Controllers', () => {
         { version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'kr-1', status: 'CANCELLED' });
+      expect(result.data.id).toBe('kr-1');
+      expect(result.data.status).toBe('CANCELLED');
     });
   });
 });

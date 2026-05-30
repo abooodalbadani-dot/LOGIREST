@@ -53,7 +53,6 @@ export class OperationsController {
     return this.lotsAvailableService.getLotsAvailable(itemId, warehouseId);
   }
 
-
   @Post(':documentType/:id/void')
   @HttpCode(HttpStatus.OK)
   async voidDocument(

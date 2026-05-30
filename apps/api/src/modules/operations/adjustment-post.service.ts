@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   BadRequestException,
@@ -12,6 +11,7 @@ import {
   DocumentType,
   AdjustmentDirection,
   Prisma,
+  Adjustment,
 } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 
@@ -30,7 +30,7 @@ export class AdjustmentPostService {
     userRole: Role,
     clientVersion?: number,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<Adjustment> {
     return this.prisma.$transaction(async (tx) => {
       // 1. Fetch Adjustment with lines and items
       const adj = await tx.adjustment.findUnique({
@@ -370,7 +370,7 @@ export class AdjustmentPostService {
           toStatus: 'POSTED',
           actionPerformed: 'POST',
           userId,
-          userRole: userRole as any,
+          userRole: userRole,
           stepNumber,
         },
       });

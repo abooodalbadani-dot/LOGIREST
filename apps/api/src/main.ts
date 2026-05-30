@@ -29,7 +29,10 @@ async function bootstrap() {
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ).split(',');
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -50,18 +53,46 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // Swagger: only expose API docs in non-production environments
-  if (process.env.NODE_ENV !== 'production') {
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('LogiRest API')
-      .setDescription('LogiRest Warehouse & Kitchen Inventory Management API')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .addCookieAuth('jwt')
-      .build();
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api/docs', app, document);
+  // Swagger: HTTP Basic Auth protection for Swagger UI in all environments except development
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  if (nodeEnv !== 'development') {
+    app.use('/api/docs', (req: any, res: any, next: any) => {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        res.setHeader(
+          'WWW-Authenticate',
+          'Basic realm="LogiRest Swagger Docs"',
+        );
+        return res.status(401).send('Unauthorized');
+      }
+
+      const auth = Buffer.from(authHeader.split(' ')[1] || '', 'base64')
+        .toString()
+        .split(':');
+      const user = auth[0];
+      const pass = auth[1];
+
+      const expectedUser = process.env.SWAGGER_USER || 'admin';
+      const expectedPass = process.env.SWAGGER_PASS || 'logirest123';
+
+      if (user === expectedUser && pass === expectedPass) {
+        return next();
+      }
+
+      res.setHeader('WWW-Authenticate', 'Basic realm="LogiRest Swagger Docs"');
+      return res.status(401).send('Unauthorized');
+    });
   }
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('LogiRest API')
+    .setDescription('LogiRest Warehouse & Kitchen Inventory Management API')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addCookieAuth('jwt')
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Flat structured validation error formatting function
   function formatErrors(

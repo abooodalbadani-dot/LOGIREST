@@ -17,7 +17,7 @@ export default async function Page() {
           </li>
         ))
       ) : (
-        <p className="text-gray-500 italic">No todos found or table 'todos' is empty.</p>
+        <p className="text-gray-500 italic">No todos found or table &apos;todos&apos; is empty.</p>
       )}
     </ul>
   )

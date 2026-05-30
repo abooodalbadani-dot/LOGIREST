@@ -90,7 +90,18 @@ describe('PurchaseRequestsService', () => {
           },
         },
         include: {
-          lines: true,
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          createdBy: {
+            select: { id: true, name: true, email: true, role: true },
+          },
         },
       });
     });
@@ -117,7 +128,15 @@ describe('PurchaseRequestsService', () => {
       expect(mockPrisma.purchaseRequest.findUnique).toHaveBeenCalledWith({
         where: { id: 'pr-1' },
         include: {
-          lines: true,
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
           createdBy: {
             select: { id: true, name: true, email: true, role: true },
           },

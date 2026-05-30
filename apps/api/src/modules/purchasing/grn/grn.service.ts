@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
@@ -18,7 +23,12 @@ export class GrnService {
       poId: string;
       warehouseId: string;
       notes?: string;
-      lines: Array<{ itemId: string; lotId?: string | null; quantity: number; unitPrice: number }>;
+      lines: Array<{
+        itemId: string;
+        lotId?: string | null;
+        quantity: number;
+        unitPrice: number;
+      }>;
     },
     userId: string,
   ) {
@@ -32,7 +42,9 @@ export class GrnService {
       });
 
       if (!po) {
-        throw new NotFoundException(`Purchase Order with ID ${body.poId} not found`);
+        throw new NotFoundException(
+          `Purchase Order with ID ${body.poId} not found`,
+        );
       }
 
       let branchId = po.purchaseRequest?.branchId;
@@ -47,7 +59,9 @@ export class GrnService {
       if (!branchId) {
         const firstBranch = await tx.branch.findFirst({ select: { id: true } });
         if (!firstBranch) {
-          throw new NotFoundException('No active branch found to generate document sequence');
+          throw new NotFoundException(
+            'No active branch found to generate document sequence',
+          );
         }
         branchId = firstBranch.id;
       }
@@ -114,7 +128,11 @@ export class GrnService {
     if (params.search) {
       where.OR = [
         { grnNumber: { contains: params.search, mode: 'insensitive' } },
-        { purchaseOrder: { poNumber: { contains: params.search, mode: 'insensitive' } } },
+        {
+          purchaseOrder: {
+            poNumber: { contains: params.search, mode: 'insensitive' },
+          },
+        },
       ];
     }
 
@@ -180,7 +198,9 @@ export class GrnService {
     });
 
     if (!grn) {
-      throw new NotFoundException(`Goods Received Note with ID ${id} not found`);
+      throw new NotFoundException(
+        `Goods Received Note with ID ${id} not found`,
+      );
     }
 
     return grn;
@@ -192,7 +212,13 @@ export class GrnService {
       poId?: string;
       warehouseId?: string;
       version: number;
-      lines?: Array<{ id?: string; itemId: string; lotId?: string | null; quantity: number; unitPrice: number }>;
+      lines?: Array<{
+        id?: string;
+        itemId: string;
+        lotId?: string | null;
+        quantity: number;
+        unitPrice: number;
+      }>;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -202,15 +228,21 @@ export class GrnService {
       });
 
       if (!existing) {
-        throw new NotFoundException(`Goods Received Note with ID ${id} not found`);
+        throw new NotFoundException(
+          `Goods Received Note with ID ${id} not found`,
+        );
       }
 
       if (existing.version !== body.version) {
-        throw new ConflictException('Concurrency conflict: The document was modified by another user.');
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
       }
 
       if (existing.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Goods Received Notes can be updated.');
+        throw new BadRequestException(
+          'Only DRAFT Goods Received Notes can be updated.',
+        );
       }
 
       if (body.lines) {
@@ -267,15 +299,21 @@ export class GrnService {
       });
 
       if (!existing) {
-        throw new NotFoundException(`Goods Received Note with ID ${id} not found`);
+        throw new NotFoundException(
+          `Goods Received Note with ID ${id} not found`,
+        );
       }
 
       if (version !== undefined && existing.version !== version) {
-        throw new ConflictException('Concurrency conflict: The document was modified by another user.');
+        throw new ConflictException(
+          'Concurrency conflict: The document was modified by another user.',
+        );
       }
 
       if (existing.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Goods Received Notes can be deleted.');
+        throw new BadRequestException(
+          'Only DRAFT Goods Received Notes can be deleted.',
+        );
       }
 
       await tx.gRNLine.deleteMany({ where: { grnId: id } });

@@ -6,11 +6,12 @@ import { NotificationService } from '../notifications/notification.service';
 import { Prisma, Role } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 import { RedisLockService } from '../../redis/redis-lock.service';
+import { AlertService } from '../alerts/alert.service';
 
 describe('ReconciliationJob', () => {
   let job: ReconciliationJob;
 
-  const mockQueryRaw = jest.fn();
+  const mockQueryRaw = jest.fn().mockResolvedValue([]);
   const mockWarehouseItemFindMany = jest.fn();
   const mockWarehouseItemUpdateMany = jest.fn();
   const mockCreateNotification = jest.fn();
@@ -76,6 +77,10 @@ describe('ReconciliationJob', () => {
     createNotification: mockCreateNotification,
   } as unknown as NotificationService;
 
+  const mockAlertService = {
+    sendSlackAlert: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -84,6 +89,7 @@ describe('ReconciliationJob', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: MetricsService, useValue: mockMetricsService },
         { provide: RedisLockService, useValue: mockRedisLockService },
+        { provide: AlertService, useValue: mockAlertService },
       ],
     }).compile();
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { OutboxCleanupJob } from './outbox-cleanup.job';
 import { PrismaService } from '../../database/prisma.service';

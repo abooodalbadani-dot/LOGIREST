@@ -17,12 +17,89 @@ export class ExpiryAlertJob {
   ) {}
 
   /**
+   * Scans lot records that are past their expiry date and updates their status to EXPIRED.
+   * Logs an audit entry and writes a critical notification log if the lot has positive stock.
+   */
+  async autoExpireExpiredLots() {
+    this.logger.log('Starting daily auto-expiry transition scan...');
+    try {
+      const now = new Date();
+      const expiredLots = await this.prisma.lot.findMany({
+        where: {
+          expiryDate: {
+            not: null,
+            lte: now,
+          },
+          status: {
+            not: 'EXPIRED',
+          },
+        },
+        include: {
+          item: true,
+          warehouseItemLots: {
+            include: {
+              warehouse: true,
+            },
+          },
+        },
+      });
+
+      this.logger.log(`Found ${expiredLots.length} lot(s) that have expired.`);
+
+      for (const lot of expiredLots) {
+        await this.prisma.$transaction(async (tx) => {
+          // Transition status to EXPIRED
+          await tx.lot.update({
+            where: { id: lot.id },
+            data: { status: 'EXPIRED' },
+          });
+
+          // Log in AuditLog
+          await tx.auditLog.create({
+            data: {
+              action: 'LOT_EXPIRED',
+              targetTable: 'lots',
+              targetId: lot.id,
+              beforeStateJson: JSON.stringify({ status: lot.status }),
+              afterStateJson: JSON.stringify({ status: 'EXPIRED' }),
+              ipAddress: '127.0.0.1', // System execution
+            },
+          });
+
+          // If the lot still has a positive stock balance, issue a CRITICAL notification alert
+          for (const whItemLot of lot.warehouseItemLots) {
+            const qty = Number(whItemLot.qtyOnHand);
+            if (qty > 0) {
+              await tx.notificationLog.create({
+                data: {
+                  targetRole: 'INV_MGR',
+                  warehouseId: whItemLot.warehouseId,
+                  message: `CRITICAL: Expired lot ${lot.lotNumber} (${lot.item.name}) has positive stock (${qty}) in warehouse ${whItemLot.warehouse.code}.`,
+                  isRead: false,
+                },
+              });
+            }
+          }
+
+          this.logger.log(`Lot ${lot.lotNumber} successfully auto-expired.`);
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to execute auto-expiry check: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
    * Scheduled job running daily at 07:00 AM.
-   * Scans lot records expiring within 7 days with stock on hand > 0,
-   * and triggers debounced Outbox alert events.
+   * Performs auto-expiry of expired lots and scans lot records expiring within 7 days
+   * with stock on hand > 0, triggering debounced Outbox alert events.
    */
   @Cron('0 7 * * *')
   async checkExpiringLots() {
+    await this.autoExpireExpiredLots();
+
     this.logger.log('Starting daily lot expiry threshold scan...');
 
     try {

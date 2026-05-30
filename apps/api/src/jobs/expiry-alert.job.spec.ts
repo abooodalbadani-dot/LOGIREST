@@ -14,6 +14,16 @@ describe('ExpiryAlertJob', () => {
     warehouseItemLot: {
       findMany: jest.Mock;
     };
+    lot: {
+      findMany: jest.Mock;
+      update: jest.Mock;
+    };
+    auditLog: {
+      create: jest.Mock;
+    };
+    notificationLog: {
+      create: jest.Mock;
+    };
     $transaction: jest.Mock;
   };
   let mockOutbox: {
@@ -36,6 +46,16 @@ describe('ExpiryAlertJob', () => {
     mockPrisma = {
       warehouseItemLot: {
         findMany: jest.fn(),
+      },
+      lot: {
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+      notificationLog: {
+        create: jest.fn(),
       },
       $transaction: jest
         .fn()
@@ -168,5 +188,46 @@ describe('ExpiryAlertJob', () => {
     // 3rd run: Alert should be written again after 24h debounce expires
     await job.checkExpiringLots();
     expect(mockOutbox.writeEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('should transition expired lots to EXPIRED status, write audit logs, and trigger critical notification if stock is positive', async () => {
+    const expiredLot = {
+      id: 'expired-lot-1',
+      lotNumber: 'LOT-EXP-1',
+      status: 'ACTIVE',
+      expiryDate: new Date(Date.now() - 1000),
+      item: { name: 'Expired Milk' },
+      warehouseItemLots: [
+        {
+          warehouseId: 'wh-1',
+          qtyOnHand: 5,
+          warehouse: { code: 'WH1' },
+        },
+      ],
+    };
+
+    mockPrisma.lot.findMany.mockResolvedValue([expiredLot]);
+    mockPrisma.warehouseItemLot.findMany.mockResolvedValue([]);
+
+    await job.checkExpiringLots();
+
+    expect(mockPrisma.lot.update).toHaveBeenCalledWith({
+      where: { id: 'expired-lot-1' },
+      data: { status: 'EXPIRED' },
+    });
+    expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'LOT_EXPIRED',
+        targetTable: 'lots',
+        targetId: 'expired-lot-1',
+      }),
+    });
+    expect(mockPrisma.notificationLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        targetRole: 'INV_MGR',
+        warehouseId: 'wh-1',
+        message: expect.stringContaining('CRITICAL: Expired lot LOT-EXP-1'),
+      }),
+    });
   });
 });

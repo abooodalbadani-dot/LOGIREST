@@ -41,25 +41,37 @@ function mapIssueDetail(issue: any) {
       id: line.id,
       document_id: line.issueId,
       item_id: line.itemId,
-      item: line.item ? {
-        id: line.item.id,
-        code: line.item.sku,
-        name_ar: line.item.name,
-        name_en: line.item.name,
-        primary_uom: line.item.unitOfMeasure ? {
-          id: line.item.unitOfMeasure.id,
-          code: line.item.unitOfMeasure.code,
-          name_ar: line.item.unitOfMeasure.name,
-          name_en: line.item.unitOfMeasure.name,
-        } : { id: '', code: '', name_ar: '', name_en: '' },
-      } : { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: '', code: '', name_ar: '', name_en: '' } },
+      item: line.item
+        ? {
+            id: line.item.id,
+            code: line.item.sku,
+            name_ar: line.item.name,
+            name_en: line.item.name,
+            primary_uom: line.item.unitOfMeasure
+              ? {
+                  id: line.item.unitOfMeasure.id,
+                  code: line.item.unitOfMeasure.code,
+                  name_ar: line.item.unitOfMeasure.name,
+                  name_en: line.item.unitOfMeasure.name,
+                }
+              : { id: '', code: '', name_ar: '', name_en: '' },
+          }
+        : {
+            id: '',
+            code: '',
+            name_ar: '',
+            name_en: '',
+            primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
+          },
       lot_id: firstAllocation ? firstAllocation.lot_id : null,
-      lot: firstAllocation ? {
-        id: firstAllocation.lot_id,
-        lot_number: firstAllocation.lot_number,
-        expiry_date: firstAllocation.expiry_date,
-        is_expired: false,
-      } : null,
+      lot: firstAllocation
+        ? {
+            id: firstAllocation.lot_id,
+            lot_number: firstAllocation.lot_number,
+            expiry_date: firstAllocation.expiry_date,
+            is_expired: false,
+          }
+        : null,
       qty: Number(line.quantity),
       uom_id: line.item?.uomId || '',
       unit_cost: line.item?.wac ? Number(line.item.wac) : null,
@@ -81,9 +93,25 @@ function mapIssueDetail(issue: any) {
     branch_id: issue.warehouse?.branchId || '',
     notes: issue.notes || '',
     created_by: 'System',
-    created_at: issue.createdAt.toISOString(),
-    updated_at: issue.createdAt.toISOString(),
-    posted_at: issue.status === 'POSTED' ? issue.createdAt.toISOString() : null,
+    created_at: issue.createdAt
+      ? (issue.createdAt instanceof Date
+          ? issue.createdAt
+          : new Date(issue.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    updated_at: issue.createdAt
+      ? (issue.createdAt instanceof Date
+          ? issue.createdAt
+          : new Date(issue.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    posted_at:
+      issue.status === 'POSTED' && issue.createdAt
+        ? (issue.createdAt instanceof Date
+            ? issue.createdAt
+            : new Date(issue.createdAt)
+          ).toISOString()
+        : null,
     posted_by: null,
     version: issue.version,
     lines,
@@ -91,14 +119,20 @@ function mapIssueDetail(issue: any) {
 }
 
 function mapIssueSummary(issue: any) {
+  const createdAtIso = issue.createdAt
+    ? (issue.createdAt instanceof Date
+        ? issue.createdAt
+        : new Date(issue.createdAt)
+      ).toISOString()
+    : new Date().toISOString();
   return {
     id: issue.id,
     document_number: issue.issueNumber,
     status: issue.status,
     destination_dept_id: issue.departmentId,
     warehouse_id: issue.warehouseId,
-    created_at: issue.createdAt.toISOString(),
-    posted_at: issue.status === 'POSTED' ? issue.createdAt.toISOString() : null,
+    created_at: createdAtIso,
+    posted_at: issue.status === 'POSTED' ? createdAtIso : null,
   };
 }
 

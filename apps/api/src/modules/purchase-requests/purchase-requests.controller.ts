@@ -33,10 +33,12 @@ function mapPRDetail(pr: any) {
       code: line.item?.sku || '',
       name_ar: line.item?.name || '',
       name_en: line.item?.name || '',
-      primary_uom: line.item?.unitOfMeasure ? {
-        id: line.item.unitOfMeasure.id,
-        code: line.item.unitOfMeasure.code,
-      } : { id: '', code: '' },
+      primary_uom: line.item?.unitOfMeasure
+        ? {
+            id: line.item.unitOfMeasure.id,
+            code: line.item.unitOfMeasure.code,
+          }
+        : { id: '', code: '' },
     },
     req_qty: Number(line.quantity),
     uom_id: line.item?.uomId || '',
@@ -133,7 +135,7 @@ export class PurchaseRequestsController {
       itemId: line.itemId || line.item_id,
       quantity: line.quantity || line.req_qty,
     }));
-    
+
     const pr = await this.prService.update(id, {
       version: body.version,
       lines,
@@ -142,10 +144,7 @@ export class PurchaseRequestsController {
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @Query('version') version?: string,
-  ) {
+  async remove(@Param('id') id: string, @Query('version') version?: string) {
     await this.prService.remove(id, version ? Number(version) : undefined);
     return { success: true };
   }

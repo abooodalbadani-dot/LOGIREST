@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GrnController } from './grn/grn.controller';
 import { GrnPostService } from './grn-post.service';
+import { GrnService } from './grn/grn.service';
 import { PurchaseOrderController } from './purchase-orders/po.controller';
 import { PurchaseOrderService } from './purchase-orders/po.service';
 import { PrismaService } from '../../database/prisma.service';
@@ -12,6 +13,8 @@ describe('Purchasing Controllers', () => {
   const mockGrnPostService = {
     post: jest.fn(),
   };
+
+  const mockGrnService = {};
 
   const mockPurchaseOrderService = {
     create: jest.fn(),
@@ -37,6 +40,7 @@ describe('Purchasing Controllers', () => {
       const module: TestingModule = await Test.createTestingModule({
         controllers: [GrnController],
         providers: [
+          { provide: GrnService, useValue: mockGrnService },
           { provide: GrnPostService, useValue: mockGrnPostService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
@@ -48,7 +52,22 @@ describe('Purchasing Controllers', () => {
     });
 
     it('should call GrnPostService.post', async () => {
-      mockGrnPostService.post.mockResolvedValue({ success: true });
+      const mockGrn = {
+        id: 'grn-1',
+        grnNumber: 'GRN-001',
+        status: 'POSTED',
+        createdAt: new Date(),
+        purchaseOrder: {
+          supplierId: 'sup-1',
+          supplier: { id: 'sup-1', name: 'Supplier 1' },
+          currencyId: 'cur-1',
+          poNumber: 'PO-001',
+        },
+        warehouseId: 'wh-1',
+        version: 1,
+        lines: [],
+      };
+      mockGrnPostService.post.mockResolvedValue(mockGrn);
 
       const result = await controller.post(
         'grn-1',
@@ -57,7 +76,8 @@ describe('Purchasing Controllers', () => {
         { version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ success: true });
+      expect(result.data.id).toEqual('grn-1');
+      expect(result.data.status).toEqual('POSTED');
       expect(mockGrnPostService.post).toHaveBeenCalledWith(
         'grn-1',
         'user-1',
@@ -90,7 +110,7 @@ describe('Purchasing Controllers', () => {
       mockPurchaseOrderService.create.mockResolvedValue({ id: 'po-1' });
 
       const result = await controller.create(body, 'user-1');
-      expect(result).toEqual({ id: 'po-1' });
+      expect(result.data.id).toEqual('po-1');
       expect(mockPurchaseOrderService.create).toHaveBeenCalledWith(
         body,
         'user-1',
@@ -101,7 +121,7 @@ describe('Purchasing Controllers', () => {
       mockPurchaseOrderService.findOne.mockResolvedValue({ id: 'po-1' });
 
       const result = await controller.findOne('po-1');
-      expect(result).toEqual({ id: 'po-1' });
+      expect(result.data.id).toEqual('po-1');
       expect(mockPurchaseOrderService.findOne).toHaveBeenCalledWith('po-1');
     });
 
@@ -118,7 +138,8 @@ describe('Purchasing Controllers', () => {
         { comments: 'ok', version: 1 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'po-1', status: 'SUBMITTED' });
+      expect(result.data.id).toEqual('po-1');
+      expect(result.data.status).toEqual('SUBMITTED');
       expect(mockPurchaseOrderService.submit).toHaveBeenCalledWith(
         'po-1',
         'user-1',
@@ -140,7 +161,8 @@ describe('Purchasing Controllers', () => {
         { comments: 'approved', version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'po-1', status: 'APPROVED' });
+      expect(result.data.id).toEqual('po-1');
+      expect(result.data.status).toEqual('APPROVED');
     });
 
     it('should call reject', async () => {
@@ -156,7 +178,8 @@ describe('Purchasing Controllers', () => {
         { comments: 'price too high', version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'po-1', status: 'REJECTED' });
+      expect(result.data.id).toEqual('po-1');
+      expect(result.data.status).toEqual('REJECTED');
     });
 
     it('should call cancel', async () => {
@@ -172,7 +195,8 @@ describe('Purchasing Controllers', () => {
         { comments: 'cancelled', version: 2 },
         mockRequest,
       );
-      expect(result).toEqual({ id: 'po-1', status: 'CANCELLED' });
+      expect(result.data.id).toEqual('po-1');
+      expect(result.data.status).toEqual('CANCELLED');
     });
   });
 });

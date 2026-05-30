@@ -11,7 +11,12 @@ export class CurrenciesService {
       code: currency.code,
       name_ar: currency.name,
       name_en: currency.name,
-      symbol: currency.code === 'SAR' ? 'ر.س' : currency.code === 'USD' ? '$' : currency.code,
+      symbol:
+        currency.code === 'SAR'
+          ? 'ر.س'
+          : currency.code === 'USD'
+            ? '$'
+            : currency.code,
       is_base_currency: currency.isBase,
       is_active: true,
       created_at: new Date().toISOString(),
@@ -23,7 +28,7 @@ export class CurrenciesService {
     const currencies = await this.prisma.currency.findMany({
       orderBy: { code: 'asc' },
     });
-    return currencies.map(c => this.mapDbCurrencyToFrontend(c));
+    return currencies.map((c) => this.mapDbCurrencyToFrontend(c));
   }
 
   async findOne(id: string) {

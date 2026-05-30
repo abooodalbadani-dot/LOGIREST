@@ -28,7 +28,7 @@ import type { Request } from 'express';
 function mapStocktakeDetail(session: any) {
   const items = (session.snapshots || []).map((snapshot: any) => {
     const count = (session.counts || []).find(
-      (c: any) => c.itemId === snapshot.itemId && c.lotId === snapshot.lotId
+      (c: any) => c.itemId === snapshot.itemId && c.lotId === snapshot.lotId,
     );
 
     const countedQty = count ? Number(count.qtyCounted) : null;
@@ -46,7 +46,9 @@ function mapStocktakeDetail(session: any) {
       variance: variance,
       variance_reason: null,
       lot_number: snapshot.lot?.lotNumber || undefined,
-      expiry_date: snapshot.lot?.expiryDate ? snapshot.lot.expiryDate.toISOString() : undefined,
+      expiry_date: snapshot.lot?.expiryDate
+        ? snapshot.lot.expiryDate.toISOString()
+        : undefined,
       unit_cost: Number(snapshot.wacSnapshot),
     };
   });
@@ -58,18 +60,44 @@ function mapStocktakeDetail(session: any) {
     warehouse_id: session.warehouseId,
     warehouse_name: session.warehouse?.name || '',
     status: session.status,
-    snapshot_at: session.createdAt.toISOString(),
+    snapshot_at: session.createdAt
+      ? (session.createdAt instanceof Date
+          ? session.createdAt
+          : new Date(session.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
     started_by: 'System',
-    started_at: session.createdAt.toISOString(),
-    posted_at: session.status === 'POSTED' ? session.createdAt.toISOString() : null,
+    started_at: session.createdAt
+      ? (session.createdAt instanceof Date
+          ? session.createdAt
+          : new Date(session.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    posted_at:
+      session.status === 'POSTED' && session.createdAt
+        ? (session.createdAt instanceof Date
+            ? session.createdAt
+            : new Date(session.createdAt)
+          ).toISOString()
+        : null,
     posted_by: null,
     items,
     version: session.version,
     description: '',
     approver_comment: '',
     approved_at: undefined,
-    created_at: session.createdAt.toISOString(),
-    updated_at: session.createdAt.toISOString(),
+    created_at: session.createdAt
+      ? (session.createdAt instanceof Date
+          ? session.createdAt
+          : new Date(session.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    updated_at: session.createdAt
+      ? (session.createdAt instanceof Date
+          ? session.createdAt
+          : new Date(session.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
     audit_log: [],
   };
 }
@@ -137,17 +165,27 @@ export class StocktakeController {
   async updateLineItem(
     @Param('stocktakeId') stocktakeId: string,
     @Param('lineId') lineId: string,
-    @Body() body: { counted_qty?: number; countedQty?: number; variance_reason?: string; varianceReason?: string },
+    @Body()
+    body: {
+      counted_qty?: number;
+      countedQty?: number;
+      variance_reason?: string;
+      varianceReason?: string;
+    },
     @CurrentUser('id') userId: string,
   ) {
-    const counted_qty = body.countedQty !== undefined ? body.countedQty : body.counted_qty;
+    const counted_qty =
+      body.countedQty !== undefined ? body.countedQty : body.counted_qty;
     if (counted_qty === undefined) {
       throw new Error('counted_qty is required');
     }
     const session = await this.stocktakeService.updateLineItem(
       stocktakeId,
       lineId,
-      { counted_qty, variance_reason: body.varianceReason || body.variance_reason },
+      {
+        counted_qty,
+        variance_reason: body.varianceReason || body.variance_reason,
+      },
       userId,
     );
     return mapStocktakeDetail(session);
@@ -157,17 +195,27 @@ export class StocktakeController {
   async updateCountAlias(
     @Param('sessionId') sessionId: string,
     @Param('countId') countId: string,
-    @Body() body: { counted_qty?: number; countedQty?: number; variance_reason?: string; varianceReason?: string },
+    @Body()
+    body: {
+      counted_qty?: number;
+      countedQty?: number;
+      variance_reason?: string;
+      varianceReason?: string;
+    },
     @CurrentUser('id') userId: string,
   ) {
-    const counted_qty = body.countedQty !== undefined ? body.countedQty : body.counted_qty;
+    const counted_qty =
+      body.countedQty !== undefined ? body.countedQty : body.counted_qty;
     if (counted_qty === undefined) {
       throw new Error('counted_qty is required');
     }
     const session = await this.stocktakeService.updateLineItem(
       sessionId,
       countId,
-      { counted_qty, variance_reason: body.varianceReason || body.variance_reason },
+      {
+        counted_qty,
+        variance_reason: body.varianceReason || body.variance_reason,
+      },
       userId,
     );
     return mapStocktakeDetail(session);
@@ -324,10 +372,15 @@ export class StocktakeController {
   @HttpCode(HttpStatus.OK)
   async reviewVariance(
     @Param('id') id: string,
-    @Body() body: { items: Array<{ line_id: string; variance_reason?: string }> },
+    @Body()
+    body: { items: Array<{ line_id: string; variance_reason?: string }> },
     @CurrentUser('id') userId: string,
   ) {
-    const session = await this.stocktakeService.reviewVariance(id, body, userId);
+    const session = await this.stocktakeService.reviewVariance(
+      id,
+      body,
+      userId,
+    );
     return mapStocktakeDetail(session);
   }
 

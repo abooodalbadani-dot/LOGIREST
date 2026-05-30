@@ -7,7 +7,9 @@ export class LotsAvailableService {
 
   async getLotsAvailable(itemId: string, warehouseId: string) {
     if (!itemId || !warehouseId) {
-      throw new BadRequestException('itemId and warehouseId are required query parameters');
+      throw new BadRequestException(
+        'itemId and warehouseId are required query parameters',
+      );
     }
 
     const warehouseItemLots = await this.prisma.warehouseItemLot.findMany({
@@ -29,7 +31,8 @@ export class LotsAvailableService {
       const lot = itemLot.lot;
       const isExpired = lot.expiryDate ? new Date(lot.expiryDate) < now : false;
       const isNearExpiry = lot.expiryDate
-        ? new Date(lot.expiryDate) >= now && new Date(lot.expiryDate) < thirtyDaysFromNow
+        ? new Date(lot.expiryDate) >= now &&
+          new Date(lot.expiryDate) < thirtyDaysFromNow
         : false;
 
       const qtyOnHand = parseFloat(itemLot.qtyOnHand.toString());

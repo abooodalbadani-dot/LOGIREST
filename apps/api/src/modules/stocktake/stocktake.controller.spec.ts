@@ -50,13 +50,14 @@ describe('StocktakeController', () => {
     postService = module.get<StocktakePostService>(StocktakePostService);
 
     jest.clearAllMocks();
+    mockStocktakeService.findOne.mockResolvedValue({ id: 'session-1' });
   });
 
   it('should call create', async () => {
     mockStocktakeService.create.mockResolvedValue({ id: 'session-1' });
 
     const result = await controller.create({ warehouseId: 'wh-1' }, 'user-1');
-    expect(result).toEqual({ id: 'session-1' });
+    expect(result.id).toEqual('session-1');
     expect(mockStocktakeService.create).toHaveBeenCalledWith(
       { warehouseId: 'wh-1' },
       'user-1',
@@ -67,7 +68,7 @@ describe('StocktakeController', () => {
     mockStocktakeService.findOne.mockResolvedValue({ id: 'session-1' });
 
     const result = await controller.findOne('session-1');
-    expect(result).toEqual({ id: 'session-1' });
+    expect(result.id).toEqual('session-1');
     expect(mockStocktakeService.findOne).toHaveBeenCalledWith('session-1');
   });
 
@@ -84,7 +85,8 @@ describe('StocktakeController', () => {
       { comments: 'start count', version: 1 },
       mockRequest,
     );
-    expect(result).toEqual({ id: 'session-1', status: 'STARTED' });
+    expect(result.id).toEqual('session-1');
+    expect(result.status).toEqual('STARTED');
     expect(mockStocktakeService.start).toHaveBeenCalledWith(
       'session-1',
       'user-1',
@@ -98,7 +100,7 @@ describe('StocktakeController', () => {
     const counts = [{ itemId: 'item-1', qtyCounted: 10 }];
 
     const result = await controller.count('session-1', { counts }, 'user-1');
-    expect(result).toEqual({ success: true });
+    expect(result.id).toEqual('session-1');
     expect(mockStocktakeService.count).toHaveBeenCalledWith(
       'session-1',
       counts,
@@ -119,7 +121,8 @@ describe('StocktakeController', () => {
       { version: 1 },
       mockRequest,
     );
-    expect(result).toEqual({ id: 'session-1', status: 'REVIEW' });
+    expect(result.id).toEqual('session-1');
+    expect(result.status).toEqual('REVIEW');
   });
 
   it('should call approve', async () => {
@@ -135,7 +138,8 @@ describe('StocktakeController', () => {
       { version: 2 },
       mockRequest,
     );
-    expect(result).toEqual({ id: 'session-1', status: 'APPROVED' });
+    expect(result.id).toEqual('session-1');
+    expect(result.status).toEqual('APPROVED');
   });
 
   it('should call cancel', async () => {
@@ -151,7 +155,8 @@ describe('StocktakeController', () => {
       { version: 2 },
       mockRequest,
     );
-    expect(result).toEqual({ id: 'session-1', status: 'CANCELLED' });
+    expect(result.id).toEqual('session-1');
+    expect(result.status).toEqual('CANCELLED');
   });
 
   it('should call post', async () => {
@@ -167,7 +172,8 @@ describe('StocktakeController', () => {
       { version: 2 },
       mockRequest,
     );
-    expect(result).toEqual({ id: 'session-1', status: 'POSTED' });
+    expect(result.id).toEqual('session-1');
+    expect(result.status).toEqual('POSTED');
     expect(mockStocktakePostService.post).toHaveBeenCalledWith(
       'session-1',
       'user-1',

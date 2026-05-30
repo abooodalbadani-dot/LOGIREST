@@ -98,7 +98,10 @@ export class StocktakeService {
 
     const total = sessions.length;
     const active = sessions.filter(
-      (s) => s.status === 'STARTED' || s.status === 'COUNTING' || s.status === 'REVIEW',
+      (s) =>
+        s.status === 'STARTED' ||
+        s.status === 'COUNTING' ||
+        s.status === 'REVIEW',
     ).length;
     const completed = sessions.filter((s) => s.status === 'POSTED').length;
 
@@ -322,7 +325,9 @@ export class StocktakeService {
       });
 
       if (!snapshot) {
-        throw new NotFoundException(`Stocktake snapshot line ${lineId} not found`);
+        throw new NotFoundException(
+          `Stocktake snapshot line ${lineId} not found`,
+        );
       }
 
       const countKey = {
@@ -357,7 +362,9 @@ export class StocktakeService {
       }
 
       // Advance status to COUNTING if not already
-      const session = await tx.stocktakeSession.findUnique({ where: { id: stocktakeId } });
+      const session = await tx.stocktakeSession.findUnique({
+        where: { id: stocktakeId },
+      });
       if (session && session.status === 'STARTED') {
         await tx.stocktakeSession.update({
           where: { id: stocktakeId },

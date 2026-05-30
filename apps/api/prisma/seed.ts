@@ -591,6 +591,45 @@ async function main() {
     },
   });
 
+  // ─── Document Sequences (T019) ───────────────────────────────
+  const currentYear = new Date().getFullYear();
+  
+  await prisma.documentSequence.upsert({
+    where: {
+      documentType_year_branchId: {
+        documentType: DocumentType.KITCHEN_REQUEST,
+        year: currentYear,
+        branchId: mainBranch.id,
+      },
+    },
+    update: {},
+    create: {
+      branchId: mainBranch.id,
+      documentType: DocumentType.KITCHEN_REQUEST,
+      year: currentYear,
+      currentSequence: 0,
+      prefix: `KR-${currentYear}-HQ`,
+    },
+  });
+
+  await prisma.documentSequence.upsert({
+    where: {
+      documentType_year_branchId: {
+        documentType: DocumentType.KITCHEN_REQUEST,
+        year: currentYear,
+        branchId: northBranch.id,
+      },
+    },
+    update: {},
+    create: {
+      branchId: northBranch.id,
+      documentType: DocumentType.KITCHEN_REQUEST,
+      year: currentYear,
+      currentSequence: 0,
+      prefix: `KR-${currentYear}-NORTH`,
+    },
+  });
+
   console.log('Seeding complete!');
 }
 

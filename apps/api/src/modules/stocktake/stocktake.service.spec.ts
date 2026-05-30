@@ -10,7 +10,7 @@ describe('StocktakeService', () => {
   let prisma: PrismaService;
   let workflowService: WorkflowService;
 
-  const mockPrisma = {
+  const mockPrisma: any = {
     stocktakeSession: {
       create: jest.fn(),
       findUnique: jest.fn(),

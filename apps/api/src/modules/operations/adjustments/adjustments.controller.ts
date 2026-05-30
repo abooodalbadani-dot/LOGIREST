@@ -30,23 +30,35 @@ import type { Request } from 'express';
 function mapAdjustmentDetail(adj: any) {
   const lines = (adj.lines || []).map((line: any) => ({
     id: line.id,
-    item: line.item ? {
-      id: line.item.id,
-      code: line.item.sku,
-      name_ar: line.item.name,
-      name_en: line.item.name,
-      primary_uom: line.item.unitOfMeasure ? {
-        id: line.item.unitOfMeasure.id,
-        code: line.item.unitOfMeasure.code,
-      } : { id: '', code: '' },
-    } : { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: '', code: '' } },
+    item: line.item
+      ? {
+          id: line.item.id,
+          code: line.item.sku,
+          name_ar: line.item.name,
+          name_en: line.item.name,
+          primary_uom: line.item.unitOfMeasure
+            ? {
+                id: line.item.unitOfMeasure.id,
+                code: line.item.unitOfMeasure.code,
+              }
+            : { id: '', code: '' },
+        }
+      : {
+          id: '',
+          code: '',
+          name_ar: '',
+          name_en: '',
+          primary_uom: { id: '', code: '' },
+        },
     direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
     qty_before: 0,
     qty_adjusted: Number(line.quantity),
     uom_id: line.item?.uomId || '',
     unit_cost: line.unitCost ? Number(line.unitCost) : null,
     reason_notes: line.reason || '',
-    lot_allocations: line.lotId ? [{ lot_id: line.lotId, qty: Number(line.quantity) }] : [],
+    lot_allocations: line.lotId
+      ? [{ lot_id: line.lotId, qty: Number(line.quantity) }]
+      : [],
   }));
 
   const mainReason = adj.lines?.[0]?.reason || 'CORRECTION';
@@ -61,9 +73,25 @@ function mapAdjustmentDetail(adj: any) {
     reject: null,
     movement_id: null,
     approved_by: null,
-    posted_at: adj.status === 'POSTED' ? adj.createdAt.toISOString() : null,
-    created_at: adj.createdAt.toISOString(),
-    updated_at: adj.createdAt.toISOString(),
+    posted_at:
+      adj.status === 'POSTED' && adj.createdAt
+        ? (adj.createdAt instanceof Date
+            ? adj.createdAt
+            : new Date(adj.createdAt)
+          ).toISOString()
+        : null,
+    created_at: adj.createdAt
+      ? (adj.createdAt instanceof Date
+          ? adj.createdAt
+          : new Date(adj.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    updated_at: adj.createdAt
+      ? (adj.createdAt instanceof Date
+          ? adj.createdAt
+          : new Date(adj.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
     version: adj.version,
     lines,
     timeline: [],
@@ -342,7 +370,13 @@ export class AdjustmentsController {
       req.ip ||
       undefined;
 
-    const adj = await this.adjPostService.post(id, userId, role, body.version, ipAddress);
+    const adj = await this.adjPostService.post(
+      id,
+      userId,
+      role,
+      body.version,
+      ipAddress,
+    );
     return mapAdjustmentDetail(adj);
   }
 }

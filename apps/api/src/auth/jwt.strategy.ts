@@ -14,6 +14,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
   constructor(private readonly prisma: PrismaService) {
+    const secret = process.env.JWT_ACCESS_SECRET;
+    if (!secret) {
+      throw new Error(
+        'FATAL: JWT_ACCESS_SECRET environment variable is not defined!',
+      );
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: any) => {
@@ -22,9 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey:
-        process.env.JWT_ACCESS_SECRET ||
-        'dev-jwt-access-secret-key-at-least-32-chars-long',
+      secretOrKey: secret,
     });
   }
 

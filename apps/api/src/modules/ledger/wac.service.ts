@@ -145,4 +145,82 @@ export class WacService {
 
     return roundedWac.toNumber();
   }
+
+  /**
+   * Enforces WAC recalculation upon receiving a stock transfer.
+   * Updates balance and logs to CostLedger.
+   */
+  async handleTransferReceipt(
+    tx: Prisma.TransactionClient,
+    warehouseId: string,
+    itemId: string,
+    receivedQty: number,
+    receivedCost: number,
+    documentId: string,
+    idempotencyKey?: string,
+  ): Promise<number> {
+    this.logger.log(
+      `Recalculating WAC for transfer receipt of item ${itemId} in wh ${warehouseId}. Qty: ${receivedQty} @ ${receivedCost}`,
+    );
+
+    // 1. Lock the WarehouseItem row
+    const whItem = await this.lockService.lockItem(tx, warehouseId, itemId);
+    const currentQty = whItem
+      ? new Prisma.Decimal(whItem.qtyOnHand)
+      : new Prisma.Decimal(0);
+    const currentWac = whItem
+      ? new Prisma.Decimal(whItem.wac)
+      : new Prisma.Decimal(0);
+    const rxQty = new Prisma.Decimal(receivedQty);
+    const rxCost = new Prisma.Decimal(receivedCost);
+
+    let newWac: Prisma.Decimal;
+    if (currentQty.lte(0)) {
+      newWac = rxCost;
+    } else {
+      const currentTotalCost = currentQty.mul(currentWac);
+      const receivedTotalCost = rxQty.mul(rxCost);
+      const totalQty = currentQty.add(rxQty);
+
+      if (totalQty.lte(0)) {
+        newWac = rxCost;
+      } else {
+        newWac = currentTotalCost.add(receivedTotalCost).div(totalQty);
+      }
+    }
+
+    const roundedWac = newWac.toDecimalPlaces(4);
+
+    // 2. Update/upsert the WarehouseItem balance
+    await tx.warehouseItem.upsert({
+      where: { warehouseId_itemId: { warehouseId, itemId } },
+      create: {
+        warehouseId,
+        itemId,
+        qtyOnHand: rxQty,
+        qtyAllocated: 0,
+        wac: roundedWac,
+      },
+      update: {
+        qtyOnHand: { increment: rxQty },
+        wac: roundedWac,
+      },
+    });
+
+    // 3. Log mutation to CostLedger
+    await tx.costLedger.create({
+      data: {
+        warehouseId,
+        itemId,
+        quantity: rxQty,
+        unitPrice: rxCost,
+        newWac: roundedWac,
+        documentId,
+        documentType: DocumentType.TRANSFER,
+        idempotencyKey,
+      },
+    });
+
+    return roundedWac.toNumber();
+  }
 }

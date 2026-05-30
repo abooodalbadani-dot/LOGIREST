@@ -262,10 +262,7 @@ export class AdminController {
   }
 
   @Get('users/:id')
-  async getUser(
-    @CurrentUser('role') role: Role,
-    @Param('id') id: string,
-  ) {
+  async getUser(@CurrentUser('role') role: Role, @Param('id') id: string) {
     if (role !== 'ADMIN') {
       throw new ForbiddenException(
         'Only administrative users are authorized to view users.',
@@ -299,6 +296,36 @@ export class AdminController {
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',
       created_at: user.createdAt.toISOString(),
+    };
+  }
+
+  @Post('users/:id/unlock')
+  async unlockUser(@CurrentUser('role') role: Role, @Param('id') id: string) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException(
+        'Only administrative users are authorized to unlock user accounts.',
+      );
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: `User ${user.email} successfully unlocked.`,
     };
   }
 }

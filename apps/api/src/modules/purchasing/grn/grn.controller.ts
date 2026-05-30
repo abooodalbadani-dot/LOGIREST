@@ -26,21 +26,35 @@ import type { Request } from 'express';
 function mapGRNDetail(grn: any) {
   const lines = (grn.lines || []).map((line: any) => ({
     id: line.id,
-    item: line.item ? {
-      id: line.item.id,
-      code: line.item.sku,
-      name_ar: line.item.name,
-      name_en: line.item.name,
-      primary_uom: line.item.unitOfMeasure ? {
-        id: line.item.unitOfMeasure.id,
-        code: line.item.unitOfMeasure.code,
-      } : { id: '', code: '' },
-    } : { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: '', code: '' } },
-    lot: line.lot ? {
-      id: line.lot.id,
-      lot_number: line.lot.lotNumber,
-      expiry_date: line.lot.expiryDate ? line.lot.expiryDate.toISOString() : null,
-    } : null,
+    item: line.item
+      ? {
+          id: line.item.id,
+          code: line.item.sku,
+          name_ar: line.item.name,
+          name_en: line.item.name,
+          primary_uom: line.item.unitOfMeasure
+            ? {
+                id: line.item.unitOfMeasure.id,
+                code: line.item.unitOfMeasure.code,
+              }
+            : { id: '', code: '' },
+        }
+      : {
+          id: '',
+          code: '',
+          name_ar: '',
+          name_en: '',
+          primary_uom: { id: '', code: '' },
+        },
+    lot: line.lot
+      ? {
+          id: line.lot.id,
+          lot_number: line.lot.lotNumber,
+          expiry_date: line.lot.expiryDate
+            ? line.lot.expiryDate.toISOString()
+            : null,
+        }
+      : null,
     qty: Number(line.quantityReceived),
     received_qty: Number(line.quantityReceived),
     uom_id: line.item?.uomId || '',
@@ -53,10 +67,12 @@ function mapGRNDetail(grn: any) {
     document_number: grn.grnNumber,
     status: grn.status,
     supplier_id: grn.purchaseOrder?.supplierId || '',
-    supplier: grn.purchaseOrder?.supplier ? {
-      id: grn.purchaseOrder.supplier.id,
-      name: grn.purchaseOrder.supplier.name,
-    } : undefined,
+    supplier: grn.purchaseOrder?.supplier
+      ? {
+          id: grn.purchaseOrder.supplier.id,
+          name: grn.purchaseOrder.supplier.name,
+        }
+      : undefined,
     po_id: grn.poId,
     po_number: grn.purchaseOrder?.poNumber || '',
     po_fx_rate: 1.0,
@@ -76,8 +92,9 @@ function mapGRNDetail(grn: any) {
 function mapGRNSummary(grn: any) {
   const lines = grn.lines || [];
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line: any) => sum + (Number(line.quantityReceived) * Number(line.unitPrice)),
-    0
+    (sum: number, line: any) =>
+      sum + Number(line.quantityReceived) * Number(line.unitPrice),
+    0,
   );
 
   return {
@@ -221,10 +238,7 @@ export class GrnController {
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @Query('version') version?: string,
-  ) {
+  async remove(@Param('id') id: string, @Query('version') version?: string) {
     await this.grnService.remove(id, version ? Number(version) : undefined);
     return { success: true };
   }
@@ -252,7 +266,13 @@ export class GrnController {
       req.ip ||
       undefined;
 
-    const grn = await this.grnPostService.post(id, userId, role, body.version, ipAddress);
+    const grn = await this.grnPostService.post(
+      id,
+      userId,
+      role,
+      body.version,
+      ipAddress,
+    );
     return { data: mapGRNDetail(grn) };
   }
 

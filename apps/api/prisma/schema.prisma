@@ -84,17 +84,20 @@ model User {
   name         String
   role         Role
   isActive     Boolean  @default(true)
-  version      Int      @default(1)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  failedLoginAttempts Int                  @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime?            @map("locked_until")
+  version             Int                  @default(1)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
-  warehouseScopes  UserWarehouseScope[]
-  purchaseRequests PurchaseRequest[]
-  approvalEvents   ApprovalEvent[]
-  warehouseLocks   WarehouseLock[]
-  stocktakeCounts  StocktakeCount[]
-  auditLogs        AuditLog[]
-  refreshTokens    RefreshToken[]
+  warehouseScopes     UserWarehouseScope[]
+  purchaseRequests    PurchaseRequest[]
+  approvalEvents      ApprovalEvent[]
+  warehouseLocks      WarehouseLock[]
+  stocktakeCounts     StocktakeCount[]
+  auditLogs           AuditLog[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -129,6 +132,21 @@ model RefreshToken {
   @@index([sessionId])
   @@index([expiresAt]) // Enables efficient expired-token cleanup queries
   @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model Branch {
@@ -171,6 +189,7 @@ model Warehouse {
   costLedgers        CostLedger[]
   warehouseLocks     WarehouseLock[]
   stocktakeSessions  StocktakeSession[]
+  yieldBatches       YieldBatch[]
 
   @@map("warehouses")
 }
@@ -376,6 +395,7 @@ model GoodsReceivedNote {
   warehouse     Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   lines         GRNLine[]
 
+  @@index([status])
   @@map("goods_received_notes")
 }
 
@@ -403,9 +423,10 @@ model InventoryIssue {
   version      Int      @default(1)
   createdAt    DateTime @default(now())
 
-  warehouse  Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  department Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  lines      InventoryIssueLine[]
+  warehouse      Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  department     Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  lines          InventoryIssueLine[]
+  kitchenRequest KitchenRequest?
 
   @@map("inventory_issues")
 }
@@ -508,13 +529,33 @@ model KitchenRequest {
   warehouseId   String
   status        String   @default("DRAFT")
   version       Int      @default(1)
+  issueId       String?  @unique @map("issue_id")
   createdAt     DateTime @default(now())
 
-  department Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  warehouse  Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  items      KitchenRequestItem[]
+  department     Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  warehouse      Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  inventoryIssue InventoryIssue?      @relation(fields: [issueId], references: [id])
+  items          KitchenRequestItem[]
 
   @@map("kitchen_requests")
+}
+
+model YieldBatch {
+  id            String     @id @default(uuid())
+  recipeName    String     @map("recipe_name")
+  category      String
+  warehouseId   String?    @map("warehouse_id")
+  warehouse     Warehouse? @relation(fields: [warehouseId], references: [id])
+  inputQty      Float      @map("input_qty")
+  outputQty     Float      @map("output_qty")
+  wasteQty      Float      @map("waste_qty")
+  yieldPct      Float      @map("yield_pct")
+  standardYield Float      @map("standard_yield")
+  efficiency    Float
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  @@index([warehouseId])
+  @@map("yield_batches")
 }
 
 model KitchenRequestItem {
@@ -628,6 +669,7 @@ model StockLedger {
 
   @@index([warehouseId, itemId, postedAt(sort: Desc)])
   @@index([warehouseId, itemId])
+  @@index([documentId])
   @@map("stock_ledger")
 }
 
@@ -647,6 +689,8 @@ model CostLedger {
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
 
   @@index([warehouseId, itemId, postedAt(sort: Desc)])
+  @@index([documentId])
+  @@index([documentId, documentType])
   @@map("cost_ledger")
 }
 
@@ -666,6 +710,7 @@ model WarehouseLock {
   lockedBy  User      @relation(fields: [lockedById], references: [id], onDelete: Restrict)
 
   @@index([isActive, expiresAt])
+  @@index([warehouseId, isActive])
   @@map("warehouse_locks")
 }
 

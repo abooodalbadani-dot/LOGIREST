@@ -8,8 +8,12 @@ import { Prisma, Role, DocumentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
+import { WacService } from '../ledger/wac.service';
 
 describe('TransferPostService', () => {
+  const mockWacService = {
+    handleTransferReceipt: jest.fn(),
+  };
   let service: TransferPostService;
 
   const mockTransferFindUnique = jest.fn();
@@ -111,6 +115,7 @@ describe('TransferPostService', () => {
         { provide: LedgerLockService, useValue: mockLockService },
         { provide: OutboxService, useValue: mockOutboxService },
         { provide: MetricsService, useValue: mockMetricsService },
+        { provide: WacService, useValue: mockWacService },
       ],
     }).compile();
 
@@ -270,7 +275,14 @@ describe('TransferPostService', () => {
         ['lot-1'],
       );
       expect(mockWarehouseItemLotUpsert).toHaveBeenCalled();
-      expect(mockWarehouseItemUpsert).toHaveBeenCalled();
+      expect(mockWacService.handleTransferReceipt).toHaveBeenCalledWith(
+        mockPrismaTx,
+        'wh-dest',
+        'item-1',
+        5,
+        10.0,
+        transferId,
+      );
       expect(mockStockLedgerCreate).toHaveBeenCalledWith({
         data: {
           warehouseId: 'wh-dest',
@@ -470,36 +482,20 @@ describe('TransferPostService', () => {
 
       expect(result).toBeDefined();
 
-      expect(mockWarehouseItemUpsert).toHaveBeenCalledWith({
-        where: {
-          warehouseId_itemId: { warehouseId: 'wh-dest', itemId: 'item-rice' },
-        },
-        create: expect.objectContaining({
-          wac: new Prisma.Decimal(7.6923),
-          qtyOnHand: new Prisma.Decimal(8),
-        }),
-        update: expect.objectContaining({
-          wac: new Prisma.Decimal(7.6923),
-          qtyOnHand: { increment: new Prisma.Decimal(8) },
-        }),
-      });
+      expect(mockWacService.handleTransferReceipt).toHaveBeenCalledWith(
+        mockPrismaTx,
+        'wh-dest',
+        'item-rice',
+        8,
+        10.0,
+        transferId,
+      );
 
       expect(mockStockLedgerCreate).toHaveBeenCalledWith({
         data: expect.objectContaining({
           warehouseId: 'wh-loss-id',
           itemId: 'item-rice',
           quantity: new Prisma.Decimal(2),
-          documentType: DocumentType.TRANSFER,
-        }),
-      });
-
-      expect(mockCostLedgerCreate).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          warehouseId: 'wh-loss-id',
-          itemId: 'item-rice',
-          quantity: new Prisma.Decimal(2),
-          unitPrice: new Prisma.Decimal(10.00),
-          newWac: new Prisma.Decimal(10.00),
           documentType: DocumentType.TRANSFER,
         }),
       });

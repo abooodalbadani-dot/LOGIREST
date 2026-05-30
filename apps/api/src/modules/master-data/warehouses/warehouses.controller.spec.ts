@@ -45,6 +45,7 @@ describe('WarehousesController', () => {
       expect(mockPrismaService.warehouse.findMany).toHaveBeenCalledWith({
         where: { isActive: true },
         include: { branch: true },
+        orderBy: { name: 'asc' },
       });
     });
 
@@ -55,6 +56,7 @@ describe('WarehousesController', () => {
       expect(mockPrismaService.warehouse.findMany).toHaveBeenCalledWith({
         where: {},
         include: { branch: true },
+        orderBy: { name: 'asc' },
       });
     });
   });

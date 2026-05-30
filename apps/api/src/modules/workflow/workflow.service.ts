@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 import {
   Injectable,
   Logger,
@@ -10,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ConcurrencyService } from '../../services/concurrency.service';
-import { DocumentType as PrismaDocType } from '@prisma/client';
+import { DocumentType as PrismaDocType, Prisma } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
 import {
@@ -222,6 +221,7 @@ export class WorkflowService {
     comments?: string,
     clientVersion?: number,
     ipAddress?: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<any> {
     const docType = this.mapModelToDocType(modelName);
     const targetTable = MODEL_TO_TABLE[modelName] || modelName;
@@ -230,7 +230,7 @@ export class WorkflowService {
       throw new BadRequestException('Comments are mandatory for REJECT action');
     }
 
-    const existingDoc = await this.prisma[modelName].findUnique({
+    const existingDoc = await (this.prisma as any)[modelName].findUnique({
       where: { id: documentId },
     });
 
@@ -286,257 +286,249 @@ export class WorkflowService {
 
     // Run update in transaction
     try {
-      return await this.prisma.$transaction(
-        async (tx) => {
-          const doc = await tx[modelName].findUnique({
-            where: { id: documentId },
-            select: { status: true, version: true },
-          });
+      const execute = async (tx: Prisma.TransactionClient) => {
+        const doc = await (tx as any)[modelName].findUnique({
+          where: { id: documentId },
+          select: { status: true, version: true },
+        });
 
-          if (!doc) {
-            throw new NotFoundException(
-              `Document not found: ${modelName} with ID ${documentId}`,
-            );
-          }
+        if (!doc) {
+          throw new NotFoundException(
+            `Document not found: ${modelName} with ID ${documentId}`,
+          );
+        }
 
-          // Optimistic locking verification
-          if (clientVersion !== undefined && doc.version !== clientVersion) {
-            await this.concurrencyService.handleConflict(
-              documentId,
-              modelName,
-              clientVersion,
-              tx,
-            );
-          }
+        // Optimistic locking verification
+        if (clientVersion !== undefined && doc.version !== clientVersion) {
+          await this.concurrencyService.handleConflict(
+            documentId,
+            modelName,
+            clientVersion,
+            tx,
+          );
+        }
 
-          // Perform the status update
-          const currentVersion = doc.version;
-          const updateResult = await tx[modelName].updateMany({
-            where: { id: documentId, version: currentVersion },
-            data: {
-              status: targetStatus,
-              version: currentVersion + 1,
-            },
-          });
+        // Perform the status update
+        const currentVersion = doc.version;
+        const updateResult = await (tx as any)[modelName].updateMany({
+          where: { id: documentId, version: currentVersion },
+          data: {
+            status: targetStatus,
+            version: currentVersion + 1,
+          },
+        });
 
-          if (updateResult.count === 0) {
-            await this.concurrencyService.handleConflict(
-              documentId,
-              modelName,
-              currentVersion,
-              tx,
-            );
-          }
+        if (updateResult.count === 0) {
+          await this.concurrencyService.handleConflict(
+            documentId,
+            modelName,
+            currentVersion,
+            tx,
+          );
+        }
 
-          // Fetch updated document to return it
-          const updatedDoc = await tx[modelName].findUnique({
-            where: { id: documentId },
-          });
+        // Fetch updated document to return it
+        const updatedDoc = await (tx as any)[modelName].findUnique({
+          where: { id: documentId },
+        });
 
-          // Determine stepNumber for ApprovalEvent
-          const stepNumber =
-            (await tx.approvalEvent.count({
-              where: {
-                documentId,
-                documentType: this.mapToPrismaDocType(docType),
-              },
-            })) + 1;
-
-          // Create ApprovalEvent
-          await tx.approvalEvent.create({
-            data: {
+        // Determine stepNumber for ApprovalEvent
+        const stepNumber =
+          (await tx.approvalEvent.count({
+            where: {
               documentId,
               documentType: this.mapToPrismaDocType(docType),
-              fromStatus: doc.status,
-              toStatus: targetStatus,
-              actionPerformed: action,
-              userId,
-              userRole: userRole as any,
-              stepNumber,
-              comments: comments || null,
             },
-          });
+          })) + 1;
 
-          // Successful AuditLog inside the transaction
-          await tx.auditLog.create({
+        // Create ApprovalEvent
+        await tx.approvalEvent.create({
+          data: {
+            documentId,
+            documentType: this.mapToPrismaDocType(docType),
+            fromStatus: doc.status,
+            toStatus: targetStatus,
+            actionPerformed: action,
+            userId,
+            userRole: userRole as any,
+            stepNumber,
+            comments: comments || null,
+          },
+        });
+
+        // Successful AuditLog inside the transaction
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: `WORKFLOW_${action}_SUCCESS`,
+            targetTable,
+            targetId: documentId,
+            beforeStateJson: JSON.stringify({
+              status: doc.status,
+              version: doc.version,
+            }),
+            afterStateJson: JSON.stringify({
+              status: targetStatus,
+              version: currentVersion + 1,
+            }),
+            ipAddress: ipAddress || null,
+          },
+        });
+
+        // Dispatch notifications for key status changes
+        if (docType === 'pr' && targetStatus === 'SUBMITTED') {
+          await tx.notificationLog.create({
             data: {
-              userId,
-              action: `WORKFLOW_${action}_SUCCESS`,
-              targetTable,
-              targetId: documentId,
-              beforeStateJson: JSON.stringify({
-                status: doc.status,
-                version: doc.version,
-              }),
-              afterStateJson: JSON.stringify({
-                status: targetStatus,
-                version: currentVersion + 1,
-              }),
-              ipAddress: ipAddress || null,
+              targetRole: 'APPROVER',
+              warehouseId: updatedDoc.warehouseId,
+              message: `Purchase Request ${updatedDoc.requestNumber} is awaiting approval.`,
+              documentType: 'PURCHASE_REQUEST',
+              documentId: updatedDoc.id,
             },
           });
+          await this.outboxService.writeEvent(tx, 'PR_SUBMITTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.requestNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+        } else if (docType === 'pr' && targetStatus === 'APPROVED') {
+          await tx.notificationLog.create({
+            data: {
+              targetRole: 'PROC_OFFICER',
+              warehouseId: updatedDoc.warehouseId,
+              message: `Purchase Request ${updatedDoc.requestNumber} has been approved.`,
+              documentType: 'PURCHASE_REQUEST',
+              documentId: updatedDoc.id,
+            },
+          });
+          await this.outboxService.writeEvent(tx, 'PR_APPROVED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.requestNumber,
+            warehouseId: updatedDoc.warehouseId,
+            createdById: updatedDoc.createdById,
+          });
+        } else if (docType === 'transfer' && targetStatus === 'IN_TRANSIT') {
+          await tx.notificationLog.create({
+            data: {
+              targetRole: 'WH_KEEPER',
+              warehouseId: updatedDoc.toWarehouseId,
+              message: `Transfer ${updatedDoc.transferNumber} has been shipped and is in transit.`,
+              documentType: 'TRANSFER',
+              documentId: updatedDoc.id,
+            },
+          });
+          await this.outboxService.writeEvent(tx, 'TRANSFER_SHIPPED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.transferNumber,
+            warehouseId: updatedDoc.toWarehouseId,
+          });
+        }
 
-          // Dispatch notifications for key status changes
-          if (docType === 'pr' && targetStatus === 'SUBMITTED') {
-            await tx.notificationLog.create({
-              data: {
-                targetRole: 'APPROVER',
-                warehouseId: updatedDoc.warehouseId,
-                message: `Purchase Request ${updatedDoc.requestNumber} is awaiting approval.`,
-                documentType: 'PURCHASE_REQUEST',
-                documentId: updatedDoc.id,
-              },
-            });
-            await this.outboxService.writeEvent(tx, 'PR_SUBMITTED', {
+        // New Outbox Notification triggers:
+        if (docType === 'grn' && targetStatus === 'POSTED') {
+          await this.outboxService.writeEvent(tx, 'GRN_POSTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.grnNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+          const po = await tx.purchaseOrder.findUnique({
+            where: { id: updatedDoc.poId },
+            include: { supplier: true },
+          });
+          if (po?.supplier?.contactEmail) {
+            await this.outboxService.writeEvent(tx, 'SUPPLIER_GRN_NOTIFIED', {
               id: updatedDoc.id,
-              documentNumber: updatedDoc.requestNumber,
-              warehouseId: updatedDoc.warehouseId,
+              documentNumber: updatedDoc.grnNumber,
+              supplierId: po.supplier.id,
+              supplierEmail: po.supplier.contactEmail,
             });
-          } else if (docType === 'pr' && targetStatus === 'APPROVED') {
-            await tx.notificationLog.create({
-              data: {
-                targetRole: 'PROC_OFFICER',
-                warehouseId: updatedDoc.warehouseId,
-                message: `Purchase Request ${updatedDoc.requestNumber} has been approved.`,
-                documentType: 'PURCHASE_REQUEST',
-                documentId: updatedDoc.id,
-              },
-            });
-            await this.outboxService.writeEvent(tx, 'PR_APPROVED', {
+          }
+        } else if (docType === 'po' && targetStatus === 'APPROVED') {
+          const supplier = await tx.supplier.findUnique({
+            where: { id: updatedDoc.supplierId },
+          });
+          if (supplier?.contactEmail) {
+            await this.outboxService.writeEvent(tx, 'SUPPLIER_PO_NOTIFIED', {
               id: updatedDoc.id,
-              documentNumber: updatedDoc.requestNumber,
-              warehouseId: updatedDoc.warehouseId,
-              createdById: updatedDoc.createdById,
+              documentNumber: updatedDoc.poNumber,
+              supplierId: supplier.id,
+              supplierEmail: supplier.contactEmail,
             });
-          } else if (docType === 'transfer' && targetStatus === 'IN_TRANSIT') {
-            await tx.notificationLog.create({
-              data: {
-                targetRole: 'WH_KEEPER',
+          }
+        } else if (docType === 'adjustment' && targetStatus === 'POSTED') {
+          await this.outboxService.writeEvent(tx, 'ADJUSTMENT_POSTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.adjustmentNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+        } else if (
+          docType === 'kitchen_request' &&
+          targetStatus === 'SUBMITTED'
+        ) {
+          await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_SUBMITTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.requestNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+        } else if (docType === 'kitchen_request' && targetStatus === 'POSTED') {
+          await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_POSTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.requestNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+          this.metricsService.postingOperationsCounter.inc({
+            document_type: 'KITCHEN_REQUEST',
+          });
+        } else if (docType === 'stocktake' && targetStatus === 'STARTED') {
+          await this.outboxService.writeEvent(tx, 'STOCKTAKE_STARTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.sessionNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+        } else if (docType === 'stocktake' && targetStatus === 'POSTED') {
+          await this.outboxService.writeEvent(tx, 'STOCKTAKE_POSTED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.sessionNumber,
+            warehouseId: updatedDoc.warehouseId,
+          });
+        } else if (docType === 'transfer' && targetStatus === 'RECEIVED') {
+          const destWarehouse = await tx.warehouse.findUnique({
+            where: { id: updatedDoc.toWarehouseId },
+            select: { name: true },
+          });
+          const warehouseName = destWarehouse?.name || updatedDoc.toWarehouseId;
+          await tx.notificationLog.createMany({
+            data: [
+              {
+                targetRole: 'ADMIN',
                 warehouseId: updatedDoc.toWarehouseId,
-                message: `Transfer ${updatedDoc.transferNumber} has been shipped and is in transit.`,
+                message: `Transfer ${updatedDoc.transferNumber} successfully received at ${warehouseName}.`,
                 documentType: 'TRANSFER',
                 documentId: updatedDoc.id,
               },
-            });
-            await this.outboxService.writeEvent(tx, 'TRANSFER_SHIPPED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.transferNumber,
-              warehouseId: updatedDoc.toWarehouseId,
-            });
-          }
-
-          // New Outbox Notification triggers:
-          if (docType === 'grn' && targetStatus === 'POSTED') {
-            await this.outboxService.writeEvent(tx, 'GRN_POSTED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.grnNumber,
-              warehouseId: updatedDoc.warehouseId,
-            });
-            const po = await tx.purchaseOrder.findUnique({
-              where: { id: updatedDoc.poId },
-              include: { supplier: true },
-            });
-            if (po?.supplier?.contactEmail) {
-              await this.outboxService.writeEvent(tx, 'SUPPLIER_GRN_NOTIFIED', {
-                id: updatedDoc.id,
-                documentNumber: updatedDoc.grnNumber,
-                supplierId: po.supplier.id,
-                supplierEmail: po.supplier.contactEmail,
-              });
-            }
-          } else if (docType === 'po' && targetStatus === 'APPROVED') {
-            const supplier = await tx.supplier.findUnique({
-              where: { id: updatedDoc.supplierId },
-            });
-            if (supplier?.contactEmail) {
-              await this.outboxService.writeEvent(tx, 'SUPPLIER_PO_NOTIFIED', {
-                id: updatedDoc.id,
-                documentNumber: updatedDoc.poNumber,
-                supplierId: supplier.id,
-                supplierEmail: supplier.contactEmail,
-              });
-            }
-          } else if (docType === 'adjustment' && targetStatus === 'POSTED') {
-            await this.outboxService.writeEvent(tx, 'ADJUSTMENT_POSTED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.adjustmentNumber,
-              warehouseId: updatedDoc.warehouseId,
-            });
-          } else if (
-            docType === 'kitchen_request' &&
-            targetStatus === 'SUBMITTED'
-          ) {
-            await this.outboxService.writeEvent(
-              tx,
-              'KITCHEN_REQUEST_SUBMITTED',
               {
-                id: updatedDoc.id,
-                documentNumber: updatedDoc.requestNumber,
-                warehouseId: updatedDoc.warehouseId,
+                targetRole: 'INV_MGR',
+                warehouseId: updatedDoc.toWarehouseId,
+                message: `Transfer ${updatedDoc.transferNumber} successfully received at ${warehouseName}.`,
+                documentType: 'TRANSFER',
+                documentId: updatedDoc.id,
               },
-            );
-          } else if (
-            docType === 'kitchen_request' &&
-            targetStatus === 'POSTED'
-          ) {
-            await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_POSTED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.requestNumber,
-              warehouseId: updatedDoc.warehouseId,
-            });
-            this.metricsService.postingOperationsCounter.inc({
-              document_type: 'KITCHEN_REQUEST',
-            });
-          } else if (docType === 'stocktake' && targetStatus === 'STARTED') {
-            await this.outboxService.writeEvent(tx, 'STOCKTAKE_STARTED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.sessionNumber,
-              warehouseId: updatedDoc.warehouseId,
-            });
-          } else if (docType === 'stocktake' && targetStatus === 'POSTED') {
-            await this.outboxService.writeEvent(tx, 'STOCKTAKE_POSTED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.sessionNumber,
-              warehouseId: updatedDoc.warehouseId,
-            });
-          } else if (docType === 'transfer' && targetStatus === 'RECEIVED') {
-            const destWarehouse = await tx.warehouse.findUnique({
-              where: { id: updatedDoc.toWarehouseId },
-              select: { name: true },
-            });
-            const warehouseName =
-              destWarehouse?.name || updatedDoc.toWarehouseId;
-            await tx.notificationLog.createMany({
-              data: [
-                {
-                  targetRole: 'ADMIN',
-                  warehouseId: updatedDoc.toWarehouseId,
-                  message: `Transfer ${updatedDoc.transferNumber} successfully received at ${warehouseName}.`,
-                  documentType: 'TRANSFER',
-                  documentId: updatedDoc.id,
-                },
-                {
-                  targetRole: 'INV_MGR',
-                  warehouseId: updatedDoc.toWarehouseId,
-                  message: `Transfer ${updatedDoc.transferNumber} successfully received at ${warehouseName}.`,
-                  documentType: 'TRANSFER',
-                  documentId: updatedDoc.id,
-                },
-              ],
-            });
-            await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.transferNumber,
-              warehouseId: updatedDoc.fromWarehouseId,
-            });
-          }
+            ],
+          });
+          await this.outboxService.writeEvent(tx, 'TRANSFER_RECEIVED', {
+            id: updatedDoc.id,
+            documentNumber: updatedDoc.transferNumber,
+            warehouseId: updatedDoc.fromWarehouseId,
+          });
+        }
 
-          return updatedDoc;
-        },
-        {
-          timeout: 30000,
-        },
-      );
+        return updatedDoc;
+      };
+
+      if (tx) {
+        return execute(tx);
+      }
+      return await this.prisma.$transaction(execute, { timeout: 30000 });
     } catch (error) {
       // Failed transition logging outside the transaction
       const errorMsg = error instanceof Error ? error.message : String(error);

@@ -10,8 +10,6 @@ import { of } from 'rxjs';
 import { ScopeInterceptor } from './scope.interceptor';
 import { PrismaService } from '../../database/prisma.service';
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-
 describe('ScopeInterceptor', () => {
   let interceptor: ScopeInterceptor;
   let reflector: Reflector;

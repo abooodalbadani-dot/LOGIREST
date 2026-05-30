@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
 import { IdempotencyGuard } from './idempotency.guard';
 import { IdempotencyService } from '../services/idempotency.service';

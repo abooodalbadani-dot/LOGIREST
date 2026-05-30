@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
@@ -22,7 +27,7 @@ export class BarcodesService {
       include: { item: true },
       orderBy: { barcode: 'asc' },
     });
-    return mappings.map(m => this.mapDbBarcodeToFrontend(m));
+    return mappings.map((m) => this.mapDbBarcodeToFrontend(m));
   }
 
   async findOne(id: string) {
@@ -52,7 +57,9 @@ export class BarcodesService {
       throw new BadRequestException('item_id and code are required');
     }
 
-    const existing = await this.prisma.barcodeMapping.findUnique({ where: { barcode: code } });
+    const existing = await this.prisma.barcodeMapping.findUnique({
+      where: { barcode: code },
+    });
     if (existing) {
       throw new ConflictException(`Barcode "${code}" is already registered`);
     }
@@ -85,13 +92,17 @@ export class BarcodesService {
   }
 
   async update(id: string, body: any, userId: string, ipAddress?: string) {
-    const existing = await this.prisma.barcodeMapping.findUnique({ where: { id } });
+    const existing = await this.prisma.barcodeMapping.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Barcode mapping with ID ${id} not found`);
     }
 
     if (body.version !== undefined && existing.version !== body.version) {
-      throw new ConflictException('Optimistic locking failure: version mismatch');
+      throw new ConflictException(
+        'Optimistic locking failure: version mismatch',
+      );
     }
 
     const { item_id, code } = body;
@@ -125,7 +136,9 @@ export class BarcodesService {
   }
 
   async remove(id: string, userId: string, ipAddress?: string) {
-    const existing = await this.prisma.barcodeMapping.findUnique({ where: { id } });
+    const existing = await this.prisma.barcodeMapping.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Barcode mapping with ID ${id} not found`);
     }

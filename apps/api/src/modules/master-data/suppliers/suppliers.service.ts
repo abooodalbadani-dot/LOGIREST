@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
@@ -6,7 +11,9 @@ export class SuppliersService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async getBaseCurrencyId(): Promise<string> {
-    const base = await this.prisma.currency.findFirst({ where: { isBase: true } });
+    const base = await this.prisma.currency.findFirst({
+      where: { isBase: true },
+    });
     if (base) return base.id;
     const first = await this.prisma.currency.findFirst();
     return first ? first.id : 'sar-id';
@@ -33,7 +40,9 @@ export class SuppliersService {
     const suppliers = await this.prisma.supplier.findMany({
       orderBy: { code: 'asc' },
     });
-    return suppliers.map(sup => this.mapDbSupplierToFrontend(sup, currencyId));
+    return suppliers.map((sup) =>
+      this.mapDbSupplierToFrontend(sup, currencyId),
+    );
   }
 
   async findOne(id: string) {
@@ -55,7 +64,9 @@ export class SuppliersService {
 
     const existing = await this.prisma.supplier.findUnique({ where: { code } });
     if (existing) {
-      throw new ConflictException(`Supplier with code "${code}" already exists`);
+      throw new ConflictException(
+        `Supplier with code "${code}" already exists`,
+      );
     }
 
     const name = name_en || name_ar;
@@ -98,7 +109,9 @@ export class SuppliersService {
     }
 
     if (body.version !== undefined && existing.version !== body.version) {
-      throw new ConflictException('Optimistic locking failure: version mismatch');
+      throw new ConflictException(
+        'Optimistic locking failure: version mismatch',
+      );
     }
 
     const { code, name_en, name_ar, email, phone } = body;
@@ -112,7 +125,8 @@ export class SuppliersService {
           name,
           contactEmail: email !== undefined ? email : existing.contactEmail,
           contactPhone: phone !== undefined ? phone : existing.contactPhone,
-          isActive: body.is_active !== undefined ? body.is_active : existing.isActive,
+          isActive:
+            body.is_active !== undefined ? body.is_active : existing.isActive,
           version: existing.version + 1,
         },
       });
@@ -149,7 +163,9 @@ export class SuppliersService {
     }
 
     if (existing.purchaseOrders.length > 0) {
-      throw new BadRequestException('Cannot delete supplier with associated purchase orders');
+      throw new BadRequestException(
+        'Cannot delete supplier with associated purchase orders',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {

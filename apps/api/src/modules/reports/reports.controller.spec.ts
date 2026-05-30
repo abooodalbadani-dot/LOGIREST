@@ -371,7 +371,7 @@ describe('ReportsController', () => {
       expect(result).toEqual([
         {
           po_no: 'PO-0001',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
           date: expect.any(String),
           supplier: 'ABC Supplier',
           currency: 'USD',

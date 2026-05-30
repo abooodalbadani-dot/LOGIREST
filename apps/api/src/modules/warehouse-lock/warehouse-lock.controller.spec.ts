@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { WarehouseLockController } from './warehouse-lock.controller';
 import { WarehouseLockService } from './warehouse-lock.service';

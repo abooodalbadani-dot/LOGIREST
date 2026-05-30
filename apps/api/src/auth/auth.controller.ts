@@ -16,6 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RtrService } from './rtr.service';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 
@@ -33,8 +34,13 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-    @Ip() ipAddress: string,
+    @Req() req: Request,
   ) {
+    const ipAddress = req?.headers
+      ? (req.headers['x-forwarded-for'] as string) || req.ip || ''
+      : typeof req === 'string'
+        ? req
+        : '';
     return this.authService.login(dto, res, ipAddress);
   }
 
@@ -82,16 +88,13 @@ export class AuthController {
   @Put('profile')
   async updateProfile(
     @CurrentUser('id') userId: string,
-    @Body() body: any,
+    @Body() body: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(userId, body);
   }
 
   @Post('profile/avatar')
-  async uploadAvatar(
-    @CurrentUser('id') userId: string,
-    @Body() body: any,
-  ) {
+  async uploadAvatar(@CurrentUser('id') userId: string, @Body() body: any) {
     return this.authService.uploadAvatar(userId, body);
   }
 
@@ -112,4 +115,3 @@ export class AuthController {
     return this.authService.resetPassword(token, password);
   }
 }
-

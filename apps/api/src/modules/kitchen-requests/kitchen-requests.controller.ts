@@ -44,9 +44,24 @@ function mapKitchenRequestDetail(kr: any) {
     status: kr.status,
     notes: kr.notes || '',
     requested_by: 'System',
-    requested_at: kr.createdAt.toISOString(),
-    created_at: kr.createdAt.toISOString(),
-    updated_at: kr.createdAt.toISOString(),
+    requested_at: kr.createdAt
+      ? (kr.createdAt instanceof Date
+          ? kr.createdAt
+          : new Date(kr.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    created_at: kr.createdAt
+      ? (kr.createdAt instanceof Date
+          ? kr.createdAt
+          : new Date(kr.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    updated_at: kr.createdAt
+      ? (kr.createdAt instanceof Date
+          ? kr.createdAt
+          : new Date(kr.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
     version: kr.version,
     items,
   };

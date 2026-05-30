@@ -9,4 +9,3 @@ import { NotificationTemplateService } from './notification-template.service';
   exports: [NotificationService, NotificationTemplateService],
 })
 export class NotificationModule {}
-

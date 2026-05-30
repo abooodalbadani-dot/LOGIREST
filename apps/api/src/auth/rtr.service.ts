@@ -5,6 +5,7 @@ import { createHash, randomBytes, randomUUID } from 'crypto';
 import { Response } from 'express';
 import { OutboxService } from '../modules/outbox/outbox.service';
 import { Role } from '@prisma/client';
+import { AlertService } from '../modules/alerts/alert.service';
 
 @Injectable()
 export class RtrService {
@@ -14,6 +15,7 @@ export class RtrService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly outboxService: OutboxService,
+    private readonly alertService: AlertService,
   ) {}
 
   private hashToken(token: string): string {
@@ -84,6 +86,24 @@ export class RtrService {
       this.logger.warn(
         `Replay attack detected! Session: ${existingToken.sessionId}`,
       );
+
+      // Trigger Slack webhook alert immediately (non-blocking)
+      this.alertService
+        .sendSlackAlert(
+          `Refresh token replay attack detected! User ID: ${existingToken.userId}, Session ID: ${existingToken.sessionId}, IP: ${ipAddress ?? 'Unknown'}. All tokens for this session revoked immediately.`,
+          '🚨 SECURITY ALERT: Token Replay Attack',
+          {
+            userId: existingToken.userId,
+            sessionId: existingToken.sessionId,
+            ipAddress: ipAddress || null,
+            timestamp: new Date().toISOString(),
+          },
+        )
+        .catch((err) => {
+          this.logger.error(
+            `Failed to dispatch Slack alert for replay attack: ${err.message}`,
+          );
+        });
 
       await this.prisma.$transaction(
         async (tx) => {

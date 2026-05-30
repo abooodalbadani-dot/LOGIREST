@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { Test, TestingModule } from '@nestjs/testing';
 import { GrnVoidService } from '../grn-void.service';
 import { PrismaService } from '../../../database/prisma.service';

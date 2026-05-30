@@ -47,6 +47,7 @@ import { OutboxModule } from './modules/outbox/outbox.module';
 import { RedisModule } from './redis/redis.module';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
+import { AlertModule } from './modules/alerts/alert.module';
 
 import { CorrelationMiddleware } from './common/correlation.middleware';
 import { correlationStorage } from './common/correlation.context';
@@ -112,6 +113,7 @@ import { correlationStorage } from './common/correlation.context';
     RedisModule,
     MetricsModule,
     SearchModule,
+    AlertModule,
   ],
   controllers: [AppController],
   providers: [

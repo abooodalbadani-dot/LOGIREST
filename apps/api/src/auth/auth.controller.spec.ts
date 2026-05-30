@@ -67,7 +67,10 @@ describe('AuthController', () => {
       };
       mockAuthService.login.mockResolvedValue(expectedResult);
 
-      const result = await controller.login(dto, mockResponse, '127.0.0.1');
+      const result = await controller.login(dto, mockResponse, {
+        ip: '127.0.0.1',
+        headers: {},
+      } as unknown as Request);
       expect(result).toEqual(expectedResult);
       expect(mockAuthService.login).toHaveBeenCalledWith(
         dto,

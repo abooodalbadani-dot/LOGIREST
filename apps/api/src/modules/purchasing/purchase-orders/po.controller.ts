@@ -32,16 +32,20 @@ import type { Request } from 'express';
 function mapPODetail(po: any) {
   const lines = (po.lines || []).map((line: any) => ({
     id: line.id,
-    item: line.item ? {
-      id: line.item.id,
-      code: line.item.sku,
-      name_ar: line.item.name,
-      name_en: line.item.name,
-      primary_uom: line.item.unitOfMeasure ? {
-        id: line.item.unitOfMeasure.id,
-        code: line.item.unitOfMeasure.code,
-      } : undefined,
-    } : undefined,
+    item: line.item
+      ? {
+          id: line.item.id,
+          code: line.item.sku,
+          name_ar: line.item.name,
+          name_en: line.item.name,
+          primary_uom: line.item.unitOfMeasure
+            ? {
+                id: line.item.unitOfMeasure.id,
+                code: line.item.unitOfMeasure.code,
+              }
+            : undefined,
+        }
+      : undefined,
     item_id: line.itemId,
     item_sku: line.item?.sku,
     item_name: line.item?.name,
@@ -54,9 +58,16 @@ function mapPODetail(po: any) {
   }));
 
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line: any) => sum + (line.quantity * line.unit_price),
-    0
+    (sum: number, line: any) => sum + line.quantity * line.unit_price,
+    0,
   );
+
+  const createdAtIso = po.createdAt
+    ? (po.createdAt instanceof Date
+        ? po.createdAt
+        : new Date(po.createdAt)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
     id: po.id,
@@ -70,8 +81,8 @@ function mapPODetail(po: any) {
     currency_code: po.currency?.code || '',
     currency_id: po.currencyId,
     exchange_rate: 1.0,
-    expected_date: po.createdAt.toISOString(),
-    expected_delivery_date: po.createdAt.toISOString(),
+    expected_date: createdAtIso,
+    expected_delivery_date: createdAtIso,
     target_warehouse_id: po.purchaseRequest?.warehouseId || undefined,
     lines,
     supplier_total_amount: supplierTotalAmount,
@@ -79,18 +90,26 @@ function mapPODetail(po: any) {
     total: supplierTotalAmount,
     notes: '',
     audit_log: [],
-    created_at: po.createdAt.toISOString(),
+    created_at: createdAtIso,
     created_by: 'System',
-    updated_at: po.createdAt.toISOString(),
+    updated_at: createdAtIso,
   };
 }
 
 function mapPOSummary(po: any) {
   const lines = po.lines || [];
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line: any) => sum + (Number(line.quantity) * Number(line.unitPrice)),
-    0
+    (sum: number, line: any) =>
+      sum + Number(line.quantity) * Number(line.unitPrice),
+    0,
   );
+
+  const createdAtIso = po.createdAt
+    ? (po.createdAt instanceof Date
+        ? po.createdAt
+        : new Date(po.createdAt)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
     id: po.id,
@@ -99,9 +118,9 @@ function mapPOSummary(po: any) {
     supplier_id: po.supplierId,
     supplier_name: po.supplier?.name || '',
     currency_code: po.currency?.code || '',
-    expected_date: po.createdAt.toISOString(),
+    expected_date: createdAtIso,
     supplier_total_amount: supplierTotalAmount,
-    created_at: po.createdAt.toISOString(),
+    created_at: createdAtIso,
   };
 }
 
@@ -129,7 +148,13 @@ export class PurchaseOrderController {
 
   @Get()
   async findAll(
-    @Query() query: { status?: string; supplier_id?: string; search?: string; page?: string },
+    @Query()
+    query: {
+      status?: string;
+      supplier_id?: string;
+      search?: string;
+      page?: string;
+    },
     @ActiveScope('warehouseId') warehouseId?: string,
   ) {
     const result = await this.poService.findAll(
@@ -167,7 +192,12 @@ export class PurchaseOrderController {
       supplierId?: string;
       currencyId?: string;
       version: number;
-      lines?: Array<{ id?: string; itemId: string; quantity: number; unitPrice: number }>;
+      lines?: Array<{
+        id?: string;
+        itemId: string;
+        quantity: number;
+        unitPrice: number;
+      }>;
     },
   ) {
     const po = await this.poService.update(id, body);
@@ -175,10 +205,7 @@ export class PurchaseOrderController {
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @Query('version') version?: string,
-  ) {
+  async remove(@Param('id') id: string, @Query('version') version?: string) {
     await this.poService.remove(id, version ? Number(version) : undefined);
     return { success: true };
   }
@@ -338,4 +365,3 @@ export class PurchaseOrderController {
     return this.poService.email(id, userId, recipientEmail);
   }
 }
-

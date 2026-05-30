@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../../../database/prisma.service';
 
 export interface YieldBatch {
   id: string;
@@ -15,50 +20,65 @@ export interface YieldBatch {
 
 @Injectable()
 export class YieldService {
-  private batches: YieldBatch[] = [
-    {
-      id: 'yield-1',
-      recipe_name: 'Beef Stroganoff Prep',
-      category: 'protein',
-      input_qty: 15.0,
-      output_qty: 12.6,
-      waste_qty: 2.4,
-      yield_pct: 84.0,
-      standard_yield: 85.0,
-      efficiency: 98.8,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'yield-2',
-      recipe_name: 'Diced Tomatoes Prep',
-      category: 'produce',
-      input_qty: 10.0,
-      output_qty: 9.1,
-      waste_qty: 0.9,
-      yield_pct: 91.0,
-      standard_yield: 90.0,
-      efficiency: 101.1,
-      created_at: new Date().toISOString(),
-    },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.batches;
+  private mapToYieldBatch(dbBatch: any): YieldBatch {
+    return {
+      id: dbBatch.id,
+      recipe_name: dbBatch.recipeName,
+      category: dbBatch.category,
+      input_qty: dbBatch.inputQty,
+      output_qty: dbBatch.outputQty,
+      waste_qty: dbBatch.wasteQty,
+      yield_pct: dbBatch.yieldPct,
+      standard_yield: dbBatch.standardYield,
+      efficiency: dbBatch.efficiency,
+      created_at:
+        dbBatch.createdAt instanceof Date
+          ? dbBatch.createdAt.toISOString()
+          : new Date(dbBatch.createdAt).toISOString(),
+    };
   }
 
-  findOne(id: string) {
-    const batch = this.batches.find(b => b.id === id);
+  async findAll(): Promise<YieldBatch[]> {
+    const batches = await this.prisma.yieldBatch.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return batches.map((b) => this.mapToYieldBatch(b));
+  }
+
+  async findOne(id: string): Promise<YieldBatch> {
+    const batch = await this.prisma.yieldBatch.findUnique({
+      where: { id },
+    });
     if (!batch) {
       throw new NotFoundException(`Yield batch with ID ${id} not found`);
     }
-    return batch;
+    return this.mapToYieldBatch(batch);
   }
 
-  create(body: any) {
-    const { recipe_name, category, input_qty, output_qty, standard_yield } = body;
+  async create(body: any): Promise<YieldBatch> {
+    const recipe_name = body.recipe_name || body.recipeName;
+    const category = body.category;
+    const input_qty =
+      body.input_qty !== undefined ? body.input_qty : body.inputQty;
+    const output_qty =
+      body.output_qty !== undefined ? body.output_qty : body.outputQty;
+    const standard_yield =
+      body.standard_yield !== undefined
+        ? body.standard_yield
+        : body.standardYield;
+    const warehouse_id = body.warehouse_id || body.warehouseId;
 
-    if (!recipe_name || !category || input_qty === undefined || output_qty === undefined) {
-      throw new BadRequestException('recipe_name, category, input_qty, and output_qty are required');
+    if (
+      !recipe_name ||
+      !category ||
+      input_qty === undefined ||
+      output_qty === undefined
+    ) {
+      throw new BadRequestException(
+        'recipe_name, category, input_qty, and output_qty are required',
+      );
     }
 
     const input = parseFloat(input_qty);
@@ -73,20 +93,20 @@ export class YieldService {
     const yieldPct = parseFloat(((output / input) * 100).toFixed(2));
     const efficiency = parseFloat(((yieldPct / stdYield) * 100).toFixed(2));
 
-    const newBatch: YieldBatch = {
-      id: `yield-${Date.now()}`,
-      recipe_name,
-      category,
-      input_qty: input,
-      output_qty: output,
-      waste_qty: waste,
-      yield_pct: yieldPct,
-      standard_yield: stdYield,
-      efficiency,
-      created_at: new Date().toISOString(),
-    };
+    const dbBatch = await this.prisma.yieldBatch.create({
+      data: {
+        recipeName: recipe_name,
+        category,
+        inputQty: input,
+        outputQty: output,
+        wasteQty: waste,
+        yieldPct,
+        standardYield: stdYield,
+        efficiency,
+        warehouseId: warehouse_id || null,
+      },
+    });
 
-    this.batches.push(newBatch);
-    return newBatch;
+    return this.mapToYieldBatch(dbBatch);
   }
 }

@@ -32,6 +32,9 @@ interface OutboxPayload {
   totalLines?: number;
   lotNumber?: string;
   expiryDate?: string;
+  email?: string;
+  name?: string;
+  resetUrl?: string;
 }
 
 @Processor('outbox')
@@ -228,6 +231,11 @@ export class OutboxWorker extends WorkerHost {
           return [data.supplierEmail];
         }
         return [];
+      case 'PASSWORD_RESET_REQUESTED':
+        if (data.email) {
+          return [data.email];
+        }
+        return [];
       default:
         return [];
     }
@@ -360,6 +368,16 @@ export class OutboxWorker extends WorkerHost {
           <p>Dear Supplier,</p>
           <p>This is to confirm that the items from Purchase Order/Goods Received Note <strong>${docNo}</strong> have been received and registered in our warehouse.</p>
           <p>Thank you for your service.</p>
+        `;
+        break;
+      case 'PASSWORD_RESET_REQUESTED':
+        subject = '🔐 LogiRest Password Reset Request';
+        body = `
+          <p>Dear ${data.name || 'User'},</p>
+          <p>We received a request to reset the password for your LogiRest account.</p>
+          <p>Please click the button below to choose a new password. This link is valid for 1 hour.</p>
+          <p><a href="${data.resetUrl || '#'}" class="btn" style="color:#ffffff;">Reset Password</a></p>
+          <p>If you did not request this, you can safely ignore this email.</p>
         `;
         break;
       default:

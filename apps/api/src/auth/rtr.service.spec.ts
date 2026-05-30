@@ -4,9 +4,10 @@ import { UnauthorizedException } from '@nestjs/common';
 import { RtrService } from './rtr.service';
 import { PrismaService } from '../database/prisma.service';
 import { OutboxService } from '../modules/outbox/outbox.service';
+import { AlertService } from '../modules/alerts/alert.service';
 import type { Response } from 'express';
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 
 describe('RtrService', () => {
   let rtrService: RtrService;
@@ -24,7 +25,7 @@ describe('RtrService', () => {
     notificationLog: {
       create: jest.fn(),
     },
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+
     $transaction: jest.fn().mockImplementation((cb) => cb(mockPrisma)),
   };
 
@@ -41,6 +42,10 @@ describe('RtrService', () => {
     writeEvent: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockAlertService = {
+    sendSlackAlert: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,6 +53,7 @@ describe('RtrService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
         { provide: OutboxService, useValue: mockOutboxService },
+        { provide: AlertService, useValue: mockAlertService },
       ],
     }).compile();
 

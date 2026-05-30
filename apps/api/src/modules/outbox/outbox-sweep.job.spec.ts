@@ -59,8 +59,18 @@ describe('OutboxSweepJob', () => {
 
   it('should re-enqueue stale PENDING events to BullMQ outbox queue', async () => {
     const mockEvents = [
-      { id: 'event-1', eventType: 'GRN_POSTED', status: 'PENDING', attempts: 0 },
-      { id: 'event-2', eventType: 'LOW_STOCK_ALERT', status: 'PENDING', attempts: 1 },
+      {
+        id: 'event-1',
+        eventType: 'GRN_POSTED',
+        status: 'PENDING',
+        attempts: 0,
+      },
+      {
+        id: 'event-2',
+        eventType: 'LOW_STOCK_ALERT',
+        status: 'PENDING',
+        attempts: 1,
+      },
     ];
     prismaMock.outboxEvent.findMany.mockResolvedValue(mockEvents);
 

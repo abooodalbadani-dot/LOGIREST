@@ -14,7 +14,9 @@ export class MetricsInterceptor implements NestInterceptor {
 
   constructor() {
     this.httpDurationHistogram =
-      (register.getSingleMetric('logirest_http_request_duration_ms') as Histogram<string>) ||
+      (register.getSingleMetric(
+        'logirest_http_request_duration_ms',
+      ) as Histogram<string>) ||
       new Histogram({
         name: 'logirest_http_request_duration_ms',
         help: 'HTTP request duration in milliseconds',
@@ -27,7 +29,7 @@ export class MetricsInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest();
     const start = Date.now();
     const method = req.method;
-    
+
     // Express route template, e.g., /api/v1/items/:sku. If route is not yet matched or undefined (like 404s), fallback to '/unknown'
     const route = req.route?.path || '/unknown';
 

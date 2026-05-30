@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { IdempotencyService } from './idempotency.service';
 import { PrismaService } from '../database/prisma.service';

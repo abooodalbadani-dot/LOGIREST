@@ -20,7 +20,7 @@ describe('AdminService', () => {
   const mockOutboxEventUpdate = jest.fn();
   const mockAuditLogCreate = jest.fn();
 
-  const mockPrismaService = {
+  const mockPrismaService: any = {
     $transaction: jest.fn((cb) => cb(mockPrismaService)),
     user: {
       groupBy: jest.fn(),

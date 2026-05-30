@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
@@ -13,27 +18,39 @@ export class ItemsService {
       name_ar: item.name,
       name_en: item.name,
       category_id: item.categoryId,
-      primary_uom: item.unitOfMeasure ? {
-        id: item.unitOfMeasure.id,
-        code: item.unitOfMeasure.code,
-        name_ar: item.unitOfMeasure.name,
-        name_en: item.unitOfMeasure.name,
-        category: 'General',
-        is_active: true,
-        created_at: item.unitOfMeasure.createdAt || new Date().toISOString(),
-        version: item.unitOfMeasure.version,
-      } : null,
+      primary_uom: item.unitOfMeasure
+        ? {
+            id: item.unitOfMeasure.id,
+            code: item.unitOfMeasure.code,
+            name_ar: item.unitOfMeasure.name,
+            name_en: item.unitOfMeasure.name,
+            category: 'General',
+            is_active: true,
+            created_at:
+              item.unitOfMeasure.createdAt || new Date().toISOString(),
+            version: item.unitOfMeasure.version,
+          }
+        : null,
       uom_conversions: [],
       track_lots: item.isBatched,
       min_stock_level: 0,
-      reorder_point: item.reorderPoint ? parseFloat(item.reorderPoint.toString()) : 0,
+      reorder_point: item.reorderPoint
+        ? parseFloat(item.reorderPoint.toString())
+        : 0,
       last_purchase_price: 0,
       is_active: item.isActive,
       version: item.version,
     };
   }
 
-  async findAll(filters: { search?: string; category_id?: string; is_active?: string; barcode?: string; page?: string; limit?: string }) {
+  async findAll(filters: {
+    search?: string;
+    category_id?: string;
+    is_active?: string;
+    barcode?: string;
+    page?: string;
+    limit?: string;
+  }) {
     const pageNum = filters.page ? parseInt(filters.page, 10) : 1;
     const limitNum = filters.limit ? parseInt(filters.limit, 10) : 10;
     const skip = (pageNum - 1) * limitNum;
@@ -79,7 +96,7 @@ export class ItemsService {
     ]);
 
     return {
-      data: items.map(item => this.mapDbItemToFrontend(item)),
+      data: items.map((item) => this.mapDbItemToFrontend(item)),
       meta: {
         total,
         page: pageNum,
@@ -107,14 +124,29 @@ export class ItemsService {
   }
 
   async create(body: any, userId: string, ipAddress?: string) {
-    const { code, name_en, name_ar, category_id, primary_uom_id, track_lots, min_stock_level, reorder_point, is_active, barcode } = body;
+    const {
+      code,
+      name_en,
+      name_ar,
+      category_id,
+      primary_uom_id,
+      track_lots,
+      min_stock_level,
+      reorder_point,
+      is_active,
+      barcode,
+    } = body;
 
     if (!code || !category_id || !primary_uom_id) {
-      throw new BadRequestException('code, category_id, and primary_uom_id are required');
+      throw new BadRequestException(
+        'code, category_id, and primary_uom_id are required',
+      );
     }
 
     // Check if sku exists
-    const existing = await this.prisma.item.findUnique({ where: { sku: code } });
+    const existing = await this.prisma.item.findUnique({
+      where: { sku: code },
+    });
     if (existing) {
       throw new ConflictException(`Item with code/sku ${code} already exists`);
     }
@@ -176,10 +208,22 @@ export class ItemsService {
 
     // Optimistic locking check
     if (body.version !== undefined && existing.version !== body.version) {
-      throw new ConflictException('Optimistic locking failure: version mismatch');
+      throw new ConflictException(
+        'Optimistic locking failure: version mismatch',
+      );
     }
 
-    const { code, name_en, name_ar, category_id, primary_uom_id, track_lots, reorder_point, is_active, barcode } = body;
+    const {
+      code,
+      name_en,
+      name_ar,
+      category_id,
+      primary_uom_id,
+      track_lots,
+      reorder_point,
+      is_active,
+      barcode,
+    } = body;
     const name = name_en || name_ar || existing.name;
 
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -192,7 +236,8 @@ export class ItemsService {
           uomId: primary_uom_id || existing.uomId,
           isBatched: track_lots !== undefined ? track_lots : existing.isBatched,
           isActive: is_active !== undefined ? is_active : existing.isActive,
-          reorderPoint: reorder_point !== undefined ? reorder_point : existing.reorderPoint,
+          reorderPoint:
+            reorder_point !== undefined ? reorder_point : existing.reorderPoint,
           version: existing.version + 1,
         },
       });

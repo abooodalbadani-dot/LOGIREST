@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
@@ -20,7 +25,7 @@ export class CategoriesService {
     const categories = await this.prisma.category.findMany({
       orderBy: { name: 'asc' },
     });
-    return categories.map(cat => this.mapDbCategoryToFrontend(cat));
+    return categories.map((cat) => this.mapDbCategoryToFrontend(cat));
   }
 
   async findOne(id: string) {
@@ -42,7 +47,9 @@ export class CategoriesService {
 
     const existing = await this.prisma.category.findUnique({ where: { name } });
     if (existing) {
-      throw new ConflictException(`Category with name "${name}" already exists`);
+      throw new ConflictException(
+        `Category with name "${name}" already exists`,
+      );
     }
 
     const created = await this.prisma.$transaction(async (tx) => {
@@ -78,7 +85,9 @@ export class CategoriesService {
     }
 
     if (body.version !== undefined && existing.version !== body.version) {
-      throw new ConflictException('Optimistic locking failure: version mismatch');
+      throw new ConflictException(
+        'Optimistic locking failure: version mismatch',
+      );
     }
 
     const { name_en, name_ar } = body;
@@ -124,7 +133,9 @@ export class CategoriesService {
     }
 
     if (existing.items.length > 0) {
-      throw new BadRequestException('Cannot delete category with associated items');
+      throw new BadRequestException(
+        'Cannot delete category with associated items',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {

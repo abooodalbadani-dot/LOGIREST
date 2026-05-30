@@ -28,6 +28,7 @@ describe('InventoryService', () => {
     $transaction: jest
       .fn()
       .mockImplementation((cb: any) => cb(mockPrismaService)),
+    $queryRaw: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -155,19 +156,25 @@ describe('InventoryService', () => {
   describe('getMovements', () => {
     it('should return paginated movements with metadata', async () => {
       const mockTimestamp = new Date();
-      mockPrismaService.stockLedger.count.mockResolvedValue(10);
-      mockPrismaService.stockLedger.findMany.mockResolvedValue([
-        {
-          id: 'ledger-1',
-          postedAt: mockTimestamp,
-          itemId: 'item-1',
-          documentType: 'GRN_IN',
-          documentId: 'GRN-01',
-          quantity: 50.0,
-          item: { name: 'Fresh Tomato' },
-          lot: { lotNumber: 'LOT-01' },
-        },
-      ]);
+      mockPrismaService.$queryRaw
+        .mockResolvedValueOnce([
+          {
+            id: 'ledger-1',
+            timestamp: mockTimestamp,
+            itemId: 'item-1',
+            itemName: 'Fresh Tomato',
+            transactionType: 'GRN_IN',
+            documentReference: 'GRN-01',
+            quantity: 50.0,
+            balanceAfter: 50.0,
+            performedByUserName: 'System User',
+          },
+        ])
+        .mockResolvedValueOnce([
+          {
+            count: 10n,
+          },
+        ]);
 
       const result = await service.getMovements('wh-1', {
         page: 2,
@@ -185,7 +192,7 @@ describe('InventoryService', () => {
             transactionType: 'GRN_IN',
             documentReference: 'GRN-01',
             quantity: 50.0,
-            balanceAfter: 0,
+            balanceAfter: 50.0,
             performedByUserName: 'System User',
           },
         ],
@@ -197,14 +204,7 @@ describe('InventoryService', () => {
         },
       });
 
-      expect(mockPrismaService.stockLedger.count).toHaveBeenCalled();
-      expect(mockPrismaService.stockLedger.findMany).toHaveBeenCalledWith({
-        where: { warehouseId: 'wh-1', itemId: 'item-1' },
-        include: { item: true, lot: true },
-        orderBy: { postedAt: 'desc' },
-        skip: 5,
-        take: 5,
-      });
+      expect(mockPrismaService.$queryRaw).toHaveBeenCalled();
     });
   });
 

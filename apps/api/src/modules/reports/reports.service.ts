@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 import {
   Injectable,
   HttpException,
@@ -1066,7 +1065,9 @@ export class ReportsService {
       },
     });
     const shortages = shortagesItems.filter(
-      wi => wi.item.reorderPoint !== null && Number(wi.qtyOnHand) < Number(wi.item.reorderPoint)
+      (wi) =>
+        wi.item.reorderPoint !== null &&
+        Number(wi.qtyOnHand) < Number(wi.item.reorderPoint),
     ).length;
 
     const pending_prs = await this.prisma.purchaseRequest.count({
@@ -1130,7 +1131,9 @@ export class ReportsService {
         unitPrice: true,
       },
     });
-    const total_procurement_spend = Number(grnSum._sum.quantityReceived || 0) * Number(grnSum._sum.unitPrice || 0) || 184500;
+    const total_procurement_spend =
+      Number(grnSum._sum.quantityReceived || 0) *
+        Number(grnSum._sum.unitPrice || 0) || 184500;
 
     const issuesList = await this.prisma.inventoryIssue.findMany({
       where: { warehouseId },
@@ -1138,12 +1141,14 @@ export class ReportsService {
       take: 5,
     });
     const transfersList = await this.prisma.transfer.findMany({
-      where: { OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }] },
+      where: {
+        OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }],
+      },
       orderBy: { createdAt: 'desc' },
       take: 5,
     });
     const recent_requests = [
-      ...issuesList.map(i => ({
+      ...issuesList.map((i) => ({
         id: i.id,
         document_number: i.issueNumber,
         type: 'ISSUE' as const,
@@ -1153,7 +1158,7 @@ export class ReportsService {
         created_at: i.createdAt.toISOString(),
         destination: i.departmentId,
       })),
-      ...transfersList.map(t => ({
+      ...transfersList.map((t) => ({
         id: t.id,
         document_number: t.transferNumber,
         type: 'TRANSFER' as const,
@@ -1163,7 +1168,12 @@ export class ReportsService {
         created_at: t.createdAt.toISOString(),
         destination: t.toWarehouseId,
       })),
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
+    ]
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
+      .slice(0, 5);
 
     if (recent_requests.length === 0) {
       recent_requests.push({
@@ -1188,14 +1198,31 @@ export class ReportsService {
       item_name: log.targetTable,
       qty: 1,
       uom: 'PCS',
-      time: log.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: log.createdAt.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
       type: log.action,
     }));
 
     if (activity_log.length === 0) {
       activity_log.push(
-        { id: 'act-1', item_name: 'Beef (Frozen)', qty: 20, uom: 'KG', time: '10:30', type: 'OUT (Issue)' },
-        { id: 'act-2', item_name: 'Cooking Oil', qty: 5, uom: 'L', time: '11:15', type: 'OUT (Issue)' }
+        {
+          id: 'act-1',
+          item_name: 'Beef (Frozen)',
+          qty: 20,
+          uom: 'KG',
+          time: '10:30',
+          type: 'OUT (Issue)',
+        },
+        {
+          id: 'act-2',
+          item_name: 'Cooking Oil',
+          qty: 5,
+          uom: 'L',
+          time: '11:15',
+          type: 'OUT (Issue)',
+        },
       );
     }
 
@@ -1217,12 +1244,14 @@ export class ReportsService {
       },
       take: 5,
     });
-    const expiring_lots = expiringLotsList.map(l => ({
+    const expiring_lots = expiringLotsList.map((l) => ({
       id: l.id,
       item_name: l.item.name,
       lot_number: l.lotNumber,
       expiry_date: l.expiryDate?.toISOString().split('T')[0] || '',
-      days_left: Math.ceil(((l.expiryDate?.getTime() || 0) - Date.now()) / (1000 * 60 * 60 * 24)),
+      days_left: Math.ceil(
+        ((l.expiryDate?.getTime() || 0) - Date.now()) / (1000 * 60 * 60 * 24),
+      ),
       warehouse_name: 'Main Warehouse',
       qty: 10,
       uom: 'PCS',
@@ -1233,7 +1262,9 @@ export class ReportsService {
         id: 'exp-1',
         item_name: 'Milk (Fresh)',
         lot_number: 'LOT-M-001',
-        expiry_date: new Date(Date.now() + 5 * 24 * 3600000).toISOString().split('T')[0],
+        expiry_date: new Date(Date.now() + 5 * 24 * 3600000)
+          .toISOString()
+          .split('T')[0],
         days_left: 5,
         warehouse_name: 'Cold Storage WH',
         qty: 12,
@@ -1242,26 +1273,30 @@ export class ReportsService {
     }
 
     const fulfillment_queue = [
-      ...issuesList.filter(i => i.status === 'POSTED').map(i => ({
-        id: i.id,
-        document_number: i.issueNumber,
-        type: 'ISSUE' as const,
-        status: i.status,
-        priority: 'HIGH',
-        items_count: 2,
-        destination: i.departmentId,
-        created_at: i.createdAt.toISOString(),
-      })),
-      ...transfersList.filter(t => t.status === 'POSTED').map(t => ({
-        id: t.id,
-        document_number: t.transferNumber,
-        type: 'TRANSFER' as const,
-        status: t.status,
-        priority: 'NORMAL',
-        items_count: 3,
-        destination: t.toWarehouseId,
-        created_at: t.createdAt.toISOString(),
-      })),
+      ...issuesList
+        .filter((i) => i.status === 'POSTED')
+        .map((i) => ({
+          id: i.id,
+          document_number: i.issueNumber,
+          type: 'ISSUE' as const,
+          status: i.status,
+          priority: 'HIGH',
+          items_count: 2,
+          destination: i.departmentId,
+          created_at: i.createdAt.toISOString(),
+        })),
+      ...transfersList
+        .filter((t) => t.status === 'POSTED')
+        .map((t) => ({
+          id: t.id,
+          document_number: t.transferNumber,
+          type: 'TRANSFER' as const,
+          status: t.status,
+          priority: 'NORMAL',
+          items_count: 3,
+          destination: t.toWarehouseId,
+          created_at: t.createdAt.toISOString(),
+        })),
     ].slice(0, 5);
 
     if (fulfillment_queue.length === 0) {
@@ -1281,7 +1316,7 @@ export class ReportsService {
       where: { warehouseId, status: 'SUBMITTED' },
       take: 5,
     });
-    const pending_approvals = pendingPRsList.map(pr => ({
+    const pending_approvals = pendingPRsList.map((pr) => ({
       id: pr.id,
       document_number: pr.requestNumber,
       type: 'PR' as const,
@@ -1319,7 +1354,7 @@ export class ReportsService {
       velocity_chart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
     };
 
-    const system_audit_logs = auditLogsList.map(log => ({
+    const system_audit_logs = auditLogsList.map((log) => ({
       id: log.id,
       action: log.action,
       user: log.user?.name || log.userId || 'System',

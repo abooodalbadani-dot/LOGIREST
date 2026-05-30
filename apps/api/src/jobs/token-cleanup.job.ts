@@ -32,9 +32,20 @@ export class TokenCleanupJob {
       this.logger.log(
         `Successfully purged ${result.count} expired or revoked refresh tokens.`,
       );
+
+      // Purge expired or used password reset tokens
+      const pwdResult = await this.prisma.passwordResetToken.deleteMany({
+        where: {
+          OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }],
+        },
+      });
+
+      this.logger.log(
+        `Successfully purged ${pwdResult.count} expired or used password reset tokens.`,
+      );
     } catch (error) {
       this.logger.error(
-        `Failed to purge expired refresh tokens: ${
+        `Failed to purge expired refresh/reset tokens: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

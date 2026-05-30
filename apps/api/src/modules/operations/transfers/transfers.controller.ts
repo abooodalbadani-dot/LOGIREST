@@ -30,18 +30,28 @@ function mapTransferDetail(transfer: any) {
     id: line.id,
     document_id: line.transferId,
     item_id: line.itemId,
-    item: line.item ? {
-      id: line.item.id,
-      code: line.item.sku,
-      name_ar: line.item.name,
-      name_en: line.item.name,
-      primary_uom: line.item.unitOfMeasure ? {
-        id: line.item.unitOfMeasure.id,
-        code: line.item.unitOfMeasure.code,
-        name_ar: line.item.unitOfMeasure.name,
-        name_en: line.item.unitOfMeasure.name,
-      } : { id: '', code: '', name_ar: '', name_en: '' },
-    } : { id: '', code: '', name_ar: '', name_en: '', primary_uom: { id: '', code: '', name_ar: '', name_en: '' } },
+    item: line.item
+      ? {
+          id: line.item.id,
+          code: line.item.sku,
+          name_ar: line.item.name,
+          name_en: line.item.name,
+          primary_uom: line.item.unitOfMeasure
+            ? {
+                id: line.item.unitOfMeasure.id,
+                code: line.item.unitOfMeasure.code,
+                name_ar: line.item.unitOfMeasure.name,
+                name_en: line.item.unitOfMeasure.name,
+              }
+            : { id: '', code: '', name_ar: '', name_en: '' },
+        }
+      : {
+          id: '',
+          code: '',
+          name_ar: '',
+          name_en: '',
+          primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
+        },
     lot_id: null,
     lot: null,
     qty: Number(line.quantityShipped),
@@ -52,7 +62,9 @@ function mapTransferDetail(transfer: any) {
     lot_allocations: [],
   }));
 
-  const isShipped = ['IN_TRANSIT', 'RECEIVED', 'POSTED'].includes(transfer.status);
+  const isShipped = ['IN_TRANSIT', 'RECEIVED', 'POSTED'].includes(
+    transfer.status,
+  );
   const isReceived = ['RECEIVED', 'POSTED'].includes(transfer.status);
 
   return {
@@ -68,13 +80,41 @@ function mapTransferDetail(transfer: any) {
     warehouse_id: transfer.fromWarehouseId,
     branch_id: transfer.fromWarehouse?.branchId || '',
     notes: '',
-    shipped_at: isShipped ? transfer.createdAt.toISOString() : null,
-    received_at: isReceived ? transfer.createdAt.toISOString() : null,
+    shipped_at:
+      isShipped && transfer.createdAt
+        ? (transfer.createdAt instanceof Date
+            ? transfer.createdAt
+            : new Date(transfer.createdAt)
+          ).toISOString()
+        : null,
+    received_at:
+      isReceived && transfer.createdAt
+        ? (transfer.createdAt instanceof Date
+            ? transfer.createdAt
+            : new Date(transfer.createdAt)
+          ).toISOString()
+        : null,
     variance_reason: null,
     created_by: 'System',
-    created_at: transfer.createdAt.toISOString(),
-    updated_at: transfer.createdAt.toISOString(),
-    posted_at: transfer.status === 'POSTED' ? transfer.createdAt.toISOString() : null,
+    created_at: transfer.createdAt
+      ? (transfer.createdAt instanceof Date
+          ? transfer.createdAt
+          : new Date(transfer.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    updated_at: transfer.createdAt
+      ? (transfer.createdAt instanceof Date
+          ? transfer.createdAt
+          : new Date(transfer.createdAt)
+        ).toISOString()
+      : new Date().toISOString(),
+    posted_at:
+      transfer.status === 'POSTED' && transfer.createdAt
+        ? (transfer.createdAt instanceof Date
+            ? transfer.createdAt
+            : new Date(transfer.createdAt)
+          ).toISOString()
+        : null,
     posted_by: null,
     version: transfer.version,
     lines,
@@ -268,10 +308,15 @@ export class TransfersController {
       req.ip ||
       undefined;
 
-    const transfer = await this.transfersService.postToLedger(id, userId, role, {
-      ...body,
-      ipAddress,
-    });
+    const transfer = await this.transfersService.postToLedger(
+      id,
+      userId,
+      role,
+      {
+        ...body,
+        ipAddress,
+      },
+    );
     return mapTransferDetail(transfer);
   }
 }

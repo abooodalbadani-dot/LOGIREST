@@ -6,12 +6,16 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
+import { DocumentSequenceService } from '../sequencing/document-sequence.service';
+import { IssuePostService } from '../operations/issue-post.service';
 
 @Injectable()
 export class KitchenRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly documentSequenceService: DocumentSequenceService,
+    private readonly issuePostService: IssuePostService,
   ) {}
 
   async create(
@@ -22,35 +26,52 @@ export class KitchenRequestsService {
     },
     userId: string,
   ) {
-    const requestNumber = `KR-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.prisma.$transaction(async (tx) => {
+      const warehouse = await tx.warehouse.findUnique({
+        where: { id: body.warehouseId },
+        select: { branchId: true },
+      });
 
-    return this.prisma.kitchenRequest.create({
-      data: {
-        requestNumber,
-        departmentId: body.departmentId,
-        warehouseId: body.warehouseId,
-        status: 'DRAFT',
-        items: {
-          create: body.items.map((item) => ({
-            itemId: item.itemId,
-            quantityRequested: item.quantityRequested,
-            quantityFulfilled: 0,
-          })),
+      if (!warehouse) {
+        throw new NotFoundException(
+          `Warehouse with ID ${body.warehouseId} not found`,
+        );
+      }
+
+      const requestNumber = await this.documentSequenceService.generateNext(
+        tx,
+        'KITCHEN_REQUEST',
+        warehouse.branchId,
+      );
+
+      return tx.kitchenRequest.create({
+        data: {
+          requestNumber,
+          departmentId: body.departmentId,
+          warehouseId: body.warehouseId,
+          status: 'DRAFT',
+          items: {
+            create: body.items.map((item) => ({
+              itemId: item.itemId,
+              quantityRequested: item.quantityRequested,
+              quantityFulfilled: 0,
+            })),
+          },
         },
-      },
-      include: {
-        items: {
-          include: {
-            item: {
-              include: {
-                unitOfMeasure: true,
+        include: {
+          items: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
               },
             },
           },
+          department: true,
+          warehouse: true,
         },
-        department: true,
-        warehouse: true,
-      },
+      });
     });
   }
 
@@ -160,53 +181,116 @@ export class KitchenRequestsService {
       fulfillments?: Array<{ itemId: string; fulfilledQty: number }>;
     },
   ) {
-    const kr = await this.prisma.kitchenRequest.findUnique({
-      where: { id },
-      include: { items: true },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const kr = await tx.kitchenRequest.findUnique({
+        where: { id },
+        include: { items: true },
+      });
 
-    if (!kr) {
-      throw new NotFoundException(`KitchenRequest with ID ${id} not found`);
-    }
+      if (!kr) {
+        throw new NotFoundException(`KitchenRequest with ID ${id} not found`);
+      }
 
-    if (kr.status !== 'SUBMITTED') {
-      throw new BadRequestException(
-        `KitchenRequest must be in SUBMITTED status to be fulfilled. (Current: ${kr.status})`,
-      );
-    }
+      if (kr.status !== 'SUBMITTED') {
+        throw new BadRequestException(
+          `KitchenRequest must be in SUBMITTED status to be fulfilled. (Current: ${kr.status})`,
+        );
+      }
 
-    if (body.fulfillments) {
-      for (const itemInput of body.fulfillments) {
-        const dbItem = kr.items.find((i) => i.itemId === itemInput.itemId);
-        if (!dbItem) {
-          throw new BadRequestException(
-            `Item with ID ${itemInput.itemId} is not part of this request`,
-          );
+      const linesData: Array<{ itemId: string; quantity: number }> = [];
+
+      if (body.fulfillments) {
+        for (const itemInput of body.fulfillments) {
+          const dbItem = kr.items.find((i) => i.itemId === itemInput.itemId);
+          if (!dbItem) {
+            throw new BadRequestException(
+              `Item with ID ${itemInput.itemId} is not part of this request`,
+            );
+          }
+          await tx.kitchenRequestItem.update({
+            where: { id: dbItem.id },
+            data: { quantityFulfilled: itemInput.fulfilledQty },
+          });
+          linesData.push({
+            itemId: itemInput.itemId,
+            quantity: itemInput.fulfilledQty,
+          });
         }
-        await this.prisma.kitchenRequestItem.update({
-          where: { id: dbItem.id },
-          data: { quantityFulfilled: itemInput.fulfilledQty },
-        });
+      } else {
+        for (const dbItem of kr.items) {
+          await tx.kitchenRequestItem.update({
+            where: { id: dbItem.id },
+            data: { quantityFulfilled: dbItem.quantityRequested },
+          });
+          linesData.push({
+            itemId: dbItem.itemId,
+            quantity: Number(dbItem.quantityRequested),
+          });
+        }
       }
-    } else {
-      for (const dbItem of kr.items) {
-        await this.prisma.kitchenRequestItem.update({
-          where: { id: dbItem.id },
-          data: { quantityFulfilled: dbItem.quantityRequested },
-        });
-      }
-    }
 
-    return this.workflowService.executeTransition(
-      id,
-      'kitchenRequest',
-      'FULFILL',
-      userId,
-      userRole,
-      body.comments,
-      body.version,
-      body.ipAddress,
-    );
+      // Generate sequence number for the InventoryIssue
+      const warehouse = await tx.warehouse.findUnique({
+        where: { id: kr.warehouseId },
+        select: { branchId: true },
+      });
+      if (!warehouse) {
+        throw new NotFoundException(
+          `Warehouse with ID ${kr.warehouseId} not found`,
+        );
+      }
+
+      const issueNumber = await this.documentSequenceService.generateNext(
+        tx,
+        'INVENTORY_ISSUE',
+        warehouse.branchId,
+      );
+
+      // Create the InventoryIssue in SUBMITTED status so the posting service accepts it
+      const issue = await tx.inventoryIssue.create({
+        data: {
+          issueNumber,
+          warehouseId: kr.warehouseId,
+          departmentId: kr.departmentId,
+          status: 'SUBMITTED',
+          lines: {
+            create: linesData.map((line) => ({
+              itemId: line.itemId,
+              quantity: line.quantity,
+            })),
+          },
+        },
+      });
+
+      // Link the kitchen request to this issue
+      await tx.kitchenRequest.update({
+        where: { id: kr.id },
+        data: { issueId: issue.id },
+      });
+
+      // Post the inventory issue atomically (deduct stock, write ledger, update status to POSTED)
+      await this.issuePostService.post(
+        issue.id,
+        userId,
+        userRole,
+        undefined,
+        body.ipAddress,
+        tx,
+      );
+
+      // Execute the FULFILL transition on the KitchenRequest itself
+      return this.workflowService.executeTransition(
+        id,
+        'kitchenRequest',
+        'FULFILL',
+        userId,
+        userRole,
+        body.comments,
+        body.version,
+        body.ipAddress,
+        tx,
+      );
+    });
   }
 
   async cancel(

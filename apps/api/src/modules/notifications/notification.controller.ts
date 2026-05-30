@@ -1,4 +1,15 @@
-import { Controller, Get, Patch, Post, Put, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
@@ -95,4 +106,3 @@ export class NotificationController {
     return this.templateService.remove(id);
   }
 }
-

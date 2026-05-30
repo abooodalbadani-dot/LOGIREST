@@ -29,7 +29,9 @@ export class DashboardController {
         select: { qtyOnHand: true, wac: true },
       }),
       // Pending purchase requests
-      this.prisma.purchaseRequest.count({ where: { status: 'PENDING_APPROVAL' } }),
+      this.prisma.purchaseRequest.count({
+        where: { status: 'PENDING_APPROVAL' },
+      }),
       // Active stocktakes
       this.prisma.stocktakeSession.count({
         where: { status: { in: ['STARTED', 'COUNTING', 'REVIEW'] } },
@@ -90,7 +92,9 @@ export class DashboardController {
           quantity: true,
           documentType: true,
           postedAt: true,
-          item: { select: { name: true, unitOfMeasure: { select: { code: true } } } },
+          item: {
+            select: { name: true, unitOfMeasure: { select: { code: true } } },
+          },
         },
       }),
       // Expiring lots (next 30 days)
@@ -108,7 +112,9 @@ export class DashboardController {
           id: true,
           lotNumber: true,
           expiryDate: true,
-          item: { select: { name: true, unitOfMeasure: { select: { code: true } } } },
+          item: {
+            select: { name: true, unitOfMeasure: { select: { code: true } } },
+          },
           warehouseItemLots: {
             select: {
               qtyOnHand: true,
@@ -162,7 +168,10 @@ export class DashboardController {
         destination: t.toWarehouse?.name ?? '',
       })),
     ]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
       .slice(0, 5);
 
     const activityLog = activityLedger.map((l) => ({

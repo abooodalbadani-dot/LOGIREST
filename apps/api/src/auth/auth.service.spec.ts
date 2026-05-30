@@ -7,6 +7,8 @@ import { RtrService } from './rtr.service';
 import { PrismaService } from '../database/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { OutboxService } from '../modules/outbox/outbox.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -15,10 +17,17 @@ describe('AuthService', () => {
   const mockPrisma = {
     user: {
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
     refreshToken: {
       create: jest.fn(),
       updateMany: jest.fn(),
+    },
+    auditLog: {
+      create: jest.fn(),
+    },
+    notificationLog: {
+      create: jest.fn(),
     },
   };
 
@@ -41,6 +50,18 @@ describe('AuthService', () => {
   } as unknown as Response;
 
   beforeEach(async () => {
+    const mockConfigService = {
+      get: jest.fn().mockImplementation((key: string) => {
+        if (key === 'JWT_ACCESS_SECRET') return 'test-access-secret';
+        if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+        return null;
+      }),
+    };
+
+    const mockOutboxService = {
+      writeEvent: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -48,6 +69,8 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
         { provide: RtrService, useValue: mockRtrService },
+        { provide: ConfigService, useValue: mockConfigService },
+        { provide: OutboxService, useValue: mockOutboxService },
       ],
     }).compile();
 

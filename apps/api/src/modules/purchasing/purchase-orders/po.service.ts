@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
@@ -88,7 +93,12 @@ export class PurchaseOrderService {
   }
 
   async findAll(
-    params: { status?: string; supplierId?: string; search?: string; page?: number },
+    params: {
+      status?: string;
+      supplierId?: string;
+      search?: string;
+      page?: number;
+    },
     warehouseId?: string,
   ) {
     const page = Number(params.page) || 1;
@@ -110,7 +120,9 @@ export class PurchaseOrderService {
     if (params.search) {
       where.OR = [
         { poNumber: { contains: params.search, mode: 'insensitive' } },
-        { supplier: { name: { contains: params.search, mode: 'insensitive' } } },
+        {
+          supplier: { name: { contains: params.search, mode: 'insensitive' } },
+        },
       ];
     }
 
@@ -186,7 +198,12 @@ export class PurchaseOrderService {
       supplierId?: string;
       currencyId?: string;
       version: number;
-      lines?: Array<{ id?: string; itemId: string; quantity: number; unitPrice: number }>;
+      lines?: Array<{
+        id?: string;
+        itemId: string;
+        quantity: number;
+        unitPrice: number;
+      }>;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -206,7 +223,9 @@ export class PurchaseOrderService {
       }
 
       if (existing.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Purchase Orders can be updated.');
+        throw new BadRequestException(
+          'Only DRAFT Purchase Orders can be updated.',
+        );
       }
 
       // Delete old lines and recreate new ones
@@ -354,7 +373,8 @@ export class PurchaseOrderService {
       throw new NotFoundException(`Purchase Order with ID ${id} not found`);
     }
 
-    const emailTo = recipientEmail || po.supplier?.contactEmail || 'supplier@example.com';
+    const emailTo =
+      recipientEmail || po.supplier?.contactEmail || 'supplier@example.com';
 
     await this.prisma.auditLog.create({
       data: {
@@ -367,7 +387,10 @@ export class PurchaseOrderService {
       },
     });
 
-    return { success: true, message: `Purchase Order sent successfully to ${emailTo}` };
+    return {
+      success: true,
+      message: `Purchase Order sent successfully to ${emailTo}`,
+    };
   }
 
   async remove(id: string, version?: number) {
@@ -388,7 +411,9 @@ export class PurchaseOrderService {
       }
 
       if (existing.status !== 'DRAFT') {
-        throw new BadRequestException('Only DRAFT Purchase Orders can be deleted.');
+        throw new BadRequestException(
+          'Only DRAFT Purchase Orders can be deleted.',
+        );
       }
 
       await tx.pOLine.deleteMany({ where: { poId: id } });
@@ -396,4 +421,3 @@ export class PurchaseOrderService {
     });
   }
 }
-
