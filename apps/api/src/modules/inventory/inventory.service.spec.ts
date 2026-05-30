@@ -65,17 +65,25 @@ describe('InventoryService', () => {
         search: 'tomato',
       });
 
-      expect(result).toEqual([
-        {
-          itemId: 'item-1',
-          itemCode: 'ITEM-001',
-          itemName: 'Fresh Tomato',
-          categoryName: 'Vegetables',
-          onHandQty: 120.5,
-          weightedAvgCost: 2.5,
-          defaultUomSymbol: 'kg',
+      expect(result).toEqual({
+        data: [
+          {
+            itemId: 'item-1',
+            itemCode: 'ITEM-001',
+            itemName: 'Fresh Tomato',
+            categoryName: 'Vegetables',
+            onHandQty: 120.5,
+            weightedAvgCost: 2.5,
+            defaultUomSymbol: 'kg',
+          },
+        ],
+        meta: {
+          total: 1,
+          page: 1,
+          page_size: 1,
+          total_pages: 1,
         },
-      ]);
+      });
 
       expect(mockPrismaService.warehouseItem.findMany).toHaveBeenCalledWith({
         where: {
@@ -123,18 +131,26 @@ describe('InventoryService', () => {
         status: 'AVAILABLE' as any,
       });
 
-      expect(result).toEqual([
-        {
-          lotId: 'lot-1',
-          lotNumber: 'LOT-01',
-          itemId: 'item-1',
-          itemCode: 'ITEM-001',
-          itemName: 'Fresh Tomato',
-          onHandQty: 50.0,
-          expiryDate: mockExpiry,
-          status: 'AVAILABLE',
+      expect(result).toEqual({
+        data: [
+          {
+            lotId: 'lot-1',
+            lotNumber: 'LOT-01',
+            itemId: 'item-1',
+            itemCode: 'ITEM-001',
+            itemName: 'Fresh Tomato',
+            onHandQty: 50.0,
+            expiryDate: mockExpiry,
+            status: 'AVAILABLE',
+          },
+        ],
+        meta: {
+          total: 1,
+          page: 1,
+          page_size: 1,
+          total_pages: 1,
         },
-      ]);
+      });
 
       expect(mockPrismaService.warehouseItemLot.findMany).toHaveBeenCalledWith({
         where: {
@@ -199,8 +215,8 @@ describe('InventoryService', () => {
         meta: {
           total: 10,
           page: 2,
-          limit: 5,
-          totalPages: 2,
+          page_size: 5,
+          total_pages: 2,
         },
       });
 
