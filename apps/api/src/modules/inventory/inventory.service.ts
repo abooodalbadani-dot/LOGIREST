@@ -35,17 +35,33 @@ export class InventoryService {
       }
     }
 
-    const items = await this.prisma.warehouseItem.findMany({
-      where: whereClause,
-      include: {
-        item: {
-          include: {
-            category: true,
-            unitOfMeasure: true,
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 50;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.warehouseItem.findMany({
+        where: whereClause,
+        include: {
+          item: {
+            include: {
+              category: true,
+              unitOfMeasure: true,
+            },
           },
         },
-      },
-    });
+        skip,
+        take: limit,
+        orderBy: {
+          item: {
+            name: 'asc',
+          },
+        },
+      }),
+      this.prisma.warehouseItem.count({
+        where: whereClause,
+      }),
+    ]);
 
     const data = items.map((wItem) => ({
       itemId: wItem.itemId,
@@ -60,10 +76,10 @@ export class InventoryService {
     return {
       data,
       meta: {
-        total: data.length,
-        page: 1,
-        page_size: data.length || 1,
-        total_pages: 1,
+        total,
+        page,
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
       },
     };
   }
@@ -81,18 +97,29 @@ export class InventoryService {
       };
     }
 
-    const lots = await this.prisma.warehouseItemLot.findMany({
-      where: whereClause,
-      include: {
-        item: true,
-        lot: true,
-      },
-      orderBy: {
-        lot: {
-          expiryDate: 'asc',
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 50;
+    const skip = (page - 1) * limit;
+
+    const [lots, total] = await Promise.all([
+      this.prisma.warehouseItemLot.findMany({
+        where: whereClause,
+        include: {
+          item: true,
+          lot: true,
         },
-      },
-    });
+        skip,
+        take: limit,
+        orderBy: {
+          lot: {
+            expiryDate: 'asc',
+          },
+        },
+      }),
+      this.prisma.warehouseItemLot.count({
+        where: whereClause,
+      }),
+    ]);
 
     const data = lots.map((wLot) => ({
       lotId: wLot.lotId,
@@ -108,10 +135,10 @@ export class InventoryService {
     return {
       data,
       meta: {
-        total: data.length,
-        page: 1,
-        page_size: data.length || 1,
-        total_pages: 1,
+        total,
+        page,
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
       },
     };
   }

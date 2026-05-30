@@ -20,6 +20,18 @@ export class BackupService {
 
   constructor(private readonly prisma: PrismaService) {
     const region = process.env.BACKUP_S3_REGION || 'eu-west-1';
+
+    if (process.env.NODE_ENV === 'production') {
+      if (
+        !process.env.BACKUP_S3_ACCESS_KEY_ID ||
+        !process.env.BACKUP_S3_SECRET_ACCESS_KEY
+      ) {
+        throw new Error(
+          'FATAL: BACKUP_S3_ACCESS_KEY_ID and BACKUP_S3_SECRET_ACCESS_KEY must be set in production.',
+        );
+      }
+    }
+
     const accessKeyId =
       process.env.BACKUP_S3_ACCESS_KEY_ID || 'dev-access-key-id';
     const secretAccessKey =
@@ -95,8 +107,9 @@ export class BackupService {
         `Local pg_dump failed: ${err.message}. Trying docker exec fallback...`,
       );
       try {
+        const containerName = process.env.BACKUP_DB_CONTAINER || 'logirest-db';
         const { stdout } = await execPromise(
-          `docker exec -i logirest-db pg_dump -U ${username} -d ${database} -F p`,
+          `docker exec -i ${containerName} pg_dump -U ${username} -d ${database} -F p`,
           {
             env: { ...process.env, PGPASSWORD: password },
             maxBuffer: 1024 * 1024 * 100,

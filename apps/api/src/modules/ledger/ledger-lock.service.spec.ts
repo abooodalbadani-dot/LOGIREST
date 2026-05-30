@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LedgerLockService } from './ledger-lock.service';
 import { PrismaService } from '../../database/prisma.service';
-import { UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { Prisma, WarehouseItem, WarehouseItemLot } from '@prisma/client';
 
 describe('LedgerLockService', () => {
@@ -101,18 +101,18 @@ describe('LedgerLockService', () => {
       expect(() => service.assertItemBalance(item, 5, 'item-1')).not.toThrow();
     });
 
-    it('should throw UnprocessableEntityException if warehouseItem is null/undefined', () => {
+    it('should throw BadRequestException if warehouseItem is null/undefined', () => {
       expect(() => service.assertItemBalance(null, 5, 'item-1')).toThrow(
-        UnprocessableEntityException,
+        BadRequestException,
       );
     });
 
-    it('should throw UnprocessableEntityException if stock is insufficient', () => {
+    it('should throw BadRequestException if stock is insufficient', () => {
       const item = {
         qtyOnHand: new Prisma.Decimal(3),
       } as unknown as WarehouseItem;
       expect(() => service.assertItemBalance(item, 5, 'item-1')).toThrow(
-        UnprocessableEntityException,
+        BadRequestException,
       );
     });
   });
@@ -126,19 +126,19 @@ describe('LedgerLockService', () => {
       expect(() => service.assertLotBalance(lot, 5, 'lot-1')).not.toThrow();
     });
 
-    it('should throw UnprocessableEntityException if warehouseItemLot is null/undefined', () => {
+    it('should throw BadRequestException if warehouseItemLot is null/undefined', () => {
       expect(() => service.assertLotBalance(null, 5, 'lot-1')).toThrow(
-        UnprocessableEntityException,
+        BadRequestException,
       );
     });
 
-    it('should throw UnprocessableEntityException if lot stock is insufficient', () => {
+    it('should throw BadRequestException if lot stock is insufficient', () => {
       const lot = {
         qtyOnHand: new Prisma.Decimal(3),
         lotId: 'lot-1',
       } as unknown as WarehouseItemLot;
       expect(() => service.assertLotBalance(lot, 5, 'lot-1')).toThrow(
-        UnprocessableEntityException,
+        BadRequestException,
       );
     });
   });

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
@@ -31,6 +35,29 @@ export class IssuesService {
           throw new NotFoundException(
             `Warehouse with ID ${activeWarehouseId} not found`,
           );
+        }
+
+        // Pre-deduction stock sufficiency check (optimistic guard before DRAFT is persisted)
+        for (const line of body.lines) {
+          const whItem = await tx.warehouseItem.findUnique({
+            where: {
+              warehouseId_itemId: {
+                warehouseId: activeWarehouseId,
+                itemId: line.itemId,
+              },
+            },
+            select: { qtyOnHand: true, isFrozen: true },
+          });
+          if (whItem?.isFrozen) {
+            throw new BadRequestException(
+              `Cannot create issue: item ${line.itemId} is frozen in this warehouse.`,
+            );
+          }
+          if (!whItem || Number(whItem.qtyOnHand) < line.quantity) {
+            throw new BadRequestException(
+              `Insufficient stock: requested quantity (${line.quantity}) exceeds available on hand for item ${line.itemId}.`,
+            );
+          }
         }
 
         const issueNumber = await this.documentSequenceService.generateNext(

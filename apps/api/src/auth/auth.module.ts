@@ -23,6 +23,12 @@ import { ConfigService } from '@nestjs/config';
             'FATAL: JWT_ACCESS_SECRET environment variable is missing.',
           );
         }
+        const refreshSecret = configService.get<string>('JWT_REFRESH_SECRET');
+        if (!refreshSecret) {
+          throw new Error(
+            'FATAL: JWT_REFRESH_SECRET environment variable is missing.',
+          );
+        }
         return {
           secret,
           signOptions: { expiresIn: '15m' },

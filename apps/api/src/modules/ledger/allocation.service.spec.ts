@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AllocationService } from './allocation.service';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from './ledger-lock.service';
-import { UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { Prisma, WarehouseItem, WarehouseItemLot } from '@prisma/client';
 
 describe('AllocationService', () => {
@@ -72,13 +72,13 @@ describe('AllocationService', () => {
           itemId: string,
         ) => {
           if (!warehouseItem) {
-            throw new UnprocessableEntityException(
+            throw new BadRequestException(
               `Warehouse item balance not found for item ${itemId}`,
             );
           }
           const currentQty = Number(warehouseItem.qtyOnHand);
           if (currentQty < requiredQty) {
-            throw new UnprocessableEntityException(
+            throw new BadRequestException(
               `Insufficient stock for item ${itemId}. Available: ${currentQty}, Required: ${requiredQty}`,
             );
           }
@@ -93,13 +93,13 @@ describe('AllocationService', () => {
           lotId: string,
         ) => {
           if (!warehouseItemLot) {
-            throw new UnprocessableEntityException(
+            throw new BadRequestException(
               `Warehouse item lot balance not found for lot ${lotId}`,
             );
           }
           const currentQty = Number(warehouseItemLot.qtyOnHand);
           if (currentQty < requiredQty) {
-            throw new UnprocessableEntityException(
+            throw new BadRequestException(
               `Insufficient stock for lot ${lotId}. Available: ${currentQty}, Required: ${requiredQty}`,
             );
           }
@@ -145,7 +145,7 @@ describe('AllocationService', () => {
       });
     });
 
-    it('should throw UnprocessableEntityException if unbatched item has insufficient stock', async () => {
+    it('should throw BadRequestException if unbatched item has insufficient stock', async () => {
       mockItemFindUnique.mockResolvedValue({
         id: itemId,
         isBatched: false,
@@ -159,7 +159,7 @@ describe('AllocationService', () => {
 
       await expect(
         service.allocate(mockPrismaTx, whId, itemId, 5),
-      ).rejects.toThrow(UnprocessableEntityException);
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should allocate in FEFO order for expired items, excluding expired lots (Case B)', async () => {
@@ -252,7 +252,7 @@ describe('AllocationService', () => {
       });
     });
 
-    it('should throw UnprocessableEntityException if batched item has insufficient active stock', async () => {
+    it('should throw BadRequestException if batched item has insufficient active stock', async () => {
       mockItemFindUnique.mockResolvedValue({
         id: itemId,
         isBatched: true,
@@ -270,7 +270,7 @@ describe('AllocationService', () => {
 
       await expect(
         service.allocate(mockPrismaTx, whId, itemId, 10),
-      ).rejects.toThrow(UnprocessableEntityException);
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

@@ -125,13 +125,18 @@ async function main() {
     where: { name: 'Main Kitchen', branchId: mainBranch.id },
   });
   if (!existingDept) {
-    await prisma.department.create({
-      data: {
-        name: 'Main Kitchen',
-        branchId: mainBranch.id,
-      },
-    });
-    console.log('Seeded default "Main Kitchen" department linked to HQ Branch.');
+    try {
+      await prisma.department.create({
+        data: {
+          name: 'Main Kitchen',
+          branchId: mainBranch.id,
+        },
+      });
+      console.log('Seeded default "Main Kitchen" department linked to HQ Branch.');
+    } catch (e: any) {
+      if (e?.code !== 'P2002') throw e; // ignore unique constraint violation on retry
+      console.log('"Main Kitchen" department already exists, skipping.');
+    }
   }
 
   // 5. Secure First Admin User Setup

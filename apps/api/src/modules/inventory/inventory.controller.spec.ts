@@ -34,7 +34,7 @@ describe('Inventory Controllers', () => {
       const mockResult = [{ itemId: 'item-1', onHandQty: 10 }];
       mockInventoryService.getBalance.mockResolvedValue(mockResult);
 
-      const query = { itemId: 'item-1' };
+      const query = { itemId: 'item-1', page: 1, limit: 50 };
       const result = await inventoryController.getBalance('wh-1', query);
 
       expect(result).toBe(mockResult);
@@ -48,7 +48,12 @@ describe('Inventory Controllers', () => {
       const mockResult = [{ lotId: 'lot-1', onHandQty: 5 }];
       mockInventoryService.getLots.mockResolvedValue(mockResult);
 
-      const query = { itemId: 'item-1', status: 'ACTIVE' as const };
+      const query = {
+        itemId: 'item-1',
+        status: 'ACTIVE' as const,
+        page: 1,
+        limit: 50,
+      };
       const result = await inventoryController.getLots('wh-1', query);
 
       expect(result).toBe(mockResult);

@@ -74,16 +74,28 @@ export class TransfersService {
     if (params.status) {
       where.status = params.status;
     }
+    // Use AND to compose warehouse scope and search independently so neither overwrites the other
     if (warehouseId) {
-      where.OR = [
-        { fromWarehouseId: warehouseId },
-        { toWarehouseId: warehouseId },
+      where.AND = [
+        {
+          OR: [
+            { fromWarehouseId: warehouseId },
+            { toWarehouseId: warehouseId },
+          ],
+        },
       ];
     }
     if (params.search) {
-      where.OR = [
-        { transferNumber: { contains: params.search, mode: 'insensitive' } },
-      ];
+      const searchCondition = {
+        OR: [
+          { transferNumber: { contains: params.search, mode: 'insensitive' } },
+        ],
+      };
+      if (where.AND) {
+        where.AND.push(searchCondition);
+      } else {
+        where.AND = [searchCondition];
+      }
     }
 
     const [items, total] = await Promise.all([

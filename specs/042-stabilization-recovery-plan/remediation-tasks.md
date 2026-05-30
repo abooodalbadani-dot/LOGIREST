@@ -25,11 +25,11 @@
 
 **⚠️ CRITICAL**: No user testing or deployment can proceed until all R1 tasks are complete.
 
-- [ ] R001 🔴 [P] Fix `OR` clause overwrite in `transfers.service.ts findAll()` — warehouse scope silently erased when `search` param is present
-- [ ] R002 🔴 [P] Add pre-deduction stock sufficiency check in `issues.service.ts`
-- [ ] R003 🔴 [P] Add pre-fulfillment stock sufficiency check in `kitchen-requests.service.ts fulfill()`
-- [ ] R004 🔴 [P] Add pre-deduction stock sufficiency check for `DECREASE` adjustments in `adjustments.service.ts create()`
-- [ ] R005 🔴 Add `JWT_REFRESH_SECRET` fail-fast boot validation in `auth.module.ts`
+- [x] R001 🔴 [P] Fix `OR` clause overwrite in `transfers.service.ts findAll()` — warehouse scope silently erased when `search` param is present
+- [x] R002 🔴 [P] Add pre-deduction stock sufficiency check in `issues.service.ts`
+- [x] R003 🔴 [P] Add pre-fulfillment stock sufficiency check in `kitchen-requests.service.ts fulfill()`
+- [x] R004 🔴 [P] Add pre-deduction stock sufficiency check for `DECREASE` adjustments in `adjustments.service.ts create()`
+- [x] R005 🔴 Add `JWT_REFRESH_SECRET` fail-fast boot validation in `auth.module.ts`
 
 **Checkpoint R1**: Run `npm run typecheck --filter=api` — zero errors. Start the API with `JWT_REFRESH_SECRET=` unset and confirm it exits with code 1.
 
@@ -39,11 +39,11 @@
 
 **Purpose**: Fix performance regressions and reliability issues discovered during the audit.
 
-- [ ] R006 🟠 [P] Add `page`/`limit` fields to `InventoryBalanceQuerySchema` in `packages/shared-types/src/schemas/reporting.schema.ts`
-- [ ] R007 🟠 [P] Add `page`/`limit` fields to `InventoryLotsQuerySchema` in `packages/shared-types/src/schemas/reporting.schema.ts`
-- [ ] R008 🟠 Add real `skip`/`take` pagination to `inventory.service.ts getBalance()` — replace the current full-table-scan approach
-- [ ] R009 🟠 Add real `skip`/`take` pagination to `inventory.service.ts getLots()` — replace the current full-table-scan approach
-- [ ] R010 🟠 Harden `backup.service.ts` constructor: throw a fatal `Error` (not use dev defaults) when `BACKUP_S3_ACCESS_KEY_ID` or `BACKUP_S3_SECRET_ACCESS_KEY` are missing in `NODE_ENV=production`
+- [x] R006 🟠 [P] Add `page`/`limit` fields to `InventoryBalanceQuerySchema` in `packages/shared-types/src/schemas/reporting.schema.ts`
+- [x] R007 🟠 [P] Add `page`/`limit` fields to `InventoryLotsQuerySchema` in `packages/shared-types/src/schemas/reporting.schema.ts`
+- [x] R008 🟠 Add real `skip`/`take` pagination to `inventory.service.ts getBalance()` — replace the current full-table-scan approach
+- [x] R009 🟠 Add real `skip`/`take` pagination to `inventory.service.ts getLots()` — replace the current full-table-scan approach
+- [x] R010 🟠 Harden `backup.service.ts` constructor: throw a fatal `Error` (not use dev defaults) when `BACKUP_S3_ACCESS_KEY_ID` or `BACKUP_S3_SECRET_ACCESS_KEY` are missing in `NODE_ENV=production`
 
 **Checkpoint R2**: Run `npm run typecheck --filter=api` and `npm run typecheck --filter=web` — zero errors. Navigate to the Inventory Balance page and confirm paginated responses return `meta.total_pages > 1` when the warehouse has more than 10 items.
 

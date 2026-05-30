@@ -200,6 +200,36 @@ export class KitchenRequestsService {
         );
       }
 
+      // Pre-fulfillment stock sufficiency check — runs before any state changes
+      const linesToCheck = body.fulfillments
+        ? body.fulfillments.map((f) => ({
+            itemId: f.itemId,
+            fulfilledQty: f.fulfilledQty,
+          }))
+        : kr.items.map((i) => ({
+            itemId: i.itemId,
+            fulfilledQty: Number(i.quantityRequested),
+          }));
+
+      for (const lineInput of linesToCheck) {
+        const whItem = await tx.warehouseItem.findUnique({
+          where: {
+            warehouseId_itemId: {
+              warehouseId: kr.warehouseId,
+              itemId: lineInput.itemId,
+            },
+          },
+          select: { qtyOnHand: true },
+        });
+        const available = Number(whItem?.qtyOnHand ?? 0);
+        if (available < lineInput.fulfilledQty) {
+          throw new BadRequestException(
+            `Insufficient stock: cannot fulfill item ${lineInput.itemId}. ` +
+              `Requested: ${lineInput.fulfilledQty}, Available: ${available}.`,
+          );
+        }
+      }
+
       const linesData: Array<{ itemId: string; quantity: number }> = [];
 
       if (body.fulfillments) {

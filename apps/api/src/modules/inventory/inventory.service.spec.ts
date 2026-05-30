@@ -11,9 +11,11 @@ describe('InventoryService', () => {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
     warehouseItemLot: {
       findMany: jest.fn(),
+      count: jest.fn(),
     },
     stockLedger: {
       count: jest.fn(),
@@ -58,11 +60,14 @@ describe('InventoryService', () => {
           },
         },
       ]);
+      mockPrismaService.warehouseItem.count.mockResolvedValue(1);
 
       const result = await service.getBalance('wh-1', {
         itemId: 'item-1',
         categoryId: 'cat-1',
         search: 'tomato',
+        page: 1,
+        limit: 50,
       });
 
       expect(result).toEqual({
@@ -80,7 +85,7 @@ describe('InventoryService', () => {
         meta: {
           total: 1,
           page: 1,
-          page_size: 1,
+          page_size: 50,
           total_pages: 1,
         },
       });
@@ -105,6 +110,27 @@ describe('InventoryService', () => {
             },
           },
         },
+        skip: 0,
+        take: 50,
+        orderBy: {
+          item: {
+            name: 'asc',
+          },
+        },
+      });
+
+      expect(mockPrismaService.warehouseItem.count).toHaveBeenCalledWith({
+        where: {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          item: {
+            categoryId: 'cat-1',
+            OR: [
+              { name: { contains: 'tomato', mode: 'insensitive' } },
+              { sku: { contains: 'tomato', mode: 'insensitive' } },
+            ],
+          },
+        },
       });
     });
   });
@@ -125,10 +151,13 @@ describe('InventoryService', () => {
           },
         },
       ]);
+      mockPrismaService.warehouseItemLot.count.mockResolvedValue(1);
 
       const result = await service.getLots('wh-1', {
         itemId: 'item-1',
         status: 'AVAILABLE' as any,
+        page: 1,
+        limit: 50,
       });
 
       expect(result).toEqual({
@@ -147,7 +176,7 @@ describe('InventoryService', () => {
         meta: {
           total: 1,
           page: 1,
-          page_size: 1,
+          page_size: 50,
           total_pages: 1,
         },
       });
@@ -162,8 +191,18 @@ describe('InventoryService', () => {
           item: true,
           lot: true,
         },
+        skip: 0,
+        take: 50,
         orderBy: {
           lot: { expiryDate: 'asc' },
+        },
+      });
+
+      expect(mockPrismaService.warehouseItemLot.count).toHaveBeenCalledWith({
+        where: {
+          warehouseId: 'wh-1',
+          itemId: 'item-1',
+          lot: { status: 'AVAILABLE' },
         },
       });
     });

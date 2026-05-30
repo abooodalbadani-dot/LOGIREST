@@ -47,6 +47,28 @@ export class AdjustmentsService {
         );
       }
 
+      // Pre-creation stock sufficiency check for all OUT (decrease) lines
+      for (const line of body.lines) {
+        if (line.direction === 'OUT') {
+          const whItem = await tx.warehouseItem.findUnique({
+            where: {
+              warehouseId_itemId: {
+                warehouseId: body.warehouseId,
+                itemId: line.itemId,
+              },
+            },
+            select: { qtyOnHand: true },
+          });
+          const available = Number(whItem?.qtyOnHand ?? 0);
+          if (available < line.quantity) {
+            throw new BadRequestException(
+              `Insufficient stock for DECREASE adjustment: item ${line.itemId} ` +
+                `has ${available} on hand, requested ${line.quantity}.`,
+            );
+          }
+        }
+      }
+
       const adjustmentNumber = await this.documentSequenceService.generateNext(
         tx,
         DocumentType.ADJUSTMENT,

@@ -140,7 +140,7 @@ echo "Database verification successful. Total users in restored database: ${ROW_
 # Cleanup
 echo "Cleaning up sandbox environment..."
 docker rm -f "${SANDBOX_CONTAINER}" >/dev/null 2>&1 || true
-rm -f "$TEMP_ENC" "$TEMP_SQL"
+rm -f "$TEMP_SQL"
 
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
@@ -149,9 +149,9 @@ echo "Total Elapsed Time: ${ELAPSED} seconds."
 
 # 4-hour RTO (Recovery Time Objective) threshold is 14400 seconds
 if [ ${ELAPSED} -lt 14400 ]; then
-  echo "PASS أ¢â‚¬â€‌ restore completed in $((ELAPSED/60)) minutes (< 240 minutes)"
+  echo "[PASS] Restore completed in $((ELAPSED/60)) minutes (< 240 minutes)"
   exit 0
 else
-  echo "FAIL أ¢â‚¬â€‌ restore took too long (${ELAPSED}s >= 14400s)"
+  echo "[FAIL] Restore took too long (${ELAPSED}s >= 14400s)"
   exit 1
 fi

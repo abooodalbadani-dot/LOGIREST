@@ -73,18 +73,20 @@ describe('HealthController', () => {
   });
 
   describe('checkBackup', () => {
-    it('should throw ServiceUnavailableException if backup is degraded', async () => {
+    it('should return status degraded if backup is degraded', async () => {
       backupServiceMock.getBackupStatus.mockResolvedValue({
         status: 'degraded',
         lastBackupAt: null,
         ageHours: null,
       });
-      await expect(controller.checkBackup()).rejects.toThrow(
-        ServiceUnavailableException,
-      );
+      const result = await controller.checkBackup();
+      expect(result.status).toBe('degraded');
+      expect(result.lastBackupAt).toBeNull();
+      expect(result.ageHours).toBeNull();
+      expect(result.timestamp).toBeDefined();
     });
 
-    it('should return status HEALTHY if backup is fresh', async () => {
+    it('should return status ok if backup is fresh', async () => {
       const lastBackupDate = new Date();
       backupServiceMock.getBackupStatus.mockResolvedValue({
         status: 'ok',
@@ -93,9 +95,10 @@ describe('HealthController', () => {
       });
 
       const result = await controller.checkBackup();
-      expect(result.status).toBe('HEALTHY');
-      expect(result.lastSuccess).toBe(lastBackupDate.toISOString());
+      expect(result.status).toBe('ok');
+      expect(result.lastBackupAt).toBe(lastBackupDate.toISOString());
       expect(result.ageHours).toBe(2.0);
+      expect(result.timestamp).toBeDefined();
     });
   });
 });

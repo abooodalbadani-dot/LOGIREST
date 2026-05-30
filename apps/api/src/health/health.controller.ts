@@ -44,29 +44,13 @@ export class HealthController {
 
   @Public()
   @Get('backup')
-  async checkBackup(): Promise<{
-    status: string;
-    lastSuccess: string | null;
-    ageHours: number | null;
-  }> {
+  async checkBackup() {
     const backupStatus = await this.backupService.getBackupStatus();
-
-    if (backupStatus.status === 'degraded') {
-      throw new ServiceUnavailableException({
-        status: 'UNHEALTHY',
-        message: backupStatus.lastBackupAt
-          ? `Last successful backup was ${backupStatus.ageHours} hours ago (exceeds 26h threshold).`
-          : 'No backup records found. The initial backup has not run or failed.',
-        lastSuccess: backupStatus.lastBackupAt,
-        ageHours: backupStatus.ageHours,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
     return {
-      status: 'HEALTHY',
-      lastSuccess: backupStatus.lastBackupAt,
+      status: backupStatus.status,
+      lastBackupAt: backupStatus.lastBackupAt,
       ageHours: backupStatus.ageHours,
+      timestamp: new Date().toISOString(),
     };
   }
 
