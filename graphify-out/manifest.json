@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.specify\\feature.json": {
-    "mtime": 1780098987.6825507,
-    "ast_hash": "ebeed495385d42f169193eb44b6c19e0",
+    "mtime": 1780099650.3928218,
+    "ast_hash": "ec943250114a76a9ba583b8212534efa",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\.specify\\init-options.json": {
@@ -5485,8 +5485,8 @@
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\AGENTS.md": {
-    "mtime": 1780098987.6835494,
-    "ast_hash": "40537d6fc0f64b9cca522651ea28530e",
+    "mtime": 1780100758.5757868,
+    "ast_hash": "12035118c817154bf9298b17a177b373",
     "semantic_hash": ""
   },
   "E:\\Kitchen\u2011Store Inventory System\\all_conflicted_files.txt": {
@@ -11437,6 +11437,56 @@
   "E:\\Kitchen\u2011Store Inventory System\\specs\\039-risk-remediation-engineering-tasks\\plan.md": {
     "mtime": 1780098987.8886402,
     "ast_hash": "3ff89cba255a1cd5ceca27e4aa9337b6",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\fix plan.md": {
+    "mtime": 1780099429.7394536,
+    "ast_hash": "3ff89cba255a1cd5ceca27e4aa9337b6",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\spec.md": {
+    "mtime": 1780100582.0182865,
+    "ast_hash": "c13d012e8f9d23d12ff40bfa48e0c47d",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\checklists\\requirements.md": {
+    "mtime": 1780099707.1317165,
+    "ast_hash": "cdb17e05ea261fad8920d33301632d56",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\data-model.md": {
+    "mtime": 1780100837.2892156,
+    "ast_hash": "9b06cff7242d0a5242e064669b2ac344",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\plan.md": {
+    "mtime": 1780100783.086812,
+    "ast_hash": "f508c21321ff76458f7c0de2ee3d6502",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\quickstart.md": {
+    "mtime": 1780100899.0816696,
+    "ast_hash": "b53e2a35df012f523d58477ed5dd3571",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\research.md": {
+    "mtime": 1780100815.5386708,
+    "ast_hash": "37de799c97f09b29d0b48d15dda7298c",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\contracts\\dto.md": {
+    "mtime": 1780100857.2091827,
+    "ast_hash": "4cc981a7e5a97ac636e6ecc14489d314",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\contracts\\idempotency.md": {
+    "mtime": 1780100878.3782313,
+    "ast_hash": "4bdafc48560a38dde131b3b5dde984c7",
+    "semantic_hash": ""
+  },
+  "E:\\Kitchen\u2011Store Inventory System\\specs\\040-risk-remediation-tasks\\tasks.md": {
+    "mtime": 1780101067.6546779,
+    "ast_hash": "4ab7afa0b9d7d41f1bf566ab07b80eed",
     "semantic_hash": ""
   }
 }
