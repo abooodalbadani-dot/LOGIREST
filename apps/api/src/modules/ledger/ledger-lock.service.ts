@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   UnprocessableEntityException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Prisma, WarehouseItem, WarehouseItemLot } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -77,14 +78,14 @@ export class LedgerLockService {
     itemId: string,
   ): void {
     if (!warehouseItem) {
-      throw new UnprocessableEntityException(
-        `Warehouse item balance not found for item ${itemId}`,
+      throw new BadRequestException(
+        'Insufficient stock: requested quantity exceeds available on hand.',
       );
     }
     const currentQty = Number(warehouseItem.qtyOnHand);
     if (currentQty < requiredQty) {
-      throw new UnprocessableEntityException(
-        `Insufficient stock for item ${itemId}. Available: ${currentQty}, Required: ${requiredQty}`,
+      throw new BadRequestException(
+        'Insufficient stock: requested quantity exceeds available on hand.',
       );
     }
   }
@@ -98,14 +99,14 @@ export class LedgerLockService {
     lotId: string,
   ): void {
     if (!warehouseItemLot) {
-      throw new UnprocessableEntityException(
-        `Warehouse item lot balance not found for lot ${lotId}`,
+      throw new BadRequestException(
+        'Insufficient stock: requested quantity exceeds available on hand.',
       );
     }
     const currentQty = Number(warehouseItemLot.qtyOnHand);
     if (currentQty < requiredQty) {
-      throw new UnprocessableEntityException(
-        `Insufficient stock for lot ${lotId}. Available: ${currentQty}, Required: ${requiredQty}`,
+      throw new BadRequestException(
+        'Insufficient stock: requested quantity exceeds available on hand.',
       );
     }
   }

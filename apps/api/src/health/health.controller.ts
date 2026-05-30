@@ -1,24 +1,26 @@
-import {
-  Controller,
-  Get,
-  ServiceUnavailableException,
-  Inject,
-} from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import Redis from 'ioredis';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { PrismaService } from '../database/prisma.service';
-import { REDIS_CLIENT } from '../redis/redis.module';
-import * as fs from 'fs';
-import * as path from 'path';
+import { BackupService } from '../backup/backup.service';
+
+interface HealthResponse {
+  status: 'ok' | 'degraded';
+  timestamp: string; // ISO8601 UTC
+  checks: {
+    database: 'ok' | 'degraded';
+    backup: {
+      status: 'ok' | 'degraded'; // degraded if ageHours > 26
+      lastBackupAt: string | null; // ISO8601 UTC, null if never run
+      ageHours: number | null; // null if never run
+    };
+  };
+}
 
 @Controller('health')
 export class HealthController {
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-    @InjectQueue('outbox') private readonly outboxQueue: Queue,
+    private readonly backupService: BackupService,
   ) {}
 
   private async checkWithTimeout<T>(
@@ -44,101 +46,34 @@ export class HealthController {
   @Get('backup')
   async checkBackup(): Promise<{
     status: string;
-    lastSuccess: string;
-    ageHours: number;
+    lastSuccess: string | null;
+    ageHours: number | null;
   }> {
-    const backupDir = process.env.BACKUP_DIR || '/backups';
-    const lastSuccessPath = path.join(backupDir, 'last_success');
+    const backupStatus = await this.backupService.getBackupStatus();
 
-    let exists = false;
-    let content = '';
-
-    if (fs.existsSync(lastSuccessPath)) {
-      exists = true;
-      content = fs.readFileSync(lastSuccessPath, 'utf8').trim();
-    } else {
-      const localFallback = path.join(process.cwd(), 'backups', 'last_success');
-      if (fs.existsSync(localFallback)) {
-        exists = true;
-        content = fs.readFileSync(localFallback, 'utf8').trim();
-      }
-    }
-
-    if (!exists) {
+    if (backupStatus.status === 'degraded') {
       throw new ServiceUnavailableException({
         status: 'UNHEALTHY',
-        message:
-          'No backup records found. The initial backup has not run or failed.',
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    // Parse the timestamp YYYYMMDD_HHMMSS
-    if (content.length < 15) {
-      throw new ServiceUnavailableException({
-        status: 'UNHEALTHY',
-        message: 'Invalid last_success backup timestamp format.',
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    const year = content.substring(0, 4);
-    const month = content.substring(4, 6);
-    const day = content.substring(6, 8);
-    const hour = content.substring(9, 11);
-    const minute = content.substring(11, 13);
-    const second = content.substring(13, 15);
-
-    const lastBackupDate = new Date(
-      `${year}-${month}-${day}T${hour}:${minute}:${second}`,
-    );
-    if (isNaN(lastBackupDate.getTime())) {
-      throw new ServiceUnavailableException({
-        status: 'UNHEALTHY',
-        message: 'Failed to parse last successful backup timestamp.',
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    const now = new Date();
-    const ageMs = now.getTime() - lastBackupDate.getTime();
-    const ageHours = ageMs / (1000 * 60 * 60);
-
-    if (ageHours > 26) {
-      throw new ServiceUnavailableException({
-        status: 'UNHEALTHY',
-        message: `Last successful backup was ${ageHours.toFixed(1)} hours ago (exceeds 26h threshold).`,
-        lastSuccess: lastBackupDate.toISOString(),
-        ageHours: Number(ageHours.toFixed(1)),
+        message: backupStatus.lastBackupAt
+          ? `Last successful backup was ${backupStatus.ageHours} hours ago (exceeds 26h threshold).`
+          : 'No backup records found. The initial backup has not run or failed.',
+        lastSuccess: backupStatus.lastBackupAt,
+        ageHours: backupStatus.ageHours,
         timestamp: new Date().toISOString(),
       });
     }
 
     return {
       status: 'HEALTHY',
-      lastSuccess: lastBackupDate.toISOString(),
-      ageHours: Number(ageHours.toFixed(1)),
+      lastSuccess: backupStatus.lastBackupAt,
+      ageHours: backupStatus.ageHours,
     };
   }
 
   @Public()
   @Get()
-  async check(): Promise<{
-    status: string;
-    db: string;
-    redis: string;
-    bullmq: string;
-    stockLedger: string;
-    timestamp: string;
-  }> {
-    const checks = {
-      db: 'disconnected',
-      redis: 'disconnected',
-      bullmq: 'disconnected',
-      stockLedger: 'disconnected',
-    };
-
-    let allHealthy = true;
+  async check(): Promise<HealthResponse> {
+    let dbStatus: 'ok' | 'degraded' = 'ok';
 
     try {
       await this.checkWithTimeout(
@@ -146,48 +81,23 @@ export class HealthController {
         2000,
         'database',
       );
-      checks.db = 'connected';
     } catch {
-      allHealthy = false;
+      dbStatus = 'degraded';
     }
 
-    try {
-      await this.checkWithTimeout(this.redis.ping(), 2000, 'redis');
-      checks.redis = 'connected';
-    } catch {
-      allHealthy = false;
-    }
-
-    try {
-      await this.checkWithTimeout(this.outboxQueue.isPaused(), 2000, 'bullmq');
-      checks.bullmq = 'connected';
-    } catch {
-      allHealthy = false;
-    }
-
-    try {
-      await this.checkWithTimeout(
-        this.prisma.stockLedger.count(),
-        3000,
-        'stock_ledger',
-      );
-      checks.stockLedger = 'connected';
-    } catch {
-      allHealthy = false;
-    }
-
-    if (!allHealthy) {
-      throw new ServiceUnavailableException({
-        status: 'ERROR',
-        ...checks,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    const backupStatus = await this.backupService.getBackupStatus();
+    const overallStatus =
+      dbStatus === 'degraded' || backupStatus.status === 'degraded'
+        ? 'degraded'
+        : 'ok';
 
     return {
-      status: 'OK',
-      ...checks,
+      status: overallStatus,
       timestamp: new Date().toISOString(),
+      checks: {
+        database: dbStatus,
+        backup: backupStatus,
+      },
     };
   }
 }

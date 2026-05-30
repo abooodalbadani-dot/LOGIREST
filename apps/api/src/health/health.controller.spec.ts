@@ -1,31 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
 import { PrismaService } from '../database/prisma.service';
-import { REDIS_CLIENT } from '../redis/redis.module';
-import { getQueueToken } from '@nestjs/bullmq';
+import { BackupService } from '../backup/backup.service';
 import { ServiceUnavailableException } from '@nestjs/common';
-import * as fs from 'fs';
-
-jest.mock('fs');
 
 describe('HealthController', () => {
   let controller: HealthController;
   let prismaMock: any;
-  let redisMock: any;
-  let queueMock: any;
+  let backupServiceMock: any;
 
   beforeEach(async () => {
     prismaMock = {
       $queryRaw: jest.fn().mockResolvedValue([1]),
-      stockLedger: {
-        count: jest.fn().mockResolvedValue(100),
-      },
     };
-    redisMock = {
-      ping: jest.fn().mockResolvedValue('PONG'),
-    };
-    queueMock = {
-      isPaused: jest.fn().mockResolvedValue(false),
+    backupServiceMock = {
+      getBackupStatus: jest.fn().mockResolvedValue({
+        status: 'ok',
+        lastBackupAt: new Date().toISOString(),
+        ageHours: 1.5,
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -36,12 +29,8 @@ describe('HealthController', () => {
           useValue: prismaMock,
         },
         {
-          provide: REDIS_CLIENT,
-          useValue: redisMock,
-        },
-        {
-          provide: getQueueToken('outbox'),
-          useValue: queueMock,
+          provide: BackupService,
+          useValue: backupServiceMock,
         },
       ],
     }).compile();
@@ -49,78 +38,64 @@ describe('HealthController', () => {
     controller = module.get<HealthController>(HealthController);
   });
 
-  it('should return status OK when all services are healthy', async () => {
-    const result = await controller.check();
-    expect(result.status).toBe('OK');
-    expect(result.db).toBe('connected');
-    expect(result.redis).toBe('connected');
-    expect(result.bullmq).toBe('connected');
-    expect(result.stockLedger).toBe('connected');
-    expect(result.timestamp).toBeDefined();
-  });
+  describe('check', () => {
+    it('should return status ok when database and backup are healthy', async () => {
+      const result = await controller.check();
+      expect(result.status).toBe('ok');
+      expect(result.checks.database).toBe('ok');
+      expect(result.checks.backup.status).toBe('ok');
+      expect(result.checks.backup.ageHours).toBe(1.5);
+      expect(result.timestamp).toBeDefined();
+    });
 
-  it('should throw ServiceUnavailableException if DB query fails', async () => {
-    prismaMock.$queryRaw.mockRejectedValue(new Error('DB Down'));
-    await expect(controller.check()).rejects.toThrow(
-      ServiceUnavailableException,
-    );
-  });
+    it('should return status degraded if database check fails', async () => {
+      prismaMock.$queryRaw.mockRejectedValue(
+        new Error('DB Connection Timeout'),
+      );
+      const result = await controller.check();
+      expect(result.status).toBe('degraded');
+      expect(result.checks.database).toBe('degraded');
+      expect(result.checks.backup.status).toBe('ok');
+    });
 
-  it('should throw ServiceUnavailableException if Redis ping fails', async () => {
-    redisMock.ping.mockRejectedValue(new Error('Redis Down'));
-    await expect(controller.check()).rejects.toThrow(
-      ServiceUnavailableException,
-    );
-  });
-
-  it('should throw ServiceUnavailableException if BullMQ check fails', async () => {
-    queueMock.isPaused.mockRejectedValue(new Error('BullMQ Down'));
-    await expect(controller.check()).rejects.toThrow(
-      ServiceUnavailableException,
-    );
-  });
-
-  it('should throw ServiceUnavailableException if stockLedger count fails', async () => {
-    prismaMock.stockLedger.count.mockRejectedValue(
-      new Error('Table Access Failure'),
-    );
-    await expect(controller.check()).rejects.toThrow(
-      ServiceUnavailableException,
-    );
+    it('should return status degraded if backup check is degraded', async () => {
+      backupServiceMock.getBackupStatus.mockResolvedValue({
+        status: 'degraded',
+        lastBackupAt: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+        ageHours: 30.0,
+      });
+      const result = await controller.check();
+      expect(result.status).toBe('degraded');
+      expect(result.checks.database).toBe('ok');
+      expect(result.checks.backup.status).toBe('degraded');
+      expect(result.checks.backup.ageHours).toBe(30.0);
+    });
   });
 
   describe('checkBackup', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('should throw ServiceUnavailableException if backup records do not exist', async () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+    it('should throw ServiceUnavailableException if backup is degraded', async () => {
+      backupServiceMock.getBackupStatus.mockResolvedValue({
+        status: 'degraded',
+        lastBackupAt: null,
+        ageHours: null,
+      });
       await expect(controller.checkBackup()).rejects.toThrow(
         ServiceUnavailableException,
       );
     });
 
-    it('should throw ServiceUnavailableException if backup is older than 26 hours', async () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readFileSync as jest.Mock).mockReturnValue('20200101_000000');
-      await expect(controller.checkBackup()).rejects.toThrow(
-        ServiceUnavailableException,
-      );
-    });
-
-    it('should return status HEALTHY if backup is fresh (under 26 hours)', async () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-
-      const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000);
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      const formattedDate = `${fiveHoursAgo.getFullYear()}${pad(fiveHoursAgo.getMonth() + 1)}${pad(fiveHoursAgo.getDate())}_${pad(fiveHoursAgo.getHours())}${pad(fiveHoursAgo.getMinutes())}${pad(fiveHoursAgo.getSeconds())}`;
-
-      (fs.readFileSync as jest.Mock).mockReturnValue(formattedDate);
+    it('should return status HEALTHY if backup is fresh', async () => {
+      const lastBackupDate = new Date();
+      backupServiceMock.getBackupStatus.mockResolvedValue({
+        status: 'ok',
+        lastBackupAt: lastBackupDate.toISOString(),
+        ageHours: 2.0,
+      });
 
       const result = await controller.checkBackup();
       expect(result.status).toBe('HEALTHY');
-      expect(result.ageHours).toBeLessThanOrEqual(26);
+      expect(result.lastSuccess).toBe(lastBackupDate.toISOString());
+      expect(result.ageHours).toBe(2.0);
     });
   });
 });

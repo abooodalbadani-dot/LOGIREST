@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   UnprocessableEntityException,
+  BadRequestException,
 } from '@nestjs/common';
 import { LotStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -127,8 +128,8 @@ export class AllocationService {
       0,
     );
     if (totalAvailable < requiredQty) {
-      throw new UnprocessableEntityException(
-        `Insufficient stock for batched item ${itemId}. Available: ${totalAvailable}, Required: ${requiredQty}`,
+      throw new BadRequestException(
+        'Insufficient stock: requested quantity exceeds available on hand.',
       );
     }
 

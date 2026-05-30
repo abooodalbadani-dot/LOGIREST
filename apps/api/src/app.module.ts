@@ -6,6 +6,7 @@ import { validate } from './config/env.validation';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
+import { BackupModule } from './backup/backup.module';
 import { PrismaModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -94,6 +95,7 @@ import { correlationStorage } from './common/correlation.context';
     ThrottlerModule.forRoot([{ name: 'short', ttl: 60000, limit: 100 }]),
     PrismaModule,
     HealthModule,
+    BackupModule,
     AuthModule,
     WorkflowModule,
     PurchaseRequestsModule,
