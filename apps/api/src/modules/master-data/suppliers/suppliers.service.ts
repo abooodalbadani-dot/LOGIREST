@@ -40,9 +40,18 @@ export class SuppliersService {
     const suppliers = await this.prisma.supplier.findMany({
       orderBy: { code: 'asc' },
     });
-    return suppliers.map((sup) =>
+    const data = suppliers.map((sup) =>
       this.mapDbSupplierToFrontend(sup, currencyId),
     );
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async findOne(id: string) {

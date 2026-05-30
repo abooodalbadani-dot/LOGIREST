@@ -6,19 +6,10 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Barcode, type BarcodeFormValues, BarcodeSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['barcodes'];
-
-const PaginatedBarcodesSchema = z.object({
-  data: z.array(BarcodeSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
 
 export function useBarcodes(filters?: { item_id?: string; search?: string }) {
   return useQuery({
@@ -29,7 +20,7 @@ export function useBarcodes(filters?: { item_id?: string; search?: string }) {
       if (filters?.item_id) params.append('item_id', filters.item_id);
       if (filters?.search) params.append('search', filters.search);
 
-      return apiClient.get(`/barcodes${params.toString() ? `?${params.toString()}` : ''}`, PaginatedBarcodesSchema, { signal });
+      return apiClient.get(`/barcodes${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(BarcodeSchema), { signal });
     },
     staleTime: 60_000,
   });

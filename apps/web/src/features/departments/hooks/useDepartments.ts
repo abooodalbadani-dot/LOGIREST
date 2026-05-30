@@ -6,19 +6,10 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type DepartmentFormValues, DepartmentSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['departments'];
-
-const PaginatedDepartmentsSchema = z.object({
-  data: z.array(DepartmentSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
 
 export function useDepartments(filters?: { branch_id?: string; warehouse_id?: string; search?: string }) {
   return useQuery({
@@ -30,7 +21,7 @@ export function useDepartments(filters?: { branch_id?: string; warehouse_id?: st
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/departments${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedDepartmentsSchema, { signal });
+      return apiClient.get(path, paginatedSchema(DepartmentSchema), { signal });
     }
   });
 }

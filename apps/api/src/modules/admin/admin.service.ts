@@ -284,8 +284,8 @@ export class AdminService {
       meta: {
         total,
         page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
       },
     };
   }

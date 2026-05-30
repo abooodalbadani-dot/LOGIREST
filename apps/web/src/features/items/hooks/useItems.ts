@@ -6,19 +6,10 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type ItemFormValues, ItemSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['items'];
-
-const PaginatedItemsSchema = z.object({
-  data: z.array(ItemSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
 
 export function useItems(filters?: { search?: string; category_id?: string; is_active?: boolean }) {
   return useQuery({
@@ -30,7 +21,7 @@ export function useItems(filters?: { search?: string; category_id?: string; is_a
       if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active));
       
       const path = `/items${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedItemsSchema, { signal });
+      return apiClient.get(path, paginatedSchema(ItemSchema), { signal });
     }
   });
 }

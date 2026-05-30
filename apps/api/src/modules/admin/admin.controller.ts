@@ -98,8 +98,8 @@ export class AdminController {
       meta: {
         total,
         page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        page_size: limitNum,
+        total_pages: Math.ceil(total / limitNum) || 1,
       },
     };
   }

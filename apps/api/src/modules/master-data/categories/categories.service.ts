@@ -25,7 +25,16 @@ export class CategoriesService {
     const categories = await this.prisma.category.findMany({
       orderBy: { name: 'asc' },
     });
-    return categories.map((cat) => this.mapDbCategoryToFrontend(cat));
+    const data = categories.map((cat) => this.mapDbCategoryToFrontend(cat));
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async findOne(id: string) {

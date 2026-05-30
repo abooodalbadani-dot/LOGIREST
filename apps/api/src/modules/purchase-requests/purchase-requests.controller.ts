@@ -106,13 +106,8 @@ export class PurchaseRequestsController {
     );
 
     return {
-      data: result.items.map(mapPRSummary),
-      pagination: {
-        page: result.page,
-        limit: result.limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / result.limit),
-      },
+      data: result.data.map(mapPRSummary),
+      meta: result.meta,
     };
   }
 

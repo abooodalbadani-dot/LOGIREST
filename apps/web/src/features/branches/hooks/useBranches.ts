@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type BranchFormValues, BranchSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 /**
@@ -15,16 +16,6 @@ import { z } from 'zod';
 
 const QUERY_KEY = ['branches'];
 
-const PaginatedBranchesSchema = z.object({
-  data: z.array(BranchSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
-
 export function useBranches(filters?: { search?: string }) {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
@@ -33,7 +24,7 @@ export function useBranches(filters?: { search?: string }) {
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/branches${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedBranchesSchema, { signal });
+      return apiClient.get(path, paginatedSchema(BranchSchema), { signal });
     },
     staleTime: 60_000,
   });

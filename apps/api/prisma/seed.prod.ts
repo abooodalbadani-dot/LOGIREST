@@ -120,6 +120,20 @@ async function main() {
     },
   });
 
+  // ─── Departments ─────────────────────────────────────────────
+  const existingDept = await prisma.department.findFirst({
+    where: { name: 'Main Kitchen', branchId: mainBranch.id },
+  });
+  if (!existingDept) {
+    await prisma.department.create({
+      data: {
+        name: 'Main Kitchen',
+        branchId: mainBranch.id,
+      },
+    });
+    console.log('Seeded default "Main Kitchen" department linked to HQ Branch.');
+  }
+
   // 5. Secure First Admin User Setup
   const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@logirest.com';
   const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'AdminPassword123!';

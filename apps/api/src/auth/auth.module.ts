@@ -9,14 +9,25 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OutboxModule } from '../modules/outbox/outbox.module';
 
+import { ConfigService } from '@nestjs/config';
+
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret:
-        process.env.JWT_ACCESS_SECRET ||
-        'dev-jwt-access-secret-key-at-least-32-chars-long',
-      signOptions: { expiresIn: '15m' },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_ACCESS_SECRET');
+        if (!secret) {
+          throw new Error(
+            'FATAL: JWT_ACCESS_SECRET environment variable is missing.',
+          );
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '15m' },
+        };
+      },
     }),
     OutboxModule,
   ],

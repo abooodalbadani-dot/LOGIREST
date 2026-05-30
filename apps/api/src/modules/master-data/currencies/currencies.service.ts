@@ -28,7 +28,16 @@ export class CurrenciesService {
     const currencies = await this.prisma.currency.findMany({
       orderBy: { code: 'asc' },
     });
-    return currencies.map((c) => this.mapDbCurrencyToFrontend(c));
+    const data = currencies.map((c) => this.mapDbCurrencyToFrontend(c));
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async findOne(id: string) {

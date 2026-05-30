@@ -114,10 +114,13 @@ export class PurchaseRequestsService {
     ]);
 
     return {
-      items,
-      total,
-      page,
-      limit,
+      data: items,
+      meta: {
+        total,
+        page,
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
+      },
     };
   }
 

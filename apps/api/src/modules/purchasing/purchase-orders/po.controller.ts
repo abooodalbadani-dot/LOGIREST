@@ -168,13 +168,8 @@ export class PurchaseOrderController {
     );
 
     return {
-      data: result.items.map(mapPOSummary),
-      pagination: {
-        page: result.page,
-        limit: result.limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / result.limit),
-      },
+      data: result.data.map(mapPOSummary),
+      meta: result.meta,
     };
   }
 

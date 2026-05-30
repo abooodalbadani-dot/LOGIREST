@@ -27,7 +27,16 @@ export class BarcodesService {
       include: { item: true },
       orderBy: { barcode: 'asc' },
     });
-    return mappings.map((m) => this.mapDbBarcodeToFrontend(m));
+    const data = mappings.map((m) => this.mapDbBarcodeToFrontend(m));
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async findOne(id: string) {

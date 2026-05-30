@@ -161,13 +161,8 @@ export class TransfersController {
     );
 
     return {
-      data: result.items.map(mapTransferDetail),
-      pagination: {
-        page: result.page,
-        limit: result.limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / result.limit),
-      },
+      data: result.data.map(mapTransferDetail),
+      meta: result.meta,
     };
   }
 

@@ -42,7 +42,19 @@ export class BranchesController {
       include: { warehouses: true },
     });
 
-    return branches;
+    const total = await this.prisma.branch.count();
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = take || total || 1;
+
+    return {
+      data: branches,
+      meta: {
+        total,
+        page: pageNum,
+        page_size: limitNum,
+        total_pages: take ? Math.ceil(total / take) : 1,
+      },
+    };
   }
 
   @Get(':id')

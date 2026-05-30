@@ -203,6 +203,13 @@ export class AuthService {
       data: {
         name: body.name || undefined,
       },
+      include: {
+        warehouseScopes: {
+          include: {
+            warehouse: true,
+          },
+        },
+      },
     });
 
     // Write profile update audit log
@@ -222,7 +229,11 @@ export class AuthService {
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
-      scopes: [],
+      scopes: (updatedUser.warehouseScopes || []).map((s) => ({
+        branch_id: s.warehouse?.branchId ?? null,
+        warehouse_id: s.warehouseId,
+        department_id: null,
+      })),
       status: updatedUser.isActive ? 'ACTIVE' : 'INACTIVE',
       language: body.language || 'en',
       avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,

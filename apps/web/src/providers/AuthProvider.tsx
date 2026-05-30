@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));
                   setActiveScopeState(newScope);
                 } else {
-                  setActiveScopeState({ branchId: '', warehouseId: '', departmentId: null });
+                  setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
                 }
               }
             } catch (err) {
@@ -263,8 +263,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const targetScope = validScope || parsedUser.scopes[0];
         if (targetScope) {
           const newScope = {
-            branchId: targetScope.branch_id || '',
-            warehouseId: targetScope.warehouse_id || '',
+            branchId: targetScope.branch_id || null,
+            warehouseId: targetScope.warehouse_id || null,
             departmentId: targetScope.department_id || null
           };
           setActiveScopeState(newScope);

@@ -6,19 +6,10 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Category, type CategoryFormValues, CategorySchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['categories'];
-
-const PaginatedCategoriesSchema = z.object({
-  data: z.array(CategorySchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
 
 export function useCategories(filters?: { search?: string }) {
   return useQuery({
@@ -28,7 +19,7 @@ export function useCategories(filters?: { search?: string }) {
       const params = new URLSearchParams();
       if (filters?.search) params.append('search', filters.search);
 
-      return apiClient.get(`/categories${params.toString() ? `?${params.toString()}` : ''}`, PaginatedCategoriesSchema, { signal });
+      return apiClient.get(`/categories${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(CategorySchema), { signal });
     },
     staleTime: 60_000,
   });

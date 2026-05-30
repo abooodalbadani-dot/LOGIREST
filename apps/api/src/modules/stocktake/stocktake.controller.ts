@@ -140,13 +140,8 @@ export class StocktakeController {
     );
 
     return {
-      data: result.items.map(mapStocktakeDetail),
-      meta: {
-        page: result.page,
-        page_size: result.limit,
-        total: result.total,
-        total_pages: Math.ceil(result.total / result.limit),
-      },
+      data: result.data.map(mapStocktakeDetail),
+      meta: result.meta,
     };
   }
 

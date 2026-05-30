@@ -6,26 +6,17 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type FXRate, type FXRateFormValues, FXRateSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
+import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['fx_rates'];
-
-const PaginatedFXRatesSchema = z.object({
-  data: z.array(FXRateSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
 
 export function useFXRates() {
   return useQuery({
     queryKey: QUERY_KEY,
     placeholderData: { data: [], meta: { total: 0, page: 1, page_size: 50, total_pages: 0 } },
     queryFn: ({ signal }) =>
-      apiClient.get('/currencies/fx-rates', PaginatedFXRatesSchema, { signal }),
+      apiClient.get('/currencies/fx-rates', paginatedSchema(FXRateSchema), { signal }),
     staleTime: 60_000,
   });
 }

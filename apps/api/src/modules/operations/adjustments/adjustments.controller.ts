@@ -144,13 +144,8 @@ export class AdjustmentsController {
     );
 
     return {
-      data: result.items.map(mapAdjustmentDetail),
-      pagination: {
-        page: result.page,
-        limit: result.limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / result.limit),
-      },
+      data: result.data.map(mapAdjustmentDetail),
+      meta: result.meta,
     };
   }
 

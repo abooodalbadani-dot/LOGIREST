@@ -47,7 +47,7 @@ export class InventoryService {
       },
     });
 
-    return items.map((wItem) => ({
+    const data = items.map((wItem) => ({
       itemId: wItem.itemId,
       itemCode: wItem.item.sku,
       itemName: wItem.item.name,
@@ -56,6 +56,16 @@ export class InventoryService {
       weightedAvgCost: Number(wItem.wac),
       defaultUomSymbol: wItem.item.unitOfMeasure.code,
     }));
+
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async getLots(warehouseId: string, query: InventoryLotsQuery) {
@@ -84,7 +94,7 @@ export class InventoryService {
       },
     });
 
-    return lots.map((wLot) => ({
+    const data = lots.map((wLot) => ({
       lotId: wLot.lotId,
       lotNumber: wLot.lot.lotNumber,
       itemId: wLot.itemId,
@@ -94,6 +104,16 @@ export class InventoryService {
       expiryDate: wLot.lot.expiryDate,
       status: wLot.lot.status,
     }));
+
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async getMovements(warehouseId: string, query: InventoryMovementsQuery) {
@@ -173,8 +193,8 @@ export class InventoryService {
       meta: {
         total,
         page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
       },
     };
   }

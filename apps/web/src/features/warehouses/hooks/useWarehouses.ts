@@ -5,21 +5,11 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Warehouse, type WarehouseFormValues, WarehouseSchema } from '@/types/master-data';
-import { type ApiError } from '@/types/api';
+import { type ApiError, paginatedSchema } from '@/types/api';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
 const QUERY_KEY = ['warehouses'];
-
-const PaginatedWarehousesSchema = z.object({
-  data: z.array(WarehouseSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number()
-  })
-});
 
 export function useWarehouses(filters?: { branch_id?: string; search?: string }) {
   return useQuery({
@@ -30,7 +20,7 @@ export function useWarehouses(filters?: { branch_id?: string; search?: string })
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/warehouses${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, PaginatedWarehousesSchema, { signal });
+      return apiClient.get(path, paginatedSchema(WarehouseSchema), { signal });
     }
   });
 }

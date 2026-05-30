@@ -35,15 +35,31 @@ export class DepartmentsController {
     const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
     const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
 
-    const departments = await this.prisma.department.findMany({
-      where: branchId ? { branchId } : {},
-      orderBy: { name: 'asc' },
-      ...(take ? { take } : {}),
-      ...(skip ? { skip } : {}),
-      include: { branch: true },
-    });
+    const where = branchId ? { branchId } : {};
 
-    return departments;
+    const [departments, total] = await Promise.all([
+      this.prisma.department.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        ...(take ? { take } : {}),
+        ...(skip ? { skip } : {}),
+        include: { branch: true },
+      }),
+      this.prisma.department.count({ where }),
+    ]);
+
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = take || total || 1;
+
+    return {
+      data: departments,
+      meta: {
+        total,
+        page: pageNum,
+        page_size: limitNum,
+        total_pages: take ? Math.ceil(total / take) : 1,
+      },
+    };
   }
 
   @Get(':id')

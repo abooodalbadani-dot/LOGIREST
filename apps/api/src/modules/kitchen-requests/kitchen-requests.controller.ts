@@ -103,13 +103,8 @@ export class KitchenRequestsController {
     );
 
     return {
-      data: result.items.map(mapKitchenRequestDetail),
-      pagination: {
-        page: result.page,
-        limit: result.limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / result.limit),
-      },
+      data: result.data.map(mapKitchenRequestDetail),
+      meta: result.meta,
     };
   }
 

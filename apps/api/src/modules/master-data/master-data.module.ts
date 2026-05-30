@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../database/database.module';
-import { WarehousesController } from './warehouses/warehouses.controller';
 import { WarehousesDirectController } from './warehouses/warehouses-direct.controller';
 import { BranchesController } from './branches/branches.controller';
 import { DepartmentsController } from './departments/departments.controller';
@@ -24,7 +23,6 @@ import { VarianceReasonsService } from './variance-reasons/variance-reasons.serv
 @Module({
   imports: [PrismaModule, FXRatesModule],
   controllers: [
-    WarehousesController,
     WarehousesDirectController,
     BranchesController,
     DepartmentsController,

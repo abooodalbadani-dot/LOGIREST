@@ -27,7 +27,16 @@ export class UomService {
     const uoms = await this.prisma.unitOfMeasure.findMany({
       orderBy: { code: 'asc' },
     });
-    return uoms.map((uom) => this.mapDbUoMToFrontend(uom));
+    const data = uoms.map((uom) => this.mapDbUoMToFrontend(uom));
+    return {
+      data,
+      meta: {
+        total: data.length,
+        page: 1,
+        page_size: data.length || 1,
+        total_pages: 1,
+      },
+    };
   }
 
   async findOne(id: string) {
