@@ -317,12 +317,14 @@ export class NotificationTemplateService {
     const limit = 10;
     const startIndex = (page - 1) * limit;
     const data = this.templates.slice(startIndex, startIndex + limit);
+    const total = this.templates.length;
     return {
       data,
       meta: {
-        total: this.templates.length,
+        total,
         page,
-        last_page: Math.ceil(this.templates.length / limit),
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
       },
     };
   }
@@ -405,13 +407,15 @@ export class NotificationTemplateService {
       : this.outbox;
     const startIndex = (page - 1) * limit;
     const data = filtered.slice(startIndex, startIndex + limit);
+    const total = filtered.length;
 
     return {
       data,
       meta: {
-        total: filtered.length,
+        total,
         page,
-        last_page: Math.ceil(filtered.length / limit),
+        page_size: limit,
+        total_pages: Math.ceil(total / limit) || 1,
       },
     };
   }
