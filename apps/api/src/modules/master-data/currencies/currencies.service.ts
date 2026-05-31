@@ -49,4 +49,49 @@ export class CurrenciesService {
     }
     return this.mapDbCurrencyToFrontend(currency);
   }
+
+  async create(data: any) {
+    if (data.is_base_currency) {
+      await this.prisma.currency.updateMany({
+        where: { isBase: true },
+        data: { isBase: false },
+      });
+    }
+
+    const currency = await this.prisma.currency.create({
+      data: {
+        code: data.code,
+        name: data.name_en || data.name_ar || '',
+        isBase: data.is_base_currency ?? false,
+      },
+    });
+    return this.mapDbCurrencyToFrontend(currency);
+  }
+
+  async update(id: string, data: any) {
+    if (data.is_base_currency) {
+      await this.prisma.currency.updateMany({
+        where: { isBase: true },
+        data: { isBase: false },
+      });
+    }
+
+    const currency = await this.prisma.currency.update({
+      where: { id },
+      data: {
+        code: data.code,
+        name: data.name_en || data.name_ar || '',
+        isBase: data.is_base_currency,
+        version: data.version ? { increment: 1 } : undefined,
+      },
+    });
+    return this.mapDbCurrencyToFrontend(currency);
+  }
+
+  async remove(id: string) {
+    await this.prisma.currency.delete({
+      where: { id },
+    });
+    return { id };
+  }
 }

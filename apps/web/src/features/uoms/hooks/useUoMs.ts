@@ -45,7 +45,7 @@ export function useCreateUoM() {
       const { signal, ...dataValues } = values;
       return apiClient.post('/units-of-measure', UoMSchema, {
         ...dataValues,
-        code: dataValues.code.toUpperCase()
+        code: dataValues.code ? dataValues.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: () => {
@@ -69,7 +69,7 @@ export function useUpdateUoM(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, values, signal }: { id: string; values: UoMFormValues; signal?: AbortSignal }) => {
       return apiClient.put(`/units-of-measure/${id}`, UoMSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: (data) => {

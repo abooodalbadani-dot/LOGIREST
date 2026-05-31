@@ -6,6 +6,7 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Truck, CreditCard, ShieldCheck, Edit3, Trash2 } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { toast } from 'sonner';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { Input } from '@/components/ui/input';
@@ -87,7 +88,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: SupplierFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -101,7 +102,14 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Supplier form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;

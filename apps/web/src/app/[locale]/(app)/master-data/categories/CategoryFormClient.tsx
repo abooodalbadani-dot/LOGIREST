@@ -24,6 +24,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { toast } from 'sonner';
 import { useState } from 'react';
 
 import { useAbortController } from '@/hooks/useAbortController';
@@ -88,7 +89,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
     );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: CategoryFormValues) => {
     if (isReadOnly || data?.is_referenced) return;
     
     try {
@@ -110,7 +111,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Category form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;

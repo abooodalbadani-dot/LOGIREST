@@ -1393,7 +1393,7 @@
       "coming_soon": "Coming Soon"
     }
   },
-"landed_cost": {
+  "landed_cost": {
     "allocate_by_value": "By Value",
     "allocate_by_volume": "By Volume",
     "allocate_by_weight": "By Weight",
@@ -1605,7 +1605,9 @@
       },
       "fields": {
         "name_ar": "Category Name (AR)",
-        "name_en": "Category Name (EN)"
+        "name_en": "Category Name (EN)",
+        "code": "Category Code",
+        "code_hint": "System-generated sequential category identifier (Read-Only)"
       },
       "hierarchy_depth": "Hierarchy Depth",
       "layers": "Layers",
@@ -1625,7 +1627,10 @@
       "title": "Categories",
       "total_groups": "Total Groups",
       "updated_success": "Classification updated",
-      "view_title": "Category Details"
+      "view_title": "Category Details",
+      "warnings": {
+        "referenced_protection": "This category is referenced in active operational documents. Certain fields are protected to maintain ledger consistency."
+      }
     },
     "common": {
       "active": "Active",
@@ -2113,7 +2118,8 @@
         "created_at": "Created At",
         "is_active": "Status",
         "name_ar": "Unit Name (AR)",
-        "name_en": "Unit Name (EN)"
+        "name_en": "Unit Name (EN)",
+        "category": "Category"
       },
       "label": "Units of Measure",
       "metrics": {
@@ -2150,7 +2156,15 @@
         "name_ar_required": "Arabic name is required",
         "name_en_required": "English name is required"
       },
-      "view_title": "UoM Details"
+      "view_title": "UoM Details",
+      "category_options": {
+        "area": "Area",
+        "count": "Count",
+        "length": "Length",
+        "mass": "Mass",
+        "unit": "Unit",
+        "volume": "Volume"
+      }
     },
     "warehouses": {
       "actions": {
@@ -3696,5 +3710,41 @@
     "date_from": "From Date",
     "date_to": "To Date",
     "warehouse": "Warehouse"
+  },
+  "masterData": {
+    "common": {
+      "master_data": "Master Data Hub"
+    },
+    "branches": {
+      "title": "Branches"
+    },
+    "warehouses": {
+      "title": "Warehouses"
+    },
+    "departments": {
+      "title": "Departments"
+    },
+    "suppliers": {
+      "title": "Suppliers"
+    },
+    "categories": {
+      "title": "Categories"
+    },
+    "items": {
+      "title": "Items"
+    },
+    "uom": {
+      "title": "Units of Measure"
+    },
+    "barcodes": {
+      "title": "Barcodes"
+    },
+    "currencies": {
+      "title": "Currencies",
+      "fx_rates_title": "FX Rates"
+    },
+    "import": {
+      "title": "Data Import"
+    }
   }
 }

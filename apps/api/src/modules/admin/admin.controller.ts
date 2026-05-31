@@ -223,7 +223,11 @@ export class AdminController {
         include: {
           warehouseScopes: {
             include: {
-              warehouse: true,
+              warehouse: {
+                include: {
+                  branch: true,
+                },
+              },
             },
           },
         },
@@ -244,6 +248,18 @@ export class AdminController {
         branch_id: s.warehouse?.branchId ?? null,
         warehouse_id: s.warehouseId,
         department_id: null,
+        warehouse: s.warehouse
+          ? {
+              id: s.warehouse.id,
+              name: s.warehouse.name,
+              branch: s.warehouse.branch
+                ? {
+                    id: s.warehouse.branch.id,
+                    name: s.warehouse.branch.name,
+                  }
+                : null,
+            }
+          : null,
       })),
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',
@@ -273,7 +289,11 @@ export class AdminController {
       include: {
         warehouseScopes: {
           include: {
-            warehouse: true,
+            warehouse: {
+              include: {
+                branch: true,
+              },
+            },
           },
         },
       },
@@ -292,6 +312,18 @@ export class AdminController {
         branch_id: s.warehouse?.branchId ?? null,
         warehouse_id: s.warehouseId,
         department_id: null,
+        warehouse: s.warehouse
+          ? {
+              id: s.warehouse.id,
+              name: s.warehouse.name,
+              branch: s.warehouse.branch
+                ? {
+                    id: s.warehouse.branch.id,
+                    name: s.warehouse.branch.name,
+                  }
+                : null,
+            }
+          : null,
       })),
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',

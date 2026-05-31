@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
@@ -51,6 +52,12 @@ export class FXRatesController {
       });
       if (!toCurr) {
         throw new ForbiddenException('Target currency not found.');
+      }
+
+      if (dto.fromCurrencyId === dto.toCurrencyId) {
+        throw new BadRequestException(
+          'Source and target currencies must be different.',
+        );
       }
 
       const rate = await tx.fXRate.create({

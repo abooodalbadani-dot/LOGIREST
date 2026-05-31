@@ -116,6 +116,18 @@ export class TransferPostService {
               );
             }
 
+            const sourceWac = sourceWhItem
+              ? sourceWhItem.wac
+              : new Prisma.Decimal(0);
+
+            // Record source WAC at shipment time
+            await tx.transferLine.update({
+              where: { id: line.id },
+              data: {
+                unitCost: sourceWac,
+              },
+            });
+
             // Perform progressive lot allocation (FEFO/FIFO) and decrement quantities in source warehouse
             const allocations = await this.allocationService.allocate(
               tx,
@@ -398,17 +410,8 @@ export class TransferPostService {
               );
             }
 
-            // Retrieve source warehouse WAC
-            const sourceWhItem = await tx.warehouseItem.findUnique({
-              where: {
-                warehouseId_itemId: {
-                  warehouseId: transfer.fromWarehouseId,
-                  itemId: item.id,
-                },
-              },
-            });
-            const sourceWac = sourceWhItem
-              ? new Prisma.Decimal(sourceWhItem.wac)
+            const sourceWac = line.unitCost
+              ? new Prisma.Decimal(line.unitCost)
               : new Prisma.Decimal(0);
 
             // Update TransferLine

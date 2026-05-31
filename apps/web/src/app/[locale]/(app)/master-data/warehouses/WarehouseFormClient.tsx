@@ -31,6 +31,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Warehouse, MapPin, Activity, Trash2 } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { toast } from 'sonner';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -118,7 +119,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: WarehouseFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -132,7 +133,14 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Warehouse form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;

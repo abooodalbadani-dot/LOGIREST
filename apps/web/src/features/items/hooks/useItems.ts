@@ -46,7 +46,7 @@ export function useCreateItem() {
       const { signal, ...dataValues } = values;
       return apiClient.post('/items', ItemSchema, {
         ...dataValues,
-        code: dataValues.code.toUpperCase()
+        code: dataValues.code ? dataValues.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: () => {
@@ -70,7 +70,7 @@ export function useUpdateItem(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, values, version, signal }: { id: string; values: ItemFormValues; version?: number; signal?: AbortSignal }) => {
       return apiClient.put(`/items/${id}`, ItemSchema, {
         ...values,
-        code: values.code.toUpperCase(),
+        code: values.code ? values.code.toUpperCase() : undefined,
         version
       }, { signal });
     },

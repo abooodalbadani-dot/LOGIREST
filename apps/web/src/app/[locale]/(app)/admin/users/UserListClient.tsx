@@ -85,11 +85,15 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
       cell: ({ row }) => {
         const scopeLabels: string[] = [];
         row.original.scopes.forEach((s) => {
-          const parts: string[] = [];
-          if (s.branch_id) parts.push(`B:${s.branch_id}`);
-          if (s.warehouse_id) parts.push(`W:${s.warehouse_id}`);
-          if (s.department_id) parts.push(`D:${s.department_id}`);
-          if (parts.length) scopeLabels.push(parts.join(', '));
+          if (s.warehouse && s.warehouse.branch) {
+            scopeLabels.push(`${s.warehouse.branch.name} - ${s.warehouse.name}`);
+          } else {
+            const parts: string[] = [];
+            if (s.branch_id) parts.push(`B:${s.branch_id}`);
+            if (s.warehouse_id) parts.push(`W:${s.warehouse_id}`);
+            if (s.department_id) parts.push(`D:${s.department_id}`);
+            if (parts.length) scopeLabels.push(parts.join(', '));
+          }
         });
         return (
           <div className="flex flex-wrap gap-1">

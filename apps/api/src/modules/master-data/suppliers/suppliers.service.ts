@@ -66,16 +66,43 @@ export class SuppliersService {
   }
 
   async create(body: any, userId: string, ipAddress?: string) {
-    const { code, name_en, name_ar, email, phone } = body;
-    if (!code || (!name_en && !name_ar)) {
-      throw new BadRequestException('code and name are required');
+    let { code } = body;
+    const { name_en, name_ar, email, phone } = body;
+    if (!name_en && !name_ar) {
+      throw new BadRequestException('name is required');
     }
 
-    const existing = await this.prisma.supplier.findUnique({ where: { code } });
-    if (existing) {
-      throw new ConflictException(
-        `Supplier with code "${code}" already exists`,
-      );
+    if (!code || code.trim() === '') {
+      const allSuppliers = await this.prisma.supplier.findMany({
+        where: {
+          code: {
+            startsWith: 'SUP-',
+          },
+        },
+        select: {
+          code: true,
+        },
+      });
+      let maxNum = 0;
+      for (const s of allSuppliers) {
+        const matches = s.code.match(/^SUP-(\d+)$/);
+        if (matches) {
+          const num = parseInt(matches[1], 10);
+          if (num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+      code = `SUP-${String(maxNum + 1).padStart(4, '0')}`;
+    } else {
+      const existing = await this.prisma.supplier.findUnique({
+        where: { code },
+      });
+      if (existing) {
+        throw new ConflictException(
+          `Supplier with code "${code}" already exists`,
+        );
+      }
     }
 
     const name = name_en || name_ar;

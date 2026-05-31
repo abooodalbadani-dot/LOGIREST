@@ -17,7 +17,7 @@ export class EmailService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    this.initializeTransporter();
+    void this.initializeTransporter();
   }
 
   get isSmtpConfigured(): boolean {

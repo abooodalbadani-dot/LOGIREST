@@ -96,7 +96,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  "text-title-sm font-bold",
  selectedBranchId === branch.id ? "text-primary-foreground" : "text-foreground"
  )}>
- {locale === 'ar' ? branch.name_ar : branch.name_en}
+ {branch.name || (locale === 'ar' ? branch.name_ar : branch.name_en)}
  </p>
  </div>
  {selectedBranchId === branch.id && (
@@ -156,7 +156,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  "text-title-sm font-bold",
  selectedWarehouseId === wh.id ? "text-primary-foreground" : "text-foreground"
  )}>
- {locale === 'ar' ? wh.name_ar : wh.name_en}
+ {wh.name || (locale === 'ar' ? wh.name_ar : wh.name_en)}
  </p>
  </div>
  {selectedWarehouseId === wh.id && (

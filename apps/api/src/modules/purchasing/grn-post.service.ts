@@ -83,6 +83,17 @@ export class GrnPostService {
             );
           }
 
+          // Validate lot-item association
+          const lot = await tx.lot.findUnique({
+            where: { id: lotId },
+            select: { itemId: true },
+          });
+          if (!lot || lot.itemId !== item.id) {
+            throw new BadRequestException(
+              `Lot ${lotId} does not belong to item ${item.id}.`,
+            );
+          }
+
           // Lock lot balance row (SELECT FOR UPDATE)
           await this.lockService.lockLots(tx, grn.warehouseId, item.id, [
             lotId,

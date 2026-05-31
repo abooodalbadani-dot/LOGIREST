@@ -9,6 +9,7 @@ import {
   Query,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
   HttpCode,
   HttpStatus,
   Req,
@@ -18,6 +19,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 @Controller('departments')
@@ -28,6 +30,8 @@ export class DepartmentsController {
 
   @Get()
   async findAll(
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Query('branch_id') branchId?: string,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
@@ -35,7 +39,20 @@ export class DepartmentsController {
     const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
     const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
 
-    const where = branchId ? { branchId } : {};
+    const where: any = branchId ? { branchId } : {};
+    if (role !== 'ADMIN') {
+      where.branch = {
+        warehouses: {
+          some: {
+            userScopes: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
+      };
+    }
 
     const [departments, total] = await Promise.all([
       this.prisma.department.findMany({
@@ -52,7 +69,10 @@ export class DepartmentsController {
     const limitNum = take || total || 1;
 
     return {
-      data: departments,
+      data: departments.map((d) => ({
+        ...d,
+        code: d.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+      })),
       meta: {
         total,
         page: pageNum,
@@ -63,7 +83,34 @@ export class DepartmentsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
+    if (role !== Role.ADMIN) {
+      const dept = await this.prisma.department.findUnique({
+        where: { id },
+        select: { branchId: true },
+      });
+      if (!dept) {
+        throw new NotFoundException(`Department with ID ${id} not found`);
+      }
+      const hasScope = await this.prisma.userWarehouseScope.findFirst({
+        where: {
+          userId,
+          warehouse: {
+            branchId: dept.branchId,
+          },
+        },
+      });
+      if (!hasScope) {
+        throw new ForbiddenException(
+          'Access to this department is not allowed.',
+        );
+      }
+    }
+
     const department = await this.prisma.department.findUnique({
       where: { id },
       include: { branch: true },
@@ -71,15 +118,24 @@ export class DepartmentsController {
     if (!department) {
       throw new NotFoundException(`Department with ID ${id} not found`);
     }
-    return department;
+    return {
+      ...department,
+      code: department.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+    };
   }
 
   @Post()
   async create(
     @Body() body: { name: string; branchId: string },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
+      throw new ForbiddenException(
+        'Only ADMIN or GM roles are authorized to modify master data.',
+      );
+    }
     const { name, branchId } = body;
     if (!name || !branchId) {
       throw new BadRequestException('name and branchId are required');
@@ -113,7 +169,10 @@ export class DepartmentsController {
       return created;
     });
 
-    return department;
+    return {
+      ...department,
+      code: department.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+    };
   }
 
   @Put(':id')
@@ -121,8 +180,14 @@ export class DepartmentsController {
     @Param('id') id: string,
     @Body() body: { name?: string; branchId?: string; version?: number },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
+      throw new ForbiddenException(
+        'Only ADMIN or GM roles are authorized to modify master data.',
+      );
+    }
     const existing = await this.prisma.department.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Department with ID ${id} not found`);
@@ -161,7 +226,10 @@ export class DepartmentsController {
       return res;
     });
 
-    return updated;
+    return {
+      ...updated,
+      code: updated.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+    };
   }
 
   @Delete(':id')
@@ -169,8 +237,14 @@ export class DepartmentsController {
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
+      throw new ForbiddenException(
+        'Only ADMIN or GM roles are authorized to modify master data.',
+      );
+    }
     const department = await this.prisma.department.findUnique({
       where: { id },
       include: {

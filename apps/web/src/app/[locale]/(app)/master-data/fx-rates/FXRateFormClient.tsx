@@ -185,7 +185,7 @@ export function FXRateFormClient({
     );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: FXRateFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -199,7 +199,14 @@ export function FXRateFormClient({
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('FXRate form validation failed:', errors);
+    toast.error(tCommon('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const displayTitle = (isReadOnlyProp || normalizedRole === 'auditor') ? (viewTitle || t('view_title') || editTitle) : (id ? editTitle : createTitle);
 

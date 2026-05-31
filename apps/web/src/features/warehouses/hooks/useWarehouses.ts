@@ -45,7 +45,7 @@ export function useCreateWarehouse() {
       const { signal, ...values } = variables;
       return apiClient.post('/warehouses', WarehouseSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: () => {
@@ -69,7 +69,7 @@ export function useUpdateWarehouse(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, values, version, signal }: { id: string; values: WarehouseFormValues; version?: number; signal?: AbortSignal }) => {
       return apiClient.put(`/warehouses/${id}`, WarehouseSchema, {
         ...values,
-        code: values.code.toUpperCase(),
+        code: values.code ? values.code.toUpperCase() : undefined,
         version
       }, { signal });
     },

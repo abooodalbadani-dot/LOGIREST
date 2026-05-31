@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 // ─── Interfaces ────────────────────────────────────────────────────────────────
 
-export interface Branch { id: string; code: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
-export interface Warehouse { id: string; branch_id: string; code: string; name_ar: string; name_en: string; type: 'main'|'dry'|'cold'|'virtual'|'transit'; is_active: boolean; version?: number; }
+export interface Branch { id: string; code: string; name?: string; name_ar: string; name_en: string; is_active: boolean; created_at: string; version?: number; }
+export interface Warehouse { id: string; branch_id: string; code: string; name?: string; name_ar: string; name_en: string; type: 'main'|'dry'|'cold'|'virtual'|'transit'; is_active: boolean; version?: number; }
 export interface Department { 
  id: string; 
  branch_id: string; 
@@ -31,12 +31,12 @@ export interface VarianceReason { id: string; code: string; name_ar: string; nam
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 export const BranchSchema = z.object({
- id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
+ id: z.string(), code: z.string(), name: z.string().optional(), name_ar: z.string(), name_en: z.string(),
  is_active: z.boolean(), created_at: z.string(), version: z.number().optional()
 });
 
 export const WarehouseSchema = z.object({
- id: z.string(), branch_id: z.string(), code: z.string(), name_ar: z.string(),
+ id: z.string(), branch_id: z.string(), code: z.string(), name: z.string().optional(), name_ar: z.string(),
  name_en: z.string(), type: z.enum(['main','dry','cold','virtual','transit']), is_active: z.boolean(),
  version: z.number().optional()
 });
@@ -123,7 +123,9 @@ export const VarianceReasonSchema = z.object({
 // ─── Form Schemas (for RHF validation) ───────────────────────────────────────
 
 export const BranchFormSchema = z.object({
-  code: z.string().min(2, 'validation.code_min').regex(/^[A-Z0-9_-]+$/, 'validation.code_format'),
+  code: z.string().nullish()
+    .refine(val => !val || val.length >= 2, { message: 'validation.code_min' })
+    .refine(val => !val || /^[A-Z0-9_-]+$/.test(val), { message: 'validation.code_format' }),
   name_ar: z.string().min(3, 'validation.name_ar_min'),
   name_en: z.string().min(3, 'validation.name_en_min'),
   is_active: z.boolean(),
@@ -132,7 +134,9 @@ export const BranchFormSchema = z.object({
 
 export const WarehouseFormSchema = z.object({
   branch_id: z.string().min(1, 'master_data.warehouses.validation.branch_required'),
-  code: z.string().min(2, 'master_data.warehouses.validation.code_min').regex(/^[A-Z0-9_-]+$/, 'master_data.warehouses.validation.code_format'),
+  code: z.string().nullish()
+    .refine(val => !val || val.length >= 2, { message: 'master_data.warehouses.validation.code_min' })
+    .refine(val => !val || /^[A-Z0-9_-]+$/.test(val), { message: 'master_data.warehouses.validation.code_format' }),
   name_ar: z.string().min(3, 'master_data.warehouses.validation.name_ar_min'),
   name_en: z.string().min(3, 'master_data.warehouses.validation.name_en_min'),
   type: z.enum(['main', 'dry', 'cold', 'virtual', 'transit']),
@@ -143,7 +147,9 @@ export const WarehouseFormSchema = z.object({
 export const DepartmentFormSchema = z.object({
   branch_id: z.string().min(1, 'master_data.departments.validation.branch_required'),
   warehouse_id: z.string().min(1, 'master_data.departments.validation.warehouse_required'),
-  code: z.string().min(2, 'master_data.departments.validation.code_min').regex(/^[A-Z0-9_-]+$/, 'master_data.departments.validation.code_format'),
+  code: z.string().nullish()
+    .refine(val => !val || val.length >= 2, { message: 'master_data.departments.validation.code_min' })
+    .refine(val => !val || /^[A-Z0-9_-]+$/.test(val), { message: 'master_data.departments.validation.code_format' }),
   name_ar: z.string().min(3, 'master_data.departments.validation.name_ar_min'),
   name_en: z.string().min(3, 'master_data.departments.validation.name_en_min'),
   manager: z.string().optional(),
@@ -153,8 +159,9 @@ export const DepartmentFormSchema = z.object({
 });
 
 export const UoMFormSchema = z.object({
-  code: z.string().min(1, 'master_data.uoms.validation.code_required')
-  .regex(/^[A-Z]+$/, 'master_data.uoms.validation.code_uppercase'),
+  code: z.string().nullish()
+    .refine(val => !val || val.length >= 1, { message: 'master_data.uoms.validation.code_required' })
+    .refine(val => !val || /^[A-Z]+$/.test(val), { message: 'master_data.uoms.validation.code_uppercase' }),
   name_ar: z.string().min(1, 'master_data.uoms.validation.name_ar_required'),
   name_en: z.string().min(1, 'master_data.uoms.validation.name_en_required'),
   category: z.string().optional(),
@@ -170,26 +177,28 @@ export const CategoryFormSchema = z.object({
 });
 
 export const ItemFormSchema = z.object({
- code: z.string().min(1, 'master_data.items.validation.code_required'),
- barcode: z.string().min(1, 'master_data.items.validation.barcode_required'),
- name_ar: z.string().min(1, 'master_data.items.validation.name_ar_required'),
- name_en: z.string().min(1, 'master_data.items.validation.name_en_required'),
- category_id: z.string().min(1, 'master_data.items.validation.category_required'),
- primary_uom_id: z.string().min(1, 'master_data.items.validation.uom_required'),
- track_lots: z.boolean(),
- min_stock_level: z.number().min(0),
- reorder_point: z.number().min(0),
- uom_conversions: z.array(z.object({
- from_uom_id: z.string().min(1),
- to_uom_id: z.string().min(1),
- factor: z.number().positive()
- })),
- is_active: z.boolean(),
- version: z.number().optional()
+  code: z.string().nullish()
+    .refine(val => !val || val.length >= 1, { message: 'master_data.items.validation.code_required' }),
+  barcode: z.string().min(1, 'master_data.items.validation.barcode_required'),
+  name_ar: z.string().min(1, 'master_data.items.validation.name_ar_required'),
+  name_en: z.string().min(1, 'master_data.items.validation.name_en_required'),
+  category_id: z.string().min(1, 'master_data.items.validation.category_required'),
+  primary_uom_id: z.string().min(1, 'master_data.items.validation.uom_required'),
+  track_lots: z.boolean(),
+  min_stock_level: z.number().min(0),
+  reorder_point: z.number().min(0),
+  uom_conversions: z.array(z.object({
+  from_uom_id: z.string().min(1),
+  to_uom_id: z.string().min(1),
+  factor: z.number().positive()
+  })),
+  is_active: z.boolean(),
+  version: z.number().optional()
 });
 
 export const SupplierFormSchema = z.object({
-  code: z.string().min(1, 'master_data.suppliers.validation.code_required'),
+  code: z.string().nullish()
+    .refine(val => !val || val.length >= 1, { message: 'master_data.suppliers.validation.code_required' }),
   name_ar: z.string().min(1, 'master_data.suppliers.validation.name_ar_required'),
   name_en: z.string().min(1, 'master_data.suppliers.validation.name_en_required'),
   currency_id: z.string().min(1, 'master_data.suppliers.validation.currency_required'),
@@ -199,10 +208,9 @@ export const SupplierFormSchema = z.object({
 });
 
 export const CurrencyFormSchema = z.object({
-  code: z.string()
-  .min(3, 'master_data.currencies.validation.code_length')
-  .max(3, 'master_data.currencies.validation.code_length')
-  .regex(/^[A-Z]{3}$/, 'master_data.currencies.validation.code_format'),
+  code: z.string().nullish()
+    .refine(val => !val || val.length === 3, { message: 'master_data.currencies.validation.code_length' })
+    .refine(val => !val || /^[A-Z]{3}$/.test(val), { message: 'master_data.currencies.validation.code_format' }),
   name_ar: z.string().min(1, 'master_data.currencies.validation.name_ar_required'),
   name_en: z.string().min(1, 'master_data.currencies.validation.name_en_required'),
   symbol: z.string().optional(),

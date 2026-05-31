@@ -46,7 +46,7 @@ export function useCreateDepartment() {
       const { signal, ...values } = variables;
       return apiClient.post('/departments', DepartmentSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: () => {
@@ -70,7 +70,7 @@ export function useUpdateDepartment(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, values, signal }: { id: string; values: DepartmentFormValues; signal?: AbortSignal }) => {
       return apiClient.put(`/departments/${id}`, DepartmentSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: (data) => {

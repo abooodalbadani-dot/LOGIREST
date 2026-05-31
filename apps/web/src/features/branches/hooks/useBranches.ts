@@ -50,7 +50,7 @@ export function useCreateBranch() {
       const { signal, ...values } = variables;
       return apiClient.post('/branches', BranchSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: () => {
@@ -74,7 +74,7 @@ export function useUpdateBranch(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, values, signal }: { id: string; values: BranchFormValues; signal?: AbortSignal }) => {
       return apiClient.put(`/branches/${id}`, BranchSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: (data) => {

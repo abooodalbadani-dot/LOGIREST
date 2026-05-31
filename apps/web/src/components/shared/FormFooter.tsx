@@ -114,7 +114,7 @@ export function FormFooter({
             {onSubmit && !isLocked && (
               <Button
                 onClick={onSubmit}
-                disabled={actualIsSaving || !actualIsValid || (!isDirty && !actualIsSaving)}
+                disabled={actualIsSaving}
                 className={cn(
                   "h-8 md:h-10 px-6 md:px-10 rounded-full transition-all",
                   "bg-primary !text-white hover:opacity-90 active:scale-95",

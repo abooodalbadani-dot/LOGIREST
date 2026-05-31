@@ -124,7 +124,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
               <SmartCombobox
                 items={departments?.data || []}
                 value={form.watch('department_id')}
-                onSelect={(dept) => form.setValue('department_id', dept.id, { shouldValidate: true })}
+                onSelect={(dept) => form.setValue('department_id', String(dept.id), { shouldValidate: true })}
                 placeholder={tCommon('select_department')}
                 triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
               />
@@ -141,7 +141,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
               <SmartCombobox
                 items={warehouses || []}
                 value={form.watch('warehouse_id')}
-                onSelect={(w) => form.setValue('warehouse_id', w.id, { shouldValidate: true })}
+                onSelect={(w) => form.setValue('warehouse_id', String(w.id), { shouldValidate: true })}
                 placeholder={tCommon('select_warehouse')}
                 triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
               />

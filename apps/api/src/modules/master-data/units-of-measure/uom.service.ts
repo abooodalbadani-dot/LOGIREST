@@ -50,18 +50,43 @@ export class UomService {
   }
 
   async create(body: any, userId: string, ipAddress?: string) {
-    const { code, name_en, name_ar } = body;
-    if (!code || (!name_en && !name_ar)) {
-      throw new BadRequestException('code and name are required');
+    let { code } = body;
+    const { name_en, name_ar } = body;
+    if (!name_en && !name_ar) {
+      throw new BadRequestException('name is required');
     }
 
-    const existing = await this.prisma.unitOfMeasure.findUnique({
-      where: { code },
-    });
-    if (existing) {
-      throw new ConflictException(
-        `Unit of Measure with code "${code}" already exists`,
-      );
+    if (!code || code.trim() === '') {
+      const allUoMs = await this.prisma.unitOfMeasure.findMany({
+        where: {
+          code: {
+            startsWith: 'UOM-',
+          },
+        },
+        select: {
+          code: true,
+        },
+      });
+      let maxNum = 0;
+      for (const u of allUoMs) {
+        const matches = u.code.match(/^UOM-(\d+)$/);
+        if (matches) {
+          const num = parseInt(matches[1], 10);
+          if (num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+      code = `UOM-${String(maxNum + 1).padStart(4, '0')}`;
+    } else {
+      const existing = await this.prisma.unitOfMeasure.findUnique({
+        where: { code },
+      });
+      if (existing) {
+        throw new ConflictException(
+          `Unit of Measure with code "${code}" already exists`,
+        );
+      }
     }
 
     const name = name_en || name_ar;

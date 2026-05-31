@@ -4,6 +4,6 @@ import { FXRatesController } from './fx-rates.controller';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [FXRatesController],
+  controllers: [],
 })
 export class FXRatesModule {}

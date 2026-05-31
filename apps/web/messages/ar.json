@@ -1605,7 +1605,9 @@
       },
       "fields": {
         "name_ar": "اسم التصنيف (AR)",
-        "name_en": "اسم التصنيف (EN)"
+        "name_en": "اسم التصنيف (EN)",
+        "code": "رمز الفئة",
+        "code_hint": "رمز الفئة التسلسلي المولد تلقائياً (للقراءة فقط)"
       },
       "hierarchy_depth": "عمق التسلسل الهرمي",
       "layers": "الطبقات",
@@ -1625,7 +1627,10 @@
       "title": "الفئات",
       "total_groups": "إجمالي المجموعات",
       "updated_success": "تم تحديث التصنيف",
-      "view_title": "تفاصيل الفئة"
+      "view_title": "تفاصيل الفئة",
+      "warnings": {
+        "referenced_protection": "هذه الفئة مستخدمة في مستندات تشغيلية نشطة. تم قفل بعض الحقول للحفاظ على اتساق السجلات المخزنية."
+      }
     },
     "common": {
       "active": "نشط",
@@ -2113,7 +2118,8 @@
         "created_at": "تاريخ الإنشاء",
         "is_active": "الحالة",
         "name_ar": "اسم الوحدة (AR)",
-        "name_en": "اسم الوحدة (EN)"
+        "name_en": "اسم الوحدة (EN)",
+        "category": "الفئة"
       },
       "label": "وحدة القياس",
       "metrics": {
@@ -2150,7 +2156,15 @@
         "name_ar_required": "الاسم بالعربية مطلوب",
         "name_en_required": "الاسم بالإنجليزية مطلوب"
       },
-      "view_title": "تفاصيل وحدة القياس"
+      "view_title": "تفاصيل وحدة القياس",
+      "category_options": {
+        "area": "مساحة",
+        "count": "عدد",
+        "length": "طول",
+        "mass": "كتلة",
+        "unit": "وحدة",
+        "volume": "حجم"
+      }
     },
     "warehouses": {
       "actions": {
@@ -3696,5 +3710,41 @@
     "date_from": "من تاريخ",
     "date_to": "إلى تاريخ",
     "warehouse": "المستودع"
+  },
+  "masterData": {
+    "common": {
+      "master_data": "مركز البيانات الأساسية"
+    },
+    "branches": {
+      "title": "الفروع"
+    },
+    "warehouses": {
+      "title": "المستودعات"
+    },
+    "departments": {
+      "title": "الأقسام"
+    },
+    "suppliers": {
+      "title": "الموردين"
+    },
+    "categories": {
+      "title": "الفئات"
+    },
+    "items": {
+      "title": "البريد / المواد"
+    },
+    "uom": {
+      "title": "وحدات القياس"
+    },
+    "barcodes": {
+      "title": "الباركود"
+    },
+    "currencies": {
+      "title": "العملات",
+      "fx_rates_title": "أسعار الصرف"
+    },
+    "import": {
+      "title": "استيراد البيانات"
+    }
   }
 }

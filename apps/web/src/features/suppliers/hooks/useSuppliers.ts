@@ -45,7 +45,7 @@ export function useCreateSupplier() {
       const { signal, ...values } = variables;
       return apiClient.post('/suppliers', SupplierSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: () => {
@@ -69,7 +69,7 @@ export function useUpdateSupplier(options?: { onConflict?: () => void }) {
     mutationFn: ({ id, values, signal }: { id: string; values: SupplierFormValues; signal?: AbortSignal }) => {
       return apiClient.put(`/suppliers/${id}`, SupplierSchema, {
         ...values,
-        code: values.code.toUpperCase()
+        code: values.code ? values.code.toUpperCase() : undefined
       }, { signal });
     },
     onSuccess: (data) => {

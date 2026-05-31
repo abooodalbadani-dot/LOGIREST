@@ -11,11 +11,13 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { ItemsService } from './items.service';
+import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 @Controller(['items', 'master-data/items'])
@@ -52,8 +54,14 @@ export class ItemsController {
   async create(
     @Body() body: any,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
+      throw new ForbiddenException(
+        'Only ADMIN or GM roles are authorized to modify master data.',
+      );
+    }
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -69,8 +77,14 @@ export class ItemsController {
     @Param('id') id: string,
     @Body() body: any,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
+      throw new ForbiddenException(
+        'Only ADMIN or GM roles are authorized to modify master data.',
+      );
+    }
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -86,8 +100,14 @@ export class ItemsController {
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    if (role !== Role.ADMIN && role !== Role.GM) {
+      throw new ForbiddenException(
+        'Only ADMIN or GM roles are authorized to modify master data.',
+      );
+    }
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]

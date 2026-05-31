@@ -782,7 +782,7 @@ export class ReportsService {
     const queryOpts: any = {
       where,
       include: { item: true },
-      orderBy: { postedAt: 'desc' as const },
+      orderBy: [{ postedAt: 'desc' as const }, { id: 'asc' as const }],
       take: currentChunkSize + 1,
     };
 
@@ -839,7 +839,10 @@ export class ReportsService {
         lot: { expiryDate: { not: null } },
       },
       include: { item: true, lot: true },
-      orderBy: { lot: { expiryDate: 'asc' as const } },
+      orderBy: [
+        { lot: { expiryDate: 'asc' as const } },
+        { id: 'asc' as const },
+      ],
       take: currentChunkSize + 1,
     };
 
@@ -903,7 +906,7 @@ export class ReportsService {
     const queryOpts: any = {
       where,
       include: { item: true },
-      orderBy: { postedAt: 'desc' as const },
+      orderBy: [{ postedAt: 'desc' as const }, { id: 'asc' as const }],
       take: currentChunkSize + 1,
     };
 
@@ -998,7 +1001,7 @@ export class ReportsService {
     const queryOpts: any = {
       where,
       include: { item: true },
-      orderBy: { postedAt: 'desc' as const },
+      orderBy: [{ postedAt: 'desc' as const }, { id: 'asc' as const }],
       take: currentChunkSize + 1,
     };
 

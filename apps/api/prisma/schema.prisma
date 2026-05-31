@@ -268,7 +268,7 @@ model FXRate {
   fromCurrency Currency @relation("FXFrom", fields: [fromCurrencyId], references: [id], onDelete: Restrict)
   toCurrency   Currency @relation("FXTo", fields: [toCurrencyId], references: [id], onDelete: Restrict)
 
-  @@index([fromCurrencyId, toCurrencyId, effectiveFrom(sort: Desc)])
+  @@unique([fromCurrencyId, toCurrencyId, effectiveFrom])
   @@map("fx_rates")
 }
 
@@ -482,6 +482,7 @@ model TransferLine {
   itemId           String
   quantityShipped  Decimal  @db.Decimal(18, 4)
   quantityReceived Decimal? @db.Decimal(18, 4)
+  unitCost         Decimal? @db.Decimal(18, 4)
   varianceReason   String?
 
   transfer       Transfer        @relation(fields: [transferId], references: [id], onDelete: Cascade)

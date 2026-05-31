@@ -4,6 +4,7 @@ import { WarehousesDirectController } from './warehouses/warehouses-direct.contr
 import { BranchesController } from './branches/branches.controller';
 import { DepartmentsController } from './departments/departments.controller';
 import { FXRatesModule } from './fx-rates/fx-rates.module';
+import { FXRatesController } from './fx-rates/fx-rates.controller';
 
 import { ItemsController } from './items/items.controller';
 import { ItemsService } from './items/items.service';
@@ -31,6 +32,7 @@ import { VarianceReasonsService } from './variance-reasons/variance-reasons.serv
     SuppliersController,
     UomController,
     BarcodesController,
+    FXRatesController,
     CurrenciesController,
     VarianceReasonsController,
   ],

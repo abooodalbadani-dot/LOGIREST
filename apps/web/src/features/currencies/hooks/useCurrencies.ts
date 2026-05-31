@@ -3,9 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { type Currency, type CurrencyFormValues } from '@/types/master-data';
+import { type Currency, type CurrencyFormValues, CurrencySchema } from '@/types/master-data';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
-import { ConflictError } from '@/lib/api/ConflictError';
+import { apiClient } from '@/lib/api/client';
+import { type ApiError, paginatedSchema } from '@/types/api';
 
 const QUERY_KEY = ['currencies'];
 
@@ -13,30 +14,21 @@ export function useCurrencies() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: async ({ signal }) => {
-      // In production, this would call the API
-      // Since I don't have the real API yet, I'll ensure it returns from cache or errors if empty
-      // but I am REMOVING the hardcoded objects as requested.
-      const response = await fetch('/api/currencies', { signal }); // Placeholder for real API logic
-      if (!response.ok) throw new Error('Failed to fetch currencies');
-      return response.json();
+      const response = await apiClient.get('/currencies', paginatedSchema(CurrencySchema), { signal });
+      return response.data;
     },
-    // Ensure data is cached and shared
     staleTime: 1000 * 60 * 5,
   });
 }
 
 export function useCurrency(id: string | null) {
-
   return useQuery({
     queryKey: [...QUERY_KEY, id],
-    queryFn: async ({ signal }) => {
+    queryFn: ({ signal }) => {
       if (!id) return null;
-      // In production, fetch specific ID
-      const response = await fetch(`/api/currencies/${id}`, { signal });
-      if (!response.ok) return null;
-      return response.json();
+      return apiClient.get(`/currencies/${id}`, CurrencySchema, { signal });
     },
-    enabled: !!id
+    enabled: !!id && id !== 'undefined' && id !== 'null'
   });
 }
 
@@ -45,51 +37,21 @@ export function useCreateCurrency() {
   const t = useTranslations('master_data.currencies');
 
   return useMutation({
-    mutationFn: async ({ values, signal }: { values: CurrencyFormValues; signal?: AbortSignal }) => {
-      const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
-
-      // GUARD: Uniqueness (Case-insensitive)
-      const exists = data.some(c => c.code.toUpperCase() === values.code.toUpperCase());
-      if (exists) {
-        throw new Error('code_exists');
-      }
-
-      const abortPromise = new Promise((_, reject) => {
-        if (signal?.aborted) return reject(new Error('AbortError'));
-        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
-      });
-
-      const workPromise = (async () => {
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const newCurrency: Currency = {
-          id: `CUR- ${values.code.toUpperCase()}`,
-          ...values,
-          code: values.code.toUpperCase(),
-          created_at: new Date().toISOString()
-        };
-
-        queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
-          let updated = [...old];
-          // If new is base, unset others
-          if (newCurrency.is_base_currency) {
-            updated = updated.map(c => ({ ...c, is_base_currency: false }));
-          }
-          return [...updated, newCurrency];
-        });
-
-        return newCurrency;
-      })();
-
-      return Promise.race([workPromise, abortPromise]) as Promise<Currency>;
+    mutationFn: (variables: { values: CurrencyFormValues; signal?: AbortSignal }) => {
+      const { signal, values } = variables;
+      return apiClient.post('/currencies', CurrencySchema, {
+        ...values,
+        code: values.code ? values.code.toUpperCase() : undefined
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success(t('created_success'));
     },
-    onError: (error: Error) => {
-      if (error.message === 'AbortError') return;
-      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'create_failed';
+      toast.error(t(`errors.${errorCode}`) || t('errors.create_failed'));
     }
   });
 }
@@ -100,85 +62,21 @@ export function useUpdateCurrency(options?: { onConflict?: () => void }) {
 
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: async ({ id, values, signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
-      const data = queryClient.getQueryData<Currency[]>(QUERY_KEY) || [];
-      const currency = data.find(c => c.id === id);
-      if (!currency) throw new Error('Currency not found');
-
-      if (values.version !== undefined && values.version < (currency.version ?? 0)) {
-        throw new ConflictError({
-          message: 'CONFLICT',
-          code: 'VERSION_CONFLICT',
-          currentVersion: currency.version
-        });
-      }
-
-      // GUARD: Uniqueness if code changed
-      if (values.code.toUpperCase() !== currency.code.toUpperCase()) {
-        const exists = data.some(c => c && c.id !== id && c.code && c.code.toUpperCase() === values.code.toUpperCase());
-        if (exists) {
-          throw new Error('code_exists');
-        }
-      }
-
-      // GUARD: Cannot deactivate base currency
-      if (values.is_active === false && currency.is_base_currency) {
-        throw new Error('cannot_deactivate_base');
-      }
-
-      // GUARD: Deactivation if in use (Operational check should be done by API)
-      if (values.is_active === false && currency.is_active === true) {
-        // In production, the API will prevent deactivation if in use
-      }
-
-      // GUARD: Base currency logic
-      // If unsetting base, check if another one exists
-      if (currency.is_base_currency && !values.is_base_currency) {
-        const otherBase = data.some(c => c.id !== id && c.is_base_currency);
-        if (!otherBase) {
-          throw new Error('base_required');
-        }
-      }
-
-      const abortPromise = new Promise((_, reject) => {
-        if (signal?.aborted) return reject(new Error('AbortError'));
-        signal?.addEventListener('abort', () => reject(new Error('AbortError')), { once: true });
-      });
-
-      const workPromise = (async () => {
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const updatedCurrency: Currency = {
-          ...currency,
-          ...values,
-          code: values.code.toUpperCase(),
-          version: (currency.version ?? 0) + 1
-        };
-
-        queryClient.setQueryData<Currency[]>(QUERY_KEY, (old = []) => {
-          let updated = old.map(c => c.id === id ? updatedCurrency : c);
-
-          // If this one is now base, unset others
-          if (updatedCurrency.is_base_currency) {
-            updated = updated.map(c => c.id === id ? c : { ...c, is_base_currency: false });
-          }
-
-          return updated;
-        });
-
-        return updatedCurrency;
-      })();
-
-      return Promise.race([workPromise, abortPromise]) as Promise<Currency>;
+    mutationFn: ({ id, values, signal }: { id: string; values: CurrencyFormValues; signal?: AbortSignal }) => {
+      return apiClient.put(`/currencies/${id}`, CurrencySchema, {
+        ...values,
+        code: values.code ? values.code.toUpperCase() : undefined,
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.setQueryData([...QUERY_KEY, data.id], data);
       toast.success(t('updated_success'));
     },
-    onError: (error: Error) => {
-      if (error.message === 'AbortError') return;
-      toast.error(t(`errors.${error.message}`) || t('errors.update_failed'));
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'update_failed';
+      toast.error(t(`errors.${errorCode}`) || t('errors.update_failed'));
     }
   });
 }

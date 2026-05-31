@@ -23,6 +23,7 @@ import { UoMFormSchema, type UoMFormValues } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { toast } from 'sonner';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -97,7 +98,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
     );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: UoMFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -111,7 +112,14 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('UoM form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -181,6 +189,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                       render={({ field }) => (
                           <Input 
                             {...field}
+                            value={field.value ?? ''}
                             id="uom-code" 
                             dir="ltr" 
                             disabled={isReadOnly}

@@ -138,7 +138,7 @@ export function StoreManagerDashboard() {
                           </Badge>
                         </div>
                         <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
-                          {job.items} {tc('units')} • {job.id.startsWith('IS') ? t('store.direct_issue') : t('store.transfer_request')}
+                          {job.items} {tc('units_label')} • {job.id.startsWith('IS') ? t('store.direct_issue') : t('store.transfer_request')}
                         </p>
                       </div>
                     </div>

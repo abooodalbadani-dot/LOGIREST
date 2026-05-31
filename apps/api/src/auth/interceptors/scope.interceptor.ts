@@ -37,6 +37,7 @@ const SCOPE_EXEMPT_ROUTES = [
   '/api/v1/branches',
   '/api/v1/warehouses',
   '/api/v1/departments',
+  '/api/v1/currencies',
   '/api/v1/master-data/',
 ];
 
@@ -65,11 +66,19 @@ export class ScopeInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const isExempt = SCOPE_EXEMPT_ROUTES.some((route) => url.startsWith(route));
+    // Normalize URL and exempt routes (remove query string, global api and v1 prefix)
+    const cleanUrl = url.split('?')[0];
+    const isExempt = SCOPE_EXEMPT_ROUTES.some((route) => {
+      const normRoute = route.replace(/^\/api\/v1/, '').replace(/^\/api/, '');
+      const normUrl = cleanUrl.replace(/^\/api\/v1/, '').replace(/^\/api/, '');
+      return normUrl.startsWith(normRoute);
+    });
+
     const warehouseId = request.headers['x-warehouse-id'] as string | undefined;
     const branchId = request.headers['x-branch-id'] as string | undefined;
     const hasHeaders = !!(warehouseId && branchId);
 
+    // If route is exempt and headers are missing, bypass scope checks entirely
     if (isExempt && !hasHeaders) {
       return next.handle();
     }
@@ -79,27 +88,42 @@ export class ScopeInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    // If headers are missing on a non-exempt route, reject
     if (!warehouseId || !branchId) {
+      if (isExempt) {
+        return next.handle();
+      }
       throw new BadRequestException(
         'Missing active scope headers: x-warehouse-id, x-branch-id',
       );
     }
 
-    const scope = await this.prisma.userWarehouseScope.findUnique({
-      where: {
-        userId_warehouseId: {
-          userId: authenticatedUser.id,
-          warehouseId,
+    let scope = null;
+    try {
+      scope = await this.prisma.userWarehouseScope.findUnique({
+        where: {
+          userId_warehouseId: {
+            userId: authenticatedUser.id,
+            warehouseId,
+          },
         },
-      },
-      include: {
-        warehouse: {
-          select: { branchId: true },
+        include: {
+          warehouse: {
+            select: { branchId: true },
+          },
         },
-      },
-    });
+      });
+    } catch (e) {
+      // Handle potential DB query errors for invalid formats by keeping scope as null
+    }
 
+    // If scope is not found or branchId does not match
     if (!scope || scope.warehouse.branchId !== branchId) {
+      // If the route is exempt, do not enforce validation failure - proceed to controller
+      if (isExempt) {
+        return next.handle();
+      }
+
       await this.prisma.auditLog.create({
         data: {
           userId: authenticatedUser.id,

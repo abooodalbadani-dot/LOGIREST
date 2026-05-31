@@ -18,6 +18,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
+import { toast } from 'sonner';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -103,7 +104,7 @@ export function CurrencyFormClient({
     );
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: CurrencyFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -117,7 +118,14 @@ export function CurrencyFormClient({
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Currency form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const displayTitle = isReadOnly ? viewTitle : (id ? editTitle : createTitle);
 

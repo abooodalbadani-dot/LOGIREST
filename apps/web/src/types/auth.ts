@@ -1,10 +1,20 @@
 export type { UserRole, UserScope, AuthUser } from '@/providers/AuthProvider';
 import { z } from 'zod';
 
+export const WarehouseDetailsSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  branch: z.object({
+    id: z.string(),
+    name: z.string(),
+  }).nullable().optional(),
+}).nullable().optional();
+
 export const UserScopeSchema = z.object({
  branch_id: z.string().nullable(),
  warehouse_id: z.string().nullable(),
  department_id: z.string().nullable(),
+ warehouse: WarehouseDetailsSchema,
 });
 
 export const NotificationPreferencesSchema = z.object({

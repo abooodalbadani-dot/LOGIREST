@@ -124,8 +124,8 @@ export class ItemsService {
   }
 
   async create(body: any, userId: string, ipAddress?: string) {
+    let { code } = body;
     const {
-      code,
       name_en,
       name_ar,
       category_id,
@@ -137,18 +137,44 @@ export class ItemsService {
       barcode,
     } = body;
 
-    if (!code || !category_id || !primary_uom_id) {
+    if (!category_id || !primary_uom_id) {
       throw new BadRequestException(
-        'code, category_id, and primary_uom_id are required',
+        'category_id and primary_uom_id are required',
       );
     }
 
-    // Check if sku exists
-    const existing = await this.prisma.item.findUnique({
-      where: { sku: code },
-    });
-    if (existing) {
-      throw new ConflictException(`Item with code/sku ${code} already exists`);
+    if (!code || code.trim() === '') {
+      const allItems = await this.prisma.item.findMany({
+        where: {
+          sku: {
+            startsWith: 'ITEM-',
+          },
+        },
+        select: {
+          sku: true,
+        },
+      });
+      let maxNum = 0;
+      for (const item of allItems) {
+        const matches = item.sku.match(/^ITEM-(\d+)$/);
+        if (matches) {
+          const num = parseInt(matches[1], 10);
+          if (num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+      code = `ITEM-${String(maxNum + 1).padStart(4, '0')}`;
+    } else {
+      // Check if sku exists
+      const existing = await this.prisma.item.findUnique({
+        where: { sku: code },
+      });
+      if (existing) {
+        throw new ConflictException(
+          `Item with code/sku ${code} already exists`,
+        );
+      }
     }
 
     const name = name_en || name_ar || code;

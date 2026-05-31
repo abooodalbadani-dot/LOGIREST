@@ -15,6 +15,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -110,7 +111,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     }));
   }, [filteredWarehouses, locale]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: DepartmentFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -124,7 +125,14 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Department form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;

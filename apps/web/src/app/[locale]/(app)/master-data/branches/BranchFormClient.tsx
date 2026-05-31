@@ -26,6 +26,7 @@ import {
  useDeleteBranch,
 } from '@/features/branches/hooks/useBranches';
 import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
+import { toast } from 'sonner';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
@@ -84,9 +85,8 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     }
   }, [data, reset]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: BranchFormValues) => {
     if (isReadOnly) return;
-    
     try {
       if (id) {
         await update.mutateAsync({ id, values, signal: abortController.signal });
@@ -98,7 +98,14 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     } catch {
       // Error handled by mutation hooks or conflict handler
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Branch form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;

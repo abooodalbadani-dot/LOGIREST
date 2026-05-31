@@ -24,6 +24,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
+import { toast } from 'sonner';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
@@ -113,7 +114,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [uoms?.data, tm]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = async (values: ItemFormValues) => {
     if (isReadOnly) return;
     
     try {
@@ -127,7 +128,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     } catch {
       // Handled by mutation callbacks
     }
-  });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.warn('Item form validation failed:', errors);
+    toast.error(t('check_fields') || 'Please check required fields');
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;

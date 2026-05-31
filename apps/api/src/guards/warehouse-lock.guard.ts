@@ -41,9 +41,9 @@ export class WarehouseLockGuard implements CanActivate {
 
     for (const source of sources) {
       if (source && typeof source === 'object') {
-        const whId = source.warehouseId;
-        const fromWhId = source.fromWarehouseId;
-        const toWhId = source.toWarehouseId;
+        const whId = source.warehouseId || source.warehouse_id;
+        const fromWhId = source.fromWarehouseId || source.from_warehouse_id;
+        const toWhId = source.toWarehouseId || source.to_warehouse_id;
 
         if (typeof whId === 'string' && whId) warehouseIdsSet.add(whId);
         if (typeof fromWhId === 'string' && fromWhId)
