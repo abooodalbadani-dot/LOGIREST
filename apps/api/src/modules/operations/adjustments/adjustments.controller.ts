@@ -25,6 +25,7 @@ import {
 } from '../../../decorators/swagger-docs.decorator';
 import { AdjustmentDirection, AdjustmentReason, Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PrismaService } from '../../../database/prisma.service';
 import type { Request } from 'express';
 
 function mapAdjustmentDetail(adj: any) {
@@ -105,6 +106,7 @@ export class AdjustmentsController {
     private readonly adjPostService: AdjustmentPostService,
     private readonly adjustmentsService: AdjustmentsService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -179,6 +181,8 @@ export class AdjustmentsController {
   @Put(':id')
   async update(
     @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Body()
     body: {
       version: number;
@@ -200,6 +204,18 @@ export class AdjustmentsController {
       }>;
     },
   ) {
+    const adjustment = await this.prisma.adjustment.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (adjustment) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        adjustment.warehouseId,
+      );
+    }
+
     const warehouseId = body.warehouseId || body.warehouse_id;
     const lines = body.lines?.map((line) => ({
       id: line.id,

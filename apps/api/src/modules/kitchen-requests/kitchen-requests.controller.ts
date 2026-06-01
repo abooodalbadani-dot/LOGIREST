@@ -24,6 +24,7 @@ import {
 import { type UpdateKitchenRequestDto } from '@logirest/shared-types';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
+import { PrismaService } from '../../database/prisma.service';
 import type { Request } from 'express';
 
 function mapKitchenRequestDetail(kr: any) {
@@ -76,6 +77,7 @@ export class KitchenRequestsController {
   constructor(
     private readonly krService: KitchenRequestsService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post()
@@ -140,8 +142,21 @@ export class KitchenRequestsController {
     @Param('id') id: string,
     @Body() dto: UpdateKitchenRequestDto,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
+    const kr = await this.prisma.kitchenRequest.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (kr) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        kr.warehouseId,
+      );
+    }
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -149,8 +164,8 @@ export class KitchenRequestsController {
       req.ip ||
       undefined;
 
-    const kr = await this.krService.update(id, dto, userId, ipAddress);
-    return { data: mapKitchenRequestDetail(kr) };
+    const updated = await this.krService.update(id, dto, userId, ipAddress);
+    return { data: mapKitchenRequestDetail(updated) };
   }
 
   @Post(':id/submit')

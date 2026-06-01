@@ -24,6 +24,7 @@ import {
 } from '../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
+import { PrismaService } from '../../database/prisma.service';
 import type { Request } from 'express';
 
 function mapPRDetail(pr: any) {
@@ -77,6 +78,7 @@ export class PurchaseRequestsController {
   constructor(
     private readonly prService: PurchaseRequestsService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post()
@@ -139,26 +141,55 @@ export class PurchaseRequestsController {
   @Put(':id')
   async update(
     @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Body()
     body: {
       version: number;
       lines?: Array<{ itemId: string; quantity: number }>;
     },
   ) {
+    const pr = await this.prisma.purchaseRequest.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (pr) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        pr.warehouseId,
+      );
+    }
     const lines = body.lines?.map((line: any) => ({
       itemId: line.itemId || line.item_id,
       quantity: line.quantity || line.req_qty,
     }));
 
-    const pr = await this.prService.update(id, {
+    const updated = await this.prService.update(id, {
       version: body.version,
       lines,
     });
-    return { data: mapPRDetail(pr) };
+    return { data: mapPRDetail(updated) };
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Query('version') version?: string) {
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Query('version') version?: string,
+  ) {
+    const pr = await this.prisma.purchaseRequest.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (pr) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        pr.warehouseId,
+      );
+    }
     await this.prService.remove(id, version ? Number(version) : undefined);
     return { success: true };
   }

@@ -1,12 +1,17 @@
 /* eslint-disable */
 import { Test, TestingModule } from '@nestjs/testing';
 import { KitchenRequestVoidService } from './kitchen-request-void.service';
+import { IssueVoidService } from './issue-void.service';
+import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { PrismaService } from '../../database/prisma.service';
-import { Prisma, Role, DocumentType } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('KitchenRequestVoidService', () => {
   let service: KitchenRequestVoidService;
+
+  const mockIssueVoidService = { void: jest.fn() };
+  const mockLockService = { lockItem: jest.fn(), lockLots: jest.fn() };
 
   const mockRequestFindUnique = jest.fn();
   const mockRequestUpdate = jest.fn();
@@ -33,12 +38,9 @@ describe('KitchenRequestVoidService', () => {
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {
-    $transaction: jest
-      .fn()
-      .mockImplementation(
-        (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-          cb(mockPrismaTx),
-      ),
+    $transaction: jest.fn().mockImplementation(
+      (cb: any, _options?: any) => cb(mockPrismaTx),
+    ),
   } as unknown as PrismaService;
 
   beforeEach(async () => {
@@ -46,6 +48,8 @@ describe('KitchenRequestVoidService', () => {
       providers: [
         KitchenRequestVoidService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: IssueVoidService, useValue: mockIssueVoidService },
+        { provide: LedgerLockService, useValue: mockLockService },
       ],
     }).compile();
 
@@ -60,11 +64,11 @@ describe('KitchenRequestVoidService', () => {
 
     mockRequestFindUnique.mockResolvedValue({
       id: requestId,
+      warehouseId: 'wh-1',
       status: 'FULFILLED',
       version: 1,
-      items: [
-        { itemId: 'item-1', item: { sku: 'SKU1' } }
-      ]
+      items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
+      issue: null,
     });
 
     mockRequestUpdate.mockResolvedValue({ id: requestId, status: 'VOIDED' });
@@ -85,16 +89,14 @@ describe('KitchenRequestVoidService', () => {
 
     mockRequestFindUnique.mockResolvedValue({
       id: requestId,
+      warehouseId: 'wh-1',
       status: 'FULFILLED',
       version: 1,
-      items: [
-        { itemId: 'item-1', item: { sku: 'SKU1' } }
-      ]
+      items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
+      issue: null,
     });
 
-    mockWarehouseItemFindUnique.mockResolvedValue({
-      isFrozen: true,
-    });
+    mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: true });
 
     await expect(service.void(requestId, userId, Role.ADMIN, 1)).rejects.toThrow(
       BadRequestException,
@@ -104,8 +106,10 @@ describe('KitchenRequestVoidService', () => {
   it('should throw BadRequestException if status is not FULFILLED', async () => {
     mockRequestFindUnique.mockResolvedValue({
       id: 'req-1',
+      warehouseId: 'wh-1',
       status: 'DRAFT',
       items: [],
+      issue: null,
     });
 
     await expect(service.void('req-1', 'user-1', Role.ADMIN)).rejects.toThrow(

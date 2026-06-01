@@ -17,6 +17,7 @@ import {
   WorkflowActionMetadata,
 } from '../decorators/workflow-action.decorator';
 import { DocumentStatus, Role } from '@logirest/shared-types';
+import { ScopeValidationService } from '../auth/scope-validation.service';
 
 @Injectable()
 export class WorkflowStateGuard implements CanActivate {
@@ -24,6 +25,7 @@ export class WorkflowStateGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -72,6 +74,47 @@ export class WorkflowStateGuard implements CanActivate {
     const action = metadata.action;
     const docType = metadata.docType;
 
+    // Warehouse Scope Validation
+    let warehouseId: string | undefined;
+
+    if (
+      modelName === 'purchaseRequest' ||
+      modelName === 'purchaseOrder' ||
+      modelName === 'goodsReceivedNote' ||
+      modelName === 'inventoryIssue' ||
+      modelName === 'kitchenRequest' ||
+      modelName === 'adjustment'
+    ) {
+      warehouseId = existingDoc.warehouseId;
+    } else if (modelName === 'transfer') {
+      if (action === 'SHIP' || action === 'CANCEL') {
+        warehouseId = existingDoc.fromWarehouseId;
+      } else if (action === 'RECEIVE' || action === 'POST') {
+        warehouseId = existingDoc.toWarehouseId;
+      }
+    }
+
+    if (warehouseId) {
+      try {
+        await this.scopeValidationService.validateWarehouse(
+          user.id,
+          user.role as Role,
+          warehouseId,
+        );
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        await this.workflowService.writeAuditLog(
+          user.id,
+          `WORKFLOW_${action}_FAILED`,
+          targetTable,
+          documentId,
+          { status: docStatus, version: existingDoc.version },
+          { error: errorMsg },
+          ipAddress,
+        );
+        throw error;
+      }
+    }
     // 1. Role Capability Check
     const hasRolePermission = this.workflowService.verifyRolePermission(
       docType,

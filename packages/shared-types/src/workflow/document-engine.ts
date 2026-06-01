@@ -266,6 +266,27 @@ export function canPerformActionV2(
   const normalizedType = documentType.toLowerCase() as BaseDocumentType;
   const normalizedAction = action.toLowerCase();
 
+  // 1. First check transitionMapV2 - status-based lock enforcement
+  const typeMap = transitionMapV2[normalizedType];
+  
+  if (!typeMap) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[Workflow Engine] No transitions defined for DocumentType: ${documentType}`);
+    }
+    return false;
+  }
+
+  const statusTransitions = typeMap[status];
+  if (!statusTransitions) {
+    return false; // Status has no transitions defined → locked
+  }
+
+  const rule = statusTransitions[action];
+  if (!rule) {
+    return false; // Action not allowed in this status → locked
+  }
+
+  // 2. Then check if the user's role has the capability
   const capabilitiesKey = normalizedType === 'pr' ? 'pr'
     : normalizedType === 'po' ? 'po'
     : normalizedType === 'grn' ? 'grn'
@@ -281,23 +302,7 @@ export function canPerformActionV2(
     }
   }
 
-  const typeMap = transitionMapV2[normalizedType];
-  
-  if (!typeMap) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[Workflow Engine] No transitions defined for DocumentType: ${documentType}`);
-    }
-    return false;
-  }
-
-  const statusTransitions = typeMap[status];
-  if (!statusTransitions) {
-    return false;
-  }
-
-  const rule = statusTransitions[action];
-  if (!rule) return false;
-
+  // 3. Fallback to transitionMapV2 role check
   return rule.allowedRoles.includes(role as Role);
 }
 

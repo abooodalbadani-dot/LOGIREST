@@ -221,6 +221,8 @@ export class PurchaseOrderController {
   @Put(':id')
   async update(
     @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Body()
     body: {
       supplierId?: string;
@@ -234,12 +236,33 @@ export class PurchaseOrderController {
       }>;
     },
   ) {
-    const po = await this.poService.update(id, body);
-    return { data: mapPODetail(po) };
+    const po = await this.poService.findOne(id);
+    if (po.purchaseRequest?.warehouseId) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        po.purchaseRequest.warehouseId,
+      );
+    }
+    const updated = await this.poService.update(id, body);
+    return { data: mapPODetail(updated) };
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Query('version') version?: string) {
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Query('version') version?: string,
+  ) {
+    const po = await this.poService.findOne(id);
+    if (po.purchaseRequest?.warehouseId) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        po.purchaseRequest.warehouseId,
+      );
+    }
     await this.poService.remove(id, version ? Number(version) : undefined);
     return { success: true };
   }

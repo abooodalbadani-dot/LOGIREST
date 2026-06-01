@@ -23,6 +23,7 @@ import { ActiveScope } from '../../../auth/decorators/active-scope.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PrismaService } from '../../../database/prisma.service';
 import type { Request } from 'express';
 
 function mapGRNDetail(grn: any) {
@@ -120,6 +121,7 @@ export class GrnController {
     private readonly grnService: GrnService,
     private readonly grnPostService: GrnPostService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post()
@@ -210,6 +212,8 @@ export class GrnController {
   @Put(':id')
   async update(
     @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
     @Body()
     body: {
       po_id?: string;
@@ -232,6 +236,18 @@ export class GrnController {
       }>;
     },
   ) {
+    const grnRecord = await this.prisma.goodsReceivedNote.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (grnRecord) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        grnRecord.warehouseId,
+      );
+    }
+
     const poId = body.poId || body.po_id;
     const warehouseId = body.warehouseId || body.warehouse_id;
     const lines = body.lines?.map((line) => ({
@@ -252,7 +268,24 @@ export class GrnController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Query('version') version?: string) {
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @Query('version') version?: string,
+  ) {
+    const grnRecord = await this.prisma.goodsReceivedNote.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (grnRecord) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        grnRecord.warehouseId,
+      );
+    }
+
     await this.grnService.remove(id, version ? Number(version) : undefined);
     return { success: true };
   }

@@ -21,13 +21,15 @@ export class IssueVoidService {
     userRole: Role,
     clientVersion?: number,
     ipAddress?: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<any> {
     if (userRole !== Role.ADMIN && userRole !== Role.INV_MGR) {
       throw new ForbiddenException(
         'Only System Administrators or Inventory Managers can void documents',
       );
     }
-    return this.prisma.$transaction(async (tx) => {
+
+    const execute = async (tx: Prisma.TransactionClient) => {
       const issue = await tx.inventoryIssue.findUnique({
         where: { id: issueId },
         include: {
@@ -196,6 +198,11 @@ export class IssueVoidService {
       });
 
       return updatedIssue;
-    });
+    };
+
+    if (tx) {
+      return execute(tx);
+    }
+    return this.prisma.$transaction(execute);
   }
 }
