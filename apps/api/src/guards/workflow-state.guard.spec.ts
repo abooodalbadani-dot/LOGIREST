@@ -3,6 +3,7 @@ import { WorkflowStateGuard } from './workflow-state.guard';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../database/prisma.service';
 import { WorkflowService } from '../modules/workflow/workflow.service';
+import { ScopeValidationService } from '../auth/scope-validation.service';
 import {
   ExecutionContext,
   ForbiddenException,
@@ -45,6 +46,10 @@ describe('WorkflowStateGuard', () => {
     } as unknown as ExecutionContext;
   };
 
+  const mockScopeValidationService = {
+    validateWarehouse: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,11 +57,17 @@ describe('WorkflowStateGuard', () => {
         { provide: Reflector, useValue: mockReflector },
         { provide: PrismaService, useValue: mockPrisma },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        {
+          provide: ScopeValidationService,
+          useValue: mockScopeValidationService,
+        },
       ],
     }).compile();
 
     guard = module.get<WorkflowStateGuard>(WorkflowStateGuard);
 
+    mockScopeValidationService.validateWarehouse.mockReset();
+    mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
     jest.clearAllMocks();
   });
 

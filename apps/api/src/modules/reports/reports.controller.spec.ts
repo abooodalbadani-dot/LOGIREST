@@ -169,7 +169,7 @@ describe('ReportsController', () => {
       ]);
       expect(mockPrismaService.adjustment.groupBy).toHaveBeenCalledWith({
         by: ['status'],
-        where: { warehouseId: 'wh-1' },
+        where: { warehouseId: { in: ['wh-1'] } },
         _count: { status: true },
       });
     });

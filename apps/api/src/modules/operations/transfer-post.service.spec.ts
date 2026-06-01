@@ -9,6 +9,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
 import { WacService } from '../ledger/wac.service';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 
 describe('TransferPostService', () => {
   const mockWacService = {
@@ -106,6 +107,11 @@ describe('TransferPostService', () => {
     },
   };
 
+  const mockScopeValidationService = {
+    validateWarehouse: jest.fn().mockResolvedValue(undefined),
+    checkWarehouseItemQuarantine: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -116,10 +122,15 @@ describe('TransferPostService', () => {
         { provide: OutboxService, useValue: mockOutboxService },
         { provide: MetricsService, useValue: mockMetricsService },
         { provide: WacService, useValue: mockWacService },
+        { provide: ScopeValidationService, useValue: mockScopeValidationService },
       ],
     }).compile();
 
     service = module.get<TransferPostService>(TransferPostService);
+    mockScopeValidationService.validateWarehouse.mockReset();
+    mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
+    mockScopeValidationService.checkWarehouseItemQuarantine.mockReset();
+    mockScopeValidationService.checkWarehouseItemQuarantine.mockResolvedValue(undefined);
     jest.clearAllMocks();
     mockWarehouseItemFindUnique.mockResolvedValue({ wac: new Prisma.Decimal(10.0), isFrozen: false });
     mockWarehouseFindUnique.mockResolvedValue({ id: 'wh-loss-id', branchId: 'branch-1' });
@@ -520,12 +531,9 @@ describe('TransferPostService', () => {
           },
         ],
       });
-      mockWarehouseItemFindUnique.mockImplementation(async (args) => {
-        if (args.where.warehouseId_itemId.warehouseId === 'wh-dest') {
-          return { isFrozen: true };
-        }
-        return { isFrozen: false };
-      });
+      mockScopeValidationService.checkWarehouseItemQuarantine.mockRejectedValue(
+        new BadRequestException('Item is frozen in destination warehouse'),
+      );
 
       await expect(
         service.receive(transferId, 'user-1', Role.INV_MGR, 2, undefined, [
@@ -553,9 +561,9 @@ describe('TransferPostService', () => {
           },
         ],
       });
-      mockWarehouseItemFindUnique.mockResolvedValue({
-        isFrozen: true,
-      });
+      mockScopeValidationService.checkWarehouseItemQuarantine.mockRejectedValue(
+        new BadRequestException('Item is frozen in source warehouse'),
+      );
 
       await expect(
         service.ship(transferId, 'user-1', Role.INV_MGR, 1),

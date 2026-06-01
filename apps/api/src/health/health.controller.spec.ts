@@ -1,18 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { PrismaService } from '../database/prisma.service';
 import { BackupService } from '../backup/backup.service';
-import { ServiceUnavailableException } from '@nestjs/common';
+import { BackupCalculatorService } from '../modules/health/backup-calculator.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let prismaMock: any;
   let backupServiceMock: any;
 
   beforeEach(async () => {
-    prismaMock = {
-      $queryRaw: jest.fn().mockResolvedValue([1]),
-    };
     backupServiceMock = {
       getBackupStatus: jest.fn().mockResolvedValue({
         status: 'ok',
@@ -25,13 +20,10 @@ describe('HealthController', () => {
       controllers: [HealthController],
       providers: [
         {
-          provide: PrismaService,
-          useValue: prismaMock,
-        },
-        {
           provide: BackupService,
           useValue: backupServiceMock,
         },
+        BackupCalculatorService,
       ],
     }).compile();
 
@@ -39,38 +31,14 @@ describe('HealthController', () => {
   });
 
   describe('check', () => {
-    it('should return status ok when database is healthy', async () => {
+    it('should return simple binary status ok without hitting database', async () => {
       const result = await controller.check();
-      expect(result.status).toBe('ok');
-      expect(result.checks.database).toBe('ok');
-      expect(result.timestamp).toBeDefined();
-    });
-
-    it('should return status degraded if database check fails', async () => {
-      prismaMock.$queryRaw.mockRejectedValue(
-        new Error('DB Connection Timeout'),
-      );
-      const result = await controller.check();
-      expect(result.status).toBe('degraded');
-      expect(result.checks.database).toBe('degraded');
+      expect(result).toEqual({ status: 'ok' });
     });
   });
 
   describe('checkBackup', () => {
-    it('should return status degraded if backup is degraded', async () => {
-      backupServiceMock.getBackupStatus.mockResolvedValue({
-        status: 'degraded',
-        lastBackupAt: null,
-        ageHours: null,
-      });
-      const result = await controller.checkBackup();
-      expect(result.status).toBe('degraded');
-      expect(result.lastBackupAt).toBeNull();
-      expect(result.ageHours).toBeNull();
-      expect(result.timestamp).toBeDefined();
-    });
-
-    it('should return status ok if backup is fresh', async () => {
+    it('should return calculated RPO details when backup is fresh', async () => {
       const lastBackupDate = new Date();
       backupServiceMock.getBackupStatus.mockResolvedValue({
         status: 'ok',
@@ -79,10 +47,22 @@ describe('HealthController', () => {
       });
 
       const result = await controller.checkBackup();
-      expect(result.status).toBe('ok');
-      expect(result.lastBackupAt).toBe(lastBackupDate.toISOString());
-      expect(result.ageHours).toBe(2.0);
-      expect(result.timestamp).toBeDefined();
+      expect(result.lastBackupTimestamp).toBe(lastBackupDate.toISOString());
+      expect(result.rpoDeltaSeconds).toBeGreaterThanOrEqual(0);
+      expect(result.backups).toEqual([]);
+    });
+
+    it('should handle missing/never run backups correctly', async () => {
+      backupServiceMock.getBackupStatus.mockResolvedValue({
+        status: 'critical',
+        lastBackupAt: null,
+        ageHours: null,
+      });
+
+      const result = await controller.checkBackup();
+      expect(result.lastBackupTimestamp).toBe('');
+      expect(result.rpoDeltaSeconds).toBe(-1);
+      expect(result.backups).toEqual([]);
     });
   });
 });

@@ -15,9 +15,9 @@
 
 **Purpose**: Test configs, environment parameters, and seeder bootstrap
 
-- [ ] T001 Initialize anonymized database seeder file layout in `apps/api/src/database/seed.anonymized.ts`
-- [ ] T002 Configure Playwright E2E testing framework environments in `tests/playwright.config.ts`
-- [ ] T003 [P] Configure metrics token and encryption variables inside system profiles configuration mapper `apps/api/src/config/configuration.ts`
+- [x] T001 Initialize anonymized database seeder file layout in `apps/api/src/database/seed.anonymized.ts`
+- [x] T002 Configure Playwright E2E testing framework environments in `tests/playwright.config.ts`
+- [x] T003 [P] Configure metrics token and encryption variables inside system profiles configuration mapper `apps/api/src/config/configuration.ts`
 
 ---
 
@@ -27,9 +27,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Build custom Nocturne high-density error boundary layouts in `apps/web/src/components/common/error-boundary.tsx`
-- [ ] T005 [P] Create randomized data mapping utility libraries in `apps/api/src/database/faker-helper.ts`
-- [ ] T006 [P] Implement dynamic database backup RPO delta calculator in `apps/api/src/modules/health/backup-calculator.service.ts`
+- [x] T004 Build custom Nocturne high-density error boundary layouts in `apps/web/src/components/common/error-boundary.tsx`
+- [x] T005 [P] Create randomized data mapping utility libraries in `apps/api/src/database/faker-helper.ts`
+- [x] T006 [P] Implement dynamic database backup RPO delta calculator in `apps/api/src/modules/health/backup-calculator.service.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -43,11 +43,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Implement item-constant randomized cost multiplier seeder logic in `apps/api/src/database/seed.anonymized.ts`
-- [ ] T008 [US1] Map Faker anonymization sanitization rules for supplier, customer, and user PII columns in `apps/api/src/database/seed.anonymized.ts` (depends on T007)
-- [ ] T009 [US1] Create parallel transaction load stress testing script simulating 50 RPS peak loads in `scripts/staging-load-test.ts`
-- [ ] T010 [US1] Create automated database backup restoration shell commands and recovery script in `scripts/database-rollback.sh`
-- [ ] T011 [US1] Build CI/CD deployment pipeline gate scripts that parse load test failures and trigger manual admin holds in `scripts/pipeline-gate.ts`
+- [x] T007 [P] [US1] Implement item-constant randomized cost multiplier seeder logic in `apps/api/src/database/seed.anonymized.ts`
+- [x] T008 [US1] Map Faker anonymization sanitization rules for supplier, customer, and user PII columns in `apps/api/src/database/seed.anonymized.ts` (depends on T007)
+- [x] T009 [US1] Create parallel transaction load stress testing script simulating 50 RPS peak loads in `scripts/staging-load-test.ts`
+- [x] T010 [US1] Create automated database backup restoration shell commands and recovery script in `scripts/database-rollback.sh`
+- [x] T011 [US1] Build CI/CD deployment pipeline gate scripts that parse load test failures and trigger manual admin holds in `scripts/pipeline-gate.ts`
 
 **Checkpoint**: Staging load stress tests and automated rollback routines are fully testable.
 
@@ -61,9 +61,9 @@
 
 ### Implementation for User Story 4 (User Story 2 in spec)
 
-- [ ] T012 [P] [US2] Create Playwright browser cookies and active sessions auth loaders in `tests/e2e/helpers/auth.ts`
-- [ ] T013 [US2] Implement Playwright E2E tests validating kitchen request draft, submission, and lot allocation in `tests/e2e/kitchen-request.spec.ts`
-- [ ] T014 [US2] Implement Playwright E2E tests verifying linked inventory issues voiding and cost log reversals in `tests/e2e/kitchen-request-void.spec.ts` (depends on T013)
+- [x] T012 [P] [US2] Create Playwright browser cookies and active sessions auth loaders in `tests/e2e/helpers/auth.ts`
+- [x] T013 [US2] Implement Playwright E2E tests validating kitchen request draft, submission, and lot allocation in `tests/e2e/kitchen-request.spec.ts`
+- [x] T014 [US2] Implement Playwright E2E tests verifying linked inventory issues voiding and cost log reversals in `tests/e2e/kitchen-request-void.spec.ts` (depends on T013)
 
 **Checkpoint**: Playwright automated E2E suites for kitchen requests are fully functional and passing.
 
@@ -77,10 +77,10 @@
 
 ### Implementation for User Story 5 (User Story 3 in spec)
 
-- [ ] T015 [P] [US3] Expose simple public binary status checks in `apps/api/src/modules/health/health.controller.ts`
-- [ ] T016 [US3] Create secured detailed backup RPO logs endpoint handler `GET /health/backup` (restricted to ADMIN and AUDITOR roles) in `apps/api/src/modules/health/health.controller.ts` (depends on T015)
-- [ ] T017 [US3] Create secret metrics token interceptor guard using `METRICS_TOKEN` environment variable validation in `apps/api/src/modules/metrics/metrics.guard.ts`
-- [ ] T018 [US3] Bind metrics validation guard to Prometheus dump query router in `apps/api/src/modules/metrics/metrics.controller.ts` (depends on T017)
+- [x] T015 [P] [US3] Expose simple public binary status checks in `apps/api/src/modules/health/health.controller.ts`
+- [x] T016 [US3] Create secured detailed backup RPO logs endpoint handler `GET /health/backup` (restricted to ADMIN and AUDITOR roles) in `apps/api/src/modules/health/health.controller.ts` (depends on T015)
+- [x] T017 [US3] Create secret metrics token interceptor guard using `METRICS_TOKEN` environment variable validation in `apps/api/src/modules/metrics/metrics.guard.ts`
+- [x] T018 [US3] Bind metrics validation guard to Prometheus dump query router in `apps/api/src/modules/metrics/metrics.controller.ts` (depends on T017)
 
 **Checkpoint**: Diagnostics endpoints are secured and public health is successfully split.
 
@@ -94,10 +94,10 @@
 
 ### Implementation for User Story 6 (User Story 4 in spec)
 
-- [ ] T019 [P] [US4] Remove global soft-delete filter intercepts from NestJS database module in `apps/api/src/database/prisma.service.ts`
-- [ ] T020 [US4] Inject explicit `isActive: true` parameters inside search and listing API query methods in `apps/api/src/modules/search/search.service.ts` (depends on T019)
-- [ ] T021 [US4] Add custom routing filters and mount full-screen Nocturne Access Denied custom page in `apps/web/src/app/[locale]/(app)/errors/403/page.tsx`
-- [ ] T022 [US4] Update valuations detail data grids to render deactivated item lines with gray/amber tags in `apps/web/src/features/reports/components/valuation-table.tsx`
+- [x] T019 [P] [US4] Remove global soft-delete filter intercepts from NestJS database module in `apps/api/src/database/prisma.service.ts`
+- [x] T020 [US4] Inject explicit `isActive: true` parameters inside search and listing API query methods in `apps/api/src/modules/search/search.service.ts` (depends on T019)
+- [x] T021 [US4] Add custom routing filters and mount full-screen Nocturne Access Denied custom page in `apps/web/src/app/[locale]/(app)/errors/403/page.tsx`
+- [x] T022 [US4] Update valuations detail data grids to render deactivated item lines with gray/amber tags in `apps/web/src/features/reports/components/valuation-table.tsx`
 
 **Checkpoint**: Inactive filtering and client-side URL scope tampering guards are complete.
 
@@ -111,8 +111,8 @@
 
 ### Implementation for User Story 7 (User Story 5 in spec)
 
-- [ ] T023 [P] [US5] Implement Jest integration tests verifying `CsrfGuard` blocks state-changing mutations lacking headers in `tests/integration/csrf.spec.ts`
-- [ ] T024 [US5] Implement integration tests proving that requests containing matching session cookies and headers are authorized in `tests/integration/csrf.spec.ts` (depends on T023)
+- [x] T023 [P] [US5] Implement Jest integration tests verifying `CsrfGuard` blocks state-changing mutations lacking headers in `tests/integration/csrf.spec.ts`
+- [x] T024 [US5] Implement integration tests proving that requests containing matching session cookies and headers are authorized in `tests/integration/csrf.spec.ts` (depends on T023)
 
 **Checkpoint**: CSRF protection is fully proven via comprehensive integration tests.
 
@@ -122,8 +122,8 @@
 
 **Purpose**: Validate monorepo builds, typecheck, and linter gates
 
-- [ ] T025 Execute full Playwright E2E and CSRF Jest suites locally to confirm validation consistency
-- [ ] T026 [P] Run linter and typecheck sweeps across Next.js and NestJS packages using `npm run typecheck --filter=web` and `npm run lint`
+- [x] T025 Execute full Playwright E2E and CSRF Jest suites locally to confirm validation consistency
+- [x] T026 [P] Run linter and typecheck sweeps across Next.js and NestJS packages using `npm run typecheck --filter=web` and `npm run lint`
 
 ---
 

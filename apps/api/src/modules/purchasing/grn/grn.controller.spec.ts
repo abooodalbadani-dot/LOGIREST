@@ -30,7 +30,11 @@ describe('GrnController', () => {
     post: jest.fn(),
   };
 
-  const mockPrismaService = {};
+  const mockPrismaService = {
+    goodsReceivedNote: {
+      findUnique: jest.fn(),
+    },
+  };
   const mockWorkflowService = {};
 
   const mockRequest = {
@@ -54,21 +58,31 @@ describe('GrnController', () => {
     }).compile();
 
     controller = module.get<GrnController>(GrnController);
+    mockScopeValidationService.validateWarehouse.mockReset();
+    mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
+    mockPrismaService.goodsReceivedNote.findUnique.mockReset();
     jest.clearAllMocks();
   });
 
   describe('update', () => {
     it('should throw ForbiddenException for cross-warehouse update', async () => {
-      mockGrnService.update.mockRejectedValue(
+      mockPrismaService.goodsReceivedNote.findUnique.mockResolvedValue({
+        warehouseId: 'wh-other',
+      });
+      mockScopeValidationService.validateWarehouse.mockRejectedValue(
         new ForbiddenException('Access to this warehouse is not authorized.'),
       );
 
       await expect(
-        controller.update('grn-1', 'user-1', Role.ADMIN, { version: 1 }),
+        controller.update('grn-1', 'user-1', Role.PROC_OFFICER, { version: 1 }),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('should succeed for same-warehouse update', async () => {
+      mockPrismaService.goodsReceivedNote.findUnique.mockResolvedValue({
+        warehouseId: 'wh-1',
+      });
+      mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
       const mockGrn = {
         id: 'grn-1',
         grnNumber: 'GRN-001',
@@ -97,16 +111,23 @@ describe('GrnController', () => {
 
   describe('remove', () => {
     it('should throw ForbiddenException for cross-warehouse delete', async () => {
-      mockGrnService.remove.mockRejectedValue(
+      mockPrismaService.goodsReceivedNote.findUnique.mockResolvedValue({
+        warehouseId: 'wh-other',
+      });
+      mockScopeValidationService.validateWarehouse.mockRejectedValue(
         new ForbiddenException('Access to this warehouse is not authorized.'),
       );
 
       await expect(
-        controller.remove('grn-1', 'user-1', Role.ADMIN, '1'),
+        controller.remove('grn-1', 'user-1', Role.PROC_OFFICER, '1'),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('should succeed for same-warehouse delete', async () => {
+      mockPrismaService.goodsReceivedNote.findUnique.mockResolvedValue({
+        warehouseId: 'wh-1',
+      });
+      mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
       mockGrnService.remove.mockResolvedValue(undefined);
 
       const result = await controller.remove(

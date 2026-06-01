@@ -27,9 +27,10 @@ export class SearchController {
     const allowedWarehouseIds: string[] | undefined = (req as any)
       .allowedWarehouseIds;
 
-    // 1. Search items
+    // 1. Search items (active only for search/listing)
     const items = await this.prisma.item.findMany({
       where: {
+        isActive: true,
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { sku: { contains: query, mode: 'insensitive' } },
@@ -38,9 +39,10 @@ export class SearchController {
       take: 10,
     });
 
-    // 2. Search suppliers
+    // 2. Search suppliers (active only for search/listing)
     const suppliers = await this.prisma.supplier.findMany({
       where: {
+        isActive: true,
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { code: { contains: query, mode: 'insensitive' } },

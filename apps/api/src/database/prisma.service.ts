@@ -29,37 +29,7 @@ export class PrismaService
       ],
     });
 
-    const extended = this.$extends({
-      query: {
-        $allModels: {
-          async findMany({ model, args, query }) {
-            const softDeleteModels = ['Item', 'Supplier', 'Warehouse', 'User'];
-            if (softDeleteModels.includes(model)) {
-              args.where = { ...args.where, isActive: true };
-            }
-            return query(args);
-          },
-        },
-      },
-    });
-
-    return new Proxy(this, {
-      get: (target, prop, receiver) => {
-        if (prop === '$transaction') {
-          return (arg1: any, arg2?: any) => {
-            const defaults = { timeout: 15000, maxWait: 5000 };
-            const opts =
-              typeof arg2 === 'object' ? { ...defaults, ...arg2 } : defaults;
-            return extended.$transaction(arg1, opts);
-          };
-        }
-        if (prop in extended) {
-          const value = Reflect.get(extended, prop);
-          return typeof value === 'function' ? value.bind(extended) : value;
-        }
-        return Reflect.get(target, prop, receiver);
-      },
-    });
+    return this;
   }
 
   async onModuleInit() {

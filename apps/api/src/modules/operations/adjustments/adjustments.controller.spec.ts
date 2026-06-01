@@ -21,7 +21,11 @@ describe('AdjustmentsController', () => {
     post: jest.fn(),
   };
 
-  const mockPrismaService = {};
+  const mockPrismaService = {
+    adjustment: {
+      findUnique: jest.fn(),
+    },
+  };
   const mockWorkflowService = {};
 
   const mockAdjustmentsService = {
@@ -58,6 +62,9 @@ describe('AdjustmentsController', () => {
     }).compile();
 
     controller = module.get<AdjustmentsController>(AdjustmentsController);
+    mockScopeValidationService.validateWarehouse.mockReset();
+    mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
+    mockPrismaService.adjustment.findUnique.mockReset();
     jest.clearAllMocks();
   });
 
@@ -120,16 +127,23 @@ describe('AdjustmentsController', () => {
 
   describe('update', () => {
     it('should throw ForbiddenException for cross-warehouse update', async () => {
-      mockAdjustmentsService.update.mockRejectedValue(
+      mockPrismaService.adjustment.findUnique.mockResolvedValue({
+        warehouseId: 'wh-other',
+      });
+      mockScopeValidationService.validateWarehouse.mockRejectedValue(
         new ForbiddenException('Access to this warehouse is not authorized.'),
       );
 
       await expect(
-        controller.update('adj-1', 'user-1', Role.ADMIN, { version: 1 }),
+        controller.update('adj-1', 'user-1', Role.WH_KEEPER, { version: 1 }),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('should succeed for same-warehouse update', async () => {
+      mockPrismaService.adjustment.findUnique.mockResolvedValue({
+        warehouseId: 'wh-1',
+      });
+      mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
       mockAdjustmentsService.update.mockResolvedValue({
         id: 'adj-1',
         adjustmentNumber: 'ADJ-001',

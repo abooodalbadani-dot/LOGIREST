@@ -1,79 +1,31 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
-import { PrismaService } from '../database/prisma.service';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { BackupService } from '../backup/backup.service';
-
-interface HealthResponse {
-  status: 'ok' | 'degraded';
-  timestamp: string; // ISO8601 UTC
-  checks: {
-    database: 'ok' | 'degraded';
-    backup: {
-      status: 'ok' | 'degraded'; // degraded if ageHours > 26
-      lastBackupAt: string | null; // ISO8601 UTC, null if never run
-      ageHours: number | null; // null if never run
-    };
-  };
-}
+import { BackupCalculatorService } from '../modules/health/backup-calculator.service';
+import { Role } from '@prisma/client';
 
 @Controller('health')
 export class HealthController {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly backupService: BackupService,
+    private readonly backupCalculator: BackupCalculatorService,
   ) {}
-
-  private async checkWithTimeout<T>(
-    check: Promise<T>,
-    timeoutMs: number,
-    name: string,
-  ): Promise<T> {
-    return Promise.race([
-      check,
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new Error(`${name} health check timed out after ${timeoutMs}ms`),
-            ),
-          timeoutMs,
-        ),
-      ),
-    ]);
-  }
-
-  @Get('backup')
-  async checkBackup() {
-    const backupStatus = await this.backupService.getBackupStatus();
-    return {
-      status: backupStatus.status,
-      lastBackupAt: backupStatus.lastBackupAt,
-      ageHours: backupStatus.ageHours,
-      timestamp: new Date().toISOString(),
-    };
-  }
 
   @Public()
   @Get()
-  async check(): Promise<HealthResponse> {
-    let dbStatus: 'ok' | 'degraded' = 'ok';
+  async check(): Promise<{ status: string }> {
+    return { status: 'ok' };
+  }
 
-    try {
-      await this.checkWithTimeout(
-        this.prisma.$queryRaw`SELECT 1`,
-        2000,
-        'database',
-      );
-    } catch {
-      dbStatus = 'degraded';
-    }
-
-    return {
-      status: dbStatus,
-      timestamp: new Date().toISOString(),
-      checks: {
-        database: dbStatus,
-      },
-    } as any;
+  @Get('backup')
+  @Roles(Role.ADMIN, Role.AUDITOR)
+  async checkBackup() {
+    const backupStatus = await this.backupService.getBackupStatus();
+    const details = this.backupCalculator.formatBackupDetails(
+      backupStatus.lastBackupAt,
+      [],
+    );
+    return details;
   }
 }

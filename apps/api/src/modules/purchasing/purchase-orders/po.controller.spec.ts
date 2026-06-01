@@ -52,6 +52,8 @@ describe('PurchaseOrderController', () => {
     }).compile();
 
     controller = module.get<PurchaseOrderController>(PurchaseOrderController);
+    mockScopeValidationService.validateWarehouse.mockReset();
+    mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
     jest.clearAllMocks();
   });
 

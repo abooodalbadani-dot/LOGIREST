@@ -77,7 +77,7 @@ describe('KitchenRequestVoidService', () => {
       status: 'FULFILLED',
       version: 1,
       items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
-      issue: null,
+      inventoryIssue: null,
     });
 
     mockKitchenRequestUpdate.mockResolvedValue({ id: krId, status: 'VOIDED' });
@@ -110,7 +110,7 @@ describe('KitchenRequestVoidService', () => {
       warehouseId: 'wh-1',
       status: 'DRAFT',
       items: [],
-      issue: null,
+      inventoryIssue: null,
     });
 
     await expect(service.void('kr-1', 'user-1', Role.ADMIN)).rejects.toThrow(
@@ -125,7 +125,7 @@ describe('KitchenRequestVoidService', () => {
       status: 'FULFILLED',
       version: 2,
       items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
-      issue: null,
+      inventoryIssue: null,
     });
 
     await expect(service.void('kr-1', 'user-1', Role.ADMIN, 1)).rejects.toThrow(
@@ -143,7 +143,7 @@ describe('KitchenRequestVoidService', () => {
       status: 'FULFILLED',
       version: 1,
       items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
-      issue: null,
+      inventoryIssue: null,
     });
 
     mockWarehouseItemFindUnique.mockResolvedValue({
@@ -166,7 +166,7 @@ describe('KitchenRequestVoidService', () => {
       status: 'FULFILLED',
       version: 1,
       items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
-      issue: { id: issueId, version: 1 },
+      inventoryIssue: { id: issueId, version: 1 },
     });
 
     mockKitchenRequestUpdate.mockResolvedValue({ id: krId, status: 'VOIDED' });
@@ -210,7 +210,7 @@ describe('KitchenRequestVoidService', () => {
       status: 'FULFILLED',
       version: 1,
       items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
-      issue: { id: issueId, version: 1 },
+      inventoryIssue: { id: issueId, version: 1 },
     });
 
     mockLockService.lockItem.mockResolvedValue({
@@ -238,7 +238,7 @@ describe('KitchenRequestVoidService', () => {
       status: 'FULFILLED',
       version: 1,
       items: [{ itemId: 'item-1', item: { sku: 'SKU1' } }],
-      issue: null,
+      inventoryIssue: null,
     });
     mockKitchenRequestUpdate.mockResolvedValue({ id: krId, status: 'VOIDED' });
     mockApprovalEventCount.mockResolvedValue(0);
@@ -264,7 +264,7 @@ describe('KitchenRequestVoidService', () => {
         { itemId: 'item-1', item: { sku: 'SKU1' } },
         { itemId: 'item-2', item: { sku: 'SKU2' } },
       ],
-      issue: { id: issueId, version: 1 },
+      inventoryIssue: { id: issueId, version: 1 },
     });
 
     mockKitchenRequestUpdate.mockResolvedValue({ id: krId, status: 'VOIDED' });

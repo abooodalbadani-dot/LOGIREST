@@ -7,6 +7,7 @@ import { OutboxService } from '../outbox/outbox.service';
 import { Prisma, Role, DocumentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MetricsService } from '../metrics/metrics.service';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 
 describe('IssuePostService', () => {
   let service: IssuePostService;
@@ -69,6 +70,11 @@ describe('IssuePostService', () => {
     writeEvent: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockScopeValidationService = {
+    validateWarehouse: jest.fn().mockResolvedValue(undefined),
+    checkWarehouseItemQuarantine: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -77,10 +83,15 @@ describe('IssuePostService', () => {
         { provide: AllocationService, useValue: mockAllocationService },
         { provide: OutboxService, useValue: mockOutboxService },
         { provide: MetricsService, useValue: mockMetricsService },
+        { provide: ScopeValidationService, useValue: mockScopeValidationService },
       ],
     }).compile();
 
     service = module.get<IssuePostService>(IssuePostService);
+    mockScopeValidationService.validateWarehouse.mockReset();
+    mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
+    mockScopeValidationService.checkWarehouseItemQuarantine.mockReset();
+    mockScopeValidationService.checkWarehouseItemQuarantine.mockResolvedValue(undefined);
     jest.clearAllMocks();
     mockWarehouseItemFindUnique.mockResolvedValue(null);
   });
@@ -207,9 +218,9 @@ describe('IssuePostService', () => {
       ],
     });
 
-    mockWarehouseItemFindUnique.mockResolvedValue({
-      isFrozen: true,
-    });
+    mockScopeValidationService.checkWarehouseItemQuarantine.mockRejectedValue(
+      new BadRequestException('Cannot post issue: Item SKU1 is frozen/locked in source warehouse'),
+    );
 
     await expect(
       service.post(issueId, userId, Role.INV_MGR, 1),
