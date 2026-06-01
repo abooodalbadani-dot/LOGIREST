@@ -1,34 +1,31 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  Req,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { Role } from '@prisma/client';
+import { WarehouseScopeInterceptor } from '../../interceptors/warehouse-scope.interceptor';
+import type { Request } from 'express';
 
 @Controller('search')
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(WarehouseScopeInterceptor)
 export class SearchController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  async search(
-    @Query('q') q: string,
-    @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
-  ) {
+  async search(@Query('q') q: string, @Req() req: Request) {
     if (!q || q.trim() === '') {
       return [];
     }
 
     const query = q.trim();
-
-    let allowedWarehouseIds: string[] | undefined = undefined;
-    if (role !== Role.ADMIN) {
-      const scopes = await this.prisma.userWarehouseScope.findMany({
-        where: { userId },
-        select: { warehouseId: true },
-      });
-      allowedWarehouseIds = scopes.map((s) => s.warehouseId);
-    }
+    const allowedWarehouseIds: string[] | undefined = (req as any)
+      .allowedWarehouseIds;
 
     // 1. Search items
     const items = await this.prisma.item.findMany({

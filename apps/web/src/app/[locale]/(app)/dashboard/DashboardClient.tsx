@@ -14,14 +14,14 @@ import { KitchenDashboard } from '@/features/dashboard/components/KitchenDashboa
 import { StoreManagerDashboard } from '@/features/dashboard/components/StoreManagerDashboard';
 import { NearExpiryWidget } from '@/features/dashboard/components/NearExpiryWidget';
 import { PendingDocumentsWidget } from '@/features/dashboard/components/PendingDocumentsWidget';
-import { useBaseCurrency } from '@/hooks/useBaseCurrency';
+import { useCurrency } from '@/app/[locale]/providers/currency-provider';
 
 export default function DashboardClient() {
  const t = useTranslations('dashboard');
  const tc = useTranslations('common');
  const { locale } = useLocale();
   const { user } = useAuth();
-  const { currency: baseCurrency } = useBaseCurrency();
+  const { currency: baseCurrency } = useCurrency();
 
  // Mock static data as per Phase 8 planning
  const stats = {

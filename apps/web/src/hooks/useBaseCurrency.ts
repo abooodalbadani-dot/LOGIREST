@@ -1,9 +1,8 @@
 'use client';
 
-import { useSettings } from './useSettings';
+import { useCurrency } from '@/app/[locale]/providers/currency-provider';
 
 export function useBaseCurrency() {
-  const { settings, isLoading } = useSettings();
-  const currency = settings?.base_currency || process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || 'SAR';
+  const { currency, isLoading } = useCurrency();
   return { currency, isLoading };
 }

@@ -7,6 +7,7 @@ export * from './workflow/document-engine';
 export * from './schemas';
 export * from './workflows';
 export * from './pagination';
+export * from './zod/landed-cost';
 
 // Explicitly re-export conflicting types to resolve TS2308 ambiguity
 export type { DocumentType } from './contracts/role-capabilities';

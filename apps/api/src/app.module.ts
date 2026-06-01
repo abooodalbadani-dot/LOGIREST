@@ -50,6 +50,8 @@ import { RedisModule } from './redis/redis.module';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
 import { AlertModule } from './modules/alerts/alert.module';
+import { LandedCostModule } from './modules/procurement/landed-cost/landed-cost.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 import { CorrelationMiddleware } from './common/correlation.middleware';
 import { correlationStorage } from './common/correlation.context';
@@ -117,6 +119,8 @@ import { correlationStorage } from './common/correlation.context';
     MetricsModule,
     SearchModule,
     AlertModule,
+    SettingsModule,
+    LandedCostModule,
   ],
   controllers: [AppController],
   providers: [

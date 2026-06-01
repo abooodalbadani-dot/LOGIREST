@@ -36,9 +36,10 @@ export interface ExportCursorResult<T> {
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getKpis(warehouseId: string) {
+  async getKpis(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
     const warehouseItems = await this.prisma.warehouseItem.findMany({
-      where: { warehouseId },
+      where: { warehouseId: { in: ids } },
       select: {
         qtyOnHand: true,
         wac: true,
@@ -60,7 +61,7 @@ export class ReportsService {
 
     const activeLocks = await this.prisma.warehouseLock.count({
       where: {
-        warehouseId,
+        warehouseId: { in: ids },
         isActive: true,
       },
     });
@@ -73,11 +74,13 @@ export class ReportsService {
     };
   }
 
-  async getDashboard(warehouseId: string) {
+  async getDashboard(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
+
     const pendingPurchaseRequests = await this.prisma.purchaseRequest.count({
       where: {
         status: 'SUBMITTED',
-        warehouseId,
+        warehouseId: { in: ids },
       },
     });
 
@@ -85,7 +88,7 @@ export class ReportsService {
       where: {
         status: 'APPROVED',
         purchaseRequest: {
-          warehouseId,
+          warehouseId: { in: ids },
         },
       },
     });
@@ -93,11 +96,14 @@ export class ReportsService {
     const inTransitTransfers = await this.prisma.transfer.count({
       where: {
         status: 'IN_TRANSIT',
-        OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }],
+        OR: [{ fromWarehouseId: { in: ids } }, { toWarehouseId: { in: ids } }],
       },
     });
 
-    const overdueTransfersList = await this.getOverdueTransfers(warehouseId);
+    const overdueTransfersList = await this.getOverdueTransfers(
+      warehouseId,
+      warehouseIds,
+    );
 
     return {
       pendingPurchaseRequests,
@@ -107,10 +113,11 @@ export class ReportsService {
     };
   }
 
-  async getAdjustmentsSummary(warehouseId: string) {
+  async getAdjustmentsSummary(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
     const groups = await this.prisma.adjustment.groupBy({
       by: ['status'],
-      where: { warehouseId },
+      where: { warehouseId: { in: ids } },
       _count: {
         status: true,
       },
@@ -122,11 +129,15 @@ export class ReportsService {
     }));
   }
 
-  async getOverdueTransfers(warehouseId: string): Promise<OverdueTransfer[]> {
+  async getOverdueTransfers(
+    warehouseId: string,
+    warehouseIds?: string[],
+  ): Promise<OverdueTransfer[]> {
+    const ids = warehouseIds ?? [warehouseId];
     const transfers = await this.prisma.transfer.findMany({
       where: {
         status: 'IN_TRANSIT',
-        OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }],
+        OR: [{ fromWarehouseId: { in: ids } }, { toWarehouseId: { in: ids } }],
       },
       include: {
         fromWarehouse: true,
@@ -177,9 +188,10 @@ export class ReportsService {
     return overdueTransfers;
   }
 
-  async getAvailableInventoryRaw(warehouseId: string) {
+  async getAvailableInventoryRaw(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
     const items = await this.prisma.warehouseItem.findMany({
-      where: { warehouseId },
+      where: { warehouseId: { in: ids } },
       include: {
         item: {
           include: {
@@ -207,12 +219,14 @@ export class ReportsService {
     page: string = '1',
     limit: string = '100',
     search?: string,
+    warehouseIds?: string[],
   ) {
     const pageNum = Math.max(1, parseInt(page, 10));
     const limitNum = Math.min(500, Math.max(1, parseInt(limit, 10)));
     const skip = (pageNum - 1) * limitNum;
 
-    const where: Prisma.WarehouseItemWhereInput = { warehouseId };
+    const ids = warehouseIds ?? [warehouseId];
+    const where: Prisma.WarehouseItemWhereInput = { warehouseId: { in: ids } };
     if (search) {
       where.item = {
         OR: [
@@ -265,12 +279,14 @@ export class ReportsService {
     startDate?: string,
     endDate?: string,
     transactionType?: string,
+    warehouseIds?: string[],
   ) {
     const pageNum = Math.max(1, parseInt(page, 10));
     const limitNum = Math.max(1, parseInt(limit, 10));
     const skip = (pageNum - 1) * limitNum;
 
-    const where: Prisma.StockLedgerWhereInput = { warehouseId };
+    const ids = warehouseIds ?? [warehouseId];
+    const where: Prisma.StockLedgerWhereInput = { warehouseId: { in: ids } };
     if (itemId) {
       where.itemId = itemId;
     }
@@ -311,10 +327,11 @@ export class ReportsService {
     };
   }
 
-  async getExpiryReport(warehouseId: string) {
+  async getExpiryReport(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
     const lots = await this.prisma.warehouseItemLot.findMany({
       where: {
-        warehouseId,
+        warehouseId: { in: ids },
         qtyOnHand: { gt: 0 },
         lot: {
           expiryDate: { not: null },
@@ -355,13 +372,18 @@ export class ReportsService {
     });
   }
 
-  async getStocktakeVariance(warehouseId: string, sessionId: string) {
+  async getStocktakeVariance(
+    warehouseId: string,
+    sessionId: string,
+    warehouseIds?: string[],
+  ) {
     if (!sessionId) {
       throw new BadRequestException('sessionId is required');
     }
 
+    const ids = warehouseIds ?? [warehouseId];
     const session = await this.prisma.stocktakeSession.findFirst({
-      where: { id: sessionId, warehouseId },
+      where: { id: sessionId, warehouseId: { in: ids } },
     });
     if (!session) {
       throw new ForbiddenException(
@@ -406,11 +428,12 @@ export class ReportsService {
     });
   }
 
-  async getProcurementStatus(warehouseId: string) {
+  async getProcurementStatus(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
     const orders = await this.prisma.purchaseOrder.findMany({
       where: {
         purchaseRequest: {
-          warehouseId,
+          warehouseId: { in: ids },
         },
       },
       include: {
@@ -439,11 +462,12 @@ export class ReportsService {
     });
   }
 
-  async getCurrencySummaries(warehouseId: string) {
+  async getCurrencySummaries(warehouseId: string, warehouseIds?: string[]) {
+    const ids = warehouseIds ?? [warehouseId];
     const orders = await this.prisma.purchaseOrder.findMany({
       where: {
         purchaseRequest: {
-          warehouseId,
+          warehouseId: { in: ids },
         },
       },
       include: {
@@ -530,12 +554,14 @@ export class ReportsService {
     itemId: string,
     startDate?: string,
     endDate?: string,
+    warehouseIds?: string[],
   ) {
     if (!itemId) {
       throw new BadRequestException('itemId is required');
     }
+    const ids = warehouseIds ?? [warehouseId];
     const where: Prisma.CostLedgerWhereInput = {
-      warehouseId,
+      warehouseId: { in: ids },
       itemId,
     };
     if (startDate || endDate) {
@@ -560,10 +586,16 @@ export class ReportsService {
     });
   }
 
-  async getLotTrace(warehouseId: string, lotId: string) {
+  async getLotTrace(
+    warehouseId: string,
+    lotId: string,
+    warehouseIds?: string[],
+  ) {
     if (!lotId) {
       throw new BadRequestException('lotId is required');
     }
+
+    const ids = warehouseIds ?? [warehouseId];
 
     const lot = await this.prisma.lot.findFirst({
       where: { id: lotId },
@@ -642,12 +674,16 @@ export class ReportsService {
       lotId?: string;
       sessionId?: string;
     },
+    warehouseIds?: string[],
   ): Promise<CountResult> {
+    const ids = warehouseIds ?? [warehouseId];
     let count = 0;
 
     switch (reportType) {
       case 'movements': {
-        const where: Prisma.StockLedgerWhereInput = { warehouseId };
+        const where: Prisma.StockLedgerWhereInput = {
+          warehouseId: { in: ids },
+        };
         this.applyDateFilter(where, filters.startDate, filters.endDate);
         if (filters.itemId) where.itemId = filters.itemId;
         if (filters.transactionType)
@@ -657,7 +693,7 @@ export class ReportsService {
       }
       case 'expiry': {
         const where: Prisma.WarehouseItemLotWhereInput = {
-          warehouseId,
+          warehouseId: { in: ids },
           qtyOnHand: { gt: 0 },
           lot: { expiryDate: { not: null } },
         };
@@ -667,12 +703,12 @@ export class ReportsService {
       }
       case 'available-inventory': {
         count = await this.prisma.warehouseItem.count({
-          where: { warehouseId },
+          where: { warehouseId: { in: ids } },
         });
         break;
       }
       case 'wac-history': {
-        const where: Prisma.CostLedgerWhereInput = { warehouseId };
+        const where: Prisma.CostLedgerWhereInput = { warehouseId: { in: ids } };
         this.applyDateFilter(where, filters.startDate, filters.endDate);
         if (filters.itemId) where.itemId = filters.itemId;
         count = await this.prisma.costLedger.count({ where });
@@ -685,7 +721,7 @@ export class ReportsService {
       case 'stocktake-variance': {
         if (filters.sessionId) {
           const session = await this.prisma.stocktakeSession.findFirst({
-            where: { id: filters.sessionId, warehouseId },
+            where: { id: filters.sessionId, warehouseId: { in: ids } },
           });
           if (session) {
             count = await this.prisma.stocktakeSnapshot.count({
@@ -698,7 +734,7 @@ export class ReportsService {
       case 'procurement-status': {
         count = await this.prisma.purchaseOrder.count({
           where: {
-            purchaseRequest: { warehouseId },
+            purchaseRequest: { warehouseId: { in: ids } },
           },
         });
         break;
@@ -706,7 +742,7 @@ export class ReportsService {
       case 'currency-summaries': {
         count = await this.prisma.purchaseOrder.count({
           where: {
-            purchaseRequest: { warehouseId },
+            purchaseRequest: { warehouseId: { in: ids } },
           },
         });
         break;
@@ -762,6 +798,7 @@ export class ReportsService {
       endDate?: string;
       transactionType?: string;
     },
+    warehouseIds?: string[],
   ): Promise<ExportCursorResult<any>> {
     const decoded = this.decodeCursor(cursor);
     const currentOffset = decoded ? decoded.offset : 0;
@@ -773,7 +810,8 @@ export class ReportsService {
     const remainingLimit = MAX_EXPORT_ROWS - currentOffset;
     const currentChunkSize = Math.min(EXPORT_CHUNK_SIZE, remainingLimit);
 
-    const where: Prisma.StockLedgerWhereInput = { warehouseId };
+    const ids = warehouseIds ?? [warehouseId];
+    const where: Prisma.StockLedgerWhereInput = { warehouseId: { in: ids } };
     if (filters?.itemId) where.itemId = filters.itemId;
     if (filters?.transactionType)
       where.documentType = filters.transactionType as DocumentType;
@@ -821,6 +859,7 @@ export class ReportsService {
   async exportExpiryCursor(
     warehouseId: string,
     cursor?: string,
+    warehouseIds?: string[],
   ): Promise<ExportCursorResult<any>> {
     const decoded = this.decodeCursor(cursor);
     const currentOffset = decoded ? decoded.offset : 0;
@@ -832,9 +871,10 @@ export class ReportsService {
     const remainingLimit = MAX_EXPORT_ROWS - currentOffset;
     const currentChunkSize = Math.min(EXPORT_CHUNK_SIZE, remainingLimit);
 
+    const ids = warehouseIds ?? [warehouseId];
     const queryOpts: any = {
       where: {
-        warehouseId,
+        warehouseId: { in: ids },
         qtyOnHand: { gt: 0 },
         lot: { expiryDate: { not: null } },
       },
@@ -888,6 +928,7 @@ export class ReportsService {
     warehouseId: string,
     cursor?: string,
     filters?: { itemId?: string; startDate?: string; endDate?: string },
+    warehouseIds?: string[],
   ): Promise<ExportCursorResult<any>> {
     const decoded = this.decodeCursor(cursor);
     const currentOffset = decoded ? decoded.offset : 0;
@@ -899,7 +940,8 @@ export class ReportsService {
     const remainingLimit = MAX_EXPORT_ROWS - currentOffset;
     const currentChunkSize = Math.min(EXPORT_CHUNK_SIZE, remainingLimit);
 
-    const where: Prisma.CostLedgerWhereInput = { warehouseId };
+    const ids = warehouseIds ?? [warehouseId];
+    const where: Prisma.CostLedgerWhereInput = { warehouseId: { in: ids } };
     if (filters?.itemId) where.itemId = filters.itemId;
     this.applyDateFilter(where, filters?.startDate, filters?.endDate);
 
@@ -945,8 +987,9 @@ export class ReportsService {
   async exportLotTraceCursor(
     warehouseId: string,
     lotId: string,
+    warehouseIds?: string[],
   ): Promise<ExportCursorResult<any>> {
-    const lotTrace = await this.getLotTrace(warehouseId, lotId);
+    const lotTrace = await this.getLotTrace(warehouseId, lotId, warehouseIds);
     // Slice to MAX_EXPORT_ROWS just to be perfectly compliant
     const data = lotTrace.allocations.slice(0, MAX_EXPORT_ROWS);
     return {
@@ -981,6 +1024,7 @@ export class ReportsService {
       endDate?: string;
       transactionType?: string;
     },
+    warehouseIds?: string[],
   ): Promise<ExportCursorResult<any>> {
     const decoded = this.decodeCursor(cursor);
     const currentOffset = decoded ? decoded.offset : 0;
@@ -992,7 +1036,8 @@ export class ReportsService {
       return { data: [], nextCursor: null, hasMore: false };
     }
 
-    const where: Prisma.StockLedgerWhereInput = { warehouseId };
+    const ids = warehouseIds ?? [warehouseId];
+    const where: Prisma.StockLedgerWhereInput = { warehouseId: { in: ids } };
     if (filters?.itemId) where.itemId = filters.itemId;
     if (filters?.transactionType)
       where.documentType = filters.transactionType as DocumentType;

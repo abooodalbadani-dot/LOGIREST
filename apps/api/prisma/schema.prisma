@@ -75,6 +75,19 @@ enum StocktakeStatus {
   CANCELLED
 }
 
+enum LandedCostStatus {
+  DRAFT
+  PROCESSING
+  POSTED
+}
+
+enum AllocationMethod {
+  VALUE
+  QUANTITY
+  WEIGHT
+  VOLUME
+}
+
 // ─── Tier 1: Master Data ───────────────────────────────────────────
 
 model User {
@@ -96,8 +109,9 @@ model User {
   warehouseLocks      WarehouseLock[]
   stocktakeCounts     StocktakeCount[]
   auditLogs           AuditLog[]
-  refreshTokens       RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
+  refreshTokens             RefreshToken[]
+  passwordResetTokens       PasswordResetToken[]
+  createdLandedCostVouchers LandedCostVoucher[] @relation("CreatedVouchers")
 
   @@map("users")
 }
@@ -393,7 +407,8 @@ model GoodsReceivedNote {
 
   purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Restrict)
   warehouse     Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  lines         GRNLine[]
+  lines              GRNLine[]
+  landedCostRelations LandedCostGRNRelation[]
 
   @@index([status])
   @@map("goods_received_notes")
@@ -407,11 +422,59 @@ model GRNLine {
   unitPrice        Decimal @db.Decimal(18, 4)
   lotId            String?
 
-  goodsReceivedNote GoodsReceivedNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
-  item              Item              @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  lot               Lot?              @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  goodsReceivedNote    GoodsReceivedNote           @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  item                 Item                        @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  lot                  Lot?                        @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  landedCostAllocations LandedCostAllocationLine[]
 
   @@map("grn_lines")
+}
+
+model LandedCostVoucher {
+  id                  String             @id @default(uuid())
+  voucherNumber       String             @unique
+  allocationMethod    AllocationMethod
+  totalAllocatedCost  Decimal            @db.Decimal(18, 4)
+  status              LandedCostStatus   @default(DRAFT)
+  currencyId          String
+  exchangeRate        Decimal            @db.Decimal(18, 6) @default(1.0)
+  transactionDate     DateTime           @default(now())
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  version             Int                @default(1)
+  createdById         String
+
+  createdBy           User                      @relation("CreatedVouchers", fields: [createdById], references: [id])
+  lines               LandedCostAllocationLine[]
+  grnRelations        LandedCostGRNRelation[]
+
+  @@map("landed_cost_vouchers")
+}
+
+model LandedCostAllocationLine {
+  id                  String   @id @default(uuid())
+  landedCostVoucherId String
+  grnLineId           String
+  allocatedCost       Decimal  @db.Decimal(18, 4)
+  adjustedUnitCost    Decimal  @db.Decimal(18, 4)
+  version             Int      @default(1)
+
+  voucher  LandedCostVoucher @relation(fields: [landedCostVoucherId], references: [id], onDelete: Cascade)
+  grnLine  GRNLine           @relation(fields: [grnLineId], references: [id], onDelete: Restrict)
+
+  @@map("landed_cost_allocation_lines")
+}
+
+model LandedCostGRNRelation {
+  id                  String @id @default(uuid())
+  landedCostVoucherId String
+  grnId               String
+
+  voucher LandedCostVoucher @relation(fields: [landedCostVoucherId], references: [id], onDelete: Cascade)
+  grn     GoodsReceivedNote @relation(fields: [grnId], references: [id], onDelete: Restrict)
+
+  @@unique([landedCostVoucherId, grnId])
+  @@map("landed_cost_grn_relations")
 }
 
 model InventoryIssue {

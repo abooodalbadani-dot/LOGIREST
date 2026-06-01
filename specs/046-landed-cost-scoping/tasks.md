@@ -15,9 +15,9 @@
 
 **Purpose**: Database schema expansion, dependency setup, and unified types validation
 
-- [ ] T001 Create baseline schema models (`LandedCostVoucher`, `LandedCostAllocationLine`, `LandedCostGRNRelation`) in `apps/api/prisma/schema.prisma`
-- [ ] T002 Generate Prisma Client bindings and register types in `apps/api/src/database/prisma.service.ts`
-- [ ] T003 [P] Create unified Zod validation schemas for landed cost allocations in `packages/shared-types/src/zod/landed-cost.ts`
+- [x] T001 Create baseline schema models (`LandedCostVoucher`, `LandedCostAllocationLine`, `LandedCostGRNRelation`) in `apps/api/prisma/schema.prisma`
+- [x] T002 Generate Prisma Client bindings and register types in `apps/api/src/database/prisma.service.ts`
+- [x] T003 [P] Create unified Zod validation schemas for landed cost allocations in `packages/shared-types/src/zod/landed-cost.ts`
 
 ---
 
@@ -27,10 +27,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Configure NestJS BullMQ queue module in `apps/api/src/modules/procurement/landed-cost/landed-cost-queue.module.ts`
-- [ ] T005 [P] Create background revaluation queue processing worker stub in `apps/api/src/modules/procurement/landed-cost/landed-cost-revaluation.consumer.ts`
-- [ ] T006 [P] Create dynamic currency lookup services inside `apps/api/src/modules/settings/settings.service.ts`
-- [ ] T007 Create base Landed Cost service interfaces and registries in `apps/api/src/modules/procurement/landed-cost/landed-cost.service.ts`
+- [x] T004 Configure NestJS BullMQ queue module in `apps/api/src/modules/procurement/landed-cost/landed-cost-queue.module.ts`
+- [x] T005 [P] Create background revaluation queue processing worker stub in `apps/api/src/modules/procurement/landed-cost/landed-cost-revaluation.consumer.ts`
+- [x] T006 [P] Create dynamic currency lookup services inside `apps/api/src/modules/settings/settings.service.ts`
+- [x] T007 Create base Landed Cost service interfaces and registries in `apps/api/src/modules/procurement/landed-cost/landed-cost.service.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -44,14 +44,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Implement landed cost controller endpoint handlers in `apps/api/src/modules/procurement/landed-cost/landed-cost.controller.ts`
-- [ ] T009 [US1] Build pro-rata allocation calculation service (Value, Qty, Weight/Volume formulas) in `apps/api/src/modules/procurement/landed-cost/landed-cost-calculator.service.ts`
-- [ ] T010 [US1] Implement post workflow dispatch that registers revaluation jobs in BullMQ in `apps/api/src/modules/procurement/landed-cost/landed-cost-post.service.ts`
-- [ ] T011 [US1] Create raw SQL row-locking query handler (`SELECT FOR UPDATE` on items/lots) in `apps/api/src/modules/procurement/landed-cost/revaluation-locking.service.ts`
-- [ ] T012 [US1] Write asynchronous background queue revaluation consumer and WAC update logic in `apps/api/src/modules/procurement/landed-cost/landed-cost-revaluation.consumer.ts`
-- [ ] T013 [P] [US1] Replace current landing cost placeholder page with client router container in `apps/web/src/app/[locale]/(app)/(procurement)/landed-cost/page.tsx`
-- [ ] T014 [US1] Build client Landed Cost Wizard step panels and pro-rata selection forms in `apps/web/src/app/[locale]/(app)/(procurement)/landed-cost/components/landed-cost-wizard.tsx`
-- [ ] T015 [US1] Implement React query allocation hooks and mutation endpoints in `apps/web/src/features/procurement/hooks/use-landed-cost.ts`
+- [x] T008 [P] [US1] Implement landed cost controller endpoint handlers in `apps/api/src/modules/procurement/landed-cost/landed-cost.controller.ts`
+- [x] T009 [US1] Build pro-rata allocation calculation service (Value, Qty, Weight/Volume formulas) in `apps/api/src/modules/procurement/landed-cost/landed-cost-calculator.service.ts`
+- [x] T010 [US1] Implement post workflow dispatch that registers revaluation jobs in BullMQ in `apps/api/src/modules/procurement/landed-cost/landed-cost-post.service.ts`
+- [x] T011 [US1] Create raw SQL row-locking query handler (`SELECT FOR UPDATE` on items/lots) in `apps/api/src/modules/procurement/landed-cost/revaluation-locking.service.ts`
+- [x] T012 [US1] Write asynchronous background queue revaluation consumer and WAC update logic in `apps/api/src/modules/procurement/landed-cost/landed-cost-revaluation.consumer.ts`
+- [x] T013 [P] [US1] Replace current landing cost placeholder page with client router container in `apps/web/src/app/[locale]/(app)/(procurement)/landed-cost/page.tsx`
+- [x] T014 [US1] Build client Landed Cost Wizard step panels and pro-rata selection forms in `apps/web/src/app/[locale]/(app)/(procurement)/landed-cost/components/landed-cost-wizard.tsx`
+- [x] T015 [US1] Implement React query allocation hooks and mutation endpoints in `apps/web/src/features/procurement/hooks/use-landed-cost.ts`
 
 **Checkpoint**: User Story 1 is fully functional and testable independently.
 
@@ -65,10 +65,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Implement warehouse scope parser and role-based global bypass interceptor in `apps/api/src/interceptors/warehouse-scope.interceptor.ts`
-- [ ] T017 [US2] Bind scoping interceptor to item search and documents search controllers in `apps/api/src/modules/search/search.controller.ts`
-- [ ] T018 [US2] Restrict ledger and inventory reports queries to active warehouse bounds in `apps/api/src/modules/reports/reports.service.ts`
-- [ ] T019 [US2] Build frontend scope-gated selector and header controls in `apps/web/src/features/navigation/components/scope-selector.tsx`
+- [x] T016 [P] [US2] Implement warehouse scope parser and role-based global bypass interceptor in `apps/api/src/interceptors/warehouse-scope.interceptor.ts`
+- [x] T017 [US2] Bind scoping interceptor to item search and documents search controllers in `apps/api/src/modules/search/search.controller.ts`
+- [x] T018 [US2] Restrict ledger and inventory reports queries to active warehouse bounds in `apps/api/src/modules/reports/reports.service.ts`
+- [x] T019 [US2] Build frontend scope-gated selector and header controls in `apps/web/src/features/navigation/components/scope-selector.tsx`
 
 **Checkpoint**: User Stories 1 AND 2 are fully integrated and functional.
 
@@ -82,11 +82,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [P] [US3] Create static capabilities roles endpoints under `apps/api/src/modules/admin/admin.controller.ts`
-- [ ] T021 [US3] Create user-role assignment update method `PUT /api/admin/users/:id/role` in `apps/api/src/modules/admin/admin.controller.ts`
-- [ ] T022 [P] [US3] Create read-only system permissions matrix UI page in `apps/web/src/app/[locale]/(app)/admin/roles/page.tsx`
-- [ ] T023 [US3] Build client role-assignment selector dialog inside `apps/web/src/app/[locale]/(app)/admin/roles/components/role-assignment-modal.tsx`
-- [ ] T024 [US3] Write React mutation hook to trigger role updates in `apps/web/src/features/admin/hooks/use-roles.ts`
+- [x] T020 [P] [US3] Create static capabilities roles endpoints under `apps/api/src/modules/admin/admin.controller.ts`
+- [x] T021 [US3] Create user-role assignment update method `PUT /api/admin/users/:id/role` in `apps/api/src/modules/admin/admin.controller.ts`
+- [x] T022 [P] [US3] Create read-only system permissions matrix UI page in `apps/web/src/app/[locale]/(app)/admin/roles/page.tsx`
+- [x] T023 [US3] Build client role-assignment selector dialog inside `apps/web/src/app/[locale]/(app)/admin/roles/components/role-assignment-modal.tsx`
+- [x] T024 [US3] Write React mutation hook to trigger role updates in `apps/web/src/features/admin/hooks/use-roles.ts`
 
 **Checkpoint**: All role management and scoping mechanisms are fully complete.
 
@@ -100,10 +100,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T025 [P] [US4] Create global settings currency API route in `apps/api/src/modules/settings/settings.controller.ts`
-- [ ] T026 [P] [US4] Construct React currency context provider in `apps/web/src/app/[locale]/providers/currency-provider.tsx`
-- [ ] T027 [US4] Wire dashboard summary cards to dynamic currency context in `apps/web/src/app/[locale]/(app)/dashboard/DashboardClient.tsx`
-- [ ] T028 [US4] Localize inventory valuations columns with active settings currency in `apps/web/src/features/reports/components/valuation-table.tsx`
+- [x] T025 [P] [US4] Create global settings currency API route in `apps/api/src/modules/settings/settings.controller.ts`
+- [x] T026 [P] [US4] Construct React currency context provider in `apps/web/src/app/[locale]/providers/currency-provider.tsx`
+- [x] T027 [US4] Wire dashboard summary cards to dynamic currency context in `apps/web/src/app/[locale]/(app)/dashboard/DashboardClient.tsx`
+- [x] T028 [US4] Localize inventory valuations columns with active settings currency in `apps/web/src/features/reports/components/valuation-table.tsx`
 
 **Checkpoint**: All user stories are independently functional and localized.
 
@@ -113,8 +113,8 @@
 
 **Purpose**: Verify compilation, linter gates, and E2E workflow consistency
 
-- [ ] T029 [P] Create full Playwright E2E suites for landed cost allocations in `tests/e2e/landed-cost.spec.ts`
-- [ ] T030 Typecheck web client and run final linter checks using `npm run typecheck --filter=web` and `npm run lint`
+- [x] T029 [P] Create full Playwright E2E suites for landed cost allocations in `tests/e2e/landed-cost.spec.ts`
+- [x] T030 Typecheck web client and run final linter checks using `npm run typecheck --filter=web` and `npm run lint`
 
 ---
 

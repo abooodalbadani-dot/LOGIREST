@@ -15,6 +15,7 @@ import { ErrorProvider } from '@/providers/ErrorProvider';
 
 
 import { UserProfileProvider } from '@/providers/UserProfileProvider';
+import { CurrencyProvider } from '@/app/[locale]/providers/currency-provider';
 
 
 import { ibmPlexSans, ibmPlexSansArabic, cairo, ibmPlexMono } from '@/lib/fonts';
@@ -190,6 +191,7 @@ export default async function LocaleLayout({
                     <AuthProvider>
                       <UserProfileProvider>
                         <WarehouseScopeProvider>
+                          <CurrencyProvider>
                           <ErrorBoundary>
                             <NetworkStatusBanner />
                             <ErrorProvider>
@@ -197,6 +199,7 @@ export default async function LocaleLayout({
                             </ErrorProvider>
                             <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
                           </ErrorBoundary>
+                          </CurrencyProvider>
                         </WarehouseScopeProvider>
                       </UserProfileProvider>
                     </AuthProvider>

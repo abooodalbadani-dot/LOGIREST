@@ -9,6 +9,7 @@ import {
   UseGuards,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -17,6 +18,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { EmailService } from '../outbox/email.service';
+import { AssignUserRoleSchema } from '@logirest/shared-types';
 
 import { AdminService } from './admin.service';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
@@ -280,6 +282,72 @@ export class AdminController {
     return {
       success: true,
       message: `User ${user.email} successfully unlocked.`,
+    };
+  }
+
+  @Put('users/:id/role')
+  async updateUserRole(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser('id') currentUserId: string,
+  ) {
+    const parsed = AssignUserRoleSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        message: parsed.error.flatten().fieldErrors,
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+
+    const newRole = parsed.data.role;
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({
+        where: { id },
+        data: {
+          role: newRole,
+          version: { increment: 1 },
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          version: true,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: currentUserId,
+          action: 'UPDATE_USER_ROLE',
+          targetTable: 'users',
+          targetId: id,
+          beforeStateJson: JSON.stringify({ role: user.role }),
+          afterStateJson: JSON.stringify({ role: newRole }),
+        },
+      });
+
+      return result;
+    });
+
+    return {
+      success: true,
+      user: {
+        id: updated.id,
+        email: updated.email,
+        name: updated.name,
+        role: updated.role,
+      },
+      message: `User role updated to ${newRole}`,
     };
   }
 }
