@@ -6,7 +6,7 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { Truck, PackageCheck } from 'lucide-react';
+import { Truck, PackageCheck, Loader2 } from 'lucide-react';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { TransferLine } from '@/features/operations/hooks/useTransfer';
 import { useLocale } from '@/hooks/useLocale';
@@ -14,6 +14,8 @@ import { useRouter } from '@/i18n/navigation';
 import { TRANSFER_STATUS } from '@logirest/shared-types';
 import type { Transfer } from '@/types/documents';
 import { VoidButton } from '@/components/shared/VoidButton';
+import { Button } from '@/components/ui/button';
+import { useReceiveTransfer } from '@/features/operations/hooks/useReceiveTransfer';
 
 interface TransferViewerProps {
   transfer: Transfer;
@@ -27,6 +29,23 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
   const { gradientClass } = useLocale();
 
   const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
+
+  const receiveMutation = useReceiveTransfer();
+
+  const handleConfirmReceipt = () => {
+    const lines = (transfer?.lines ?? []).map((line) => ({
+      line_id: line.id,
+      received_qty: line.shipped_qty ?? line.qty,
+    }));
+    receiveMutation.mutate({
+      id: transfer.id,
+      body: {
+        version: transfer.version || 1,
+        lines,
+        confirmation: 'CONFIRMED',
+      },
+    });
+  };
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -60,6 +79,19 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
               status={transferStatus}
               version={transfer.version || 1}
             />
+            {transferStatus === TRANSFER_STATUS.IN_TRANSIT && (
+              <Button
+                onClick={handleConfirmReceipt}
+                disabled={receiveMutation.isPending}
+              >
+                {receiveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <PackageCheck className="w-4 h-4" />
+                )}
+                {t('confirm_receipt')}
+              </Button>
+            )}
           </div>
         }
       />

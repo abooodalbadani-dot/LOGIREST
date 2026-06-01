@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { Role, DocumentType, Prisma, InventoryIssue } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
@@ -16,6 +17,7 @@ export class IssuePostService {
     private readonly allocationService: AllocationService,
     private readonly outboxService: OutboxService,
     private readonly metricsService: MetricsService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   async post(
@@ -63,19 +65,11 @@ export class IssuePostService {
         const item = line.item;
 
         // Check if item is frozen in source warehouse
-        const sourceWhItemCheck = await tx.warehouseItem.findUnique({
-          where: {
-            warehouseId_itemId: {
-              warehouseId: issue.warehouseId,
-              itemId: item.id,
-            },
-          },
-        });
-        if (sourceWhItemCheck?.isFrozen) {
-          throw new BadRequestException(
-            `Cannot post issue: Item ${item.sku} is frozen/locked in source warehouse`,
-          );
-        }
+        await this.scopeValidationService.checkWarehouseItemQuarantine(
+          issue.warehouseId,
+          item.id,
+          item.sku,
+        );
 
         // Perform progressive lot allocation (FEFO/FIFO) and decrement quantities
         const allocations = await this.allocationService.allocate(

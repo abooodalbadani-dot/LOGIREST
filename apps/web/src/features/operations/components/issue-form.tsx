@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft, Scan } from 'lucide-react';
+import { AlertCircle, History, Package, Clock, User, FileText, ArrowRight, ArrowLeft, Scan, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -12,6 +12,7 @@ import { useLotsByItem } from '@/features/operations/hooks/useLotsByItem';
 import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/DocumentLockBanner';
 import { FormFooter } from '@/components/shared/FormFooter';
 import { usePostIssue } from '@/features/operations/hooks/usePostIssue';
+import { useSubmitIssue } from '@/features/operations/hooks/useSubmitIssue';
 import { LockBanner } from '@/components/shared/LockBanner';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
@@ -54,6 +55,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   
   const postIssue = usePostIssue({ onConflict });
   const isPostPending = postIssue.isPending;
+  const submitIssue = useSubmitIssue({ onConflict });
   const { playSound } = useAudioFeedback();
 
   const { data: itemsData } = useItems(); const items = itemsData?.data || [];
@@ -82,6 +84,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
   const lastResetId = useRef<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     if (issue && issue.id !== lastResetId.current) {
@@ -141,7 +144,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const status = (issue?.status || ISSUE_STATUS.DRAFT) as DocumentStatus;
   const isDocLocked = isDocumentLocked("ISSUE", status);
   const isWarehouseLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
-  const effectiveIsLocked = isDocLocked;
+  const effectiveIsLocked = isDocLocked || isSubmitted;
 
   const handleScan = async (barcode: string) => {
 
@@ -291,6 +294,19 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     setActiveLine(null);
   };
 
+  const handleSubmitIssue = async () => {
+    if (!issue) return;
+    try {
+      await submitIssue.mutateAsync({ id, version: issue.version, signal: abortController.signal });
+      setIsSubmitted(true);
+      toast.success(t('submit_success') || 'Issue submitted successfully');
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; name?: string };
+      if (apiErr?.name === 'AbortError') return;
+      toast.error(t('submit_error') || 'Failed to submit issue');
+    }
+  };
+
   const handlePost = async () => {
     if (!issue) return;
     try {
@@ -317,6 +333,13 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
   const history = useMemo((): StatusTimelineEntry[] => {
     if (!issue) return [];
+
+    const issueAny = issue as unknown as Record<string, unknown>;
+    const cachedTimeline = issueAny.timeline as StatusTimelineEntry[] | undefined;
+    if (cachedTimeline && cachedTimeline.length > 0) {
+      return cachedTimeline;
+    }
+
     const h: StatusTimelineEntry[] = [
       { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.created_at ?? '', by: issue.created_by ?? 'System' }
     ];
@@ -608,6 +631,21 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                   status={status}
                   version={issue?.version || 1}
                 />
+              )}
+              {!effectiveIsLocked && !isNew && status === ISSUE_STATUS.DRAFT && (
+                <Button
+                  type="button"
+                  onClick={handleSubmitIssue}
+                  disabled={submitIssue.isPending}
+                  className="h-8 md:h-10 px-4 md:px-6 rounded-full transition-all bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] md:text-label-sm font-black uppercase tracking-widest shadow-lg shadow-cyan-900/30 active:scale-95 flex items-center gap-2 shrink-0 border-none"
+                >
+                  {submitIssue.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 md:w-5 md:h-5" />
+                  )}
+                  <span>{submitIssue.isPending ? t('submitting') || 'Submitting...' : t('submit') || 'Submit'}</span>
+                </Button>
               )}
               {!effectiveIsLocked && !isNew && (
                 <Button

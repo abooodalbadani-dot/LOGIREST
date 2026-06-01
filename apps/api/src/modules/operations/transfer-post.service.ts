@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { Role, DocumentType, Prisma, Transfer } from '@prisma/client';
 import { canPerformActionV2, DocumentStatus } from '@logirest/shared-types';
 import { MetricsService } from '../metrics/metrics.service';
@@ -23,6 +24,7 @@ export class TransferPostService {
     private readonly metricsService: MetricsService,
     private readonly outboxService: OutboxService,
     private readonly wacService: WacService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   /**
@@ -102,6 +104,12 @@ export class TransferPostService {
             const item = line.item;
 
             // Check if item is frozen in source warehouse
+            await this.scopeValidationService.checkWarehouseItemQuarantine(
+              transfer.fromWarehouseId,
+              item.id,
+              item.sku,
+            );
+
             const sourceWhItem = await tx.warehouseItem.findUnique({
               where: {
                 warehouseId_itemId: {
@@ -110,12 +118,6 @@ export class TransferPostService {
                 },
               },
             });
-            if (sourceWhItem?.isFrozen) {
-              throw new BadRequestException(
-                `Cannot ship transfer: Item ${item.sku} is frozen/locked in source warehouse`,
-              );
-            }
-
             const sourceWac = sourceWhItem
               ? sourceWhItem.wac
               : new Prisma.Decimal(0);
@@ -396,19 +398,11 @@ export class TransferPostService {
             }
 
             // Check if item is frozen in destination warehouse
-            const destWhItemCheck = await tx.warehouseItem.findUnique({
-              where: {
-                warehouseId_itemId: {
-                  warehouseId: transfer.toWarehouseId,
-                  itemId: item.id,
-                },
-              },
-            });
-            if (destWhItemCheck?.isFrozen) {
-              throw new BadRequestException(
-                `Cannot receive transfer: Item ${item.sku} is frozen/locked in destination warehouse`,
-              );
-            }
+            await this.scopeValidationService.checkWarehouseItemQuarantine(
+              transfer.toWarehouseId,
+              item.id,
+              item.sku,
+            );
 
             const sourceWac = line.unitCost
               ? new Prisma.Decimal(line.unitCost)

@@ -1,10 +1,30 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { Role } from '@prisma/client';
 
 @Injectable()
 export class ScopeValidationService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async checkWarehouseItemQuarantine(
+    warehouseId: string,
+    itemId: string,
+    sku?: string,
+  ): Promise<void> {
+    const whItem = await this.prisma.warehouseItem.findUnique({
+      where: { warehouseId_itemId: { warehouseId, itemId } },
+      select: { isFrozen: true },
+    });
+    if (whItem?.isFrozen) {
+      throw new BadRequestException(
+        `Item ${sku ?? itemId} is frozen/locked in warehouse ${warehouseId}`,
+      );
+    }
+  }
 
   async validateWarehouse(
     userId: string,
