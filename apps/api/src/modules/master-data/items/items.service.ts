@@ -120,7 +120,15 @@ export class ItemsService {
       throw new NotFoundException(`Item with ID ${id} not found`);
     }
 
-    return this.mapDbItemToFrontend(item);
+    const hasTransactions =
+      (await this.prisma.stockLedger.count({
+        where: { itemId: id },
+      })) > 0;
+
+    return {
+      ...this.mapDbItemToFrontend(item),
+      has_transactions: hasTransactions,
+    };
   }
 
   async create(body: any, userId: string, ipAddress?: string) {

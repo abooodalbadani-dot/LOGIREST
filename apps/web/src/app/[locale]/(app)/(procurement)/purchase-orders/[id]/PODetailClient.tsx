@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
 
-import { CheckCircle, Mail } from 'lucide-react';
+import { CheckCircle, Mail, Trash2 } from 'lucide-react';
+import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
 import { type DocumentStatus } from '@logirest/shared-types';
 import { apiClient } from '@/infrastructure/api/client';
 import { z } from 'zod';
@@ -31,6 +32,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
   const router = useRouter();
   const { user } = useAuth();
   const { data: po, isLoading } = usePO(id || '');
+  const deletePO = useDeletePO();
   const { open, handleReload, handleClose, triggerConflict } = useConflictHandler('purchase-order', id || '');
 
   if (isLoading) {
@@ -55,7 +57,7 @@ export function PODetailClient({ id }: PODetailClientProps) {
         <Button
           onClick={async () => {
             try {
-              await apiClient.post(`/procurement/pos/${id}/email`, z.any());
+              await apiClient.post(`/procurement/purchase-orders/${id}/email`, z.any());
               toast.success(t('email_sent') || 'PO emailed to supplier successfully');
             } catch (err) {
               toast.error(tCommon('error_generic') || 'Error sending email');
@@ -66,6 +68,29 @@ export function PODetailClient({ id }: PODetailClientProps) {
           <Mail className="w-4 h-4 me-2" />
           {t('actions.email_po') || 'Email PO'}
         </Button>
+      )}
+
+      {status === PO_STATUS.DRAFT && !isNew && (
+        <PermissionGate action="delete" resource="po">
+          <Button
+            onClick={async () => {
+              const confirmed = window.confirm('Are you sure you want to delete this draft purchase order? This action is permanent.');
+              if (!confirmed) return;
+              try {
+                await deletePO.mutateAsync({ id: id || '', version: po?.version });
+                toast.success('Draft purchase order deleted successfully');
+                router.push('/purchase-orders');
+              } catch (err) {
+                console.error(err);
+              }
+            }}
+            disabled={deletePO.isPending}
+            className="bg-red-500/10 text-red-500 hover:bg-red-500/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-red-500/20"
+          >
+            <Trash2 className="w-4 h-4 me-2" />
+            {tCommon('actions.delete') || 'Delete'}
+          </Button>
+        </PermissionGate>
       )}
 
       <ActionGuard documentType="PO" status={status} action="APPROVE" role={user?.role}>

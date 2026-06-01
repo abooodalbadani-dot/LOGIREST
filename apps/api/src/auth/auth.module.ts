@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
@@ -8,9 +8,11 @@ import { RtrService } from './rtr.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OutboxModule } from '../modules/outbox/outbox.module';
+import { ScopeValidationService } from './scope-validation.service';
 
 import { ConfigService } from '@nestjs/config';
 
+@Global()
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -44,6 +46,7 @@ import { ConfigService } from '@nestjs/config';
     RtrService,
     JwtStrategy,
     JwtAuthGuard,
+    ScopeValidationService,
   ],
   exports: [
     AuthService,
@@ -52,6 +55,7 @@ import { ConfigService } from '@nestjs/config';
     PassportModule,
     JwtAuthGuard,
     JwtStrategy,
+    ScopeValidationService,
   ],
 })
 export class AuthModule {}

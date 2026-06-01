@@ -13,6 +13,7 @@ import { useLocale } from '@/hooks/useLocale';
 import { useRouter } from '@/i18n/navigation';
 import { TRANSFER_STATUS } from '@logirest/shared-types';
 import type { Transfer } from '@/types/documents';
+import { VoidButton } from '@/components/shared/VoidButton';
 
 interface TransferViewerProps {
   transfer: Transfer;
@@ -53,6 +54,12 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
           <div className="flex gap-4 items-center">
             <StatusBadge status={transferStatus as BadgeStatus} />
             <DocumentExportMenu />
+            <VoidButton
+              documentId={transfer.id}
+              documentType="TRANSFER"
+              status={transferStatus}
+              version={transfer.version || 1}
+            />
           </div>
         }
       />

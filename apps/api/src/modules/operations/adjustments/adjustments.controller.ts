@@ -23,8 +23,8 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../../decorators/swagger-docs.decorator';
-import { AdjustmentDirection, AdjustmentReason } from '@prisma/client';
-import type { Role } from '@logirest/shared-types';
+import { AdjustmentDirection, AdjustmentReason, Role } from '@prisma/client';
+import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapAdjustmentDetail(adj: any) {
@@ -104,6 +104,7 @@ export class AdjustmentsController {
   constructor(
     private readonly adjPostService: AdjustmentPostService,
     private readonly adjustmentsService: AdjustmentsService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -124,7 +125,13 @@ export class AdjustmentsController {
       }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      body.warehouseId,
+    );
     const adj = await this.adjustmentsService.create(body, userId);
     return mapAdjustmentDetail(adj);
   }
@@ -155,8 +162,17 @@ export class AdjustmentsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const adj = await this.adjustmentsService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      adj.warehouseId,
+    );
     return mapAdjustmentDetail(adj);
   }
 

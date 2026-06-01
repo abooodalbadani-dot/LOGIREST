@@ -10,6 +10,7 @@ import { BackupModule } from './backup/backup.module';
 import { PrismaModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
 import { ScopeInterceptor } from './auth/interceptors/scope.interceptor';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { PurchaseRequestsModule } from './modules/purchase-requests/purchase-requests.module';
@@ -140,6 +141,10 @@ import { correlationStorage } from './common/correlation.context';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: APP_GUARD,

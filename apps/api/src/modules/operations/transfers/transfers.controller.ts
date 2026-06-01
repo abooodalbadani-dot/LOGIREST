@@ -22,7 +22,8 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapTransferDetail(transfer: any) {
@@ -127,6 +128,7 @@ export class TransfersController {
   constructor(
     private readonly transferPostService: TransferPostService,
     private readonly transfersService: TransfersService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -141,7 +143,13 @@ export class TransfersController {
       lines: Array<{ itemId: string; quantityShipped: number }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      body.fromWarehouseId,
+    );
     const transfer = await this.transfersService.create(body, userId);
     return mapTransferDetail(transfer);
   }
@@ -172,8 +180,17 @@ export class TransfersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const transfer = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateAtLeastOneWarehouse(
+      userId,
+      role,
+      [transfer.fromWarehouseId, transfer.toWarehouseId],
+    );
     return mapTransferDetail(transfer);
   }
 
@@ -193,6 +210,13 @@ export class TransfersController {
     @Body() body: { version?: number },
     @Req() req: Request,
   ) {
+    const t = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      t.fromWarehouseId,
+    );
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -234,6 +258,13 @@ export class TransfersController {
     },
     @Req() req: Request,
   ) {
+    const t = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      t.toWarehouseId,
+    );
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -267,6 +298,13 @@ export class TransfersController {
     @Body() body: { comments?: string; version?: number },
     @Req() req: Request,
   ) {
+    const t = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      t.fromWarehouseId,
+    );
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]
@@ -296,6 +334,13 @@ export class TransfersController {
     @Body() body: { comments?: string; version?: number },
     @Req() req: Request,
   ) {
+    const t = await this.transfersService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      t.toWarehouseId,
+    );
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]

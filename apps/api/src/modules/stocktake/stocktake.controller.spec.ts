@@ -5,9 +5,14 @@ import { StocktakePostService } from './stocktake-post.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import type { Request } from 'express';
-import { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 
 describe('StocktakeController', () => {
+  const mockScopeValidationService = {
+    validateWarehouse: jest.fn(),
+    validateAtLeastOneWarehouse: jest.fn(),
+  };
   let controller: StocktakeController;
   let service: StocktakeService;
   let postService: StocktakePostService;
@@ -42,6 +47,10 @@ describe('StocktakeController', () => {
         { provide: StocktakePostService, useValue: mockStocktakePostService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: WorkflowService, useValue: mockWorkflowService },
+        {
+          provide: ScopeValidationService,
+          useValue: mockScopeValidationService,
+        },
       ],
     }).compile();
 
@@ -50,13 +59,20 @@ describe('StocktakeController', () => {
     postService = module.get<StocktakePostService>(StocktakePostService);
 
     jest.clearAllMocks();
-    mockStocktakeService.findOne.mockResolvedValue({ id: 'session-1' });
+    mockStocktakeService.findOne.mockResolvedValue({
+      id: 'session-1',
+      warehouseId: 'wh-1',
+    });
   });
 
   it('should call create', async () => {
     mockStocktakeService.create.mockResolvedValue({ id: 'session-1' });
 
-    const result = await controller.create({ warehouseId: 'wh-1' }, 'user-1');
+    const result = await controller.create(
+      { warehouseId: 'wh-1' },
+      'user-1',
+      Role.ADMIN,
+    );
     expect(result.id).toEqual('session-1');
     expect(mockStocktakeService.create).toHaveBeenCalledWith(
       { warehouseId: 'wh-1' },
@@ -65,9 +81,12 @@ describe('StocktakeController', () => {
   });
 
   it('should call findOne', async () => {
-    mockStocktakeService.findOne.mockResolvedValue({ id: 'session-1' });
+    mockStocktakeService.findOne.mockResolvedValue({
+      id: 'session-1',
+      warehouseId: 'wh-1',
+    });
 
-    const result = await controller.findOne('session-1');
+    const result = await controller.findOne('session-1', 'user-1', Role.ADMIN);
     expect(result.id).toEqual('session-1');
     expect(mockStocktakeService.findOne).toHaveBeenCalledWith('session-1');
   });

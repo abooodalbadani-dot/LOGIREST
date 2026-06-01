@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
-import { Role } from '@logirest/shared-types';
+import { Role, UpdateKitchenRequestDto } from '@logirest/shared-types';
 import { DocumentSequenceService } from '../sequencing/document-sequence.service';
 import { IssuePostService } from '../operations/issue-post.service';
 
@@ -342,5 +342,114 @@ export class KitchenRequestsService {
       body.version,
       body.ipAddress,
     );
+  }
+
+  async update(
+    id: string,
+    dto: UpdateKitchenRequestDto,
+    userId: string,
+    ipAddress?: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const kr = await tx.kitchenRequest.findUnique({
+        where: { id },
+        include: { items: true },
+      });
+
+      if (!kr) {
+        throw new NotFoundException(`KitchenRequest with ID ${id} not found`);
+      }
+
+      if (kr.status !== 'DRAFT') {
+        throw new BadRequestException(
+          'Only DRAFT kitchen requests can be edited.',
+        );
+      }
+
+      if (dto.version !== undefined && kr.version !== dto.version) {
+        throw new BadRequestException(
+          'Concurrency conflict: KitchenRequest version mismatch',
+        );
+      }
+
+      if (dto.warehouseId) {
+        const warehouse = await tx.warehouse.findUnique({
+          where: { id: dto.warehouseId },
+        });
+        if (!warehouse) {
+          throw new NotFoundException(
+            `Warehouse with ID ${dto.warehouseId} not found`,
+          );
+        }
+      }
+
+      // 1. Delete existing items
+      await tx.kitchenRequestItem.deleteMany({
+        where: { requestId: id },
+      });
+
+      // 2. Update core fields and create new items
+      const updated = await tx.kitchenRequest.update({
+        where: { id },
+        data: {
+          departmentId: dto.departmentId || kr.departmentId,
+          warehouseId: dto.warehouseId || kr.warehouseId,
+          version: { increment: 1 },
+          items: dto.items
+            ? {
+                create: dto.items.map((item) => ({
+                  itemId: item.itemId,
+                  quantityRequested: item.quantityRequested,
+                  quantityFulfilled: 0,
+                })),
+              }
+            : undefined,
+        },
+        include: {
+          items: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+          department: true,
+          warehouse: true,
+        },
+      });
+
+      // 3. Log the action in AuditLog
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'KITCHEN_REQUEST_UPDATED',
+          targetTable: 'kitchen_requests',
+          targetId: id,
+          beforeStateJson: JSON.stringify({
+            departmentId: kr.departmentId,
+            warehouseId: kr.warehouseId,
+            version: kr.version,
+            items: kr.items.map((i) => ({
+              itemId: i.itemId,
+              qty: i.quantityRequested,
+            })),
+          }),
+          afterStateJson: JSON.stringify({
+            departmentId: updated.departmentId,
+            warehouseId: updated.warehouseId,
+            version: updated.version,
+            items: updated.items.map((i) => ({
+              itemId: i.itemId,
+              qty: i.quantityRequested,
+            })),
+          }),
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return updated;
+    });
   }
 }

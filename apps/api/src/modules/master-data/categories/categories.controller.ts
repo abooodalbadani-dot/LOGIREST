@@ -11,7 +11,9 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CategoriesService } from './categories.service';
@@ -34,6 +36,7 @@ export class CategoriesController {
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.GM)
   async create(
     @Body() body: any,
     @CurrentUser('id') userId: string,
@@ -50,6 +53,7 @@ export class CategoriesController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
     @Body() body: any,
@@ -68,6 +72,7 @@ export class CategoriesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @Roles(Role.ADMIN, Role.GM)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

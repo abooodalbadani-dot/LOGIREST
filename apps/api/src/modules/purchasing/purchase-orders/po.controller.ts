@@ -25,7 +25,9 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../../auth/scope-validation.service';
+import { PrismaService } from '../../../database/prisma.service';
 import type { Request } from 'express';
 
 // Map database fields to match the frontend expected schemas
@@ -127,7 +129,11 @@ function mapPOSummary(po: any) {
 @Controller('procurement/purchase-orders')
 @ApiSecureController()
 export class PurchaseOrderController {
-  constructor(private readonly poService: PurchaseOrderService) {}
+  constructor(
+    private readonly poService: PurchaseOrderService,
+    private readonly prisma: PrismaService,
+    private readonly scopeValidationService: ScopeValidationService,
+  ) {}
 
   @Post()
   @Idempotent()
@@ -141,7 +147,29 @@ export class PurchaseOrderController {
       lines: Array<{ itemId: string; quantity: number; unitPrice: number }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
+    if (role !== Role.ADMIN) {
+      if (!body.prId) {
+        throw new BadRequestException(
+          'prId is required for non-administrative users to create a Purchase Order.',
+        );
+      }
+      const pr = await this.prisma.purchaseRequest.findUnique({
+        where: { id: body.prId },
+        select: { warehouseId: true },
+      });
+      if (!pr) {
+        throw new NotFoundException(
+          `Purchase Request with ID ${body.prId} not found.`,
+        );
+      }
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        pr.warehouseId,
+      );
+    }
     const po = await this.poService.create(body, userId);
     return { data: mapPODetail(po) };
   }
@@ -174,8 +202,19 @@ export class PurchaseOrderController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const po = await this.poService.findOne(id);
+    if (po.purchaseRequest?.warehouseId) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        po.purchaseRequest.warehouseId,
+      );
+    }
     return { data: mapPODetail(po) };
   }
 
@@ -315,35 +354,6 @@ export class PurchaseOrderController {
       undefined;
 
     const po = await this.poService.cancel(id, userId, role, {
-      ...body,
-      ipAddress,
-    });
-    return { data: mapPODetail(po) };
-  }
-
-  @Post(':id/post')
-  @UseGuards(WorkflowStateGuard)
-  @WorkflowAction({
-    docType: 'po',
-    action: 'POST',
-    modelName: 'purchaseOrder',
-  })
-  @HttpCode(HttpStatus.OK)
-  async postToLedger(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
-    @Body() body: { comments?: string; version?: number },
-    @Req() req: Request,
-  ) {
-    const ipAddress =
-      (Array.isArray(req.headers['x-forwarded-for'])
-        ? req.headers['x-forwarded-for'][0]
-        : req.headers['x-forwarded-for']) ||
-      req.ip ||
-      undefined;
-
-    const po = await this.poService.postToLedger(id, userId, role, {
       ...body,
       ipAddress,
     });

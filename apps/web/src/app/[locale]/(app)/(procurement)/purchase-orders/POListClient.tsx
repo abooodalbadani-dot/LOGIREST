@@ -9,7 +9,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { usePOList, POSummary } from '@/features/purchasing/hooks/usePOList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck, AlertTriangle } from 'lucide-react';
+import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Truck, AlertTriangle, Trash2 } from 'lucide-react';
+import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
 
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -29,6 +30,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('procurement.po');
   const tc = useTranslations('common');
   const router = useRouter();
+  const deletePO = useDeletePO();
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
@@ -113,23 +115,48 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
     {
       id: 'actions',
       header: '',
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <PermissionGate action="view" resource="po">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-amber-500/20 text-muted-foreground/60 hover:text-amber-500 transition-all group"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/purchase-orders/${row.original.id}`);
-              }}
-            >
-              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
-            </Button>
-          </PermissionGate>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const isDraft = row.original.status === 'DRAFT';
+        return (
+          <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+            <PermissionGate action="view" resource="po">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-amber-500/20 text-muted-foreground/60 hover:text-amber-500 transition-all group"
+                onClick={() => {
+                  router.push(`/purchase-orders/${row.original.id}`);
+                }}
+              >
+                <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
+              </Button>
+            </PermissionGate>
+
+            {isDraft && (
+              <PermissionGate action="delete" resource="po">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={deletePO.isPending}
+                  className="w-8 h-8 rounded-xl bg-red-500/5 hover:bg-red-500/20 text-red-500 transition-all"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const confirmed = window.confirm('Are you sure you want to delete this draft purchase order?');
+                    if (!confirmed) return;
+                    try {
+                      await deletePO.mutateAsync({ id: row.original.id });
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </PermissionGate>
+            )}
+          </div>
+        );
+      }
     },
   ], [t, tc, locale, router]);
 

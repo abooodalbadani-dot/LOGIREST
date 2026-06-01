@@ -4,6 +4,8 @@ import { PrismaService } from '../../database/prisma.service';
 import { Role } from '@prisma/client';
 import { encrypt, decrypt } from './crypto.util';
 
+process.env.ENCRYPTION_KEY = 'test-encryption-key-for-unit-testing-32-chars';
+
 describe('AdminService', () => {
   let service: AdminService;
 

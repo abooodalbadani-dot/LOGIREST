@@ -65,6 +65,9 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
   if (request.rejected_at) {
     history.push({ status: 'rejected' as Status, at: request.rejected_at, by: request.rejected_by || 'Rejecter' });
   }
+  if (request.status === 'CANCELLED') {
+    history.push({ status: 'cancelled' as Status, at: request.updated_at || request.created_at, by: request.rejected_by || 'System' });
+  }
   if (request.fulfilled_at) {
     history.push({ status: request.status.toLowerCase() as Status, at: request.fulfilled_at, by: request.fulfilled_by || 'Store Keeper' });
   }

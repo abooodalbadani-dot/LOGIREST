@@ -111,3 +111,27 @@ export function useDeleteWarehouse() {
   });
 }
 
+export function useArchiveWarehouse() {
+  const queryClient = useQueryClient();
+  const t = useTranslations('master_data.warehouses');
+
+  return useMutation({
+    mutationFn: ({ id, version, signal }: { id: string; version?: number; signal?: AbortSignal }) => {
+      const url = version != null ? `/warehouses/${id}/archive?version=${version}` : `/warehouses/${id}/archive`;
+      return apiClient.post(url, WarehouseSchema, {}, { signal });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.setQueryData([...QUERY_KEY, data.id], data);
+      toast.success(t('archived_success') || 'Warehouse archived successfully');
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      
+      const errorCode = (error as ApiError)?.code || (error as Error)?.message || 'archive_failed';
+      const translationKey = `errors.${errorCode}`;
+      toast.error(t.has(translationKey) ? t(translationKey) : t('errors.archive_failed') || 'Failed to archive warehouse');
+    }
+  });
+}
+

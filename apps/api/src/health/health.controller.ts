@@ -42,7 +42,6 @@ export class HealthController {
     ]);
   }
 
-  @Public()
   @Get('backup')
   async checkBackup() {
     const backupStatus = await this.backupService.getBackupStatus();
@@ -69,19 +68,12 @@ export class HealthController {
       dbStatus = 'degraded';
     }
 
-    const backupStatus = await this.backupService.getBackupStatus();
-    const overallStatus =
-      dbStatus === 'degraded' || backupStatus.status === 'degraded'
-        ? 'degraded'
-        : 'ok';
-
     return {
-      status: overallStatus,
+      status: dbStatus,
       timestamp: new Date().toISOString(),
       checks: {
         database: dbStatus,
-        backup: backupStatus,
       },
-    };
+    } as any;
   }
 }

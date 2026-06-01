@@ -39,12 +39,10 @@ describe('HealthController', () => {
   });
 
   describe('check', () => {
-    it('should return status ok when database and backup are healthy', async () => {
+    it('should return status ok when database is healthy', async () => {
       const result = await controller.check();
       expect(result.status).toBe('ok');
       expect(result.checks.database).toBe('ok');
-      expect(result.checks.backup.status).toBe('ok');
-      expect(result.checks.backup.ageHours).toBe(1.5);
       expect(result.timestamp).toBeDefined();
     });
 
@@ -55,20 +53,6 @@ describe('HealthController', () => {
       const result = await controller.check();
       expect(result.status).toBe('degraded');
       expect(result.checks.database).toBe('degraded');
-      expect(result.checks.backup.status).toBe('ok');
-    });
-
-    it('should return status degraded if backup check is degraded', async () => {
-      backupServiceMock.getBackupStatus.mockResolvedValue({
-        status: 'degraded',
-        lastBackupAt: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
-        ageHours: 30.0,
-      });
-      const result = await controller.check();
-      expect(result.status).toBe('degraded');
-      expect(result.checks.database).toBe('ok');
-      expect(result.checks.backup.status).toBe('degraded');
-      expect(result.checks.backup.ageHours).toBe(30.0);
     });
   });
 

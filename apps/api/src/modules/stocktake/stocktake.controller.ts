@@ -10,6 +10,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { StocktakePostService } from './stocktake-post.service';
 import { StocktakeService } from './stocktake.service';
@@ -22,7 +23,8 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapStocktakeDetail(session: any) {
@@ -108,6 +110,7 @@ export class StocktakeController {
   constructor(
     private readonly stocktakeService: StocktakeService,
     private readonly stocktakePostService: StocktakePostService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   @Post()
@@ -116,11 +119,17 @@ export class StocktakeController {
   async create(
     @Body() body: { warehouseId?: string; warehouse_id?: string },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
     const warehouseId = body.warehouseId || body.warehouse_id;
     if (!warehouseId) {
-      throw new Error('warehouseId is required');
+      throw new BadRequestException('warehouseId is required');
     }
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      warehouseId,
+    );
     const session = await this.stocktakeService.create({ warehouseId }, userId);
     return mapStocktakeDetail(await this.stocktakeService.findOne(session.id));
   }
@@ -151,8 +160,17 @@ export class StocktakeController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const session = await this.stocktakeService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      session.warehouseId,
+    );
     return mapStocktakeDetail(session);
   }
 

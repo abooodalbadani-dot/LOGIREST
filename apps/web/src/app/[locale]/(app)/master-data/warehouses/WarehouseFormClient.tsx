@@ -19,7 +19,7 @@ import {
  useWarehouse,
  useCreateWarehouse,
  useUpdateWarehouse,
- useDeleteWarehouse,
+ useArchiveWarehouse,
 } from '@/features/warehouses/hooks/useWarehouses';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import {
@@ -56,7 +56,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const create = useCreateWarehouse();
   const conflict = useConflictHandler('warehouse', id ?? '');
   const update = useUpdateWarehouse({ onConflict: conflict.triggerConflict });
-  const deleteWarehouse = useDeleteWarehouse();
+  const archiveWarehouse = useArchiveWarehouse();
   const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -142,17 +142,17 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
 
   const onSubmit = handleSubmit(onValid, onInvalid);
 
-  const handleDelete = async () => {
+  const handleArchive = async () => {
     if (!id) return;
     try {
-      await deleteWarehouse.mutateAsync({ id, signal: abortController.signal });
+      await archiveWarehouse.mutateAsync({ id, signal: abortController.signal });
       guardedRouter.push('/master-data/warehouses', { skipGuard: true });
     } catch {
       setShowDeleteConfirm(false);
     }
   };
 
-  const isSaving = create.isPending || update.isPending || deleteWarehouse.isPending;
+  const isSaving = create.isPending || update.isPending || archiveWarehouse.isPending;
 
   // Determine the display title
   const displayTitle = id 
@@ -187,6 +187,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                 className="text-status-error hover:text-status-error hover:bg-status-error/10 rounded-full w-10 h-10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isSaving || (data as { has_stock?: boolean } | null)?.has_stock}
+                title={(data as { has_stock?: boolean } | null)?.has_stock ? 'Cannot archive: warehouse contains active stock' : 'Archive warehouse'}
               >
                 <Trash2 className="w-5 h-5" />
               </Button>
@@ -361,10 +362,10 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
       <PostConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
-        onConfirm={handleDelete}
-        title={tw('delete_confirm_title')}
-        description={tw('delete_confirm_desc')}
-        isLoading={deleteWarehouse.isPending}
+        onConfirm={handleArchive}
+        title={tw('archive_confirm_title') || 'Archive Warehouse'}
+        description={tw('archive_confirm_desc') || 'Are you sure you want to archive this warehouse? This will deactivate it and preserve all transaction history.'}
+        isLoading={archiveWarehouse.isPending}
         variant="destructive"
       />
     </>

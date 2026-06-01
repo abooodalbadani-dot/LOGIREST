@@ -12,7 +12,8 @@ describe('AdminController', () => {
 
   const mockPrismaService = {
     reconciliationRun: {
-      count: jest.fn(),
+      count: jest.fn().mockResolvedValue(0),
+      findMany: jest.fn().mockResolvedValue([]),
     },
   };
 
@@ -41,22 +42,20 @@ describe('AdminController', () => {
   });
 
   describe('getReconciliationRuns', () => {
-    it('should throw ForbiddenException if user role is not ADMIN', async () => {
-      await expect(
-        controller.getReconciliationRuns(Role.INV_MGR, '1', '50'),
-      ).rejects.toThrow(ForbiddenException);
+    it('should return reconciliation runs', async () => {
+      mockPrismaService.reconciliationRun.count.mockResolvedValue(1);
+      mockPrismaService.reconciliationRun.findMany.mockResolvedValue([
+        { id: 'run-1' },
+      ]);
+
+      const result = await controller.getReconciliationRuns('1', '10');
+      expect(result.data).toEqual([{ id: 'run-1' }]);
+      expect(result.meta.total).toBe(1);
     });
   });
 
   describe('getRoles', () => {
-    it('should throw ForbiddenException if user role is not ADMIN', async () => {
-      await expect(controller.getRoles(Role.INV_MGR)).rejects.toThrow(
-        ForbiddenException,
-      );
-      expect(mockAdminService.getRoles).not.toHaveBeenCalled();
-    });
-
-    it('should return roles list from AdminService for ADMIN', async () => {
+    it('should return roles list from AdminService', async () => {
       const mockRoles = [
         {
           id: 'ADMIN',
@@ -67,7 +66,7 @@ describe('AdminController', () => {
       ];
       mockAdminService.getRoles.mockResolvedValue(mockRoles);
 
-      const result = await controller.getRoles(Role.ADMIN);
+      const result = await controller.getRoles();
 
       expect(result).toEqual(mockRoles);
       expect(mockAdminService.getRoles).toHaveBeenCalled();
@@ -81,10 +80,16 @@ describe('AdminController', () => {
       validationPipe = new ValidationPipe({ whitelist: true, transform: true });
     });
 
-    it('should throw ForbiddenException if user is not ADMIN', async () => {
-      await expect(
-        controller.updateSettings(Role.INV_MGR, 'user-1', {} as any),
-      ).rejects.toThrow(ForbiddenException);
+    it('should call updateSettings on AdminService', async () => {
+      const dto = {} as any;
+      mockAdminService.updateSettings.mockResolvedValue({ success: true });
+
+      const result = await controller.updateSettings('user-1', dto);
+      expect(result).toEqual({ success: true });
+      expect(mockAdminService.updateSettings).toHaveBeenCalledWith(
+        dto,
+        'user-1',
+      );
     });
 
     it('should pass validation with a valid settings payload', async () => {

@@ -11,6 +11,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { GrnService } from './grn.service';
@@ -20,7 +21,8 @@ import { WorkflowAction } from '../../../decorators/workflow-action.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../../auth/decorators/active-scope.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapGRNDetail(grn: any) {
@@ -117,6 +119,7 @@ export class GrnController {
   constructor(
     private readonly grnService: GrnService,
     private readonly grnPostService: GrnPostService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   @Post()
@@ -141,12 +144,19 @@ export class GrnController {
       }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
     const poId = body.poId || body.po_id;
     const warehouseId = body.warehouseId || body.warehouse_id;
     if (!poId || !warehouseId) {
-      throw new Error('poId and warehouseId are required');
+      throw new BadRequestException('poId and warehouseId are required');
     }
+
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      warehouseId,
+    );
 
     const lines = body.lines.map((line) => ({
       itemId: line.itemId || line.item_id || '',
@@ -183,8 +193,17 @@ export class GrnController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const grn = await this.grnService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      grn.warehouseId,
+    );
     return { data: mapGRNDetail(grn) };
   }
 

@@ -13,9 +13,15 @@ import { KitchenRequestsService } from '../kitchen-requests/kitchen-requests.ser
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import type { Request } from 'express';
-import { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 
 describe('Operations and Kitchen Requests Controllers', () => {
+  const mockScopeValidationService = {
+    validateWarehouse: jest.fn(),
+    validateAtLeastOneWarehouse: jest.fn(),
+  };
+
   const mockIssuesService = {
     create: jest.fn(),
     findOne: jest.fn(),
@@ -78,6 +84,10 @@ describe('Operations and Kitchen Requests Controllers', () => {
           { provide: IssuePostService, useValue: mockIssuePostService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          {
+            provide: ScopeValidationService,
+            useValue: mockScopeValidationService,
+          },
         ],
       }).compile();
 
@@ -99,9 +109,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
     });
 
     it('should call findOne', async () => {
-      mockIssuesService.findOne.mockResolvedValue({ id: 'iss-1' });
+      mockIssuesService.findOne.mockResolvedValue({
+        id: 'iss-1',
+        warehouseId: 'wh-1',
+      });
 
-      const result = await controller.findOne('iss-1');
+      const result = await controller.findOne('iss-1', 'user-1', Role.ADMIN);
       expect(result.id).toBe('iss-1');
     });
 
@@ -168,6 +181,10 @@ describe('Operations and Kitchen Requests Controllers', () => {
           { provide: TransferPostService, useValue: mockTransferPostService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          {
+            provide: ScopeValidationService,
+            useValue: mockScopeValidationService,
+          },
         ],
       }).compile();
 
@@ -183,14 +200,18 @@ describe('Operations and Kitchen Requests Controllers', () => {
       };
       mockTransfersService.create.mockResolvedValue({ id: 'tr-1' });
 
-      const result = await controller.create(body, 'user-1');
+      const result = await controller.create(body, 'user-1', Role.ADMIN);
       expect(result.id).toBe('tr-1');
     });
 
     it('should call findOne', async () => {
-      mockTransfersService.findOne.mockResolvedValue({ id: 'tr-1' });
+      mockTransfersService.findOne.mockResolvedValue({
+        id: 'tr-1',
+        fromWarehouseId: 'wh-1',
+        toWarehouseId: 'wh-2',
+      });
 
-      const result = await controller.findOne('tr-1');
+      const result = await controller.findOne('tr-1', 'user-1', Role.ADMIN);
       expect(result.id).toBe('tr-1');
     });
 
@@ -260,6 +281,10 @@ describe('Operations and Kitchen Requests Controllers', () => {
           },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          {
+            provide: ScopeValidationService,
+            useValue: mockScopeValidationService,
+          },
         ],
       }).compile();
 
@@ -271,14 +296,17 @@ describe('Operations and Kitchen Requests Controllers', () => {
       const body = { warehouseId: 'wh-1', lines: [] };
       mockAdjustmentsService.create.mockResolvedValue({ id: 'adj-1' });
 
-      const result = await controller.create(body, 'user-1');
+      const result = await controller.create(body, 'user-1', Role.ADMIN);
       expect(result.id).toBe('adj-1');
     });
 
     it('should call findOne', async () => {
-      mockAdjustmentsService.findOne.mockResolvedValue({ id: 'adj-1' });
+      mockAdjustmentsService.findOne.mockResolvedValue({
+        id: 'adj-1',
+        warehouseId: 'wh-1',
+      });
 
-      const result = await controller.findOne('adj-1');
+      const result = await controller.findOne('adj-1', 'user-1', Role.ADMIN);
       expect(result.id).toBe('adj-1');
     });
 
@@ -381,6 +409,10 @@ describe('Operations and Kitchen Requests Controllers', () => {
           },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          {
+            provide: ScopeValidationService,
+            useValue: mockScopeValidationService,
+          },
         ],
       }).compile();
 
@@ -394,14 +426,17 @@ describe('Operations and Kitchen Requests Controllers', () => {
       const body = { departmentId: 'dept-1', warehouseId: 'wh-1', items: [] };
       mockKitchenRequestsService.create.mockResolvedValue({ id: 'kr-1' });
 
-      const result = await controller.create(body, 'user-1');
+      const result = await controller.create(body, 'user-1', Role.ADMIN);
       expect(result.data.id).toBe('kr-1');
     });
 
     it('should call findOne', async () => {
-      mockKitchenRequestsService.findOne.mockResolvedValue({ id: 'kr-1' });
+      mockKitchenRequestsService.findOne.mockResolvedValue({
+        id: 'kr-1',
+        warehouseId: 'wh-1',
+      });
 
-      const result = await controller.findOne('kr-1');
+      const result = await controller.findOne('kr-1', 'user-1', Role.ADMIN);
       expect(result.data.id).toBe('kr-1');
     });
 

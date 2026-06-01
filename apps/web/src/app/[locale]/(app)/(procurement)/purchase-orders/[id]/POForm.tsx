@@ -36,6 +36,7 @@ import { useWarehouses } from "@/features/warehouses/hooks/useWarehouses";
 import { useFXRates } from "@/features/purchasing/hooks/useFXRates";
 import { useBaseCurrency } from "@/hooks/useBaseCurrency";
 import { formatCurrency } from "@/utils/currency";
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 
 
 const lineItemSchema = z.object({
@@ -74,6 +75,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
   const createMutation = useCreatePO();
   const updateMutation = useUpdatePO({ onConflict });
   const { playSound } = useAudioFeedback();
+
+  const status = initialData?.status as DocumentStatus;
+  const isLocked = isDocumentLocked('PO', status);
 
   const form = useForm<PurchaseOrderFormValues>({
  resolver: zodResolver(formSchema),
@@ -224,7 +228,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <FormItem>
  <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
  <FormControl>
- <Input type="date" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
+ <Input type="date" className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
  </FormControl>
  <FormMessage />
  </FormItem>
@@ -237,7 +241,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('target_warehouse')}</FormLabel>
- <Select onValueChange={field.onChange} value={field.value}>
+ <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
  <FormControl>
  <SelectTrigger className="bg-surface-container-low border-none h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
  <SelectValue placeholder={t('select_warehouse')} />
@@ -264,7 +268,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  render={({ field }) => (
  <FormItem>
  <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier_currency')}</FormLabel>
- <Select onValueChange={field.onChange} value={field.value}>
+ <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
  <FormControl>
  <SelectTrigger className="bg-surface-container-low border-none font-mono h-11 rounded-xl focus:ring-1 focus:ring-operational-cyan/30">
  <SelectValue placeholder={t('currency_placeholder')} />
@@ -299,6 +303,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  dir="ltr" 
  {...field} 
  onChange={(e) => field.onChange(e.target.valueAsNumber)}
+ disabled={isLocked}
  />
  </FormControl>
  </div>
@@ -313,7 +318,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <FormItem className="md:col-span-3 text-start">
  <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('general_notes')}</FormLabel>
  <FormControl>
- <Input placeholder={t('notes_placeholder')} className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} />
+ <Input placeholder={t('notes_placeholder')} className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
  </FormControl>
  <FormMessage />
  </FormItem>

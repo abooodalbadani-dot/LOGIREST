@@ -3,7 +3,6 @@ import {
   Get,
   Put,
   Post,
-  Patch,
   Body,
   Param,
   Query,
@@ -13,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
@@ -23,6 +23,7 @@ import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
+@Roles(Role.ADMIN)
 @ApiSecureController()
 export class AdminController {
   constructor(
@@ -32,23 +33,12 @@ export class AdminController {
   ) {}
 
   @Get('roles')
-  async getRoles(@CurrentUser('role') role: Role) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to access system roles configuration.',
-      );
-    }
+  async getRoles() {
     return this.adminService.getRoles();
   }
 
   @Get('system/email-status')
-  async getEmailStatus(@CurrentUser('role') role: Role) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to view email system status.',
-      );
-    }
-
+  async getEmailStatus() {
     const failedEvent = await this.prisma.outboxEvent.findFirst({
       where: { status: 'FAILED', lastError: 'SMTP_NOT_CONFIGURED' },
       orderBy: { processedAt: 'desc' },
@@ -68,16 +58,9 @@ export class AdminController {
 
   @Get('reconciliation-runs')
   async getReconciliationRuns(
-    @CurrentUser('role') role: Role,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to access reconciliation runs history.',
-      );
-    }
-
     const pageNum = Math.max(1, parseInt(page || '1', 10));
     const limitNum = Math.max(1, parseInt(limit || '50', 10));
     const skip = (pageNum - 1) * limitNum;
@@ -105,89 +88,48 @@ export class AdminController {
   }
 
   @Get('settings')
-  async getSettings(@CurrentUser('role') role: Role) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to view system settings.',
-      );
-    }
+  async getSettings() {
     return this.adminService.getSettings();
   }
 
   @Put('settings')
   async updateSettings(
-    @CurrentUser('role') role: Role,
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateSettingsDto,
   ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to update system settings.',
-      );
-    }
     return this.adminService.updateSettings(dto, userId);
   }
 
   @Post('settings/test-email')
-  async testEmail(@CurrentUser('role') role: Role, @Body() dto: any) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to test email settings.',
-      );
-    }
+  async testEmail(@Body() dto: any) {
     return this.emailService.testConnection(dto);
   }
 
   @Get('outbox/failed')
   async getFailedOutboxEvents(
-    @CurrentUser('role') role: Role,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to view failed outbox events.',
-      );
-    }
     const pageNum = Math.max(1, parseInt(page || '1', 10));
     const limitNum = Math.max(1, parseInt(limit || '50', 10));
     return this.adminService.getFailedOutboxEvents(pageNum, limitNum);
   }
 
   @Post('outbox/:id/retry')
-  async retryOutboxEvent(
-    @CurrentUser('role') role: Role,
-    @Param('id') id: string,
-  ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to retry failed outbox events.',
-      );
-    }
+  async retryOutboxEvent(@Param('id') id: string) {
     return this.adminService.retryOutboxEvent(id);
   }
 
   @Get('inventory/frozen')
-  async getFrozenItems(@CurrentUser('role') role: Role) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to view frozen items.',
-      );
-    }
+  async getFrozenItems() {
     return this.adminService.getFrozenItems();
   }
 
   @Post('inventory/:id/unfreeze')
   async unfreezeItem(
-    @CurrentUser('role') role: Role,
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to unfreeze items.',
-      );
-    }
     const parts = id.split('_');
     if (parts.length !== 2) {
       throw new ForbiddenException(
@@ -203,16 +145,7 @@ export class AdminController {
   }
 
   @Get('users')
-  async getUsers(
-    @CurrentUser('role') role: Role,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to view users.',
-      );
-    }
+  async getUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
     const pageNum = Math.max(1, parseInt(page || '1', 10));
     const limitNum = Math.max(1, parseInt(limit || '50', 10));
     const skip = (pageNum - 1) * limitNum;
@@ -278,12 +211,7 @@ export class AdminController {
   }
 
   @Get('users/:id')
-  async getUser(@CurrentUser('role') role: Role, @Param('id') id: string) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to view users.',
-      );
-    }
+  async getUser(@Param('id') id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -332,13 +260,7 @@ export class AdminController {
   }
 
   @Post('users/:id/unlock')
-  async unlockUser(@CurrentUser('role') role: Role, @Param('id') id: string) {
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only administrative users are authorized to unlock user accounts.',
-      );
-    }
-
+  async unlockUser(@Param('id') id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });

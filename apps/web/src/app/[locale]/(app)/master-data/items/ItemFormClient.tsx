@@ -453,11 +453,18 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       className="data-[state=checked]:bg-status-active" 
                     />
                   </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-4 p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30"
+                    title={!!(data as { has_transactions?: boolean } | null)?.has_transactions ? 'Cannot change lot tracking after transactions exist.' : undefined}
+                  >
                     <div className="space-y-1">
                       <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{ti('track_lots')}</Label>
                       <p className={`text-label-sm font-semibold uppercase ${trackLots ? 'text-status-active' : 'text-muted-foreground/40'}`}>{trackLots ? tm('yes') : tm('no')}</p>
+                      {!!(data as { has_transactions?: boolean } | null)?.has_transactions && (
+                        <p className="text-[10px] text-status-warning uppercase font-bold mt-1">
+                          {ti('lot_tracking_locked') || 'Tracking locked: transactions exist'}
+                        </p>
+                      )}
                     </div>
                     <Switch 
                       checked={trackLots} 

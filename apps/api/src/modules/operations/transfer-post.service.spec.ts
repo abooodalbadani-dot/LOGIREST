@@ -226,6 +226,7 @@ describe('TransferPostService', () => {
             id: 'line-1',
             itemId: 'item-1',
             quantityShipped: new Prisma.Decimal(5),
+            unitCost: new Prisma.Decimal(10.0),
             item: {
               id: 'item-1',
               sku: 'SKU1',
@@ -435,6 +436,7 @@ describe('TransferPostService', () => {
             id: 'line-1',
             itemId: 'item-rice',
             quantityShipped: new Prisma.Decimal(10),
+            unitCost: new Prisma.Decimal(10.0),
             item: {
               id: 'item-rice',
               sku: 'RICE',

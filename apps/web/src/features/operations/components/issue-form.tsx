@@ -16,6 +16,7 @@ import { LockBanner } from '@/components/shared/LockBanner';
 import { toast } from 'sonner';
 import { audioAlerts } from '@/utils/audio';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { VoidButton } from '@/components/shared/VoidButton';
 
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
@@ -599,17 +600,27 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           submitLabel={t('post_issue')}
           canSubmit={lines.length > 0 && !!destinationId}
           actions={
-            !effectiveIsLocked && !isNew && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => guardedRouter.push(`/issues/${id}/scan-mode`)}
-                className="h-8 md:h-10 px-3 md:px-5 rounded-full text-[10px] md:text-label-sm font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all group flex items-center gap-2 shrink-0 border-none"
-              >
-                <Scan className="w-4 h-4 md:w-5 md:h-5 opacity-50 transition-transform group-hover:scale-110" />
-                <span className="hidden md:inline">{t('scan_mode.breadcrumb_scan')}</span>
-              </Button>
-            )
+            <>
+              {effectiveIsLocked && (
+                <VoidButton
+                  documentId={id}
+                  documentType="ISSUE"
+                  status={status}
+                  version={issue?.version || 1}
+                />
+              )}
+              {!effectiveIsLocked && !isNew && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => guardedRouter.push(`/issues/${id}/scan-mode`)}
+                  className="h-8 md:h-10 px-3 md:px-5 rounded-full text-[10px] md:text-label-sm font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all group flex items-center gap-2 shrink-0 border-none"
+                >
+                  <Scan className="w-4 h-4 md:w-5 md:h-5 opacity-50 transition-transform group-hover:scale-110" />
+                  <span className="hidden md:inline">{t('scan_mode.breadcrumb_scan')}</span>
+                </Button>
+              )}
+            </>
           }
         />
       </form>

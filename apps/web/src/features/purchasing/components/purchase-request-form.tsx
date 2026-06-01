@@ -39,6 +39,7 @@ import { useCreatePR } from '@/features/purchasing/hooks/useCreatePR';
 import { useUpdatePR } from '@/features/purchasing/hooks/useUpdatePR';
 import { useSubmitPR } from '@/features/purchasing/hooks/useSubmitPR';
 import { useCancelPR } from '@/features/purchasing/hooks/useCancelPR';
+import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -106,6 +107,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const updatePR = useUpdatePR({ onConflict });
   const submitPR = useSubmitPR({ onConflict });
   const cancelPR = useCancelPR({ onConflict });
+  const deletePR = useDeletePR();
   const { playSound } = useAudioFeedback();
 
   const departmentItems = React.useMemo(() => {
@@ -307,6 +309,30 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         </Button>
       )}
 
+      {/* Delete Button for Draft Documents */}
+      {!isLocked && initialData?.id && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={deletePR.isPending}
+          onClick={async () => {
+            const confirmed = window.confirm('Are you sure you want to delete this draft request? This action is permanent.');
+            if (!confirmed) return;
+            try {
+              await deletePR.mutateAsync({ id: initialData.id, version: initialData.version });
+              toast.success('Draft request deleted successfully');
+              router.push('/purchase-requests', { skipGuard: true });
+            } catch {
+              toast.error(tc('error'));
+            }
+          }}
+          className="h-12 px-8 border-none bg-status-error/10 text-status-error text-label-xs font-semibold uppercase rounded-xl hover:bg-status-error/20 active:scale-95 transition-all shadow-xl shadow-black/5"
+        >
+          <Trash2 className="w-3.5 h-3.5 me-2" />
+          {tc('actions.delete') || 'Delete'}
+        </Button>
+      )}
+
       {/* Workflow Actions for Locked Documents */}
       {isLocked && (
         <>
@@ -420,7 +446,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                           {t('expected_date')}
                         </FormLabel>
                         <FormControl>
-                          <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
+                          <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
                         </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>
@@ -434,7 +460,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                       <FormItem className="lg:col-span-3">
                         <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
                         <FormControl>
-                          <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
+                          <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
                         </FormControl>
                         <FormMessage className="text-label-xxs font-semibold uppercase" />
                       </FormItem>

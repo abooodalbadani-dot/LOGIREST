@@ -10,11 +10,14 @@ import { GRNForm } from '@/features/purchasing/components/grn-form';
 import { GRNViewer, type GRNViewerDocument } from './GRNViewer';
 import { Button } from '@/components/ui/button';
 import { VoidButton } from '@/components/shared/VoidButton';
-import { Send, Scan } from 'lucide-react';
+import { Send, Scan, Trash2 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { GRN_STATUS } from '@logirest/shared-types';
+import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { toast } from 'sonner';
 
 interface GRNDetailClientProps {
   id: string;
@@ -29,9 +32,11 @@ import { ErrorState } from '@/components/shared/ErrorState';
  */
 export function GRNDetailClient({ id }: GRNDetailClientProps) {
   const t = useTranslations('procurement.grn');
+  const tCommon = useTranslations('common');
   const locale = useLocale() as 'ar' | 'en';
   const router = useRouter();
   const { user } = useAuth();
+  const deleteGRN = useDeleteGRN();
   
   const isNew = id === 'new';
   const { data: grn, isLoading, error } = useGRN(isNew ? null : id);
@@ -73,6 +78,28 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
             {t('post_grn')}
           </Button>
         </ActionGuard>
+        {status === GRN_STATUS.DRAFT && !isNew && (
+          <PermissionGate action="delete" resource="grn">
+            <Button
+              onClick={async () => {
+                const confirmed = window.confirm('Are you sure you want to delete this draft goods received note? This action is permanent.');
+                if (!confirmed) return;
+                try {
+                  await deleteGRN.mutateAsync({ id, version: grn?.version });
+                  toast.success('Draft goods received note deleted successfully');
+                  router.push('/goods-received');
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+              disabled={deleteGRN.isPending}
+              className="bg-red-500/10 text-red-500 hover:bg-red-500/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-red-500/20"
+            >
+              <Trash2 className="w-4 h-4 me-2" />
+              {tCommon('actions.delete') || 'Delete'}
+            </Button>
+          </PermissionGate>
+        )}
         <VoidButton
           documentId={id}
           documentType="GRN"

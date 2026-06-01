@@ -30,6 +30,7 @@ export interface EmailOutboxEntry {
   sent_at: string | null;
   status: 'PENDING' | 'SENT' | 'FAILED';
   error_message: string | null;
+  warehouseId?: string | null;
 }
 
 export interface TriggerEvent {
@@ -146,6 +147,7 @@ export class NotificationTemplateService {
       sent_at: '2026-05-30T00:15:00.000Z',
       status: 'SENT',
       error_message: null,
+      warehouseId: 'wh-main',
     },
     {
       id: 'outbox-2',
@@ -155,6 +157,7 @@ export class NotificationTemplateService {
       sent_at: null,
       status: 'PENDING',
       error_message: null,
+      warehouseId: null,
     },
     {
       id: 'outbox-3',
@@ -164,6 +167,7 @@ export class NotificationTemplateService {
       sent_at: '2026-05-29T18:22:11.000Z',
       status: 'FAILED',
       error_message: 'SMTP Connection Timeout',
+      warehouseId: 'wh-main',
     },
   ];
 
@@ -400,11 +404,17 @@ export class NotificationTemplateService {
     return this.parameterRegistry;
   }
 
-  getOutbox(status?: string, page = 1) {
+  getOutbox(status?: string, page = 1, allowedWarehouseIds?: string[]) {
     const limit = 10;
-    const filtered = status
-      ? this.outbox.filter((e) => e.status === status)
-      : this.outbox;
+    let filtered = this.outbox;
+    if (status) {
+      filtered = filtered.filter((e) => e.status === status);
+    }
+    if (allowedWarehouseIds) {
+      filtered = filtered.filter(
+        (e) => !e.warehouseId || allowedWarehouseIds.includes(e.warehouseId),
+      );
+    }
     const startIndex = (page - 1) * limit;
     const data = filtered.slice(startIndex, startIndex + limit);
     const total = filtered.length;

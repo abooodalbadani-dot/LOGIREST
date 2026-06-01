@@ -22,7 +22,8 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapPRDetail(pr: any) {
@@ -73,7 +74,10 @@ function mapPRSummary(pr: any) {
 @Controller('procurement/purchase-requests')
 @ApiSecureController()
 export class PurchaseRequestsController {
-  constructor(private readonly prService: PurchaseRequestsService) {}
+  constructor(
+    private readonly prService: PurchaseRequestsService,
+    private readonly scopeValidationService: ScopeValidationService,
+  ) {}
 
   @Post()
   @Idempotent()
@@ -86,7 +90,13 @@ export class PurchaseRequestsController {
       lines: Array<{ itemId: string; quantity: number }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      body.warehouseId,
+    );
     const pr = await this.prService.create(body, userId);
     return { data: mapPRDetail(pr) };
   }
@@ -112,8 +122,17 @@ export class PurchaseRequestsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const pr = await this.prService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      pr.warehouseId,
+    );
     return { data: mapPRDetail(pr) };
   }
 

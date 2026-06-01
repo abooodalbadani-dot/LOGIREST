@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { Role } from '@prisma/client';
@@ -106,17 +107,12 @@ export class BranchesController {
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.GM)
   async create(
     @Body() body: { name: string; code?: string },
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const { name } = body;
     let { code } = body;
     if (!name) {
@@ -176,18 +172,13 @@ export class BranchesController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
     @Body() body: { name?: string; code?: string; version?: number },
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const existing = await this.prisma.branch.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Branch with ID ${id} not found`);
@@ -230,17 +221,12 @@ export class BranchesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @Roles(Role.ADMIN, Role.GM)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const branch = await this.prisma.branch.findUnique({
       where: { id },
       include: { warehouses: { where: { isActive: true } } },

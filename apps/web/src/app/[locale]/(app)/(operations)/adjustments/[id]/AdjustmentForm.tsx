@@ -52,6 +52,7 @@ import { DocumentLockBanner, DocumentLockWrapper } from '@/components/shared/Doc
 import { FormFooter } from '@/components/shared/FormFooter';
 import { formatQuantity } from '@/utils/currency';
 import { audioAlerts } from '@/utils/audio';
+import { VoidButton } from '@/components/shared/VoidButton';
 
 interface AdjustmentFormProps {
   document?: AdjustmentDetail;
@@ -732,69 +733,81 @@ export function AdjustmentForm({
           actions={
             !isNew && (
               <div className="flex items-center gap-3">
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role} disabled={hasNegativeStock}>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setSubmitDialogOpen(true)}
-                    className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-                  >
-                    <Send className="w-5 h-5 me-3" />
-                    {t('submit_for_approval')}
-                  </Button>
-                </ActionGuard>
+                {isLocked && (
+                  <VoidButton
+                    documentId={id}
+                    documentType="ADJUSTMENT"
+                    status={adjustmentStatus}
+                    version={document?.version || 1}
+                  />
+                )}
+                {!isLocked && (
+                  <>
+                    <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="SUBMIT" role={user?.role} disabled={hasNegativeStock}>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setSubmitDialogOpen(true)}
+                        className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                      >
+                        <Send className="w-5 h-5 me-3" />
+                        {t('submit_for_approval')}
+                      </Button>
+                    </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role}>
-                  <Button 
-                    variant="outline"
-                    onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
-                    className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-                  >
-                    <Pencil className="w-5 h-5 me-3" />
-                    {t('edit_rejected')}
-                  </Button>
-                </ActionGuard>
+                    <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="EDIT" role={user?.role}>
+                      <Button 
+                        variant="outline"
+                        onClick={() => editAdjustment.mutate({ id, version: document?.version ?? 0 })}
+                        className="h-14 px-8 border-primary/20 text-primary hover:bg-primary/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                      >
+                        <Pencil className="w-5 h-5 me-3" />
+                        {t('edit_rejected')}
+                      </Button>
+                    </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role}>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => setRejectDialogOpen(true)}
-                    className="h-14 px-8 text-red-500 hover:bg-red-500/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-                  >
-                    <XCircle className="w-5 h-5 me-3" />
-                    {t('reject')}
-                  </Button>
-                </ActionGuard>
-                
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role} disabled={hasNegativeStock}>
-                  <Button 
-                    onClick={() => setApproveDialogOpen(true)}
-                    className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-emerald-600/30 border-none"
-                  >
-                    <CheckCircle className="w-5 h-5 me-3" />
-                    {t('approve')}
-                  </Button>
-                </ActionGuard>
+                    <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="REJECT" role={user?.role}>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => setRejectDialogOpen(true)}
+                        className="h-14 px-8 text-red-500 hover:bg-red-500/5 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                      >
+                        <XCircle className="w-5 h-5 me-3" />
+                        {t('reject')}
+                      </Button>
+                    </ActionGuard>
+                    
+                    <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="APPROVE" role={user?.role} disabled={hasNegativeStock}>
+                      <Button 
+                        onClick={() => setApproveDialogOpen(true)}
+                        className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-emerald-600/30 border-none"
+                      >
+                        <CheckCircle className="w-5 h-5 me-3" />
+                        {t('approve')}
+                      </Button>
+                    </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
-                  <Button 
-                    onClick={() => setPostDialogOpen(true)}
-                    className="h-14 px-12 primary-gradient text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-primary/30 border-none"
-                  >
-                    <CheckCircle className="w-5 h-5 me-3" />
-                    {t('post_adjustment')}
-                  </Button>
-                </ActionGuard>
+                    <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="POST" role={user?.role || ''} disabled={hasNegativeStock}>
+                      <Button 
+                        onClick={() => setPostDialogOpen(true)}
+                        className="h-14 px-12 primary-gradient text-white text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-2xl shadow-primary/30 border-none"
+                      >
+                        <CheckCircle className="w-5 h-5 me-3" />
+                        {t('post_adjustment')}
+                      </Button>
+                    </ActionGuard>
 
-                <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => setCancelDialogOpen(true)}
-                    className="h-14 px-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
-                  >
-                    <XCircle className="w-5 h-5 me-3" />
-                    {tc('cancel')}
-                  </Button>
-                </ActionGuard>
+                    <ActionGuard documentType="ADJUSTMENT" status={adjustmentStatus} action="CANCEL" role={user?.role || ''}>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => setCancelDialogOpen(true)}
+                        className="h-14 px-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                      >
+                        <XCircle className="w-5 h-5 me-3" />
+                        {tc('cancel')}
+                      </Button>
+                    </ActionGuard>
+                  </>
+                )}
               </div>
             )
           }

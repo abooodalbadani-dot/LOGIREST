@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { YieldService } from './yield.service';
 
@@ -20,6 +22,7 @@ export class YieldController {
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.INV_MGR)
   async create(@Body() body: any) {
     return this.yieldService.create(body);
   }

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Param,
   Body,
   Query,
@@ -20,7 +21,9 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { type UpdateKitchenRequestDto } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapKitchenRequestDetail(kr: any) {
@@ -70,7 +73,10 @@ function mapKitchenRequestDetail(kr: any) {
 @Controller('operations/kitchen-requests')
 @ApiSecureController()
 export class KitchenRequestsController {
-  constructor(private readonly krService: KitchenRequestsService) {}
+  constructor(
+    private readonly krService: KitchenRequestsService,
+    private readonly scopeValidationService: ScopeValidationService,
+  ) {}
 
   @Post()
   @Idempotent()
@@ -83,7 +89,13 @@ export class KitchenRequestsController {
       items: Array<{ itemId: string; quantityRequested: number }>;
     },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      body.warehouseId,
+    );
     const kr = await this.krService.create(body, userId);
     return { data: mapKitchenRequestDetail(kr) };
   }
@@ -109,8 +121,35 @@ export class KitchenRequestsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const kr = await this.krService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      kr.warehouseId,
+    );
+    return { data: mapKitchenRequestDetail(kr) };
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateKitchenRequestDto,
+    @CurrentUser('id') userId: string,
+    @Req() req: Request,
+  ) {
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
+    const kr = await this.krService.update(id, dto, userId, ipAddress);
     return { data: mapKitchenRequestDetail(kr) };
   }
 

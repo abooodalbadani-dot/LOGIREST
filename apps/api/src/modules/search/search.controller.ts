@@ -1,6 +1,8 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('search')
 @UseGuards(JwtAuthGuard)
@@ -8,12 +10,25 @@ export class SearchController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  async search(@Query('q') q: string) {
+  async search(
+    @Query('q') q: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     if (!q || q.trim() === '') {
       return [];
     }
 
     const query = q.trim();
+
+    let allowedWarehouseIds: string[] | undefined = undefined;
+    if (role !== Role.ADMIN) {
+      const scopes = await this.prisma.userWarehouseScope.findMany({
+        where: { userId },
+        select: { warehouseId: true },
+      });
+      allowedWarehouseIds = scopes.map((s) => s.warehouseId);
+    }
 
     // 1. Search items
     const items = await this.prisma.item.findMany({
@@ -41,28 +56,66 @@ export class SearchController {
     const lots = await this.prisma.lot.findMany({
       where: {
         lotNumber: { contains: query, mode: 'insensitive' },
+        ...(allowedWarehouseIds
+          ? {
+              warehouseItemLots: {
+                some: {
+                  warehouseId: { in: allowedWarehouseIds },
+                },
+              },
+            }
+          : {}),
       },
       take: 10,
     });
 
     // 4. Search documents (GRNs, POs, Transfers, Issues)
     const grns = await this.prisma.goodsReceivedNote.findMany({
-      where: { grnNumber: { contains: query, mode: 'insensitive' } },
+      where: {
+        grnNumber: { contains: query, mode: 'insensitive' },
+        ...(allowedWarehouseIds
+          ? { warehouseId: { in: allowedWarehouseIds } }
+          : {}),
+      },
       take: 5,
     });
 
     const pos = await this.prisma.purchaseOrder.findMany({
-      where: { poNumber: { contains: query, mode: 'insensitive' } },
+      where: {
+        poNumber: { contains: query, mode: 'insensitive' },
+        ...(allowedWarehouseIds
+          ? {
+              purchaseRequest: {
+                warehouseId: { in: allowedWarehouseIds },
+              },
+            }
+          : {}),
+      },
       take: 5,
     });
 
     const transfers = await this.prisma.transfer.findMany({
-      where: { transferNumber: { contains: query, mode: 'insensitive' } },
+      where: {
+        transferNumber: { contains: query, mode: 'insensitive' },
+        ...(allowedWarehouseIds
+          ? {
+              OR: [
+                { fromWarehouseId: { in: allowedWarehouseIds } },
+                { toWarehouseId: { in: allowedWarehouseIds } },
+              ],
+            }
+          : {}),
+      },
       take: 5,
     });
 
     const issues = await this.prisma.inventoryIssue.findMany({
-      where: { issueNumber: { contains: query, mode: 'insensitive' } },
+      where: {
+        issueNumber: { contains: query, mode: 'insensitive' },
+        ...(allowedWarehouseIds
+          ? { warehouseId: { in: allowedWarehouseIds } }
+          : {}),
+      },
       take: 5,
     });
 

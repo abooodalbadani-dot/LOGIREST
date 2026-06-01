@@ -22,7 +22,8 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../../decorators/swagger-docs.decorator';
-import type { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 function mapIssueDetail(issue: any) {
@@ -142,6 +143,7 @@ export class IssuesController {
   constructor(
     private readonly issuePostService: IssuePostService,
     private readonly issuesService: IssuesService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   @Throttle({ short: { limit: 50, ttl: 1000 } })
@@ -182,8 +184,17 @@ export class IssuesController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const issue = await this.issuesService.findOne(id);
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      issue.warehouseId,
+    );
     return mapIssueDetail(issue);
   }
 

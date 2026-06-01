@@ -49,6 +49,9 @@ describe('GrnPostService', () => {
     auditLog: {
       create: mockAuditLogCreate,
     },
+    lot: {
+      findUnique: jest.fn().mockResolvedValue({ itemId: 'item-1' }),
+    },
   } as unknown as Prisma.TransactionClient;
 
   const mockPrisma = {

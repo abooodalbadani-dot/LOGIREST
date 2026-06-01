@@ -348,24 +348,6 @@ export class PurchaseOrderService {
     );
   }
 
-  async postToLedger(
-    id: string,
-    userId: string,
-    userRole: Role,
-    body: { comments?: string; version?: number; ipAddress?: string },
-  ) {
-    return this.workflowService.executeTransition(
-      id,
-      'purchaseOrder',
-      'POST',
-      userId,
-      userRole,
-      body.comments,
-      body.version,
-      body.ipAddress,
-    );
-  }
-
   async email(id: string, userId: string, recipientEmail?: string) {
     const po = await this.prisma.purchaseOrder.findUnique({
       where: { id },

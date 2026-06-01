@@ -7,9 +7,14 @@ import { PurchaseOrderService } from './purchase-orders/po.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import type { Request } from 'express';
-import { Role } from '@logirest/shared-types';
+import { Role } from '@prisma/client';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 
 describe('Purchasing Controllers', () => {
+  const mockScopeValidationService = {
+    validateWarehouse: jest.fn(),
+    validateAtLeastOneWarehouse: jest.fn(),
+  };
   const mockGrnPostService = {
     post: jest.fn(),
   };
@@ -44,6 +49,10 @@ describe('Purchasing Controllers', () => {
           { provide: GrnPostService, useValue: mockGrnPostService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          {
+            provide: ScopeValidationService,
+            useValue: mockScopeValidationService,
+          },
         ],
       }).compile();
 
@@ -98,6 +107,10 @@ describe('Purchasing Controllers', () => {
           { provide: PurchaseOrderService, useValue: mockPurchaseOrderService },
           { provide: PrismaService, useValue: mockPrismaService },
           { provide: WorkflowService, useValue: mockWorkflowService },
+          {
+            provide: ScopeValidationService,
+            useValue: mockScopeValidationService,
+          },
         ],
       }).compile();
 
@@ -109,7 +122,7 @@ describe('Purchasing Controllers', () => {
       const body = { supplierId: 'sup-1', currencyId: 'cur-1', lines: [] };
       mockPurchaseOrderService.create.mockResolvedValue({ id: 'po-1' });
 
-      const result = await controller.create(body, 'user-1');
+      const result = await controller.create(body, 'user-1', Role.ADMIN);
       expect(result.data.id).toEqual('po-1');
       expect(mockPurchaseOrderService.create).toHaveBeenCalledWith(
         body,
@@ -118,9 +131,12 @@ describe('Purchasing Controllers', () => {
     });
 
     it('should call findOne', async () => {
-      mockPurchaseOrderService.findOne.mockResolvedValue({ id: 'po-1' });
+      mockPurchaseOrderService.findOne.mockResolvedValue({
+        id: 'po-1',
+        purchaseRequest: { warehouseId: 'wh-1' },
+      });
 
-      const result = await controller.findOne('po-1');
+      const result = await controller.findOne('po-1', 'user-1', Role.ADMIN);
       expect(result.data.id).toEqual('po-1');
       expect(mockPurchaseOrderService.findOne).toHaveBeenCalledWith('po-1');
     });

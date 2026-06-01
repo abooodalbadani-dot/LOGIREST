@@ -9,7 +9,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { usePRList, PRSummary } from '@/features/purchasing/hooks/usePRList';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search } from 'lucide-react';
+import { Plus, Filter, ClipboardList, CheckCircle2, Clock, ArrowUpRight, ListFilter, Search, Trash2 } from 'lucide-react';
+import { useDeletePR } from '@/features/purchasing/hooks/useDeletePR';
 
 import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
@@ -28,6 +29,7 @@ export function PRListClient() {
  const t = useTranslations('procurement.pr');
  const tc = useTranslations('common');
  const router = useRouter();
+const deletePR = useDeletePR();
 
 const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
@@ -91,27 +93,53 @@ const [page, setPage] = useState(1);
  </div>
  ),
  },
- {
- id: 'actions',
- header: '',
- cell: ({ row }) => (
- <div className="flex justify-end">
- <PermissionGate action="view" resource="pr">
- <Button 
- variant="ghost" 
- size="icon" 
- className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-cyan-500/20 text-muted-foreground/60 hover:text-cyan-500 transition-all group"
- onClick={() => {
-  router.push(`/purchase-requests/${row.original.id}`);
- }}
- >
- <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
- </Button>
- </PermissionGate>
- </div>
- ),
- },
- ], [t, tc, locale, router]);
+  {
+  id: 'actions',
+  header: '',
+  cell: ({ row }) => {
+    const isDraft = row.original.status === 'DRAFT';
+    return (
+      <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+        <PermissionGate action="view" resource="pr">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-8 h-8 rounded-xl bg-surface-variant/10 hover:bg-cyan-500/20 text-muted-foreground/60 hover:text-cyan-500 transition-all group"
+            onClick={() => {
+              router.push(`/purchase-requests/${row.original.id}`);
+            }}
+          >
+            <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" />
+          </Button>
+        </PermissionGate>
+
+        {isDraft && (
+          <PermissionGate action="delete" resource="pr">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={deletePR.isPending}
+              className="w-8 h-8 rounded-xl bg-red-500/5 hover:bg-red-500/20 text-red-500 transition-all"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const confirmed = window.confirm('Are you sure you want to delete this draft request?');
+                if (!confirmed) return;
+                try {
+                  await deletePR.mutateAsync({ id: row.original.id });
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </PermissionGate>
+        )}
+      </div>
+    );
+  }
+  },
+ ], [t, tc, locale, router, deletePR.isPending, deletePR]);
 
  const breadcrumbs = [
   { label: tc('sidebar.dashboard'), href: '/dashboard' },

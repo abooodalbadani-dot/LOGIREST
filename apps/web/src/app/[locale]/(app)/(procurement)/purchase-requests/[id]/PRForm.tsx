@@ -29,6 +29,7 @@ import { PRDetail } from '@/features/purchasing/hooks/usePR';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
+import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 
 const lineItemSchema = z.object({
  id: z.string().optional(), // For existing lines
@@ -62,6 +63,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
   const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
   const { playSound } = useAudioFeedback();
+
+  const status = initialData?.status as DocumentStatus;
+  const isLocked = isDocumentLocked('PR', status);
 
   // Mocks/Hooks for data selection
  const { data: warehouses } = useMasterDataList('warehouses', WarehouseSchema);
@@ -210,36 +214,36 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  )}
  />
 
- <FormField<PurchaseRequestFormValues, 'expected_date'>
- control={form.control}
- name="expected_date"
- render={({ field }) => (
- <FormItem>
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2 ps-1">
- <Calendar className="w-3 h-3" />
- {t('expected_date')}
- </FormLabel>
- <FormControl>
- <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
- </FormControl>
- <FormMessage className="text-label-xxs font-semibold uppercase" />
- </FormItem>
- )}
- />
+  <FormField<PurchaseRequestFormValues, 'expected_date'>
+  control={form.control}
+  name="expected_date"
+  render={({ field }) => (
+  <FormItem>
+  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 flex items-center gap-2 ps-1">
+  <Calendar className="w-3 h-3" />
+  {t('expected_date')}
+  </FormLabel>
+  <FormControl>
+  <Input type="date" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
+  </FormControl>
+  <FormMessage className="text-label-xxs font-semibold uppercase" />
+  </FormItem>
+  )}
+  />
 
- <FormField<PurchaseRequestFormValues, 'notes'>
- control={form.control}
- name="notes"
- render={({ field }) => (
- <FormItem className="lg:col-span-3">
- <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
- <FormControl>
- <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} />
- </FormControl>
- <FormMessage className="text-label-xxs font-semibold uppercase" />
- </FormItem>
- )}
- />
+  <FormField<PurchaseRequestFormValues, 'notes'>
+  control={form.control}
+  name="notes"
+  render={({ field }) => (
+  <FormItem className="lg:col-span-3">
+  <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/40 mb-3 ps-1">{tc('notes')}</FormLabel>
+  <FormControl>
+  <Input placeholder={tc('notes')} className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase focus-visible:ring-operational-cyan/30" {...field} disabled={isLocked} />
+  </FormControl>
+  <FormMessage className="text-label-xxs font-semibold uppercase" />
+  </FormItem>
+  )}
+  />
  </div>
  </div>
 

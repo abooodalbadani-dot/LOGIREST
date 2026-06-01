@@ -8,7 +8,9 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CurrenciesService } from './currencies.service';
 
@@ -29,16 +31,19 @@ export class CurrenciesController {
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.GM)
   async create(@Body() body: any) {
     return this.currenciesService.create(body);
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.GM)
   async update(@Param('id') id: string, @Body() body: any) {
     return this.currenciesService.update(id, body);
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.GM)
   async remove(@Param('id') id: string) {
     return this.currenciesService.remove(id);
   }

@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
@@ -107,12 +108,8 @@ export class WarehousesDirectController {
   }
 
   @Post()
-  async create(@Body() body: any, @CurrentUser('role') role: Role) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
+  @Roles(Role.ADMIN, Role.GM)
+  async create(@Body() body: any) {
     let code = body.code;
     if (!code || code.trim() === '') {
       const allWarehouses = await this.prisma.warehouse.findMany({
@@ -149,16 +146,8 @@ export class WarehousesDirectController {
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() body: any,
-    @CurrentUser('role') role: Role,
-  ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
+  @Roles(Role.ADMIN, Role.GM)
+  async update(@Param('id') id: string, @Body() body: any) {
     return this.prisma.warehouse.update({
       where: { id },
       data: {
@@ -171,12 +160,8 @@ export class WarehousesDirectController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @CurrentUser('role') role: Role) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
+  @Roles(Role.ADMIN, Role.GM)
+  async remove(@Param('id') id: string) {
     return this.prisma.warehouse.delete({
       where: { id },
     });
@@ -184,17 +169,12 @@ export class WarehousesDirectController {
 
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
+  @Roles(Role.ADMIN, Role.GM)
   async archive(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const warehouse = await this.prisma.warehouse.findUnique({
       where: { id },
     });

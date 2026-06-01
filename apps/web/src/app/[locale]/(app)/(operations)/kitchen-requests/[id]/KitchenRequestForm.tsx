@@ -153,6 +153,9 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     if (request.rejected_at) {
       h.push({ status: 'rejected' as Status, at: request.rejected_at, by: request.rejected_by || 'Rejecter' });
     }
+    if (request.status === 'CANCELLED') {
+      h.push({ status: 'cancelled' as Status, at: request.updated_at || request.created_at, by: request.rejected_by || 'System' });
+    }
     if (request.fulfilled_at) {
       h.push({ status: request.status.toLowerCase() as Status, at: request.fulfilled_at, by: request.fulfilled_by || 'Store Keeper' });
     }
@@ -278,7 +281,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   const workflowActions = (
     <>
-      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="REJECT" role={user?.role}>
+      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="CANCEL" role={user?.role}>
         <Button 
           variant="outline" 
           disabled={isWriteBlocked}
@@ -286,7 +289,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           onClick={() => setRejectDialogOpen(true)}
         >
           <XCircle className="w-5 h-5 me-3" />
-          {t('reject')}
+          {t('cancel_request') || 'Cancel Request'}
         </Button>
       </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="APPROVE" role={user?.role}>
@@ -475,22 +478,22 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       <PostConfirmDialog
         open={rejectDialogOpen}
         onOpenChange={setRejectDialogOpen}
-        title={t('reject')}
-        description={t('rejection_reason_description') || "Please provide a reason for rejecting this request."}
+        title={t('cancel_request') || 'Cancel Request'}
+        description={t('cancellation_reason_description') || "Please provide a reason for cancelling this request."}
         onConfirm={handleReject}
         variant="destructive"
         icon="reject"
-        confirmText={t('confirm_rejection')}
+        confirmText={t('confirm_cancellation') || 'Confirm Cancellation'}
         disabled={rejectionReason.trim().length < 15 || isWriteBlocked}
       >
         <div className="space-y-4">
           <label className="text-label-xs font-bold text-muted-foreground/40 uppercase ms-1">
-            {t('rejection_reason_label')}
+            {t('cancellation_reason_label') || 'Cancellation Reason'}
           </label>
           <Textarea 
-            placeholder={t('rejection_reason_placeholder')}
+            placeholder={t('cancellation_reason_placeholder') || 'Enter cancellation reason...'}
             disabled={isWriteBlocked}
-            aria-label={t('rejection_reason_label')}
+            aria-label={t('cancellation_reason_label') || 'Cancellation Reason'}
             className="bg-surface-container-high/40 border-none rounded-2xl p-5 text-body-md font-medium min-h-[120px] focus:ring-1 focus:ring-operational-cyan/30 resize-none transition-all"
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}

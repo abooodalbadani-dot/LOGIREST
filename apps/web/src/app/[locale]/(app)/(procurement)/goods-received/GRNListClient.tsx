@@ -10,9 +10,10 @@ import { StatusBadge, type BadgeStatus } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Filter, Search, CheckCircle2, Clock, Inbox, ArrowRight, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { Input } from '@/components/ui/input';
+import { useDeleteGRN } from '@/features/purchasing/hooks/useDeleteGRN';
 
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -36,6 +37,7 @@ export function GRNListClient({
  const tc = useTranslations('common');
  const router = useRouter();
 
+  const deleteGRN = useDeleteGRN();
   const [status, setStatus] = useState<string | undefined>(initialStatus);
   const [page, setPage] = useState(initialPage);
   const [search, setSearch] = useState('');
@@ -120,29 +122,55 @@ export function GRNListClient({
         </div>
       ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
   },
- {
- id: 'actions',
- header: '',
- cell: ({ row }) => (
- <div className="flex justify-end">
- <PermissionGate action="view" resource="grn">
- <Button
- variant="ghost"
- size="sm"
- className="text-label-xxs font-semibold uppercase text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-md transition-all group"
- onClick={(e) => {
- e.stopPropagation();
-   router.push(`/goods-received/${row.original.id}`);
- }}
- >
- {tc('view')}
- <ArrowRight className="w-3 h-3 ms-2 opacity-0 group-hover:opacity-100 transition-all translate-x-[-4px] group-hover:translate-x-0 rtl:translate-x-[4px] rtl:group-hover:translate-x-0 rtl:rotate-180" />
- </Button>
- </PermissionGate>
- </div>
- ),
- },
-  ], [locale, router, t, tc, sortField, sortOrder]);
+  {
+    id: 'actions',
+    header: '',
+    cell: ({ row }) => {
+      const isDraft = row.original.status === GRN_STATUS.DRAFT;
+      return (
+        <div className="flex justify-end items-center gap-2">
+          <PermissionGate action="view" resource="grn">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-label-xxs font-semibold uppercase text-cyan-500 hover:text-white hover:bg-cyan-500/20 h-8 px-4 rounded-md transition-all group"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/goods-received/${row.original.id}`);
+              }}
+            >
+              {tc('view')}
+              <ArrowRight className="w-3 h-3 ms-2 opacity-0 group-hover:opacity-100 transition-all translate-x-[-4px] group-hover:translate-x-0 rtl:translate-x-[4px] rtl:group-hover:translate-x-0 rtl:rotate-180" />
+            </Button>
+          </PermissionGate>
+
+          {isDraft && (
+            <PermissionGate action="delete" resource="grn">
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={deleteGRN.isPending}
+                className="w-8 h-8 rounded-md bg-red-500/5 hover:bg-red-500/20 text-red-500 transition-all"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const confirmed = window.confirm('Are you sure you want to delete this draft goods received note?');
+                  if (!confirmed) return;
+                  try {
+                    await deleteGRN.mutateAsync({ id: row.original.id });
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </PermissionGate>
+          )}
+        </div>
+      );
+    },
+  },
+   ], [locale, router, t, tc, sortField, sortOrder, deleteGRN.isPending, deleteGRN]);
 
  const totalGRNs = data?.meta?.total || 0;
  const postedCount = data?.data?.filter(p => isPostedStatus('GRN', p.status as DocumentStatus)).length || 0;
