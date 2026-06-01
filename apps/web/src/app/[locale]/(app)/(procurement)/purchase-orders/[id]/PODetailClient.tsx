@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PurchaseOrderForm } from '@/features/purchasing/components/purchase-order-form';
 
-import { CheckCircle, Mail, Trash2 } from 'lucide-react';
+import { CheckCircle, Mail, Trash2, FileText } from 'lucide-react';
 import { useDeletePO } from '@/features/purchasing/hooks/useDeletePO';
 import { type DocumentStatus } from '@logirest/shared-types';
 import { apiClient } from '@/infrastructure/api/client';
@@ -54,20 +54,30 @@ export function PODetailClient({ id }: PODetailClientProps) {
   const actions = (
     <div className="flex items-center gap-3">
       {status === PO_STATUS.APPROVED && !isNew && (
-        <Button
-          onClick={async () => {
-            try {
-              await apiClient.post(`/procurement/purchase-orders/${id}/email`, z.any());
-              toast.success(t('email_sent') || 'PO emailed to supplier successfully');
-            } catch (err) {
-              toast.error(tCommon('error_generic') || 'Error sending email');
-            }
-          }}
-          className="bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-operational-cyan/20"
-        >
-          <Mail className="w-4 h-4 me-2" />
-          {t('actions.email_po') || 'Email PO'}
-        </Button>
+        <>
+          <Button
+            onClick={() => router.push(`/goods-received/new?po_id=${id}`)}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs shadow-md border-none flex items-center"
+          >
+            <FileText className="w-4 h-4 me-2" />
+            {t('actions.receive_items') || 'Receive Items (GRN)'}
+          </Button>
+
+          <Button
+            onClick={async () => {
+              try {
+                await apiClient.post(`/procurement/purchase-orders/${id}/email`, z.any());
+                toast.success(t('email_sent') || 'PO emailed to supplier successfully');
+              } catch (err) {
+                toast.error(tCommon('error_generic') || 'Error sending email');
+              }
+            }}
+            className="bg-operational-cyan/10 text-operational-cyan hover:bg-operational-cyan/20 h-10 px-6 rounded-lg transition-all font-bold uppercase text-label-xs border border-operational-cyan/20 flex items-center"
+          >
+            <Mail className="w-4 h-4 me-2" />
+            {t('actions.email_po') || 'Email PO'}
+          </Button>
+        </>
       )}
 
       {status === PO_STATUS.DRAFT && !isNew && (

@@ -28,6 +28,7 @@ import {
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
 // Map database fields to match the frontend expected schemas
@@ -219,6 +220,7 @@ export class PurchaseOrderController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -249,6 +251,7 @@ export class PurchaseOrderController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

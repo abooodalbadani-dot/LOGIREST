@@ -25,6 +25,7 @@ import {
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
 function mapPRDetail(pr: any) {
@@ -139,6 +140,7 @@ export class PurchaseRequestsController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -173,6 +175,7 @@ export class PurchaseRequestsController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

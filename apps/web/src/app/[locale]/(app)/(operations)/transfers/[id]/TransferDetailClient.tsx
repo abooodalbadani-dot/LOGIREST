@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from 'next-intl';
 import { useTransfer } from '@/features/operations/hooks/useTransfer';
 import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
 import { TransferForm } from '@/features/operations/components/transfer-form';
@@ -12,9 +11,10 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ScopeGuard } from '@/components/shared/ScopeGuard';
+import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 export function TransferDetailClient({ id }: { id: string }) {
-  const t = useTranslations('operations.transfer');
+  const { warehouseId: activeWarehouseId } = useOperationalScope();
   const { data: transfer, isLoading } = useTransfer(id);
   const conflict = useConflictHandler('transfer', id);
 
@@ -24,8 +24,11 @@ export function TransferDetailClient({ id }: { id: string }) {
   const isDocLocked = isDocumentLocked("TRANSFER", transferStatus as DocumentStatus);
 
   if (isDocLocked && transfer) {
+    const targetScope = activeWarehouseId === transfer.to_warehouse_id
+      ? transfer.to_warehouse_id
+      : transfer.from_warehouse_id;
     return (
-      <ScopeGuard warehouseId={transfer.from_warehouse_id}>
+      <ScopeGuard warehouseId={targetScope}>
         <TransferViewer transfer={transfer} />
       </ScopeGuard>
     );

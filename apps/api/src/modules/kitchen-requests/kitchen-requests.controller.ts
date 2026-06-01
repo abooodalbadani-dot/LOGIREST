@@ -25,6 +25,7 @@ import { type UpdateKitchenRequestDto } from '@logirest/shared-types';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
 function mapKitchenRequestDetail(kr: any) {
@@ -138,6 +139,7 @@ export class KitchenRequestsController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.KITCHEN_CHIEF)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateKitchenRequestDto,

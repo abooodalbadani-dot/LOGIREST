@@ -33,18 +33,25 @@ export class ArchivalJob {
       let archivedLedgersCount = 0;
 
       try {
-        // 1. Archive Audit Logs in batches of 1,000 to prevent OOM
+        // 1. Archive Audit Logs in batches of 1,000 using cursor-based pagination
+        let lastProcessedLogId: string | undefined = undefined;
         let hasMoreLogs = true;
         while (hasMoreLogs) {
+          const whereClause: any = {
+            createdAt: { lt: twoYearsAgo },
+          };
+          if (lastProcessedLogId) {
+            whereClause.id = { gt: lastProcessedLogId };
+          }
+
           const oldLogs = await this.prisma.auditLog.findMany({
-            where: {
-              createdAt: { lt: twoYearsAgo },
-            },
+            where: whereClause,
             take: 1000,
             orderBy: { id: 'asc' },
           });
 
           if (oldLogs.length > 0) {
+            lastProcessedLogId = oldLogs[oldLogs.length - 1].id;
             await this.prisma.$transaction(
               async (tx) => {
                 await tx.auditLogArchive.createMany({
@@ -79,18 +86,25 @@ export class ArchivalJob {
           }
         }
 
-        // 2. Archive Stock Ledger entries in batches of 1,000 to prevent OOM
+        // 2. Archive Stock Ledger entries in batches of 1,000 using cursor-based pagination
+        let lastProcessedLedgerId: string | undefined = undefined;
         let hasMoreLedgers = true;
         while (hasMoreLedgers) {
+          const whereClause: any = {
+            postedAt: { lt: threeYearsAgo },
+          };
+          if (lastProcessedLedgerId) {
+            whereClause.id = { gt: lastProcessedLedgerId };
+          }
+
           const oldLedgers = await this.prisma.stockLedger.findMany({
-            where: {
-              postedAt: { lt: threeYearsAgo },
-            },
+            where: whereClause,
             take: 1000,
             orderBy: { id: 'asc' },
           });
 
           if (oldLedgers.length > 0) {
+            lastProcessedLedgerId = oldLedgers[oldLedgers.length - 1].id;
             await this.prisma.$transaction(
               async (tx) => {
                 await tx.stockLedgerArchive.createMany({

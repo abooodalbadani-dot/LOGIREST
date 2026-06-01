@@ -180,6 +180,25 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     }
   };
 
+  const handleSubmit = async () => {
+    if (warehouseLockState?.isLocked) {
+      audioAlerts.playScanBlocked();
+      toast.error(t('warehouse_locked_cannot_mutate') || 'Warehouse is locked. Cannot perform this action.');
+      return;
+    }
+    try {
+      await updateStatus.mutateAsync({ 
+        id, 
+        status: KITCHEN_REQUEST_STATUS.SUBMITTED, 
+        version: request.version ?? 0,
+        headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      });
+      toast.success(locale === 'ar' ? 'تم تقديم الطلب بنجاح' : 'Request submitted successfully');
+    } catch (error) {
+      console.error('Failed to submit request', error);
+    }
+  };
+
   const handleReject = async () => {
     if (warehouseLockState?.isLocked) {
       audioAlerts.playScanBlocked();
@@ -281,6 +300,16 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   const workflowActions = (
     <>
+      <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="SUBMIT" role={user?.role}>
+        <Button 
+          disabled={isWriteBlocked}
+          className="bg-primary hover:bg-primary/95 text-white rounded-2xl h-14 px-10 text-label-xs font-black uppercase tracking-widest transition-all shadow-2xl shadow-primary/30 border-none"
+          onClick={handleSubmit}
+        >
+          <CheckCircle2 className="w-5 h-5 me-3" />
+          {t('submit_request') || 'Submit Request'}
+        </Button>
+      </ActionGuard>
       <ActionGuard documentType="KITCHEN_REQUEST" status={status} action="CANCEL" role={user?.role}>
         <Button 
           variant="outline" 

@@ -47,9 +47,21 @@ export class AdjustmentsService {
         );
       }
 
-      // Pre-creation stock sufficiency check for all OUT (decrease) lines
+      // Pre-creation stock sufficiency check for all OUT (decrease) lines and unit cost check for IN (increase)
       for (const line of body.lines) {
-        if (line.direction === 'OUT') {
+        if (line.direction === AdjustmentDirection.IN) {
+          if (
+            line.unitCost === undefined ||
+            line.unitCost === null ||
+            Number(line.unitCost) <= 0
+          ) {
+            throw new BadRequestException(
+              `Unit cost is required and must be greater than zero for manual Adjustment IN.`,
+            );
+          }
+        }
+
+        if (line.direction === AdjustmentDirection.OUT) {
           const whItem = await tx.warehouseItem.findUnique({
             where: {
               warehouseId_itemId: {
@@ -244,6 +256,22 @@ export class AdjustmentsService {
       }
 
       if (body.lines) {
+        for (const line of body.lines) {
+          if (
+            line.direction === 'INCREASE' ||
+            line.direction === ('IN' as any)
+          ) {
+            if (
+              line.unitCost === undefined ||
+              line.unitCost === null ||
+              Number(line.unitCost) <= 0
+            ) {
+              throw new BadRequestException(
+                `Unit cost is required and must be greater than zero for manual Adjustment IN.`,
+              );
+            }
+          }
+        }
         await tx.adjustmentLine.deleteMany({
           where: { adjustmentId: id },
         });

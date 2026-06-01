@@ -26,6 +26,7 @@ import {
 import { AdjustmentDirection, AdjustmentReason, Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
 function mapAdjustmentDetail(adj: any) {
@@ -179,6 +180,7 @@ export class AdjustmentsController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR)
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

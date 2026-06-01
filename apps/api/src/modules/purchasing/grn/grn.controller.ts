@@ -24,6 +24,7 @@ import { ApiSecureController } from '../../../decorators/swagger-docs.decorator'
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
 function mapGRNDetail(grn: any) {
@@ -210,6 +211,7 @@ export class GrnController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -268,6 +270,7 @@ export class GrnController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

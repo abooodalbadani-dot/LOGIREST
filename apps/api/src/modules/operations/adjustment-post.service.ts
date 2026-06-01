@@ -69,26 +69,9 @@ export class AdjustmentPostService {
             line.unitCost === undefined ||
             Number(line.unitCost) <= 0
           ) {
-            const whItem = await tx.warehouseItem.findUnique({
-              where: {
-                warehouseId_itemId: {
-                  warehouseId: adj.warehouseId,
-                  itemId: line.itemId,
-                },
-              },
-            });
-            const currentWac = whItem ? Number(whItem.wac) : 0;
-            if (currentWac > 0) {
-              await tx.adjustmentLine.update({
-                where: { id: line.id },
-                data: { unitCost: currentWac },
-              });
-              line.unitCost = new Prisma.Decimal(currentWac);
-            } else {
-              throw new BadRequestException(
-                `Unit cost is required for manual Adjustment IN because no prior WAC history exists in this warehouse for SKU ${line.item.sku}.`,
-              );
-            }
+            throw new BadRequestException(
+              `Unit cost is required and must be greater than zero for manual Adjustment IN (Item SKU: ${line.item.sku}).`,
+            );
           }
         }
       }
