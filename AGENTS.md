@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\046-landed-cost-scoping\plan.md
+E:\Kitchen‑Store Inventory System\specs\047-hardening-e2e-validation\plan.md
 <!-- SPECKIT END -->
 
 
