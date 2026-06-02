@@ -9,6 +9,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { IssuePostService } from '../issue-post.service';
@@ -154,11 +155,22 @@ export class IssuesController {
     @Body()
     body: {
       departmentId: string;
+      warehouseId?: string;
       lines: Array<{ itemId: string; quantity: number }>;
     },
     @CurrentUser('id') userId: string,
-    @ActiveScope('warehouseId') warehouseId: string,
+    @CurrentUser('role') role: Role,
+    @ActiveScope('warehouseId') headerWarehouseId?: string,
   ) {
+    const warehouseId = body.warehouseId || headerWarehouseId;
+    if (!warehouseId) {
+      throw new BadRequestException('Warehouse ID is required');
+    }
+    await this.scopeValidationService.validateWarehouse(
+      userId,
+      role,
+      warehouseId,
+    );
     const issue = await this.issuesService.create(body, userId, warehouseId);
     return mapIssueDetail(issue);
   }

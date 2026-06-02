@@ -297,8 +297,8 @@ export function canPerformActionV2(
   if (docCapabilities) {
     const capabilityAction = normalizedAction === 'review_variance' ? 'review' : normalizedAction;
     const allowedRoles = docCapabilities[capabilityAction as keyof typeof docCapabilities];
-    if (allowedRoles) {
-      return (allowedRoles as readonly Role[]).includes(role as Role);
+    if (allowedRoles && !(allowedRoles as readonly Role[]).includes(role as Role)) {
+      return false; // If the capability is defined but the user lacks the role, reject immediately
     }
   }
 

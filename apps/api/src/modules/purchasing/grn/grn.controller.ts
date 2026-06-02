@@ -25,6 +25,8 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { CreateGrnDto } from './dto/create-grn.dto';
+import { UpdateGrnDto } from './dto/update-grn.dto';
 import type { Request } from 'express';
 
 function mapGRNDetail(grn: any) {
@@ -127,25 +129,7 @@ export class GrnController {
 
   @Post()
   async create(
-    @Body()
-    body: {
-      po_id?: string;
-      poId?: string;
-      warehouse_id?: string;
-      warehouseId?: string;
-      notes?: string;
-      lines: Array<{
-        item_id?: string;
-        itemId?: string;
-        lot_id?: string | null;
-        lotId?: string | null;
-        qty?: number;
-        quantity?: number;
-        received_qty?: number;
-        unit_cost_foreign?: number;
-        unitPrice?: number;
-      }>;
-    },
+    @Body() body: CreateGrnDto,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
@@ -216,27 +200,7 @@ export class GrnController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body()
-    body: {
-      po_id?: string;
-      poId?: string;
-      warehouse_id?: string;
-      warehouseId?: string;
-      version: number;
-      notes?: string;
-      lines?: Array<{
-        id?: string;
-        item_id?: string;
-        itemId?: string;
-        lot_id?: string | null;
-        lotId?: string | null;
-        qty?: number;
-        quantity?: number;
-        received_qty?: number;
-        unit_cost_foreign?: number;
-        unitPrice?: number;
-      }>;
-    },
+    @Body() body: UpdateGrnDto,
   ) {
     const grnRecord = await this.prisma.goodsReceivedNote.findUnique({
       where: { id },

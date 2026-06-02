@@ -60,8 +60,13 @@ export class WorkflowStateGuard implements CanActivate {
     const targetTable = MODEL_TO_TABLE[modelName] || modelName;
 
     // Load document from DB
+    const includeConfig =
+      modelName === 'purchaseOrder'
+        ? { purchaseRequest: { select: { warehouseId: true } } }
+        : undefined;
     const existingDoc = await (this.prisma[modelName] as any).findUnique({
       where: { id: documentId },
+      include: includeConfig,
     });
 
     if (!existingDoc) {
@@ -79,13 +84,14 @@ export class WorkflowStateGuard implements CanActivate {
 
     if (
       modelName === 'purchaseRequest' ||
-      modelName === 'purchaseOrder' ||
       modelName === 'goodsReceivedNote' ||
       modelName === 'inventoryIssue' ||
       modelName === 'kitchenRequest' ||
       modelName === 'adjustment'
     ) {
       warehouseId = existingDoc.warehouseId;
+    } else if (modelName === 'purchaseOrder') {
+      warehouseId = existingDoc.purchaseRequest?.warehouseId;
     } else if (modelName === 'transfer') {
       if (action === 'SHIP' || action === 'CANCEL') {
         warehouseId = existingDoc.fromWarehouseId;

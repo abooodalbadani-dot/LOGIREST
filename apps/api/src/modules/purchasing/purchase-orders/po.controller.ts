@@ -14,6 +14,7 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PurchaseOrderService } from './po.service';
 import { WorkflowStateGuard } from '../../../guards/workflow-state.guard';
@@ -29,6 +30,8 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { CreatePoDto } from './dto/create-po.dto';
+import { UpdatePoDto } from './dto/update-po.dto';
 import type { Request } from 'express';
 
 // Map database fields to match the frontend expected schemas
@@ -140,13 +143,7 @@ export class PurchaseOrderController {
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
-    @Body()
-    body: {
-      supplierId: string;
-      currencyId: string;
-      prId?: string;
-      lines: Array<{ itemId: string; quantity: number; unitPrice: number }>;
-    },
+    @Body() body: CreatePoDto,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
@@ -215,6 +212,10 @@ export class PurchaseOrderController {
         role,
         po.purchaseRequest.warehouseId,
       );
+    } else if (role !== Role.ADMIN) {
+      throw new ForbiddenException(
+        'Access denied: Purchase Order lacks warehouse scope.',
+      );
     }
     return { data: mapPODetail(po) };
   }
@@ -225,18 +226,7 @@ export class PurchaseOrderController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Body()
-    body: {
-      supplierId?: string;
-      currencyId?: string;
-      version: number;
-      lines?: Array<{
-        id?: string;
-        itemId: string;
-        quantity: number;
-        unitPrice: number;
-      }>;
-    },
+    @Body() body: UpdatePoDto,
   ) {
     const po = await this.poService.findOne(id);
     if (po.purchaseRequest?.warehouseId) {
@@ -244,6 +234,10 @@ export class PurchaseOrderController {
         userId,
         role,
         po.purchaseRequest.warehouseId,
+      );
+    } else if (role !== Role.ADMIN) {
+      throw new ForbiddenException(
+        'Access denied: Cannot update a Purchase Order lacking warehouse scope.',
       );
     }
     const updated = await this.poService.update(id, body);
@@ -264,6 +258,10 @@ export class PurchaseOrderController {
         userId,
         role,
         po.purchaseRequest.warehouseId,
+      );
+    } else if (role !== Role.ADMIN) {
+      throw new ForbiddenException(
+        'Access denied: Cannot delete a Purchase Order lacking warehouse scope.',
       );
     }
     await this.poService.remove(id, version ? Number(version) : undefined);

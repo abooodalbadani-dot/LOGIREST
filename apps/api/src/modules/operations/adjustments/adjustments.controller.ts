@@ -247,6 +247,18 @@ export class AdjustmentsController {
     @Body() body: { version: number },
     @Req() req: Request,
   ) {
+    const adjustment = await this.prisma.adjustment.findUnique({
+      where: { id },
+      select: { warehouseId: true },
+    });
+    if (adjustment) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        adjustment.warehouseId,
+      );
+    }
+
     const ipAddress =
       (Array.isArray(req.headers['x-forwarded-for'])
         ? req.headers['x-forwarded-for'][0]

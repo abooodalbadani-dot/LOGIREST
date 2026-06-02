@@ -132,7 +132,12 @@ export class AdjustmentPostService {
             });
 
             // Lock WarehouseItem row
-            await this.lockService.lockItem(tx, adj.warehouseId, item.id);
+            const lockedItem = await this.lockService.lockItem(
+              tx,
+              adj.warehouseId,
+              item.id,
+            );
+            const currentWac = lockedItem ? Number(lockedItem.wac) : 0;
 
             // Upsert WarehouseItem
             await tx.warehouseItem.upsert({
@@ -157,7 +162,7 @@ export class AdjustmentPostService {
             });
 
             // Recalculate WAC (positive adjustment)
-            const unitCost = line.unitCost ? Number(line.unitCost) : 0;
+            const unitCost = line.unitCost ? Number(line.unitCost) : currentWac;
             await this.wacService.handlePositiveAdjustment(
               tx,
               adj.warehouseId,
