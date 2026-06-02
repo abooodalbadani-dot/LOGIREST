@@ -99,7 +99,12 @@ describe('Operations and Kitchen Requests Controllers', () => {
       const body = { departmentId: 'dept-1', lines: [] };
       mockIssuesService.create.mockResolvedValue({ id: 'iss-1' });
 
-      const result = await controller.create(body, 'user-1', 'wh-1');
+      const result = await controller.create(
+        body,
+        'user-1',
+        Role.ADMIN,
+        'wh-1',
+      );
       expect(result.id).toBe('iss-1');
       expect(mockIssuesService.create).toHaveBeenCalledWith(
         body,

@@ -17,15 +17,15 @@ export class UpdatePoLineDto {
 
   @IsString()
   @IsNotEmpty()
-  itemId!:  string;
+  itemId!: string;
 
   @IsNumber()
   @Min(0)
-  quantity!:  number;
+  quantity!: number;
 
   @IsNumber()
   @Min(0)
-  unitPrice!:  number;
+  unitPrice!: number;
 }
 
 export class UpdatePoDto {
@@ -39,7 +39,7 @@ export class UpdatePoDto {
 
   @IsInt()
   @IsNotEmpty()
-  version!:  number;
+  version!: number;
 
   @IsArray()
   @IsOptional()
@@ -47,4 +47,3 @@ export class UpdatePoDto {
   @Type(() => UpdatePoLineDto)
   lines?: UpdatePoLineDto[];
 }
-

@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
+import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { Role, DocumentType, Prisma, InventoryIssue } from '@prisma/client';
 import { OutboxService } from '../outbox/outbox.service';
 import { MetricsService } from '../metrics/metrics.service';
@@ -18,6 +19,7 @@ export class IssuePostService {
     private readonly outboxService: OutboxService,
     private readonly metricsService: MetricsService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly lockService: LedgerLockService,
   ) {}
 
   async post(
@@ -31,7 +33,30 @@ export class IssuePostService {
     const execute = async (
       tx: Prisma.TransactionClient,
     ): Promise<InventoryIssue> => {
-      // 1. Fetch Issue with lines and items
+      // Lock the document first
+      const lockedDoc = await this.lockService.lockDocument(
+        tx,
+        issueId,
+        DocumentType.INVENTORY_ISSUE,
+      );
+      if (!lockedDoc) {
+        throw new NotFoundException(
+          `InventoryIssue with ID ${issueId} not found`,
+        );
+      }
+
+      if (lockedDoc.status !== 'SUBMITTED') {
+        throw new BadRequestException(
+          `InventoryIssue must be in SUBMITTED status to be posted`,
+        );
+      }
+
+      // Optimistic locking version check
+      if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      // Fetch Issue details with lines and items
       const issue = await tx.inventoryIssue.findUnique({
         where: { id: issueId },
         include: {
@@ -45,24 +70,22 @@ export class IssuePostService {
 
       if (!issue) {
         throw new NotFoundException(
-          `InventoryIssue with ID ${issueId} not found`,
+          `Inventory Issue with ID ${issueId} not found`,
         );
-      }
-
-      if (issue.status !== 'SUBMITTED') {
-        throw new BadRequestException(
-          `InventoryIssue must be in SUBMITTED status to be posted`,
-        );
-      }
-
-      // Optimistic locking version check
-      if (clientVersion !== undefined && issue.version !== clientVersion) {
-        throw new BadRequestException('Version conflict detected');
       }
 
       // 2. Process each line
       for (const line of issue.lines) {
         const item = line.item;
+
+        // Historical posting guard
+        const latestLedger = await tx.stockLedger.findFirst({
+          where: { warehouseId: issue.warehouseId, itemId: item.id },
+          orderBy: { postedAt: 'desc' },
+        });
+        if (latestLedger && issue.createdAt < latestLedger.postedAt) {
+          throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
+        }
 
         // Check if item is frozen in source warehouse
         await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -99,6 +122,7 @@ export class IssuePostService {
                 quantity: -alloc.quantityAllocated,
                 documentId: issue.id,
                 documentType: DocumentType.INVENTORY_ISSUE,
+                idempotencyKey: `${DocumentType.INVENTORY_ISSUE}:stock:${issue.id}:${item.id}:${alloc.lotId}:${line.id}`,
               },
             });
           }
@@ -112,19 +136,32 @@ export class IssuePostService {
               quantity: -Number(line.quantity),
               documentId: issue.id,
               documentType: DocumentType.INVENTORY_ISSUE,
+              idempotencyKey: `${DocumentType.INVENTORY_ISSUE}:stock:${issue.id}:${item.id}:${line.id}`,
             },
           });
         }
       }
 
-      // 3. Update Issue status
-      const updatedIssue = await tx.inventoryIssue.update({
-        where: { id: issueId },
+      // 3. Update Issue status with version check
+      const updateResult = await tx.inventoryIssue.updateMany({
+        where: { id: issueId, version: lockedDoc.version },
         data: {
           status: 'POSTED',
-          version: issue.version + 1,
+          version: lockedDoc.version + 1,
         },
       });
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      const updatedIssue = await tx.inventoryIssue.findUnique({
+        where: { id: issueId },
+      });
+      if (!updatedIssue) {
+        throw new NotFoundException(
+          `Inventory Issue with ID ${issueId} not found`,
+        );
+      }
 
       this.metricsService.postingOperationsCounter.inc({
         document_type: 'INVENTORY_ISSUE',

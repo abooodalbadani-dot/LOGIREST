@@ -13,6 +13,7 @@ describe('ReportsService', () => {
   let service: ReportsService;
 
   const mockPrismaService = {
+    $queryRaw: jest.fn(),
     warehouseItem: { findMany: jest.fn() },
     warehouseLock: { count: jest.fn() },
     purchaseRequest: { count: jest.fn() },
@@ -46,10 +47,12 @@ describe('ReportsService', () => {
 
   describe('getKpis', () => {
     it('should calculate KPIs for a warehouse', async () => {
-      mockPrismaService.warehouseItem.findMany.mockResolvedValue([
-        { qtyOnHand: 10, wac: 5.5 },
-        { qtyOnHand: 0, wac: 2.0 },
-        { qtyOnHand: 5, wac: 10.0 },
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        {
+          total_items: 3,
+          total_value: 105,
+          out_of_stock_count: 1,
+        },
       ]);
       mockPrismaService.warehouseLock.count.mockResolvedValue(1);
 

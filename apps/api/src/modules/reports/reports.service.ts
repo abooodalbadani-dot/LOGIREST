@@ -38,26 +38,27 @@ export class ReportsService {
 
   async getKpis(warehouseId: string, warehouseIds?: string[]) {
     const ids = warehouseIds ?? [warehouseId];
-    const warehouseItems = await this.prisma.warehouseItem.findMany({
-      where: { warehouseId: { in: ids } },
-      select: {
-        qtyOnHand: true,
-        wac: true,
-      },
-    });
 
-    const totalItems = warehouseItems.length;
-    let totalValue = 0;
-    let outOfStockCount = 0;
+    const result = await this.prisma.$queryRaw<
+      Array<{
+        total_items: number;
+        total_value: number | null;
+        out_of_stock_count: number;
+      }>
+    >`
+      SELECT
+        COUNT(*)::integer as total_items,
+        COALESCE(SUM("qtyOnHand" * "wac"), 0)::double precision as total_value,
+        COUNT(CASE WHEN "qtyOnHand" = 0 THEN 1 END)::integer as out_of_stock_count
+      FROM "warehouse_items"
+      WHERE "warehouseId" = ANY(${ids})
+    `;
 
-    for (const item of warehouseItems) {
-      const qty = Number(item.qtyOnHand);
-      const wac = Number(item.wac || 0);
-      totalValue += qty * wac;
-      if (qty === 0) {
-        outOfStockCount++;
-      }
-    }
+    const stats = result[0] || {
+      total_items: 0,
+      total_value: 0,
+      out_of_stock_count: 0,
+    };
 
     const activeLocks = await this.prisma.warehouseLock.count({
       where: {
@@ -67,9 +68,9 @@ export class ReportsService {
     });
 
     return {
-      totalItems,
-      totalValue,
-      outOfStockCount,
+      totalItems: stats.total_items,
+      totalValue: stats.total_value ?? 0,
+      outOfStockCount: stats.out_of_stock_count,
       activeLocks,
     };
   }

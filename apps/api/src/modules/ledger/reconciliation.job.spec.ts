@@ -32,7 +32,7 @@ describe('ReconciliationJob', () => {
   };
 
   const mockRedisLockService = {
-    acquireLock: jest.fn().mockResolvedValue(true),
+    acquireLock: jest.fn().mockResolvedValue('mock-token'),
     releaseLock: jest.fn().mockResolvedValue(true),
   };
 

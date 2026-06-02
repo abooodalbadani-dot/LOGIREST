@@ -27,7 +27,29 @@ export class GrnPostService {
     ipAddress?: string,
   ): Promise<any> {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Fetch GRN with lines and items
+      // Lock the document first
+      const lockedDoc = await this.lockService.lockDocument(
+        tx,
+        grnId,
+        PrismaDocType.GOODS_RECEIVED_NOTE,
+      );
+      if (!lockedDoc) {
+        throw new NotFoundException(
+          `GoodsReceivedNote with ID ${grnId} not found`,
+        );
+      }
+
+      if (lockedDoc.status !== 'RECEIVED') {
+        throw new BadRequestException(
+          `GoodsReceivedNote must be in RECEIVED status to be posted`,
+        );
+      }
+
+      if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      // Fetch GRN details and lines
       const grn = await tx.goodsReceivedNote.findUnique({
         where: { id: grnId },
         include: {
@@ -41,25 +63,23 @@ export class GrnPostService {
 
       if (!grn) {
         throw new NotFoundException(
-          `GoodsReceivedNote with ID ${grnId} not found`,
+          `Goods Received Note with ID ${grnId} not found`,
         );
-      }
-
-      if (grn.status !== 'RECEIVED') {
-        throw new BadRequestException(
-          `GoodsReceivedNote must be in RECEIVED status to be posted`,
-        );
-      }
-
-      // Optimistic locking version check
-      if (clientVersion !== undefined && grn.version !== clientVersion) {
-        throw new BadRequestException('Version conflict detected');
       }
 
       // 2. Process each line
       for (const line of grn.lines) {
         const item = line.item;
         const lotId = line.lotId;
+
+        // Historical posting guard
+        const latestLedger = await tx.stockLedger.findFirst({
+          where: { warehouseId: grn.warehouseId, itemId: item.id },
+          orderBy: { postedAt: 'desc' },
+        });
+        if (latestLedger && grn.createdAt < latestLedger.postedAt) {
+          throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
+        }
 
         // Check if item is frozen in destination warehouse
         const destWhItemCheck = await tx.warehouseItem.findUnique({
@@ -145,6 +165,7 @@ export class GrnPostService {
         });
 
         // Recalculate WAC
+        const costIdempotencyKey = `${PrismaDocType.GOODS_RECEIVED_NOTE}:cost:${grn.id}:${item.id}:${line.id}`;
         await this.wacService.recalculate(
           tx,
           grn.warehouseId,
@@ -152,9 +173,11 @@ export class GrnPostService {
           Number(line.quantityReceived),
           Number(line.unitPrice),
           grn.id,
+          costIdempotencyKey,
         );
 
         // Insert StockLedger entry
+        const stockIdempotencyKey = `${PrismaDocType.GOODS_RECEIVED_NOTE}:stock:${grn.id}:${item.id}:${line.id}`;
         await tx.stockLedger.create({
           data: {
             warehouseId: grn.warehouseId,
@@ -163,17 +186,25 @@ export class GrnPostService {
             quantity: line.quantityReceived,
             documentId: grn.id,
             documentType: PrismaDocType.GOODS_RECEIVED_NOTE,
+            idempotencyKey: stockIdempotencyKey,
           },
         });
       }
 
-      // 3. Update GRN status
-      const updatedGrn = await tx.goodsReceivedNote.update({
-        where: { id: grnId },
+      // 3. Update GRN status with version check
+      const updateResult = await tx.goodsReceivedNote.updateMany({
+        where: { id: grnId, version: lockedDoc.version },
         data: {
           status: 'POSTED',
-          version: grn.version + 1,
+          version: lockedDoc.version + 1,
         },
+      });
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      const updatedGrn = await tx.goodsReceivedNote.findUnique({
+        where: { id: grnId },
       });
 
       this.metricsService.postingOperationsCounter.inc({

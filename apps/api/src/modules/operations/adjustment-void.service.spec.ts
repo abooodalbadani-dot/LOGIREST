@@ -17,19 +17,36 @@ describe('AdjustmentVoidService', () => {
 
   const mockAdjFindUnique = jest.fn();
   const mockAdjUpdate = jest.fn();
+  const mockAdjustmentFindFirst = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockCostLedgerFindMany = jest.fn();
   const mockCostLedgerCreate = jest.fn();
+  const mockCostLedgerFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockGoodsReceivedNoteFindFirst = jest.fn();
+  const mockTransferFindFirst = jest.fn();
 
   const mockPrismaTx = {
+    goodsReceivedNote: {
+      findFirst: mockGoodsReceivedNoteFindFirst,
+    },
     adjustment: {
       findUnique: mockAdjFindUnique,
       update: mockAdjUpdate,
+      findFirst: mockAdjustmentFindFirst,
+    },
+    transfer: {
+      findFirst: mockTransferFindFirst,
+    },
+    stocktakeSession: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    landedCostVoucher: {
+      findFirst: jest.fn().mockResolvedValue(null),
     },
     warehouseItemLot: {
       update: mockWarehouseItemLotUpdate,
@@ -43,6 +60,7 @@ describe('AdjustmentVoidService', () => {
     costLedger: {
       findMany: mockCostLedgerFindMany,
       create: mockCostLedgerCreate,
+      findFirst: mockCostLedgerFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -119,6 +137,14 @@ describe('AdjustmentVoidService', () => {
       qtyOnHand: new Prisma.Decimal(10),
     });
 
+    mockGoodsReceivedNoteFindFirst.mockResolvedValue(null);
+    mockAdjustmentFindFirst.mockResolvedValue(null);
+    mockTransferFindFirst.mockResolvedValue(null);
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-2',
+      newWac: new Prisma.Decimal(12),
+    });
+
     // Mock costLedger entries to trigger WAC recalculation
     mockCostLedgerFindMany.mockResolvedValue([
       {
@@ -185,6 +211,7 @@ describe('AdjustmentVoidService', () => {
         newWac: new Prisma.Decimal(12),
         documentId: adjId,
         documentType: DocumentType.ADJUSTMENT,
+        idempotencyKey: 'ADJUSTMENT:cost_void:adj-1:item-1:line-1',
       },
     });
 
@@ -197,6 +224,7 @@ describe('AdjustmentVoidService', () => {
         quantity: -5,
         documentId: adjId,
         documentType: DocumentType.ADJUSTMENT,
+        idempotencyKey: 'ADJUSTMENT:stock_void:adj-1:item-1:lot-1:line-1',
       },
     });
   });

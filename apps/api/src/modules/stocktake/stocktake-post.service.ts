@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
-import { Role, DocumentType, StocktakeStatus } from '@prisma/client';
+import { Role, DocumentType, StocktakeStatus, Prisma } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
@@ -125,7 +125,14 @@ export class StocktakePostService {
             ]);
 
             // Lock WarehouseItem row
-            await this.lockService.lockItem(tx, session.warehouseId, itemId);
+            const whItem = await this.lockService.lockItem(
+              tx,
+              session.warehouseId,
+              itemId,
+            );
+            const currentWac = whItem
+              ? new Prisma.Decimal(whItem.wac)
+              : new Prisma.Decimal(0);
 
             if (variance > 0) {
               // Upsert WarehouseItemLot
@@ -162,10 +169,24 @@ export class StocktakePostService {
                   itemId,
                   qtyOnHand: variance,
                   qtyAllocated: 0,
-                  wac: 0,
+                  wac: currentWac,
                 },
                 update: {
                   qtyOnHand: { increment: variance },
+                },
+              });
+
+              // Write CostLedger entry to maintain ledger parity (positive variance counts as Adjustment IN equivalent)
+              await tx.costLedger.create({
+                data: {
+                  warehouseId: session.warehouseId,
+                  itemId,
+                  quantity: variance,
+                  unitPrice: currentWac,
+                  newWac: currentWac,
+                  documentId: session.id,
+                  documentType: DocumentType.STOCKTAKE,
+                  idempotencyKey: `${DocumentType.STOCKTAKE}:cost:${session.id}:${itemId}:${lotId || 'null'}`,
                 },
               });
             } else {
@@ -199,7 +220,14 @@ export class StocktakePostService {
             }
           } else {
             // Unbatched item
-            await this.lockService.lockItem(tx, session.warehouseId, itemId);
+            const whItem = await this.lockService.lockItem(
+              tx,
+              session.warehouseId,
+              itemId,
+            );
+            const currentWac = whItem
+              ? new Prisma.Decimal(whItem.wac)
+              : new Prisma.Decimal(0);
 
             if (variance > 0) {
               await tx.warehouseItem.upsert({
@@ -214,10 +242,24 @@ export class StocktakePostService {
                   itemId,
                   qtyOnHand: variance,
                   qtyAllocated: 0,
-                  wac: 0,
+                  wac: currentWac,
                 },
                 update: {
                   qtyOnHand: { increment: variance },
+                },
+              });
+
+              // Write CostLedger entry to maintain ledger parity (positive variance counts as Adjustment IN equivalent)
+              await tx.costLedger.create({
+                data: {
+                  warehouseId: session.warehouseId,
+                  itemId,
+                  quantity: variance,
+                  unitPrice: currentWac,
+                  newWac: currentWac,
+                  documentId: session.id,
+                  documentType: DocumentType.STOCKTAKE,
+                  idempotencyKey: `${DocumentType.STOCKTAKE}:cost:${session.id}:${itemId}:${lotId || 'null'}`,
                 },
               });
             } else {
@@ -245,6 +287,7 @@ export class StocktakePostService {
               quantity: variance,
               documentId: session.id,
               documentType: DocumentType.STOCKTAKE,
+              idempotencyKey: `${DocumentType.STOCKTAKE}:stock:${session.id}:${itemId}:${lotId || 'null'}`,
             },
           });
         }

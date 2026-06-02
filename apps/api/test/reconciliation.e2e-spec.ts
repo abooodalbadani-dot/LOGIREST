@@ -99,6 +99,7 @@ describe('Reconciliation Drift (e2e)', () => {
         quantity: 10,
         documentId: 'INITIAL',
         documentType: 'GOODS_RECEIVED_NOTE',
+        idempotencyKey: 'INITIAL-TEST-KEY',
       },
     });
 

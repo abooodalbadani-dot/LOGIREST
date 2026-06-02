@@ -23,7 +23,7 @@ export class WacService {
     receivedQty: number,
     receivedCost: number,
     documentId: string,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ): Promise<number> {
     this.logger.log(
       `Recalculating WAC for item ${itemId} in wh ${warehouseId}. Received: ${receivedQty} @ ${receivedCost}`,
@@ -90,7 +90,7 @@ export class WacService {
     adjustedQty: number, // must be positive
     adjustedCost: number,
     documentId: string,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ): Promise<number> {
     this.logger.log(
       `Handling positive adjustment for item ${itemId} in wh ${warehouseId}. Qty: ${adjustedQty} @ ${adjustedCost}`,
@@ -157,7 +157,7 @@ export class WacService {
     receivedQty: number,
     receivedCost: number,
     documentId: string,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ): Promise<number> {
     this.logger.log(
       `Recalculating WAC for transfer receipt of item ${itemId} in wh ${warehouseId}. Qty: ${receivedQty} @ ${receivedCost}`,

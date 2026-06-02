@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { RedisLockService } from '../redis/redis-lock.service';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ArchivalJob {
@@ -86,27 +86,53 @@ export class ArchivalJob {
           }
         }
 
-        // 2. Archive Stock Ledger entries in batches of 1,000 using cursor-based pagination
+        // 2. Archive Stock Ledger and Cost Ledger entries in batches of 1,000 using cursor-based pagination
         let lastProcessedLedgerId: string | undefined = undefined;
+        let lastProcessedCostId: string | undefined = undefined;
         let hasMoreLedgers = true;
+
         while (hasMoreLedgers) {
-          const whereClause: any = {
+          const stockWhere: any = {
             postedAt: { lt: threeYearsAgo },
           };
           if (lastProcessedLedgerId) {
-            whereClause.id = { gt: lastProcessedLedgerId };
+            stockWhere.id = { gt: lastProcessedLedgerId };
+          }
+
+          const costWhere: any = {
+            postedAt: { lt: threeYearsAgo },
+          };
+          if (lastProcessedCostId) {
+            costWhere.id = { gt: lastProcessedCostId };
           }
 
           const oldLedgers = await this.prisma.stockLedger.findMany({
-            where: whereClause,
+            where: stockWhere,
             take: 1000,
             orderBy: { id: 'asc' },
           });
 
+          const oldCostLedgers = await this.prisma.costLedger.findMany({
+            where: costWhere,
+            take: 1000,
+            orderBy: { id: 'asc' },
+          });
+
+          if (oldLedgers.length === 0 && oldCostLedgers.length === 0) {
+            hasMoreLedgers = false;
+            break;
+          }
+
           if (oldLedgers.length > 0) {
             lastProcessedLedgerId = oldLedgers[oldLedgers.length - 1].id;
-            await this.prisma.$transaction(
-              async (tx) => {
+          }
+          if (oldCostLedgers.length > 0) {
+            lastProcessedCostId = oldCostLedgers[oldCostLedgers.length - 1].id;
+          }
+
+          await this.prisma.$transaction(
+            async (tx) => {
+              if (oldLedgers.length > 0) {
                 await tx.stockLedgerArchive.createMany({
                   data: oldLedgers.map((ledger) => ({
                     id: ledger.id,
@@ -126,17 +152,41 @@ export class ArchivalJob {
                     id: { in: oldLedgers.map((ledger) => ledger.id) },
                   },
                 });
-              },
-              { timeout: 15000 },
-            );
+              }
 
-            archivedLedgersCount += oldLedgers.length;
-            this.logger.log(
-              `Archived a batch of ${oldLedgers.length} stock ledgers. Total so far: ${archivedLedgersCount}`,
-            );
-          } else {
-            hasMoreLedgers = false;
-          }
+              if (oldCostLedgers.length > 0) {
+                await tx.costLedgerArchive.createMany({
+                  data: oldCostLedgers.map((ledger) => ({
+                    id: ledger.id,
+                    postedAt: ledger.postedAt,
+                    warehouseId: ledger.warehouseId,
+                    itemId: ledger.itemId,
+                    quantity: ledger.quantity,
+                    unitPrice: ledger.unitPrice,
+                    newWac: ledger.newWac,
+                    documentId: ledger.documentId,
+                    documentType: ledger.documentType,
+                    idempotencyKey: ledger.idempotencyKey,
+                  })),
+                });
+
+                await tx.costLedger.deleteMany({
+                  where: {
+                    id: { in: oldCostLedgers.map((ledger) => ledger.id) },
+                  },
+                });
+              }
+            },
+            {
+              timeout: 30000,
+              isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            },
+          );
+
+          archivedLedgersCount += oldLedgers.length + oldCostLedgers.length;
+          this.logger.log(
+            `Archived a batch of ${oldLedgers.length} stock ledgers and ${oldCostLedgers.length} cost ledgers. Total so far: ${archivedLedgersCount}`,
+          );
         }
 
         const durationMs = Date.now() - startTime;

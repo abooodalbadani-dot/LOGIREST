@@ -725,7 +725,7 @@ model StockLedger {
   quantity       Decimal      @db.Decimal(18, 4)
   documentId     String
   documentType   DocumentType
-  idempotencyKey String?      @unique
+  idempotencyKey String       @unique
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -747,7 +747,7 @@ model CostLedger {
   newWac         Decimal      @db.Decimal(18, 4)
   documentId     String
   documentType   DocumentType
-  idempotencyKey String?      @unique
+  idempotencyKey String       @unique
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -950,6 +950,21 @@ model StockLedgerArchive {
   idempotencyKey String?
 
   @@map("stock_ledger_archive")
+}
+
+model CostLedgerArchive {
+  id             String       @id
+  postedAt       DateTime
+  warehouseId    String
+  itemId         String
+  quantity       Decimal      @db.Decimal(18, 4)
+  unitPrice      Decimal      @db.Decimal(18, 4)
+  newWac         Decimal      @db.Decimal(18, 4)
+  documentId     String
+  documentType   DocumentType
+  idempotencyKey String?
+
+  @@map("cost_ledger_archive")
 }
 
 

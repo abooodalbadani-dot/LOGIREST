@@ -28,6 +28,26 @@ export class GrnVoidService {
       );
     }
     return this.prisma.$transaction(async (tx) => {
+      // Lock the document first
+      const lockedDoc = await this.lockService.lockDocument(
+        tx,
+        grnId,
+        DocumentType.GOODS_RECEIVED_NOTE,
+      );
+      if (!lockedDoc) {
+        throw new NotFoundException(`GRN with ID ${grnId} not found`);
+      }
+
+      if (lockedDoc.status !== 'POSTED') {
+        throw new BadRequestException(
+          'GRN must be in POSTED status to be voided',
+        );
+      }
+
+      if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
       const grn = await tx.goodsReceivedNote.findUnique({
         where: { id: grnId },
         include: {
@@ -41,14 +61,29 @@ export class GrnVoidService {
         throw new NotFoundException(`GRN with ID ${grnId} not found`);
       }
 
-      if (grn.status !== 'POSTED') {
+      // Assert no landed costs are applied to this GRN
+      const landedCostExists = await tx.landedCostAllocationLine.findFirst({
+        where: { grnLineId: { in: grn.lines.map((l) => l.id) } },
+      });
+      if (landedCostExists) {
         throw new BadRequestException(
-          'GRN must be in POSTED status to be voided',
+          'GRN voiding is rejected because landed cost allocations have been posted to this receipt.',
         );
       }
 
-      if (clientVersion !== undefined && grn.version !== clientVersion) {
-        throw new BadRequestException('Version conflict detected');
+      // Assert no subsequent GRNs containing any of the items have been posted in the warehouse
+      const subsequentGrn = await tx.goodsReceivedNote.findFirst({
+        where: {
+          warehouseId: grn.warehouseId,
+          status: 'POSTED',
+          createdAt: { gt: grn.createdAt },
+          lines: { some: { itemId: { in: grn.lines.map((l) => l.itemId) } } },
+        },
+      });
+      if (subsequentGrn) {
+        throw new BadRequestException(
+          'GRN voiding is rejected because a subsequent Goods Received Note has been posted, locking WAC history.',
+        );
       }
 
       const sortedLines = [...grn.lines].sort((a, b) => {
@@ -79,7 +114,7 @@ export class GrnVoidService {
             const lotQty = Number(lockedLots[0].qtyOnHand);
             if (lotQty < qtyVal) {
               throw new BadRequestException(
-                `Cannot void GRN: Item ${item.sku} (lot ${lotId}) has been partially consumed. Available: ${lotQty}, Required to void: ${qtyVal}`,
+                'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
               );
             }
           }
@@ -94,7 +129,7 @@ export class GrnVoidService {
           const itemQty = Number(lockedItem.qtyOnHand);
           if (itemQty < qtyVal) {
             throw new BadRequestException(
-              `Cannot void GRN: Item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${qtyVal}`,
+              'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
             );
           }
         }
@@ -137,6 +172,7 @@ export class GrnVoidService {
               quantity: -qtyVal,
               documentId: grn.id,
               documentType: DocumentType.GOODS_RECEIVED_NOTE,
+              idempotencyKey: `${DocumentType.GOODS_RECEIVED_NOTE}:stock:${grn.id}:${item.id}:${line.id}:void`,
             },
           });
         } else {
@@ -158,6 +194,7 @@ export class GrnVoidService {
               quantity: -qtyVal,
               documentId: grn.id,
               documentType: DocumentType.GOODS_RECEIVED_NOTE,
+              idempotencyKey: `${DocumentType.GOODS_RECEIVED_NOTE}:stock:${grn.id}:${item.id}:${line.id}:void`,
             },
           });
         }
@@ -198,13 +235,22 @@ export class GrnVoidService {
             newWac: roundedWac,
             documentId: grn.id,
             documentType: DocumentType.GOODS_RECEIVED_NOTE,
+            idempotencyKey: `${DocumentType.GOODS_RECEIVED_NOTE}:cost:${grn.id}:${item.id}:${line.id}:void`,
           },
         });
       }
 
-      const updatedGrn = await tx.goodsReceivedNote.update({
+      // Update GRN status with version check
+      const updateResult = await tx.goodsReceivedNote.updateMany({
+        where: { id: grnId, version: lockedDoc.version },
+        data: { status: 'VOIDED', version: lockedDoc.version + 1 },
+      });
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      const updatedGrn = await tx.goodsReceivedNote.findUnique({
         where: { id: grnId },
-        data: { status: 'VOIDED', version: grn.version + 1 },
       });
 
       const stepNumber =

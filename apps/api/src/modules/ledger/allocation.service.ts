@@ -128,9 +128,7 @@ export class AllocationService {
       0,
     );
     if (totalAvailable < requiredQty) {
-      throw new BadRequestException(
-        'Insufficient stock: requested quantity exceeds available on hand.',
-      );
+      throw new BadRequestException('INSUFFICIENT_STOCK');
     }
 
     // Progressively allocate

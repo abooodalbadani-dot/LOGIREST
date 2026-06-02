@@ -22,6 +22,8 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
+import { ScopeValidationService } from '../../auth/scope-validation.service';
 import type { Request } from 'express';
 
 const VALID_DOC_TYPES = [
@@ -43,6 +45,8 @@ export class OperationsController {
     private readonly transferVoidService: TransferVoidService,
     private readonly kitchenRequestVoidService: KitchenRequestVoidService,
     private readonly lotsAvailableService: LotsAvailableService,
+    private readonly prisma: PrismaService,
+    private readonly scopeValidationService: ScopeValidationService,
   ) {}
 
   @Get('lots-available')
@@ -76,6 +80,69 @@ export class OperationsController {
     ) {
       throw new BadRequestException(
         `Invalid document type: ${documentType}. Must be one of: ${VALID_DOC_TYPES.join(', ')}`,
+      );
+    }
+
+    // Resolve warehouse and validate user scope (BOLA / IDOR defense)
+    let warehouseId: string | null = null;
+    let warehouseIds: string[] = [];
+
+    switch (documentType) {
+      case 'grn': {
+        const doc = await this.prisma.goodsReceivedNote.findUnique({
+          where: { id },
+          select: { warehouseId: true },
+        });
+        if (doc) warehouseId = doc.warehouseId;
+        break;
+      }
+      case 'issue': {
+        const doc = await this.prisma.inventoryIssue.findUnique({
+          where: { id },
+          select: { warehouseId: true },
+        });
+        if (doc) warehouseId = doc.warehouseId;
+        break;
+      }
+      case 'adjustment': {
+        const doc = await this.prisma.adjustment.findUnique({
+          where: { id },
+          select: { warehouseId: true },
+        });
+        if (doc) warehouseId = doc.warehouseId;
+        break;
+      }
+      case 'transfer': {
+        const doc = await this.prisma.transfer.findUnique({
+          where: { id },
+          select: { fromWarehouseId: true, toWarehouseId: true },
+        });
+        if (doc) {
+          warehouseIds = [doc.fromWarehouseId, doc.toWarehouseId];
+        }
+        break;
+      }
+      case 'kitchen-request': {
+        const doc = await this.prisma.kitchenRequest.findUnique({
+          where: { id },
+          select: { warehouseId: true },
+        });
+        if (doc) warehouseId = doc.warehouseId;
+        break;
+      }
+    }
+
+    if (warehouseId) {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        warehouseId,
+      );
+    } else if (warehouseIds.length > 0) {
+      await this.scopeValidationService.validateAtLeastOneWarehouse(
+        userId,
+        role,
+        warehouseIds,
       );
     }
 

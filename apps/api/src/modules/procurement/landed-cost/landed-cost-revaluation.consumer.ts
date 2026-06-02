@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, BadRequestException } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { Prisma } from '@prisma/client';
+import { Prisma, AdjustmentDirection } from '@prisma/client';
 import { PrismaService } from '../../../database/prisma.service';
 import { RevaluationLockingService } from './revaluation-locking.service';
 
@@ -135,33 +135,171 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
             }
 
             const currentQty = Number(whItem.qtyOnHand);
-            const currentWac = Number(whItem.wac);
-            const allocatedCost = Number(allocation.allocatedCost);
+            const originalQty = Number(grnLine.quantityReceived);
 
-            let newWac: number;
-            if (currentQty <= 0) {
-              newWac = currentWac;
-            } else {
-              const totalCost = currentQty * currentWac;
-              newWac = (totalCost + allocatedCost) / currentQty;
+            // Guard 1a: qtyOnHand < originalReceivedQty for that GRN line
+            if (currentQty < originalQty) {
+              throw new BadRequestException(
+                `Landed cost allocation is forbidden because the goods received note quantity has been partially or fully issued/consumed (GRNLine ID: ${grnLine.id}, current qty: ${currentQty}, original qty: ${originalQty}).`,
+              );
             }
 
-            const roundedWac = Math.round(newWac * 10000) / 10000;
+            // Guard 1b: A subsequent cost-impacting document exists for the same item in the same warehouse
+            const subsequentGrn = await tx.goodsReceivedNote.findFirst({
+              where: {
+                warehouseId,
+                status: 'POSTED',
+                createdAt: { gt: grnLine.goodsReceivedNote.createdAt },
+                lines: {
+                  some: {
+                    itemId,
+                  },
+                },
+              },
+            });
+
+            const subsequentAdj = await tx.adjustment.findFirst({
+              where: {
+                warehouseId,
+                status: 'POSTED',
+                createdAt: { gt: grnLine.goodsReceivedNote.createdAt },
+                lines: {
+                  some: {
+                    itemId,
+                    direction: AdjustmentDirection.IN,
+                  },
+                },
+              },
+            });
+
+            const subsequentTransfer = await tx.transfer.findFirst({
+              where: {
+                toWarehouseId: warehouseId,
+                status: 'RECEIVED',
+                createdAt: { gt: grnLine.goodsReceivedNote.createdAt },
+                lines: {
+                  some: {
+                    itemId,
+                  },
+                },
+              },
+            });
+
+            const subsequentStocktakeSessions =
+              await tx.stocktakeSession.findMany({
+                where: {
+                  warehouseId,
+                  status: 'POSTED',
+                  createdAt: { gt: grnLine.goodsReceivedNote.createdAt },
+                  counts: {
+                    some: {
+                      itemId,
+                    },
+                  },
+                },
+                include: {
+                  counts: {
+                    where: { itemId },
+                  },
+                  snapshots: {
+                    where: { itemId },
+                  },
+                },
+              });
+
+            let subsequentStocktake = false;
+            for (const session of subsequentStocktakeSessions) {
+              const snapshotMap = new Map<string, number>();
+              const countMap = new Map<string, number>();
+              const allLotIds = new Set<string>();
+
+              for (const snap of session.snapshots) {
+                const key = snap.lotId || '';
+                snapshotMap.set(key, Number(snap.qtySnapshot));
+                allLotIds.add(key);
+              }
+
+              for (const count of session.counts) {
+                const key = count.lotId || '';
+                countMap.set(key, Number(count.qtyCounted));
+                allLotIds.add(key);
+              }
+
+              for (const lotId of allLotIds) {
+                const qtySnapshot = snapshotMap.get(lotId) || 0;
+                const qtyCounted = countMap.get(lotId) || 0;
+                if (qtyCounted > qtySnapshot) {
+                  subsequentStocktake = true;
+                  break;
+                }
+              }
+              if (subsequentStocktake) break;
+            }
+
+            const subsequentLandedCost = await tx.landedCostVoucher.findFirst({
+              where: {
+                status: 'POSTED',
+                createdAt: { gt: grnLine.goodsReceivedNote.createdAt },
+                lines: {
+                  some: {
+                    grnLine: {
+                      itemId,
+                      goodsReceivedNote: {
+                        warehouseId,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+
+            if (
+              subsequentGrn ||
+              subsequentAdj ||
+              subsequentTransfer ||
+              subsequentStocktake ||
+              subsequentLandedCost
+            ) {
+              throw new BadRequestException(
+                'LANDED_COST_NOT_ALLOWED_UNDER_COST_IMPACT',
+              );
+            }
+
+            const currentQtyDec = new Prisma.Decimal(whItem.qtyOnHand);
+            const currentWacDec = new Prisma.Decimal(whItem.wac);
+            const allocatedCostDec = new Prisma.Decimal(
+              allocation.allocatedCost,
+            );
+            const originalQtyDec = new Prisma.Decimal(grnLine.quantityReceived);
+
+            // Corrected WAC addition formula: (currentQtyDec * currentWacDec + allocatedCostDec) / currentQtyDec
+            const newWac = currentQtyDec
+              .mul(currentWacDec)
+              .add(allocatedCostDec)
+              .div(currentQtyDec);
+
+            const roundedWac = newWac.toDecimalPlaces(4);
 
             await tx.warehouseItem.update({
               where: { warehouseId_itemId: { warehouseId, itemId } },
               data: { wac: roundedWac },
             });
 
+            const unitLandedCost = allocatedCostDec
+              .div(originalQtyDec)
+              .toDecimalPlaces(4);
+            const idempotencyKey = `LANDED_COST:cost:${voucherId}:${grnLine.id}`;
+
             await tx.costLedger.create({
               data: {
                 warehouseId,
                 itemId,
-                quantity: currentQty,
-                unitPrice: allocatedCost,
+                quantity: originalQtyDec,
+                unitPrice: unitLandedCost,
                 newWac: roundedWac,
                 documentId: voucherId,
                 documentType: 'GOODS_RECEIVED_NOTE' as any,
+                idempotencyKey,
               },
             });
           }
@@ -183,6 +321,37 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
       this.logger.error(
         `Failed to process revaluation for voucher ${voucherId}: ${error instanceof Error ? error.message : String(error)}`,
       );
+
+      const isDuplicateKey =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002';
+
+      if (isDuplicateKey) {
+        // Verify if ledger entries for this voucher already exist
+        const existingLedgerEntries = await this.prisma.costLedger.findFirst({
+          where: {
+            documentId: voucherId,
+            documentType: 'GOODS_RECEIVED_NOTE' as any,
+          },
+        });
+
+        if (existingLedgerEntries) {
+          this.logger.log(
+            `Duplicate revaluation execution detected for voucher ${voucherId}, but ledger entries already exist. Marking voucher as POSTED without reverting or rethrowing.`,
+          );
+          await this.prisma.landedCostVoucher
+            .update({
+              where: { id: voucherId },
+              data: { status: 'POSTED', version: { increment: 1 } },
+            })
+            .catch((updateError) => {
+              this.logger.error(
+                `Failed to ensure voucher status is POSTED: ${updateError instanceof Error ? updateError.message : String(updateError)}`,
+              );
+            });
+          return;
+        }
+      }
 
       await this.prisma.landedCostVoucher
         .update({

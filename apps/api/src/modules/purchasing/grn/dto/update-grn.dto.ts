@@ -83,4 +83,3 @@ export class UpdateGrnDto {
   @Type(() => UpdateGrnLineDto)
   lines?: UpdateGrnLineDto[];
 }
-

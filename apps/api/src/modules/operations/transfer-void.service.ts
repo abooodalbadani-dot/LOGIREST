@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
-import { Role, DocumentType, Prisma } from '@prisma/client';
+import {
+  Role,
+  DocumentType,
+  Prisma,
+  AdjustmentDirection,
+} from '@prisma/client';
 
 @Injectable()
 export class TransferVoidService {
@@ -189,6 +194,7 @@ export class TransferVoidService {
                 quantity: Number(alloc.quantityAllocated),
                 documentId: transfer.id,
                 documentType: DocumentType.TRANSFER,
+                idempotencyKey: `${DocumentType.TRANSFER}:stock_void_src:${transfer.id}:${item.id}:${alloc.lotId}:${line.id}`,
               },
             });
 
@@ -214,6 +220,7 @@ export class TransferVoidService {
                   quantity: -receivedForLot,
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
+                  idempotencyKey: `${DocumentType.TRANSFER}:stock_void_dest:${transfer.id}:${item.id}:${alloc.lotId}:${line.id}`,
                 },
               });
 
@@ -248,6 +255,7 @@ export class TransferVoidService {
               quantity: shippedQty,
               documentId: transfer.id,
               documentType: DocumentType.TRANSFER,
+              idempotencyKey: `${DocumentType.TRANSFER}:stock_void_src:${transfer.id}:${item.id}:${line.id}`,
             },
           });
 
@@ -270,6 +278,7 @@ export class TransferVoidService {
               quantity: -receivedQty,
               documentId: transfer.id,
               documentType: DocumentType.TRANSFER,
+              idempotencyKey: `${DocumentType.TRANSFER}:stock_void_dest:${transfer.id}:${item.id}:${line.id}`,
             },
           });
         }
@@ -298,44 +307,139 @@ export class TransferVoidService {
         }
 
         // Recalculate destination WAC from cost ledger entries excluding this transfer
-        const costEntries = await tx.costLedger.findMany({
+        // 1. Check if any subsequent cost-impacting document exists for the same item in the destination warehouse
+        const subsequentGrn = await tx.goodsReceivedNote.findFirst({
+          where: {
+            warehouseId: transfer.toWarehouseId,
+            status: 'POSTED',
+            createdAt: { gt: transfer.createdAt },
+            lines: {
+              some: {
+                itemId: item.id,
+              },
+            },
+          },
+        });
+
+        const subsequentAdj = await tx.adjustment.findFirst({
+          where: {
+            warehouseId: transfer.toWarehouseId,
+            status: 'POSTED',
+            createdAt: { gt: transfer.createdAt },
+            lines: {
+              some: {
+                itemId: item.id,
+                direction: AdjustmentDirection.IN,
+              },
+            },
+          },
+        });
+
+        const subsequentTransfer = await tx.transfer.findFirst({
+          where: {
+            toWarehouseId: transfer.toWarehouseId,
+            status: 'RECEIVED',
+            createdAt: { gt: transfer.createdAt },
+            lines: {
+              some: {
+                itemId: item.id,
+              },
+            },
+          },
+        });
+
+        const subsequentStocktakeSessions = await tx.stocktakeSession.findMany({
+          where: {
+            warehouseId: transfer.toWarehouseId,
+            status: 'POSTED',
+            createdAt: { gt: transfer.createdAt },
+            counts: {
+              some: {
+                itemId: item.id,
+              },
+            },
+          },
+          include: {
+            counts: {
+              where: { itemId: item.id },
+            },
+            snapshots: {
+              where: { itemId: item.id },
+            },
+          },
+        });
+
+        let subsequentStocktake = false;
+        for (const session of subsequentStocktakeSessions) {
+          const snapshotMap = new Map<string, number>();
+          const countMap = new Map<string, number>();
+          const allLotIds = new Set<string>();
+
+          for (const snap of session.snapshots) {
+            const key = snap.lotId || '';
+            snapshotMap.set(key, Number(snap.qtySnapshot));
+            allLotIds.add(key);
+          }
+
+          for (const count of session.counts) {
+            const key = count.lotId || '';
+            countMap.set(key, Number(count.qtyCounted));
+            allLotIds.add(key);
+          }
+
+          for (const lotId of allLotIds) {
+            const qtySnapshot = snapshotMap.get(lotId) || 0;
+            const qtyCounted = countMap.get(lotId) || 0;
+            if (qtyCounted > qtySnapshot) {
+              subsequentStocktake = true;
+              break;
+            }
+          }
+          if (subsequentStocktake) break;
+        }
+
+        const subsequentLandedCost = await tx.landedCostVoucher.findFirst({
+          where: {
+            status: 'POSTED',
+            createdAt: { gt: transfer.createdAt },
+            lines: {
+              some: {
+                grnLine: {
+                  itemId: item.id,
+                  goodsReceivedNote: {
+                    warehouseId: transfer.toWarehouseId,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (
+          subsequentGrn ||
+          subsequentAdj ||
+          subsequentTransfer ||
+          subsequentStocktake ||
+          subsequentLandedCost
+        ) {
+          throw new BadRequestException('VOID_NOT_ALLOWED_UNDER_COST_IMPACT');
+        }
+
+        // 2. Find the most recent CostLedger entry NOT from this Transfer (O(1) restoration query)
+        const lastCostEntry = await tx.costLedger.findFirst({
           where: {
             warehouseId: transfer.toWarehouseId,
             itemId: item.id,
+            NOT: {
+              documentId: transfer.id,
+            },
           },
-          orderBy: { postedAt: 'asc' },
+          orderBy: { postedAt: 'desc' },
         });
 
-        let recalcQty = new Prisma.Decimal(0);
-        let recalcWac = new Prisma.Decimal(0);
-
-        for (const entry of costEntries) {
-          if (
-            entry.documentId === transfer.id &&
-            entry.documentType === DocumentType.TRANSFER
-          ) {
-            continue;
-          }
-
-          const entryQty = new Prisma.Decimal(entry.quantity);
-          if (entryQty.isZero()) continue;
-
-          if (entryQty.gt(0)) {
-            const entryPrice = new Prisma.Decimal(entry.unitPrice);
-            if (recalcQty.lte(0)) {
-              recalcWac = entryPrice;
-            } else {
-              recalcWac = recalcQty
-                .mul(recalcWac)
-                .add(entryQty.mul(entryPrice))
-                .div(recalcQty.add(entryQty));
-            }
-          }
-
-          recalcQty = recalcQty.add(entryQty);
-        }
-
-        const newWac = recalcQty.lte(0) ? new Prisma.Decimal(0) : recalcWac;
+        const newWac = lastCostEntry
+          ? new Prisma.Decimal(lastCostEntry.newWac)
+          : new Prisma.Decimal(0);
         const roundedWac = newWac.toDecimalPlaces(4);
 
         await tx.warehouseItem.update({
@@ -358,6 +462,7 @@ export class TransferVoidService {
             newWac: roundedWac,
             documentId: transfer.id,
             documentType: DocumentType.TRANSFER,
+            idempotencyKey: `${DocumentType.TRANSFER}:cost_void_dest:${transfer.id}:${item.id}:${line.id}`,
           },
         });
 
@@ -388,6 +493,7 @@ export class TransferVoidService {
                 quantity: -discrepancy,
                 documentId: transfer.id,
                 documentType: DocumentType.TRANSFER,
+                idempotencyKey: `${DocumentType.TRANSFER}:stock_void_transit_loss:${transfer.id}:${item.id}:${line.id}`,
               },
             });
 
@@ -400,6 +506,7 @@ export class TransferVoidService {
                 newWac: sourceWac,
                 documentId: transfer.id,
                 documentType: DocumentType.TRANSFER,
+                idempotencyKey: `${DocumentType.TRANSFER}:cost_void_transit_loss:${transfer.id}:${item.id}:${line.id}`,
               },
             });
           }

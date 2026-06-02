@@ -11,6 +11,7 @@ describe('IssueVoidService', () => {
 
   const mockIssueFindUnique = jest.fn();
   const mockIssueUpdate = jest.fn();
+  const mockIssueUpdateMany = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockStockLedgerCreate = jest.fn();
@@ -24,6 +25,7 @@ describe('IssueVoidService', () => {
     inventoryIssue: {
       findUnique: mockIssueFindUnique,
       update: mockIssueUpdate,
+      updateMany: mockIssueUpdateMany,
     },
     costLedger: {
       create: mockCostLedgerCreate,
@@ -53,14 +55,15 @@ describe('IssueVoidService', () => {
     $transaction: jest
       .fn()
       .mockImplementation(
-        (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-          cb(mockPrismaTx),
+      (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
+        cb(mockPrismaTx),
       ),
   } as unknown as PrismaService;
 
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   beforeEach(async () => {
@@ -74,6 +77,13 @@ describe('IssueVoidService', () => {
 
     service = module.get<IssueVoidService>(IssueVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      status: 'POSTED',
+      version: 1,
+      warehouseId: 'wh-1',
+    });
+    mockIssueUpdateMany.mockResolvedValue({ count: 1 });
   });
 
   it('should void a POSTED issue successfully', async () => {
@@ -153,11 +163,16 @@ describe('IssueVoidService', () => {
         quantity: 5,
         documentId: issueId,
         documentType: DocumentType.INVENTORY_ISSUE,
+        idempotencyKey: 'INVENTORY_ISSUE:stock:issue-1:item-1:lot-1:line-1:void',
       },
     });
   });
 
   it('should throw BadRequestException if status is not POSTED', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      status: 'DRAFT',
+    });
     mockIssueFindUnique.mockResolvedValue({
       id: 'issue-1',
       status: 'DRAFT',

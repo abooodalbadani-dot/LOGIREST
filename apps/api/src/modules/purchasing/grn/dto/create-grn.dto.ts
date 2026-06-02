@@ -74,4 +74,3 @@ export class CreateGrnDto {
   @Type(() => GrnLineDto)
   lines!: GrnLineDto[];
 }
-

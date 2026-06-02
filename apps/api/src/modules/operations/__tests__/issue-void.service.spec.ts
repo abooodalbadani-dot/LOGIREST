@@ -10,6 +10,7 @@ describe('IssueVoidService', () => {
 
   const mockIssueFindUnique = jest.fn();
   const mockIssueUpdate = jest.fn();
+  const mockIssueUpdateMany = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
@@ -23,6 +24,7 @@ describe('IssueVoidService', () => {
     inventoryIssue: {
       findUnique: mockIssueFindUnique,
       update: mockIssueUpdate,
+      updateMany: mockIssueUpdateMany,
     },
     costLedger: {
       create: mockCostLedgerCreate,
@@ -60,6 +62,7 @@ describe('IssueVoidService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   beforeEach(async () => {
@@ -73,6 +76,13 @@ describe('IssueVoidService', () => {
 
     service = module.get<IssueVoidService>(IssueVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      status: 'POSTED',
+      version: 1,
+      warehouseId: 'wh-1',
+    });
+    mockIssueUpdateMany.mockResolvedValue({ count: 1 });
   });
 
   it('should void a POSTED inventory issue successfully (unbatched item)', async () => {
@@ -128,10 +138,11 @@ describe('IssueVoidService', () => {
         quantity: 10,
         documentId: issueId,
         documentType: DocumentType.INVENTORY_ISSUE,
+        idempotencyKey: 'INVENTORY_ISSUE:stock:issue-1:item-1:line-1:void',
       },
     });
-    expect(mockIssueUpdate).toHaveBeenCalledWith({
-      where: { id: issueId },
+    expect(mockIssueUpdateMany).toHaveBeenCalledWith({
+      where: { id: issueId, version: 1 },
       data: { status: 'VOIDED', version: 2 },
     });
     expect(mockApprovalEventCreate).toHaveBeenCalled();
@@ -142,6 +153,13 @@ describe('IssueVoidService', () => {
     const issueId = 'issue-2';
     const userId = 'user-1';
     const warehouseId = 'wh-1';
+
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: issueId,
+      warehouseId,
+      status: 'POSTED',
+      version: 1,
+    });
 
     mockIssueFindUnique.mockResolvedValue({
       id: issueId,
@@ -214,6 +232,7 @@ describe('IssueVoidService', () => {
   });
 
   it('should throw NotFoundException if Issue does not exist', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue(null);
     mockIssueFindUnique.mockResolvedValue(null);
 
     await expect(service.void('invalid', 'user-1', Role.ADMIN)).rejects.toThrow(
@@ -222,6 +241,11 @@ describe('IssueVoidService', () => {
   });
 
   it('should throw BadRequestException if Issue is not POSTED', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      status: 'DRAFT',
+      version: 1,
+    });
     mockIssueFindUnique.mockResolvedValue({
       id: 'issue-1',
       status: 'DRAFT',
@@ -233,6 +257,11 @@ describe('IssueVoidService', () => {
   });
 
   it('should throw BadRequestException on version conflict', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      status: 'POSTED',
+      version: 2,
+    });
     mockIssueFindUnique.mockResolvedValue({
       id: 'issue-1',
       status: 'POSTED',

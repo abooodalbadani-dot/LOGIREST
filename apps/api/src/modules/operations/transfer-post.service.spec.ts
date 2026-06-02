@@ -19,6 +19,7 @@ describe('TransferPostService', () => {
 
   const mockTransferFindUnique = jest.fn();
   const mockTransferUpdate = jest.fn();
+  const mockTransferUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
   const mockTransferLineUpdate = jest.fn();
   const mockLotAllocationCreate = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
@@ -39,6 +40,7 @@ describe('TransferPostService', () => {
     transfer: {
       findUnique: mockTransferFindUnique,
       update: mockTransferUpdate,
+      updateMany: mockTransferUpdateMany,
     },
     transferLine: {
       update: mockTransferLineUpdate,
@@ -48,7 +50,8 @@ describe('TransferPostService', () => {
       findMany: mockLotAllocationFindMany,
     },
     stockLedger: {
-      create: mockStockLedgerCreate,
+       create: mockStockLedgerCreate,
+       findFirst: jest.fn().mockResolvedValue(null),
     },
     costLedger: {
       create: mockCostLedgerCreate,
@@ -95,6 +98,7 @@ describe('TransferPostService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   const mockOutboxService = {
@@ -131,6 +135,8 @@ describe('TransferPostService', () => {
     mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
     mockScopeValidationService.checkWarehouseItemQuarantine.mockReset();
     mockScopeValidationService.checkWarehouseItemQuarantine.mockResolvedValue(undefined);
+    (mockLockService.lockDocument as jest.Mock).mockReset();
+    (mockLockService.lockDocument as jest.Mock).mockImplementation(() => mockTransferFindUnique());
     jest.clearAllMocks();
     mockWarehouseItemFindUnique.mockResolvedValue({ wac: new Prisma.Decimal(10.0), isFrozen: false });
     mockWarehouseFindUnique.mockResolvedValue({ id: 'wh-loss-id', branchId: 'branch-1' });
@@ -201,10 +207,11 @@ describe('TransferPostService', () => {
           quantity: -5,
           documentId: transferId,
           documentType: DocumentType.TRANSFER,
+          idempotencyKey: 'TRANSFER:stock_ship:transfer-1:item-1:lot-1:line-1',
         },
       });
-      expect(mockTransferUpdate).toHaveBeenCalledWith({
-        where: { id: transferId },
+      expect(mockTransferUpdateMany).toHaveBeenCalledWith({
+        where: { id: transferId, version: 1 },
         data: { status: 'IN_TRANSIT', version: 2 },
       });
     });
@@ -294,6 +301,7 @@ describe('TransferPostService', () => {
         5,
         10.0,
         transferId,
+        'TRANSFER:cost_receive:transfer-1:item-1:line-1',
       );
       expect(mockStockLedgerCreate).toHaveBeenCalledWith({
         data: {
@@ -303,6 +311,7 @@ describe('TransferPostService', () => {
           quantity: 5,
           documentId: transferId,
           documentType: DocumentType.TRANSFER,
+          idempotencyKey: 'TRANSFER:stock_receive:transfer-1:item-1:lot-1:line-1',
         },
       });
 
@@ -502,6 +511,7 @@ describe('TransferPostService', () => {
         8,
         10.0,
         transferId,
+        'TRANSFER:cost_receive:transfer-1:item-rice:line-1',
       );
 
       expect(mockStockLedgerCreate).toHaveBeenCalledWith({

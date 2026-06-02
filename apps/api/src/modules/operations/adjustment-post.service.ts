@@ -32,7 +32,29 @@ export class AdjustmentPostService {
     ipAddress?: string,
   ): Promise<Adjustment> {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Fetch Adjustment with lines and items
+      // Lock the document first
+      const lockedDoc = await this.lockService.lockDocument(
+        tx,
+        adjustmentId,
+        DocumentType.ADJUSTMENT,
+      );
+      if (!lockedDoc) {
+        throw new NotFoundException(
+          `Adjustment with ID ${adjustmentId} not found`,
+        );
+      }
+
+      if (lockedDoc.status !== 'APPROVED') {
+        throw new BadRequestException(
+          `Adjustment must be in APPROVED status to be posted`,
+        );
+      }
+
+      if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      // Fetch Adjustment details with lines and items
       const adj = await tx.adjustment.findUnique({
         where: { id: adjustmentId },
         include: {
@@ -48,17 +70,6 @@ export class AdjustmentPostService {
         throw new NotFoundException(
           `Adjustment with ID ${adjustmentId} not found`,
         );
-      }
-
-      if (adj.status !== 'APPROVED') {
-        throw new BadRequestException(
-          `Adjustment must be in APPROVED status to be posted`,
-        );
-      }
-
-      // Optimistic locking version check
-      if (clientVersion !== undefined && adj.version !== clientVersion) {
-        throw new BadRequestException('Version conflict detected');
       }
 
       // 2. Validate all lines before processing
@@ -81,6 +92,15 @@ export class AdjustmentPostService {
         const item = line.item;
         const lotId = line.lotId;
         const qtyVal = Number(line.quantity);
+
+        // Historical posting guard
+        const latestLedger = await tx.stockLedger.findFirst({
+          where: { warehouseId: adj.warehouseId, itemId: item.id },
+          orderBy: { postedAt: 'desc' },
+        });
+        if (latestLedger && adj.createdAt < latestLedger.postedAt) {
+          throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
+        }
 
         // Check if item is frozen in warehouse
         const whItemCheck = await tx.warehouseItem.findUnique({
@@ -163,6 +183,7 @@ export class AdjustmentPostService {
 
             // Recalculate WAC (positive adjustment)
             const unitCost = line.unitCost ? Number(line.unitCost) : currentWac;
+            const costIdempotencyKey = `${DocumentType.ADJUSTMENT}:cost:${adj.id}:${item.id}:${line.id}`;
             await this.wacService.handlePositiveAdjustment(
               tx,
               adj.warehouseId,
@@ -170,9 +191,11 @@ export class AdjustmentPostService {
               qtyVal,
               unitCost,
               adj.id,
+              costIdempotencyKey,
             );
 
             // Insert StockLedger entry
+            const stockIdempotencyKey = `${DocumentType.ADJUSTMENT}:stock:${adj.id}:${item.id}:${line.id}`;
             await tx.stockLedger.create({
               data: {
                 warehouseId: adj.warehouseId,
@@ -181,6 +204,7 @@ export class AdjustmentPostService {
                 quantity: qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: stockIdempotencyKey,
               },
             });
           } else {
@@ -231,6 +255,7 @@ export class AdjustmentPostService {
             });
 
             // Insert StockLedger entry (negative for decrease)
+            const stockIdempotencyKey = `${DocumentType.ADJUSTMENT}:stock:${adj.id}:${item.id}:${line.id}`;
             await tx.stockLedger.create({
               data: {
                 warehouseId: adj.warehouseId,
@@ -239,6 +264,7 @@ export class AdjustmentPostService {
                 quantity: -qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: stockIdempotencyKey,
               },
             });
           }
@@ -272,6 +298,7 @@ export class AdjustmentPostService {
 
             // Recalculate WAC (positive adjustment)
             const unitCost = line.unitCost ? Number(line.unitCost) : 0;
+            const costIdempotencyKey = `${DocumentType.ADJUSTMENT}:cost:${adj.id}:${item.id}:${line.id}`;
             await this.wacService.handlePositiveAdjustment(
               tx,
               adj.warehouseId,
@@ -279,9 +306,11 @@ export class AdjustmentPostService {
               qtyVal,
               unitCost,
               adj.id,
+              costIdempotencyKey,
             );
 
             // Insert StockLedger entry
+            const stockIdempotencyKey = `${DocumentType.ADJUSTMENT}:stock:${adj.id}:${item.id}:${line.id}`;
             await tx.stockLedger.create({
               data: {
                 warehouseId: adj.warehouseId,
@@ -290,6 +319,7 @@ export class AdjustmentPostService {
                 quantity: qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: stockIdempotencyKey,
               },
             });
           } else {
@@ -314,6 +344,7 @@ export class AdjustmentPostService {
             });
 
             // Insert StockLedger entry (negative)
+            const stockIdempotencyKey = `${DocumentType.ADJUSTMENT}:stock:${adj.id}:${item.id}:${line.id}`;
             await tx.stockLedger.create({
               data: {
                 warehouseId: adj.warehouseId,
@@ -322,20 +353,33 @@ export class AdjustmentPostService {
                 quantity: -qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: stockIdempotencyKey,
               },
             });
           }
         }
       }
 
-      // 4. Update Adjustment status to POSTED
-      const updatedAdj = await tx.adjustment.update({
-        where: { id: adjustmentId },
+      // 4. Update Adjustment status to POSTED with version check
+      const updateResult = await tx.adjustment.updateMany({
+        where: { id: adjustmentId, version: lockedDoc.version },
         data: {
           status: 'POSTED',
-          version: adj.version + 1,
+          version: lockedDoc.version + 1,
         },
       });
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      const updatedAdj = await tx.adjustment.findUnique({
+        where: { id: adjustmentId },
+      });
+      if (!updatedAdj) {
+        throw new NotFoundException(
+          `Adjustment with ID ${adjustmentId} not found`,
+        );
+      }
 
       this.metricsService.postingOperationsCounter.inc({
         document_type: 'ADJUSTMENT',

@@ -4,7 +4,12 @@ import {
   UnprocessableEntityException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma, WarehouseItem, WarehouseItemLot } from '@prisma/client';
+import {
+  Prisma,
+  WarehouseItem,
+  WarehouseItemLot,
+  DocumentType,
+} from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -12,6 +17,57 @@ export class LedgerLockService {
   private readonly logger = new Logger(LedgerLockService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Locks a document row using raw SQL SELECT FOR UPDATE.
+   */
+  async lockDocument(
+    tx: Prisma.TransactionClient,
+    documentId: string,
+    documentType: DocumentType,
+  ): Promise<any> {
+    this.logger.debug(
+      `Locking document: id=${documentId}, type=${documentType}`,
+    );
+    let tableName: string;
+    switch (documentType) {
+      case DocumentType.PURCHASE_REQUEST:
+        tableName = 'purchase_requests';
+        break;
+      case DocumentType.PURCHASE_ORDER:
+        tableName = 'purchase_orders';
+        break;
+      case DocumentType.GOODS_RECEIVED_NOTE:
+        tableName = 'goods_received_notes';
+        break;
+      case DocumentType.INVENTORY_ISSUE:
+        tableName = 'inventory_issues';
+        break;
+      case DocumentType.TRANSFER:
+        tableName = 'transfers';
+        break;
+      case DocumentType.ADJUSTMENT:
+        tableName = 'adjustments';
+        break;
+      case DocumentType.KITCHEN_REQUEST:
+        tableName = 'kitchen_requests';
+        break;
+      case DocumentType.STOCKTAKE:
+        tableName = 'stocktake_sessions';
+        break;
+      default:
+        throw new BadRequestException(
+          `Unsupported document type: ${String(documentType)}`,
+        );
+    }
+
+    const query = `SELECT * FROM "${tableName}" WHERE "id" = $1 FOR UPDATE`;
+    const results = await tx.$queryRawUnsafe<any[]>(query, documentId);
+    if (!results || results.length === 0) {
+      return null;
+    }
+    return results[0];
+  }
 
   /**
    * Acquires a raw SQL SELECT FOR UPDATE lock on a global warehouse item balance.
@@ -78,15 +134,11 @@ export class LedgerLockService {
     itemId: string,
   ): void {
     if (!warehouseItem) {
-      throw new BadRequestException(
-        'Insufficient stock: requested quantity exceeds available on hand.',
-      );
+      throw new BadRequestException('INSUFFICIENT_STOCK');
     }
     const currentQty = Number(warehouseItem.qtyOnHand);
     if (currentQty < requiredQty) {
-      throw new BadRequestException(
-        'Insufficient stock: requested quantity exceeds available on hand.',
-      );
+      throw new BadRequestException('INSUFFICIENT_STOCK');
     }
   }
 
@@ -99,15 +151,11 @@ export class LedgerLockService {
     lotId: string,
   ): void {
     if (!warehouseItemLot) {
-      throw new BadRequestException(
-        'Insufficient stock: requested quantity exceeds available on hand.',
-      );
+      throw new BadRequestException('INSUFFICIENT_STOCK');
     }
     const currentQty = Number(warehouseItemLot.qtyOnHand);
     if (currentQty < requiredQty) {
-      throw new BadRequestException(
-        'Insufficient stock: requested quantity exceeds available on hand.',
-      );
+      throw new BadRequestException('INSUFFICIENT_STOCK');
     }
   }
 }

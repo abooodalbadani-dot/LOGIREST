@@ -13,25 +13,25 @@ import { Type } from 'class-transformer';
 export class PoLineDto {
   @IsString()
   @IsNotEmpty()
-  itemId!:  string;
+  itemId!: string;
 
   @IsNumber()
   @Min(0)
-  quantity!:  number;
+  quantity!: number;
 
   @IsNumber()
   @Min(0)
-  unitPrice!:  number;
+  unitPrice!: number;
 }
 
 export class CreatePoDto {
   @IsString()
   @IsNotEmpty()
-  supplierId!:  string;
+  supplierId!: string;
 
   @IsString()
   @IsNotEmpty()
-  currencyId!:  string;
+  currencyId!: string;
 
   @IsString()
   @IsOptional()
@@ -40,6 +40,5 @@ export class CreatePoDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PoLineDto)
-  lines!:  PoLineDto[];
+  lines!: PoLineDto[];
 }
-

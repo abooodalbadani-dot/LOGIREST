@@ -26,11 +26,11 @@ export class ReconciliationJob {
     // Acquire distributed lock to prevent concurrent multi-node executions
     const lockKey = 'reconciliation-job';
     const lockTtlSeconds = 10 * 60; // 10 minutes lock TTL
-    const acquired = await this.lockService.acquireLock(
+    const lockToken = await this.lockService.acquireLock(
       lockKey,
       lockTtlSeconds,
     );
-    if (!acquired) {
+    if (!lockToken) {
       this.logger.warn(
         'Reconciliation job already running (lock held). Skipping.',
       );
@@ -377,7 +377,9 @@ Please review the system logs and administrator notification panel immediately.`
         `Reconciliation job completed in ${durationMs}ms. Processed ${processedCount} items, found ${discrepancyCount} discrepancies, detected ${lotDiscrepanciesFound} lot-level drifts.`,
       );
     } finally {
-      await this.lockService.releaseLock(lockKey);
+      if (lockToken) {
+        await this.lockService.releaseLock(lockKey, lockToken);
+      }
     }
   }
 }

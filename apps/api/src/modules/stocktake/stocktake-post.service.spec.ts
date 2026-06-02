@@ -31,6 +31,7 @@ describe('StocktakePostService', () => {
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockCostLedgerCreate = jest.fn();
 
   const mockPrismaTx = {
     stocktakeSession: {
@@ -54,6 +55,9 @@ describe('StocktakePostService', () => {
     },
     stockLedger: {
       create: mockStockLedgerCreate,
+    },
+    costLedger: {
+      create: mockCostLedgerCreate,
     },
     warehouseLock: {
       updateMany: mockWarehouseLockUpdateMany,
@@ -150,6 +154,7 @@ describe('StocktakePostService', () => {
         quantity: 2,
         documentId: sessionId,
         documentType: DocumentType.STOCKTAKE,
+        idempotencyKey: 'STOCKTAKE:stock:session-1:item-1:lot-1',
       },
     });
     expect(mockWarehouseLockUpdateMany).toHaveBeenCalledWith({

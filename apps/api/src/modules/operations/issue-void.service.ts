@@ -30,6 +30,28 @@ export class IssueVoidService {
     }
 
     const execute = async (tx: Prisma.TransactionClient) => {
+      // Lock the document first
+      const lockedDoc = await this.lockService.lockDocument(
+        tx,
+        issueId,
+        DocumentType.INVENTORY_ISSUE,
+      );
+      if (!lockedDoc) {
+        throw new NotFoundException(
+          `InventoryIssue with ID ${issueId} not found`,
+        );
+      }
+
+      if (lockedDoc.status !== 'POSTED') {
+        throw new BadRequestException(
+          'InventoryIssue must be in POSTED status to be voided',
+        );
+      }
+
+      if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
       const issue = await tx.inventoryIssue.findUnique({
         where: { id: issueId },
         include: {
@@ -41,18 +63,8 @@ export class IssueVoidService {
 
       if (!issue) {
         throw new NotFoundException(
-          `InventoryIssue with ID ${issueId} not found`,
+          `Inventory Issue with ID ${issueId} not found`,
         );
-      }
-
-      if (issue.status !== 'POSTED') {
-        throw new BadRequestException(
-          'InventoryIssue must be in POSTED status to be voided',
-        );
-      }
-
-      if (clientVersion !== undefined && issue.version !== clientVersion) {
-        throw new BadRequestException('Version conflict detected');
       }
 
       const sortedLines = [...issue.lines].sort((a, b) =>
@@ -99,6 +111,7 @@ export class IssueVoidService {
                 quantity: Number(alloc.quantityAllocated),
                 documentId: issue.id,
                 documentType: DocumentType.INVENTORY_ISSUE,
+                idempotencyKey: `${DocumentType.INVENTORY_ISSUE}:stock:${issue.id}:${item.id}:${alloc.lotId}:${line.id}:void`,
               },
             });
           }
@@ -126,19 +139,6 @@ export class IssueVoidService {
           data: { qtyOnHand: { increment: qtyVal } },
         });
 
-        // Insert CostLedger entry for voided issue to restore volume on cost basis
-        await tx.costLedger.create({
-          data: {
-            warehouseId: issue.warehouseId,
-            itemId: item.id,
-            quantity: new Prisma.Decimal(qtyVal),
-            unitPrice: currentWac,
-            newWac: currentWac,
-            documentId: issue.id,
-            documentType: DocumentType.INVENTORY_ISSUE,
-          },
-        });
-
         if (!item.isBatched && !item.hasExpiry) {
           await tx.stockLedger.create({
             data: {
@@ -148,14 +148,23 @@ export class IssueVoidService {
               quantity: qtyVal,
               documentId: issue.id,
               documentType: DocumentType.INVENTORY_ISSUE,
+              idempotencyKey: `${DocumentType.INVENTORY_ISSUE}:stock:${issue.id}:${item.id}:${line.id}:void`,
             },
           });
         }
       }
 
-      const updatedIssue = await tx.inventoryIssue.update({
+      // Update Issue status with version check
+      const updateResult = await tx.inventoryIssue.updateMany({
+        where: { id: issueId, version: lockedDoc.version },
+        data: { status: 'VOIDED', version: lockedDoc.version + 1 },
+      });
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      const updatedIssue = await tx.inventoryIssue.findUnique({
         where: { id: issueId },
-        data: { status: 'VOIDED', version: issue.version + 1 },
       });
 
       const stepNumber =

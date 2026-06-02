@@ -19,10 +19,12 @@ describe('GrnPostService', () => {
 
   const mockGrnFindUnique = jest.fn();
   const mockGrnUpdate = jest.fn();
+  const mockGrnUpdateMany = jest.fn();
   const mockWarehouseItemLotUpsert = jest.fn();
   const mockWarehouseItemUpsert = jest.fn();
   const mockWarehouseItemFindUnique = jest.fn();
   const mockStockLedgerCreate = jest.fn();
+  const mockStockLedgerFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -31,6 +33,7 @@ describe('GrnPostService', () => {
     goodsReceivedNote: {
       findUnique: mockGrnFindUnique,
       update: mockGrnUpdate,
+      updateMany: mockGrnUpdateMany,
     },
     warehouseItemLot: {
       upsert: mockWarehouseItemLotUpsert,
@@ -41,6 +44,7 @@ describe('GrnPostService', () => {
     },
     stockLedger: {
       create: mockStockLedgerCreate,
+      findFirst: mockStockLedgerFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -66,6 +70,7 @@ describe('GrnPostService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   const mockWacService = {
@@ -85,6 +90,14 @@ describe('GrnPostService', () => {
 
     service = module.get<GrnPostService>(GrnPostService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'grn-1',
+      status: 'RECEIVED',
+      version: 1,
+      warehouseId: 'wh-1',
+    });
+    mockGrnUpdateMany.mockResolvedValue({ count: 1 });
+    mockStockLedgerFindFirst.mockResolvedValue(null);
   });
 
   it('should post RECEIVED GRN successfully', async () => {
@@ -142,8 +155,8 @@ describe('GrnPostService', () => {
     expect(mockWarehouseItemUpsert).toHaveBeenCalled();
     expect(mockWacService.recalculate).toHaveBeenCalled();
     expect(mockStockLedgerCreate).toHaveBeenCalled();
-    expect(mockGrnUpdate).toHaveBeenCalledWith({
-      where: { id: grnId },
+    expect(mockGrnUpdateMany).toHaveBeenCalledWith({
+      where: { id: grnId, version: 1 },
       data: { status: 'POSTED', version: 2 },
     });
     expect(mockApprovalEventCreate).toHaveBeenCalled();
@@ -151,6 +164,7 @@ describe('GrnPostService', () => {
   });
 
   it('should throw NotFoundException if GRN does not exist', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue(null);
     mockGrnFindUnique.mockResolvedValue(null);
     await expect(
       service.post('invalid', 'user-1', Role.PROC_OFFICER),
@@ -158,6 +172,11 @@ describe('GrnPostService', () => {
   });
 
   it('should throw BadRequestException if GRN is not RECEIVED', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'grn-1',
+      status: 'DRAFT',
+      version: 1,
+    });
     mockGrnFindUnique.mockResolvedValue({
       id: 'grn-1',
       status: 'DRAFT',
@@ -168,6 +187,11 @@ describe('GrnPostService', () => {
   });
 
   it('should throw BadRequestException if version mismatch occurs', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'grn-1',
+      status: 'RECEIVED',
+      version: 2,
+    });
     mockGrnFindUnique.mockResolvedValue({
       id: 'grn-1',
       status: 'RECEIVED',

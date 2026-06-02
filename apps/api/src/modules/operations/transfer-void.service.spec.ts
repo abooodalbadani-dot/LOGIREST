@@ -11,6 +11,7 @@ describe('TransferVoidService', () => {
 
   const mockTransferFindUnique = jest.fn();
   const mockTransferUpdate = jest.fn();
+  const mockTransferFindFirst = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemLotUpsert = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
@@ -18,16 +19,32 @@ describe('TransferVoidService', () => {
   const mockStockLedgerCreate = jest.fn();
   const mockCostLedgerFindMany = jest.fn();
   const mockCostLedgerCreate = jest.fn();
+  const mockCostLedgerFindFirst = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
   const mockWarehouseFindUnique = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockGoodsReceivedNoteFindFirst = jest.fn();
+  const mockAdjustmentFindFirst = jest.fn();
 
   const mockPrismaTx = {
+    goodsReceivedNote: {
+      findFirst: mockGoodsReceivedNoteFindFirst,
+    },
+    adjustment: {
+      findFirst: mockAdjustmentFindFirst,
+    },
     transfer: {
       findUnique: mockTransferFindUnique,
       update: mockTransferUpdate,
+      findFirst: mockTransferFindFirst,
+    },
+    stocktakeSession: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    landedCostVoucher: {
+      findFirst: jest.fn().mockResolvedValue(null),
     },
     warehouseItemLot: {
       update: mockWarehouseItemLotUpdate,
@@ -43,6 +60,7 @@ describe('TransferVoidService', () => {
     costLedger: {
       findMany: mockCostLedgerFindMany,
       create: mockCostLedgerCreate,
+      findFirst: mockCostLedgerFindFirst,
     },
     lotAllocation: {
       findMany: mockLotAllocationFindMany,
@@ -135,6 +153,14 @@ describe('TransferVoidService', () => {
       wac: new Prisma.Decimal(10),
     });
 
+    mockGoodsReceivedNoteFindFirst.mockResolvedValue(null);
+    mockAdjustmentFindFirst.mockResolvedValue(null);
+    mockTransferFindFirst.mockResolvedValue(null);
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-2',
+      newWac: new Prisma.Decimal(12),
+    });
+
     // Mock cost ledger entries for destination warehouse (excluding this transfer, WAC recalculation)
     mockCostLedgerFindMany.mockResolvedValue([
       {
@@ -191,6 +217,7 @@ describe('TransferVoidService', () => {
         quantity: 5,
         documentId: transferId,
         documentType: DocumentType.TRANSFER,
+        idempotencyKey: 'TRANSFER:stock_void_src:transfer-1:item-1:lot-1:line-1',
       },
     });
 
@@ -202,6 +229,7 @@ describe('TransferVoidService', () => {
         quantity: -5,
         documentId: transferId,
         documentType: DocumentType.TRANSFER,
+        idempotencyKey: 'TRANSFER:stock_void_dest:transfer-1:item-1:lot-1:line-1',
       },
     });
   });

@@ -329,59 +329,62 @@ export class PurchaseRequestsService {
       ipAddress?: string;
     },
   ) {
-    // 1. Fetch the Purchase Request with its lines
-    const pr = await this.prisma.purchaseRequest.findUnique({
-      where: { id },
-      include: { lines: true },
-    });
-
-    if (!pr) {
-      throw new NotFoundException(`Purchase Request with ID ${id} not found`);
-    }
-
-    if (pr.status !== 'APPROVED') {
-      throw new BadRequestException(
-        `Only APPROVED Purchase Requests can be converted to Purchase Orders. (Current status: ${pr.status})`,
-      );
-    }
-
-    const existingPo = await this.prisma.purchaseOrder.findFirst({
-      where: { prId: id },
-    });
-    if (existingPo) {
-      throw new ConflictException(
-        `Purchase Request ${id} has already been converted to Purchase Order ${existingPo.poNumber}.`,
-      );
-    }
-
-    const priceMap = new Map<string, number>();
-    if (body.lines) {
-      for (const line of body.lines) {
-        priceMap.set(line.itemId, line.unitPrice);
-      }
-    }
-
-    for (const prLine of pr.lines) {
-      if (!priceMap.has(prLine.itemId)) {
-        throw new BadRequestException(
-          `Unit price is missing for item ID: ${prLine.itemId}`,
-        );
-      }
-    }
-
-    await this.workflowService.executeTransition(
-      id,
-      'purchaseRequest',
-      'CONVERT_TO_PO',
-      userId,
-      userRole,
-      body.comments,
-      body.version,
-      body.ipAddress,
-    );
-
     return this.prisma.$transaction(
       async (tx) => {
+        // 1. Fetch the Purchase Request with its lines inside transaction
+        const pr = await tx.purchaseRequest.findUnique({
+          where: { id },
+          include: { lines: true },
+        });
+
+        if (!pr) {
+          throw new NotFoundException(
+            `Purchase Request with ID ${id} not found`,
+          );
+        }
+
+        if (pr.status !== 'APPROVED') {
+          throw new BadRequestException(
+            `Only APPROVED Purchase Requests can be converted to Purchase Orders. (Current status: ${pr.status})`,
+          );
+        }
+
+        const existingPo = await tx.purchaseOrder.findFirst({
+          where: { prId: id },
+        });
+        if (existingPo) {
+          throw new ConflictException(
+            `Purchase Request ${id} has already been converted to Purchase Order ${existingPo.poNumber}.`,
+          );
+        }
+
+        const priceMap = new Map<string, number>();
+        if (body.lines) {
+          for (const line of body.lines) {
+            priceMap.set(line.itemId, line.unitPrice);
+          }
+        }
+
+        for (const prLine of pr.lines) {
+          if (!priceMap.has(prLine.itemId)) {
+            throw new BadRequestException(
+              `Unit price is missing for item ID: ${prLine.itemId}`,
+            );
+          }
+        }
+
+        await this.workflowService.executeTransition(
+          id,
+          'purchaseRequest',
+          'CONVERT_TO_PO',
+          userId,
+          userRole,
+          body.comments,
+          body.version,
+          body.ipAddress,
+          tx,
+        );
+
         const poNumber = await this.documentSequenceService.generateNext(
           tx,
           DocumentType.PURCHASE_ORDER,

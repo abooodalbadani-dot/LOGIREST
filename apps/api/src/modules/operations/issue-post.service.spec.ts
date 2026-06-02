@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IssuePostService } from './issue-post.service';
 import { PrismaService } from '../../database/prisma.service';
 import { AllocationService } from '../ledger/allocation.service';
+import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { Prisma, Role, DocumentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -20,6 +21,7 @@ describe('IssuePostService', () => {
 
   const mockIssueFindUnique = jest.fn();
   const mockIssueUpdate = jest.fn();
+  const mockIssueUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
   const mockLotAllocationCreate = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockApprovalEventCount = jest.fn();
@@ -31,12 +33,14 @@ describe('IssuePostService', () => {
     inventoryIssue: {
       findUnique: mockIssueFindUnique,
       update: mockIssueUpdate,
+      updateMany: mockIssueUpdateMany,
     },
     lotAllocation: {
       create: mockLotAllocationCreate,
     },
     stockLedger: {
       create: mockStockLedgerCreate,
+      findFirst: jest.fn().mockResolvedValue(null),
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -66,6 +70,10 @@ describe('IssuePostService', () => {
     allocate: jest.fn(),
   } as unknown as AllocationService;
 
+  const mockLockService = {
+    lockDocument: jest.fn(),
+  } as unknown as LedgerLockService;
+
   const mockOutboxService = {
     writeEvent: jest.fn().mockResolvedValue(undefined),
   };
@@ -81,6 +89,7 @@ describe('IssuePostService', () => {
         IssuePostService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AllocationService, useValue: mockAllocationService },
+        { provide: LedgerLockService, useValue: mockLockService },
         { provide: OutboxService, useValue: mockOutboxService },
         { provide: MetricsService, useValue: mockMetricsService },
         { provide: ScopeValidationService, useValue: mockScopeValidationService },
@@ -92,6 +101,8 @@ describe('IssuePostService', () => {
     mockScopeValidationService.validateWarehouse.mockResolvedValue(undefined);
     mockScopeValidationService.checkWarehouseItemQuarantine.mockReset();
     mockScopeValidationService.checkWarehouseItemQuarantine.mockResolvedValue(undefined);
+    (mockLockService.lockDocument as jest.Mock).mockReset();
+    (mockLockService.lockDocument as jest.Mock).mockImplementation(() => mockIssueFindUnique());
     jest.clearAllMocks();
     mockWarehouseItemFindUnique.mockResolvedValue(null);
   });
@@ -155,10 +166,11 @@ describe('IssuePostService', () => {
         quantity: -10,
         documentId: issueId,
         documentType: DocumentType.INVENTORY_ISSUE,
+        idempotencyKey: 'INVENTORY_ISSUE:stock:issue-1:item-1:lot-1:line-1',
       },
     });
-    expect(mockIssueUpdate).toHaveBeenCalledWith({
-      where: { id: issueId },
+    expect(mockIssueUpdateMany).toHaveBeenCalledWith({
+      where: { id: issueId, version: 1 },
       data: { status: 'POSTED', version: 2 },
     });
     expect(mockApprovalEventCreate).toHaveBeenCalled();

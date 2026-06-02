@@ -11,12 +11,15 @@ describe('GrnVoidService', () => {
 
   const mockGrnFindUnique = jest.fn();
   const mockGrnUpdate = jest.fn();
+  const mockGrnUpdateMany = jest.fn();
+  const mockGrnFindFirst = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockStockLedgerCreate = jest.fn();
   const mockCostLedgerFindMany = jest.fn();
   const mockCostLedgerCreate = jest.fn();
   const mockCostLedgerFindFirst = jest.fn();
+  const mockLandedCostAllocationLineFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -25,6 +28,8 @@ describe('GrnVoidService', () => {
     goodsReceivedNote: {
       findUnique: mockGrnFindUnique,
       update: mockGrnUpdate,
+      updateMany: mockGrnUpdateMany,
+      findFirst: mockGrnFindFirst,
     },
     warehouseItemLot: {
       update: mockWarehouseItemLotUpdate,
@@ -39,6 +44,9 @@ describe('GrnVoidService', () => {
       findMany: mockCostLedgerFindMany,
       create: mockCostLedgerCreate,
       findFirst: mockCostLedgerFindFirst,
+    },
+    landedCostAllocationLine: {
+      findFirst: mockLandedCostAllocationLineFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -61,6 +69,7 @@ describe('GrnVoidService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   beforeEach(async () => {
@@ -74,6 +83,15 @@ describe('GrnVoidService', () => {
 
     service = module.get<GrnVoidService>(GrnVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'grn-1',
+      status: 'POSTED',
+      version: 1,
+      warehouseId: 'wh-1',
+    });
+    mockGrnUpdateMany.mockResolvedValue({ count: 1 });
+    mockLandedCostAllocationLineFindFirst.mockResolvedValue(null);
+    mockGrnFindFirst.mockResolvedValue(null);
   });
 
   it('should void a POSTED GRN successfully and recalculate WAC', async () => {
@@ -171,6 +189,7 @@ describe('GrnVoidService', () => {
         newWac: new Prisma.Decimal(12),
         documentId: grnId,
         documentType: DocumentType.GOODS_RECEIVED_NOTE,
+        idempotencyKey: 'GOODS_RECEIVED_NOTE:cost:grn-1:item-1:line-1:void',
       },
     });
 
@@ -183,11 +202,17 @@ describe('GrnVoidService', () => {
         quantity: -5,
         documentId: grnId,
         documentType: DocumentType.GOODS_RECEIVED_NOTE,
+        idempotencyKey: 'GOODS_RECEIVED_NOTE:stock:grn-1:item-1:line-1:void',
       },
     });
   });
 
   it('should throw BadRequestException if status is not POSTED', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'grn-1',
+      status: 'DRAFT',
+      version: 1,
+    });
     mockGrnFindUnique.mockResolvedValue({
       id: 'grn-1',
       status: 'DRAFT',

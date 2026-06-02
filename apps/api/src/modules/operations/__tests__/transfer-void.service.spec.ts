@@ -10,6 +10,7 @@ describe('TransferVoidService', () => {
 
   const mockTransferFindUnique = jest.fn();
   const mockTransferUpdate = jest.fn();
+  const mockTransferFindFirst = jest.fn();
   const mockWarehouseItemLotUpsert = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
@@ -17,16 +18,32 @@ describe('TransferVoidService', () => {
   const mockStockLedgerCreate = jest.fn();
   const mockCostLedgerFindMany = jest.fn();
   const mockCostLedgerCreate = jest.fn();
+  const mockCostLedgerFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
   const mockLotAllocationFindMany = jest.fn();
   const mockWarehouseFindUnique = jest.fn();
+  const mockGoodsReceivedNoteFindFirst = jest.fn();
+  const mockAdjustmentFindFirst = jest.fn();
 
   const mockPrismaTx = {
+    goodsReceivedNote: {
+      findFirst: mockGoodsReceivedNoteFindFirst,
+    },
+    adjustment: {
+      findFirst: mockAdjustmentFindFirst,
+    },
     transfer: {
       findUnique: mockTransferFindUnique,
       update: mockTransferUpdate,
+      findFirst: mockTransferFindFirst,
+    },
+    stocktakeSession: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    landedCostVoucher: {
+      findFirst: jest.fn().mockResolvedValue(null),
     },
     warehouseItemLot: {
       upsert: mockWarehouseItemLotUpsert,
@@ -42,6 +59,7 @@ describe('TransferVoidService', () => {
     costLedger: {
       findMany: mockCostLedgerFindMany,
       create: mockCostLedgerCreate,
+      findFirst: mockCostLedgerFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -120,6 +138,14 @@ describe('TransferVoidService', () => {
     mockLockService.lockItem = jest.fn().mockResolvedValue({
       itemId: 'item-1',
       qtyOnHand: new Prisma.Decimal(10),
+    });
+
+    mockGoodsReceivedNoteFindFirst.mockResolvedValue(null);
+    mockAdjustmentFindFirst.mockResolvedValue(null);
+    mockTransferFindFirst.mockResolvedValue(null);
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-prev',
+      newWac: new Prisma.Decimal(5),
     });
 
     mockCostLedgerFindMany.mockResolvedValue([]);

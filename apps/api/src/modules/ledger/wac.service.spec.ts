@@ -66,6 +66,7 @@ describe('WacService', () => {
         10,
         7.0,
         docId,
+        'test-key-1',
       );
 
       expect(newWac).toBe(6.0);
@@ -83,7 +84,7 @@ describe('WacService', () => {
           newWac: new Prisma.Decimal(6.0),
           documentId: docId,
           documentType: DocumentType.GOODS_RECEIVED_NOTE,
-          idempotencyKey: undefined,
+          idempotencyKey: 'test-key-1',
         },
       });
     });
@@ -103,6 +104,7 @@ describe('WacService', () => {
         10,
         8.0,
         docId,
+        'test-key-2',
       );
 
       expect(newWac).toBe(8.0);
@@ -127,6 +129,7 @@ describe('WacService', () => {
         10,
         10.0,
         docId,
+        'test-key-3',
       );
 
       expect(newWac).toBe(10.0);
@@ -157,6 +160,7 @@ describe('WacService', () => {
         10,
         7.0,
         docId,
+        'test-key-4',
       );
 
       expect(wacResult).toBe(6.0);
@@ -173,7 +177,7 @@ describe('WacService', () => {
           newWac: new Prisma.Decimal(6.0),
           documentId: docId,
           documentType: DocumentType.ADJUSTMENT,
-          idempotencyKey: undefined,
+          idempotencyKey: 'test-key-4',
         },
       });
     });

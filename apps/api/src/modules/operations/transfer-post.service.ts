@@ -40,7 +40,60 @@ export class TransferPostService {
     try {
       return await this.prisma.$transaction(
         async (tx) => {
-          // 1. Fetch Transfer with lines and items
+          // Lock the document first using SELECT FOR UPDATE
+          const lockedDoc = await this.lockService.lockDocument(
+            tx,
+            transferId,
+            DocumentType.TRANSFER,
+          );
+          if (!lockedDoc) {
+            throw new NotFoundException(
+              `Transfer with ID ${transferId} not found`,
+            );
+          }
+
+          // 1. Centralized Role Check
+          const hasRolePermission = canPerformActionV2(
+            'TRANSFER',
+            lockedDoc.status as DocumentStatus,
+            'SHIP',
+            userRole,
+          );
+          if (!hasRolePermission) {
+            const errorMsg = `User with role ${userRole} is not authorized to perform action SHIP on TRANSFER in status ${lockedDoc.status}`;
+            throw new ForbiddenException(errorMsg);
+          }
+
+          // 2. Strict Origin Warehouse Branch Scope Check
+          const originScope = await tx.userWarehouseScope.findUnique({
+            where: {
+              userId_warehouseId: {
+                userId,
+                warehouseId: lockedDoc.fromWarehouseId,
+              },
+            },
+          });
+          if (!originScope) {
+            const errorMsg = `User ${userId} with role ${userRole} is not authorized for the origin warehouse branch ${lockedDoc.fromWarehouseId}`;
+            throw new ForbiddenException(errorMsg);
+          }
+
+          // 3. Status Guard (Defense-in-depth)
+          if (lockedDoc.status !== 'DRAFT') {
+            throw new BadRequestException(
+              `Transfer must be in DRAFT status to be shipped`,
+            );
+          }
+
+          // Optimistic locking version check
+          if (
+            clientVersion !== undefined &&
+            lockedDoc.version !== clientVersion
+          ) {
+            throw new BadRequestException('Version conflict detected');
+          }
+
+          // Fetch transfer details with lines and items
           const transfer = await tx.transfer.findUnique({
             where: { id: transferId },
             include: {
@@ -58,50 +111,18 @@ export class TransferPostService {
             );
           }
 
-          // 1. Centralized Role Check
-          const hasRolePermission = canPerformActionV2(
-            'TRANSFER',
-            transfer.status as DocumentStatus,
-            'SHIP',
-            userRole,
-          );
-          if (!hasRolePermission) {
-            const errorMsg = `User with role ${userRole} is not authorized to perform action SHIP on TRANSFER in status ${transfer.status}`;
-            throw new ForbiddenException(errorMsg);
-          }
-
-          // 2. Strict Origin Warehouse Branch Scope Check
-          const originScope = await tx.userWarehouseScope.findUnique({
-            where: {
-              userId_warehouseId: {
-                userId,
-                warehouseId: transfer.fromWarehouseId,
-              },
-            },
-          });
-          if (!originScope) {
-            const errorMsg = `User ${userId} with role ${userRole} is not authorized for the origin warehouse branch ${transfer.fromWarehouseId}`;
-            throw new ForbiddenException(errorMsg);
-          }
-
-          // 3. Status Guard (Defense-in-depth)
-          if (transfer.status !== 'DRAFT') {
-            throw new BadRequestException(
-              `Transfer must be in DRAFT status to be shipped`,
-            );
-          }
-
-          // Optimistic locking version check
-          if (
-            clientVersion !== undefined &&
-            transfer.version !== clientVersion
-          ) {
-            throw new BadRequestException('Version conflict detected');
-          }
-
           // 2. Process each line
           for (const line of transfer.lines) {
             const item = line.item;
+
+            // Historical posting guard
+            const latestLedger = await tx.stockLedger.findFirst({
+              where: { warehouseId: transfer.fromWarehouseId, itemId: item.id },
+              orderBy: { postedAt: 'desc' },
+            });
+            if (latestLedger && transfer.createdAt < latestLedger.postedAt) {
+              throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
+            }
 
             // Check if item is frozen in source warehouse
             await this.scopeValidationService.checkWarehouseItemQuarantine(
@@ -158,6 +179,7 @@ export class TransferPostService {
                     quantity: -alloc.quantityAllocated,
                     documentId: transfer.id,
                     documentType: DocumentType.TRANSFER,
+                    idempotencyKey: `${DocumentType.TRANSFER}:stock_ship:${transfer.id}:${item.id}:${alloc.lotId}:${line.id}`,
                   },
                 });
               }
@@ -171,19 +193,32 @@ export class TransferPostService {
                   quantity: -Number(line.quantityShipped),
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
+                  idempotencyKey: `${DocumentType.TRANSFER}:stock_ship:${transfer.id}:${item.id}:${line.id}`,
                 },
               });
             }
           }
 
-          // 3. Update Transfer status to IN_TRANSIT
-          const updatedTransfer = await tx.transfer.update({
-            where: { id: transferId },
+          // 3. Update Transfer status to IN_TRANSIT with version check
+          const updateResult = await tx.transfer.updateMany({
+            where: { id: transferId, version: lockedDoc.version },
             data: {
               status: 'IN_TRANSIT',
-              version: transfer.version + 1,
+              version: lockedDoc.version + 1,
             },
           });
+          if (updateResult.count === 0) {
+            throw new BadRequestException('Version conflict detected');
+          }
+
+          const updatedTransfer = await tx.transfer.findUnique({
+            where: { id: transferId },
+          });
+          if (!updatedTransfer) {
+            throw new NotFoundException(
+              `Transfer with ID ${transferId} not found`,
+            );
+          }
 
           this.metricsService.postingOperationsCounter.inc({
             document_type: 'TRANSFER',
@@ -307,7 +342,60 @@ export class TransferPostService {
     try {
       return await this.prisma.$transaction(
         async (tx) => {
-          // 1. Fetch Transfer with lines and items
+          // Lock the document first using SELECT FOR UPDATE
+          const lockedDoc = await this.lockService.lockDocument(
+            tx,
+            transferId,
+            DocumentType.TRANSFER,
+          );
+          if (!lockedDoc) {
+            throw new NotFoundException(
+              `Transfer with ID ${transferId} not found`,
+            );
+          }
+
+          // 1. Centralized Role Check
+          const hasRolePermission = canPerformActionV2(
+            'TRANSFER',
+            lockedDoc.status as DocumentStatus,
+            'RECEIVE',
+            userRole,
+          );
+          if (!hasRolePermission) {
+            const errorMsg = `User with role ${userRole} is not authorized to perform action RECEIVE on TRANSFER in status ${lockedDoc.status}`;
+            throw new ForbiddenException(errorMsg);
+          }
+
+          // 2. Strict Destination Warehouse Branch Scope Check
+          const destinationScope = await tx.userWarehouseScope.findUnique({
+            where: {
+              userId_warehouseId: {
+                userId,
+                warehouseId: lockedDoc.toWarehouseId,
+              },
+            },
+          });
+          if (!destinationScope) {
+            const errorMsg = `User ${userId} with role ${userRole} is not authorized for the destination warehouse branch ${lockedDoc.toWarehouseId}`;
+            throw new ForbiddenException(errorMsg);
+          }
+
+          // 3. Status Guard (Defense-in-depth)
+          if (lockedDoc.status !== 'IN_TRANSIT') {
+            throw new BadRequestException(
+              `Transfer must be in IN_TRANSIT status to be received`,
+            );
+          }
+
+          // Optimistic locking version check
+          if (
+            clientVersion !== undefined &&
+            lockedDoc.version !== clientVersion
+          ) {
+            throw new BadRequestException('Version conflict detected');
+          }
+
+          // Fetch transfer details with lines and items
           const transfer = await tx.transfer.findUnique({
             where: { id: transferId },
             include: {
@@ -325,47 +413,6 @@ export class TransferPostService {
             );
           }
 
-          // 1. Centralized Role Check
-          const hasRolePermission = canPerformActionV2(
-            'TRANSFER',
-            transfer.status as DocumentStatus,
-            'RECEIVE',
-            userRole,
-          );
-          if (!hasRolePermission) {
-            const errorMsg = `User with role ${userRole} is not authorized to perform action RECEIVE on TRANSFER in status ${transfer.status}`;
-            throw new ForbiddenException(errorMsg);
-          }
-
-          // 2. Strict Destination Warehouse Branch Scope Check
-          const destinationScope = await tx.userWarehouseScope.findUnique({
-            where: {
-              userId_warehouseId: {
-                userId,
-                warehouseId: transfer.toWarehouseId,
-              },
-            },
-          });
-          if (!destinationScope) {
-            const errorMsg = `User ${userId} with role ${userRole} is not authorized for the destination warehouse branch ${transfer.toWarehouseId}`;
-            throw new ForbiddenException(errorMsg);
-          }
-
-          // 3. Status Guard (Defense-in-depth)
-          if (transfer.status !== 'IN_TRANSIT') {
-            throw new BadRequestException(
-              `Transfer must be in IN_TRANSIT status to be received`,
-            );
-          }
-
-          // Optimistic locking version check
-          if (
-            clientVersion !== undefined &&
-            transfer.version !== clientVersion
-          ) {
-            throw new BadRequestException('Version conflict detected');
-          }
-
           // Map linesReceived for easy lookup
           const receivedMap = new Map<
             string,
@@ -380,6 +427,15 @@ export class TransferPostService {
           // 2. Process each line
           for (const line of transfer.lines) {
             const item = line.item;
+
+            // Historical posting guard
+            const latestLedger = await tx.stockLedger.findFirst({
+              where: { warehouseId: transfer.toWarehouseId, itemId: item.id },
+              orderBy: { postedAt: 'desc' },
+            });
+            if (latestLedger && transfer.createdAt < latestLedger.postedAt) {
+              throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
+            }
             const input = receivedMap.get(line.id);
             const receivedQty = input
               ? input.quantityReceived
@@ -472,6 +528,7 @@ export class TransferPostService {
                       quantity: receivedForLot,
                       documentId: transfer.id,
                       documentType: DocumentType.TRANSFER,
+                      idempotencyKey: `${DocumentType.TRANSFER}:stock_receive:${transfer.id}:${item.id}:${alloc.lotId}:${line.id}`,
                     },
                   });
 
@@ -495,11 +552,13 @@ export class TransferPostService {
                   quantity: receivedQty,
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
+                  idempotencyKey: `${DocumentType.TRANSFER}:stock_receive:${transfer.id}:${item.id}:${line.id}`,
                 },
               });
             }
 
             // Recalculate WAC and log cost ledger using central WacService
+            const receiveCostIdempotencyKey = `${DocumentType.TRANSFER}:cost_receive:${transfer.id}:${item.id}:${line.id}`;
             await this.wacService.handleTransferReceipt(
               tx,
               transfer.toWarehouseId,
@@ -507,6 +566,7 @@ export class TransferPostService {
               receivedQty,
               Number(sourceWac),
               transfer.id,
+              receiveCostIdempotencyKey,
             );
 
             // Log Transit Loss if there is a discrepancy
@@ -556,6 +616,7 @@ export class TransferPostService {
                 },
               });
 
+              const transitLossStockKey = `${DocumentType.TRANSFER}:stock_transit_loss:${transfer.id}:${item.id}:${line.id}`;
               await tx.stockLedger.create({
                 data: {
                   warehouseId: transitLossWh.id,
@@ -564,9 +625,11 @@ export class TransferPostService {
                   quantity: discrepancyDec,
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
+                  idempotencyKey: transitLossStockKey,
                 },
               });
 
+              const transitLossCostKey = `${DocumentType.TRANSFER}:cost_transit_loss:${transfer.id}:${item.id}:${line.id}`;
               await tx.costLedger.create({
                 data: {
                   warehouseId: transitLossWh.id,
@@ -576,19 +639,32 @@ export class TransferPostService {
                   newWac: sourceWac,
                   documentId: transfer.id,
                   documentType: DocumentType.TRANSFER,
+                  idempotencyKey: transitLossCostKey,
                 },
               });
             }
           }
 
-          // 3. Update Transfer status to RECEIVED
-          const updatedTransfer = await tx.transfer.update({
-            where: { id: transferId },
+          // 3. Update Transfer status to RECEIVED with version check
+          const updateResult = await tx.transfer.updateMany({
+            where: { id: transferId, version: lockedDoc.version },
             data: {
               status: 'RECEIVED',
-              version: transfer.version + 1,
+              version: lockedDoc.version + 1,
             },
           });
+          if (updateResult.count === 0) {
+            throw new BadRequestException('Version conflict detected');
+          }
+
+          const updatedTransfer = await tx.transfer.findUnique({
+            where: { id: transferId },
+          });
+          if (!updatedTransfer) {
+            throw new NotFoundException(
+              `Transfer with ID ${transferId} not found`,
+            );
+          }
 
           this.metricsService.postingOperationsCounter.inc({
             document_type: 'TRANSFER',

@@ -23,12 +23,14 @@ describe('AdjustmentPostService', () => {
 
   const mockAdjFindUnique = jest.fn();
   const mockAdjUpdate = jest.fn();
+  const mockAdjUpdateMany = jest.fn();
   const mockWarehouseItemLotUpsert = jest.fn();
   const mockWarehouseItemLotUpdate = jest.fn();
   const mockWarehouseItemUpsert = jest.fn();
   const mockWarehouseItemUpdate = jest.fn();
   const mockWarehouseItemFindUnique = jest.fn();
   const mockStockLedgerCreate = jest.fn();
+  const mockStockLedgerFindFirst = jest.fn();
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
@@ -37,6 +39,7 @@ describe('AdjustmentPostService', () => {
     adjustment: {
       findUnique: mockAdjFindUnique,
       update: mockAdjUpdate,
+      updateMany: mockAdjUpdateMany,
     },
     warehouseItemLot: {
       upsert: mockWarehouseItemLotUpsert,
@@ -49,6 +52,7 @@ describe('AdjustmentPostService', () => {
     },
     stockLedger: {
       create: mockStockLedgerCreate,
+      findFirst: mockStockLedgerFindFirst,
     },
     approvalEvent: {
       count: mockApprovalEventCount,
@@ -63,9 +67,9 @@ describe('AdjustmentPostService', () => {
     $transaction: jest
       .fn()
       .mockImplementation(
-          (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-            cb(mockPrismaTx),
-        ),
+        (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
+          cb(mockPrismaTx),
+      ),
   } as unknown as PrismaService;
 
   const mockLockService = {
@@ -73,6 +77,7 @@ describe('AdjustmentPostService', () => {
     lockItem: jest.fn(),
     assertItemBalance: jest.fn(),
     assertLotBalance: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   const mockWacService = {
@@ -99,6 +104,14 @@ describe('AdjustmentPostService', () => {
     service = module.get<AdjustmentPostService>(AdjustmentPostService);
     jest.clearAllMocks();
     mockWarehouseItemFindUnique.mockResolvedValue(null);
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'adj-1',
+      status: 'APPROVED',
+      version: 1,
+      warehouseId: 'wh-1',
+    });
+    mockAdjUpdateMany.mockResolvedValue({ count: 1 });
+    mockStockLedgerFindFirst.mockResolvedValue(null);
   });
 
   it('should post APPROVED INCREASE adjustment successfully', async () => {
@@ -151,6 +164,7 @@ describe('AdjustmentPostService', () => {
       5,
       10,
       adjId,
+      'ADJUSTMENT:cost:adj-1:item-1:line-1',
     );
     expect(mockStockLedgerCreate).toHaveBeenCalledWith({
       data: {
@@ -160,6 +174,7 @@ describe('AdjustmentPostService', () => {
         quantity: 5,
         documentId: adjId,
         documentType: DocumentType.ADJUSTMENT,
+        idempotencyKey: 'ADJUSTMENT:stock:adj-1:item-1:line-1',
       },
     });
   });
@@ -227,11 +242,17 @@ describe('AdjustmentPostService', () => {
         quantity: -5,
         documentId: adjId,
         documentType: DocumentType.ADJUSTMENT,
+        idempotencyKey: 'ADJUSTMENT:stock:adj-1:item-1:line-1',
       },
     });
   });
 
   it('should throw BadRequestException if status is not APPROVED', async () => {
+    mockLockService.lockDocument = jest.fn().mockResolvedValue({
+      id: 'adj-1',
+      status: 'DRAFT',
+      version: 1,
+    });
     mockAdjFindUnique.mockResolvedValue({
       id: 'adj-1',
       status: 'DRAFT',
@@ -267,11 +288,11 @@ describe('AdjustmentPostService', () => {
     });
 
     await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
-      new BadRequestException('Unit cost is required for manual Adjustment IN because no prior WAC history exists in this warehouse for SKU SKU1.'),
+      new BadRequestException('Unit cost is required and must be greater than zero for manual Adjustment IN (Item SKU: SKU1).'),
     );
   });
 
-  it('should adopt current WAC if direction is IN and unitCost is missing but WAC history exists', async () => {
+  it('should throw BadRequestException if direction is IN and unitCost is missing', async () => {
     mockAdjFindUnique.mockResolvedValue({
       id: 'adj-1',
       status: 'APPROVED',
@@ -295,33 +316,8 @@ describe('AdjustmentPostService', () => {
       ],
     });
 
-    mockWarehouseItemFindUnique.mockResolvedValue({
-      qtyOnHand: new Prisma.Decimal(10),
-      wac: new Prisma.Decimal(12.5),
-    });
-
-    mockAdjUpdate.mockResolvedValue({ id: 'adj-1', status: 'POSTED' });
-    mockApprovalEventCount.mockResolvedValue(1);
-
-    const mockAdjustmentLineUpdate = jest.fn();
-    (mockPrismaTx as any).adjustmentLine = {
-      update: mockAdjustmentLineUpdate,
-    };
-
-    const result = await service.post('adj-1', 'user-1', Role.INV_MGR, 1);
-
-    expect(result).toBeDefined();
-    expect(mockAdjustmentLineUpdate).toHaveBeenCalledWith({
-      where: { id: 'line-1' },
-      data: { unitCost: 12.5 },
-    });
-    expect(mockWacService.handlePositiveAdjustment).toHaveBeenCalledWith(
-      mockPrismaTx,
-      undefined, // warehouseId
-      'item-1',
-      5,
-      12.5,
-      'adj-1',
+    await expect(service.post('adj-1', 'user-1', Role.INV_MGR, 1)).rejects.toThrow(
+      new BadRequestException('Unit cost is required and must be greater than zero for manual Adjustment IN (Item SKU: SKU1).'),
     );
   });
 

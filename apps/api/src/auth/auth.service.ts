@@ -42,6 +42,10 @@ export class AuthService {
     });
 
     if (!user) {
+      // Execute dummy bcrypt check to prevent timing attacks
+      const dummyHash =
+        '$2b$10$sO8YI23iA0R1N0M3D0U2M.b3y8t1g2h3j4k5l6m7n8o9p0q1r2s3t';
+      await this.bcrypt.compare(dto.password, dummyHash);
       await this.logFailedLogin(dto.email, null, 'user_not_found', ipAddress);
       throw new UnauthorizedException('Invalid email or password');
     }

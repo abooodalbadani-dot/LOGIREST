@@ -286,6 +286,7 @@ describe('PurchaseRequestsService', () => {
         'converting',
         1,
         '127.0.0.1',
+        mockPrisma,
       );
       expect(mockPrisma.purchaseOrder.create).toHaveBeenCalledWith({
         data: {

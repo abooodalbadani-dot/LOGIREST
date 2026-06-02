@@ -1,6 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from './redis.constants';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class RedisLockService {
@@ -10,37 +11,48 @@ export class RedisLockService {
 
   /**
    * Tries to acquire a lock for a given key and TTL (in seconds).
-   * Returns true if lock was acquired successfully, false otherwise.
+   * Returns token string if lock was acquired successfully, null otherwise.
    */
-  async acquireLock(key: string, ttlSeconds: number): Promise<boolean> {
+  async acquireLock(key: string, ttlSeconds: number): Promise<string | null> {
     const lockKey = `lock:cron:${key}`;
-    const result = await this.redis.set(
-      lockKey,
-      'locked',
-      'EX',
-      ttlSeconds,
-      'NX',
-    );
+    const token = randomUUID();
+    const result = await this.redis.set(lockKey, token, 'EX', ttlSeconds, 'NX');
     const acquired = result === 'OK';
     if (acquired) {
       this.logger.log(
-        `Acquired lock for key: ${lockKey} with TTL ${ttlSeconds}s`,
+        `Acquired lock for key: ${lockKey} with TTL ${ttlSeconds}s (token: ${token})`,
       );
+      return token;
     } else {
       this.logger.log(
         `Failed to acquire lock for key: ${lockKey} (already locked)`,
       );
+      return null;
     }
-    return acquired;
   }
 
   /**
-   * Releases a lock for a given key.
+   * Releases a lock for a given key, matching the unique token.
    */
-  async releaseLock(key: string): Promise<void> {
+  async releaseLock(key: string, token: string): Promise<boolean> {
     const lockKey = `lock:cron:${key}`;
-    await this.redis.del(lockKey);
-    this.logger.log(`Released lock for key: ${lockKey}`);
+    const luaScript = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `;
+    const result = await this.redis.eval(luaScript, 1, lockKey, token);
+    const released = result === 1;
+    if (released) {
+      this.logger.log(`Released lock for key: ${lockKey} (token: ${token})`);
+    } else {
+      this.logger.warn(
+        `Failed to release lock for key: ${lockKey} (token mismatch or expired)`,
+      );
+    }
+    return released;
   }
 
   /**
@@ -51,8 +63,8 @@ export class RedisLockService {
     ttlSeconds: number,
     fn: () => Promise<T>,
   ): Promise<T | null> {
-    const acquired = await this.acquireLock(key, ttlSeconds);
-    if (!acquired) {
+    const token = await this.acquireLock(key, ttlSeconds);
+    if (!token) {
       this.logger.log(
         `Skipping job execution because lock for "${key}" is already held.`,
       );
@@ -61,7 +73,7 @@ export class RedisLockService {
     try {
       return await fn();
     } finally {
-      await this.releaseLock(key);
+      await this.releaseLock(key, token);
     }
   }
 }

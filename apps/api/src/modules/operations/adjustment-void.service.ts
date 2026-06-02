@@ -146,6 +146,7 @@ export class AdjustmentVoidService {
                 quantity: -qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: `${DocumentType.ADJUSTMENT}:stock_void:${adj.id}:${item.id}:${lotId}:${line.id}`,
               },
             });
           } else {
@@ -167,49 +168,146 @@ export class AdjustmentVoidService {
                 quantity: -qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: `${DocumentType.ADJUSTMENT}:stock_void:${adj.id}:${item.id}:${line.id}`,
               },
             });
           }
 
           // WAC recalculation & Cost Ledger entry for IN adjustment void
-          const costEntries = await tx.costLedger.findMany({
+          // 1. Check if any subsequent cost-impacting document exists for the same item in the same warehouse
+          const subsequentGrn = await tx.goodsReceivedNote.findFirst({
+            where: {
+              warehouseId: adj.warehouseId,
+              status: 'POSTED',
+              createdAt: { gt: adj.createdAt },
+              lines: {
+                some: {
+                  itemId: item.id,
+                },
+              },
+            },
+          });
+
+          const subsequentAdj = await tx.adjustment.findFirst({
+            where: {
+              warehouseId: adj.warehouseId,
+              status: 'POSTED',
+              createdAt: { gt: adj.createdAt },
+              lines: {
+                some: {
+                  itemId: item.id,
+                  direction: AdjustmentDirection.IN,
+                },
+              },
+            },
+          });
+
+          const subsequentTransfer = await tx.transfer.findFirst({
+            where: {
+              toWarehouseId: adj.warehouseId,
+              status: 'RECEIVED',
+              createdAt: { gt: adj.createdAt },
+              lines: {
+                some: {
+                  itemId: item.id,
+                },
+              },
+            },
+          });
+
+          const subsequentStocktakeSessions =
+            await tx.stocktakeSession.findMany({
+              where: {
+                warehouseId: adj.warehouseId,
+                status: 'POSTED',
+                createdAt: { gt: adj.createdAt },
+                counts: {
+                  some: {
+                    itemId: item.id,
+                  },
+                },
+              },
+              include: {
+                counts: {
+                  where: { itemId: item.id },
+                },
+                snapshots: {
+                  where: { itemId: item.id },
+                },
+              },
+            });
+
+          let subsequentStocktake = false;
+          for (const session of subsequentStocktakeSessions) {
+            const snapshotMap = new Map<string, number>();
+            const countMap = new Map<string, number>();
+            const allLotIds = new Set<string>();
+
+            for (const snap of session.snapshots) {
+              const key = snap.lotId || '';
+              snapshotMap.set(key, Number(snap.qtySnapshot));
+              allLotIds.add(key);
+            }
+
+            for (const count of session.counts) {
+              const key = count.lotId || '';
+              countMap.set(key, Number(count.qtyCounted));
+              allLotIds.add(key);
+            }
+
+            for (const lotId of allLotIds) {
+              const qtySnapshot = snapshotMap.get(lotId) || 0;
+              const qtyCounted = countMap.get(lotId) || 0;
+              if (qtyCounted > qtySnapshot) {
+                subsequentStocktake = true;
+                break;
+              }
+            }
+            if (subsequentStocktake) break;
+          }
+
+          const subsequentLandedCost = await tx.landedCostVoucher.findFirst({
+            where: {
+              status: 'POSTED',
+              createdAt: { gt: adj.createdAt },
+              lines: {
+                some: {
+                  grnLine: {
+                    itemId: item.id,
+                    goodsReceivedNote: {
+                      warehouseId: adj.warehouseId,
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          if (
+            subsequentGrn ||
+            subsequentAdj ||
+            subsequentTransfer ||
+            subsequentStocktake ||
+            subsequentLandedCost
+          ) {
+            throw new BadRequestException('VOID_NOT_ALLOWED_UNDER_COST_IMPACT');
+          }
+
+          // 2. Find the most recent CostLedger entry NOT from this Adjustment (O(1) restoration query)
+          const lastCostEntry = await tx.costLedger.findFirst({
             where: {
               warehouseId: adj.warehouseId,
               itemId: item.id,
+              NOT: {
+                documentId: adj.id,
+              },
             },
-            orderBy: { postedAt: 'asc' },
+            orderBy: { postedAt: 'desc' },
           });
 
-          let recalcQty = new Prisma.Decimal(0);
-          let recalcWac = new Prisma.Decimal(0);
-
-          for (const entry of costEntries) {
-            if (
-              entry.documentId === adj.id &&
-              entry.documentType === DocumentType.ADJUSTMENT
-            ) {
-              continue;
-            }
-
-            const entryQty = new Prisma.Decimal(entry.quantity);
-            if (entryQty.isZero()) continue;
-
-            if (entryQty.gt(0)) {
-              const entryPrice = new Prisma.Decimal(entry.unitPrice);
-              if (recalcQty.lte(0)) {
-                recalcWac = entryPrice;
-              } else {
-                recalcWac = recalcQty
-                  .mul(recalcWac)
-                  .add(entryQty.mul(entryPrice))
-                  .div(recalcQty.add(entryQty));
-              }
-            }
-
-            recalcQty = recalcQty.add(entryQty);
-          }
-
-          const newWac = recalcQty.lte(0) ? new Prisma.Decimal(0) : recalcWac;
+          const newWac = lastCostEntry
+            ? new Prisma.Decimal(lastCostEntry.newWac)
+            : new Prisma.Decimal(0);
           const roundedWac = newWac.toDecimalPlaces(4);
 
           await tx.warehouseItem.update({
@@ -232,6 +330,7 @@ export class AdjustmentVoidService {
               newWac: roundedWac,
               documentId: adj.id,
               documentType: DocumentType.ADJUSTMENT,
+              idempotencyKey: `${DocumentType.ADJUSTMENT}:cost_void:${adj.id}:${item.id}:${line.id}`,
             },
           });
         } else {
@@ -276,6 +375,7 @@ export class AdjustmentVoidService {
                 quantity: qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: `${DocumentType.ADJUSTMENT}:stock_void:${adj.id}:${item.id}:${lotId}:${line.id}`,
               },
             });
           } else {
@@ -299,6 +399,7 @@ export class AdjustmentVoidService {
                 quantity: qtyVal,
                 documentId: adj.id,
                 documentType: DocumentType.ADJUSTMENT,
+                idempotencyKey: `${DocumentType.ADJUSTMENT}:stock_void:${adj.id}:${item.id}:${line.id}`,
               },
             });
           }
