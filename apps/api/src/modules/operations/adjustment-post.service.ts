@@ -31,13 +31,19 @@ export class AdjustmentPostService {
     clientVersion?: number,
     ipAddress?: string,
   ): Promise<Adjustment> {
-    return this.prisma.$transaction(async (tx) => {
-      // Lock the document first
-      const lockedDoc = await this.lockService.lockDocument(
-        tx,
-        adjustmentId,
-        DocumentType.ADJUSTMENT,
-      );
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            // Lock the document first
+            const lockedDoc = await this.lockService.lockDocument(
+              tx,
+              adjustmentId,
+              DocumentType.ADJUSTMENT,
+            );
       if (!lockedDoc) {
         throw new NotFoundException(
           `Adjustment with ID ${adjustmentId} not found`,
@@ -93,12 +99,17 @@ export class AdjustmentPostService {
         const lotId = line.lotId;
         const qtyVal = Number(line.quantity);
 
-        // Historical posting guard
-        const latestLedger = await tx.stockLedger.findFirst({
-          where: { warehouseId: adj.warehouseId, itemId: item.id },
-          orderBy: { postedAt: 'desc' },
-        });
-        if (latestLedger && adj.createdAt < latestLedger.postedAt) {
+        // Historical posting guard with raw SELECT FOR UPDATE to serialize concurrent posts
+        const latestLedgers = await tx.$queryRaw<any[]>`
+          SELECT "postedAt"
+          FROM "stock_ledger"
+          WHERE "warehouseId" = ${adj.warehouseId} AND "itemId" = ${item.id}
+          ORDER BY "postedAt" DESC
+          LIMIT 1
+          FOR UPDATE
+        `;
+        const latestLedger = latestLedgers[0];
+        if (latestLedger && adj.createdAt < new Date(latestLedger.postedAt)) {
           throw new BadRequestException('HISTORICAL_POSTING_BLOCKED');
         }
 
@@ -427,6 +438,27 @@ export class AdjustmentPostService {
       });
 
       return updatedAdj;
-    });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            timeout: 30000,
+          },
+        );
+      } catch (error) {
+        const isSerializationError =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          (error.code === 'P2034' ||
+            error.message?.includes('40001') ||
+            error.message?.includes('40P01') ||
+            error.message?.includes('serialization') ||
+            error.message?.includes('deadlock'));
+        if (isSerializationError && attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
   }
 }

@@ -32,21 +32,27 @@ export class AdjustmentVoidService {
         'Only System Administrators or Inventory Managers can void documents',
       );
     }
-    return this.prisma.$transaction(async (tx) => {
-      const adj = await tx.adjustment.findUnique({
-        where: { id: adjustmentId },
-        include: {
-          lines: {
-            include: { item: true },
-          },
-        },
-      });
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            const adj = await tx.adjustment.findUnique({
+              where: { id: adjustmentId },
+              include: {
+                lines: {
+                  include: { item: true },
+                },
+              },
+            });
 
-      if (!adj) {
-        throw new NotFoundException(
-          `Adjustment with ID ${adjustmentId} not found`,
-        );
-      }
+            if (!adj) {
+              throw new NotFoundException(
+                `Adjustment with ID ${adjustmentId} not found`,
+              );
+            }
 
       if (adj.status !== 'POSTED') {
         throw new BadRequestException(
@@ -453,6 +459,27 @@ export class AdjustmentVoidService {
       });
 
       return updatedAdj;
-    });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            timeout: 30000,
+          },
+        );
+      } catch (error) {
+        const isSerializationError =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          (error.code === 'P2034' ||
+            error.message?.includes('40001') ||
+            error.message?.includes('40P01') ||
+            error.message?.includes('serialization') ||
+            error.message?.includes('deadlock'));
+        if (isSerializationError && attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
   }
 }

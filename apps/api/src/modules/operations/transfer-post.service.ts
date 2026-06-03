@@ -717,7 +717,6 @@ export class TransferPostService {
             documentNumber: transfer.transferNumber || transfer.id,
             fromWarehouseId: transfer.fromWarehouseId,
             toWarehouseId: transfer.toWarehouseId,
-            timestamp: new Date().toISOString(),
           });
 
           // Notification log for source warehouse keeper

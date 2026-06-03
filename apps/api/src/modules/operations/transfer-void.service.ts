@@ -32,16 +32,22 @@ export class TransferVoidService {
         'Only System Administrators or Inventory Managers can void documents',
       );
     }
-    return this.prisma.$transaction(async (tx) => {
-      // Lock the document first using SELECT FOR UPDATE
-      const lockedDoc = await this.lockService.lockDocument(
-        tx,
-        transferId,
-        DocumentType.TRANSFER,
-      );
-      if (!lockedDoc) {
-        throw new NotFoundException(`Transfer with ID ${transferId} not found`);
-      }
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            // Lock the document first using SELECT FOR UPDATE
+            const lockedDoc = await this.lockService.lockDocument(
+              tx,
+              transferId,
+              DocumentType.TRANSFER,
+            );
+            if (!lockedDoc) {
+              throw new NotFoundException(`Transfer with ID ${transferId} not found`);
+            }
 
       if (lockedDoc.status !== 'RECEIVED') {
         throw new BadRequestException(
@@ -594,6 +600,27 @@ export class TransferVoidService {
       });
 
       return updatedTransfer;
-    });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            timeout: 30000,
+          },
+        );
+      } catch (error) {
+        const isSerializationError =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          (error.code === 'P2034' ||
+            error.message?.includes('40001') ||
+            error.message?.includes('40P01') ||
+            error.message?.includes('serialization') ||
+            error.message?.includes('deadlock'));
+        if (isSerializationError && attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
   }
 }

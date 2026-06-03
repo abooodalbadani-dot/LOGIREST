@@ -32,8 +32,12 @@ describe('StocktakePostService', () => {
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
   const mockCostLedgerCreate = jest.fn();
-
+  const mockItemFindUnique = jest.fn();
+ 
   const mockPrismaTx = {
+    item: {
+      findUnique: mockItemFindUnique,
+    },
     stocktakeSession: {
       findUnique: mockSessionFindUnique,
       update: mockSessionUpdate,
@@ -101,6 +105,7 @@ describe('StocktakePostService', () => {
 
     service = module.get<StocktakePostService>(StocktakePostService);
     jest.clearAllMocks();
+    mockItemFindUnique.mockResolvedValue({ sku: 'SKU1' });
     mockLockService.lockDocument = jest.fn().mockImplementation(() => mockSessionFindUnique());
     mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false, item: { sku: 'SKU1' } });
   });
@@ -250,7 +255,7 @@ describe('StocktakePostService', () => {
         newWac: new Prisma.Decimal(15),
         documentId: sessionId,
         documentType: DocumentType.STOCKTAKE,
-        idempotencyKey: 'STOCKTAKE:cost:session-1:item-1:lot-1:negative',
+        idempotencyKey: 'STOCKTAKE:cost_negative:session-1:item-1:lot-1',
       },
     });
   });
@@ -313,7 +318,7 @@ describe('StocktakePostService', () => {
         newWac: new Prisma.Decimal(15),
         documentId: sessionId,
         documentType: DocumentType.STOCKTAKE,
-        idempotencyKey: 'STOCKTAKE:cost:session-1:item-1:null:negative',
+        idempotencyKey: 'STOCKTAKE:cost_negative:session-1:item-1:null',
       },
     });
   });
@@ -350,13 +355,61 @@ describe('StocktakePostService', () => {
 
     mockCountFindMany.mockResolvedValue([]);
 
-    mockWarehouseItemFindUnique.mockResolvedValue({
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
       isFrozen: true,
+      itemId: 'item-1',
       item: { sku: 'SKU1' },
     });
 
     await expect(
       service.post(sessionId, 'user-1', Role.INV_MGR, 1),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should fail and rollback transaction if unique constraint violation occurs on CostLedger creation (concurrent post)', async () => {
+    const sessionId = 'session-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockSessionFindUnique.mockResolvedValue({
+      id: sessionId,
+      warehouseId,
+      status: StocktakeStatus.APPROVED,
+      version: 1,
+    });
+
+    mockSnapshotFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        lotId: 'lot-1',
+        qtySnapshot: new Prisma.Decimal(10),
+        item: { id: 'item-1', sku: 'SKU1', isBatched: true },
+      },
+    ]);
+
+    mockCountFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        lotId: 'lot-1',
+        qtyCounted: new Prisma.Decimal(7), // negative variance (-3)
+      },
+    ]);
+
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
+      itemId: 'item-1',
+      wac: new Prisma.Decimal(15),
+    });
+
+    // Mock unique constraint error on CostLedger creation
+    mockCostLedgerCreate.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      }),
+    );
+
+    await expect(
+      service.post(sessionId, userId, Role.INV_MGR, 1),
+    ).rejects.toThrow(Prisma.PrismaClientKnownRequestError);
   });
 });

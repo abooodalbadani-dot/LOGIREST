@@ -78,34 +78,6 @@ export class StocktakePostService {
         allKeys.add(key);
       }
 
-      // Check if any item is frozen/locked in target warehouse
-      const uniqueItemIds = new Set<string>();
-      for (const snap of snapshots) {
-        uniqueItemIds.add(snap.itemId);
-      }
-      for (const count of counts) {
-        uniqueItemIds.add(count.itemId);
-      }
-
-      for (const itemId of uniqueItemIds) {
-        const whItemCheck = await tx.warehouseItem.findUnique({
-          where: {
-            warehouseId_itemId: {
-              warehouseId: session.warehouseId,
-              itemId,
-            },
-          },
-          include: {
-            item: true,
-          },
-        });
-        if (whItemCheck?.isFrozen) {
-          throw new BadRequestException(
-            `Cannot post stocktake: Item ${whItemCheck.item?.sku || itemId} is frozen/locked in target warehouse`,
-          );
-        }
-      }
-
       // 3. Reconcile variances in sorted order to avoid deadlock
       const sortedKeys = Array.from(allKeys).sort((a, b) => a.localeCompare(b));
       for (const key of sortedKeys) {
@@ -128,6 +100,12 @@ export class StocktakePostService {
               session.warehouseId,
               itemId,
             );
+            if (whItem?.isFrozen && userRole !== Role.ADMIN) {
+              const itemDb = await tx.item.findUnique({ where: { id: itemId } });
+              throw new BadRequestException(
+                `Cannot post stocktake: Item ${itemDb?.sku || itemId} is frozen/locked in target warehouse`,
+              );
+            }
 
             // Lock lot row (SELECT FOR UPDATE) second
             await this.lockService.lockLots(tx, session.warehouseId, itemId, [
@@ -231,7 +209,7 @@ export class StocktakePostService {
                   newWac: currentWac,
                   documentId: session.id,
                   documentType: DocumentType.STOCKTAKE,
-                  idempotencyKey: `${DocumentType.STOCKTAKE}:cost:${session.id}:${itemId}:${lotId || 'null'}:negative`,
+                  idempotencyKey: `STOCKTAKE:cost_negative:${session.id}:${itemId}:${lotId || 'null'}`,
                 },
               });
             }
@@ -242,6 +220,12 @@ export class StocktakePostService {
               session.warehouseId,
               itemId,
             );
+            if (whItem?.isFrozen && userRole !== Role.ADMIN) {
+              const itemDb = await tx.item.findUnique({ where: { id: itemId } });
+              throw new BadRequestException(
+                `Cannot post stocktake: Item ${itemDb?.sku || itemId} is frozen/locked in target warehouse`,
+              );
+            }
             const currentWac = whItem
               ? new Prisma.Decimal(whItem.wac)
               : new Prisma.Decimal(0);
@@ -303,7 +287,7 @@ export class StocktakePostService {
                   newWac: currentWac,
                   documentId: session.id,
                   documentType: DocumentType.STOCKTAKE,
-                  idempotencyKey: `${DocumentType.STOCKTAKE}:cost:${session.id}:${itemId}:null:negative`,
+                  idempotencyKey: `STOCKTAKE:cost_negative:${session.id}:${itemId}:null`,
                 },
               });
             }

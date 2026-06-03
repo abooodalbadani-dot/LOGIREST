@@ -34,8 +34,10 @@ describe('AdjustmentPostService', () => {
   const mockApprovalEventCount = jest.fn();
   const mockApprovalEventCreate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockQueryRaw = jest.fn();
 
   const mockPrismaTx = {
+    $queryRaw: mockQueryRaw,
     adjustment: {
       findUnique: mockAdjFindUnique,
       update: mockAdjUpdate,
@@ -103,6 +105,7 @@ describe('AdjustmentPostService', () => {
 
     service = module.get<AdjustmentPostService>(AdjustmentPostService);
     jest.clearAllMocks();
+    mockQueryRaw.mockResolvedValue([]);
     mockWarehouseItemFindUnique.mockResolvedValue(null);
     mockLockService.lockDocument = jest.fn().mockResolvedValue({
       id: 'adj-1',

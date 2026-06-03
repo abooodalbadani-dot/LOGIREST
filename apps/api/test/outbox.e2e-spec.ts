@@ -12,6 +12,7 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { randomUUID } from 'crypto';
 
 // Stub out ioredis connection so BullMQ/Redis connections connect instantly and exit instantly
+/*
 jest.mock('ioredis', () => {
   const EventEmitter = require('events');
   class MockRedis extends EventEmitter {
@@ -69,6 +70,7 @@ jest.mock('ioredis', () => {
   (MockRedis as any).Redis = MockRedis;
   return MockRedis;
 });
+*/
 
 describe('Outbox Notification Queue (e2e)', () => {
   jest.setTimeout(300000);
@@ -211,50 +213,117 @@ describe('Outbox Notification Queue (e2e)', () => {
 
   afterAll(async () => {
     if (prisma) {
-      // Stage 1: Clear all dependent child tables sequentially to avoid connection pool starvation deadlocks
-      await prisma.outboxEvent.deleteMany({ where: { eventType: { in: ['PR_SUBMITTED', 'ISSUE_POSTED', 'TEST_CLEANUP'] } } });
-      await prisma.userWarehouseScope.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
-      await prisma.pRLine.deleteMany({ where: { prId: { not: '' } } });
-      await prisma.inventoryIssueLine.deleteMany({ where: { itemId } });
-      await prisma.notificationLog.deleteMany({ where: { warehouseId } });
-      await prisma.approvalEvent.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
-      await prisma.refreshToken.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
-      await prisma.auditLog.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
-      await prisma.warehouseLock.deleteMany({ where: { lockedById: { in: [procOfficerId, adminId] } } });
-      await prisma.stocktakeCount.deleteMany({ where: { OR: [{ countedById: { in: [procOfficerId, adminId] } }, { itemId }] } });
-      await prisma.stocktakeSnapshot.deleteMany({ where: { itemId } });
-      await prisma.stockLedger.deleteMany({ where: { itemId } });
-      await prisma.costLedger.deleteMany({ where: { itemId } });
-      await prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } });
-      await prisma.warehouseItemLot.deleteMany({ where: { itemId } });
-      await prisma.warehouseItem.deleteMany({ where: { itemId } });
-      await prisma.lot.deleteMany({ where: { itemId } });
+      try {
+        await prisma.outboxEvent.deleteMany({ where: { eventType: { in: ['PR_SUBMITTED', 'ISSUE_POSTED', 'TRANSFER_RECEIVED', 'TRANSFER_SHIPPED', 'TEST_CLEANUP'] } } });
+      } catch (e) {}
+      try {
+        await prisma.userWarehouseScope.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      } catch (e) {}
+      try {
+        await prisma.pRLine.deleteMany({ where: { prId: { not: '' } } });
+      } catch (e) {}
+      try {
+        await prisma.inventoryIssueLine.deleteMany({ where: { itemId } });
+      } catch (e) {}
+      try {
+        await prisma.transferLine.deleteMany({ where: { itemId } });
+      } catch (e) {}
+      try {
+        await prisma.transfer.deleteMany({ where: { OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }] } });
+      } catch (e) {}
+      try {
+        await prisma.notificationLog.deleteMany({ where: { warehouseId } });
+      } catch (e) {}
+      try {
+        await prisma.approvalEvent.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      } catch (e) {}
+      try {
+        await prisma.refreshToken.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      } catch (e) {}
+      try {
+        await prisma.auditLog.deleteMany({ where: { userId: { in: [procOfficerId, adminId] } } });
+      } catch (e) {}
+      try {
+        await prisma.warehouseLock.deleteMany({ where: { lockedById: { in: [procOfficerId, adminId] } } });
+      } catch (e) {}
+      try {
+        await prisma.stocktakeCount.deleteMany({ where: { OR: [{ countedById: { in: [procOfficerId, adminId] } }, { itemId }] } });
+      } catch (e) {}
+      try {
+        await prisma.stocktakeSnapshot.deleteMany({ where: { itemId } });
+      } catch (e) {}
 
-      // Stage 2: Clear transactional documents sequentially
-      await prisma.purchaseRequest.deleteMany({ where: { branchId } });
-      await prisma.inventoryIssue.deleteMany({ where: { warehouseId } });
-      await prisma.item.deleteMany({ where: { categoryId } });
-      await prisma.documentSequence.deleteMany({ where: { branchId } });
+      // Disable triggers for ledger deletion
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`);
+        await prisma.stockLedger.deleteMany({ where: { itemId } });
+        await prisma.costLedger.deleteMany({ where: { itemId } });
+      } catch (err) {
+        console.warn('Could not disable trigger or delete ledgers in afterAll:', err.message);
+      } finally {
+        try {
+          await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);
+          await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger ENABLE TRIGGER cost_ledger_immutable;`);
+        } catch (err) {}
+      }
 
-      // Stage 3: Clear master data sequentially
-      await prisma.unitOfMeasure.deleteMany({ where: { id: uomId } });
-      await prisma.category.deleteMany({ where: { id: categoryId } });
-      await prisma.department.deleteMany({ where: { branchId } });
-      await prisma.warehouse.deleteMany({ where: { id: warehouseId } });
+      try {
+        await prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } });
+      } catch (e) {}
+      try {
+        await prisma.warehouseItemLot.deleteMany({ where: { itemId } });
+      } catch (e) {}
+      try {
+        await prisma.warehouseItem.deleteMany({ where: { itemId } });
+      } catch (e) {}
+      try {
+        await prisma.lot.deleteMany({ where: { itemId } });
+      } catch (e) {}
 
-      // Stage 4: Clear root records sequentially
-      await prisma.branch.deleteMany({ where: { id: branchId } });
-      await prisma.user.deleteMany({ where: { id: { in: [procOfficerId, adminId] } } });
+      try {
+        await prisma.purchaseRequest.deleteMany({ where: { branchId } });
+      } catch (e) {}
+      try {
+        await prisma.inventoryIssue.deleteMany({ where: { warehouseId } });
+      } catch (e) {}
+      try {
+        await prisma.item.deleteMany({ where: { categoryId } });
+      } catch (e) {}
+      try {
+        await prisma.documentSequence.deleteMany({ where: { branchId } });
+      } catch (e) {}
+
+      try {
+        await prisma.unitOfMeasure.deleteMany({ where: { id: uomId } });
+      } catch (e) {}
+      try {
+        await prisma.category.deleteMany({ where: { id: categoryId } });
+      } catch (e) {}
+      try {
+        await prisma.department.deleteMany({ where: { branchId } });
+      } catch (e) {}
+      try {
+        await prisma.warehouse.deleteMany({ where: { id: warehouseId } });
+      } catch (e) {}
+      try {
+        await prisma.branch.deleteMany({ where: { id: branchId } });
+      } catch (e) {}
+      try {
+        await prisma.user.deleteMany({ where: { id: { in: [procOfficerId, adminId] } } });
+      } catch (e) {}
 
       await prisma.$disconnect();
     }
-    app.close().catch(err => console.error('Error closing app:', err));
+    if (app) {
+      await app.close().catch(err => console.error('Error closing app:', err));
+    }
   });
 
   it('should write an OutboxEvent on PR submission transition', async () => {
     // 1. Create Purchase Request (DRAFT)
     const createRes = await request(app.getHttpServer())
-      .post('/api/v1/purchase-requests')
+      .post('/api/v1/procurement/purchase-requests')
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -266,12 +335,12 @@ describe('Outbox Notification Queue (e2e)', () => {
       })
       .expect(201);
 
-    const prId = createRes.body.id;
+    const prId = createRes.body.data.id;
 
     // 2. Submit the PR (DRAFT -> SUBMITTED)
     // This executes transactionally and writes a PR_SUBMITTED event via WorkflowService + OutboxService
     await request(app.getHttpServer())
-      .post(`/api/v1/purchase-requests/${prId}/submit`)
+      .post(`/api/v1/procurement/purchase-requests/${prId}/submit`)
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -428,5 +497,120 @@ describe('Outbox Notification Queue (e2e)', () => {
     expect(mgrNotif?.warehouseId).toBe(warehouseId);
     expect(mgrNotif?.message).toContain('Stock Issue Posted');
     expect(mgrNotif?.message).toContain('تم ترحيل صرف مخزون');
+  });
+
+  it('should create exactly one TRANSFER_RECEIVED outbox event on receive, and prevent duplicates under concurrent receive calls', async () => {
+    // 1. Create a source warehouse
+    const suffix = `outbox-trans-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const sourceWh = await prisma.warehouse.create({
+      data: { name: `Source Wh ${suffix}`, code: `SWH-${suffix}`, branchId },
+    });
+
+    // 2. Grant warehouse scopes to admin
+    await prisma.userWarehouseScope.create({
+      data: { userId: adminId, warehouseId: sourceWh.id },
+    });
+
+    // 3. Seed stock in the source warehouse for the item
+    await prisma.warehouseItem.upsert({
+      where: {
+        warehouseId_itemId: { warehouseId: sourceWh.id, itemId },
+      },
+      create: {
+        warehouseId: sourceWh.id,
+        itemId,
+        qtyOnHand: 10.0,
+        qtyAllocated: 0,
+        wac: 5.0,
+      },
+      update: {
+        qtyOnHand: 10.0,
+      },
+    });
+
+    // 4. Create Transfer (DRAFT) from sourceWh to destination (warehouseId)
+    const createRes = await request(app.getHttpServer())
+      .post('/api/v1/operations/transfers')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-warehouse-id', sourceWh.id)
+      .set('x-branch-id', branchId)
+      .set('x-idempotency-key', randomUUID())
+      .send({
+        fromWarehouseId: sourceWh.id,
+        toWarehouseId: warehouseId,
+        lines: [{ itemId, quantityShipped: 4 }],
+      })
+      .expect(201);
+
+    const transferId = createRes.body.id;
+    const version1 = createRes.body.version;
+
+    // 5. Ship the transfer (DRAFT -> IN_TRANSIT)
+    const shipRes = await request(app.getHttpServer())
+      .post(`/api/v1/operations/transfers/${transferId}/ship`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('x-warehouse-id', sourceWh.id)
+      .set('x-branch-id', branchId)
+      .send({ version: version1 })
+      .expect(200);
+
+    const version2 = shipRes.body.version;
+
+    // 6. Execute concurrent receive calls
+    const receivePromises = [
+      request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/receive`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: version2 }),
+      request(app.getHttpServer())
+        .post(`/api/v1/operations/transfers/${transferId}/receive`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('x-warehouse-id', warehouseId)
+        .set('x-branch-id', branchId)
+        .send({ version: version2 }),
+    ];
+
+    const results = await Promise.all(receivePromises);
+
+    // At least one should succeed (return 200)
+    const successRes = results.find(r => r.status === 200);
+    expect(successRes).toBeDefined();
+
+    // 7. Query outboxEvent table
+    const outboxEvents = await prisma.outboxEvent.findMany({
+      where: {
+        eventType: 'TRANSFER_RECEIVED',
+        documentId: transferId,
+      },
+    });
+
+    // 8. Assert exactly 1 TRANSFER_RECEIVED outbox event is created
+    expect(outboxEvents.length).toBe(1);
+
+    // Cleanup local test data
+    await prisma.lotAllocation.deleteMany({ where: { transferLine: { itemId } } });
+    await prisma.transferLine.deleteMany({ where: { itemId } });
+    await prisma.transfer.deleteMany({ where: { id: transferId } });
+
+    // Disable triggers before deleting ledgers
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`);
+      await prisma.stockLedger.deleteMany({ where: { OR: [{ warehouseId: sourceWh.id }, { itemId }] } });
+      await prisma.costLedger.deleteMany({ where: { OR: [{ warehouseId: sourceWh.id }, { itemId }] } });
+    } catch (err) {
+      console.warn('Could not disable trigger or delete ledgers:', err.message);
+    } finally {
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);
+        await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger ENABLE TRIGGER cost_ledger_immutable;`);
+      } catch (err) {}
+    }
+
+    await prisma.userWarehouseScope.deleteMany({ where: { warehouseId: sourceWh.id } });
+    await prisma.warehouseItem.deleteMany({ where: { warehouseId: sourceWh.id } });
+    await prisma.warehouse.delete({ where: { id: sourceWh.id } });
   });
 });

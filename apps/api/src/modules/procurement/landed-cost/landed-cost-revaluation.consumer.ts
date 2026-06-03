@@ -63,6 +63,8 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
             string,
             { itemId: string; lotIds: Set<string> }
           >();
+          const grnLineMap = new Map<string, any>();
+          const lockedGrnIds = new Set<string>();
 
           for (const allocation of voucher.lines) {
             const grnLine = await tx.gRNLine.findUnique({
@@ -76,6 +78,18 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
               );
               continue;
             }
+
+            const grnId = grnLine.goodsReceivedNote.id;
+            if (!lockedGrnIds.has(grnId)) {
+              await tx.$queryRaw`
+                SELECT id FROM "goods_received_notes"
+                WHERE id = ${grnId}
+                FOR UPDATE
+              `;
+              lockedGrnIds.add(grnId);
+            }
+
+            grnLineMap.set(allocation.grnLineId, grnLine);
 
             const warehouseId = grnLine.goodsReceivedNote.warehouseId;
             const itemId = grnLine.itemId;
@@ -113,10 +127,7 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
           }
 
           for (const allocation of voucher.lines) {
-            const grnLine = await tx.gRNLine.findUnique({
-              where: { id: allocation.grnLineId },
-              include: { goodsReceivedNote: true },
-            });
+            const grnLine = grnLineMap.get(allocation.grnLineId);
 
             if (!grnLine) continue;
 
