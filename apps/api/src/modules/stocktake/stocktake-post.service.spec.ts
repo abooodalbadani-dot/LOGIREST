@@ -86,6 +86,7 @@ describe('StocktakePostService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   beforeEach(async () => {
@@ -100,6 +101,7 @@ describe('StocktakePostService', () => {
 
     service = module.get<StocktakePostService>(StocktakePostService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockSessionFindUnique());
     mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false, item: { sku: 'SKU1' } });
   });
 

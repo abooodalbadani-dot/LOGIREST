@@ -69,6 +69,20 @@ export class AdjustmentVoidService {
         const qtyVal = Number(line.quantity);
 
         if (line.direction === AdjustmentDirection.IN) {
+          const lockedItem = await this.lockService.lockItem(
+            tx,
+            adj.warehouseId,
+            item.id,
+          );
+          if (lockedItem) {
+            const itemQty = Number(lockedItem.qtyOnHand);
+            if (itemQty < qtyVal) {
+              throw new BadRequestException(
+                `Cannot void adjustment IN: Item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${qtyVal}`,
+              );
+            }
+          }
+
           if (item.isBatched || item.hasExpiry) {
             const lotId = line.lotId;
             if (!lotId) {
@@ -90,20 +104,6 @@ export class AdjustmentVoidService {
                   `Cannot void adjustment IN: Item ${item.sku} (lot ${lotId}) has been partially consumed. Available: ${lotQty}, Required to void: ${qtyVal}`,
                 );
               }
-            }
-          }
-
-          const lockedItem = await this.lockService.lockItem(
-            tx,
-            adj.warehouseId,
-            item.id,
-          );
-          if (lockedItem) {
-            const itemQty = Number(lockedItem.qtyOnHand);
-            if (itemQty < qtyVal) {
-              throw new BadRequestException(
-                `Cannot void adjustment IN: Item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${qtyVal}`,
-              );
             }
           }
         }
@@ -341,6 +341,8 @@ export class AdjustmentVoidService {
                 `Lot ID is required for batched item: ${item.sku}`,
               );
             }
+
+            await this.lockService.lockItem(tx, adj.warehouseId, item.id);
 
             await this.lockService.lockLots(tx, adj.warehouseId, item.id, [
               lotId,

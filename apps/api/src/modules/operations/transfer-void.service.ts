@@ -33,6 +33,26 @@ export class TransferVoidService {
       );
     }
     return this.prisma.$transaction(async (tx) => {
+      // Lock the document first using SELECT FOR UPDATE
+      const lockedDoc = await this.lockService.lockDocument(
+        tx,
+        transferId,
+        DocumentType.TRANSFER,
+      );
+      if (!lockedDoc) {
+        throw new NotFoundException(`Transfer with ID ${transferId} not found`);
+      }
+
+      if (lockedDoc.status !== 'RECEIVED') {
+        throw new BadRequestException(
+          'Transfer must be in RECEIVED status to be voided',
+        );
+      }
+
+      if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
       const transfer = await tx.transfer.findUnique({
         where: { id: transferId },
         include: {
@@ -42,29 +62,53 @@ export class TransferVoidService {
         },
       });
 
-      if (!transfer) {
-        throw new NotFoundException(`Transfer with ID ${transferId} not found`);
-      }
-
-      if (transfer.status !== 'RECEIVED') {
-        throw new BadRequestException(
-          'Transfer must be in RECEIVED status to be voided',
-        );
-      }
-
-      if (clientVersion !== undefined && transfer.version !== clientVersion) {
-        throw new BadRequestException('Version conflict detected');
-      }
-
       // Sort lines deterministically to prevent deadlocks
       const sortedLines = [...transfer.lines].sort((a, b) =>
         a.itemId.localeCompare(b.itemId),
       );
 
+      // Deterministically sort warehouse IDs to prevent cross-warehouse deadlocks
+      const sortedWhs = [transfer.fromWarehouseId, transfer.toWarehouseId].sort();
+
+      // Pre-acquire locks in deterministic order: Warehouse -> Item -> Lot
+      for (const whId of sortedWhs) {
+        for (const line of sortedLines) {
+          const item = line.item;
+          // Lock WarehouseItem first
+          await this.lockService.lockItem(tx, whId, item.id);
+
+          // Lock WarehouseItemLot second (if batched)
+          if (item.isBatched || item.hasExpiry) {
+            const allocations = await tx.lotAllocation.findMany({
+              where: { transferLineId: line.id },
+            });
+            const lotIds = allocations.map((a) => a.lotId).sort();
+            if (lotIds.length > 0) {
+              await this.lockService.lockLots(tx, whId, item.id, lotIds);
+            }
+          }
+        }
+      }
+
       // 1. Lock and validate balances in destination warehouse (we need to deduct received stock)
       for (const line of sortedLines) {
         const item = line.item;
         const receivedQty = Number(line.quantityReceived);
+
+        // Lock WarehouseItem first (destination warehouse)
+        const lockedItem = await this.lockService.lockItem(
+          tx,
+          transfer.toWarehouseId,
+          item.id,
+        );
+        if (lockedItem) {
+          const itemQty = Number(lockedItem.qtyOnHand);
+          if (itemQty < receivedQty) {
+            throw new BadRequestException(
+              `Cannot void Transfer: Destination warehouse item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${receivedQty}`,
+            );
+          }
+        }
 
         if (item.isBatched || item.hasExpiry) {
           const allocations = await tx.lotAllocation.findMany({
@@ -102,20 +146,6 @@ export class TransferVoidService {
               }
               remainingReceived -= receivedForLot;
             }
-          }
-        }
-
-        const lockedItem = await this.lockService.lockItem(
-          tx,
-          transfer.toWarehouseId,
-          item.id,
-        );
-        if (lockedItem) {
-          const itemQty = Number(lockedItem.qtyOnHand);
-          if (itemQty < receivedQty) {
-            throw new BadRequestException(
-              `Cannot void Transfer: Destination warehouse item ${item.sku} has been partially consumed. Available: ${itemQty}, Required to void: ${receivedQty}`,
-            );
           }
         }
       }
@@ -228,13 +258,11 @@ export class TransferVoidService {
             }
           }
         } else {
-          // Unbatched item: lock and update WarehouseItems
-          await this.lockService.lockItem(
-            tx,
-            transfer.fromWarehouseId,
-            item.id,
-          );
-          await this.lockService.lockItem(tx, transfer.toWarehouseId, item.id);
+          // Unbatched item: lock and update WarehouseItems in sorted warehouse order
+          const sortedWhs = [transfer.fromWarehouseId, transfer.toWarehouseId].sort();
+          for (const whId of sortedWhs) {
+            await this.lockService.lockItem(tx, whId, item.id);
+          }
 
           // Add to origin
           await tx.warehouseItem.update({
@@ -513,10 +541,17 @@ export class TransferVoidService {
         }
       }
 
-      // Update document status
-      const updatedTransfer = await tx.transfer.update({
+      // Update document status with version check
+      const updateResult = await tx.transfer.updateMany({
+        where: { id: transferId, version: lockedDoc.version },
+        data: { status: 'VOIDED', version: lockedDoc.version + 1 },
+      });
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Version conflict detected');
+      }
+
+      const updatedTransfer = await tx.transfer.findUnique({
         where: { id: transferId },
-        data: { status: 'VOIDED', version: transfer.version + 1 },
       });
 
       const stepNumber =
@@ -547,12 +582,12 @@ export class TransferVoidService {
           targetTable: 'transfers',
           targetId: transfer.id,
           beforeStateJson: JSON.stringify({
-            status: transfer.status,
-            version: transfer.version,
+            status: lockedDoc.status,
+            version: lockedDoc.version,
           }),
           afterStateJson: JSON.stringify({
             status: 'VOIDED',
-            version: transfer.version + 1,
+            version: lockedDoc.version + 1,
           }),
           ipAddress: ipAddress || null,
         },

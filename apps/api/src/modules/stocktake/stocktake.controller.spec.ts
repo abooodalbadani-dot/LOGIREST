@@ -31,7 +31,12 @@ describe('StocktakeController', () => {
     post: jest.fn(),
   };
 
-  const mockPrismaService = {};
+  const mockPrismaService: any = {
+    $transaction: jest.fn((cb) => cb(mockPrismaService)),
+    stocktakeSession: {
+      findUnique: jest.fn(),
+    },
+  };
   const mockWorkflowService = {};
 
   const mockRequest = {
@@ -61,6 +66,9 @@ describe('StocktakeController', () => {
     jest.clearAllMocks();
     mockStocktakeService.findOne.mockResolvedValue({
       id: 'session-1',
+      warehouseId: 'wh-1',
+    });
+    mockPrismaService.stocktakeSession.findUnique.mockResolvedValue({
       warehouseId: 'wh-1',
     });
   });
@@ -118,7 +126,12 @@ describe('StocktakeController', () => {
     mockStocktakeService.count.mockResolvedValue({ success: true });
     const counts = [{ itemId: 'item-1', qtyCounted: 10 }];
 
-    const result = await controller.count('session-1', { counts }, 'user-1');
+    const result = await controller.count(
+      'session-1',
+      { counts },
+      'user-1',
+      'wh-1',
+    );
     expect(result.id).toEqual('session-1');
     expect(mockStocktakeService.count).toHaveBeenCalledWith(
       'session-1',

@@ -108,34 +108,67 @@ describe('Stocktake Lock Lifecycle E2E', () => {
 
   afterAll(async () => {
     if (prisma) {
-      await Promise.all([
-        prisma.userWarehouseScope.deleteMany({ where: { userId: adminId } }),
-        prisma.approvalEvent.deleteMany({ where: { userId: adminId } }),
-        prisma.refreshToken.deleteMany({ where: { userId: adminId } }),
-        prisma.auditLog.deleteMany({ where: { userId: adminId } }),
-        prisma.warehouseLock.deleteMany({ where: { warehouseId } }),
-        prisma.stocktakeCount.deleteMany({ where: { itemId } }),
-        prisma.stocktakeSnapshot.deleteMany({ where: { itemId } }),
-        prisma.stockLedger.deleteMany({ where: { itemId } }),
-        prisma.costLedger.deleteMany({ where: { itemId } }),
-        prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } }),
-        prisma.gRNLine.deleteMany({ where: { itemId } }),
-        prisma.pOLine.deleteMany({ where: { itemId } }),
-      ]);
+      try {
+        await Promise.all([
+          prisma.userWarehouseScope.deleteMany({ where: { userId: adminId } }),
+          prisma.approvalEvent.deleteMany({ where: { userId: adminId } }),
+          prisma.refreshToken.deleteMany({ where: { userId: adminId } }),
+          prisma.auditLog.deleteMany({ where: { userId: adminId } }),
+          prisma.warehouseLock.deleteMany({ where: { warehouseId } }),
+          prisma.stocktakeCount.deleteMany({ where: { itemId } }),
+          prisma.stocktakeSnapshot.deleteMany({ where: { itemId } }),
+          prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } }),
+          prisma.gRNLine.deleteMany({ where: { itemId } }),
+          prisma.pOLine.deleteMany({ where: { itemId } }),
+          prisma.warehouseItemLot.deleteMany({ where: { itemId } }),
+          prisma.warehouseItem.deleteMany({ where: { itemId } }),
+        ]);
+      } catch (err) {}
 
-      await prisma.goodsReceivedNote.deleteMany({ where: { warehouseId } });
-      await prisma.purchaseOrder.deleteMany({ where: { supplierId } });
-      await prisma.stocktakeSession.deleteMany({ where: { warehouseId } });
+      try {
+        await prisma.stockLedger.deleteMany({ where: { itemId } });
+      } catch (err) {}
+      try {
+        await prisma.costLedger.deleteMany({ where: { itemId } });
+      } catch (err) {}
 
-      await prisma.item.deleteMany({ where: { categoryId } });
-      await prisma.unitOfMeasure.delete({ where: { id: uomId } });
-      await prisma.category.delete({ where: { id: categoryId } });
-      await prisma.supplier.delete({ where: { id: supplierId } });
-      await prisma.currency.delete({ where: { id: currencyId } });
-      await prisma.warehouse.delete({ where: { id: warehouseId } });
-      await prisma.documentSequence.deleteMany({ where: { branchId } });
-      await prisma.branch.delete({ where: { id: branchId } });
-      await prisma.user.delete({ where: { id: adminId } });
+      try {
+        await prisma.goodsReceivedNote.deleteMany({ where: { warehouseId } });
+      } catch (err) {}
+      try {
+        await prisma.purchaseOrder.deleteMany({ where: { supplierId } });
+      } catch (err) {}
+      try {
+        await prisma.stocktakeSession.deleteMany({ where: { warehouseId } });
+      } catch (err) {}
+
+      try {
+        await prisma.item.deleteMany({ where: { categoryId } });
+      } catch (err) {}
+      try {
+        await prisma.unitOfMeasure.delete({ where: { id: uomId } });
+      } catch (err) {}
+      try {
+        await prisma.category.delete({ where: { id: categoryId } });
+      } catch (err) {}
+      try {
+        await prisma.supplier.delete({ where: { id: supplierId } });
+      } catch (err) {}
+      try {
+        await prisma.currency.delete({ where: { id: currencyId } });
+      } catch (err) {}
+      try {
+        await prisma.warehouse.delete({ where: { id: warehouseId } });
+      } catch (err) {}
+      try {
+        await prisma.documentSequence.deleteMany({ where: { branchId } });
+      } catch (err) {}
+      try {
+        await prisma.branch.delete({ where: { id: branchId } });
+      } catch (err) {}
+      try {
+        await prisma.user.delete({ where: { id: adminId } });
+      } catch (err) {}
 
       await prisma.$disconnect();
     }
@@ -198,7 +231,7 @@ describe('Stocktake Lock Lifecycle E2E', () => {
 
     // 5. Try to Post GRN (Should block with 423 Locked)
     const grnPostBlockedRes = await request(app.getHttpServer())
-      .post(`/api/v1/procurement/goods-received/${grn.id}/post`)
+      .post(`/api/v1/procurement/grns/${grn.id}/post`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -226,13 +259,13 @@ describe('Stocktake Lock Lifecycle E2E', () => {
 
     // 9. Post GRN should now succeed (returns 200 OK)
     const grnPostSucceedRes = await request(app.getHttpServer())
-      .post(`/api/v1/procurement/goods-received/${grn.id}/post`)
+      .post(`/api/v1/procurement/grns/${grn.id}/post`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
       .send({ version: 1 })
       .expect(200);
 
-    expect(grnPostSucceedRes.body.status).toBe('POSTED');
+    expect(grnPostSucceedRes.body.data.status).toBe('POSTED');
   });
 });

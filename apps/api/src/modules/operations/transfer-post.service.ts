@@ -473,6 +473,13 @@ export class TransferPostService {
               },
             });
 
+            // Lock WarehouseItem first (destination warehouse)
+            await this.lockService.lockItem(
+              tx,
+              transfer.toWarehouseId,
+              item.id,
+            );
+
             if (item.isBatched || item.hasExpiry) {
               // Retrieve LotAllocations to know which lots were shipped
               const allocations = await tx.lotAllocation.findMany({
@@ -536,13 +543,6 @@ export class TransferPostService {
                 }
               }
             } else {
-              // Unbatched item: lock and upsert WarehouseItem directly
-              await this.lockService.lockItem(
-                tx,
-                transfer.toWarehouseId,
-                item.id,
-              );
-
               // Create StockLedger entry
               await tx.stockLedger.create({
                 data: {

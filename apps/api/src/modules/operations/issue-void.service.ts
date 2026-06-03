@@ -75,6 +75,18 @@ export class IssueVoidService {
         const item = line.item;
         const qtyVal = Number(line.quantity);
 
+        const whItem = await this.lockService.lockItem(
+          tx,
+          issue.warehouseId,
+          item.id,
+        );
+        if (!whItem) {
+          throw new NotFoundException(
+            `WarehouseItem not found for warehouse ${issue.warehouseId} and item ${item.id}`,
+          );
+        }
+        const currentWac = whItem.wac;
+
         if (item.isBatched || item.hasExpiry) {
           const allocations = await tx.lotAllocation.findMany({
             where: { issueLineId: line.id },
@@ -116,18 +128,6 @@ export class IssueVoidService {
             });
           }
         }
-
-        const whItem = await this.lockService.lockItem(
-          tx,
-          issue.warehouseId,
-          item.id,
-        );
-        if (!whItem) {
-          throw new NotFoundException(
-            `WarehouseItem not found for warehouse ${issue.warehouseId} and item ${item.id}`,
-          );
-        }
-        const currentWac = whItem.wac;
 
         await tx.warehouseItem.update({
           where: {

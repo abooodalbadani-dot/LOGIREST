@@ -11,7 +11,7 @@ describe('KitchenRequestVoidService', () => {
   let service: KitchenRequestVoidService;
 
   const mockIssueVoidService = { void: jest.fn() };
-  const mockLockService = { lockItem: jest.fn(), lockLots: jest.fn() };
+  const mockLockService = { lockItem: jest.fn(), lockLots: jest.fn(), lockDocument: jest.fn() };
 
   const mockRequestFindUnique = jest.fn();
   const mockRequestUpdate = jest.fn();
@@ -55,6 +55,7 @@ describe('KitchenRequestVoidService', () => {
 
     service = module.get<KitchenRequestVoidService>(KitchenRequestVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockRequestFindUnique());
     mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false });
   });
 

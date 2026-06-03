@@ -96,6 +96,20 @@ export class GrnVoidService {
         const item = line.item;
         const qtyVal = Number(line.quantityReceived);
 
+        const lockedItem = await this.lockService.lockItem(
+          tx,
+          grn.warehouseId,
+          item.id,
+        );
+        if (lockedItem) {
+          const itemQty = Number(lockedItem.qtyOnHand);
+          if (itemQty < qtyVal) {
+            throw new BadRequestException(
+              'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
+            );
+          }
+        }
+
         if (item.isBatched || item.hasExpiry) {
           const lotId = line.lotId;
           if (!lotId) {
@@ -117,20 +131,6 @@ export class GrnVoidService {
                 'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
               );
             }
-          }
-        }
-
-        const lockedItem = await this.lockService.lockItem(
-          tx,
-          grn.warehouseId,
-          item.id,
-        );
-        if (lockedItem) {
-          const itemQty = Number(lockedItem.qtyOnHand);
-          if (itemQty < qtyVal) {
-            throw new BadRequestException(
-              'GRN voiding is rejected because items from this receipt have been partially or fully issued/consumed.',
-            );
           }
         }
       }

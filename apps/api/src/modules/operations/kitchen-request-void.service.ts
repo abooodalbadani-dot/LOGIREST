@@ -31,6 +31,28 @@ export class KitchenRequestVoidService {
     }
     return this.prisma.$transaction(
       async (tx) => {
+        // Lock the document first using SELECT FOR UPDATE
+        const lockedDoc = await this.lockService.lockDocument(
+          tx,
+          kitchenRequestId,
+          DocumentType.KITCHEN_REQUEST,
+        );
+        if (!lockedDoc) {
+          throw new NotFoundException(
+            `KitchenRequest with ID ${kitchenRequestId} not found`,
+          );
+        }
+
+        if (lockedDoc.status !== 'FULFILLED') {
+          throw new BadRequestException(
+            'KitchenRequest must be in FULFILLED status to be voided',
+          );
+        }
+
+        if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+          throw new BadRequestException('Version conflict detected');
+        }
+
         const request = await tx.kitchenRequest.findUnique({
           where: { id: kitchenRequestId },
           include: {
@@ -47,16 +69,6 @@ export class KitchenRequestVoidService {
           throw new NotFoundException(
             `KitchenRequest with ID ${kitchenRequestId} not found`,
           );
-        }
-
-        if (request.status !== 'FULFILLED') {
-          throw new BadRequestException(
-            'KitchenRequest must be in FULFILLED status to be voided',
-          );
-        }
-
-        if (clientVersion !== undefined && request.version !== clientVersion) {
-          throw new BadRequestException('Version conflict detected');
         }
 
         // Check if any item is frozen/locked in the warehouse
@@ -78,14 +90,6 @@ export class KitchenRequestVoidService {
 
         // If linked to an InventoryIssue, reverse stock within the same transaction
         if (request.inventoryIssue) {
-          for (const reqItem of request.items) {
-            await this.lockService.lockItem(
-              tx,
-              request.warehouseId,
-              reqItem.itemId,
-            );
-          }
-
           await this.issueVoidService.void(
             request.inventoryIssue.id,
             userId,
@@ -98,7 +102,7 @@ export class KitchenRequestVoidService {
 
         const updatedRequest = await tx.kitchenRequest.update({
           where: { id: kitchenRequestId },
-          data: { status: 'VOIDED', version: request.version + 1 },
+          data: { status: 'VOIDED', version: lockedDoc.version + 1 },
         });
 
         const stepNumber =
@@ -129,12 +133,12 @@ export class KitchenRequestVoidService {
             targetTable: 'kitchen_requests',
             targetId: request.id,
             beforeStateJson: JSON.stringify({
-              status: request.status,
-              version: request.version,
+              status: lockedDoc.status,
+              version: lockedDoc.version,
             }),
             afterStateJson: JSON.stringify({
               status: 'VOIDED',
-              version: request.version + 1,
+              version: lockedDoc.version + 1,
             }),
             ipAddress: ipAddress || null,
           },

@@ -125,6 +125,14 @@ export class AdjustmentPostService {
           }
 
           if (line.direction === AdjustmentDirection.IN) {
+            // Lock WarehouseItem row
+            const lockedItem = await this.lockService.lockItem(
+              tx,
+              adj.warehouseId,
+              item.id,
+            );
+            const currentWac = lockedItem ? Number(lockedItem.wac) : 0;
+
             // Lock lot row (SELECT FOR UPDATE)
             await this.lockService.lockLots(tx, adj.warehouseId, item.id, [
               lotId,
@@ -150,14 +158,6 @@ export class AdjustmentPostService {
                 qtyOnHand: { increment: qtyVal },
               },
             });
-
-            // Lock WarehouseItem row
-            const lockedItem = await this.lockService.lockItem(
-              tx,
-              adj.warehouseId,
-              item.id,
-            );
-            const currentWac = lockedItem ? Number(lockedItem.wac) : 0;
 
             // Upsert WarehouseItem
             await tx.warehouseItem.upsert({
@@ -209,6 +209,14 @@ export class AdjustmentPostService {
             });
           } else {
             // Outflow: decrement
+            // Lock WarehouseItem row
+            const lockedItem = await this.lockService.lockItem(
+              tx,
+              adj.warehouseId,
+              item.id,
+            );
+            this.lockService.assertItemBalance(lockedItem, qtyVal, item.id);
+
             // Lock lot row (SELECT FOR UPDATE)
             const lockedLots = await this.lockService.lockLots(
               tx,
@@ -218,14 +226,6 @@ export class AdjustmentPostService {
             );
             const lockedLot = lockedLots.length > 0 ? lockedLots[0] : null;
             this.lockService.assertLotBalance(lockedLot, qtyVal, lotId);
-
-            // Lock WarehouseItem row
-            const lockedItem = await this.lockService.lockItem(
-              tx,
-              adj.warehouseId,
-              item.id,
-            );
-            this.lockService.assertItemBalance(lockedItem, qtyVal, item.id);
 
             // Decrement WarehouseItemLot
             await tx.warehouseItemLot.update({

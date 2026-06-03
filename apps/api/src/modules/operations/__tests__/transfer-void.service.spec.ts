@@ -38,6 +38,7 @@ describe('TransferVoidService', () => {
       findUnique: mockTransferFindUnique,
       update: mockTransferUpdate,
       findFirst: mockTransferFindFirst,
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     stocktakeSession: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -88,6 +89,7 @@ describe('TransferVoidService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   beforeEach(async () => {
@@ -101,6 +103,7 @@ describe('TransferVoidService', () => {
 
     service = module.get<TransferVoidService>(TransferVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockTransferFindUnique());
   });
 
   it('should void a RECEIVED Transfer successfully (unbatched item)', async () => {
@@ -157,8 +160,8 @@ describe('TransferVoidService', () => {
     expect(result).toBeDefined();
     expect(mockWarehouseItemUpdate).toHaveBeenCalled();
     expect(mockStockLedgerCreate).toHaveBeenCalled();
-    expect(mockTransferUpdate).toHaveBeenCalledWith({
-      where: { id: transferId },
+    expect(mockPrismaTx.transfer.updateMany).toHaveBeenCalledWith({
+      where: { id: transferId, version: 1 },
       data: { status: 'VOIDED', version: 2 },
     });
   });

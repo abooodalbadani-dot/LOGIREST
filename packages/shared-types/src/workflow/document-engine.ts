@@ -27,7 +27,8 @@ export type DocumentAction =
   | 'INTERNAL_MOVEMENT'
   | 'SHIP'
   | 'RECEIVE'
-  | 'CLOSE';
+  | 'CLOSE'
+  | 'RECOUNT';
 
 import { 
   PR_STATUS, 
@@ -225,6 +226,7 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
       'APPROVE': { targetStatus: STOCKTAKE_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
       'REJECT': { targetStatus: STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
       'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
+      'RECOUNT': { targetStatus: STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR'] },
     },
     [STOCKTAKE_STATUS.APPROVED]: {
       'POST': { targetStatus: STOCKTAKE_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR'] },

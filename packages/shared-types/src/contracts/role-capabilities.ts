@@ -34,7 +34,8 @@ export type CapabilityAction =
   | 'count'
   | 'review'
   | 'close'
-  | 'fulfill';
+  | 'fulfill'
+  | 'recount';
 
 export const ROLE_CAPABILITIES = {
   adjustment: {
@@ -75,6 +76,7 @@ export const ROLE_CAPABILITIES = {
     close: ['ADMIN', 'INV_MGR'] as const,
     view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'] as const,
+    recount: ['ADMIN', 'INV_MGR'] as const,
   },
   kitchen_request: {
     create: ['ADMIN', 'KITCHEN_CHIEF', 'INV_MGR', 'STORE_MGR'] as const,

@@ -19,6 +19,7 @@ import { TransferVoidService } from './transfer-void.service';
 import { KitchenRequestVoidService } from './kitchen-request-void.service';
 import { LotsAvailableService } from './lots-available.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
@@ -53,8 +54,12 @@ export class OperationsController {
   async getLotsAvailable(
     @Query('item_id') itemId: string,
     @Query('warehouse_id') warehouseId: string,
+    @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
-    return this.lotsAvailableService.getLotsAvailable(itemId, warehouseId);
+    if (warehouseId !== activeWarehouseId) {
+      throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
+    }
+    return this.lotsAvailableService.getLotsAvailable(itemId, activeWarehouseId);
   }
 
   @Post(':documentType/:id/void')

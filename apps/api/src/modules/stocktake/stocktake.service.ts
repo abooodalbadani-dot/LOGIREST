@@ -433,53 +433,11 @@ export class StocktakeService {
     );
   }
 
-  async recount(id: string, body: { item_ids?: string[] }, userId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const session = await tx.stocktakeSession.findUnique({
-        where: { id },
-      });
-      if (!session) {
-        throw new NotFoundException(`StocktakeSession ${id} not found`);
-      }
-
-      await tx.stocktakeSession.update({
-        where: { id },
-        data: {
-          status: 'COUNTING',
-          version: { increment: 1 },
-        },
-      });
-
-      const stepNumber =
-        (await tx.approvalEvent.count({
-          where: {
-            documentId: id,
-            documentType: 'STOCKTAKE',
-          },
-        })) + 1;
-
-      await tx.approvalEvent.create({
-        data: {
-          documentId: id,
-          documentType: 'STOCKTAKE',
-          fromStatus: session.status,
-          toStatus: 'COUNTING',
-          actionPerformed: 'RECOUNT',
-          userId,
-          userRole: Role.INV_MGR,
-          stepNumber,
-          comments: `Partial recount requested for items: ${body.item_ids?.join(', ') || 'All'}`,
-        },
-      });
-
-      return this.findOne(id);
-    });
-  }
-
-  async reviewVariance(
+  async recount(
     id: string,
-    body: { items: Array<{ line_id: string; variance_reason?: string }> },
+    body: { item_ids?: string[]; version?: number; ipAddress?: string },
     userId: string,
+    userRole: Role,
   ) {
     return this.prisma.$transaction(async (tx) => {
       const session = await tx.stocktakeSession.findUnique({
@@ -489,37 +447,49 @@ export class StocktakeService {
         throw new NotFoundException(`StocktakeSession ${id} not found`);
       }
 
-      await tx.stocktakeSession.update({
+      return this.workflowService.executeTransition(
+        id,
+        'stocktakeSession',
+        'RECOUNT',
+        userId,
+        userRole,
+        `Partial recount requested for items: ${body.item_ids?.join(', ') || 'All'}`,
+        body.version,
+        body.ipAddress,
+        tx,
+      );
+    });
+  }
+
+  async reviewVariance(
+    id: string,
+    body: {
+      items: Array<{ line_id: string; variance_reason?: string }>;
+      version?: number;
+      ipAddress?: string;
+    },
+    userId: string,
+    userRole: Role,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const session = await tx.stocktakeSession.findUnique({
         where: { id },
-        data: {
-          status: 'REVIEW',
-          version: { increment: 1 },
-        },
       });
+      if (!session) {
+        throw new NotFoundException(`StocktakeSession ${id} not found`);
+      }
 
-      const stepNumber =
-        (await tx.approvalEvent.count({
-          where: {
-            documentId: id,
-            documentType: 'STOCKTAKE',
-          },
-        })) + 1;
-
-      await tx.approvalEvent.create({
-        data: {
-          documentId: id,
-          documentType: 'STOCKTAKE',
-          fromStatus: session.status,
-          toStatus: 'REVIEW',
-          actionPerformed: 'SUBMIT', // variance review action
-          userId,
-          userRole: Role.INV_MGR,
-          stepNumber,
-          comments: 'Variance review submitted',
-        },
-      });
-
-      return this.findOne(id);
+      return this.workflowService.executeTransition(
+        id,
+        'stocktakeSession',
+        'REVIEW_VARIANCE',
+        userId,
+        userRole,
+        'Variance review submitted',
+        body.version,
+        body.ipAddress,
+        tx,
+      );
     });
   }
 

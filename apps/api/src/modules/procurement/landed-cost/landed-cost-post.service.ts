@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../../database/prisma.service';
 import { LandedCostCalculatorService } from './landed-cost-calculator.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class LandedCostPostService {
@@ -15,7 +16,7 @@ export class LandedCostPostService {
     private readonly revaluationQueue: Queue,
   ) {}
 
-  async post(voucherId: string, userId: string) {
+  async post(voucherId: string, userId: string, role: Role) {
     const voucher = await this.prisma.landedCostVoucher.findUnique({
       where: { id: voucherId },
       include: {
@@ -38,6 +39,22 @@ export class LandedCostPostService {
       throw new BadRequestException(
         `LandedCostVoucher with ID ${voucherId} not found`,
       );
+    }
+
+    if (role !== 'ADMIN') {
+      for (const rel of voucher.grnRelations) {
+        const hasScope = await this.prisma.userWarehouseScope.findUnique({
+          where: {
+            userId_warehouseId: {
+              userId,
+              warehouseId: rel.grn.warehouseId,
+            },
+          },
+        });
+        if (!hasScope) {
+          throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
+        }
+      }
     }
 
     if (voucher.status !== 'DRAFT') {

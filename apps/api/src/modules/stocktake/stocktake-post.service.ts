@@ -24,10 +24,12 @@ export class StocktakePostService {
     ipAddress?: string,
   ): Promise<any> {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Fetch Session
-      const session = await tx.stocktakeSession.findUnique({
-        where: { id: sessionId },
-      });
+      // 1. Fetch Session and lock document
+      const session = await this.lockService.lockDocument(
+        tx,
+        sessionId,
+        DocumentType.STOCKTAKE,
+      );
 
       if (!session) {
         throw new NotFoundException(
@@ -104,8 +106,9 @@ export class StocktakePostService {
         }
       }
 
-      // 3. Reconcile variances
-      for (const key of allKeys) {
+      // 3. Reconcile variances in sorted order to avoid deadlock
+      const sortedKeys = Array.from(allKeys).sort((a, b) => a.localeCompare(b));
+      for (const key of sortedKeys) {
         const snapshot = snapshotMap.get(key);
         const count = countMap.get(key);
 
@@ -119,17 +122,17 @@ export class StocktakePostService {
 
         if (variance !== 0) {
           if (isBatched && lotId) {
-            // Lock lot row (SELECT FOR UPDATE)
-            await this.lockService.lockLots(tx, session.warehouseId, itemId, [
-              lotId,
-            ]);
-
-            // Lock WarehouseItem row
+            // Lock WarehouseItem row first
             const whItem = await this.lockService.lockItem(
               tx,
               session.warehouseId,
               itemId,
             );
+
+            // Lock lot row (SELECT FOR UPDATE) second
+            await this.lockService.lockLots(tx, session.warehouseId, itemId, [
+              lotId,
+            ]);
             const currentWac = whItem
               ? new Prisma.Decimal(whItem.wac)
               : new Prisma.Decimal(0);

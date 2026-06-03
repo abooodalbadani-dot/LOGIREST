@@ -97,6 +97,9 @@ export class AllocationService {
       );
     }
 
+    // Lock the parent WarehouseItem row to prevent concurrent updates on the total balance
+    await this.lockService.lockItem(tx, warehouseId, itemId);
+
     // Lock candidate lots in sorted order (lotId ASC) to prevent deadlocks
     const lotIds = activeLots.map((l) => l.lotId);
     const lockedLotRows = await this.lockService.lockLots(
@@ -118,9 +121,6 @@ export class AllocationService {
         qtyOnHand: lockedQtyMap.get(lot.lotId) ?? 0,
       }))
       .filter((lot) => lot.qtyOnHand > 0);
-
-    // Lock the parent WarehouseItem row to prevent concurrent updates on the total balance
-    await this.lockService.lockItem(tx, warehouseId, itemId);
 
     // Calculate total available stock across all active lots
     const totalAvailable = activeLots.reduce(

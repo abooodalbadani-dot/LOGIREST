@@ -10,7 +10,7 @@ describe('KitchenRequestVoidService', () => {
   let service: KitchenRequestVoidService;
   let mockIssueVoidService: jest.Mocked<Pick<IssueVoidService, 'void'>>;
   let mockLockService: jest.Mocked<
-    Pick<LedgerLockService, 'lockItem' | 'lockLots'>
+    Pick<LedgerLockService, 'lockItem' | 'lockLots' | 'lockDocument'>
   >;
 
   const mockKitchenRequestFindUnique = jest.fn();
@@ -51,7 +51,8 @@ describe('KitchenRequestVoidService', () => {
     mockLockService = {
       lockItem: jest.fn(),
       lockLots: jest.fn(),
-    };
+      lockDocument: jest.fn(),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -64,6 +65,7 @@ describe('KitchenRequestVoidService', () => {
 
     service = module.get<KitchenRequestVoidService>(KitchenRequestVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockKitchenRequestFindUnique());
     mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false });
   });
 
@@ -180,10 +182,10 @@ describe('KitchenRequestVoidService', () => {
     const result: unknown = await service.void(krId, userId, Role.ADMIN, 1);
 
     expect(result).toBeDefined();
-    expect(mockLockService.lockItem).toHaveBeenCalledWith(
+    expect(mockLockService.lockDocument).toHaveBeenCalledWith(
       mockPrismaTx,
-      'wh-1',
-      'item-1',
+      krId,
+      DocumentType.KITCHEN_REQUEST,
     );
     expect(mockIssueVoidService.void).toHaveBeenCalledWith(
       issueId,
@@ -250,7 +252,7 @@ describe('KitchenRequestVoidService', () => {
     });
   });
 
-  it('should acquire FOR UPDATE locks on all warehouse items when linked issue exists', async () => {
+  it('should acquire FOR UPDATE lock on the kitchen request document', async () => {
     const krId = 'kr-1';
     const issueId = 'issue-1';
     const userId = 'user-1';
@@ -269,25 +271,14 @@ describe('KitchenRequestVoidService', () => {
 
     mockKitchenRequestUpdate.mockResolvedValue({ id: krId, status: 'VOIDED' });
     mockApprovalEventCount.mockResolvedValue(0);
-    mockLockService.lockItem.mockResolvedValue({
-      wac: new Prisma.Decimal(10),
-    } as any);
     mockIssueVoidService.void.mockResolvedValue(undefined);
 
     await service.void(krId, userId, Role.ADMIN, 1);
 
-    expect(mockLockService.lockItem).toHaveBeenCalledTimes(2);
-    expect(mockLockService.lockItem).toHaveBeenNthCalledWith(
-      1,
+    expect(mockLockService.lockDocument).toHaveBeenCalledWith(
       mockPrismaTx,
-      'wh-1',
-      'item-1',
-    );
-    expect(mockLockService.lockItem).toHaveBeenNthCalledWith(
-      2,
-      mockPrismaTx,
-      'wh-1',
-      'item-2',
+      krId,
+      DocumentType.KITCHEN_REQUEST,
     );
   });
 });

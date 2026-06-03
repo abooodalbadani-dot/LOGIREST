@@ -39,6 +39,7 @@ describe('TransferVoidService', () => {
       findUnique: mockTransferFindUnique,
       update: mockTransferUpdate,
       findFirst: mockTransferFindFirst,
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     stocktakeSession: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -89,6 +90,7 @@ describe('TransferVoidService', () => {
   const mockLockService = {
     lockLots: jest.fn(),
     lockItem: jest.fn(),
+    lockDocument: jest.fn(),
   } as unknown as LedgerLockService;
 
   beforeEach(async () => {
@@ -102,6 +104,7 @@ describe('TransferVoidService', () => {
 
     service = module.get<TransferVoidService>(TransferVoidService);
     jest.clearAllMocks();
+    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockTransferFindUnique());
   });
 
   it('should void a RECEIVED transfer successfully', async () => {

@@ -37,7 +37,11 @@ export class LandedCostController {
   ) {}
 
   @Post()
-  async create(@Body() body: unknown, @CurrentUser('id') userId: string) {
+  async create(
+    @Body() body: unknown,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const parsed = CreateLandedCostVoucherSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException(parsed.error.flatten().fieldErrors);
@@ -46,19 +50,29 @@ export class LandedCostController {
     const voucher = await this.landedCostService.create({
       ...parsed.data,
       createdById: userId,
+      userRole: role,
     });
 
     return { data: voucher };
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() body: unknown) {
+  async update(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+  ) {
     const parsed = UpdateLandedCostVoucherSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException(parsed.error.flatten().fieldErrors);
     }
 
-    const voucher = await this.landedCostService.update(id, parsed.data);
+    const voucher = await this.landedCostService.update(id, {
+      ...parsed.data,
+      userId,
+      role,
+    });
     return { data: voucher };
   }
 
@@ -69,13 +83,14 @@ export class LandedCostController {
     @Param('id') id: string,
     @Body() body: unknown,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
   ) {
     const parsed = PostLandedCostVoucherSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException(parsed.error.flatten().fieldErrors);
     }
 
-    const voucher = await this.landedCostPostService.post(id, userId);
+    const voucher = await this.landedCostPostService.post(id, userId, role);
     return { data: voucher };
   }
 

@@ -3,9 +3,11 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class LandedCostService {
@@ -119,6 +121,7 @@ export class LandedCostService {
     transactionDate: string;
     grnIds: string[];
     createdById: string;
+    userRole: Role;
   }) {
     return this.prisma.$transaction(async (tx) => {
       const voucherNumber = await this.generateVoucherNumber();
@@ -126,10 +129,24 @@ export class LandedCostService {
       for (const grnId of data.grnIds) {
         const grn = await tx.goodsReceivedNote.findUnique({
           where: { id: grnId },
-          select: { id: true },
+          select: { id: true, warehouseId: true },
         });
         if (!grn) {
           throw new BadRequestException(`GRN with ID ${grnId} not found`);
+        }
+
+        if (data.userRole !== 'ADMIN') {
+          const hasScope = await tx.userWarehouseScope.findUnique({
+            where: {
+              userId_warehouseId: {
+                userId: data.createdById,
+                warehouseId: grn.warehouseId,
+              },
+            },
+          });
+          if (!hasScope) {
+            throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
+          }
         }
       }
 
@@ -171,12 +188,24 @@ export class LandedCostService {
       allocationMethod?: 'VALUE' | 'QUANTITY' | 'WEIGHT' | 'VOLUME';
       totalAllocatedCost?: number;
       grnIds?: string[];
+      userId: string;
+      role: Role;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.landedCostVoucher.findUnique({
         where: { id },
-        select: { version: true, status: true },
+        select: {
+          version: true,
+          status: true,
+          grnRelations: {
+            include: {
+              grn: {
+                select: { id: true, warehouseId: true },
+              },
+            },
+          },
+        },
       });
 
       if (!existing) {
@@ -193,6 +222,29 @@ export class LandedCostService {
 
       if (existing.status !== 'DRAFT') {
         throw new BadRequestException('Only DRAFT vouchers can be updated.');
+      }
+
+      if (data.role !== 'ADMIN') {
+        const checkGrnIds = data.grnIds || existing.grnRelations.map((r) => r.grnId);
+        for (const grnId of checkGrnIds) {
+          const grn = await tx.goodsReceivedNote.findUnique({
+            where: { id: grnId },
+            select: { warehouseId: true },
+          });
+          if (grn) {
+            const hasScope = await tx.userWarehouseScope.findUnique({
+              where: {
+                userId_warehouseId: {
+                  userId: data.userId,
+                  warehouseId: grn.warehouseId,
+                },
+              },
+            });
+            if (!hasScope) {
+              throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
+            }
+          }
+        }
       }
 
       const updateData: any = {

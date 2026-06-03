@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { StocktakePostService } from './stocktake-post.service';
 import { StocktakeService } from './stocktake.service';
@@ -25,6 +26,7 @@ import {
 } from '../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
+import { PrismaService } from '../../database/prisma.service';
 import type { Request } from 'express';
 
 function mapStocktakeDetail(session: any) {
@@ -111,7 +113,26 @@ export class StocktakeController {
     private readonly stocktakeService: StocktakeService,
     private readonly stocktakePostService: StocktakePostService,
     private readonly scopeValidationService: ScopeValidationService,
+    private readonly prisma: PrismaService,
   ) {}
+
+  private async validateSessionScope(
+    sessionId: string,
+    activeWarehouseId: string,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const session = await tx.stocktakeSession.findUnique({
+        where: { id: sessionId },
+        select: { warehouseId: true },
+      });
+      if (!session) {
+        throw new BadRequestException(`StocktakeSession with ID ${sessionId} not found`);
+      }
+      if (session.warehouseId !== activeWarehouseId) {
+        throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
+      }
+    });
+  }
 
   @Post()
   @Idempotent()
@@ -186,7 +207,9 @@ export class StocktakeController {
       varianceReason?: string;
     },
     @CurrentUser('id') userId: string,
+    @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
+    await this.validateSessionScope(stocktakeId, activeWarehouseId);
     const counted_qty =
       body.countedQty !== undefined ? body.countedQty : body.counted_qty;
     if (counted_qty === undefined) {
@@ -216,7 +239,9 @@ export class StocktakeController {
       varianceReason?: string;
     },
     @CurrentUser('id') userId: string,
+    @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
+    await this.validateSessionScope(sessionId, activeWarehouseId);
     const counted_qty =
       body.countedQty !== undefined ? body.countedQty : body.counted_qty;
     if (counted_qty === undefined) {
@@ -272,7 +297,9 @@ export class StocktakeController {
       counts: Array<{ itemId: string; lotId?: string; qtyCounted: number }>;
     },
     @CurrentUser('id') userId: string,
+    @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
+    await this.validateSessionScope(id, activeWarehouseId);
     await this.stocktakeService.count(id, body.counts, userId);
     return mapStocktakeDetail(await this.stocktakeService.findOne(id));
   }
@@ -370,13 +397,29 @@ export class StocktakeController {
   @HttpCode(HttpStatus.OK)
   async recount(
     @Param('id') id: string,
-    @Body() body: { item_ids?: string[]; itemIds?: string[] },
+    @Body() body: { item_ids?: string[]; itemIds?: string[] | null; version?: number },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @ActiveScope('warehouseId') activeWarehouseId: string,
+    @Req() req: Request,
   ) {
+    await this.validateSessionScope(id, activeWarehouseId);
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
     const session = await this.stocktakeService.recount(
       id,
-      { item_ids: body.itemIds || body.item_ids },
+      {
+        item_ids: body.itemIds || body.item_ids || [],
+        version: body.version,
+        ipAddress,
+      },
       userId,
+      role,
     );
     return mapStocktakeDetail(session);
   }
@@ -386,13 +429,32 @@ export class StocktakeController {
   async reviewVariance(
     @Param('id') id: string,
     @Body()
-    body: { items: Array<{ line_id: string; variance_reason?: string }> },
+    body: {
+      items: Array<{ line_id: string; variance_reason?: string }>;
+      version?: number;
+    },
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: Role,
+    @ActiveScope('warehouseId') activeWarehouseId: string,
+    @Req() req: Request,
   ) {
+    await this.validateSessionScope(id, activeWarehouseId);
+    const ipAddress =
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      undefined;
+
     const session = await this.stocktakeService.reviewVariance(
       id,
-      body,
+      {
+        items: body.items,
+        version: body.version,
+        ipAddress,
+      },
       userId,
+      role,
     );
     return mapStocktakeDetail(session);
   }

@@ -96,6 +96,9 @@ export class GrnPostService {
           );
         }
 
+        // Lock WarehouseItem row
+        await this.lockService.lockItem(tx, grn.warehouseId, item.id);
+
         if (item.isBatched || item.hasExpiry) {
           if (!lotId) {
             throw new BadRequestException(
@@ -140,9 +143,6 @@ export class GrnPostService {
             },
           });
         }
-
-        // Lock WarehouseItem row
-        await this.lockService.lockItem(tx, grn.warehouseId, item.id);
 
         // Upsert WarehouseItem
         await tx.warehouseItem.upsert({
