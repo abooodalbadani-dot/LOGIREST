@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { PrismaModule } from '../../../database/database.module';
 import { SettingsModule } from '../../settings/settings.module';
+import { DocumentSequenceModule } from '../../sequencing/document-sequence.module';
 import { LandedCostController } from './landed-cost.controller';
 import { LandedCostService } from './landed-cost.service';
 import { LandedCostPostService } from './landed-cost-post.service';
@@ -13,6 +14,7 @@ import { RevaluationLockingService } from './revaluation-locking.service';
   imports: [
     PrismaModule,
     SettingsModule,
+    DocumentSequenceModule,
     BullModule.registerQueue({
       name: 'landed-cost-revaluation',
     }),

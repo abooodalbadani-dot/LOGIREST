@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PurchaseRequestsService } from './purchase-requests.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
-import { DocumentSequenceService } from '../sequencing/document-sequence.service';
+import { DocumentNumberService } from '../sequencing/document-number.service';
 import {
   NotFoundException,
   BadRequestException,
@@ -32,7 +32,7 @@ describe('PurchaseRequestsService', () => {
     executeTransition: jest.fn(),
   };
 
-  const mockDocumentSequenceService = {
+  const mockDocumentNumberService = {
     generateNext: jest.fn().mockImplementation((tx, type) => {
       return `${type}-SEQ-00001`;
     }),
@@ -45,8 +45,8 @@ describe('PurchaseRequestsService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: WorkflowService, useValue: mockWorkflowService },
         {
-          provide: DocumentSequenceService,
-          useValue: mockDocumentSequenceService,
+          provide: DocumentNumberService,
+          useValue: mockDocumentNumberService,
         },
       ],
     }).compile();

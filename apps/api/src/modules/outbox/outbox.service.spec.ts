@@ -33,6 +33,7 @@ describe('OutboxService', () => {
   it('should insert event and enqueue BullMQ job', async () => {
     const mockTx = {
       outboxEvent: {
+        findFirst: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue({
           id: 'event-1',
           eventType: 'PR_SUBMITTED',
@@ -49,8 +50,18 @@ describe('OutboxService', () => {
 
     // Cast mockTx back for jest matching checks safely
     const mockTxSpy = mockTx as unknown as {
-      outboxEvent: { create: jest.Mock };
+      outboxEvent: { findFirst: jest.Mock; create: jest.Mock };
     };
+
+    expect(mockTxSpy.outboxEvent.findFirst).toHaveBeenCalledWith({
+      where: {
+        eventType: 'PR_SUBMITTED',
+        payload: {
+          path: ['id'],
+          equals: 'pr-1',
+        },
+      },
+    });
 
     expect(mockTxSpy.outboxEvent.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -71,5 +82,42 @@ describe('OutboxService', () => {
     );
 
     expect(event.id).toBe('event-1');
+  });
+
+  it('should not create a new event if one with the same type and payload ID already exists', async () => {
+    const mockTx = {
+      outboxEvent: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'existing-event-1',
+          eventType: 'PR_SUBMITTED',
+          payload: { id: 'pr-1' },
+          status: 'PENDING',
+          attempts: 0,
+        }),
+        create: jest.fn(),
+      },
+    } as unknown as Parameters<OutboxService['writeEvent']>[0];
+
+    const event = await service.writeEvent(mockTx, 'PR_SUBMITTED', {
+      id: 'pr-1',
+    });
+
+    const mockTxSpy = mockTx as unknown as {
+      outboxEvent: { findFirst: jest.Mock; create: jest.Mock };
+    };
+
+    expect(mockTxSpy.outboxEvent.findFirst).toHaveBeenCalledWith({
+      where: {
+        eventType: 'PR_SUBMITTED',
+        payload: {
+          path: ['id'],
+          equals: 'pr-1',
+        },
+      },
+    });
+
+    expect(mockTxSpy.outboxEvent.create).not.toHaveBeenCalled();
+    expect(mockQueue.add).not.toHaveBeenCalled();
+    expect(event.id).toBe('existing-event-1');
   });
 });

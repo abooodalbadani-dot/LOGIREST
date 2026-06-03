@@ -897,6 +897,8 @@ model OutboxEvent {
   processedAt DateTime?
   createdAt   DateTime  @default(now())
   expiresAt   DateTime
+  documentId  String?
+  eventHash   String?   @map("event_hash") @db.VarChar(64)
 
   @@index([status, createdAt])
   @@map("outbox_events")
@@ -965,6 +967,17 @@ model CostLedgerArchive {
   idempotencyKey String?
 
   @@map("cost_ledger_archive")
+}
+
+model DocumentCounter {
+  docType    String   @map("doc_type")
+  branchCode String   @map("branch_code")
+  year       Int
+  lastSeq    Int      @default(0) @map("last_seq")
+
+  @@id([docType, branchCode, year])
+  @@index([docType, branchCode, year])
+  @@map("document_counters")
 }
 
 

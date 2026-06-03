@@ -37,38 +37,27 @@ describe('ReconciliationJob', () => {
   };
 
   const mockPrismaTx = {
-    warehouseItem: {
-      updateMany: mockWarehouseItemUpdateMany,
-    },
-  } as unknown as Prisma.TransactionClient;
-
-  const mockPrisma = {
     $queryRaw: mockQueryRaw,
     warehouseItem: {
       findMany: mockWarehouseItemFindMany,
+      updateMany: mockWarehouseItemUpdateMany,
     },
     lotAllocation: {
       findMany: mockLotAllocationFindMany,
     },
-    reconciliationRun: {
-      create: mockReconciliationRunCreate,
-    },
     warehouseItemLot: {
       findMany: mockWarehouseItemLotFindMany,
     },
-    goodsReceivedNote: {
-      findMany: mockGrnFindMany,
-    },
-    costLedger: {
-      count: mockCostLedgerCount,
-    },
-    stockLedger: {
-      count: mockStockLedgerCount,
+  } as unknown as Prisma.TransactionClient;
+
+  const mockPrisma = {
+    reconciliationRun: {
+      create: mockReconciliationRunCreate,
     },
     $transaction: jest
       .fn()
       .mockImplementation(
-        (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
+        (cb: (tx: Prisma.TransactionClient) => Promise<unknown>, options?: { isolationLevel?: string }) =>
           cb(mockPrismaTx),
       ),
   } as unknown as PrismaService;
@@ -327,6 +316,7 @@ describe('ReconciliationJob', () => {
       .mockResolvedValueOnce([
         {
           warehouseId: 'wh-1',
+          itemId: 'item-1',
           lotId: 'lot-1',
           total: '10',
         },
@@ -385,5 +375,20 @@ describe('ReconciliationJob', () => {
 
     // Verify counter incremented
     expect(mockMetricsService.reconciliationDiscrepanciesCounter.inc).toHaveBeenCalledWith(1);
+  });
+
+  it('should run transaction with REPEATABLE READ isolation level', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    mockWarehouseItemFindMany.mockResolvedValue([]);
+    mockWarehouseItemLotFindMany.mockResolvedValue([]);
+
+    await job.runReconciliation();
+
+    expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+      }),
+    );
   });
 });

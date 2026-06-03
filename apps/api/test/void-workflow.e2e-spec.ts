@@ -15,6 +15,7 @@ import { DocumentSequenceModule } from '../src/modules/sequencing/document-seque
 import { WarehouseLockModule } from '../src/modules/warehouse-lock/warehouse-lock.module';
 import { OutboxModule } from '../src/modules/outbox/outbox.module';
 import { MetricsModule } from '../src/modules/metrics/metrics.module';
+import { AlertModule } from '../src/modules/alerts/alert.module';
 import { BullModule } from '@nestjs/bullmq';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard';
@@ -27,7 +28,7 @@ import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
 import { randomUUID } from 'crypto';
 import { AdjustmentDirection, AdjustmentReason } from '@prisma/client';
-import { REDIS_CLIENT } from '../src/redis/redis.module';
+import { REDIS_CLIENT, RedisModule } from '../src/redis/redis.module';
 import Redis from 'ioredis';
 
 jest.mock('ioredis', () => {
@@ -93,6 +94,8 @@ describe('Void Workflow (e2e)', () => {
         DocumentSequenceModule,
         OutboxModule,
         MetricsModule,
+        AlertModule,
+        RedisModule,
       ],
       providers: [
         IdempotencyService,
@@ -305,7 +308,7 @@ describe('Void Workflow (e2e)', () => {
   describe('GRN Void (POST /api/v1/operations/grn/:id/void)', () => {
     it('should create and POST a GRN', async () => {
       const res = await request(app.getHttpServer())
-        .post('/api/v1/purchase-orders')
+        .post('/api/v1/procurement/purchase-orders')
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)

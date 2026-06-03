@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
-import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
+import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType } from '@prisma/client';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class PurchaseOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
-    private readonly documentSequenceService: DocumentSequenceService,
+    private readonly documentNumberService: DocumentNumberService,
   ) {}
 
   async create(
@@ -49,7 +49,7 @@ export class PurchaseOrderService {
         branchId = firstBranch.id;
       }
 
-      const poNumber = await this.documentSequenceService.generateNext(
+      const poNumber = await this.documentNumberService.next(
         tx,
         DocumentType.PURCHASE_ORDER,
         branchId,

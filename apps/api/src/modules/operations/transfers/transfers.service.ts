@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
-import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
+import { DocumentNumberService } from '../../sequencing/document-number.service';
 import { DocumentType } from '@prisma/client';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class TransfersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
-    private readonly documentSequenceService: DocumentSequenceService,
+    private readonly documentNumberService: DocumentNumberService,
   ) {}
 
   async create(
@@ -32,7 +32,7 @@ export class TransfersService {
         );
       }
 
-      const transferNumber = await this.documentSequenceService.generateNext(
+      const transferNumber = await this.documentNumberService.next(
         tx,
         DocumentType.TRANSFER,
         warehouse.branchId,

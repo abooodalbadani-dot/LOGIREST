@@ -12,14 +12,14 @@ import {
   AdjustmentReason,
   DocumentType,
 } from '@prisma/client';
-import { DocumentSequenceService } from '../../sequencing/document-sequence.service';
+import { DocumentNumberService } from '../../sequencing/document-number.service';
 
 @Injectable()
 export class AdjustmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
-    private readonly documentSequenceService: DocumentSequenceService,
+    private readonly documentNumberService: DocumentNumberService,
   ) {}
 
   async create(
@@ -81,7 +81,7 @@ export class AdjustmentsService {
         }
       }
 
-      const adjustmentNumber = await this.documentSequenceService.generateNext(
+      const adjustmentNumber = await this.documentNumberService.next(
         tx,
         DocumentType.ADJUSTMENT,
         warehouse.branchId,

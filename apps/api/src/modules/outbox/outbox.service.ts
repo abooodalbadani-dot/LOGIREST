@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, OutboxEvent } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { createHash } from 'crypto';
 
 import { correlationStorage } from '../../common/correlation.context';
 
@@ -21,24 +22,55 @@ export class OutboxService {
     payload: any,
   ): Promise<OutboxEvent> {
     this.logger.log(`Writing outbox event of type: ${eventType}`);
+
+    const documentId =
+      payload && typeof payload === 'object' && 'id' in payload && payload.id
+        ? String(payload.id)
+        : null;
+
+    const eventHash = createHash('sha256')
+      .update(eventType + JSON.stringify(payload))
+      .digest('hex');
+
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days TTL
 
-    const event = await tx.outboxEvent.create({
-      data: {
-        eventType,
-        payload: payload as Prisma.InputJsonValue,
-        status: 'PENDING',
-        attempts: 0,
-        expiresAt,
-      },
-    });
+    let event: OutboxEvent;
+    
+    try {
+      event = await tx.outboxEvent.create({
+        data: {
+          eventType,
+          payload: payload as Prisma.InputJsonValue,
+          status: 'PENDING',
+          attempts: 0,
+          expiresAt,
+          documentId,
+          eventHash,
+        },
+      });
+    } catch (error) {
+      // Catch Prisma duplicate unique constraint error (P2002)
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        this.logger.warn(
+          `Concurrent duplicate outbox event prevented for type ${eventType} with eventHash ${eventHash}.`,
+        );
+        const existing = await tx.outboxEvent.findFirst({
+          where: { eventHash },
+        });
+        if (existing) {
+          return existing;
+        }
+      }
+      throw error;
+    }
 
     const correlationId = correlationStorage.getStore();
 
     // Enqueue background processing job in BullMQ.
-    // A 500ms delay is added to ensure the enclosing database transaction
-    // has completed committing before the worker attempts to fetch this record.
     await this.outboxQueue.add(
       'process-event',
       { eventId: event.id, correlationId },

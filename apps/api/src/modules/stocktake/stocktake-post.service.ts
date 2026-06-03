@@ -220,6 +220,20 @@ export class StocktakePostService {
                   qtyOnHand: { decrement: Math.abs(variance) },
                 },
               });
+
+              // Write CostLedger entry for negative variance
+              await tx.costLedger.create({
+                data: {
+                  warehouseId: session.warehouseId,
+                  itemId,
+                  quantity: variance,
+                  unitPrice: currentWac,
+                  newWac: currentWac,
+                  documentId: session.id,
+                  documentType: DocumentType.STOCKTAKE,
+                  idempotencyKey: `${DocumentType.STOCKTAKE}:cost:${session.id}:${itemId}:${lotId || 'null'}:negative`,
+                },
+              });
             }
           } else {
             // Unbatched item
@@ -276,6 +290,20 @@ export class StocktakePostService {
                 },
                 data: {
                   qtyOnHand: { decrement: Math.abs(variance) },
+                },
+              });
+
+              // Write CostLedger entry for negative variance
+              await tx.costLedger.create({
+                data: {
+                  warehouseId: session.warehouseId,
+                  itemId,
+                  quantity: variance,
+                  unitPrice: currentWac,
+                  newWac: currentWac,
+                  documentId: session.id,
+                  documentType: DocumentType.STOCKTAKE,
+                  idempotencyKey: `${DocumentType.STOCKTAKE}:cost:${session.id}:${itemId}:null:negative`,
                 },
               });
             }

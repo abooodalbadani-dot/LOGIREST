@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role, UpdateKitchenRequestDto } from '@logirest/shared-types';
-import { DocumentSequenceService } from '../sequencing/document-sequence.service';
+import { DocumentNumberService } from '../sequencing/document-number.service';
 import { IssuePostService } from '../operations/issue-post.service';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class KitchenRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workflowService: WorkflowService,
-    private readonly documentSequenceService: DocumentSequenceService,
+    private readonly documentNumberService: DocumentNumberService,
     private readonly issuePostService: IssuePostService,
   ) {}
 
@@ -38,7 +38,7 @@ export class KitchenRequestsService {
         );
       }
 
-      const requestNumber = await this.documentSequenceService.generateNext(
+      const requestNumber = await this.documentNumberService.next(
         tx,
         'KITCHEN_REQUEST',
         warehouse.branchId,
@@ -273,7 +273,7 @@ export class KitchenRequestsService {
         );
       }
 
-      const issueNumber = await this.documentSequenceService.generateNext(
+      const issueNumber = await this.documentNumberService.next(
         tx,
         'INVENTORY_ISSUE',
         warehouse.branchId,

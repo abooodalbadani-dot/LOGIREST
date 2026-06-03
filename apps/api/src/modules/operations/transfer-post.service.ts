@@ -756,6 +756,18 @@ export class TransferPostService {
             },
           });
 
+          // Notification log for administrator at destination warehouse
+          await tx.notificationLog.create({
+            data: {
+              targetRole: Role.ADMIN,
+              warehouseId: transfer.toWarehouseId,
+              message: `Transfer ${transfer.transferNumber || transfer.id} has been successfully received and stocked.`,
+              isRead: false,
+              documentType: DocumentType.TRANSFER,
+              documentId: transfer.id,
+            },
+          });
+
           return updatedTransfer;
         },
         { timeout: 30000 },

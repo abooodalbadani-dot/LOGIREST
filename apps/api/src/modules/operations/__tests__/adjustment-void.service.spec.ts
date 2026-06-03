@@ -151,6 +151,15 @@ describe('AdjustmentVoidService', () => {
       },
       data: { qtyOnHand: { decrement: 5 } },
     });
+    expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId: 'item-1',
+        },
+      },
+      data: { wac: new Prisma.Decimal(0) },
+    });
     expect(mockStockLedgerCreate).toHaveBeenCalledWith({
       data: {
         warehouseId,
@@ -160,6 +169,18 @@ describe('AdjustmentVoidService', () => {
         documentId: adjId,
         documentType: DocumentType.ADJUSTMENT,
         idempotencyKey: 'ADJUSTMENT:stock_void:adj-1:item-1:line-1',
+      },
+    });
+    expect(mockCostLedgerCreate).toHaveBeenCalledWith({
+      data: {
+        warehouseId,
+        itemId: 'item-1',
+        quantity: -5,
+        unitPrice: 10,
+        newWac: new Prisma.Decimal(0),
+        documentId: adjId,
+        documentType: DocumentType.ADJUSTMENT,
+        idempotencyKey: 'ADJUSTMENT:cost_void:adj-1:item-1:line-1',
       },
     });
     expect(mockAdjUpdate).toHaveBeenCalledWith({
@@ -230,6 +251,116 @@ describe('AdjustmentVoidService', () => {
         idempotencyKey: 'ADJUSTMENT:stock_void:adj-2:item-1:line-1',
       },
     });
+    expect(mockCostLedgerCreate).not.toHaveBeenCalled();
+  });
+
+  it('should void an IN adjustment where item had prior GRN - WAC restores to GRN WAC', async () => {
+    const adjId = 'adj-wac-prior';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockAdjFindUnique.mockResolvedValue({
+      id: adjId,
+      warehouseId,
+      status: 'POSTED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          quantity: new Prisma.Decimal(5),
+          direction: AdjustmentDirection.IN,
+          reason: AdjustmentReason.CORRECTION,
+          lotId: null,
+          unitCost: new Prisma.Decimal(10),
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: false,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
+      itemId: 'item-1',
+      qtyOnHand: new Prisma.Decimal(10),
+    });
+
+    mockCostLedgerFindFirst.mockResolvedValue({
+      id: 'cost-prior',
+      newWac: new Prisma.Decimal(15),
+    });
+
+    mockAdjUpdate.mockResolvedValue({ id: adjId, status: 'VOIDED' });
+    mockApprovalEventCount.mockResolvedValue(0);
+
+    const result = await service.void(adjId, userId, Role.ADMIN, 1);
+
+    expect(result).toBeDefined();
+    expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId: 'item-1',
+        },
+      },
+      data: { wac: new Prisma.Decimal(15) },
+    });
+    expect(mockCostLedgerCreate).toHaveBeenCalledWith({
+      data: {
+        warehouseId,
+        itemId: 'item-1',
+        quantity: -5,
+        unitPrice: 10,
+        newWac: new Prisma.Decimal(15),
+        documentId: adjId,
+        documentType: DocumentType.ADJUSTMENT,
+        idempotencyKey: 'ADJUSTMENT:cost_void:adj-wac-prior:item-1:line-1',
+      },
+    });
+  });
+
+  it('should throw BadRequestException if subsequent cost-impacting document exists (subsequent GRN)', async () => {
+    const adjId = 'adj-subsequent-block';
+    const warehouseId = 'wh-1';
+
+    mockAdjFindUnique.mockResolvedValue({
+      id: adjId,
+      warehouseId,
+      status: 'POSTED',
+      version: 1,
+      lines: [
+        {
+          id: 'line-1',
+          itemId: 'item-1',
+          quantity: new Prisma.Decimal(5),
+          direction: AdjustmentDirection.IN,
+          lotId: null,
+          item: {
+            id: 'item-1',
+            sku: 'SKU1',
+            isBatched: false,
+            hasExpiry: false,
+          },
+        },
+      ],
+    });
+
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
+      itemId: 'item-1',
+      qtyOnHand: new Prisma.Decimal(10),
+    });
+
+    // Mock subsequent GRN exists (findFirst returns a mock GRN record)
+    mockGoodsReceivedNoteFindFirst.mockResolvedValueOnce({
+      id: 'subsequent-grn-id',
+    });
+
+    await expect(service.void(adjId, 'user-1', Role.ADMIN, 1)).rejects.toThrow(
+      new BadRequestException('VOID_NOT_ALLOWED_UNDER_COST_IMPACT'),
+    );
   });
 
   it('should throw BadRequestException if IN adjustment stock has been consumed', async () => {

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../database/database.module';
-import { DocumentSequenceService } from './document-sequence.service';
+import { DocumentNumberService } from './document-number.service';
 
 @Module({
   imports: [PrismaModule],
-  providers: [DocumentSequenceService],
-  exports: [DocumentSequenceService],
+  providers: [DocumentNumberService],
+  exports: [DocumentNumberService],
 })
 export class DocumentSequenceModule {}

@@ -7,40 +7,20 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
+import { DocumentNumberService } from '../../sequencing/document-number.service';
 
 @Injectable()
 export class LandedCostService {
   private readonly logger = new Logger(LandedCostService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly documentNumberService: DocumentNumberService,
+  ) {}
 
-  async generateVoucherNumber(): Promise<string> {
-    const now = new Date();
-    const yyyy = now.getFullYear().toString();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const dateStr = `${yyyy}${mm}${dd}`;
-
-    const prefix = 'LCV';
-    const todayStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-    const todayEnd = new Date(todayStart.getTime() + 86400000);
-
-    const count = await this.prisma.landedCostVoucher.count({
-      where: {
-        createdAt: {
-          gte: todayStart,
-          lt: todayEnd,
-        },
-      },
-    });
-
-    const seq = String(count + 1).padStart(4, '0');
-    return `${prefix}-${dateStr}-${seq}`;
+  async generateVoucherNumber(tx: Prisma.TransactionClient, branchId: string): Promise<string> {
+    return this.documentNumberService.next(tx, 'LANDED_COST_VOUCHER', branchId);
   }
 
   async findById(id: string) {
@@ -124,7 +104,21 @@ export class LandedCostService {
     userRole: Role;
   }) {
     return this.prisma.$transaction(async (tx) => {
-      const voucherNumber = await this.generateVoucherNumber();
+      // Get branchId from the first GRN
+      if (!data.grnIds || data.grnIds.length === 0) {
+        throw new BadRequestException('At least one GRN must be selected');
+      }
+      
+      const firstGrn = await tx.goodsReceivedNote.findUnique({
+        where: { id: data.grnIds[0] },
+        include: { warehouse: true }
+      });
+      
+      if (!firstGrn || !firstGrn.warehouse) {
+        throw new BadRequestException('Valid GRN with a warehouse is required to generate voucher number');
+      }
+
+      const voucherNumber = await this.generateVoucherNumber(tx, firstGrn.warehouse.branchId);
 
       for (const grnId of data.grnIds) {
         const grn = await tx.goodsReceivedNote.findUnique({
@@ -225,7 +219,8 @@ export class LandedCostService {
       }
 
       if (data.role !== 'ADMIN') {
-        const checkGrnIds = data.grnIds || existing.grnRelations.map((r) => r.grnId);
+        const checkGrnIds =
+          data.grnIds || existing.grnRelations.map((r) => r.grnId);
         for (const grnId of checkGrnIds) {
           const grn = await tx.goodsReceivedNote.findUnique({
             where: { id: grnId },

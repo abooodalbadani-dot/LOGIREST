@@ -167,6 +167,155 @@ describe('StocktakePostService', () => {
       where: { id: warehouseId },
       data: { isLocked: false },
     });
+    expect(mockCostLedgerCreate).toHaveBeenCalledWith({
+      data: {
+        warehouseId,
+        itemId: 'item-1',
+        quantity: 2,
+        unitPrice: expect.any(Object),
+        newWac: expect.any(Object),
+        documentId: sessionId,
+        documentType: DocumentType.STOCKTAKE,
+        idempotencyKey: 'STOCKTAKE:cost:session-1:item-1:lot-1',
+      },
+    });
+  });
+
+  it('should write CostLedger entry on negative variance (write-down) for batched items', async () => {
+    const sessionId = 'session-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockSessionFindUnique.mockResolvedValue({
+      id: sessionId,
+      warehouseId,
+      status: StocktakeStatus.APPROVED,
+      version: 1,
+    });
+
+    mockSnapshotFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        lotId: 'lot-1',
+        qtySnapshot: new Prisma.Decimal(10),
+        item: { id: 'item-1', sku: 'SKU1', isBatched: true },
+      },
+    ]);
+
+    mockCountFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        lotId: 'lot-1',
+        qtyCounted: new Prisma.Decimal(7), // negative variance (-3)
+      },
+    ]);
+
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
+      itemId: 'item-1',
+      wac: new Prisma.Decimal(15),
+    });
+
+    mockSessionUpdate.mockResolvedValue({ id: sessionId, status: 'POSTED' });
+    mockApprovalEventCount.mockResolvedValue(1);
+
+    await service.post(sessionId, userId, Role.INV_MGR, 1);
+
+    expect(mockWarehouseItemLotUpdate).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId_lotId: {
+          warehouseId,
+          itemId: 'item-1',
+          lotId: 'lot-1',
+        },
+      },
+      data: { qtyOnHand: { decrement: 3 } },
+    });
+
+    expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId: 'item-1',
+        },
+      },
+      data: { qtyOnHand: { decrement: 3 } },
+    });
+
+    expect(mockCostLedgerCreate).toHaveBeenCalledWith({
+      data: {
+        warehouseId,
+        itemId: 'item-1',
+        quantity: -3,
+        unitPrice: new Prisma.Decimal(15),
+        newWac: new Prisma.Decimal(15),
+        documentId: sessionId,
+        documentType: DocumentType.STOCKTAKE,
+        idempotencyKey: 'STOCKTAKE:cost:session-1:item-1:lot-1:negative',
+      },
+    });
+  });
+
+  it('should write CostLedger entry on negative variance (write-down) for unbatched items', async () => {
+    const sessionId = 'session-1';
+    const userId = 'user-1';
+    const warehouseId = 'wh-1';
+
+    mockSessionFindUnique.mockResolvedValue({
+      id: sessionId,
+      warehouseId,
+      status: StocktakeStatus.APPROVED,
+      version: 1,
+    });
+
+    mockSnapshotFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        lotId: null,
+        qtySnapshot: new Prisma.Decimal(10),
+        item: { id: 'item-1', sku: 'SKU1', isBatched: false },
+      },
+    ]);
+
+    mockCountFindMany.mockResolvedValue([
+      {
+        itemId: 'item-1',
+        lotId: null,
+        qtyCounted: new Prisma.Decimal(6), // negative variance (-4)
+      },
+    ]);
+
+    mockLockService.lockItem = jest.fn().mockResolvedValue({
+      itemId: 'item-1',
+      wac: new Prisma.Decimal(15),
+    });
+
+    mockSessionUpdate.mockResolvedValue({ id: sessionId, status: 'POSTED' });
+    mockApprovalEventCount.mockResolvedValue(1);
+
+    await service.post(sessionId, userId, Role.INV_MGR, 1);
+
+    expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
+      where: {
+        warehouseId_itemId: {
+          warehouseId,
+          itemId: 'item-1',
+        },
+      },
+      data: { qtyOnHand: { decrement: 4 } },
+    });
+
+    expect(mockCostLedgerCreate).toHaveBeenCalledWith({
+      data: {
+        warehouseId,
+        itemId: 'item-1',
+        quantity: -4,
+        unitPrice: new Prisma.Decimal(15),
+        newWac: new Prisma.Decimal(15),
+        documentId: sessionId,
+        documentType: DocumentType.STOCKTAKE,
+        idempotencyKey: 'STOCKTAKE:cost:session-1:item-1:null:negative',
+      },
+    });
   });
 
   it('should throw BadRequestException if status is not APPROVED', async () => {
