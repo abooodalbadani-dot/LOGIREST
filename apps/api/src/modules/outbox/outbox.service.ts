@@ -36,7 +36,7 @@ export class OutboxService {
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days TTL
 
     let event: OutboxEvent;
-    
+
     try {
       event = await tx.outboxEvent.create({
         data: {

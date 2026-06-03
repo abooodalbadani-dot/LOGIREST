@@ -259,7 +259,7 @@ describe('Outbox Notification Queue (e2e)', () => {
         await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`);
         await prisma.stockLedger.deleteMany({ where: { itemId } });
         await prisma.costLedger.deleteMany({ where: { itemId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Could not disable trigger or delete ledgers in afterAll:', err.message);
       } finally {
         try {
@@ -600,7 +600,7 @@ describe('Outbox Notification Queue (e2e)', () => {
       await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`);
       await prisma.stockLedger.deleteMany({ where: { OR: [{ warehouseId: sourceWh.id }, { itemId }] } });
       await prisma.costLedger.deleteMany({ where: { OR: [{ warehouseId: sourceWh.id }, { itemId }] } });
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Could not disable trigger or delete ledgers:', err.message);
     } finally {
       try {

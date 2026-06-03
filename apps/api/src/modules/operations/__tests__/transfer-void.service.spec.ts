@@ -103,7 +103,9 @@ describe('TransferVoidService', () => {
 
     service = module.get<TransferVoidService>(TransferVoidService);
     jest.clearAllMocks();
-    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockTransferFindUnique());
+    mockLockService.lockDocument = jest
+      .fn()
+      .mockImplementation(() => mockTransferFindUnique());
   });
 
   it('should void a RECEIVED Transfer successfully (unbatched item)', async () => {

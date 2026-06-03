@@ -50,7 +50,10 @@ export class GrnVoidService {
               );
             }
 
-            if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+            if (
+              clientVersion !== undefined &&
+              lockedDoc.version !== clientVersion
+            ) {
               throw new BadRequestException('Version conflict detected');
             }
 
@@ -68,9 +71,10 @@ export class GrnVoidService {
             }
 
             // Assert no landed costs are applied to this GRN
-            const landedCostExists = await tx.landedCostAllocationLine.findFirst({
-              where: { grnLineId: { in: grn.lines.map((l) => l.id) } },
-            });
+            const landedCostExists =
+              await tx.landedCostAllocationLine.findFirst({
+                where: { grnLineId: { in: grn.lines.map((l) => l.id) } },
+              });
             if (landedCostExists) {
               throw new BadRequestException(
                 'GRN voiding is rejected because landed cost allocations have been posted to this receipt.',
@@ -83,7 +87,9 @@ export class GrnVoidService {
                 warehouseId: grn.warehouseId,
                 status: 'POSTED',
                 createdAt: { gt: grn.createdAt },
-                lines: { some: { itemId: { in: grn.lines.map((l) => l.itemId) } } },
+                lines: {
+                  some: { itemId: { in: grn.lines.map((l) => l.itemId) } },
+                },
               },
             });
             if (subsequentGrn) {

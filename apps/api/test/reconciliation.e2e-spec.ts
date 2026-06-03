@@ -60,51 +60,61 @@ describe('Reconciliation Drift (e2e)', () => {
     if (prisma) {
       try {
         await prisma.notificationLog.deleteMany({ where: { warehouseId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete notificationLog:', err.message);
       }
 
       try {
-        await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`);
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
+        );
         await prisma.stockLedger.deleteMany({ where: { itemId } });
-      } catch (err) {
-        console.warn('Could not disable trigger or delete stockLedger:', err.message);
+      } catch (err: any) {
+        console.warn(
+          'Could not disable trigger or delete stockLedger:',
+          err.message,
+        );
       } finally {
         try {
-          await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);
-        } catch (err) {
-          console.warn('Failed to re-enable stock_ledger trigger:', err.message);
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
+          );
+        } catch (err: any) {
+          console.warn(
+            'Failed to re-enable stock_ledger trigger:',
+            err.message,
+          );
         }
       }
 
       try {
         await prisma.warehouseItem.deleteMany({ where: { itemId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete warehouseItem:', err.message);
       }
       try {
         await prisma.item.deleteMany({ where: { categoryId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete item:', err.message);
       }
       try {
         await prisma.unitOfMeasure.delete({ where: { id: uomId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete unitOfMeasure:', err.message);
       }
       try {
         await prisma.category.delete({ where: { id: categoryId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete category:', err.message);
       }
       try {
         await prisma.warehouse.delete({ where: { id: warehouseId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete warehouse:', err.message);
       }
       try {
         await prisma.branch.delete({ where: { id: branchId } });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete branch:', err.message);
       }
       try {
@@ -115,7 +125,7 @@ describe('Reconciliation Drift (e2e)', () => {
             },
           },
         });
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Failed to delete reconciliationRun:', err.message);
       }
       await prisma.$disconnect();
@@ -163,7 +173,9 @@ describe('Reconciliation Drift (e2e)', () => {
       where: { warehouseId_itemId: { warehouseId, itemId } },
       include: { item: true },
     });
-    expect(run1.frozenItems).not.toContain(whItem?.item?.sku || `SKU-${itemId}`);
+    expect(run1.frozenItems).not.toContain(
+      whItem?.item?.sku || `SKU-${itemId}`,
+    );
     expect(whItem?.isFrozen).toBe(false);
 
     // 4. Manually edit database to introduce drift (set qtyOnHand to 15, while ledger sums to 10)
@@ -247,51 +259,54 @@ describe('Reconciliation Drift (e2e)', () => {
     });
 
     // 3. Wrap prisma.$transaction to intercept lotAllocation.findMany on the dynamic tx client
-    const originalTransaction = prisma.$transaction;
+    const originalTransaction = prisma.$transaction.bind(prisma);
     let concurrentWriteDone = false;
 
-    const transactionSpy = jest.spyOn(prisma, '$transaction').mockImplementation(async function (
-      this: any,
-      arg1: any,
-      arg2: any,
-    ) {
-      if (typeof arg1 === 'function') {
-        const originalCallback = arg1;
-        const wrappedCallback = async (tx: any) => {
-          const originalFindMany = tx.lotAllocation.findMany;
-          tx.lotAllocation.findMany = async function (this: any, ...args: any[]) {
-            const res = await originalFindMany.apply(this, args);
+    const transactionSpy = jest
+      .spyOn(prisma, '$transaction')
+      .mockImplementation(async function (this: any, arg1: any, arg2: any) {
+        if (typeof arg1 === 'function') {
+          const originalCallback = arg1;
+          const wrappedCallback = async (tx: any) => {
+            const originalFindMany = tx.lotAllocation.findMany;
+            tx.lotAllocation.findMany = async function (
+              this: any,
+              ...args: any[]
+            ) {
+              const res = await originalFindMany.apply(this, args);
 
-            if (!concurrentWriteDone) {
-              concurrentWriteDone = true;
+              if (!concurrentWriteDone) {
+                concurrentWriteDone = true;
 
-              // Perform concurrent write (increment qtyOnHand to 15, and insert a new StockLedger entry of 5)
-              // These run on the main prisma client, committing in a separate transaction session.
-              await prisma.stockLedger.create({
-                data: {
-                  warehouseId,
-                  itemId: testItemId,
-                  quantity: 5,
-                  documentId: 'CONCURRENT-POST',
-                  documentType: 'GOODS_RECEIVED_NOTE',
-                  idempotencyKey: `CONCURRENT-ISO-KEY-${suffix}`,
-                },
-              });
+                // Perform concurrent write (increment qtyOnHand to 15, and insert a new StockLedger entry of 5)
+                // These run on the main prisma client, committing in a separate transaction session.
+                await prisma.stockLedger.create({
+                  data: {
+                    warehouseId,
+                    itemId: testItemId,
+                    quantity: 5,
+                    documentId: 'CONCURRENT-POST',
+                    documentType: 'GOODS_RECEIVED_NOTE',
+                    idempotencyKey: `CONCURRENT-ISO-KEY-${suffix}`,
+                  },
+                });
 
-              await prisma.warehouseItem.update({
-                where: { warehouseId_itemId: { warehouseId, itemId: testItemId } },
-                data: { qtyOnHand: 15 },
-              });
-            }
+                await prisma.warehouseItem.update({
+                  where: {
+                    warehouseId_itemId: { warehouseId, itemId: testItemId },
+                  },
+                  data: { qtyOnHand: 15 },
+                });
+              }
 
-            return res;
+              return res;
+            };
+            return originalCallback(tx);
           };
-          return originalCallback(tx);
-        };
-        return originalTransaction.call(this, wrappedCallback, arg2);
-      }
-      return originalTransaction.call(this, arg1, arg2);
-    });
+          return originalTransaction.call(this, wrappedCallback, arg2);
+        }
+        return originalTransaction.call(this, arg1, arg2);
+      });
 
     try {
       // 4. Run reconciliation
@@ -308,21 +323,36 @@ describe('Reconciliation Drift (e2e)', () => {
       transactionSpy.mockRestore();
       // Clean up the new item
       try {
-        await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`);
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
+        );
         await prisma.stockLedger.deleteMany({ where: { itemId: testItemId } });
-      } catch (err) {
-        console.warn('Failed to clean up stockLedger for iso test:', err.message);
+      } catch (err: any) {
+        console.warn(
+          'Failed to clean up stockLedger for iso test:',
+          err.message,
+        );
       } finally {
         try {
-          await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);
-        } catch (err) {}
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
+          );
+        } catch (err: any) {
+          // ignore
+        }
       }
       try {
-        await prisma.warehouseItem.deleteMany({ where: { itemId: testItemId } });
-      } catch (err) {}
+        await prisma.warehouseItem.deleteMany({
+          where: { itemId: testItemId },
+        });
+      } catch (err: any) {
+        // ignore
+      }
       try {
         await prisma.item.delete({ where: { id: testItemId } });
-      } catch (err) {}
+      } catch (err: any) {
+        // ignore
+      }
     }
   });
 
@@ -456,36 +486,53 @@ describe('Reconciliation Drift (e2e)', () => {
     } finally {
       // Clean up
       try {
-        await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`);
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
+        );
         await prisma.stockLedger.deleteMany({
           where: { itemId: { in: [itemAId, itemBId] } },
         });
-      } catch (err) {
-        console.warn('Failed to clean up stockLedger for lot test:', err.message);
+      } catch (err: any) {
+        console.warn(
+          'Failed to clean up stockLedger for lot test:',
+          err.message,
+        );
       } finally {
         try {
-          await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);
-        } catch (err) {}
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
+          );
+        } catch (err: any) {
+          // ignore
+        }
       }
 
       try {
         await prisma.warehouseItemLot.deleteMany({
           where: { itemId: { in: [itemAId, itemBId] } },
         });
-      } catch (err) {}
+      } catch (err: any) {
+        // ignore
+      }
       try {
         await prisma.warehouseItem.deleteMany({
           where: { itemId: { in: [itemAId, itemBId] } },
         });
-      } catch (err) {}
+      } catch (err: any) {
+        // ignore
+      }
       try {
         await prisma.lot.delete({ where: { id: sharedLotId } });
-      } catch (err) {}
+      } catch (err) {
+        // ignore
+      }
       try {
         await prisma.item.deleteMany({
           where: { id: { in: [itemAId, itemBId] } },
         });
-      } catch (err) {}
+      } catch (err) {
+        // ignore
+      }
     }
   });
 });

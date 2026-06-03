@@ -82,7 +82,8 @@ export class ReconciliationJob {
               const warehouseId = alloc.transferLine.transfer.toWarehouseId;
               const itemId = alloc.transferLine.itemId;
               const key = `${warehouseId}_${itemId}`;
-              const currentVal = allocationMap.get(key) || new Prisma.Decimal(0);
+              const currentVal =
+                allocationMap.get(key) || new Prisma.Decimal(0);
               allocationMap.set(key, currentVal.add(alloc.quantityAllocated));
             }
           }
@@ -91,8 +92,10 @@ export class ReconciliationJob {
           let discrepancyCount = 0;
           let lotDiscrepanciesFound = 0;
           const frozenItems: string[] = [];
-          const discrepanciesToFreeze: { warehouseId: string; itemId: string }[] =
-            [];
+          const discrepanciesToFreeze: {
+            warehouseId: string;
+            itemId: string;
+          }[] = [];
           const notificationsToCreate: {
             targetRole: Role;
             warehouseId?: string;
@@ -145,7 +148,9 @@ export class ReconciliationJob {
               // Check B: Qty Allocated vs Active Allocations (soft check)
               const expectedQtyAllocated =
                 allocationMap.get(key) || new Prisma.Decimal(0);
-              const currentQtyAllocated = new Prisma.Decimal(whItem.qtyAllocated);
+              const currentQtyAllocated = new Prisma.Decimal(
+                whItem.qtyAllocated,
+              );
 
               if (!currentQtyAllocated.equals(expectedQtyAllocated)) {
                 this.logger.warn(
@@ -167,7 +172,12 @@ export class ReconciliationJob {
 
           // Check C: Lot-level drift — aggregate lot-level stock ledger totals
           const lotLedgerTotals = await tx.$queryRaw<
-            Array<{ warehouseId: string; itemId: string; lotId: string; total: string }>
+            Array<{
+              warehouseId: string;
+              itemId: string;
+              lotId: string;
+              total: string;
+            }>
           >`
             SELECT "warehouseId", "itemId", "lotId", SUM(quantity)::text as total
             FROM stock_ledger
@@ -186,29 +196,29 @@ export class ReconciliationJob {
             | { warehouseId: string; itemId: string; lotId: string }
             | undefined;
           while (true) {
-            const batchLots: Array<any> =
-              await tx.warehouseItemLot.findMany({
-                take: 500,
-                ...(lotCursor
-                  ? { skip: 1, cursor: { warehouseId_itemId_lotId: lotCursor } }
-                  : {}),
-                include: {
-                  item: { select: { sku: true } },
-                  lot: { select: { lotNumber: true, status: true } },
-                  warehouse: { select: { name: true, code: true } },
-                },
-                orderBy: [
-                  { warehouseId: 'asc' },
-                  { itemId: 'asc' },
-                  { lotId: 'asc' },
-                ],
-              });
+            const batchLots: Array<any> = await tx.warehouseItemLot.findMany({
+              take: 500,
+              ...(lotCursor
+                ? { skip: 1, cursor: { warehouseId_itemId_lotId: lotCursor } }
+                : {}),
+              include: {
+                item: { select: { sku: true } },
+                lot: { select: { lotNumber: true, status: true } },
+                warehouse: { select: { name: true, code: true } },
+              },
+              orderBy: [
+                { warehouseId: 'asc' },
+                { itemId: 'asc' },
+                { lotId: 'asc' },
+              ],
+            });
 
             if (batchLots.length === 0) break;
 
             for (const wil of batchLots) {
               const key = `${wil.warehouseId}_${wil.itemId}_${wil.lotId}`;
-              const ledgerLotQty = lotLedgerMap.get(key) || new Prisma.Decimal(0);
+              const ledgerLotQty =
+                lotLedgerMap.get(key) || new Prisma.Decimal(0);
               const currentLotQty = new Prisma.Decimal(wil.qtyOnHand);
 
               if (!currentLotQty.equals(ledgerLotQty)) {
@@ -227,7 +237,8 @@ export class ReconciliationJob {
               // Check F: EXPIRED/QUARANTINE lots with positive balance (Task-11)
               if (
                 currentLotQty.gt(0) &&
-                (wil.lot.status === 'EXPIRED' || wil.lot.status === 'QUARANTINE')
+                (wil.lot.status === 'EXPIRED' ||
+                  wil.lot.status === 'QUARANTINE')
               ) {
                 this.logger.warn(
                   `Lot status alert: Lot ${wil.lot.lotNumber} (SKU: ${wil.item.sku}) is marked ${wil.lot.status} but has positive balance of ${currentLotQty.toString()} in Warehouse ${wil.warehouse.name} (${wil.warehouse.code}).`,

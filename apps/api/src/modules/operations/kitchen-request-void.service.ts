@@ -49,7 +49,10 @@ export class KitchenRequestVoidService {
           );
         }
 
-        if (clientVersion !== undefined && lockedDoc.version !== clientVersion) {
+        if (
+          clientVersion !== undefined &&
+          lockedDoc.version !== clientVersion
+        ) {
           throw new BadRequestException('Version conflict detected');
         }
 

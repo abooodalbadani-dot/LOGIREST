@@ -52,7 +52,7 @@ describe('KitchenRequestVoidService', () => {
       lockItem: jest.fn(),
       lockLots: jest.fn(),
       lockDocument: jest.fn(),
-    } as any;
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -65,7 +65,9 @@ describe('KitchenRequestVoidService', () => {
 
     service = module.get<KitchenRequestVoidService>(KitchenRequestVoidService);
     jest.clearAllMocks();
-    mockLockService.lockDocument = jest.fn().mockImplementation(() => mockKitchenRequestFindUnique());
+    mockLockService.lockDocument = jest
+      .fn()
+      .mockImplementation(() => mockKitchenRequestFindUnique());
     mockWarehouseItemFindUnique.mockResolvedValue({ isFrozen: false });
   });
 

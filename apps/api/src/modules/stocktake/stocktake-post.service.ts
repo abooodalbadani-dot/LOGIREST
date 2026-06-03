@@ -101,7 +101,9 @@ export class StocktakePostService {
               itemId,
             );
             if (whItem?.isFrozen && userRole !== Role.ADMIN) {
-              const itemDb = await tx.item.findUnique({ where: { id: itemId } });
+              const itemDb = await tx.item.findUnique({
+                where: { id: itemId },
+              });
               throw new BadRequestException(
                 `Cannot post stocktake: Item ${itemDb?.sku || itemId} is frozen/locked in target warehouse`,
               );
@@ -221,7 +223,9 @@ export class StocktakePostService {
               itemId,
             );
             if (whItem?.isFrozen && userRole !== Role.ADMIN) {
-              const itemDb = await tx.item.findUnique({ where: { id: itemId } });
+              const itemDb = await tx.item.findUnique({
+                where: { id: itemId },
+              });
               throw new BadRequestException(
                 `Cannot post stocktake: Item ${itemDb?.sku || itemId} is frozen/locked in target warehouse`,
               );

@@ -33,7 +33,9 @@ describe('Document Number Concurrency (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -79,12 +81,23 @@ describe('Document Number Concurrency (e2e)', () => {
     itemId = item.id;
 
     const supplier = await prisma.supplier.create({
-      data: { name: `Supplier ${suffix}`, code: `SUP-${suffix}`, contactEmail: 'a@a.com', contactName: 'a', contactPhone: '1', isActive: true },
+      data: {
+        name: `Supplier ${suffix}`,
+        code: `SUP-${suffix}`,
+        contactEmail: 'a@a.com',
+        contactName: 'a',
+        contactPhone: '1',
+        isActive: true,
+      },
     });
     supplierId = supplier.id;
 
     const currency = await prisma.currency.create({
-      data: { name: `Currency ${suffix}`, code: `CUR-${suffix}`, isBase: false },
+      data: {
+        name: `Currency ${suffix}`,
+        code: `CUR-${suffix}`,
+        isBase: false,
+      },
     });
     currencyId = currency.id;
 
@@ -134,7 +147,11 @@ describe('Document Number Concurrency (e2e)', () => {
           where: { warehouse: { branchId } },
         });
         await prisma.pOLine.deleteMany({
-          where: { purchaseOrder: { supplier: { code: { startsWith: 'SUP-stress-' } } } },
+          where: {
+            purchaseOrder: {
+              supplier: { code: { startsWith: 'SUP-stress-' } },
+            },
+          },
         });
         await prisma.purchaseOrder.deleteMany({
           where: { supplier: { code: { startsWith: 'SUP-stress-' } } },
@@ -190,7 +207,11 @@ describe('Document Number Concurrency (e2e)', () => {
     const numbers: string[] = [];
     for (const res of responses) {
       if (res.status !== 201) {
-        console.error('GRN creation failed:', res.status, JSON.stringify(res.body, null, 2));
+        console.error(
+          'GRN creation failed:',
+          res.status,
+          JSON.stringify(res.body, null, 2),
+        );
       }
       expect(res.status).toBe(201);
       expect(res.body.data.document_number).toBeDefined();
@@ -237,7 +258,11 @@ describe('Document Number Concurrency (e2e)', () => {
     const numbers: string[] = [];
     for (const res of responses) {
       if (res.status !== 201) {
-        console.error('Transfer creation failed:', res.status, JSON.stringify(res.body, null, 2));
+        console.error(
+          'Transfer creation failed:',
+          res.status,
+          JSON.stringify(res.body, null, 2),
+        );
       }
       expect(res.status).toBe(201);
       expect(res.body.document_number).toBeDefined();
@@ -268,7 +293,15 @@ describe('Document Number Concurrency (e2e)', () => {
         .set('x-idempotency-key', randomUUID())
         .send({
           warehouseId,
-          lines: [{ itemId, quantity: 1, direction: 'IN', reason: 'CORRECTION', unitCost: 10.0 }],
+          lines: [
+            {
+              itemId,
+              quantity: 1,
+              direction: 'IN',
+              reason: 'CORRECTION',
+              unitCost: 10.0,
+            },
+          ],
         }),
     );
 
@@ -277,7 +310,11 @@ describe('Document Number Concurrency (e2e)', () => {
     const numbers: string[] = [];
     for (const res of responses) {
       if (res.status !== 201) {
-        console.error('Adjustment creation failed:', res.status, JSON.stringify(res.body, null, 2));
+        console.error(
+          'Adjustment creation failed:',
+          res.status,
+          JSON.stringify(res.body, null, 2),
+        );
       }
       expect(res.status).toBe(201);
       expect(res.body.document_number).toBeDefined();
@@ -320,7 +357,11 @@ describe('Document Number Concurrency (e2e)', () => {
     const numbers: string[] = [];
     for (const res of responses) {
       if (res.status !== 201) {
-        console.error('LandedCost creation failed:', res.status, JSON.stringify(res.body, null, 2));
+        console.error(
+          'LandedCost creation failed:',
+          res.status,
+          JSON.stringify(res.body, null, 2),
+        );
       }
       expect(res.status).toBe(201);
       expect(res.body.data.voucherNumber).toBeDefined();
@@ -355,7 +396,11 @@ describe('Document Number Concurrency (e2e)', () => {
 
     // Generate sequence for branch 2
     const seqBranch2 = await prisma.$transaction(async (tx) => {
-      return docNumberService.next(tx, DocumentType.PURCHASE_REQUEST, branch2.id);
+      return docNumberService.next(
+        tx,
+        DocumentType.PURCHASE_REQUEST,
+        branch2.id,
+      );
     });
 
     expect(seqBranch1).toContain(branchCode);
@@ -367,7 +412,9 @@ describe('Document Number Concurrency (e2e)', () => {
     expect(suffix1).toBe('00001');
     expect(suffix2).toBe('00001');
 
-    await prisma.documentCounter.deleteMany({ where: { branchCode: branch2.code } });
+    await prisma.documentCounter.deleteMany({
+      where: { branchCode: branch2.code },
+    });
     await prisma.branch.delete({ where: { id: branch2.id } });
   });
 });

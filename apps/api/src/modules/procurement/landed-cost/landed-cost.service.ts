@@ -19,7 +19,10 @@ export class LandedCostService {
     private readonly documentNumberService: DocumentNumberService,
   ) {}
 
-  async generateVoucherNumber(tx: Prisma.TransactionClient, branchId: string): Promise<string> {
+  async generateVoucherNumber(
+    tx: Prisma.TransactionClient,
+    branchId: string,
+  ): Promise<string> {
     return this.documentNumberService.next(tx, 'LANDED_COST_VOUCHER', branchId);
   }
 
@@ -108,17 +111,22 @@ export class LandedCostService {
       if (!data.grnIds || data.grnIds.length === 0) {
         throw new BadRequestException('At least one GRN must be selected');
       }
-      
+
       const firstGrn = await tx.goodsReceivedNote.findUnique({
         where: { id: data.grnIds[0] },
-        include: { warehouse: true }
+        include: { warehouse: true },
       });
-      
+
       if (!firstGrn || !firstGrn.warehouse) {
-        throw new BadRequestException('Valid GRN with a warehouse is required to generate voucher number');
+        throw new BadRequestException(
+          'Valid GRN with a warehouse is required to generate voucher number',
+        );
       }
 
-      const voucherNumber = await this.generateVoucherNumber(tx, firstGrn.warehouse.branchId);
+      const voucherNumber = await this.generateVoucherNumber(
+        tx,
+        firstGrn.warehouse.branchId,
+      );
 
       for (const grnId of data.grnIds) {
         const grn = await tx.goodsReceivedNote.findUnique({

@@ -126,7 +126,9 @@ export class StocktakeController {
         select: { warehouseId: true },
       });
       if (!session) {
-        throw new BadRequestException(`StocktakeSession with ID ${sessionId} not found`);
+        throw new BadRequestException(
+          `StocktakeSession with ID ${sessionId} not found`,
+        );
       }
       if (session.warehouseId !== activeWarehouseId) {
         throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
@@ -397,7 +399,8 @@ export class StocktakeController {
   @HttpCode(HttpStatus.OK)
   async recount(
     @Param('id') id: string,
-    @Body() body: { item_ids?: string[]; itemIds?: string[] | null; version?: number },
+    @Body()
+    body: { item_ids?: string[]; itemIds?: string[] | null; version?: number },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') activeWarehouseId: string,

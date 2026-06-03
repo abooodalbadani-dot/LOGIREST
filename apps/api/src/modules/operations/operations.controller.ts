@@ -59,7 +59,10 @@ export class OperationsController {
     if (warehouseId !== activeWarehouseId) {
       throw new ForbiddenException('WAREHOUSE_SCOPE_VIOLATION');
     }
-    return this.lotsAvailableService.getLotsAvailable(itemId, activeWarehouseId);
+    return this.lotsAvailableService.getLotsAvailable(
+      itemId,
+      activeWarehouseId,
+    );
   }
 
   @Post(':documentType/:id/void')
