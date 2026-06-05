@@ -58,18 +58,18 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     useForm<SupplierFormValues>({
       resolver: zodResolver(SupplierFormSchema),
       disabled: isReadOnly,
-      defaultValues: { code: '', name_ar: '', name_en: '', currency_id: '', payment_terms: '', is_active: true, version: undefined },
+      defaultValues: { code: '', nameAr: '', nameEn: '', currencyId: '', paymentTerms: '', isActive: true, version: undefined },
     });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const isActive = useWatch({ control, name: 'is_active' });
+  const isActive = useWatch({ control, name: 'isActive' });
 
   const currencyItems = useMemo(() => {
     const list = currencies?.map((c: Currency) => ({
       id: c.id,
-      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
     })) || [];
     return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
   }, [currencies, locale]);
@@ -78,11 +78,11 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     if (data) {
       reset({
         code: data.code,
-        name_ar: data.name_ar,
-        name_en: data.name_en,
-        currency_id: data.currency_id,
-        payment_terms: data.payment_terms || '',
-        is_active: data.is_active,
+        nameAr: data.nameAr,
+        nameEn: data.nameEn,
+        currencyId: data.currencyId,
+        paymentTerms: data.paymentTerms || '',
+        isActive: data.isActive,
         version: data.version,
       });
     }
@@ -104,7 +104,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Supplier form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -209,12 +209,12 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                     <Input 
                       id="sup-name-en" 
                       dir="ltr" 
-                      {...register('name_en')} 
+                      {...register('nameEn')} 
                       disabled={isReadOnly}
                       className="font-semibold" 
                       placeholder={ts('name_en_placeholder')} 
                     />
-                    {errors.name_en?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as never)}</p>}
+                    {errors.nameEn?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameEn.message as never)}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -222,12 +222,12 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                     <Input 
                       id="sup-name-ar" 
                       dir="rtl" 
-                      {...register('name_ar')} 
+                      {...register('nameAr')} 
                       disabled={isReadOnly}
                       className="font-semibold" 
                       placeholder={ts('name_ar_placeholder')} 
                     />
-                    {errors.name_ar?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as never)}</p>}
+                    {errors.nameAr?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameAr.message as never)}</p>}
                   </div>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 <div className="space-y-2">
                   <Label htmlFor="sup-currency" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('fields.currency')}</Label>
                   <Controller
-                    name="currency_id"
+                    name="currencyId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -263,7 +263,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                       />
                     )}
                   />
-                  {errors.currency_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currency_id.message as never)}</p>}
+                  {errors.currencyId?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.currencyId.message as never)}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -271,7 +271,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   <Textarea 
                     id="sup-terms" 
                     rows={4} 
-                    {...register('payment_terms')} 
+                    {...register('paymentTerms')} 
                     disabled={isReadOnly}
                     className="font-medium resize-none p-4" 
                     placeholder={ts('terms_placeholder')} 
@@ -303,7 +303,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 <Switch
                   id="sup-active"
                   checked={isActive}
-                  onCheckedChange={(v) => !isReadOnly && setValue('is_active', v)}
+                  onCheckedChange={(v) => !isReadOnly && setValue('isActive', v)}
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-status-active"
                 />

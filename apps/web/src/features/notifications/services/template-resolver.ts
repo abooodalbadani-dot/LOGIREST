@@ -41,7 +41,7 @@ export function interpolateTemplate(
 
   params.forEach((param) => {
     const regex = new RegExp(`\\{\\{\\s*${param.name}\\s*\\}\\}`, 'g');
-    const replacement = overrides?.[param.name] ?? param.sample_value ?? `{{${param.name}}}`;
+    const replacement = overrides?.[param.name] ?? param.sampleValue ?? `{{${param.name}}}`;
     resolvedSubject = resolvedSubject.replace(regex, replacement);
     resolvedBody = resolvedBody.replace(regex, replacement);
   });

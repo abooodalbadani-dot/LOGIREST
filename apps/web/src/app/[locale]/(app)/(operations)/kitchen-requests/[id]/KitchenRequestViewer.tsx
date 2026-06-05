@@ -18,11 +18,16 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { useMemo } from 'react';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { type KitchenRequestDetail, type KitchenRequestItem } from '@/features/operations/types/kitchen-request';
+
+interface KitchenRequestLineItem extends LineItem {
+  fulfilledQty?: number;
+  notes?: string;
+}
 
 interface KitchenRequestViewerProps {
   request: KitchenRequestDetail;
@@ -35,41 +40,41 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
   const tCommon = useTranslations('common');
   const router = useRouter();
 
-  const tableLines = useMemo(() => {
+  const tableLines = useMemo((): KitchenRequestLineItem[] => {
     return request.items.map((item) => ({
       id: item.id,
       item: {
-        id: item.item_id,
-        code: item.item_id,
-        name_en: item.item_name,
-        name_ar: item.item_name,
-        primary_uom: { code: item.uom }
+        id: item.itemId,
+        code: item.itemId,
+        nameEn: item.itemName,
+        nameAr: item.itemName,
+        primaryUom: { code: item.uom }
       },
       qty: item.quantity,
-      fulfilledQty: item.fulfilled_quantity,
-      uom_id: '',
+      fulfilledQty: item.fulfilledQuantity,
+      uomId: '',
       lot: null,
       notes: item.notes,
     }));
   }, [request.items]);
 
   const history = [
-    { status: 'draft' as Status, at: request.created_at, by: request.requested_by }
+    { status: 'draft' as Status, at: request.createdAt, by: request.requestedBy }
   ];
-  if (request.requested_at) {
-    history.push({ status: 'submitted' as Status, at: request.requested_at, by: request.requested_by });
+  if (request.requestedAt) {
+    history.push({ status: 'submitted' as Status, at: request.requestedAt, by: request.requestedBy });
   }
-  if (request.approved_at) {
-    history.push({ status: 'approved' as Status, at: request.approved_at, by: request.approved_by || 'Approver' });
+  if (request.approvedAt) {
+    history.push({ status: 'approved' as Status, at: request.approvedAt, by: request.approvedBy || 'Approver' });
   }
-  if (request.rejected_at) {
-    history.push({ status: 'rejected' as Status, at: request.rejected_at, by: request.rejected_by || 'Rejecter' });
+  if (request.rejectedAt) {
+    history.push({ status: 'rejected' as Status, at: request.rejectedAt, by: request.rejectedBy || 'Rejecter' });
   }
   if (request.status === 'CANCELLED') {
-    history.push({ status: 'cancelled' as Status, at: request.updated_at || request.created_at, by: request.rejected_by || 'System' });
+    history.push({ status: 'cancelled' as Status, at: request.updatedAt || request.createdAt, by: request.rejectedBy || 'System' });
   }
-  if (request.fulfilled_at) {
-    history.push({ status: request.status.toLowerCase() as Status, at: request.fulfilled_at, by: request.fulfilled_by || 'Store Keeper' });
+  if (request.fulfilledAt) {
+    history.push({ status: request.status.toLowerCase() as Status, at: request.fulfilledAt, by: request.fulfilledBy || 'Store Keeper' });
   }
 
   return (
@@ -81,7 +86,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
               items={[
                 { label: tCommon('inventory'), href: '#' },
                 { label: t('title'), href: "/kitchen-requests" },
-                { label: request.request_number }
+                { label: request.requestNumber }
               ]} 
             />
             <div className="flex items-center gap-4">
@@ -89,12 +94,12 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                 <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
               </Button>
               <div>
-                <h1 className="text-headline-lg font-semibold uppercase italic">{request.request_number}</h1>
+                <h1 className="text-headline-lg font-semibold uppercase italic">{request.requestNumber}</h1>
                 <div className="flex items-center gap-3 mt-1">
                   <StatusBadge status={request.status} />
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
-                    <ClientOnlyTime date={request.created_at} mode="date" locale={locale} className="tabular-nums" />
+                    <ClientOnlyTime date={request.createdAt} mode="date" locale={locale} className="tabular-nums" />
                   </span>
                 </div>
               </div>
@@ -122,21 +127,21 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                   <Building2 className="w-3.5 h-3.5" />
                   {t('department')}
                 </span>
-                <p className="text-body-md font-bold">{request.department_name}</p>
+                <p className="text-body-md font-bold">{request.departmentName}</p>
               </div>
               <div className="space-y-1">
                 <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
                   <Warehouse className="w-3.5 h-3.5" />
                   {t('warehouse')}
                 </span>
-                <p className="text-body-md font-bold">{request.warehouse_name}</p>
+                <p className="text-body-md font-bold">{request.warehouseName}</p>
               </div>
               <div className="space-y-1">
                 <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
                   <User className="w-3.5 h-3.5" />
                   {t('requested_by')}
                 </span>
-                <p className="text-body-md font-bold">{request.requested_by}</p>
+                <p className="text-body-md font-bold">{request.requestedBy}</p>
               </div>
               {request.notes && (
                 <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
@@ -159,7 +164,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                   {request.items.length} {t('entries')}
                 </Badge>
               </div>
-              <DocumentLineItemTable
+              <DocumentLineItemTable<KitchenRequestLineItem>
                 lines={tableLines}
                 locale={locale}
                 isReadOnly={true}
@@ -177,7 +182,7 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
                 )}
                 renderUom={(line) => (
                   <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
-                    {line.item.primary_uom?.code || '---'}
+                    {line.item.primaryUom?.code || '---'}
                   </span>
                 )}
                 extraColumns={[

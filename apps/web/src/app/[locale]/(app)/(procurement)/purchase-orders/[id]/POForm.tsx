@@ -82,18 +82,18 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
   const form = useForm<PurchaseOrderFormValues>({
  resolver: zodResolver(formSchema),
  defaultValues: {
- supplier_id: initialData?.supplier_id || "",
- pr_id: initialData?.pr_id || "",
- currency_code: initialData?.currency_code || "",
- exchange_rate: initialData?.exchange_rate || 1,
- expected_date: initialData?.expected_date || "",
- target_warehouse_id: initialData?.target_warehouse_id || "",
+ supplier_id: initialData?.supplierId || "",
+ pr_id: initialData?.prId || "",
+ currency_code: initialData?.currencyCode || "",
+ exchange_rate: initialData?.exchangeRate || 1,
+ expected_date: initialData?.expectedDate || "",
+ target_warehouse_id: initialData?.targetWarehouseId || "",
  notes: initialData?.notes || "",
  lines: initialData?.lines.map(l => ({
  item_id: l.item?.id || "",
- quantity: l.quantity,
- unit_price: l.unit_price,
- uom_id: l.uom_id,
+ quantity: l.quantity || l.qty || 1,
+ unit_price: l.unitPrice || l.unitCostForeign || 0,
+ uom_id: l.uomId,
  notes: l.notes || ""
  })) || [{ item_id: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
  },
@@ -197,7 +197,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <SelectContent className="bg-surface-container-low border-none rounded-xl">
  {suppliers?.map(s => (
  <SelectItem key={s.id} value={s.id}>
- {s.name_en} ({s.code})
+ {s.nameEn} ({s.code})
  </SelectItem>
  ))}
  </SelectContent>
@@ -250,7 +250,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict }: 
  <SelectContent className="bg-surface-container-low border-none rounded-xl">
  {warehouses?.map(w => (
  <SelectItem key={w.id} value={w.id}>
- {w.name_en}
+ {w.name}
  </SelectItem>
  ))}
  </SelectContent>

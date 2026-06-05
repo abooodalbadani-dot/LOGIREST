@@ -36,8 +36,8 @@ export function BarcodeListClient({ locale }: { locale: string }) {
   const stats = useMemo(() => {
     return {
       total: barcodes.length,
-      active: barcodes.filter(b => b.is_active).length,
-      items: new Set(barcodes.map(b => b.item_id)).size
+      active: barcodes.filter(b => b.isActive).length,
+      items: new Set(barcodes.map(b => b.itemId)).size
     };
   }, [barcodes]);
 
@@ -55,42 +55,42 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       )
     },
     { 
-      accessorKey: 'item_id', 
+      accessorKey: 'itemId', 
       header: t('fields.item'), 
       cell: ({ row }) => {
-        const item = items.find(i => i.id === row.original.item_id);
+        const item = items.find(i => i.id === row.original.itemId);
         if (!item) return <span className="opacity-40 italic">---</span>;
         return (
           <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-label-sm">{item.name_en}</span>
-            <span className="text-label-xs opacity-40" dir="rtl">{item.name_ar}</span>
+            <span className="font-bold text-label-sm">{item.nameEn}</span>
+            <span className="text-label-xs opacity-40" dir="rtl">{item.nameAr}</span>
           </div>
         );
       }
     },
     { 
-      accessorKey: 'uom_id', 
+      accessorKey: 'uomId', 
       header: t('fields.uom'), 
       cell: ({ row }) => {
-        const uom = uoms.find(u => u.id === row.original.uom_id);
+        const uom = uoms.find(u => u.id === row.original.uomId);
         if (!uom) return <span className="opacity-40 italic">---</span>;
         return (
           <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-label-sm">{uom.name_en}</span>
-            <span className="text-label-xs opacity-40" dir="rtl">{uom.name_ar}</span>
+            <span className="font-bold text-label-sm">{uom.nameEn}</span>
+            <span className="text-label-xs opacity-40" dir="rtl">{uom.nameAr}</span>
           </div>
         );
       }
     },
     {
-      accessorKey: 'default_qty',
+      accessorKey: 'defaultQty',
       header: t('fields.default_qty'),
       cell: ({ row }) => {
-        const uom = uoms.find(u => u.id === row.original.uom_id);
+        const uom = uoms.find(u => u.id === row.original.uomId);
         return (
           <div className="flex items-center gap-1.5 font-mono">
             <span className="text-label-xs text-muted-foreground/40 font-bold italic">x</span>
-            <span className="font-semibold text-amber-500/80">{row.original.default_qty}</span>
+            <span className="font-semibold text-amber-500/80">{row.original.defaultQty}</span>
             {uom && (
               <span className="text-label-xs font-bold text-muted-foreground/30 uppercase">
                 {uom.code}
@@ -101,11 +101,11 @@ export function BarcodeListClient({ locale }: { locale: string }) {
       }
     },
     {
-      accessorKey: 'is_active', 
+      accessorKey: 'isActive', 
       header: t('fields.is_active'),
       cell: ({ row }) => (
         <StatusBadge 
-          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
+          status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
         />
       )
     },

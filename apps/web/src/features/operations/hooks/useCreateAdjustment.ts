@@ -7,23 +7,23 @@ import { toast } from 'sonner';
 import { AdjustmentDetailSchema } from './useAdjustment';
 
 const LotAllocationSchema = z.object({
- lot_id: z.string(),
- qty: z.number()
+  lotId: z.string(),
+  qty: z.number()
 });
 
 const CreateAdjustmentPayloadSchema = z.object({
- warehouse_id: z.string().min(1, 'Warehouse is required'),
- reason: z.string().min(1, 'Reason category is required'),
- notes: z.string().min(10, 'Reason details must be at least 10 characters').optional().or(z.literal('')),
- lines: z.array(z.object({
- item_id: z.string(),
- qty: z.number().positive(),
- uom_id: z.string(),
- direction: z.enum(['INCREASE', 'DECREASE']),
- unit_cost: z.number().nullable().optional(),
- lot_allocations: z.array(LotAllocationSchema).optional(),
- is_custom: z.boolean().optional()
- })).min(1, 'At least one item is required')
+  warehouseId: z.string().min(1, 'Warehouse is required'),
+  reason: z.string().min(1, 'Reason category is required'),
+  notes: z.string().min(10, 'Reason details must be at least 10 characters').optional().or(z.literal('')),
+  lines: z.array(z.object({
+    itemId: z.string(),
+    qty: z.number().positive(),
+    uomId: z.string(),
+    direction: z.enum(['INCREASE', 'DECREASE']),
+    unitCost: z.number().nullable().optional(),
+    lotAllocations: z.array(LotAllocationSchema).optional(),
+    isCustom: z.boolean().optional()
+  })).min(1, 'At least one item is required')
 });
 
 export type CreateAdjustmentPayload = z.infer<typeof CreateAdjustmentPayloadSchema>;

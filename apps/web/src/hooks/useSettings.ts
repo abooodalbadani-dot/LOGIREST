@@ -5,7 +5,7 @@ export function useSettings() {
   const { data: settings, ...rest } = useAdminSettings();
   return {
     settings,
-    baseCurrency: settings?.base_currency,
+    baseCurrency: settings?.baseCurrency,
     ...rest
   };
 }

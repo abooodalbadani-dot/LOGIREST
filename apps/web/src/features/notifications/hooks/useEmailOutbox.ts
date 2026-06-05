@@ -5,13 +5,13 @@ import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 const EmailOutboxEntrySchema = z.object({
- id: z.string(),
- template_id: z.string(),
- recipient_email: z.string(),
- subject: z.string(),
- sent_at: z.string().nullable(),
- status: z.enum(['PENDING', 'SENT', 'FAILED']),
- error_message: z.string().nullable(),
+  id: z.string(),
+  templateId: z.string(),
+  recipientEmail: z.string(),
+  subject: z.string(),
+  sentAt: z.string().nullable(),
+  status: z.enum(['PENDING', 'SENT', 'FAILED']),
+  errorMessage: z.string().nullable(),
 });
 
 export type EmailOutboxRow = z.infer<typeof EmailOutboxEntrySchema>;

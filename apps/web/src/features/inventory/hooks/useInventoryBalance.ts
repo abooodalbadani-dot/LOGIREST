@@ -4,10 +4,13 @@ import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { StockBalanceItemSchema } from '@/types/inventory';
 
+import { useAuth } from '@/providers/AuthProvider';
+
 export function useInventoryBalance(
   filters: { warehouse_id?: string; search?: string; page?: number } = {},
   options?: { enabled?: boolean }
 ) {
+  const { activeScope } = useAuth();
   return useQuery({
     queryKey: ['inventory/balance', filters],
     queryFn: async ({ signal }) => {
@@ -20,5 +23,6 @@ export function useInventoryBalance(
     },
     staleTime: 60_000,
     ...options,
+    enabled: options?.enabled !== undefined ? options.enabled : !!activeScope.warehouseId,
   });
 }

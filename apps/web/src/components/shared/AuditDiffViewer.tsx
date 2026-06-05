@@ -4,8 +4,8 @@ import { useTranslations } from 'next-intl';
 
 interface DiffEntry {
  field: string;
- old_value: unknown;
- new_value: unknown;
+ oldValue: unknown;
+ newValue: unknown;
 }
 
 export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
@@ -35,8 +35,8 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
  </thead>
  <tbody>
  {changes.map((change, i) => {
- const isAdded = change.old_value === null && change.new_value !== null;
- const isDeleted = change.old_value !== null && change.new_value === null;
+ const isAdded = change.oldValue === null && change.newValue !== null;
+ const isDeleted = change.oldValue !== null && change.newValue === null;
  
  // Tonal indicator based on type of change
  const indicatorClass = isDeleted ? 'bg-status-error/20' : isAdded ? 'bg-status-success/20' : 'bg-status-warning/20';
@@ -50,10 +50,10 @@ export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {
  </div>
  </td>
  <td className="px-6 text-label-xs font-medium text-foreground/80 break-all">
- {renderValue(change.old_value)}
+ {renderValue(change.oldValue)}
  </td>
  <td className="px-6 text-label-xs font-medium text-foreground/80 break-all">
- {renderValue(change.new_value)}
+ {renderValue(change.newValue)}
  </td>
  </tr>
  );

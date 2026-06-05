@@ -52,14 +52,14 @@ export function SettingsClient({ locale }: { locale: string }) {
 
   const { router: _guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const watchedBaseCurrency = useWatch({ control, name: 'base_currency' });
-  const watchedLanguage = useWatch({ control, name: 'locale_default' });
-  const initialBaseCurrency = currentSettings?.base_currency || null;
+  const watchedBaseCurrency = useWatch({ control, name: 'baseCurrency' });
+  const watchedLanguage = useWatch({ control, name: 'localeDefault' });
+  const initialBaseCurrency = currentSettings?.baseCurrency || null;
 
   const showCurrencyWarning = watchedBaseCurrency && initialBaseCurrency && watchedBaseCurrency !== initialBaseCurrency;
 
   const onSubmit = async (data: AdminSettings) => {
-    if (data.base_currency !== initialBaseCurrency) {
+    if (data.baseCurrency !== initialBaseCurrency) {
       setPendingData(data);
       setIsConfirmOpen(true);
     } else {
@@ -274,17 +274,17 @@ export function SettingsClient({ locale }: { locale: string }) {
                   </Label>
                   <div className="relative group">
                     <Input
-                      {...register('system_name')}
+                      {...register('systemName')}
                       className={cn(
                         "h-14 font-bold bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]",
-                        errors.system_name ? "border-status-error focus-visible:ring-status-error" : ""
+                        errors.systemName ? "border-status-error focus-visible:ring-status-error" : ""
                       )}
                     />
                   </div>
-                  {errors.system_name && (
+                  {errors.systemName && (
                     <p className="text-[10px] font-bold text-status-error uppercase ml-1 flex items-center gap-1.5 animate-pulse">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      {errors.system_name.message}
+                      {errors.systemName.message}
                     </p>
                   )}
                 </div>
@@ -295,7 +295,7 @@ export function SettingsClient({ locale }: { locale: string }) {
                     {t('default_language')}
                   </Label>
                   <Select 
-                    onValueChange={(val) => setValue('locale_default', val as 'en' | 'ar', { shouldDirty: true })}
+                    onValueChange={(val) => setValue('localeDefault', val as 'en' | 'ar', { shouldDirty: true })}
                     value={watchedLanguage}
                   >
                     <SelectTrigger className="h-14 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 font-bold transition-all hover:border-operational-cyan/20 text-sm focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan">
@@ -314,9 +314,9 @@ export function SettingsClient({ locale }: { locale: string }) {
                     {t('base_currency')}
                   </Label>
                   <Select 
-                    onValueChange={(val) => setValue('base_currency', val as string, { shouldDirty: true })}
+                    onValueChange={(val) => setValue('baseCurrency', val as string, { shouldDirty: true })}
                     value={watchedBaseCurrency}
-                    disabled={currentSettings?.has_transactions}
+                    disabled={currentSettings?.hasTransactions}
                   >
                     <SelectTrigger className="h-14 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 font-bold transition-all hover:border-operational-cyan/20 text-sm focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan disabled:opacity-50 disabled:cursor-not-allowed">
                       <SelectValue placeholder={t('select_currency')} />
@@ -393,17 +393,17 @@ export function SettingsClient({ locale }: { locale: string }) {
                   </Label>
                   <div className="relative group">
                     <Input
-                      {...register('sender_name')}
+                      {...register('senderName')}
                       className={cn(
                         "h-14 font-bold bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]",
-                        errors.sender_name ? "border-status-error focus-visible:ring-status-error" : ""
+                        errors.senderName ? "border-status-error focus-visible:ring-status-error" : ""
                       )}
                     />
                   </div>
-                  {errors.sender_name && (
+                  {errors.senderName && (
                     <p className="text-[10px] font-bold text-status-error uppercase ml-1 flex items-center gap-1.5 animate-pulse">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      {errors.sender_name.message}
+                      {errors.senderName.message}
                     </p>
                   )}
                 </div>
@@ -415,18 +415,18 @@ export function SettingsClient({ locale }: { locale: string }) {
                   </Label>
                   <div className="relative group">
                     <Input
-                      {...register('reply_to_email')}
+                      {...register('replyToEmail')}
                       dir="ltr"
                       className={cn(
                         "h-14 font-bold bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner group-hover:border-white/20 focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]",
-                        errors.reply_to_email ? "border-status-error focus-visible:ring-status-error" : ""
+                        errors.replyToEmail ? "border-status-error focus-visible:ring-status-error" : ""
                       )}
                     />
                   </div>
-                  {errors.reply_to_email && (
+                  {errors.replyToEmail && (
                     <p className="text-[10px] font-bold text-status-error uppercase ml-1 flex items-center gap-1.5 animate-pulse">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      {errors.reply_to_email.message}
+                      {errors.replyToEmail.message}
                     </p>
                   )}
                 </div>

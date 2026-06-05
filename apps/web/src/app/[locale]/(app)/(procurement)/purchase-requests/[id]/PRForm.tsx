@@ -78,16 +78,16 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  const form = useForm<PurchaseRequestFormValues>({
  resolver: zodResolver(formSchema),
  defaultValues: initialData ? {
- department_id: initialData.department_id,
- expected_date: initialData.expected_date.split('T')[0],
+ department_id: initialData.departmentId,
+ expected_date: initialData.expectedDate.split('T')[0],
  notes: initialData.notes || '',
  lines: initialData.lines.map(l => ({
  id: l.id,
  item_id: l.item.id,
- item_name: locale === 'ar' ? l.item.name_ar : l.item.name_en,
+ item_name: locale === 'ar' ? l.item.nameAr : l.item.nameEn,
  item_code: l.item.code,
- req_qty: l.req_qty,
- uom_id: l.uom_id,
+ req_qty: l.reqQty,
+ uom_id: l.uomId,
  })),
  } : {
  department_id: '',
@@ -107,13 +107,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  if (item) {
  append({
  item_id: item.id,
- item_name: locale === 'ar' ? item.name_ar : item.name_en,
+ item_name: locale === 'ar' ? item.nameAr : item.nameEn,
  item_code: item.code,
  req_qty: 1,
- uom_id: item.primary_uom?.id || 'EA',
+ uom_id: item.primaryUom?.id || 'EA',
  });
   playSound('success');
-  toast.success(tc('items') + ': ' + (locale === 'ar' ? item.name_ar : item.name_en));
+  toast.success(tc('items') + ': ' + (locale === 'ar' ? item.nameAr : item.nameEn));
   } else {
     playSound('error');
     toast.error(tc('not_found'));
@@ -166,9 +166,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  <form onSubmit={form.handleSubmit((v) => onSave(v, false))} className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative pb-20">
  <div className="flex items-center justify-between">
  <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">{t('detail_title')}</h3>
- {initialData?.document_number && (
+ {initialData?.documentNumber && (
  <span className="font-mono text-label-sm font-semibold text-muted-foreground/40">
- {initialData.document_number}
+ {initialData.documentNumber}
  </span>
  )}
  </div>
@@ -204,7 +204,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  <SelectContent className="bg-surface-container-low border-none rounded-2xl">
  {warehouses?.data?.map((w: Warehouse) => (
  <SelectItem key={w.id} value={w.id} className="text-label-xs font-bold">
- {locale === 'ar' ? w.name_ar : w.name_en}
+ {w.name}
  </SelectItem>
  ))}
  </SelectContent>
@@ -293,9 +293,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  onValueChange={(val) => {
  const item = itemsData?.data?.find((i: Item) => i.id === val);
  form.setValue(`lines.${index}.item_id`, val as string);
- form.setValue(`lines.${index}.item_name`, locale === 'ar' ? item?.name_ar : item?.name_en);
+ form.setValue(`lines.${index}.item_name`, locale === 'ar' ? item?.nameAr : item?.nameEn);
  form.setValue(`lines.${index}.item_code`, item?.code);
- form.setValue(`lines.${index}.uom_id`, item?.primary_uom?.id || 'EA');
+ form.setValue(`lines.${index}.uom_id`, item?.primaryUom?.id || 'EA');
  }} 
  value={inputField.value}
  >
@@ -307,7 +307,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  <SelectContent className="bg-surface-container-low border-none rounded-2xl max-h-[300px]">
  {itemsData?.data?.map((i: Item) => (
  <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
- {i.code} - {locale === 'ar' ? i.name_ar : i.name_en}
+ {i.code} - {locale === 'ar' ? i.nameAr : i.nameEn}
  </SelectItem>
  ))}
  </SelectContent>

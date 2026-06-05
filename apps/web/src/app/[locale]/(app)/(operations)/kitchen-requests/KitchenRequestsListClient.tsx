@@ -65,7 +65,7 @@ export function KitchenRequestsListClient({
 
   const columns = useMemo<ColumnDef<KitchenRequestSummary>[]>(() => [
     {
-      accessorKey: 'request_number',
+      accessorKey: 'requestNumber',
       header: t('doc_number'),
       cell: ({ row }) => (
         <div className="flex flex-col">
@@ -73,12 +73,12 @@ export function KitchenRequestsListClient({
             href={`/kitchen-requests/${row.original.id}`}
             className="font-mono text-body-md font-semibold text-cyan-500 hover:text-cyan-400 transition-colors"
           >
-            {row.original.request_number}
+            {row.original.requestNumber}
           </Link>
           <div className="flex items-center gap-1.5 opacity-20 mt-1">
             <Calendar className="w-2.5 h-2.5" />
             <ClientOnlyTime 
-              date={row.original.created_at} 
+              date={row.original.createdAt} 
               mode="datetime" 
               locale={locale} 
               className="text-label-xxs font-semibold tabular-nums" 
@@ -88,30 +88,30 @@ export function KitchenRequestsListClient({
       ),
     },
     {
-      accessorKey: 'department_id',
+      accessorKey: 'departmentId',
       header: t('department'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <ChefHat className="w-3.5 h-3.5 text-muted-foreground/60" />
-          <span className="font-bold text-label-sm text-foreground/80">{row.original.department_id}</span>
+          <span className="font-bold text-label-sm text-foreground/80">{row.original.departmentId}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'warehouse_id',
+      accessorKey: 'warehouseId',
       header: t('warehouse'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
-          <span className="font-bold text-label-sm text-foreground/80">{row.original.warehouse_id}</span>
+          <span className="font-bold text-label-sm text-foreground/80">{row.original.warehouseId}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'requested_by',
+      accessorKey: 'requestedBy',
       header: t('requested_by'),
       cell: ({ row }) => (
-        <span className="text-label-sm font-medium text-foreground/60">{row.original.requested_by}</span>
+        <span className="text-label-sm font-medium text-foreground/60">{row.original.requestedBy}</span>
       ),
     },
     {
@@ -187,9 +187,9 @@ export function KitchenRequestsListClient({
           isLoading={isLoading}
           pagination={{
             page: initialPage,
-            pageSize: data?.meta?.page_size ?? 10,
+            pageSize: data?.meta?.pageSize ?? 10,
             total: data?.meta?.total ?? 0,
-            totalPages: data?.meta?.total_pages ?? 1,
+            totalPages: data?.meta?.totalPages ?? 1,
             onPageChange: (page) => {
               const params = new URLSearchParams(searchParams.toString());
               params.set('page', (page + 1).toString());

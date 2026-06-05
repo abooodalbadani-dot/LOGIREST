@@ -8,33 +8,33 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 export const TransferSummarySchema = z.object({ 
   id: z.string(), 
-  document_number: z.string(), 
-  transfer_status: BadgeStatusSchema, 
-  from_warehouse_id: z.string(), 
-  to_warehouse_id: z.string(), 
-  shipped_at: z.string().nullable().optional(),
-  received_at: z.string().nullable().optional(),
-  created_at: z.string(), 
+  documentNumber: z.string(), 
+  transferStatus: BadgeStatusSchema, 
+  fromWarehouseId: z.string(), 
+  toWarehouseId: z.string(), 
+  shippedAt: z.string().nullable().optional(),
+  receivedAt: z.string().nullable().optional(),
+  createdAt: z.string(), 
 });
 
 export type TransferSummary = z.infer<typeof TransferSummarySchema>;
 
-export function useTransferList(filters: { status?: string; page?: number; search?: string; warehouse_id?: string; date_from?: string; date_to?: string; sort_by?: string; sort_dir?: string } = {}) {
+export function useTransferList(filters: { status?: string; page?: number; search?: string; warehouseId?: string; dateFrom?: string; dateTo?: string; sortBy?: string; sortDir?: string } = {}) {
   const { warehouseId, branchId } = useOperationalScope();
-  const scopeWarehouseId = filters.warehouse_id ?? warehouseId ?? undefined;
+  const scopeWarehouseId = filters.warehouseId ?? warehouseId ?? undefined;
   const params = new URLSearchParams();
   if (filters.status) params.set('transfer_status', filters.status);
   if (scopeWarehouseId) params.set('warehouse_id', scopeWarehouseId);
   if (branchId) params.set('branch_id', branchId);
   if (filters.search) params.set('search', filters.search);
-  if (filters.date_from) params.set('date_from', filters.date_from);
-  if (filters.date_to) params.set('date_to', filters.date_to);
-  if (filters.sort_by) params.set('sort_by', filters.sort_by);
-  if (filters.sort_dir) params.set('sort_dir', filters.sort_dir);
+  if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+  if (filters.dateTo) params.set('date_to', filters.dateTo);
+  if (filters.sortBy) params.set('sort_by', filters.sortBy);
+  if (filters.sortDir) params.set('sort_dir', filters.sortDir);
   params.set('page', String(filters.page ?? 1));
  
   return useQuery({
-    queryKey: ['transfers', { ...filters, warehouseId: scopeWarehouseId, branchId, date_from: filters.date_from, date_to: filters.date_to, sort_by: filters.sort_by, sort_dir: filters.sort_dir }],
+    queryKey: ['transfers', { ...filters, warehouseId: scopeWarehouseId, branchId }],
     queryFn: ({ signal }) => apiClient.get(`/operations/transfers?${params.toString()}`, paginatedSchema(TransferSummarySchema), { signal }),
     staleTime: 60_000,
     placeholderData: keepPreviousData,

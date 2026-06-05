@@ -8,15 +8,15 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 const StocktakeSummarySchema = z.object({
   id: z.string(),
-  session_number: z.string(),
-  warehouse_id: z.string(),
+  sessionNumber: z.string(),
+  warehouseId: z.string(),
   status: BadgeStatusSchema,
-  snapshot_at: z.string(),
-  started_by: z.string(),
-  posted_at: z.string().nullable(),
-  posted_by: z.string().nullable(),
-  total_items: z.number().optional().default(0),
-  counted_items: z.number().optional().default(0),
+  snapshotAt: z.string(),
+  startedBy: z.string(),
+  postedAt: z.string().nullable(),
+  postedBy: z.string().nullable(),
+  totalItems: z.number().optional().default(0),
+  countedItems: z.number().optional().default(0),
 });
 
 export type StocktakeSummary = z.infer<typeof StocktakeSummarySchema>;

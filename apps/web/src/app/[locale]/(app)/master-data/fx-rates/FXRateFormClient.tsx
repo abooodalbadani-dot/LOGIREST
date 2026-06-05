@@ -73,22 +73,22 @@ export function FXRateFormClient({
   }, [user, authLoading]);
 
   const activeCurrencies = useMemo(() => {
-    return (currencies || []).filter((c: Currency) => c.is_active);
+    return (currencies || []).filter((c: Currency) => c.isActive);
   }, [currencies]);
 
   const fromCurrencyItems = useMemo(() => {
     return activeCurrencies.map((c: Currency) => ({
       id: c.id,
-      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
     }));
   }, [activeCurrencies, locale]);
 
   const toCurrencyItems = useMemo(() => {
     return activeCurrencies.map((c: Currency) => ({
       id: c.id,
-      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
     }));
   }, [activeCurrencies, locale]);
 
@@ -132,11 +132,11 @@ export function FXRateFormClient({
     useForm<FXRateFormValues>({
       resolver: zodResolver(FXRateFormSchema),
       defaultValues: { 
-        from_currency_id: '',
-        to_currency_id: '',
+        fromCurrencyId: '',
+        toCurrencyId: '',
         rate: 1,
-        effective_date: new Date().toISOString().split('T')[0],
-        is_active: true,
+        effectiveDate: new Date().toISOString().split('T')[0],
+        isActive: true,
         version: undefined
       },
     });
@@ -146,11 +146,11 @@ export function FXRateFormClient({
   useEffect(() => {
     if (fxRate) {
       reset({ 
-        from_currency_id: fxRate.from_currency_id,
-        to_currency_id: fxRate.to_currency_id,
+        fromCurrencyId: fxRate.fromCurrencyId,
+        toCurrencyId: fxRate.toCurrencyId,
         rate: fxRate.rate,
-        effective_date: fxRate.effective_date.split('T')[0],
-        is_active: fxRate.is_active,
+        effectiveDate: fxRate.effectiveDate.split('T')[0],
+        isActive: fxRate.isActive,
         version: fxRate.version
       });
     }
@@ -201,7 +201,7 @@ export function FXRateFormClient({
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('FXRate form validation failed:', errors);
     toast.error(tCommon('check_fields') || 'Please check required fields');
   };
@@ -253,7 +253,7 @@ export function FXRateFormClient({
                     {t('fields.from_currency_id')}
                   </Label>
                   <Controller
-                    name="from_currency_id"
+                    name="fromCurrencyId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -266,7 +266,7 @@ export function FXRateFormClient({
                       />
                     )}
                   />
-                  {errors.from_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.from_currency_id.message as Parameters<typeof t>[0])}</p>}
+                  {errors.fromCurrencyId && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.fromCurrencyId.message as Parameters<typeof t>[0])}</p>}
                 </div>
 
                 {/* To Currency */}
@@ -275,7 +275,7 @@ export function FXRateFormClient({
                     {t('fields.to_currency_id')}
                   </Label>
                   <Controller
-                    name="to_currency_id"
+                    name="toCurrencyId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -288,7 +288,7 @@ export function FXRateFormClient({
                       />
                     )}
                   />
-                  {errors.to_currency_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.to_currency_id.message as Parameters<typeof t>[0])}</p>}
+                  {errors.toCurrencyId && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.toCurrencyId.message as Parameters<typeof t>[0])}</p>}
                 </div>
               </div>
 
@@ -326,11 +326,11 @@ export function FXRateFormClient({
                       type="date"
                       dir="ltr" 
                       readOnly={isReadOnly}
-                      {...register('effective_date')} 
+                      {...register('effectiveDate')} 
                       className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm read-only:opacity-70 read-only:cursor-default"
                     />
                   </div>
-                  {errors.effective_date && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.effective_date.message as Parameters<typeof t>[0])}</p>}
+                  {errors.effectiveDate && <p className="text-label-xs font-semibold text-rose-400 uppercase">{t(errors.effectiveDate.message as Parameters<typeof t>[0])}</p>}
                 </div>
               </div>
             </CardContent>
@@ -358,7 +358,7 @@ export function FXRateFormClient({
                   <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('active_desc')}</p>
                 </div>
                 <Controller
-                  name="is_active"
+                  name="isActive"
                   control={control}
                   render={({ field }) => (
                     <Switch

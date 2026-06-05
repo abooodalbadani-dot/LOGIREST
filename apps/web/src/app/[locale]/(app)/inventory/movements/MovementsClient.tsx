@@ -36,37 +36,37 @@ export default function MovementsClient() {
  const [typeFilter, setTypeFilter] = useState('');
  const [page, setPage] = useState(1);
 
- const { data, isLoading } = useInventoryMovements({ 
+ const { data, isLoading, isError, error } = useInventoryMovements({ 
  search: searchFilter || undefined,
  document_type: typeFilter || undefined,
  page 
  });
 
  const getDocumentPath = useMemo(() => (movement: InventoryMovement): string => {
- switch (movement.document_type) {
- case 'GRN': return `/procurement/grn/${movement.document_id}`;
- case 'ISSUE': return `/operations/issues/${movement.document_id}`;
- case 'TRANSFER': return `/operations/transfers/${movement.document_id}`;
- case 'ADJUSTMENT': return `/operations/adjustments/${movement.document_id}`;
+ switch (movement.transactionType) {
+ case 'GRN': return `/procurement/grn/${movement.documentReference}`;
+ case 'ISSUE': return `/operations/issues/${movement.documentReference}`;
+ case 'TRANSFER': return `/operations/transfers/${movement.documentReference}`;
+ case 'ADJUSTMENT': return `/operations/adjustments/${movement.documentReference}`;
  default: return '#';
  }
  }, []);
 
  const columns = useMemo<ColumnDef<InventoryMovement, unknown>[]>(() => [
  {
- accessorKey: 'posted_at',
+ accessorKey: 'timestamp',
  header: t('posted_at'),
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5">
  <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/60">
- {formatDate(row.original.posted_at, currentLocale as 'ar' | 'en')}
+ {formatDate(row.original.timestamp, currentLocale as 'ar' | 'en')}
  </span>
  <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('temporal_mark')}</span>
  </div>
  ),
  },
  {
- accessorKey: 'document_number',
+ accessorKey: 'documentReference',
  header: t('document_number'),
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5">
@@ -74,40 +74,40 @@ export default function MovementsClient() {
  href={getDocumentPath(row.original)}
  className="text-label-xs font-semibold text-operational-cyan hover:text-operational-cyan/80 transition-colors drop-shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.3)]"
  >
- <span dir="ltr">{row.original.document_number}</span>
+ <span dir="ltr">{row.original.documentReference}</span>
  </Link>
  <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('source_reference')}</span>
  </div>
  ),
  },
  {
- accessorKey: 'document_type',
+ accessorKey: 'transactionType',
  header: t('document_type'),
  cell: ({ row }) => (
- <Badge variant="secondary" className={`${getTypeStyle(row.original.document_type)} text-label-xxs font-semibold uppercase px-3 h-6 rounded-xl`}>
- {t(`types.${row.original.document_type.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
+ <Badge variant="secondary" className={`${getTypeStyle(row.original.transactionType)} text-label-xxs font-semibold uppercase px-3 h-6 rounded-xl`}>
+ {t(`types.${row.original.transactionType.toLowerCase()}` as 'types.grn' | 'types.issue' | 'types.transfer' | 'types.adjustment')}
  </Badge>
  ),
  },
  {
- accessorKey: 'item_code',
+ accessorKey: 'itemId',
  header: t('item_code'),
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5">
  <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase">
- {row.original.item_code}
+ {row.original.itemId}
  </span>
  <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('system_id')}</span>
  </div>
  ),
  },
  {
- id: 'item_name',
+ id: 'itemName',
  header: t('item_name'),
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5 max-w-[220px]">
  <span className="font-semibold text-label-sm text-foreground truncate group-hover:text-cyan-400 transition-colors leading-tight">
- {currentLocale === 'ar' ? row.original.item_name_ar : row.original.item_name_en}
+ {row.original.itemName}
  </span>
  <span className="text-label-xxs font-bold text-muted-foreground/60 truncate uppercase">
  {t('sku_master_entity')}
@@ -116,10 +116,10 @@ export default function MovementsClient() {
  ),
  },
  {
- accessorKey: 'direction',
+ id: 'direction',
  header: t('direction'),
  cell: ({ row }) => {
- const isEntry = row.original.direction === 'IN';
+ const isEntry = row.original.quantity > 0;
  return (
  <div className={`flex items-center gap-2 font-semibold text-label-xs uppercase ${isEntry ? 'text-status-success' : 'text-status-error'}`}>
  <div className={`p-1.5 rounded-lg ${isEntry ? 'bg-status-success/10' : 'bg-status-error/10'}`}>
@@ -131,36 +131,36 @@ export default function MovementsClient() {
  },
  },
  {
- accessorKey: 'qty',
+ accessorKey: 'quantity',
  header: t('qty'),
- cell: ({ row }) => (
+ cell: ({ row }) => {
+ const isEntry = row.original.quantity > 0;
+ return (
  <div className="flex flex-col items-end">
- <span dir="ltr" className={`font-mono text-label-sm font-semibold px-3 py-1 rounded-xl ${ row.original.direction === 'IN' ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20' }`}>
- {formatQuantity(row.original.qty, currentLocale as 'ar' | 'en')}
+ <span dir="ltr" className={`font-mono text-label-sm font-semibold px-3 py-1 rounded-xl ${ isEntry ? 'text-status-success bg-status-success/10 border border-status-success/20' : 'text-status-error bg-status-error/10 border border-status-error/20' }`}>
+ {formatQuantity(Math.abs(row.original.quantity), currentLocale as 'ar' | 'en')}
  </span>
  <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase mt-1">{t('movement_delta')}</span>
  </div>
- ),
+ );
+ },
  },
  ], [t, currentLocale, getDocumentPath]);
 
  const handleExport = () => {
  if (!data?.data) return;
  const columns = [
- { header: t('posted_at'), key: 'posted_at', width: 20 },
- { header: t('document_number'), key: 'document_number', width: 20 },
- { header: t('document_type'), key: 'document_type', width: 15 },
- { header: t('item_code'), key: 'item_code', width: 15 },
- { header: t('item_name'), key: 'item_name', width: 30 },
- { header: t('lot'), key: 'lot_number', width: 15 },
- { header: t('direction'), key: 'direction', width: 10 },
- { header: t('qty'), key: 'qty', width: 10 },
+ { header: t('posted_at'), key: 'timestamp', width: 20 },
+ { header: t('document_number'), key: 'documentReference', width: 20 },
+ { header: t('document_type'), key: 'transactionType', width: 15 },
+ { header: t('item_code'), key: 'itemId', width: 15 },
+ { header: t('item_name'), key: 'itemName', width: 30 },
+ { header: t('qty'), key: 'quantity', width: 10 },
  ];
 
  const rows = data.data.map(item => ({
  ...item,
- posted_at: formatDate(item.posted_at, currentLocale as 'ar' | 'en'),
- item_name: currentLocale === 'ar' ? item.item_name_ar : item.item_name_en,
+ timestamp: formatDate(item.timestamp, currentLocale as 'ar' | 'en'),
  }));
 
  generateExcel(columns, rows, 'Stock_Movements');
@@ -168,8 +168,8 @@ export default function MovementsClient() {
 
  const stats = useMemo(() => ({
  total: data?.meta?.total || 0,
- inbound: data?.data?.filter(m => m.direction === 'IN').length || 0,
- outbound: data?.data?.filter(m => m.direction === 'OUT').length || 0,
+ inbound: data?.data?.filter(m => m.quantity > 0).length || 0,
+ outbound: data?.data?.filter(m => m.quantity < 0).length || 0,
  }), [data]);
 
  return (
@@ -289,6 +289,11 @@ export default function MovementsClient() {
  </div>
 
  <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-border-muted/50 overflow-hidden">
+ {isError && (
+    <div className="p-4 bg-status-error/10 border-b border-status-error/20 text-status-error text-label-sm font-semibold">
+      Failed to load data: {(error instanceof Error ? error.message : 'Unknown error')}
+    </div>
+  )}
  <DataTable 
  columns={columns} 
  data={data?.data ?? []} 
@@ -296,9 +301,9 @@ export default function MovementsClient() {
  collectionName="inventory_operational_ledger"
  pagination={data?.meta ? {
  page: data.meta.page,
- pageSize: data.meta.page_size,
+ pageSize: data.meta.pageSize,
  total: data.meta.total,
- totalPages: data.meta.total_pages,
+ totalPages: data.meta.totalPages,
  onPageChange: setPage
  } : undefined}
  emptyState={

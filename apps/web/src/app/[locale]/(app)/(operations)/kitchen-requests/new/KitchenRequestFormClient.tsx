@@ -2,10 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -15,10 +14,8 @@ import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 import { useItems } from '@/features/items/hooks/useItems';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { 
- Plus, 
- Trash2, 
  Save, 
  Send, 
  Warehouse, 
@@ -32,8 +29,18 @@ import {
  KitchenRequestSchema, 
  CreateKitchenRequestDTO 
 } from '@/features/operations/types/kitchen-request';
+import { type Item } from '@/types/master-data';
+import { mapWarehouseToCombobox, mapItemToCombobox } from '@/utils/mappers';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { useAuth } from '@/providers/AuthProvider';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
+
+interface KitchenRequestFormLineItem extends LineItem {
+  index: number;
+  selectedItem?: Item;
+}
 
 export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  const t = useTranslations('operations.kitchen_request');
@@ -48,10 +55,18 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const { router: guardedRouter } = useUnsavedChangesGuard(form.formState.isDirty);
  
- const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
- const { data: departments } = useDepartments();
- const { data: itemsData } = useItems(); const items = itemsData?.data || [];
- const createRequest = useCreateKitchenRequest();
+  const { user } = useAuth();
+ 
+  const { data: warehousesData, isLoading: isLoadingWarehouses, error: errorWarehouses } = useWarehouses();
+  const warehouses = useMemo(() => warehousesData?.data || [], [warehousesData]);
+
+  const { data: departmentsData, isLoading: isLoadingDepartments, error: errorDepartments } = useDepartments();
+  const departmentsList = useMemo(() => departmentsData?.data || [], [departmentsData]);
+
+  const { data: itemsData, isLoading: isLoadingItems, error: errorItems } = useItems();
+  const items = useMemo(() => itemsData?.data || [], [itemsData]);
+
+  const createRequest = useCreateKitchenRequest();
  
  const { fields, append, remove } = useFieldArray({
  control: form.control,
@@ -63,6 +78,44 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
  name: "items",
  });
 
+  // Derive assigned warehouses and departments from user scopes
+  const assignedWarehouseIds = useMemo(() => {
+    if (!user?.scopes) return null;
+    const ids = user.scopes.map(s => s.warehouseId).filter(Boolean) as string[];
+    return ids.length > 0 ? ids : null;
+  }, [user?.scopes]);
+
+  const assignedDepartmentIds = useMemo(() => {
+    if (!user?.scopes) return null;
+    const ids = user.scopes.map(s => s.departmentId).filter(Boolean) as string[];
+    return ids.length > 0 ? ids : null;
+  }, [user?.scopes]);
+
+  const hasNoScope = assignedWarehouseIds === null && assignedDepartmentIds === null;
+
+  // Filter and map warehouses/departments/items using centralized mappers
+  const warehouseItems = useMemo(() => {
+    const filtered = !assignedWarehouseIds
+      ? warehouses
+      : warehouses.filter(w => assignedWarehouseIds.includes(w.id));
+    return filtered.map(w => mapWarehouseToCombobox(w));
+  }, [warehouses, assignedWarehouseIds]);
+
+  const departmentItems = useMemo(() => {
+    const filtered = !assignedDepartmentIds
+      ? departmentsList
+      : departmentsList.filter(d => assignedDepartmentIds.includes(d.id));
+    return filtered.map(d => ({
+      id: d.id,
+      name: d.name || '',
+      code: d.code,
+    }));
+  }, [departmentsList, assignedDepartmentIds]);
+
+  const itemItems = useMemo(() => {
+    return items.map(item => mapItemToCombobox(item, locale));
+  }, [items, locale]);
+
   const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
     createRequest.mutate({ data: { ...values, isDraft } }, {
       onSuccess: (data) => {
@@ -71,6 +124,24 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       }
     });
   };
+
+  if (isLoadingWarehouses || isLoadingDepartments || isLoadingItems) {
+    return <PageSkeleton />;
+  }
+
+  if (errorWarehouses || errorDepartments || errorItems) {
+    return <ErrorState onRetry={() => window.location.reload()} />;
+  }
+
+  if (hasNoScope) {
+    return (
+      <ErrorState 
+        title={locale === 'ar' ? 'غير مصرح' : 'Access Denied'}
+        message={locale === 'ar' ? 'لم يتم تعيين أي مستودع أو قسم لحسابك. يرجى التواصل مع المسؤول.' : 'No authorized warehouse or department scopes assigned to your account. Please contact your administrator.'}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
 
   return (
     <div className="p-8 max-w-[1200px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -122,13 +193,14 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 {t('department')}
               </label>
               <SmartCombobox
-                items={departments?.data || []}
-                value={form.watch('department_id')}
-                onSelect={(dept) => form.setValue('department_id', String(dept.id), { shouldValidate: true })}
+                items={departmentItems}
+                value={form.watch('departmentId')}
+                onSelect={(dept) => form.setValue('departmentId', String(dept.id), { shouldValidate: true })}
+                getPrimaryLabel={(dept) => dept.name}
                 placeholder={tCommon('select_department')}
                 triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
               />
-              {form.formState.errors.department_id && (
+              {form.formState.errors.departmentId && (
                 <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.department_required')}</p>
               )}
             </div>
@@ -139,13 +211,14 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                 {t('warehouse')}
               </label>
               <SmartCombobox
-                items={warehouses || []}
-                value={form.watch('warehouse_id')}
-                onSelect={(w) => form.setValue('warehouse_id', String(w.id), { shouldValidate: true })}
+                items={warehouseItems}
+                value={form.watch('warehouseId')}
+                onSelect={(w) => form.setValue('warehouseId', String(w.id), { shouldValidate: true })}
+                getPrimaryLabel={(w) => w.name}
                 placeholder={tCommon('select_warehouse')}
                 triggerClassName="bg-surface-container-high/30 border-none h-14 px-6 text-body-md font-bold rounded-2xl focus:ring-2 focus:ring-primary/20"
               />
-              {form.formState.errors.warehouse_id && (
+              {form.formState.errors.warehouseId && (
                 <p className="text-label-xs font-bold text-red-500 uppercase px-2">{t('validation.warehouse_required')}</p>
               )}
             </div>
@@ -184,16 +257,17 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
               {tCommon('select_item')}
             </label>
             <SmartCombobox
-              items={items || []}
-              onSelect={(item: { id: string }) => {
-                const existingIndex = watchedItems?.findIndex(i => i?.item_id === item.id) ?? -1;
+              items={itemItems}
+              onSelect={(item) => {
+                const existingIndex = watchedItems?.findIndex(i => i?.itemId === String(item.id)) ?? -1;
                 if (existingIndex !== -1) {
                   const currentQty = form.getValues(`items.${existingIndex}.quantity`) || 0;
                   form.setValue(`items.${existingIndex}.quantity`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
                 } else {
-                  append({ item_id: item.id, quantity: 1, notes: '' });
+                  append({ itemId: String(item.id), quantity: 1, notes: '' });
                 }
               }}
+              getPrimaryLabel={(item) => item.name}
               placeholder={tCommon('select_item')}
             />
           </div>
@@ -206,21 +280,21 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
               </div>
             ) : (
               <div className="bg-surface-container-low/30 rounded-[2rem] border border-white/5 overflow-hidden">
-                <DocumentLineItemTable
+                <DocumentLineItemTable<KitchenRequestFormLineItem>
                   lines={fields.map((field, index) => {
-                    const selectedItemId = watchedItems?.[index]?.item_id;
+                    const selectedItemId = watchedItems?.[index]?.itemId;
                     const selectedItem = items?.find(i => i.id === selectedItemId);
                     return {
                       id: field.id,
                       item: {
                         id: selectedItemId || '',
                         code: selectedItem?.barcode || '',
-                        name_en: selectedItem?.name_en || '',
-                        name_ar: selectedItem?.name_ar || '',
-                        primary_uom: { code: selectedItem?.primary_uom?.code || '' }
+                        nameEn: selectedItem?.nameEn || '',
+                        nameAr: selectedItem?.nameAr || '',
+                        primaryUom: { code: selectedItem?.primaryUom?.code || '' }
                       },
                       qty: watchedItems?.[index]?.quantity ?? 1,
-                      uom_id: '',
+                      uomId: '',
                       lot: null,
                       index,
                       selectedItem,
@@ -258,7 +332,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                   )}
                   renderUom={(line) => (
                     <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-                      {line.selectedItem?.primary_uom?.code || '---'}
+                      {line.selectedItem?.primaryUom?.code || '---'}
                     </span>
                   )}
                   extraColumns={[

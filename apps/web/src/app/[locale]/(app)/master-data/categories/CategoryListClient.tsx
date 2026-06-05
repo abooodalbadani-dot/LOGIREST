@@ -45,8 +45,8 @@ export function CategoryListClient() {
             <Layers className="w-4 h-4 text-operational-cyan" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-label-sm">{row.original.name_en}</span>
-            <span className="text-label-xs text-muted-foreground/50" dir="rtl">{row.original.name_ar}</span>
+            <span className="font-bold text-label-sm">{row.original.nameEn}</span>
+            <span className="text-label-xs text-muted-foreground/50" dir="rtl">{row.original.nameAr}</span>
           </div>
         </div>
       ),

@@ -14,7 +14,7 @@ const QUERY_KEY = ['barcodes'];
 export function useBarcodes(filters?: { item_id?: string; search?: string }) {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
-    placeholderData: { data: [], meta: { total: 0, page: 1, page_size: 50, total_pages: 0 } },
+    placeholderData: { data: [], meta: { total: 0, page: 1, pageSize: 50, totalPages: 0 } },
     queryFn: ({ signal }) => {
       const params = new URLSearchParams();
       if (filters?.item_id) params.append('item_id', filters.item_id);

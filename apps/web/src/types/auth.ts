@@ -11,9 +11,9 @@ export const WarehouseDetailsSchema = z.object({
 }).nullable().optional();
 
 export const UserScopeSchema = z.object({
- branch_id: z.string().nullable(),
- warehouse_id: z.string().nullable(),
- department_id: z.string().nullable(),
+ branchId: z.string().nullable(),
+ warehouseId: z.string().nullable(),
+ departmentId: z.string().nullable(),
  warehouse: WarehouseDetailsSchema,
 });
 
@@ -34,10 +34,10 @@ export const AuthUserSchema = z.object({
  locale: z.enum(['ar','en']).optional(),
  status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
  language: z.enum(['ar', 'en']).default('en'),
- created_at: z.string().optional(),
- avatar_url: z.string().optional().nullable(),
+ createdAt: z.string().optional(),
+ avatarUrl: z.string().optional().nullable(),
  phone: z.string().optional().nullable(),
- notification_preferences: NotificationPreferencesSchema.optional(),
+ notificationPreferences: NotificationPreferencesSchema.optional(),
 });
 
 export const ForgotPasswordSchema = z.object({

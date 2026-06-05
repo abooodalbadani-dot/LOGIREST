@@ -33,8 +33,8 @@ export function getExcelBrandingHeader() {
  [branding.name],
  [branding.address],
  [`Tel: ${branding.phone} | Email: ${branding.email}`],
- branding.tax_number ? [`Tax No: ${branding.tax_number}`] : [],
- branding.commercial_registration ? [`CR No: ${branding.commercial_registration}`] : [],
+ branding.taxNumber ? [`Tax No: ${branding.taxNumber}`] : [],
+ branding.commercialRegistration ? [`CR No: ${branding.commercialRegistration}`] : [],
  [''], // Spacing
  ].filter(row => row.length > 0);
 }

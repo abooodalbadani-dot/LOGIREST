@@ -53,42 +53,42 @@ const [page, setPage] = useState(1);
  cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
  },
  {
- accessorKey: 'document_number',
+ accessorKey: 'documentNumber',
  header: tc('doc_number'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono text-cyan-500 font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">
- {row.original.document_number}
+ {row.original.documentNumber}
  </span>
  ),
  },
  {
- accessorKey: 'warehouse_id',
+ accessorKey: 'warehouseId',
  header: tc('warehouse'),
  cell: ({ row }) => (
  <div className="flex flex-col">
- <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouse_id}</span>
+ <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouseId}</span>
  <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold text-start">{tc('warehouse')}</span>
  </div>
  ),
  },
  {
- accessorKey: 'created_at',
+ accessorKey: 'createdAt',
  header: tc('created_at'),
  cell: ({ row }) => (
  <div className="flex flex-col">
  <span dir="ltr" className="text-label-xs font-mono font-semibold text-foreground/80">
- <ClientOnlyTime date={row.original.created_at} mode="datetime" />
+ <ClientOnlyTime date={row.original.createdAt} mode="datetime" />
  </span>
  <span className="text-label-xxs uppercase opacity-30 font-semibold text-start">{tc('created_at')}</span>
  </div>
  ),
  },
  {
- accessorKey: 'created_by',
+ accessorKey: 'createdBy',
  header: t('requested_by'),
  cell: ({ row }) => (
  <div className="flex flex-col">
- <span className="opacity-90 font-bold text-body-md text-start">{row.original.created_by}</span>
+ <span className="opacity-90 font-bold text-body-md text-start">{row.original.createdBy}</span>
  <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold text-start">{t('requested_by')}</span>
  </div>
  ),
@@ -219,7 +219,7 @@ const [page, setPage] = useState(1);
  page: page,
  pageSize: 10,
  total: data.meta.total,
- totalPages: data.meta.total_pages,
+ totalPages: data.meta.totalPages,
  onPageChange: setPage
  } : undefined}
  filters={

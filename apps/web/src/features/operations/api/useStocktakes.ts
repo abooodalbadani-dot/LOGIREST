@@ -16,9 +16,9 @@ const StocktakeListSchema = z.object({
   data: z.array(StocktakeSessionSchema.omit({ items: true })),
   meta: z.object({
     page: z.number(),
-    page_size: z.number(),
+    pageSize: z.number(),
     total: z.number(),
-    total_pages: z.number(),
+    totalPages: z.number(),
   }),
 });
 

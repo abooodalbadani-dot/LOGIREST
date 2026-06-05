@@ -9,14 +9,14 @@ import { useAdminSettings } from './useAdminSettings';
 const STORAGE_KEY = 'logirest_restaurant_profile';
 
 export const RestaurantProfileSchema = z.object({
- name: z.string().min(1, 'Restaurant name is required'),
- address: z.string().min(1, 'Address is required'),
- phone: z.string().min(1, 'Phone is required'),
- email: z.string().email('Invalid email address'),
- logo: z.string().optional(), // Base64 string
- tax_number: z.string().optional(),
- commercial_registration: z.string().optional(),
- updated_at: z.string().optional(),
+  name: z.string().min(1, 'Restaurant name is required'),
+  address: z.string().min(1, 'Address is required'),
+  phone: z.string().min(1, 'Phone is required'),
+  email: z.string().email('Invalid email address'),
+  logo: z.string().optional(), // Base64 string
+  taxNumber: z.string().optional(),
+  commercialRegistration: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export type RestaurantProfile = z.infer<typeof RestaurantProfileSchema>;
@@ -47,14 +47,14 @@ export function useRestaurantProfile() {
       
       // Fallback
       return {
-        name: settings?.system_name || 'LogiRest Enterprise',
+        name: settings?.systemName || 'LogiRest Enterprise',
         address: '',
         phone: '',
         email: '',
         logo: '',
-        tax_number: '',
-        commercial_registration: '',
-        updated_at: new Date().toISOString(),
+        taxNumber: '',
+        commercialRegistration: '',
+        updatedAt: new Date().toISOString(),
       } as RestaurantProfile;
     },
     staleTime: Infinity,
@@ -75,7 +75,7 @@ export function useUpdateRestaurantProfile() {
           
           const profileWithDate = {
             ...values,
-            updated_at: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           };
 
           localStorage.setItem(STORAGE_KEY, JSON.stringify(profileWithDate));

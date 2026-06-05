@@ -35,15 +35,15 @@ export function LotRow({
  <div className="flex gap-4">
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('lot')}</span>
- <span dir="ltr" className="font-mono font-medium text-body-md text-foreground">{lot.lot_number}</span>
+ <span dir="ltr" className="font-mono font-medium text-body-md text-foreground">{lot.lotNumber}</span>
  </div>
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('expiry')}</span>
-  <span dir="ltr" className="font-mono text-body-md text-foreground">{formatDate(lot.expiry_date, locale as 'ar' | 'en')}</span>
+  <span dir="ltr" className="font-mono text-body-md text-foreground">{formatDate(lot.expiryDate, locale as 'ar' | 'en')}</span>
  </div>
  <div>
  <span className="text-label-sm text-muted-foreground block mb-1">{t('available')}</span>
- <span dir="ltr" className="font-mono text-body-md text-foreground">{lot.qty_available}</span>
+ <span dir="ltr" className="font-mono text-body-md text-foreground">{lot.qtyAvailable}</span>
  </div>
  </div>
  
@@ -55,7 +55,7 @@ export function LotRow({
  <input 
  type="number" 
  min="0"
- max={lot.qty_available}
+ max={lot.qtyAvailable}
  value={allocatedQty || ''} onChange={(e) => onQtyChange(Number(e.target.value))}
  disabled={inputDisabled}
  aria-label="Allocate Quantity"

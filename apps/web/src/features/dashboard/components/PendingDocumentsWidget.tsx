@@ -6,13 +6,13 @@ import { useBaseCurrency } from '@/hooks/useBaseCurrency';
 
 export interface PendingDocument {
   id: string;
-  document_number: string;
+  documentNumber: string;
   type: 'PR' | 'PO' | 'ADJUSTMENT' | 'ISSUE' | 'TRANSFER';
   status: string;
   priority: string;
   destination: string;
-  created_at: string;
-  total_value?: number;
+  createdAt: string;
+  totalValue?: number;
 }
 
 export function PendingDocumentsWidget({ 
@@ -41,10 +41,10 @@ export function PendingDocumentsWidget({
         return {
           id: doc.id,
           type: typeKey,
-          number: doc.document_number,
+          number: doc.documentNumber,
           destination: doc.destination,
-          total: doc.total_value,
-          date: doc.created_at,
+          total: doc.totalValue,
+          date: doc.createdAt,
           path,
           isApi: true,
           numberKey: '',

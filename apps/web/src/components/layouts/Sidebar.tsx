@@ -101,7 +101,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'kitchen_requests', href: '/kitchen-requests', resource: 'kitchen_requests', labelKey: 'kitchen_requests', icon: Store },
         { key: 'scan_mode', href: '/inventory/scan-mode', resource: 'inventory', labelKey: 'scan_mode', icon: Barcode },
         { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck },
-        { key: 'yield_management', href: '/yield-management', resource: 'inventory', labelKey: 'yield_management', icon: TrendingUp },
+        // yield_management hidden for MVR launch — not in RFC scope
         { key: 'stocktake_archive', href: '/stocktake/archive', resource: 'stocktake', labelKey: 'stocktake_archive', icon: History },
         { key: 'transfer_hub', href: '/transfers/hub', resource: 'transfer', labelKey: 'transfer_hub', icon: LayoutDashboard },
       ]
@@ -112,7 +112,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { key: 'pr', href: '/purchase-requests', resource: 'pr', labelKey: 'pr', icon: FileText },
         { key: 'po', href: '/purchase-orders', resource: 'po', labelKey: 'po', icon: ShoppingCart },
-        { key: 'landed_cost', href: '/landed-cost', resource: 'po', labelKey: 'landed_cost', icon: Coins },
+        // landed_cost hidden for MVR launch — Phase 2 feature requiring client onboarding
       ]
     },
     {
@@ -165,7 +165,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { key: 'roles_matrix', href: '/admin/roles/matrix', resource: 'admin', labelKey: 'roles_matrix', icon: Shield },
         { key: 'settings', href: '/admin/settings', resource: 'admin', labelKey: 'settings', icon: Sliders },
         { key: 'mail_settings', href: '/admin/mail-settings', resource: 'admin', labelKey: 'mail_settings', icon: Sliders },
-        { key: 'frozen_items', href: '/admin/frozen-items', resource: 'admin', labelKey: 'frozen_items', icon: Layers },
+        // frozen_items hidden for MVR — auto-freeze is disabled; this page has no operational value at launch
         { key: 'outbox', href: '/admin/outbox', resource: 'admin', labelKey: 'outbox', icon: Mail },
         { key: 'restaurant_profile', href: '/admin/restaurant-profile', resource: 'admin', labelKey: 'restaurant_profile', icon: Store },
         { key: 'audit', href: '/admin/audit-logs', resource: 'admin', labelKey: 'audit_log', icon: History },

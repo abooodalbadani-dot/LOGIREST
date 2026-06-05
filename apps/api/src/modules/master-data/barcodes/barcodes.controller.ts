@@ -41,7 +41,7 @@ export class BarcodesController {
 
   @Post()
   async create(
-    @Body() body: any,
+    @Body() body: Record<string, unknown>,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -58,7 +58,7 @@ export class BarcodesController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: Record<string, unknown>,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {

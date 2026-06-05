@@ -7,22 +7,22 @@ import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 const POSummarySchema = z.object({ 
- id: z.string(), 
- document_number: z.string(), 
- status: BadgeStatusSchema, 
- supplier_id: z.string(), 
- currency_code: z.string(), 
- expected_date: z.string(),
- supplier_total_amount: z.number(),
- created_at: z.string(), 
+  id: z.string(), 
+  documentNumber: z.string(), 
+  status: BadgeStatusSchema, 
+  supplierId: z.string(), 
+  currencyCode: z.string(), 
+  expectedDate: z.string(),
+  supplierTotalAmount: z.number(),
+  createdAt: z.string(), 
 });
 
 export type POSummary = z.infer<typeof POSummarySchema>;
 
-export function usePOList(filters: { status?: string; supplier_id?: string; search?: string; page?: number } = {}) {
+export function usePOList(filters: { status?: string; supplierId?: string; search?: string; page?: number } = {}) {
   const params = new URLSearchParams();
   if (filters.status) params.set('status', filters.status);
-  if (filters.supplier_id) params.set('supplier_id', filters.supplier_id);
+  if (filters.supplierId) params.set('supplier_id', filters.supplierId);
   if (filters.search) params.set('search', filters.search);
   params.set('page', String(filters.page ?? 1));
  

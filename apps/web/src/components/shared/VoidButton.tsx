@@ -21,10 +21,12 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
+import { DocumentStatus } from '@/types/documents';
+
 interface VoidButtonProps {
   documentId: string;
   documentType: 'GRN' | 'ISSUE' | 'ADJUSTMENT' | 'TRANSFER' | 'KITCHEN_REQUEST';
-  status: any;
+  status: DocumentStatus;
   version: number;
   onSuccess?: () => void;
 }
@@ -72,9 +74,9 @@ export function VoidButton({
       } else {
         window.location.reload();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message || t('error_generic') || 'Error voiding document');
+      toast.error(err instanceof Error ? err.message : t('error_generic') || 'Error voiding document');
     } finally {
       setIsLoading(false);
     }

@@ -52,22 +52,22 @@ export default function StocktakeVarianceClient() {
       header: t('table.name'),
     },
     {
-      accessorKey: 'system_qty',
+      accessorKey: 'systemQty',
       header: t('table.system_qty'),
       meta: { numeric: true },
       cell: ({ row }) => (
         <span dir="ltr" className="font-mono">
-          {formatQuantity(row.original.system_qty, locale)}
+          {formatQuantity(row.original.systemQty, locale)}
         </span>
       ),
     },
     {
-      accessorKey: 'counted_qty',
+      accessorKey: 'countedQty',
       header: t('table.counted_qty'),
       meta: { numeric: true },
       cell: ({ row }) => (
         <span dir="ltr" className="font-mono">
-          {formatQuantity(row.original.counted_qty, locale)}
+          {formatQuantity(row.original.countedQty, locale)}
         </span>
       ),
     },
@@ -99,8 +99,8 @@ export default function StocktakeVarianceClient() {
   const exportColumns = [
     { header: t('table.sku'), key: 'sku', width: 15 },
     { header: t('table.item'), key: 'name', width: 30 },
-    { header: t('table.system_qty'), key: 'system_qty', width: 15 },
-    { header: t('table.counted_qty'), key: 'counted_qty', width: 15 },
+    { header: t('table.system_qty'), key: 'systemQty', width: 15 },
+    { header: t('table.counted_qty'), key: 'countedQty', width: 15 },
     { header: t('table.variance'), key: 'variance', width: 15 },
     { header: t('table.reason'), key: 'reason', width: 30 },
   ];
@@ -125,7 +125,7 @@ export default function StocktakeVarianceClient() {
               <SelectContent className="bg-surface-container-lowest border-none rounded-xl shadow-2xl">
                 {sessions.map((s) => (
                   <SelectItem key={s.id} value={s.id} className="text-label-xs font-semibold">
-                    {s.session_number} ({s.status})
+                    {s.sessionNumber} ({s.status})
                   </SelectItem>
                 ))}
               </SelectContent>

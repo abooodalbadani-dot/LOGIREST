@@ -120,7 +120,7 @@ export function PRApprovalClient({ id }: Props) {
         </div>
         <PageHeader
           title={t('approval.title')}
-          description={`${t('approval.description')} #${pr.document_number}`}
+          description={`${t('approval.description')} #${pr.documentNumber}`}
         />
       </div>
 
@@ -149,14 +149,14 @@ export function PRApprovalClient({ id }: Props) {
                     <Building2 className="w-3.5 h-3.5 text-muted-foreground/40" />
                     <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.department')}</p>
                   </div>
-                  <p className="font-bold text-title-sm">{pr.department_id}</p>
+                  <p className="font-bold text-title-sm">{pr.departmentId}</p>
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar className="w-3.5 h-3.5 text-muted-foreground/40" />
                     <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.expected_date')}</p>
                   </div>
-                  <p dir="ltr" className="font-mono font-bold text-title-sm">{pr.expected_date || '—'}</p>
+                  <p dir="ltr" className="font-mono font-bold text-title-sm">{pr.expectedDate || '—'}</p>
                 </div>
                 <div className="md:col-span-2 space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('notes')}</p>
@@ -182,15 +182,15 @@ export function PRApprovalClient({ id }: Props) {
                     item: {
                       id: l.item.id,
                       code: l.item.code,
-                      name_en: l.item.name_en,
-                      name_ar: l.item.name_ar,
-                      primary_uom: {
-                        code: l.item.primary_uom.code
+                      nameEn: l.item.nameEn,
+                      nameAr: l.item.nameAr,
+                      primaryUom: {
+                        code: l.item.primaryUom.code
                       }
                     },
-                    qty: l.req_qty,
-                    uom_id: l.uom_id
-                  })) as LineItem[]}
+                    qty: l.reqQty,
+                    uomId: l.uomId
+                  }))}
                   locale={locale}
                   isReadOnly={true}
                 />

@@ -21,7 +21,7 @@ import { DocumentExportMenu } from '@/components/shared/DocumentExportMenu';
 import { StickyGlassHeader } from '@/components/shared/StickyGlassHeader';
 import { ADJUSTMENT_STATUS } from '@logirest/shared-types';
 import { AdjustmentDetail, AdjustmentLine } from '@/features/operations/hooks/useAdjustment';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 
 interface AdjustmentViewerProps {
@@ -41,8 +41,8 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
 
   const { data: warehousesData } = useWarehouses();
   const warehouses = warehousesData?.data || [];
-  const warehouseName = document?.warehouse_id
-    ? warehouses.find(w => w.id === document.warehouse_id)
+  const warehouseName = document?.warehouseId
+    ? warehouses.find(w => w.id === document.warehouseId)
     : null;
 
   const adjustmentStatus = document?.status ?? ADJUSTMENT_STATUS.DRAFT;
@@ -53,14 +53,10 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
     by: e.by
   })) || [];
 
-  interface MappedAdjustmentLine {
-    id: string;
-    item: AdjustmentLine['item'];
-    qty: number;
-    uom_id: string;
+  interface MappedAdjustmentLine extends LineItem {
     direction: AdjustmentLine['direction'];
-    qty_before: number;
-    qty_adjusted: number;
+    qtyBefore: number;
+    qtyAdjusted: number;
   }
 
   const documentLines = document?.lines;
@@ -68,11 +64,11 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
     return documentLines?.map((line: AdjustmentLine) => ({
       id: line.id,
       item: line.item,
-      qty: line.qty_adjusted,
-      uom_id: line.item.primary_uom.code,
+      qty: line.qtyAdjusted,
+      uomId: line.uomId,
       direction: line.direction,
-      qty_before: line.qty_before,
-      qty_adjusted: line.qty_adjusted,
+      qtyBefore: line.qtyBefore,
+      qtyAdjusted: line.qtyAdjusted,
     })) || [];
   }, [documentLines]);
 
@@ -93,7 +89,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
       header: t('qty_before'),
       cell: (line: MappedAdjustmentLine) => (
         <span className="text-body-md font-bold text-muted-foreground/40">
-          {formatQuantity(line.qty_before, locale as 'ar' | 'en')}
+          {formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}
         </span>
       )
     },
@@ -101,8 +97,8 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
       header: t('qty_after'),
       cell: (line: MappedAdjustmentLine) => {
         const afterVal = line.direction === 'INCREASE' 
-          ? line.qty_before + line.qty_adjusted 
-          : line.qty_before - line.qty_adjusted;
+          ? line.qtyBefore + line.qtyAdjusted 
+          : line.qtyBefore - line.qtyAdjusted;
         return (
           <span className={cn("text-body-md font-bold", afterVal < 0 ? "text-red-500" : "text-foreground")}>
             {formatQuantity(afterVal, locale as 'ar' | 'en')}
@@ -119,20 +115,20 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold uppercase">{tp('adjustment_voucher_title')}</h1>
-            <p className="text-sm text-gray-600 mt-1">{document?.document_number || ''}</p>
+            <p className="text-sm text-gray-600 mt-1">{document?.documentNumber || ''}</p>
           </div>
           <div className="text-right text-sm text-gray-600">
-            <p>{document?.created_at ? format(new Date(document.created_at), 'PPP') : ''}</p>
+            <p>{document?.createdAt ? format(new Date(document.createdAt), 'PPP') : ''}</p>
           </div>
         </div>
       </div>
       <StickyGlassHeader
-        title={<span className="italic">{document?.document_number || '...'}</span>}
+        title={<span className="italic">{document?.documentNumber || '...'}</span>}
         statusBadge={
           <>
             <StatusBadge status={adjustmentStatus as BadgeStatus} />
             <ClientOnlyTime 
-              date={document?.created_at} 
+              date={document?.createdAt} 
               mode="date" 
               locale={locale as 'ar' | 'en'}
               className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
@@ -157,7 +153,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('warehouse')}</label>
-                  <p className="font-bold text-body-md bg-surface-container-low p-3 rounded-lg uppercase italic">{warehouseName ? (locale === 'ar' ? warehouseName.name_ar : warehouseName.name_en) : document.warehouse_id}</p>
+                  <p className="font-bold text-body-md bg-surface-container-low p-3 rounded-lg uppercase italic">{warehouseName ? warehouseName.name : document.warehouseId}</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -191,7 +187,7 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                   renderQty={(line) => (
                     <div className="flex flex-col items-center gap-0.5">
                       <span className={cn("text-body-md font-semibold", line.direction === 'INCREASE' ? "text-emerald-500" : "text-red-500")}>
-                        {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qty_adjusted, locale as 'ar' | 'en')}
+                        {line.direction === 'INCREASE' ? '+' : '−'}{formatQuantity(line.qtyAdjusted, locale as 'ar' | 'en')}
                       </span>
                     </div>
                   )}
@@ -237,21 +233,21 @@ export function AdjustmentViewer({ document, actions }: AdjustmentViewerProps) {
                   <span className="text-label-sm text-muted-foreground">{tc('status')}</span>
                   <StatusBadge status={adjustmentStatus as BadgeStatus} />
                 </div>
-                {document?.posted_at && (
+                {document?.postedAt && (
                   <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
                     <span className="text-label-sm text-muted-foreground">{t('posted_at')}</span>
                     <ClientOnlyTime 
-                      date={document.posted_at} 
+                      date={document.postedAt} 
                       mode="datetime" 
                       locale={locale as 'ar' | 'en'}
                       className="text-label-xs font-bold"
                     />
                   </div>
                 )}
-                {document?.approved_by && (
+                {document?.approvedBy && (
                   <div className="flex justify-between items-center py-3 border-b border-surface-container-low">
                     <span className="text-label-sm text-muted-foreground">{t('approved_by')}</span>
-                    <span className="text-label-xs font-semibold uppercase text-foreground/70">{document.approved_by}</span>
+                    <span className="text-label-xs font-semibold uppercase text-foreground/70">{document.approvedBy}</span>
                   </div>
                 )}
               </div>

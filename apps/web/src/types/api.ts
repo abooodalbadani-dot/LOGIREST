@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 export interface PaginatedResponse<T> {
  data: T[];
- meta: { page: number; page_size: number; total: number; total_pages: number; };
+ meta: { page: number; pageSize: number; total: number; totalPages: number; };
 }
 
 export interface ApiError {
  code: string;
  message: string;
- field_errors: Record<string, string[]> | null;
+ fieldErrors: Record<string, string[]> | null;
 }
 
 import { paginatedSchema as sharedPaginatedSchema } from '@logirest/shared-types';

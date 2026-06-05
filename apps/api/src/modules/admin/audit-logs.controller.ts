@@ -32,7 +32,7 @@ export class AuditLogsController {
     const limit = query.limit || 50;
     const skip = (page - 1) * limit;
 
-    const whereClause: any = {};
+    const whereClause: Record<string, unknown> = {};
     if (query.userId) {
       whereClause.userId = query.userId;
     }
@@ -57,8 +57,8 @@ export class AuditLogsController {
     ]);
 
     const data = logs.map((log) => {
-      let beforeStateJson: any = null;
-      let afterStateJson: any = null;
+      let beforeStateJson: unknown = null;
+      let afterStateJson: unknown = null;
 
       try {
         if (log.beforeStateJson) {

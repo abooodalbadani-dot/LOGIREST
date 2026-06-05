@@ -8,9 +8,9 @@ export const AvailableInventoryReportSchema = z.object({
  sku: z.string(),
  name: z.string(),
  category: z.string(),
- qty_physical: z.number(),
- qty_reserved: z.number(),
- qty_available: z.number(),
+ qtyPhysical: z.number(),
+ qtyReserved: z.number(),
+ qtyAvailable: z.number(),
 });
 
 export const PaginatedAvailableInventorySchema = z.object({
@@ -34,23 +34,24 @@ export const StockMovementsReportSchema = z.object({
 export const ExpiryReportSchema = z.object({
  sku: z.string(),
  name: z.string(),
- lot_no: z.string(),
- expiry_date: z.string(),
- days_remaining: z.number(),
+ lotNo: z.string(),
+ expiryDate: z.string(),
+ daysRemaining: z.number(),
  status: z.string(),
+ qtyOnHand: z.number().optional(),
 });
 
 export const StocktakeVarianceReportSchema = z.object({
  sku: z.string(),
  name: z.string(),
- system_qty: z.number(),
- counted_qty: z.number(),
+ systemQty: z.number(),
+ countedQty: z.number(),
  variance: z.number(),
  reason: z.string(),
 });
 
 export const ProcurementStatusReportSchema = z.object({
- po_no: z.string(),
+ poNo: z.string(),
  date: z.string(),
  supplier: z.string(),
  currency: z.string(),
@@ -61,8 +62,8 @@ export const ProcurementStatusReportSchema = z.object({
 export const CurrencySummaryReportSchema = z.object({
  currency: z.string(),
  total: z.number(),
- total_base: z.number(),
- last_rate: z.number(),
+ totalBase: z.number(),
+ lastRate: z.number(),
 });
 
 export type AvailableInventoryReport = z.infer<typeof AvailableInventoryReportSchema>;
@@ -77,13 +78,13 @@ export type CurrencySummaryReport = z.infer<typeof CurrencySummaryReportSchema>;
 export const WacHistoryReportSchema = z.object({
   id: z.string(),
   date: z.string(),
-  document_type: z.string(),
-  document_number: z.string(),
-  document_id: z.string(),
+  documentType: z.string(),
+  documentNumber: z.string(),
+  documentId: z.string(),
   item: z.string(),
   quantity: z.number(),
-  unit_cost: z.number(),
-  new_wac: z.number(),
+  unitCost: z.number(),
+  newWac: z.number(),
 });
 
 export type WacHistoryReport = z.infer<typeof WacHistoryReportSchema>;
@@ -100,14 +101,14 @@ export function useWacHistoryReport() {
 
 export const LotTraceReportSchema = z.object({
   id: z.string(),
-  lot_number: z.string(),
+  lotNumber: z.string(),
   item: z.string(),
-  received_date: z.string(),
-  expiry_date: z.string(),
+  receivedDate: z.string(),
+  expiryDate: z.string(),
   quantity: z.number(),
-  source_document: z.string(),
-  source_document_type: z.string(),
-  source_document_id: z.string(),
+  sourceDocument: z.string(),
+  sourceDocumentType: z.string(),
+  sourceDocumentId: z.string(),
 });
 
 export type LotTraceReport = z.infer<typeof LotTraceReportSchema>;

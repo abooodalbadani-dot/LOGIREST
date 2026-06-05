@@ -78,8 +78,8 @@ export async function generatePDF(
  pdfDoc.text(branding?.address || '', 50, 26);
  pdfDoc.text(`Tel: ${branding?.phone || ''} | Email: ${branding?.email || ''}`, 50, 31);
  
- if (branding?.tax_number) {
- pdfDoc.text(`Tax No: ${branding.tax_number}`, 50, 36);
+ if (branding?.taxNumber) {
+ pdfDoc.text(`Tax No: ${branding.taxNumber}`, 50, 36);
  }
 
  // Report Title

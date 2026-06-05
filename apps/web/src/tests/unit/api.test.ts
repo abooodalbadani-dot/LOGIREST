@@ -7,7 +7,7 @@ describe('paginatedSchema', () => {
  const ItemSchema = z.object({ id: z.string(), name: z.string() });
  const result = paginatedSchema(ItemSchema).parse({
  data: [{ id: '1', name: 'Test' }],
- meta: { page: 1, page_size: 10, total: 1, total_pages: 1 }
+ meta: { page: 1, pageSize: 10, total: 1, totalPages: 1 }
  });
  expect(result.data).toHaveLength(1);
  expect(result.data[0].id).toBe('1');

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api/client';
 import { AdminSettingsSchema, type AdminSettings } from '@/types/admin';
+import { toSnakeCase } from '@/lib/api/adapters';
 
 export { AdminSettingsSchema, type AdminSettings };
 
@@ -21,7 +22,7 @@ export function useUpdateSettings() {
 
   return useMutation({
     mutationFn: (newSettings: AdminSettings) => 
-      apiClient.put('/admin/settings', AdminSettingsSchema, newSettings),
+      apiClient.put('/admin/settings', AdminSettingsSchema, toSnakeCase(newSettings)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin/settings'] });
       toast.success(t('settings_saved'));

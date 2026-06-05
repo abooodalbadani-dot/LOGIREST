@@ -113,24 +113,24 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const departmentItems = React.useMemo(() => {
     return warehouses?.data?.map((w: Warehouse) => ({
       id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
+      name_en: w.name || '',
+      name_ar: w.name || '',
     })) ?? [];
   }, [warehouses?.data]);
 
   const comboboxItems = React.useMemo(() => {
     return itemsData?.data?.map((i: Item) => ({
       id: i.id,
-      name_en: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
-      name_ar: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
+      name_en: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
+      name_ar: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
     })) ?? [];
   }, [itemsData?.data, locale]);
 
   const form = useForm<PurchaseRequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ? {
-      department_id: initialData.department_id || '',
-      expected_date: initialData.expected_date ? initialData.expected_date.split('T')[0] : '',
+      department_id: initialData.departmentId || '',
+      expected_date: initialData.expectedDate ? initialData.expectedDate.split('T')[0] : '',
       notes: initialData.notes || '',
       lines: initialData.lines.map(l => ({
         id: l.id,
@@ -138,16 +138,16 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         item: {
           id: l.item.id,
           code: l.item.code,
-          name_ar: l.item.name_ar,
-          name_en: l.item.name_en,
+          name_ar: l.item.nameAr,
+          name_en: l.item.nameEn,
           primary_uom: {
-            code: l.item.primary_uom?.code || 'EA'
+            code: l.item.primaryUom?.code || 'EA'
           },
-          min_stock_level: (l.item as Record<string, unknown>)?.min_stock_level as number | undefined,
-          reorder_point: (l.item as Record<string, unknown>)?.reorder_point as number | undefined,
+          min_stock_level: l.item.minStockLevel,
+          reorder_point: l.item.reorderPoint,
         },
-        req_qty: l.req_qty || 0,
-        uom_id: l.uom_id,
+        req_qty: l.reqQty || 0,
+        uom_id: l.uomId,
       })),
     } : {
       department_id: '',
@@ -175,26 +175,26 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         const existing = currentLines[index];
         form.setValue(`lines.${index}.req_qty`, (existing.req_qty || 0) + 1);
         playSound('success');
-        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       } else {
         append({
           item_id: item.id,
           item: {
             id: item.id,
             code: item.code,
-            name_ar: item.name_ar,
-            name_en: item.name_en,
+            name_ar: item.nameAr,
+            name_en: item.nameEn,
             primary_uom: {
-              code: item.primary_uom?.code || 'EA'
+              code: item.primaryUom?.code || 'EA'
             },
-            min_stock_level: item.min_stock_level,
-            reorder_point: item.reorder_point,
+            min_stock_level: item.minStockLevel,
+            reorder_point: item.reorderPoint,
           },
           req_qty: 1,
-          uom_id: item.primary_uom?.id || 'EA',
+          uom_id: item.primaryUom?.id || 'EA',
         });
         playSound('success');
-        toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        toast.success(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       }
     } else {
       playSound('error');
@@ -392,9 +392,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                     {isLocked && <Badge variant="outline" className="bg-surface-container-high/50 border-none text-muted-foreground/60"><History className="w-3 h-3 me-1" /> {tc('read_only')}</Badge>}
                   </h3>
                 </div>
-                {initialData?.document_number && (
+                {initialData?.documentNumber && (
                   <span className="font-mono text-label-sm font-semibold text-muted-foreground/40 bg-surface-container-low px-4 py-1.5 rounded-full">
-                    {initialData.document_number}
+                    {initialData.documentNumber}
                   </span>
                 )}
               </div>
@@ -495,7 +495,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
                 <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable
-                    lines={fields.map(f => ({ ...f, qty: f.req_qty })) as LineItem[]}
+                    lines={fields.map(f => ({ ...f, itemId: f.item_id, reqQty: f.req_qty, uomId: f.uom_id, qty: f.req_qty })) as unknown as LineItem[]}
                     isReadOnly={isLocked}
                     hideLotColumns={true}
                     onRemoveLine={(id) => {
@@ -545,13 +545,13 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                                   form.setValue(`lines.${index}.item`, {
                                     id: matchedItem?.id || '',
                                     code: matchedItem?.code || '',
-                                    name_ar: matchedItem?.name_ar || '',
-                                    name_en: matchedItem?.name_en || '',
-                                    primary_uom: { code: matchedItem?.primary_uom?.code || 'EA' },
-                                    min_stock_level: matchedItem?.min_stock_level,
-                                    reorder_point: matchedItem?.reorder_point,
+                                    name_ar: matchedItem?.nameAr || '',
+                                    name_en: matchedItem?.nameEn || '',
+                                    primary_uom: { code: matchedItem?.primaryUom?.code || 'EA' },
+                                    min_stock_level: matchedItem?.minStockLevel,
+                                    reorder_point: matchedItem?.reorderPoint,
                                   });
-                                  form.setValue(`lines.${index}.uom_id`, matchedItem?.primary_uom?.id || 'EA');
+                                  form.setValue(`lines.${index}.uom_id`, matchedItem?.primaryUom?.id || 'EA');
                                 }}
                                 placeholder={tc('select_item')}
                                 className="h-10 bg-surface-container-low border-none rounded-xl text-label-xs font-semibold uppercase"

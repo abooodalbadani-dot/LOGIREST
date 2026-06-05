@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react';
 import { apiClient } from '@/lib/api/client';
+import { getTokenCookie } from '@/lib/api/cookies';
 import { z } from 'zod';
 
 const CurrencyResponseSchema = z.object({
@@ -32,6 +33,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (fetched.current) return;
     fetched.current = true;
+
+    if (!getTokenCookie()) {
+      setValue({ currency: 'SAR', symbol: '\u{FDFC}', isLoading: false });
+      return;
+    }
 
     let cancelled = false;
 

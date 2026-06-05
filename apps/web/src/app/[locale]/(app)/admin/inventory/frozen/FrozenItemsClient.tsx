@@ -68,8 +68,9 @@ export function FrozenItemsClient() {
       if (res.length > 0 && !selectedItem) {
         setSelectedItem(res[0]);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to fetch frozen inventory items');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to fetch frozen inventory items');
     } finally {
       setIsLoading(false);
     }
@@ -100,9 +101,10 @@ export function FrozenItemsClient() {
       
       // Refresh list
       fetchFrozenItems();
-    } catch (err: any) {
+    } catch (err: unknown) {
       playSound('error');
-      toast.error(err.message || 'Failed to unfreeze item');
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to unfreeze item');
     } finally {
       setIsUnfreezingMap(prev => ({ ...prev, [key]: false }));
     }

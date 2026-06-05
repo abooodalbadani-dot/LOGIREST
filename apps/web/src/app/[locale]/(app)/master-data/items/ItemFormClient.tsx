@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -61,27 +61,27 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       resolver: zodResolver(ItemFormSchema),
       disabled: isReadOnly,
       defaultValues: {
-        code: '', barcode: '', name_ar: '', name_en: '', category_id: '', primary_uom_id: '',
-        track_lots: false, min_stock_level: 0, reorder_point: 0, uom_conversions: [], is_active: true,
+        code: '', barcode: '', nameAr: '', nameEn: '', categoryId: '', primaryUomId: '',
+        trackLots: false, minStockLevel: 0, reorderPoint: 0, uomConversions: [], isActive: true,
         version: undefined,
       },
     });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'uom_conversions' });
+  const { fields, append, remove } = useFieldArray({ control, name: 'uomConversions' });
 
   useEffect(() => {
     if (data) {
       reset({
-        code: data.code, barcode: data.barcode, name_ar: data.name_ar, name_en: data.name_en,
-        category_id: data.category_id, primary_uom_id: data.primary_uom.id,
-        track_lots: data.track_lots, min_stock_level: data.min_stock_level,
-        reorder_point: data.reorder_point,
-        uom_conversions: data.uom_conversions.map((c) => ({
-          from_uom_id: c.from_uom_id, to_uom_id: c.to_uom_id, factor: c.factor,
+        code: data.code, barcode: data.barcode, nameAr: data.nameAr, nameEn: data.nameEn,
+        categoryId: data.categoryId, primaryUomId: data.primaryUom.id,
+        trackLots: data.trackLots, minStockLevel: data.minStockLevel,
+        reorderPoint: data.reorderPoint,
+        uomConversions: data.uomConversions.map((c: UoMConversion) => ({
+          fromUomId: c.fromUomId, toUomId: c.toUomId, factor: c.factor,
         })),
-        is_active: data.is_active,
+        isActive: data.isActive,
         version: data.version,
       });
     }
@@ -90,8 +90,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const categoryItems = useMemo(() => {
     const list = categories?.data?.map((c: Category) => ({
       id: c.id,
-      name_en: c.name_en,
-      name_ar: c.name_ar,
+      name_en: c.nameEn,
+      name_ar: c.nameAr,
     })) || [];
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [categories?.data, tm]);
@@ -99,8 +99,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const uomItems = useMemo(() => {
     const list = uoms?.data?.map((u) => ({
       id: u.id,
-      name_en: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
-      name_ar: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
+      name_en: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
+      name_ar: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
     })) || [];
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [uoms?.data, locale, tm]);
@@ -130,7 +130,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Item form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -148,8 +148,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   };
 
   const isSaving = create.isPending || update.isPending;
-  const trackLots = useWatch({ control, name: 'track_lots' });
-  const isActive = useWatch({ control, name: 'is_active' });
+  const trackLots = useWatch({ control, name: 'trackLots' });
+  const isActive = useWatch({ control, name: 'isActive' });
 
   // 1. Loading State
   if ((id && isLoading) || isLoadingCats || isLoadingUoms) {
@@ -272,13 +272,13 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <Label htmlFor="item-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_en')}</Label>
-                    <Input id="item-name-en" dir="ltr" {...register('name_en')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.name_en?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_en.message as never)}</p>}
+                    <Input id="item-name-en" dir="ltr" {...register('nameEn')} disabled={isReadOnly} className="font-semibold" />
+                    {errors.nameEn?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameEn.message as never)}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="item-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_ar')}</Label>
-                    <Input id="item-name-ar" dir="rtl" {...register('name_ar')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.name_ar?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name_ar.message as never)}</p>}
+                    <Input id="item-name-ar" dir="rtl" {...register('nameAr')} disabled={isReadOnly} className="font-semibold" />
+                    {errors.nameAr?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameAr.message as never)}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -301,7 +301,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   <div className="space-y-2">
                     <Label htmlFor="item-category" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.category')}</Label>
                     <Controller
-                      name="category_id"
+                      name="categoryId"
                       control={control}
                       render={({ field }) => (
                          <SmartCombobox
@@ -314,13 +314,13 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                          />
                       )}
                     />
-                    {errors.category_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.category_id.message as never)}</p>}
+                    {errors.categoryId?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.categoryId.message as never)}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="primary-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.base_unit')}</Label>
                     <Controller
-                      name="primary_uom_id"
+                      name="primaryUomId"
                       control={control}
                       render={({ field }) => (
                          <SmartCombobox
@@ -333,7 +333,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                          />
                       )}
                     />
-                    {errors.primary_uom_id?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primary_uom_id.message as never)}</p>}
+                    {errors.primaryUomId?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.primaryUomId.message as never)}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -355,7 +355,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   {!isReadOnly && (
                     <Button type="button" variant="outline" size="sm"
                       className="h-10 px-4 text-label-xs font-semibold uppercase border-status-secondary/20 hover:bg-status-secondary/5 text-status-secondary transition-all shrink-0"
-                      onClick={() => append({ from_uom_id: '', to_uom_id: '', factor: 1 })}>
+                      onClick={() => append({ fromUomId: '', toUomId: '', factor: 1 })}>
                       <Plus className="w-3.5 h-3.5 me-2" />{ti('add_conversion')}
                     </Button>
                   )}
@@ -374,7 +374,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                           <div className="space-y-2">
                             <Label htmlFor={`uom-from-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('from_uom')}</Label>
                             <Controller
-                              name={`uom_conversions.${idx}.from_uom_id`}
+                              name={`uomConversions.${idx}.fromUomId`}
                               control={control}
                               render={({ field }) => (
                                  <SmartCombobox
@@ -391,7 +391,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                           <div className="space-y-2">
                             <Label htmlFor={`uom-to-${idx}`} className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('to_uom')}</Label>
                             <Controller
-                              name={`uom_conversions.${idx}.to_uom_id`}
+                              name={`uomConversions.${idx}.toUomId`}
                               control={control}
                               render={({ field }) => (
                                  <SmartCombobox
@@ -410,7 +410,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                             <Input id={`uom-factor-${idx}`} type="number" dir="ltr" min={0} step="any" 
                               disabled={isReadOnly}
                               className="font-mono font-semibold text-status-secondary"
-                              {...register(`uom_conversions.${idx}.factor`, { valueAsNumber: true })} />
+                              {...register(`uomConversions.${idx}.factor`, { valueAsNumber: true })} />
                           </div>
                           {!isReadOnly && (
                             <Button type="button" variant="ghost" size="icon" className="h-12 w-12 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
@@ -448,7 +448,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     </div>
                     <Switch 
                       checked={isActive} 
-                      onCheckedChange={(v) => !isReadOnly && setValue('is_active', v)} 
+                      onCheckedChange={(v) => !isReadOnly && setValue('isActive', v)} 
                       disabled={isReadOnly}
                       className="data-[state=checked]:bg-status-active" 
                     />
@@ -470,7 +470,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       checked={trackLots} 
                       onCheckedChange={(v) => {
                         const d = data as { has_transactions?: boolean } | null;
-                        if (!isReadOnly && !d?.has_transactions) setValue('track_lots', v);
+                        if (!isReadOnly && !d?.has_transactions) setValue('trackLots', v);
                       }} 
                       disabled={isReadOnly || !!(data as { has_transactions?: boolean } | null)?.has_transactions}
                       className="data-[state=checked]:bg-status-active" 
@@ -498,14 +498,14 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                     <Input id="min-stock" type="number" dir="ltr" min={0} 
                       disabled={isReadOnly}
                       className="font-mono font-semibold text-status-secondary"
-                      {...register('min_stock_level', { valueAsNumber: true })} />
+                      {...register('minStockLevel', { valueAsNumber: true })} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reorder-point" className="text-label-xs font-semibold uppercase text-muted-foreground/60 ps-1">{ti('fields.reorder_point')}</Label>
                     <Input id="reorder-point" type="number" dir="ltr" min={0} 
                       disabled={isReadOnly}
                       className="font-mono font-semibold text-status-secondary"
-                      {...register('reorder_point', { valueAsNumber: true })} />
+                      {...register('reorderPoint', { valueAsNumber: true })} />
                   </div>
                 </div>
               </CardContent>

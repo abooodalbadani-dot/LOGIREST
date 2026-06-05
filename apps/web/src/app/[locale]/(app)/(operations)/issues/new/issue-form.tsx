@@ -43,16 +43,16 @@ import { cn } from "@/lib/utils";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const buildLineSchema = (t: (k: string) => string) => z.object({
-  item_id: z.string().min(1, t('validation.item_required')),
-  requested_qty: z.number().min(0.01, t('validation.qty_positive')),
+  itemId: z.string().min(1, t('validation.item_required')),
+  requestedQty: z.number().min(0.01, t('validation.qty_positive')),
   qty: z.number(),
-  lot_allocations: z.array(z.custom<IssueLot>()),
+  lotAllocations: z.array(z.custom<IssueLot>()),
   notes: z.string().optional(),
 });
 
 const buildFormSchema = (t: (k: string) => string) => z.object({
-  warehouse_id: z.string().min(1, t('validation.warehouse_required')),
-  destination_dept_id: z.string().min(1, t('validation.department_required')),
+  warehouseId: z.string().min(1, t('validation.warehouse_required')),
+  destinationDeptId: z.string().min(1, t('validation.department_required')),
   lines: z.array(buildLineSchema(t)).min(1, t('validation.items_required')),
   notes: z.string().optional(),
 });
@@ -89,8 +89,8 @@ export function IssueForm() {
   const form = useForm<IssueFormValues>({
   resolver: zodResolver(formSchema),
   defaultValues: {
-    warehouse_id: "",
-    destination_dept_id: "",
+    warehouseId: "",
+    destinationDeptId: "",
     lines: [],
     notes: "",
   },
@@ -111,8 +111,8 @@ export function IssueForm() {
    name: "lines",
   });
 
-  const watchedWarehouse = useWatch({ control: form.control, name: "warehouse_id" });
-  const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.item_id : undefined;
+  const watchedWarehouse = useWatch({ control: form.control, name: "warehouseId" });
+  const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.itemId : undefined;
   const { data: availableLots } = useLotsByItem({
     item_id: activeItemId,
     warehouse_id: watchedWarehouse,
@@ -121,25 +121,25 @@ export function IssueForm() {
   const tableLines = React.useMemo<CustomLineItem[]>(() => {
     return fields.map((field, index) => {
       const lineVal = watchedLines?.[index];
-      const selectedItem = items?.find(i => i.id === lineVal?.item_id);
+      const selectedItem = items?.find(i => i.id === lineVal?.itemId);
       return {
         id: field.id,
         item: {
-          id: lineVal?.item_id || '',
+          id: lineVal?.itemId || '',
           code: selectedItem?.barcode || selectedItem?.code || '',
-          name_ar: selectedItem?.name_ar || '',
-          name_en: selectedItem?.name_en || '',
-          primary_uom: {
-            code: selectedItem?.primary_uom?.code || '',
+          nameAr: selectedItem?.nameAr || '',
+          nameEn: selectedItem?.nameEn || '',
+          primaryUom: {
+            code: selectedItem?.primaryUom?.code || '',
           }
         },
-        qty: lineVal?.requested_qty ?? 1,
-        uom_id: selectedItem?.primary_uom?.id || '',
-        lot_allocations: (lineVal?.lot_allocations || []).map(lot => ({
-          lot_id: lot.lot_number,
-          lot_number: lot.lot_number,
-          expiry_date: lot.expiry_date,
-          allocated_qty: lot.allocated_qty,
+        qty: lineVal?.requestedQty ?? 1,
+        uomId: selectedItem?.primaryUom?.id || '',
+        lotAllocations: (lineVal?.lotAllocations || []).map(lot => ({
+          lotId: lot.lotNumber,
+          lotNumber: lot.lotNumber,
+          expiryDate: lot.expiryDate,
+          allocatedQty: lot.allocatedQty,
         })),
         qtyAllocated: lineVal?.qty ?? 0,
         index,
@@ -203,11 +203,11 @@ export function IssueForm() {
           type="number"
           step="0.01"
           dir="ltr"
-          {...form.register(`lines.${line.index}.requested_qty`, { valueAsNumber: true })}
+          {...form.register(`lines.${line.index}.requestedQty`, { valueAsNumber: true })}
           className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center py-1.5 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
         />
       </div>
-      {form.formState.errors.lines?.[line.index]?.requested_qty && (
+      {form.formState.errors.lines?.[line.index]?.requestedQty && (
         <p className="text-label-xxs font-bold text-red-500 uppercase text-center mt-1">
           {t('validation.qty_positive')}
         </p>
@@ -217,7 +217,7 @@ export function IssueForm() {
 
   const renderUom = React.useCallback((line: CustomLineItem) => (
     <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-      {line.selectedItem?.primary_uom?.code || '---'}
+      {line.selectedItem?.primaryUom?.code || '---'}
     </span>
   ), []);
 
@@ -229,34 +229,34 @@ export function IssueForm() {
  setAllocatorOpen(true);
  };
 
- const handleAllocate = (lot_allocations: IssueLot[]) => {
+ const handleAllocate = (lotAllocations: IssueLot[]) => {
   if (activeLineIndex === null) return;
   const line = fields[activeLineIndex];
-  const allocated = lot_allocations.reduce((s, l) => s + l.allocated_qty, 0);
+  const allocated = lotAllocations.reduce((s, l) => s + l.allocatedQty, 0);
   update(activeLineIndex, {
     ...line,
     qty: allocated,
-    lot_allocations,
+    lotAllocations,
   });
  };
 
  const allLinesAllocated = fields.length > 0 && fields.every(
-  (f) => (f.qty ?? 0) >= (f.requested_qty ?? 0)
+  (f) => (f.qty ?? 0) >= (f.requestedQty ?? 0)
  );
 
   const onSubmit = (data: IssueFormValues) => {
   if (!allLinesAllocated) return;
    const payload: CreateIssuePayload = {
-     warehouse_id: data.warehouse_id,
-     destination_dept_id: data.destination_dept_id,
+     warehouseId: data.warehouseId,
+     destinationDeptId: data.destinationDeptId,
      notes: data.notes,
      lines: data.lines.map(line => ({
-       item_id: line.item_id,
-       requested_qty: line.requested_qty,
+       itemId: line.itemId,
+       requestedQty: line.requestedQty,
        notes: line.notes,
-       lot_allocations: line.lot_allocations.map(lot => ({
-         lot_number: lot.lot_number,
-         allocated_qty: lot.allocated_qty,
+       lotAllocations: line.lotAllocations.map(lot => ({
+         lotNumber: lot.lotNumber,
+         allocatedQty: lot.allocatedQty,
        })),
      })),
    };
@@ -298,9 +298,9 @@ export function IssueForm() {
  )}
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-  <FormField<IssueFormValues, "warehouse_id">
+  <FormField<IssueFormValues, "warehouseId">
   control={form.control}
-  name="warehouse_id"
+  name="warehouseId"
   render={({ field }) => (
   <FormItem>
   <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
@@ -321,9 +321,9 @@ export function IssueForm() {
   )}
   />
 
-  <FormField<IssueFormValues, "destination_dept_id">
+  <FormField<IssueFormValues, "destinationDeptId">
   control={form.control}
-  name="destination_dept_id"
+  name="destinationDeptId"
   render={({ field }) => (
   <FormItem>
   <FormLabel className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-3 flex items-center gap-2">
@@ -384,12 +384,12 @@ export function IssueForm() {
     <SmartCombobox
       items={items || []}
       onSelect={(item) => {
-        const existingIndex = watchedLines?.findIndex(i => i?.item_id === item.id) ?? -1;
+        const existingIndex = watchedLines?.findIndex(i => i?.itemId === item.id) ?? -1;
         if (existingIndex !== -1) {
-          const currentQty = form.getValues(`lines.${existingIndex}.requested_qty`) || 0;
-          form.setValue(`lines.${existingIndex}.requested_qty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
+          const currentQty = form.getValues(`lines.${existingIndex}.requestedQty`) || 0;
+          form.setValue(`lines.${existingIndex}.requestedQty`, currentQty + 1, { shouldDirty: true, shouldValidate: true });
         } else {
-          append({ item_id: item.id, requested_qty: 1, qty: 0, lot_allocations: [] });
+          append({ itemId: item.id, requestedQty: 1, qty: 0, lotAllocations: [] });
         }
       }}
       placeholder={tc('select_item') || "Search and Select Item"}
@@ -435,7 +435,7 @@ export function IssueForm() {
   <div>
   <div className="text-label-xs font-semibold uppercase text-muted-foreground/60/40 mb-1">{t('sync_commitment')}</div>
   <div className="text-title-lg font-bold text-foreground">
-  {fields.filter(f => (f.qty ?? 0) >= (f.requested_qty ?? 0)).length} / {fields.length} {t('protocol_validations')}
+  {fields.filter(f => (f.qty ?? 0) >= (f.requestedQty ?? 0)).length} / {fields.length} {t('protocol_validations')}
   </div>
   </div>
  </div>
@@ -465,10 +465,16 @@ export function IssueForm() {
    <FEFOLotAllocator
    isOpen={allocatorOpen}
    onClose={() => setAllocatorOpen(false)}
-   itemId={fields[activeLineIndex].item_id}
-   requestedQty={fields[activeLineIndex].requested_qty || 1}
+   itemId={fields[activeLineIndex].itemId}
+   requestedQty={fields[activeLineIndex].requestedQty || 1}
    onAllocate={handleAllocate}
-   lots={availableLots?.map(l => ({ lot_number: l.lot_number, expiry_date: l.expiry_date ?? '', allocated_qty: 0, availableQty: l.qty_available, is_expired: l.is_expired }))}
+   lots={availableLots?.map(l => ({ 
+      lotNumber: l.lotNumber, 
+      expiryDate: l.expiryDate ?? '', 
+      allocatedQty: 0, 
+      availableQty: l.qtyAvailable, 
+      isExpired: l.isExpired 
+    }))}
    />
   )}
 

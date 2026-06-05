@@ -28,48 +28,70 @@ import { PrismaService } from '../../database/prisma.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
-function mapPRDetail(pr: any) {
-  const lines = (pr.lines || []).map((line: any) => ({
-    id: line.id,
-    item: {
-      id: line.item?.id || '',
-      code: line.item?.sku || '',
-      name_ar: line.item?.name || '',
-      name_en: line.item?.name || '',
-      primary_uom: line.item?.unitOfMeasure
-        ? {
-            id: line.item.unitOfMeasure.id,
-            code: line.item.unitOfMeasure.code,
-          }
-        : { id: '', code: '' },
-    },
-    req_qty: Number(line.quantity),
-    uom_id: line.item?.uomId || '',
-  }));
+function mapPRDetail(pr: Record<string, unknown>) {
+  const prLines = (pr.lines as Record<string, unknown>[]) || [];
+  const createdBy = pr.createdBy as Record<string, unknown> | null;
+
+  const lines = prLines.map((line: Record<string, unknown>) => {
+    const item = line.item as Record<string, unknown> | null;
+    const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
+
+    return {
+      id: line.id as string,
+      item: {
+        id: (item?.id as string) || '',
+        code: (item?.sku as string) || '',
+        name_ar: (item?.name as string) || '',
+        name_en: (item?.name as string) || '',
+        primary_uom: unitOfMeasure
+          ? {
+              id: unitOfMeasure.id as string,
+              code: unitOfMeasure.code as string,
+            }
+          : { id: '', code: '' },
+      },
+      req_qty: Number(line.quantity),
+      uom_id: (item?.uomId as string) || '',
+    };
+  });
+
+  const createdAtIso = pr.createdAt
+    ? (pr.createdAt instanceof Date
+        ? pr.createdAt
+        : new Date(pr.createdAt as string)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
-    id: pr.id,
-    document_number: pr.requestNumber,
-    status: pr.status,
-    department_id: pr.warehouseId, // Fallback since no department_id is stored directly
-    expected_date: pr.createdAt.toISOString(),
-    version: pr.version,
+    id: pr.id as string,
+    document_number: pr.requestNumber as string,
+    status: pr.status as string,
+    department_id: pr.warehouseId as string, // Fallback since no department_id is stored directly
+    expected_date: createdAtIso,
+    version: pr.version as number,
     notes: '',
-    created_at: pr.createdAt.toISOString(),
-    created_by: pr.createdBy?.name || 'System',
-    updated_at: pr.createdAt.toISOString(),
+    created_at: createdAtIso,
+    created_by: (createdBy?.name as string) || 'System',
+    updated_at: createdAtIso,
     lines,
   };
 }
 
-function mapPRSummary(pr: any) {
+function mapPRSummary(pr: Record<string, unknown>) {
+  const createdAtIso = pr.createdAt
+    ? (pr.createdAt instanceof Date
+        ? pr.createdAt
+        : new Date(pr.createdAt as string)
+      ).toISOString()
+    : new Date().toISOString();
+
   return {
-    id: pr.id,
-    document_number: pr.requestNumber,
-    status: pr.status,
-    department_id: pr.warehouseId,
-    expected_date: pr.createdAt.toISOString(),
-    created_at: pr.createdAt.toISOString(),
+    id: pr.id as string,
+    document_number: pr.requestNumber as string,
+    status: pr.status as string,
+    department_id: pr.warehouseId as string,
+    expected_date: createdAtIso,
+    created_at: createdAtIso,
   };
 }
 
@@ -162,10 +184,12 @@ export class PurchaseRequestsController {
         pr.warehouseId,
       );
     }
-    const lines = body.lines?.map((line: any) => ({
-      itemId: line.itemId || line.item_id,
-      quantity: line.quantity || line.req_qty,
-    }));
+    const lines = (body.lines as Record<string, unknown>[])?.map(
+      (line: Record<string, unknown>) => ({
+        itemId: String(line.itemId || line.item_id || ''),
+        quantity: Number(line.quantity || line.req_qty || 0),
+      }),
+    );
 
     const updated = await this.prService.update(id, {
       version: body.version,
@@ -208,7 +232,7 @@ export class PurchaseRequestsController {
   async submit(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: any,
+    @CurrentUser('role') role: string,
     @Body() body: { comments?: string; version?: number },
     @Req() req: Request,
   ) {
@@ -236,7 +260,7 @@ export class PurchaseRequestsController {
   async approve(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: any,
+    @CurrentUser('role') role: string,
     @Body() body: { comments?: string; version?: number },
     @Req() req: Request,
   ) {
@@ -264,7 +288,7 @@ export class PurchaseRequestsController {
   async reject(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: any,
+    @CurrentUser('role') role: string,
     @Body() body: { comments?: string; version?: number },
     @Req() req: Request,
   ) {
@@ -292,7 +316,7 @@ export class PurchaseRequestsController {
   async cancel(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: any,
+    @CurrentUser('role') role: string,
     @Body() body: { comments?: string; version?: number },
     @Req() req: Request,
   ) {
@@ -320,7 +344,7 @@ export class PurchaseRequestsController {
   async convertToPo(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: any,
+    @CurrentUser('role') role: string,
     @Body()
     body: {
       supplierId: string;

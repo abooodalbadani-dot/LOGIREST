@@ -24,8 +24,8 @@ export class SearchController {
     }
 
     const query = q.trim();
-    const allowedWarehouseIds: string[] | undefined = (req as any)
-      .allowedWarehouseIds;
+    const allowedWarehouseIds = (req as unknown as Record<string, unknown>)
+      .allowedWarehouseIds as string[] | undefined;
 
     // 1. Search items (active only for search/listing)
     const items = await this.prisma.item.findMany({
@@ -118,7 +118,7 @@ export class SearchController {
       take: 5,
     });
 
-    const results: any[] = [];
+    const results: Record<string, unknown>[] = [];
 
     // Map items
     items.forEach((item) => {

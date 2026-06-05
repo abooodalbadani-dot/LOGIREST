@@ -2,21 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
-export const VarianceReasonSchema = z.object({
-  id: z.string(),
-  code: z.string(),
-  name_ar: z.string(),
-  name_en: z.string(),
-  is_active: z.boolean(),
-});
+import { VarianceReasonSchema } from '@/types/master-data';
 
 export const VarianceReasonListSchema = z.object({
   data: z.array(VarianceReasonSchema),
   meta: z.object({
     page: z.number(),
-    page_size: z.number(),
+    pageSize: z.number().optional(),
     total: z.number(),
-    total_pages: z.number(),
+    totalPages: z.number().optional(),
   }).optional(),
 });
 

@@ -6,11 +6,11 @@ import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 export interface ExpiringLot {
   id: string;
-  item_name: string;
-  lot_number: string;
-  expiry_date: string;
-  days_left: number;
-  warehouse_name: string;
+  itemName: string;
+  lotNumber: string;
+  expiryDate: string;
+  daysLeft: number;
+  warehouseName: string;
   qty: number;
   uom: string;
 }
@@ -29,14 +29,14 @@ export function NearExpiryWidget({
   const items = data
     ? data.map((lot) => ({
         id: lot.id,
-        name: lot.item_name,
-        lot_number: lot.lot_number,
-        expiry_date: lot.expiry_date,
-        days_left: lot.days_left,
-        warehouse: lot.warehouse_name,
+        name: lot.itemName,
+        lot_number: lot.lotNumber,
+        expiry_date: lot.expiryDate,
+        days_left: lot.daysLeft,
+        warehouse: lot.warehouseName,
         qty: lot.qty,
         unit: lot.uom,
-        priority: lot.days_left <= 7 ? 'high' : lot.days_left <= 15 ? 'medium' : 'low',
+        priority: lot.daysLeft <= 7 ? 'high' : lot.daysLeft <= 15 ? 'medium' : 'low',
         isApi: true,
         nameKey: '',
       }))

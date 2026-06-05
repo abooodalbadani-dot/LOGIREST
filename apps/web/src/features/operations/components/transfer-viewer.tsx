@@ -28,14 +28,14 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
   const router = useRouter();
   const { gradientClass } = useLocale();
 
-  const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
+  const transferStatus = transfer?.transferStatus ?? TRANSFER_STATUS.DRAFT;
 
   const receiveMutation = useReceiveTransfer();
 
   const handleConfirmReceipt = () => {
     const lines = (transfer?.lines ?? []).map((line) => ({
       line_id: line.id,
-      received_qty: line.shipped_qty ?? line.qty,
+      received_qty: line.shippedQty ?? line.qty,
     }));
     receiveMutation.mutate({
       id: transfer.id,
@@ -66,7 +66,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
         statusBadge={
           <div className="flex items-center gap-2">
             <span>{tCommon('doc_number')}</span>
-            <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.document_number}</span>
+            <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.documentNumber}</span>
           </div>
         }
         actions={
@@ -102,23 +102,23 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
         <div className="space-y-2">
           <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>
           <div className="bg-surface-container-highest/40 rounded-xl p-4 font-bold text-body-md">
-            {transfer?.from_warehouse_name}
+            {transfer?.fromWarehouseName}
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('to_warehouse')}</label>
           <div className="bg-surface-container-highest/40 rounded-xl p-4 font-bold text-body-md">
-            {transfer?.to_warehouse_name}
+            {transfer?.toWarehouseName}
           </div>
         </div>
 
-        {transfer?.shipped_at && (
+        {transfer?.shippedAt && (
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
             <div className="bg-surface-container-highest/30 rounded-xl p-4 flex items-center justify-between">
               <ClientOnlyTime 
-                date={transfer.shipped_at} 
+                date={transfer.shippedAt} 
                 mode="datetime" 
                 className="font-mono text-body-md font-bold text-cyan-500/80"
               />
@@ -127,12 +127,12 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
           </div>
         )}
 
-        {transfer?.received_at && (
+        {transfer?.receivedAt && (
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
             <div className="bg-surface-container-highest/30 rounded-xl p-4 flex items-center justify-between">
               <ClientOnlyTime 
-                date={transfer.received_at} 
+                date={transfer.receivedAt} 
                 mode="datetime" 
                 className="font-mono text-body-md font-bold text-emerald-500/80"
               />
@@ -149,19 +149,19 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
           </div>
         </div>
 
-        {transfer?.variance_reason && (
+        {transfer?.varianceReason && (
           <div className="col-span-1 md:col-span-4 space-y-2">
             <label className="text-label-xs font-semibold uppercase text-status-warning/80 ms-1">{t('variance_reason')}</label>
             <div className="bg-status-warning/5 rounded-xl p-4 font-medium text-body-md">
-              {transfer.variance_reason}
+              {transfer.varianceReason}
             </div>
           </div>
         )}
       </div>
 
       <div className="bg-surface-container-low/30 rounded-2xl overflow-hidden shadow-2xl">
-        <DocumentLineItemTable
-          lines={transfer?.lines ?? []}
+        <DocumentLineItemTable<TransferLine>
+          lines={(transfer?.lines ?? []) as unknown as TransferLine[]}
           isReadOnly={true}
           onRemoveLine={() => {}}
           hideLotColumns={true}
@@ -177,7 +177,7 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
               cell: (line: TransferLine) => (
                 <div className="flex justify-center">
                   <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-xl">
-                    {line.shipped_qty ?? line.qty}
+                    {line.shippedQty ?? line.qty}
                   </span>
                 </div>
               ),
@@ -186,8 +186,8 @@ export function TransferViewer({ transfer }: TransferViewerProps) {
               header: t('received_qty'),
               cell: (line: TransferLine) => (
                 <div className="flex justify-center">
-                  <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-xl ${line.received_qty ? 'bg-emerald-500/10 text-emerald-400' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
-                    {line.received_qty ?? '—'}
+                  <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-xl ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
+                    {line.receivedQty ?? '—'}
                   </span>
                 </div>
               ),

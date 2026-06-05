@@ -28,46 +28,46 @@ import { PrismaService } from '../../database/prisma.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
-function mapKitchenRequestDetail(kr: any) {
-  const items = (kr.items || []).map((item: any) => ({
-    id: item.id,
-    item_id: item.itemId,
-    item_name: item.item?.name || '',
-    uom: item.item?.unitOfMeasure?.code || 'PCS',
-    quantity: Number(item.quantityRequested),
-    notes: '',
-    fulfilled_quantity: Number(item.quantityFulfilled),
-  }));
+function mapKitchenRequestDetail(kr: Record<string, unknown>) {
+  const krItems = (kr.items as Record<string, unknown>[]) || [];
+  const department = kr.department as Record<string, unknown> | null;
+  const warehouse = kr.warehouse as Record<string, unknown> | null;
+
+  const items = krItems.map((item: Record<string, unknown>) => {
+    const it = item.item as Record<string, unknown> | null;
+    const unitOfMeasure = it?.unitOfMeasure as Record<string, unknown> | null;
+    return {
+      id: item.id as string,
+      item_id: item.itemId as string,
+      item_name: (it?.name as string) || '',
+      uom: (unitOfMeasure?.code as string) || 'PCS',
+      quantity: Number(item.quantityRequested),
+      notes: '',
+      fulfilled_quantity: Number(item.quantityFulfilled),
+    };
+  });
+
+  const createdAtIso = kr.createdAt
+    ? (kr.createdAt instanceof Date
+        ? kr.createdAt
+        : new Date(kr.createdAt as string)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
-    id: kr.id,
-    request_number: kr.requestNumber,
-    department_id: kr.departmentId,
-    department_name: kr.department?.name || '',
-    warehouse_id: kr.warehouseId,
-    warehouse_name: kr.warehouse?.name || '',
-    status: kr.status,
-    notes: kr.notes || '',
+    id: kr.id as string,
+    request_number: kr.requestNumber as string,
+    department_id: kr.departmentId as string,
+    department_name: (department?.name as string) || '',
+    warehouse_id: kr.warehouseId as string,
+    warehouse_name: (warehouse?.name as string) || '',
+    status: kr.status as string,
+    notes: (kr.notes as string) || '',
     requested_by: 'System',
-    requested_at: kr.createdAt
-      ? (kr.createdAt instanceof Date
-          ? kr.createdAt
-          : new Date(kr.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    created_at: kr.createdAt
-      ? (kr.createdAt instanceof Date
-          ? kr.createdAt
-          : new Date(kr.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    updated_at: kr.createdAt
-      ? (kr.createdAt instanceof Date
-          ? kr.createdAt
-          : new Date(kr.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    version: kr.version,
+    requested_at: createdAtIso,
+    created_at: createdAtIso,
+    updated_at: createdAtIso,
+    version: kr.version as number,
     items,
   };
 }

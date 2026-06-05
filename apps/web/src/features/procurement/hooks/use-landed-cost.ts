@@ -57,8 +57,8 @@ const LandedCostListSchema = z.object({
   meta: z.object({
     total: z.number(),
     page: z.number(),
-    page_size: z.number(),
-    total_pages: z.number(),
+    pageSize: z.number(),
+    totalPages: z.number(),
   }),
 });
 

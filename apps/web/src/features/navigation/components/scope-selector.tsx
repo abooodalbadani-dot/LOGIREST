@@ -11,7 +11,7 @@ const SCOPELESS_ROLES = ['ADMIN', 'GM', 'INV_MGR', 'AUDITOR', 'VIEWER'];
 interface ScopeWarehouse {
   id: string;
   name: string;
-  warehouse_id: string;
+  warehouseId: string;
 }
 
 export function ScopeSelector() {
@@ -23,22 +23,18 @@ export function ScopeSelector() {
   const isGlobal = SCOPELESS_ROLES.includes(user.role);
 
   const availableWarehouses: ScopeWarehouse[] = user.scopes
-    .filter((s): s is typeof s & { warehouse_id: string } => !!s.warehouse_id)
+    .filter((s): s is typeof s & { warehouseId: string } => !!s.warehouseId)
     .map((s) => {
-      const wh = (s as any).warehouse;
+      const wh = s.warehouse;
       return {
-        id: s.warehouse_id,
-        warehouse_id: s.warehouse_id,
-        name: wh
-          ? isRtl
-            ? wh.name_ar || wh.name
-            : wh.name_en || wh.name
-          : s.warehouse_id,
+        id: s.warehouseId,
+        warehouseId: s.warehouseId,
+        name: wh?.name || s.warehouseId,
       };
     });
 
   const currentWarehouse = availableWarehouses.find(
-    (w) => w.warehouse_id === activeScope.warehouseId,
+    (w) => w.warehouseId === activeScope.warehouseId,
   );
 
   const displayLabel = isGlobal
@@ -116,7 +112,7 @@ export function ScopeSelector() {
                 availableWarehouses.map((wh) => (
                   <Select.Item
                     key={wh.id}
-                    value={wh.warehouse_id}
+                    value={wh.warehouseId}
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 text-label-sm cursor-pointer outline-none',
                       'data-highlighted:bg-surface-container-high data-highlighted:text-foreground',

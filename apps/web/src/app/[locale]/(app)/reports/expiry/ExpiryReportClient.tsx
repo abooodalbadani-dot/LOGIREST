@@ -25,29 +25,29 @@ export default function ExpiryReportClient() {
  header: t('table.name'),
  },
  {
- accessorKey: 'lot_no',
+ accessorKey: 'lotNo',
  header: t('table.lot_no'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono opacity-70 uppercase">
- {row.getValue('lot_no')}
+ {row.getValue('lotNo')}
  </span>
  ),
  },
  {
- accessorKey: 'expiry_date',
+ accessorKey: 'expiryDate',
  header: t('table.expiry_date'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono">
- {formatDate(row.getValue('expiry_date'), locale as 'ar' | 'en')}
+ {formatDate(row.getValue('expiryDate'), locale as 'ar' | 'en')}
  </span>
  ),
  },
  {
- accessorKey: 'days_remaining',
+ accessorKey: 'daysRemaining',
  header: t('table.days_remaining'),
  meta: { numeric: true },
  cell: ({ row }) => {
- const days = row.getValue('days_remaining') as number;
+ const days = row.getValue('daysRemaining') as number;
  return (
  <span dir="ltr" className="font-mono font-bold">
  {formatNumber(days, locale as 'ar' | 'en')}
@@ -68,10 +68,10 @@ export default function ExpiryReportClient() {
 
  const exportColumns = [
  { header: t('table.sku'), key: 'sku', width: 15 },
- { header: t('table.name'), key: 'item_name', width: 30 },
- { header: t('table.lot_no'), key: 'lot_no', width: 15 },
- { header: t('table.expiry_date'), key: 'expiry_date', width: 20 },
- { header: t('table.qty'), key: 'qty', width: 10 },
+ { header: t('table.name'), key: 'name', width: 30 },
+ { header: t('table.lot_no'), key: 'lotNo', width: 15 },
+ { header: t('table.expiry_date'), key: 'expiryDate', width: 20 },
+ { header: t('table.qty'), key: 'qtyOnHand', width: 10 },
  { header: t('table.status'), key: 'status', width: 15 },
  ];
 

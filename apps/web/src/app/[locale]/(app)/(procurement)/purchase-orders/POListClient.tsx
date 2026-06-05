@@ -34,11 +34,11 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
 
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string>('');
-  const [supplier_id] = useState<string>('');
+  const [supplierId] = useState<string>('');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, isLoading } = usePOList({ status, supplier_id, search: debouncedSearch, page });
+  const { data, isLoading } = usePOList({ status, supplierId, search: debouncedSearch, page });
 
   const statusItems = useMemo(() => [
     { id: 'ALL', name_en: tc('statuses.all'), name_ar: tc('statuses.all') },
@@ -55,34 +55,34 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
     },
     {
-      accessorKey: 'document_number',
+      accessorKey: 'documentNumber',
       header: tc('doc_number'),
       cell: ({ row }) => (
         <span dir="ltr" className="font-mono text-amber-500 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">
-          {row.original.document_number}
+          {row.original.documentNumber}
         </span>
       ),
     },
     {
-      accessorKey: 'supplier_id',
+      accessorKey: 'supplierId',
       header: t('supplier'),
       cell: ({ row }) => (
         <div className="flex flex-col text-start">
-          <span className="opacity-90 font-bold text-body-md">{row.original.supplier_id}</span>
+          <span className="opacity-90 font-bold text-body-md">{row.original.supplierId}</span>
           <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('supplier')}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'expected_date',
+      accessorKey: 'expectedDate',
       header: t('expected_date'),
       cell: ({ row }) => {
-        const isOverdue = row.original.expected_date && new Date(row.original.expected_date) < new Date() && row.original.status !== 'FULFILLED';
+        const isOverdue = row.original.expectedDate && new Date(row.original.expectedDate) < new Date() && row.original.status !== 'FULFILLED';
         return (
           <div className="flex flex-col text-start">
             <div className="flex items-center gap-2">
               <ClientOnlyTime 
-                date={row.original.expected_date} 
+                date={row.original.expectedDate} 
                 mode="date" 
                 locale={locale} 
                 fallback="--/--/----"
@@ -101,12 +101,12 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       },
     },
     {
-      accessorKey: 'supplier_total_amount',
+      accessorKey: 'supplierTotalAmount',
       header: t('total_amount'),
       cell: ({ row }) => (
         <div className="flex flex-col text-end">
           <span dir="ltr" className="text-body-md font-mono font-semibold text-foreground/90">
-            {formatCurrency(row.original.supplier_total_amount, row.original.currency_code, locale)}
+            {formatCurrency(row.original.supplierTotalAmount, row.original.currencyCode, locale)}
           </span>
           <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('total_amount')}</span>
         </div>
@@ -238,7 +238,7 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
  page: page,
  pageSize: 10,
  total: data.meta.total,
- totalPages: data.meta.total_pages,
+ totalPages: data.meta.totalPages,
  onPageChange: setPage
  } : undefined}
  filters={

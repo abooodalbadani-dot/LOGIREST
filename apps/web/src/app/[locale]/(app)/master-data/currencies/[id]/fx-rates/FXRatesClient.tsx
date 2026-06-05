@@ -45,8 +45,8 @@ export function FXRatesClient({ currencyId, locale }: Props) {
       ?.filter((c) => c.id !== currencyId)
       .map((c) => ({
         id: c.id,
-        name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
-        name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+        name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+        name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
       })) || [];
     return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
   }, [currencies?.data, currencyId, locale]);
@@ -54,59 +54,59 @@ export function FXRatesClient({ currencyId, locale }: Props) {
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FXRateFormValues>({
     resolver: zodResolver(FXRateFormSchema),
     defaultValues: {
-      from_currency_id: currencyId,
-      to_currency_id: '',
+      fromCurrencyId: currencyId,
+      toCurrencyId: '',
       rate: 0,
-      effective_date: new Date().toISOString().substring(0, 10),
+      effectiveDate: new Date().toISOString().substring(0, 10),
     },
   });
 
  const onSubmit = handleSubmit(async (values) => {
      await create.mutateAsync({ body: values });
- reset({ from_currency_id: currencyId, to_currency_id: '', rate: 0, effective_date: new Date().toISOString().substring(0, 10) });
+ reset({ fromCurrencyId: currencyId, toCurrencyId: '', rate: 0, effectiveDate: new Date().toISOString().substring(0, 10) });
  });
 
- const columns: ColumnDef<FXRate>[] = [
- { 
- accessorKey: 'to_currency_id', 
- header: () => <span className="text-label-xs font-semibold uppercase">{t('to_currency')}</span>,
- cell: ({ row }) => (
- <div className="flex items-center gap-2">
- <div className="w-8 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low">
- <span className="text-label-xs font-mono font-bold text-cyan-500">{row.original.to_currency_id}</span>
- </div>
- <span className="text-body-md font-medium">
- {currencies?.data?.find(c => c.id === row.original.to_currency_id)?.name_en || row.original.to_currency_id}
- </span>
- </div>
- )
- },
- {
- accessorKey: 'rate',
- header: () => <span className="text-label-xs font-semibold uppercase">{t('rate')}</span>,
- cell: ({ row }) => (
- <div className="flex items-center gap-2">
- <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
- <span dir="ltr" className="font-mono font-semibold text-body-md text-foreground tabular-nums">
- {formatRate(row.original.rate, locale, 4)}
- </span>
- </div>
- ),
- },
-  {
-    accessorKey: 'effective_date',
-    header: () => <span className="text-label-xs font-semibold uppercase">{t('effective_date')}</span>,
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2 text-muted-foreground/60">
-        <History className="w-3.5 h-3.5 opacity-40" />
-        <ClientOnlyTime 
-          date={row.original.effective_date} 
-          mode="date" 
-          className="text-label-sm font-bold uppercase"
-        />
-      </div>
-    ),
+  const columns: ColumnDef<FXRate>[] = [
+  { 
+  accessorKey: 'toCurrencyId', 
+  header: () => <span className="text-label-xs font-semibold uppercase">{t('to_currency')}</span>,
+  cell: ({ row }) => (
+  <div className="flex items-center gap-2">
+  <div className="w-8 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low">
+  <span className="text-label-xs font-mono font-bold text-cyan-500">{row.original.toCurrencyId}</span>
+  </div>
+  <span className="text-body-md font-medium">
+  {currencies?.data?.find(c => c.id === row.original.toCurrencyId)?.[locale === 'ar' ? 'nameAr' : 'nameEn'] || row.original.toCurrencyId}
+  </span>
+  </div>
+  )
   },
+  {
+  accessorKey: 'rate',
+  header: () => <span className="text-label-xs font-semibold uppercase">{t('rate')}</span>,
+  cell: ({ row }) => (
+  <div className="flex items-center gap-2">
+  <TrendingUp className="w-3.5 h-3.5 text-cyan-500/50" />
+  <span dir="ltr" className="font-mono font-semibold text-body-md text-foreground tabular-nums">
+  {formatRate(row.original.rate, locale, 4)}
+  </span>
+  </div>
+  ),
+  },
+   {
+     accessorKey: 'effectiveDate',
+     header: () => <span className="text-label-xs font-semibold uppercase">{t('effective_date')}</span>,
+     cell: ({ row }) => (
+       <div className="flex items-center gap-2 text-muted-foreground/60">
+         <History className="w-3.5 h-3.5 opacity-40" />
+         <ClientOnlyTime 
+           date={row.original.effectiveDate} 
+           mode="date" 
+           className="text-label-sm font-bold uppercase"
+         />
+       </div>
+     ),
+   },
  {
  id: 'lock',
  header: '',
@@ -173,7 +173,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
   {t('to_currency')}
   </Label>
   <Controller
-    name="to_currency_id"
+    name="toCurrencyId"
     control={control}
     render={({ field }) => (
        <SmartCombobox
@@ -185,7 +185,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
        />
     )}
   />
-  {errors.to_currency_id && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.to_currency_id.message}</p>}
+  {errors.toCurrencyId && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.toCurrencyId.message}</p>}
   </div>
 
  {/* Rate */}
@@ -215,9 +215,9 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  type="date" 
  dir="ltr" 
  className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
- {...register('effective_date')} 
+ {...register('effectiveDate')} 
  />
- {errors.effective_date && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.effective_date.message}</p>}
+ {errors.effectiveDate && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.effectiveDate.message}</p>}
  </div>
  </CardContent>
  </Card>

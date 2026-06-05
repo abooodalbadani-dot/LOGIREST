@@ -32,17 +32,17 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  const s = search.toLowerCase();
  return currencies.filter((c: Currency) => 
  c.code.toLowerCase().includes(s) || 
- c.name_en.toLowerCase().includes(s) || 
- c.name_ar.includes(s)
+ c.nameEn.toLowerCase().includes(s) || 
+ c.nameAr.includes(s)
  );
  }, [currencies, search]);
 
  const stats = useMemo(() => {
- const base = currencies.find((c: Currency) => c.is_base_currency);
+ const base = currencies.find((c: Currency) => c.isBaseCurrency);
  return {
  total: currencies.length,
- active: currencies.filter((c: Currency) => c.is_active).length,
- baseCurrency: base ? (locale === 'ar' ? base.name_ar : base.name_en) : '---'
+ active: currencies.filter((c: Currency) => c.isActive).length,
+ baseCurrency: base ? (locale === 'ar' ? base.nameAr : base.nameEn) : '---'
  };
  }, [currencies, locale]);
 
@@ -64,8 +64,8 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  header: tc('name'), 
  cell: ({ row }) => (
  <div className="flex flex-col gap-0.5">
- <span className="font-bold text-label-sm">{row.original.name_en}</span>
- <span className="text-label-xs opacity-40" dir="rtl">{row.original.name_ar}</span>
+ <span className="font-bold text-label-sm">{row.original.nameEn}</span>
+ <span className="text-label-xs opacity-40" dir="rtl">{row.original.nameAr}</span>
  </div>
  )
  },
@@ -79,20 +79,20 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  )
  },
  {
- accessorKey: 'is_base_currency',
+ accessorKey: 'isBaseCurrency',
  header: t('fields.is_base'),
- cell: ({ row }) => row.original.is_base_currency ? (
+ cell: ({ row }) => row.original.isBaseCurrency ? (
  <Badge className="bg-amber-500/10 text-amber-500 border-none rounded-sm text-label-xxs font-semibold uppercase px-2 h-5">
  {t('fields.is_base')}
  </Badge>
  ) : null
  },
  {
- accessorKey: 'is_active', 
+ accessorKey: 'isActive', 
  header: t('fields.is_active'),
  cell: ({ row }) => (
  <StatusBadge 
- status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
+ status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
  />
  )
  },

@@ -30,8 +30,8 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
   const router = useRouter();
 
   const timelineEntries = [
-    { status: 'draft' as Status, at: document.created_at || '', by: document.created_by || tc('system') },
-    { status: document.status.toLowerCase() as Status, at: document.updated_at || document.created_at || '', by: tc('system') },
+    { status: 'draft' as Status, at: document.createdAt || '', by: document.createdBy || tc('system') },
+    { status: document.status.toLowerCase() as Status, at: document.updatedAt || document.createdAt || '', by: tc('system') },
   ];
 
   return (
@@ -47,7 +47,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
               <p className="text-label-xs font-bold text-muted-foreground/40 uppercase">{tc('read_only_view')}</p>
               <span className="text-muted-foreground/20">•</span>
               <span className="font-mono text-label-xs font-semibold text-muted-foreground/60">
-                {document.document_number}
+                {document.documentNumber}
               </span>
             </div>
           </div>
@@ -74,7 +74,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
 
       <div className="hidden print:block mb-8">
         <h1 className="text-2xl font-bold uppercase">{t('detail_title') || 'Purchase Request'}</h1>
-        <p className="text-sm font-mono text-muted-foreground mt-1">Ref: {document.document_number}</p>
+        <p className="text-sm font-mono text-muted-foreground mt-1">Ref: {document.documentNumber}</p>
       </div>
 
       <DocumentReadOnlyOverlay isPosted={document?.status === 'APPROVED' || document?.status === 'REJECTED'}>
@@ -88,7 +88,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
                   {t('department')}
                 </label>
                 <div className="bg-surface-container-lowest h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5">
-                  {document.department_id}
+                  {document.departmentId}
                 </div>
               </div>
 
@@ -98,7 +98,7 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
                   {t('expected_date')}
                 </label>
                 <div className="bg-surface-container-lowest h-11 px-4 rounded-xl flex items-center text-label-xs font-bold uppercase text-foreground/80 border border-surface-variant/5 font-mono">
-                  {document.expected_date.split('T')[0]}
+                  {document.expectedDate.split('T')[0]}
                 </div>
               </div>
 
@@ -130,15 +130,15 @@ export function PRViewer({ document, locale, actions }: PRViewerProps) {
                   item: {
                     id: l.item.id,
                     code: l.item.code,
-                    name_en: l.item.name_en,
-                    name_ar: l.item.name_ar,
-                    primary_uom: {
-                      code: l.item.primary_uom.code
+                    nameEn: l.item.nameEn,
+                    nameAr: l.item.nameAr,
+                    primaryUom: {
+                      code: l.item.primaryUom.code
                     }
                   },
-                  qty: l.req_qty,
-                  uom_id: l.uom_id
-                })) as LineItem[]}
+                  qty: l.reqQty,
+                  uomId: l.uomId
+                }))}
                 locale={locale}
                 isReadOnly={true}
               />

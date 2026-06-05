@@ -35,7 +35,7 @@ export function TransferListClient() {
   const { data: warehousesData } = useWarehouses();
   const warehouseMap = useMemo(() => {
     const list = warehousesData?.data ?? [];
-    return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
+    return new Map(list.map((w) => [w.id, w.name || '']));
   }, [warehousesData]);
 
   const [page, setPage] = useState(1);
@@ -75,32 +75,32 @@ export function TransferListClient() {
     return [allItem, ...statuses];
   }, [tCommon]);
 
-  const { data, isLoading } = useTransferList({ status, page, search: debouncedSearch, date_from: dateFrom || undefined, date_to: dateTo || undefined, sort_by: sortBy, sort_dir: sortDir });
+  const { data, isLoading } = useTransferList({ status, page, search: debouncedSearch, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, sortBy, sortDir });
   const { data: summaryData } = useTransferSummary();
   useOperationalScope();
 
   const columns = useMemo<ColumnDef<TransferSummary>[]>(() => [
     {
-      accessorKey: 'transfer_status',
+      accessorKey: 'transferStatus',
       header: tCommon('status_label'),
       meta: { sortBy: 'status' },
-      cell: ({ row }) => <StatusBadge status={row.original.transfer_status} />,
+      cell: ({ row }) => <StatusBadge status={row.original.transferStatus} />,
     },
     {
-      accessorKey: 'document_number',
+      accessorKey: 'documentNumber',
       header: tCommon('doc_number'),
       cell: ({ row }) => (
         <span dir="ltr" className="font-mono text-cyan-500/90 font-semibold text-body-md">
-          {row.original.document_number}
+          {row.original.documentNumber}
         </span>
       ),
     },
     {
-      accessorKey: 'from_warehouse_id',
+      accessorKey: 'fromWarehouseId',
       header: t('from_warehouse'),
       cell: ({ row }) => {
-        const name = warehouseMap.get(row.original.from_warehouse_id);
-        const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.from_warehouse_id;
+        const name = warehouseMap.get(row.original.fromWarehouseId);
+        const display = name || row.original.fromWarehouseId;
         return (
           <span className="opacity-80 font-medium">
             {display}
@@ -109,11 +109,11 @@ export function TransferListClient() {
       },
     },
     {
-      accessorKey: 'to_warehouse_id',
+      accessorKey: 'toWarehouseId',
       header: t('to_warehouse'),
       cell: ({ row }) => {
-        const name = warehouseMap.get(row.original.to_warehouse_id);
-        const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.to_warehouse_id;
+        const name = warehouseMap.get(row.original.toWarehouseId);
+        const display = name || row.original.toWarehouseId;
         return (
           <span className="opacity-80 font-medium">
             {display}
@@ -122,12 +122,12 @@ export function TransferListClient() {
       },
     },
     {
-      accessorKey: 'shipped_at',
+      accessorKey: 'shippedAt',
       header: t('shipped_at'),
       meta: { sortBy: 'shipped_at' },
       cell: ({ row }) => (
         <ClientOnlyTime
-          date={row.original.shipped_at}
+          date={row.original.shippedAt}
           mode="date"
           locale={locale}
           className="text-label-xs opacity-60 font-mono font-medium"
@@ -135,12 +135,12 @@ export function TransferListClient() {
       ),
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: tCommon('created_at'),
       meta: { sortBy: 'created_at' },
       cell: ({ row }) => (
         <ClientOnlyTime
-          date={row.original.created_at}
+          date={row.original.createdAt}
           mode="date"
           locale={locale}
           className="text-label-xs opacity-60 font-mono font-medium"
@@ -169,10 +169,10 @@ export function TransferListClient() {
   ], [t, tCommon, router, warehouseMap, locale]);
 
   const totalTransfersCount = summaryData?.total ?? data?.meta?.total ?? 0;
-  const inTransitCount = summaryData?.in_transit ?? 0;
-  const completedCount = data?.data?.filter(i => isTransferPosted(i.transfer_status)).length ?? 0;
+  const inTransitCount = summaryData?.inTransit ?? 0;
+  const completedCount = data?.data?.filter(i => isTransferPosted(i.transferStatus)).length ?? 0;
 
-  const overdueCount = summaryData?.overdue_count ?? 0;
+  const overdueCount = summaryData?.overdueCount ?? 0;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -270,7 +270,7 @@ export function TransferListClient() {
             page: page,
             pageSize: 10,
             total: data.meta.total,
-            totalPages: data.meta.total_pages,
+            totalPages: data.meta.totalPages,
             onPageChange: setPage
           } : undefined}
           filters={

@@ -59,7 +59,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
 
   const assignedWarehouseIds = React.useMemo(() => {
     if (!user?.scopes) return null;
-    const ids = user.scopes.map(s => s.warehouse_id).filter(Boolean) as string[];
+    const ids = user.scopes.map(s => s.warehouseId).filter(Boolean) as string[];
     return ids.length > 0 ? ids : null;
   }, [user?.scopes]);
 
@@ -99,8 +99,8 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  const onSubmit = (data: StocktakeFormValues) => {
     createStocktake.mutate({
       data: {
-        session_name: data.sessionName,
-        warehouse_id: data.warehouseId,
+        sessionName: data.sessionName,
+        warehouseId: data.warehouseId,
         description: data.description,
       },
     }, {
@@ -126,8 +126,8 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
 
   const warehouseItems = (filteredWarehouses || []).map(w => ({
     id: w.id,
-    name_en: w.name_en,
-    name_ar: w.name_ar,
+    name_en: w.name || '',
+    name_ar: w.name || '',
     code: w.code,
   }));
 

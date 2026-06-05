@@ -89,9 +89,9 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
             scopeLabels.push(`${s.warehouse.branch.name} - ${s.warehouse.name}`);
           } else {
             const parts: string[] = [];
-            if (s.branch_id) parts.push(`B:${s.branch_id}`);
-            if (s.warehouse_id) parts.push(`W:${s.warehouse_id}`);
-            if (s.department_id) parts.push(`D:${s.department_id}`);
+            if (s.branchId) parts.push(`B:${s.branchId}`);
+            if (s.warehouseId) parts.push(`W:${s.warehouseId}`);
+            if (s.departmentId) parts.push(`D:${s.departmentId}`);
             if (parts.length) scopeLabels.push(parts.join(', '));
           }
         });
@@ -107,11 +107,11 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
       },
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: tCommon('created_at'),
       cell: ({ row }) => (
         <span className="text-label-xs font-mono opacity-40" dir="ltr">
-          {row.original.created_at ? <ClientOnlyTime date={row.original.created_at} mode="datetime" /> : '—'}
+          {row.original.createdAt ? <ClientOnlyTime date={row.original.createdAt} mode="datetime" /> : '—'}
         </span>
       ),
     },
@@ -184,7 +184,7 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
           page: page,
           pageSize: 10,
           total: data.meta.total,
-          totalPages: data.meta.total_pages,
+          totalPages: data.meta.totalPages,
           onPageChange: setPage
         } : undefined}
         filters={

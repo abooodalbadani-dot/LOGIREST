@@ -12,6 +12,14 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDate, formatQuantity } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 
+interface LotTraceAllocation {
+  documentNumber: string;
+  documentType: string;
+  quantity: number;
+  date: string;
+  status: string;
+}
+
 export default function LotTraceReportClient() {
   const t = useTranslations('reports');
   const locale = useLocale() as 'ar' | 'en';
@@ -23,17 +31,17 @@ export default function LotTraceReportClient() {
   const lots = useMemo(() => {
     return (lotsData?.data || []).map((lot) => ({
       id: lot.id,
-      code: lot.lot_number,
+      code: lot.lotNumber,
       barcode: undefined,
-      name_en: lot.item_name_en,
-      name_ar: lot.item_name_ar,
+      name_en: lot.itemName,
+      name_ar: lot.itemName,
     }));
   }, [lotsData]);
 
   // Fetch trace details
   const { data: traceData, isLoading: isLoadingTrace } = useLotTrace(selectedLotId);
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<LotTraceAllocation>[] = [
     {
       accessorKey: 'documentNumber',
       header: t('lot_trace_table.source_document') || 'Document Number',

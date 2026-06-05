@@ -27,11 +27,11 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  
  for (const lot of sortedLots) {
  if (remaining <= 0) break;
- if (isExpired(lot.expiry_date) && !['ADMIN', 'INV_MGR'].includes(userRole || '')) {
+ if (isExpired(lot.expiryDate) && !['ADMIN', 'INV_MGR'].includes(userRole || '')) {
  continue;
  }
  
- const toAllocate = Math.min(remaining, lot.qty_available);
+ const toAllocate = Math.min(remaining, lot.qtyAvailable);
  if (toAllocate > 0) {
  initialAllocations[lot.id] = { qty: toAllocate, reason: '' };
  remaining -= toAllocate;
@@ -44,7 +44,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  
  const isValid = totalAllocated === requestedQty && sortedLots.every(lot => {
  const alloc = allocations[lot.id];
- if (alloc && alloc.qty > 0 && isExpired(lot.expiry_date)) {
+ if (alloc && alloc.qty > 0 && isExpired(lot.expiryDate)) {
  return !!alloc.reason;
  }
  return true;
@@ -57,11 +57,11 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  .map(([id, data]) => {
  const lot = lots.find(l => l.id === id)!;
  return {
- lot_id: lot.id,
- lot_number: lot.lot_number,
- expiry_date: lot.expiry_date,
- allocated_qty: data.qty,
- override_reason: isExpired(lot.expiry_date) ? data.reason : null
+ lotId: lot.id,
+ lotNumber: lot.lotNumber,
+ expiryDate: lot.expiryDate,
+ allocatedQty: data.qty,
+ overrideReason: isExpired(lot.expiryDate) ? data.reason : null
  };
  });
  onAllocate(finalAllocations);
@@ -83,8 +83,8 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  lot={lot}
  allocatedQty={allocations[lot.id]?.qty || 0}
  onQtyChange={(qty) => setAllocations(prev => ({ ...prev, [lot.id]: { ...prev[lot.id], qty } }))}
- isExpired={isExpired(lot.expiry_date)}
- isNearExpiry={isNearExpiry(lot.expiry_date)}
+ isExpired={isExpired(lot.expiryDate)}
+ isNearExpiry={isNearExpiry(lot.expiryDate)}
  userRole={userRole}
  onExpiredOverride={(reason) => setAllocations(prev => ({ ...prev, [lot.id]: { ...prev[lot.id], reason } }))}
  />

@@ -65,18 +65,18 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     useForm<WarehouseFormValues>({
       resolver: zodResolver(WarehouseFormSchema),
       disabled: isReadOnly,
-      defaultValues: { branch_id: '', code: '', name_ar: '', name_en: '', type: 'main', is_active: true, version: undefined },
+      defaultValues: { branchId: '', code: '', name: '', type: 'main', isActive: true, version: undefined },
     });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const isActive = useWatch({ control, name: 'is_active' });
+  const isActive = useWatch({ control, name: 'isActive' });
 
   const branchItems = useMemo(() => {
     return branches.map((b) => ({
       id: b.id,
-      name_en: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
-      name_ar: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
+      name_en: `${b.code} — ${b.name}`,
+      name_ar: `${b.code} — ${b.name}`,
     }));
   }, [branches, locale]);
 
@@ -90,7 +90,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
 
   useEffect(() => {
     if (data) {
-      reset({ branch_id: data.branch_id, code: data.code, name_ar: data.name_ar, name_en: data.name_en, type: data.type, is_active: data.is_active, version: data.version });
+      reset({ branchId: data.branchId, code: data.code, name: data.name, type: data.type, isActive: data.isActive, version: data.version });
     }
   }, [data, reset]);
 
@@ -135,7 +135,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Warehouse form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -218,7 +218,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                     {tw('fields.branch')}
                   </Label>
                   <Controller
-                    name="branch_id"
+                    name="branchId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -231,7 +231,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                       />
                     )}
                   />
-                  {errors.branch_id && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.branch_id.message}`)}</p>}
+                  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.branchId.message}`)}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -251,31 +251,17 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="wh-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {tw('fields.name_en')}
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="wh-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+                    {tw('fields.name_en')} {/* Use generic name translation if available, else keep name_en/name_ar fallback or create a new one */}
                   </Label>
                   <Input 
-                    id="wh-name-en" 
-                    dir="ltr" 
-                    {...register('name_en')} 
+                    id="wh-name" 
+                    {...register('name')} 
                     disabled={isReadOnly}
                     className="font-semibold" 
                   />
-                  {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.name_en.message}`)}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="wh-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {tw('fields.name_ar')}
-                  </Label>
-                  <Input 
-                    id="wh-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    disabled={isReadOnly}
-                    className="font-semibold text-end" 
-                  />
-                  {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.name_ar.message}`)}</p>}
+                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.name.message}`)}</p>}
                 </div>
               </div>
             </CardContent>
@@ -342,7 +328,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                 <Switch 
                   id="wh-active" 
                   checked={isActive} 
-                  onCheckedChange={(v: boolean) => !isReadOnly && setValue('is_active', v)} 
+                  onCheckedChange={(v: boolean) => !isReadOnly && setValue('isActive', v)} 
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-status-active"
                 />

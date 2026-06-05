@@ -4,10 +4,10 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 
 export const FXRateSchema = z.object({
- from_currency_id: z.string(),
- to_currency_id: z.string(),
- rate: z.number(),
- effective_date: z.string(),
+  fromCurrencyId: z.string(),
+  toCurrencyId: z.string(),
+  rate: z.number(),
+  effectiveDate: z.string(),
 });
 
 export type FXRate = z.infer<typeof FXRateSchema>;

@@ -50,11 +50,11 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
     useForm<BarcodeFormValues>({
       resolver: zodResolver(BarcodeFormSchema),
       defaultValues: { 
-        item_id: '', 
-        uom_id: '', 
+        itemId: '', 
+        uomId: '', 
         code: '', 
-        default_qty: 1,
-        is_active: true,
+        defaultQty: 1,
+        isActive: true,
         version: undefined
       },
       disabled: isReadOnly,
@@ -69,31 +69,31 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const itemItems = useMemo(() => {
     return items?.data?.map((i) => ({
       id: i.id,
-      name_en: `${i.code} — ${locale === 'ar' ? i.name_ar : i.name_en}`,
-      name_ar: `${i.code} — ${locale === 'ar' ? i.name_ar : i.name_en}`,
+      name_en: `${i.code} — ${locale === 'ar' ? i.nameAr : i.nameEn}`,
+      name_ar: `${i.code} — ${locale === 'ar' ? i.nameAr : i.nameEn}`,
     })) || [];
   }, [items?.data, locale]);
 
   const uomItems = useMemo(() => {
     return uoms?.data?.map((u) => ({
       id: u.id,
-      name_en: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
-      name_ar: `${u.code} — ${locale === 'ar' ? u.name_ar : u.name_en}`,
+      name_en: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
+      name_ar: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
     })) || [];
   }, [uoms?.data, locale]);
 
- useEffect(() => {
- if (barcode) {
- reset({ 
- item_id: barcode.item_id, 
- uom_id: barcode.uom_id,
- code: barcode.code, 
- default_qty: barcode.default_qty,
- is_active: barcode.is_active,
- version: barcode.version
- });
- }
- }, [barcode, reset]);
+  useEffect(() => {
+    if (barcode) {
+      reset({ 
+        itemId: barcode.itemId, 
+        uomId: barcode.uomId,
+        code: barcode.code, 
+        defaultQty: barcode.defaultQty,
+        isActive: barcode.isActive,
+        version: barcode.version
+      });
+    }
+  }, [barcode, reset]);
 
   useEffect(() => {
     if (!currentCode || id) {
@@ -161,66 +161,66 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-  <div className="space-y-2">
-  <Label htmlFor="bc-item" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-  {tb('fields.item')}
-  </Label>
-  <Controller
-  name="item_id"
-  control={control}
-  render={({ field }) => (
-     <SmartCombobox
-       disabled={isReadOnly}
-       value={field.value}
-       onSelect={(item) => field.onChange(item.id)}
-       items={itemItems}
-       placeholder="—"
-       className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-     />
-  )}
-  />
-  {errors.item_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.item_id.message}</p>}
-  </div>
+   <div className="space-y-2">
+   <Label htmlFor="bc-item" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+   {tb('fields.item')}
+   </Label>
+   <Controller
+   name="itemId"
+   control={control}
+   render={({ field }) => (
+      <SmartCombobox
+        disabled={isReadOnly}
+        value={field.value}
+        onSelect={(item) => field.onChange(item.id)}
+        items={itemItems}
+        placeholder="—"
+        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+      />
+   )}
+   />
+   {errors.itemId && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.itemId.message}</p>}
+   </div>
+
+   <div className="space-y-2">
+   <Label htmlFor="bc-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+   {tb('fields.uom')}
+   </Label>
+   <Controller
+   name="uomId"
+   control={control}
+   render={({ field }) => (
+      <SmartCombobox
+        disabled={isReadOnly}
+        value={field.value}
+        onSelect={(item) => field.onChange(item.id)}
+        items={uomItems}
+        placeholder="—"
+        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+      />
+   )}
+   />
+   {errors.uomId && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.uomId.message}</p>}
+   </div>
 
   <div className="space-y-2">
-  <Label htmlFor="bc-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-  {tb('fields.uom')}
+  <Label htmlFor="bc-qty" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+  {tb('fields.default_qty')}
   </Label>
-  <Controller
-  name="uom_id"
-  control={control}
-  render={({ field }) => (
-     <SmartCombobox
-       disabled={isReadOnly}
-       value={field.value}
-       onSelect={(item) => field.onChange(item.id)}
-       items={uomItems}
-       placeholder="—"
-       className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-     />
-  )}
-  />
-  {errors.uom_id && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.uom_id.message}</p>}
+  <div className="relative group">
+  <Hash className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-status-active transition-colors" />
+                 <Input 
+                   id="bc-qty" 
+                   type="number" 
+                   dir="ltr" 
+                   min={1}
+                   disabled={isReadOnly}
+                   {...register('defaultQty', { valueAsNumber: true })} 
+                   className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-status-active"
+                 />
   </div>
-
- <div className="space-y-2">
- <Label htmlFor="bc-qty" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
- {tb('fields.default_qty')}
- </Label>
- <div className="relative group">
- <Hash className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-status-active transition-colors" />
-                <Input 
-                  id="bc-qty" 
-                  type="number" 
-                  dir="ltr" 
-                  min={1}
-                  disabled={isReadOnly}
-                  {...register('default_qty', { valueAsNumber: true })} 
-                  className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-status-active"
-                />
- </div>
- {errors.default_qty && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.default_qty.message}</p>}
- </div>
+  {errors.defaultQty && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.defaultQty.message}</p>}
+  </div>
  </div>
  </CardContent>
  </Card>
@@ -293,18 +293,18 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  <Label className="text-label-xs font-bold uppercase text-foreground/80">{tb('active_status_label')}</Label>
  <p className="text-label-xxs text-muted-foreground uppercase font-medium">{tb('active_status_desc')}</p>
  </div>
- <Controller
- name="is_active"
- control={control}
- render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={isReadOnly}
-                    className="data-[state=checked]:bg-status-active"
-                  />
- )}
- />
+  <Controller
+  name="isActive"
+  control={control}
+  render={({ field }) => (
+                   <Switch
+                     checked={field.value}
+                     onCheckedChange={field.onChange}
+                     disabled={isReadOnly}
+                     className="data-[state=checked]:bg-status-active"
+                   />
+  )}
+  />
  </div>
  </CardContent>
  </Card>

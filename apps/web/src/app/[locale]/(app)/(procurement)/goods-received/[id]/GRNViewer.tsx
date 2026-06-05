@@ -31,14 +31,14 @@ import type { GRN, GRNLineItem } from '@/types/documents';
 
 interface AuditLogEntry {
   status: string;
-  created_at: string;
-  user_name?: string;
+  createdAt: string;
+  userName?: string;
 }
 
 export interface GRNViewerDocument extends Omit<GRN, 'lines'> {
-  supplier_name?: string;
-  po_number?: string | null;
-  audit_log?: AuditLogEntry[];
+  supplierName?: string;
+  poNumber?: string | null;
+  auditLog?: AuditLogEntry[];
   lines: GRNLineItem[];
 }
 
@@ -59,15 +59,15 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
 
   const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
 
-  const totalForeign = document?.lines?.reduce((acc: number, line: GRNLineItem) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
-  const currentFxRate = document?.fx_rate || 1;
+  const totalForeign = document?.lines?.reduce((acc: number, line: GRNLineItem) => acc + (line.receivedQty * (line.unitCostForeign || 0)), 0) || 0;
+  const currentFxRate = document?.fxRate || 1;
 
-  const timelineEntries = document?.audit_log?.map((e: AuditLogEntry) => ({
+  const timelineEntries = document?.auditLog?.map((e: AuditLogEntry) => ({
     status: e.status.toLowerCase() as Status,
-    at: e.created_at,
-    by: e.user_name || tc('system')
+    at: e.createdAt,
+    by: e.userName || tc('system')
   })) || [
-    { status: (document?.status || 'DRAFT').toLowerCase() as Status, at: document?.created_at || new Date().toISOString(), by: 'System' }
+    { status: (document?.status || 'DRAFT').toLowerCase() as Status, at: document?.createdAt || new Date().toISOString(), by: 'System' }
   ];
 
   if (loadingSettings) {
@@ -87,7 +87,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
         }
         statusBadge={
           <span className="font-mono text-label-xs font-semibold text-muted-foreground/60">
-            {tc('read_only_view')} • {document?.document_number}
+            {tc('read_only_view')} • {document?.documentNumber}
           </span>
         }
         actions={
@@ -109,7 +109,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
           {/* Supplier Info */}
           <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group border border-surface-variant/5">
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</p>
-            <p className="font-bold text-title-sm mt-2 italic uppercase text-foreground">{document?.supplier_name || 'Supply Co'}</p>
+            <p className="font-bold text-title-sm mt-2 italic uppercase text-foreground">{document?.supplierName || 'Supply Co'}</p>
           </div>
 
           {/* Currency Info */}
@@ -118,7 +118,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
               <Wallet className="w-12 h-12" />
             </div>
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</p>
-            <p className="font-mono font-semibold text-title-sm text-primary mt-2">{document?.currency_id}</p>
+            <p className="font-mono font-semibold text-title-sm text-primary mt-2">{document?.currencyId}</p>
           </div>
 
           {/* Linked PO */}
@@ -128,9 +128,9 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             </div>
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
             <div className="mt-2">
-              {document?.po_number ? (
+              {document?.poNumber ? (
                 <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-lg">
-                  <span dir="ltr" className="font-mono">{document.po_number}</span>
+                  <span dir="ltr" className="font-mono">{document.poNumber}</span>
                 </Badge>
               ) : (
                 <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
@@ -144,7 +144,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
               <Warehouse className="w-12 h-12" />
             </div>
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</p>
-            <p className="font-bold text-title-sm mt-2 uppercase italic text-foreground">{document?.warehouse_id === 'wh-1' ? 'Main Warehouse' : 'Kitchen Store'}</p>
+            <p className="font-bold text-title-sm mt-2 uppercase italic text-foreground">{document?.warehouseId === 'wh-1' ? 'Main Warehouse' : 'Kitchen Store'}</p>
           </div>
 
           {/* Notes */}
@@ -170,14 +170,14 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
                 {
                   header: tc('table_headers.received_qty'),
                   cell: (line: GRNLineItem) => (
-                    <span dir="ltr" className="font-mono font-bold text-foreground/80">{line.received_qty}</span>
+                    <span dir="ltr" className="font-mono font-bold text-foreground/80">{line.receivedQty}</span>
                   )
                 },
                 {
                   header: tc('table_headers.lot_allocation'),
                   cell: (line: GRNLineItem) => (
                     <span dir="ltr" className="font-mono text-label-xs font-semibold uppercase text-operational-cyan">
-                      {line.lot?.lot_number || 'N/A'}
+                      {line.lot?.lotNumber || 'N/A'}
                     </span>
                   )
                 }
@@ -195,7 +195,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="flex items-center gap-2 text-amber-500">
               <TrendingUp className="w-3 h-3" />
               <p dir="ltr" className="text-label-sm font-mono font-semibold">
-                1 {document?.currency_id} = {currentFxRate} {baseCurrency}
+                1 {document?.currencyId} = {currentFxRate} {baseCurrency}
               </p>
             </div>
           </div>
@@ -204,8 +204,8 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="absolute top-0 end-0 w-1 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-all" />
             <div className="space-y-6 relative z-10">
               <div className="flex justify-between items-baseline gap-10">
-                <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currency_id })}</p>
-                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currency_id, locale)}</p>
+                <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currencyId })}</p>
+                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currencyId, locale)}</p>
               </div>
               <div className="h-px bg-surface-container-high/20 w-full" />
               <div className="flex justify-between items-center gap-10">

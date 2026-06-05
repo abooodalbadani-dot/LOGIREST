@@ -26,98 +26,94 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import type { Request } from 'express';
 
-function mapTransferDetail(transfer: any) {
-  const lines = (transfer.lines || []).map((line: any) => ({
-    id: line.id,
-    document_id: line.transferId,
-    item_id: line.itemId,
-    item: line.item
-      ? {
-          id: line.item.id,
-          code: line.item.sku,
-          name_ar: line.item.name,
-          name_en: line.item.name,
-          primary_uom: line.item.unitOfMeasure
-            ? {
-                id: line.item.unitOfMeasure.id,
-                code: line.item.unitOfMeasure.code,
-                name_ar: line.item.unitOfMeasure.name,
-                name_en: line.item.unitOfMeasure.name,
-              }
-            : { id: '', code: '', name_ar: '', name_en: '' },
-        }
-      : {
-          id: '',
-          code: '',
-          name_ar: '',
-          name_en: '',
-          primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
-        },
-    lot_id: null,
-    lot: null,
-    qty: Number(line.quantityShipped),
-    shipped_qty: Number(line.quantityShipped),
-    received_qty: line.quantityReceived ? Number(line.quantityReceived) : null,
-    uom_id: line.item?.uomId || '',
-    unit_cost: line.item?.wac ? Number(line.item.wac) : null,
-    lot_allocations: [],
-  }));
+function mapTransferDetail(transfer: Record<string, unknown>) {
+  const fromWarehouse = transfer.fromWarehouse as Record<
+    string,
+    unknown
+  > | null;
+  const toWarehouse = transfer.toWarehouse as Record<string, unknown> | null;
+
+  const lines = ((transfer.lines as Record<string, unknown>[]) || []).map(
+    (line: Record<string, unknown>) => {
+      const item = line.item as Record<string, unknown> | null;
+      const unitOfMeasure = item?.unitOfMeasure as Record<
+        string,
+        unknown
+      > | null;
+      return {
+        id: line.id as string,
+        document_id: line.transferId as string,
+        item_id: line.itemId as string,
+        item: item
+          ? {
+              id: item.id as string,
+              code: item.sku as string,
+              name_ar: item.name as string,
+              name_en: item.name as string,
+              primary_uom: unitOfMeasure
+                ? {
+                    id: unitOfMeasure.id as string,
+                    code: unitOfMeasure.code as string,
+                    name_ar: unitOfMeasure.name as string,
+                    name_en: unitOfMeasure.name as string,
+                  }
+                : { id: '', code: '', name_ar: '', name_en: '' },
+            }
+          : {
+              id: '',
+              code: '',
+              name_ar: '',
+              name_en: '',
+              primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
+            },
+        lot_id: null,
+        lot: null,
+        qty: Number(line.quantityShipped),
+        shipped_qty: Number(line.quantityShipped),
+        received_qty: line.quantityReceived
+          ? Number(line.quantityReceived)
+          : null,
+        uom_id: (item?.uomId as string) || '',
+        unit_cost: item?.wac ? Number(item.wac) : null,
+        lot_allocations: [],
+      };
+    },
+  );
 
   const isShipped = ['IN_TRANSIT', 'RECEIVED', 'POSTED'].includes(
-    transfer.status,
+    transfer.status as string,
   );
-  const isReceived = ['RECEIVED', 'POSTED'].includes(transfer.status);
+  const isReceived = ['RECEIVED', 'POSTED'].includes(transfer.status as string);
+
+  const createdAtIso = transfer.createdAt
+    ? (transfer.createdAt instanceof Date
+        ? transfer.createdAt
+        : new Date(transfer.createdAt as string)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
-    id: transfer.id,
-    document_number: transfer.transferNumber,
+    id: transfer.id as string,
+    document_number: transfer.transferNumber as string,
     type: 'TRANSFER',
-    status: transfer.status,
-    transfer_status: transfer.status,
-    from_warehouse_id: transfer.fromWarehouseId,
-    from_warehouse_name: transfer.fromWarehouse?.name || '',
-    to_warehouse_id: transfer.toWarehouseId,
-    to_warehouse_name: transfer.toWarehouse?.name || '',
-    warehouse_id: transfer.fromWarehouseId,
-    branch_id: transfer.fromWarehouse?.branchId || '',
+    status: transfer.status as string,
+    transfer_status: transfer.status as string,
+    from_warehouse_id: transfer.fromWarehouseId as string,
+    from_warehouse_name: (fromWarehouse?.name as string) || '',
+    to_warehouse_id: transfer.toWarehouseId as string,
+    to_warehouse_name: (toWarehouse?.name as string) || '',
+    warehouse_id: transfer.fromWarehouseId as string,
+    branch_id: (fromWarehouse?.branchId as string) || '',
     notes: '',
-    shipped_at:
-      isShipped && transfer.createdAt
-        ? (transfer.createdAt instanceof Date
-            ? transfer.createdAt
-            : new Date(transfer.createdAt)
-          ).toISOString()
-        : null,
-    received_at:
-      isReceived && transfer.createdAt
-        ? (transfer.createdAt instanceof Date
-            ? transfer.createdAt
-            : new Date(transfer.createdAt)
-          ).toISOString()
-        : null,
+    shipped_at: isShipped ? createdAtIso : null,
+    received_at: isReceived ? createdAtIso : null,
     variance_reason: null,
     created_by: 'System',
-    created_at: transfer.createdAt
-      ? (transfer.createdAt instanceof Date
-          ? transfer.createdAt
-          : new Date(transfer.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    updated_at: transfer.createdAt
-      ? (transfer.createdAt instanceof Date
-          ? transfer.createdAt
-          : new Date(transfer.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    posted_at:
-      transfer.status === 'POSTED' && transfer.createdAt
-        ? (transfer.createdAt instanceof Date
-            ? transfer.createdAt
-            : new Date(transfer.createdAt)
-          ).toISOString()
-        : null,
+    created_at: createdAtIso,
+    updated_at: createdAtIso,
+    posted_at: transfer.status === 'POSTED' ? createdAtIso : null,
     posted_by: null,
-    version: transfer.version,
+    version: transfer.version as number,
     lines,
   };
 }

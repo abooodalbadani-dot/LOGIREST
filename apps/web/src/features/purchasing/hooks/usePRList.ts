@@ -7,14 +7,14 @@ import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 const PRSummarySchema = z.object({ 
- id: z.string(), 
- document_number: z.string(), 
- status: BadgeStatusSchema, 
- department_id: z.string(), 
- warehouse_id: z.string(), 
- expected_date: z.string(), 
- created_at: z.string(), 
- created_by: z.string(), 
+  id: z.string(), 
+  documentNumber: z.string(), 
+  status: BadgeStatusSchema, 
+  departmentId: z.string(), 
+  warehouseId: z.string(), 
+  expectedDate: z.string(), 
+  createdAt: z.string(), 
+  createdBy: z.string(), 
 });
 
 export type PRSummary = z.infer<typeof PRSummarySchema>;

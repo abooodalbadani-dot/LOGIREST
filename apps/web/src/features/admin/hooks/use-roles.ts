@@ -61,16 +61,16 @@ const UserRoleSchema = z.object({
   email: z.string(),
   role: z.string(),
   status: z.string(),
-  created_at: z.string(),
+  createdAt: z.string(),
 });
 
 const PaginatedUsersResponseSchema = z.object({
   data: z.array(UserRoleSchema),
   meta: z.object({
     page: z.number(),
-    page_size: z.number(),
+    pageSize: z.number(),
     total: z.number(),
-    total_pages: z.number(),
+    totalPages: z.number(),
   }),
 });
 
@@ -80,16 +80,16 @@ export interface UserSummary {
   email: string;
   role: string;
   status: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface PaginatedUsers {
   data: UserSummary[];
   meta: {
     page: number;
-    page_size: number;
+    pageSize: number;
     total: number;
-    total_pages: number;
+    totalPages: number;
   };
 }
 

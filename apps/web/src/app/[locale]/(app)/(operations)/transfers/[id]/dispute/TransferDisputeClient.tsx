@@ -46,9 +46,9 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
 
   // Filter lines that have variances
   const discrepantLines = transfer?.lines?.filter(line => 
-    line.shipped_qty !== undefined && 
-    line.received_qty !== undefined && 
-    line.shipped_qty !== line.received_qty
+    line.shippedQty !== undefined && 
+    line.receivedQty !== null && line.receivedQty !== undefined && 
+    line.shippedQty !== line.receivedQty
   ) ?? [];
 
   return (
@@ -57,7 +57,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
         <Breadcrumb 
           items={[
             { label: t('title'), href: `/transfers` },
-            { label: transfer?.document_number || 'Transfer', href: `/transfers/${transfer?.id}` },
+            { label: transfer?.documentNumber || 'Transfer', href: `/transfers/${transfer?.id}` },
             { label: t('dispute_title') || 'Dispute Mediation' }
           ]} 
         />
@@ -77,7 +77,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
           <div className="flex items-center gap-3">
             <Scale className="w-5 h-5 text-operational-cyan/60" />
             <span className="uppercase font-bold text-label-sm tracking-widest text-muted-foreground/60">
-              Resolving quantities for Transfer <span dir="ltr" className="text-operational-cyan">{transfer?.document_number}</span>
+              Resolving quantities for Transfer <span dir="ltr" className="text-operational-cyan">{transfer?.documentNumber}</span>
             </span>
           </div>
         }
@@ -140,7 +140,7 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
                 cell: (line: TransferLine) => (
                   <div className="flex justify-center">
                     <span dir="ltr" className="font-mono text-body-md font-bold bg-amber-500/10 text-amber-500 px-4 py-1.5 rounded-md border border-amber-500/20">
-                      {line.received_qty}
+                      {line.receivedQty}
                     </span>
                   </div>
                 ),
@@ -148,13 +148,13 @@ export function TransferDisputeClient({ transfer, locale }: TransferDisputeClien
               {
                 header: t('variance'),
                 cell: (line: TransferLine) => {
-                  const variance = (line.received_qty ?? 0) - (line.shipped_qty ?? 0);
+                  const variance = (line.receivedQty ?? 0) - (line.shippedQty ?? 0);
                   return (
-                    <div className="flex justify-center">
-                      <span dir="ltr" className={`font-mono text-body-md font-bold px-4 py-1.5 rounded-md border ${variance < 0 ? 'bg-status-error/10 text-status-error border-status-error/20' : 'bg-status-success/10 text-status-success border-status-success/20'}`}>
-                        {variance > 0 ? '+' : ''}{variance}
-                      </span>
-                    </div>
+                     <div className="flex justify-center">
+                       <span dir="ltr" className={`font-mono text-body-md font-bold px-4 py-1.5 rounded-md border ${variance < 0 ? 'bg-status-error/10 text-status-error border-status-error/20' : 'bg-status-success/10 text-status-success border-status-success/20'}`}>
+                         {variance > 0 ? '+' : ''}{variance}
+                       </span>
+                     </div>
                   );
                 },
               },

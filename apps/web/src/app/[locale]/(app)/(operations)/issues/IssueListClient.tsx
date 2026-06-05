@@ -43,10 +43,10 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
 
   const warehouseItems = useMemo(() => {
     const list = warehousesData?.data ?? [];
-    return list.map((w: { id: string; name_en: string; name_ar: string; code?: string }) => ({
+    return list.map((w) => ({
       id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
+      name_en: w.name || '',
+      name_ar: w.name || '',
       code: w.code,
     }));
   }, [warehousesData]);
@@ -103,12 +103,12 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       ),
     },
     {
-      accessorKey: 'document_number',
+      accessorKey: 'documentNumber',
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{t('doc_number')}</span>,
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500">
-            {row.original.document_number}
+            {row.original.documentNumber}
           </span>
           <span className="text-[10px] font-bold text-muted-foreground/20 uppercase tracking-tight">
             {t('internal_voucher')}
@@ -117,7 +117,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       ),
     },
     {
-      accessorKey: 'destination_department_id',
+      accessorKey: 'destinationDeptId',
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{t('destination')}</span>,
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -125,24 +125,24 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
             <Activity className="w-3 h-3 text-muted-foreground/40" />
           </div>
           <span className="text-label-xs font-semibold text-muted-foreground/60">
-            {row.original.destination_dept_id || '—'}
+            {row.original.destinationDeptId || '—'}
           </span>
         </div>
       ),
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{tc('created_at')}</span>,
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <ClientOnlyTime
-            date={row.original.created_at}
+            date={row.original.createdAt}
             mode="date"
             className="text-label-xs font-mono font-medium text-muted-foreground/60 tabular-nums"
           />
           <span className="w-1 h-1 rounded-full bg-muted-foreground/20" />
           <ClientOnlyTime
-            date={row.original.created_at}
+            date={row.original.createdAt}
             mode="time"
             className="text-label-xs font-mono font-medium text-muted-foreground/30 tabular-nums uppercase"
           />
@@ -312,9 +312,9 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
           }
           pagination={meta ? {
             page: meta.page,
-            pageSize: meta.page_size,
+            pageSize: meta.pageSize,
             total: meta.total,
-            totalPages: meta.total_pages,
+            totalPages: meta.totalPages,
             onPageChange: handlePageChange
           } : undefined}
         />

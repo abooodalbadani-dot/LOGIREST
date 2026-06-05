@@ -37,7 +37,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
 
   const stats = useMemo(() => ({
     total: data?.meta?.total || 0,
-    active: warehouses.filter(w => w.is_active).length,
+    active: warehouses.filter(w => w.isActive).length,
     physical: warehouses.filter(w => w.type === 'main' || w.type === 'cold').length,
   }), [data, warehouses]);
 
@@ -56,8 +56,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       header: tc('name'), 
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs opacity-40 font-medium" dir="rtl">{row.original.name_ar}</span>
+          <span className="font-bold text-label-sm">{row.original.name}</span>
         </div>
       )
     },
@@ -65,7 +64,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       accessorKey: 'type', 
       header: tc('fields.type'),
       cell: ({ row }) => {
-        const style = WAREHOUSE_TYPE_STYLES[row.original.type] || { label: row.original.type, color: 'text-muted-foreground', shadow: '' };
+        const style = WAREHOUSE_TYPE_STYLES[row.original.type as NonNullable<typeof row.original.type>] || { label: row.original.type, color: 'text-muted-foreground', shadow: '' };
         return (
           <div className={`flex items-center gap-2 ${style.color} font-bold text-label-xxs uppercase bg-current/5 px-2.5 py-1 rounded-lg border border-current/10 w-fit`}>
             <div className={`w-1.5 h-1.5 rounded-full bg-current ${style.shadow}`} />
@@ -75,11 +74,11 @@ export function WarehouseListClient({ locale }: { locale: string }) {
       }
     },
     {
-      accessorKey: 'is_active', 
+      accessorKey: 'isActive', 
       header: tc('fields.is_active'),
       cell: ({ row }) => (
         <StatusBadge 
-          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5"
+          status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5"
         />
       )
     },

@@ -29,10 +29,21 @@ import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
 import type { Request } from 'express';
 
-function mapStocktakeDetail(session: any) {
-  const items = (session.snapshots || []).map((snapshot: any) => {
-    const count = (session.counts || []).find(
-      (c: any) => c.itemId === snapshot.itemId && c.lotId === snapshot.lotId,
+function mapStocktakeDetail(session: Record<string, unknown>) {
+  const counts = (session.counts as Record<string, unknown>[]) || [];
+  const snapshots = (session.snapshots as Record<string, unknown>[]) || [];
+  const warehouse = session.warehouse as Record<string, unknown> | null;
+
+  const items = snapshots.map((snapshot: Record<string, unknown>) => {
+    const item = snapshot.item as Record<string, unknown> | null;
+    const lot = snapshot.lot as Record<string, unknown> | null;
+    const barcodeMappings =
+      (item?.barcodeMappings as Record<string, unknown>[]) || [];
+    const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
+
+    const count = counts.find(
+      (c: Record<string, unknown>) =>
+        c.itemId === snapshot.itemId && c.lotId === snapshot.lotId,
     );
 
     const countedQty = count ? Number(count.qtyCounted) : null;
@@ -40,66 +51,69 @@ function mapStocktakeDetail(session: any) {
     const variance = countedQty !== null ? countedQty - snapshotQty : null;
 
     return {
-      id: snapshot.id,
-      item_id: snapshot.itemId,
-      item_name: snapshot.item?.name || '',
-      barcode: snapshot.item?.barcodeMappings?.[0]?.barcode || '',
-      uom: snapshot.item?.unitOfMeasure?.code || 'PCS',
+      id: snapshot.id as string,
+      item_id: snapshot.itemId as string,
+      item_name: (item?.name as string) || '',
+      barcode: (barcodeMappings[0]?.barcode as string) || '',
+      uom: (unitOfMeasure?.code as string) || 'PCS',
       snapshot_qty: snapshotQty,
       counted_qty: countedQty,
       variance: variance,
       variance_reason: null,
-      lot_number: snapshot.lot?.lotNumber || undefined,
-      expiry_date: snapshot.lot?.expiryDate
-        ? snapshot.lot.expiryDate.toISOString()
+      lot_number: (lot?.lotNumber as string) || undefined,
+      expiry_date: lot?.expiryDate
+        ? (lot.expiryDate instanceof Date
+            ? lot.expiryDate
+            : new Date(lot.expiryDate as string)
+          ).toISOString()
         : undefined,
       unit_cost: Number(snapshot.wacSnapshot),
     };
   });
 
   return {
-    id: session.id,
-    session_number: session.sessionNumber,
-    session_name: `Stocktake ${session.sessionNumber}`,
-    warehouse_id: session.warehouseId,
-    warehouse_name: session.warehouse?.name || '',
-    status: session.status,
+    id: session.id as string,
+    session_number: session.sessionNumber as number,
+    session_name: `Stocktake ${String(session.sessionNumber)}`,
+    warehouse_id: session.warehouseId as string,
+    warehouse_name: (warehouse?.name as string) || '',
+    status: session.status as string,
     snapshot_at: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
-          : new Date(session.createdAt)
+          : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
     started_by: 'System',
     started_at: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
-          : new Date(session.createdAt)
+          : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
     posted_at:
       session.status === 'POSTED' && session.createdAt
         ? (session.createdAt instanceof Date
             ? session.createdAt
-            : new Date(session.createdAt)
+            : new Date(session.createdAt as string)
           ).toISOString()
         : null,
     posted_by: null,
     items,
-    version: session.version,
+    version: session.version as number,
     description: '',
     approver_comment: '',
     approved_at: undefined,
     created_at: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
-          : new Date(session.createdAt)
+          : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
     updated_at: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
-          : new Date(session.createdAt)
+          : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
     audit_log: [],

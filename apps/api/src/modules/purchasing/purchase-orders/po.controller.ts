@@ -35,61 +35,75 @@ import { UpdatePoDto } from './dto/update-po.dto';
 import type { Request } from 'express';
 
 // Map database fields to match the frontend expected schemas
-function mapPODetail(po: any) {
-  const lines = (po.lines || []).map((line: any) => ({
-    id: line.id,
-    item: line.item
-      ? {
-          id: line.item.id,
-          code: line.item.sku,
-          name_ar: line.item.name,
-          name_en: line.item.name,
-          primary_uom: line.item.unitOfMeasure
-            ? {
-                id: line.item.unitOfMeasure.id,
-                code: line.item.unitOfMeasure.code,
-              }
-            : undefined,
-        }
-      : undefined,
-    item_id: line.itemId,
-    item_sku: line.item?.sku,
-    item_name: line.item?.name,
-    quantity: Number(line.quantity),
-    qty: Number(line.quantity),
-    unit_price: Number(line.unitPrice),
-    unit_cost_foreign: Number(line.unitPrice),
-    uom_id: line.item?.uomId || '',
-    notes: '',
-  }));
+function mapPODetail(po: Record<string, unknown>) {
+  const poLines = (po.lines as Record<string, unknown>[]) || [];
+  const supplier = po.supplier as Record<string, unknown> | null;
+  const purchaseRequest = po.purchaseRequest as Record<string, unknown> | null;
+  const warehouse = purchaseRequest?.warehouse as Record<
+    string,
+    unknown
+  > | null;
+  const currency = po.currency as Record<string, unknown> | null;
+
+  const lines = poLines.map((line: Record<string, unknown>) => {
+    const item = line.item as Record<string, unknown> | null;
+    const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
+
+    return {
+      id: line.id as string,
+      item: item
+        ? {
+            id: item.id as string,
+            code: item.sku as string,
+            name_ar: item.name as string,
+            name_en: item.name as string,
+            primary_uom: unitOfMeasure
+              ? {
+                  id: unitOfMeasure.id as string,
+                  code: unitOfMeasure.code as string,
+                }
+              : undefined,
+          }
+        : undefined,
+      item_id: line.itemId as string,
+      item_sku: item?.sku as string,
+      item_name: item?.name as string,
+      quantity: Number(line.quantity),
+      qty: Number(line.quantity),
+      unit_cost_foreign: Number(line.unitPrice),
+      unit_price: Number(line.unitPrice),
+      uom_id: (item?.uomId as string) || '',
+      notes: '',
+    };
+  });
 
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line: any) => sum + line.quantity * line.unit_price,
+    (sum: number, line) => sum + line.quantity * line.unit_price,
     0,
   );
 
   const createdAtIso = po.createdAt
     ? (po.createdAt instanceof Date
         ? po.createdAt
-        : new Date(po.createdAt)
+        : new Date(po.createdAt as string)
       ).toISOString()
     : new Date().toISOString();
 
   return {
-    id: po.id,
-    document_number: po.poNumber,
-    status: po.status,
-    pr_id: po.prId,
-    version: po.version,
-    supplier_id: po.supplierId,
-    supplier_name: po.supplier?.name || '',
-    warehouse_name: po.purchaseRequest?.warehouse?.name || '',
-    currency_code: po.currency?.code || '',
-    currency_id: po.currencyId,
+    id: po.id as string,
+    document_number: po.poNumber as string,
+    status: po.status as string,
+    pr_id: po.prId as string,
+    version: po.version as number,
+    supplier_id: po.supplierId as string,
+    supplier_name: (supplier?.name as string) || '',
+    warehouse_name: (warehouse?.name as string) || '',
+    currency_code: (currency?.code as string) || '',
+    currency_id: po.currencyId as string,
     exchange_rate: 1.0,
     expected_date: createdAtIso,
     expected_delivery_date: createdAtIso,
-    target_warehouse_id: po.purchaseRequest?.warehouseId || undefined,
+    target_warehouse_id: (purchaseRequest?.warehouseId as string) || undefined,
     lines,
     supplier_total_amount: supplierTotalAmount,
     base_total_amount: supplierTotalAmount,
@@ -102,10 +116,13 @@ function mapPODetail(po: any) {
   };
 }
 
-function mapPOSummary(po: any) {
-  const lines = po.lines || [];
+function mapPOSummary(po: Record<string, unknown>) {
+  const lines = (po.lines as Record<string, unknown>[]) || [];
+  const supplier = po.supplier as Record<string, unknown> | null;
+  const currency = po.currency as Record<string, unknown> | null;
+
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line: any) =>
+    (sum: number, line: Record<string, unknown>) =>
       sum + Number(line.quantity) * Number(line.unitPrice),
     0,
   );
@@ -113,17 +130,17 @@ function mapPOSummary(po: any) {
   const createdAtIso = po.createdAt
     ? (po.createdAt instanceof Date
         ? po.createdAt
-        : new Date(po.createdAt)
+        : new Date(po.createdAt as string)
       ).toISOString()
     : new Date().toISOString();
 
   return {
-    id: po.id,
-    document_number: po.poNumber,
-    status: po.status,
-    supplier_id: po.supplierId,
-    supplier_name: po.supplier?.name || '',
-    currency_code: po.currency?.code || '',
+    id: po.id as string,
+    document_number: po.poNumber as string,
+    status: po.status as string,
+    supplier_id: po.supplierId as string,
+    supplier_name: (supplier?.name as string) || '',
+    currency_code: (currency?.code as string) || '',
     expected_date: createdAtIso,
     supplier_total_amount: supplierTotalAmount,
     created_at: createdAtIso,

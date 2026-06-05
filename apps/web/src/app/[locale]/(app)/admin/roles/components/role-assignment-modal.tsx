@@ -225,7 +225,7 @@ export function RoleAssignmentModal({ trigger }: Props) {
                   <p className="text-label-xs text-muted-foreground">
                     {tCommon('page_of', {
                       current: meta.page,
-                      total: meta.total_pages,
+                      total: meta.totalPages,
                     })}
                   </p>
                   <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ export function RoleAssignmentModal({ trigger }: Props) {
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={page >= meta.total_pages}
+                      disabled={page >= meta.totalPages}
                       onClick={() => setPage((p) => p + 1)}
                     >
                       <ArrowRight className="w-4 h-4" />

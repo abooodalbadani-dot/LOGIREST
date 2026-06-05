@@ -52,14 +52,13 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
-      branch_id: '',
-      warehouse_id: '',
+      branchId: '',
+      warehouseId: '',
       code: '',
-      name_ar: '',
-      name_en: '',
-      is_active: true,
+      name: '',
+      isActive: true,
       manager: '',
-      cost_center: '',
+      costCenter: '',
       version: undefined
     },
     disabled: isReadOnly,
@@ -89,25 +88,23 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     }
   }, [data, reset]);
 
- const isActive = useWatch({ control, name: 'is_active' });
- const selectedBranchId = useWatch({ control, name: 'branch_id' });
+  const isActive = useWatch({ control, name: 'isActive' });
+ const selectedBranchId = useWatch({ control, name: 'branchId' });
 
  // Filter warehouses based on selected branch
- const filteredWarehouses = warehouses.filter(w => !selectedBranchId || w.branch_id === selectedBranchId);
+ const filteredWarehouses = warehouses.filter(w => !selectedBranchId || w.branchId === selectedBranchId);
 
-   const branchItems = useMemo(() => {
+  const branchItems = useMemo(() => {
     return branches.map((b) => ({
       id: b.id,
-      name_en: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
-      name_ar: `${b.code} — ${locale === 'ar' ? b.name_ar : b.name_en}`,
+      name: `${b.code} — ${b.name || ''}`,
     }));
   }, [branches, locale]);
 
   const warehouseItems = useMemo(() => {
     return filteredWarehouses.map((w) => ({
       id: w.id,
-      name_en: `${w.code} — ${locale === 'ar' ? w.name_ar : w.name_en}`,
-      name_ar: `${w.code} — ${locale === 'ar' ? w.name_ar : w.name_en}`,
+      name: `${w.code} — ${w.name || ''}`,
     }));
   }, [filteredWarehouses, locale]);
 
@@ -127,7 +124,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Department form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -221,7 +218,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
   <div className="space-y-2">
   <Label htmlFor="dept-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.branch')}</Label>
   <Controller
-  name="branch_id"
+  name="branchId"
   control={control}
   render={({ field }) => (
     <SmartCombobox
@@ -229,7 +226,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
       value={field.value ?? ''}
       onSelect={(item) => {
         field.onChange(item.id);
-        setValue('warehouse_id', ''); // Reset warehouse when branch changes
+        setValue('warehouseId', ''); // Reset warehouse when branch changes
       }}
       items={branchItems}
       placeholder={t('null_select')}
@@ -237,14 +234,14 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     />
   )}
   />
-  {errors.branch_id && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.branch_id.message}`)}</p>}
+  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.branchId.message}`)}</p>}
   </div>
 
  {/* Warehouse Select */}
   <div className="space-y-2">
   <Label htmlFor="dept-warehouse" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.warehouse')}</Label>
   <Controller
-  name="warehouse_id"
+  name="warehouseId"
   control={control}
   render={({ field }) => (
     <SmartCombobox
@@ -257,7 +254,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     />
   )}
   />
-  {errors.warehouse_id && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.warehouse_id.message}`)}</p>}
+  {errors.warehouseId && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.warehouseId.message}`)}</p>}
   </div>
  </div>
 
@@ -277,30 +274,17 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
  </div>
 
  <div className="grid grid-cols-2 gap-4">
- {/* Name EN */}
+ {/* Name */}
  <div className="space-y-2">
- <Label htmlFor="dept-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.name_en')}</Label>
+ <Label htmlFor="dept-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.name')}</Label>
                   <Input 
-                    id="dept-name-en" 
+                    id="dept-name" 
                     dir="ltr" 
-                    {...register('name_en')} 
+                    {...register('name')} 
                     disabled={isReadOnly}
                     className="font-semibold" 
                   />
- {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.name_en.message}`)}</p>}
- </div>
-
- {/* Name AR */}
- <div className="space-y-2">
- <Label htmlFor="dept-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.name_ar')}</Label>
-                  <Input 
-                    id="dept-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    disabled={isReadOnly}
-                    className="font-semibold text-end" 
-                  />
- {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.name_ar.message}`)}</p>}
+ {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.name.message}`)}</p>}
  </div>
  </div>
  </div>
@@ -338,7 +322,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
                 <Input 
                   id="dept-cost-center" 
                   dir="ltr"
-                  {...register('cost_center')} 
+                  {...register('costCenter')} 
                   disabled={isReadOnly}
                   className="font-mono font-semibold uppercase text-tertiary" 
                   placeholder={td('placeholders.cost_center')} 
@@ -371,7 +355,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
                 <Switch
                   id="dept-is-active"
                   checked={isActive}
-                  onCheckedChange={(v) => setValue('is_active', v)}
+                  onCheckedChange={(v) => setValue('isActive', v)}
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-status-active"
                 />

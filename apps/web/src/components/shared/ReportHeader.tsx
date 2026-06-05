@@ -49,16 +49,16 @@ export function ReportHeader() {
           <span className="opacity-40">{t('profile.email')}</span>
           <span className="text-foreground lowercase">{profile.email}</span>
         </div>
-        {profile.tax_number && (
+        {profile.taxNumber && (
           <div className="flex flex-col gap-1">
             <span className="opacity-40">{t('profile.tax_number')}</span>
-            <span dir="ltr" className="text-foreground">{profile.tax_number}</span>
+            <span dir="ltr" className="text-foreground">{profile.taxNumber}</span>
           </div>
         )}
-        {profile.commercial_registration && (
+        {profile.commercialRegistration && (
           <div className="flex flex-col gap-1">
             <span className="opacity-40">{t('profile.cr_number')}</span>
-            <span dir="ltr" className="text-foreground">{profile.commercial_registration}</span>
+            <span dir="ltr" className="text-foreground">{profile.commercialRegistration}</span>
           </div>
         )}
       </div>

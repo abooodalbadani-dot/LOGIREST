@@ -40,8 +40,8 @@ export function YieldManagementClient() {
     if (data.length === 0) {
       return { avgYield: 0, totalWaste: 0, avgEfficiency: 0, productionRuns: 0 };
     }
-    const avgYield = data.reduce((acc, item) => acc + item.yield_pct, 0) / data.length;
-    const totalWaste = data.reduce((acc, item) => acc + item.waste_qty, 0);
+    const avgYield = data.reduce((acc, item) => acc + item.yieldPct, 0) / data.length;
+    const totalWaste = data.reduce((acc, item) => acc + item.wasteQty, 0);
     const avgEfficiency = data.reduce((acc, item) => acc + item.efficiency, 0) / data.length;
     
     return {
@@ -68,36 +68,36 @@ export function YieldManagementClient() {
 
   const columns: ColumnDef<YieldBatch, unknown>[] = [
     {
-      accessorKey: 'recipe_name',
+      accessorKey: 'recipeName',
       header: tc('name'),
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-foreground">{row.original.recipe_name}</span>
+          <span className="font-semibold text-foreground">{row.original.recipeName}</span>
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.original.category}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'input_qty',
+      accessorKey: 'inputQty',
       header: t('input_qty'),
-      cell: ({ row }) => <span className="tabular-nums font-medium">{row.original.input_qty} kg</span>,
+      cell: ({ row }) => <span className="tabular-nums font-medium">{row.original.inputQty} kg</span>,
     },
     {
-      accessorKey: 'output_qty',
+      accessorKey: 'outputQty',
       header: t('output_qty'),
-      cell: ({ row }) => <span className="tabular-nums text-emerald-400 font-bold">{row.original.output_qty} kg</span>,
+      cell: ({ row }) => <span className="tabular-nums text-emerald-400 font-bold">{row.original.outputQty} kg</span>,
     },
     {
-      accessorKey: 'waste_qty',
+      accessorKey: 'wasteQty',
       header: t('waste_qty'),
-      cell: ({ row }) => <span className="tabular-nums text-rose-400 opacity-80">{row.original.waste_qty} kg</span>,
+      cell: ({ row }) => <span className="tabular-nums text-rose-400 opacity-80">{row.original.wasteQty} kg</span>,
     },
     {
-      accessorKey: 'yield_pct',
+      accessorKey: 'yieldPct',
       header: t('yield_percentage'),
       cell: ({ row }) => {
-        const val = row.original.yield_pct;
-        const std = row.original.standard_yield;
+        const val = row.original.yieldPct;
+        const std = row.original.standardYield;
         const isLow = val < std;
         return (
           <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export function YieldManagementClient() {
                 {bottlenecks.map(item => (
                   <div key={item.id} className="flex items-center justify-between p-3 bg-rose-500/5 rounded-sm border border-rose-500/10">
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold">{item.recipe_name}</span>
+                      <span className="text-sm font-semibold">{item.recipeName}</span>
                       <span className="text-[10px] text-rose-400">{t('vs_standard', { value: `${(item.efficiency - 100).toFixed(1)}%` })}</span>
                     </div>
                     <ArrowDownRight className="w-4 h-4 text-rose-400" />
@@ -200,7 +200,7 @@ export function YieldManagementClient() {
                 {topPerformers.map(item => (
                   <div key={item.id} className="flex items-center justify-between p-3 bg-emerald-500/5 rounded-sm border border-emerald-500/10">
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold">{item.recipe_name}</span>
+                      <span className="text-sm font-semibold">{item.recipeName}</span>
                       <span className="text-[10px] text-emerald-400">{t('vs_standard', { value: `+${(item.efficiency - 100).toFixed(1)}%` })}</span>
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-emerald-400" />

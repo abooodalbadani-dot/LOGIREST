@@ -65,22 +65,22 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     item: {
       id: l.item.id,
       code: l.item.code,
-      name_ar: l.item.name_ar,
-      name_en: l.item.name_en,
-      primary_uom: { code: l.item.primary_uom.code },
+      nameAr: l.item.nameAr,
+      nameEn: l.item.nameEn,
+      primaryUom: { code: l.item.primaryUom.code },
     },
-    lot: l.lot ? { lot_number: l.lot.lot_number, expiry_date: l.lot.expiry_date } : null,
+    lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
     qty: l.qty,
-    uom_id: l.uom_id,
-    lot_allocations: l.lot_allocations,
+    uomId: l.uomId,
+    lotAllocations: l.lotAllocations,
   });
 
   const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []).map(toLineItem));
-  const [destinationId, setDestinationId] = useState(() => issue?.destination_dept_id ?? '');
-  const [warehouseId] = useState(() => issue?.warehouse_id || 'wh-1');
+  const [destinationId, setDestinationId] = useState(() => issue?.destinationDeptId ?? '');
+  const [warehouseId] = useState(() => issue?.warehouseId || 'wh-1');
   const [notes, setNotes] = useState(() => issue?.notes || '');
   const [scanError, setScanError] = useState('');
-  const [requestedBy, setRequestedBy] = useState(() => issue?.requested_by ?? '');
+  const [requestedBy, setRequestedBy] = useState(() => issue?.requestedBy ?? '');
 
   const lastResetId = useRef<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
@@ -90,9 +90,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     if (issue && issue.id !== lastResetId.current) {
       lastResetId.current = issue.id;
       setLines((issue.lines || []).map(toLineItem));
-      setDestinationId(issue.destination_dept_id ?? '');
+      setDestinationId(issue.destinationDeptId ?? '');
       setNotes(issue.notes || '');
-      setRequestedBy(issue.requested_by ?? '');
+      setRequestedBy(issue.requestedBy ?? '');
       setIdempotencyKey(crypto.randomUUID());
     }
   }, [issue]);
@@ -105,9 +105,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     
     // Check if lines have changed
     const linesChanged = JSON.stringify(lines) !== JSON.stringify(issue?.lines || []);
-    const destChanged = destinationId !== (issue?.destination_dept_id ?? '');
+    const destChanged = destinationId !== (issue?.destinationDeptId ?? '');
     const notesChanged = notes !== (issue?.notes || '');
-    const reqByChanged = requestedBy !== (issue?.requested_by ?? '');
+    const reqByChanged = requestedBy !== (issue?.requestedBy ?? '');
     
     return linesChanged || destChanged || notesChanged || reqByChanged;
   }, [isNew, lines, destinationId, notes, requestedBy, issue]);
@@ -149,11 +149,18 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const handleScan = async (barcode: string) => {
 
     try {
-      setScanError('');
       const ItemSchema = z.object({
         data: z.array(z.object({
-          id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
-          primary_uom: z.object({ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string() })
+          id: z.string(),
+          code: z.string(),
+          nameAr: z.string(),
+          nameEn: z.string(),
+          primaryUom: z.object({
+            id: z.string(),
+            code: z.string(),
+            nameAr: z.string(),
+            nameEn: z.string()
+          })
         }))
       });
       const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, { signal: abortController.signal });
@@ -172,8 +179,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         data: z.array(z.object({
           id: z.string(),
           item_id: z.string(),
-          lot_number: z.string(),
-          expiry_date: z.string(),
+          lotNumber: z.string(),
+          expiryDate: z.string(),
           total_qty: z.number().optional(),
           qty_available: z.number().optional(),
           is_expired: z.boolean().optional(),
@@ -191,8 +198,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         id: lotItem.id,
         item_id: lotItem.item_id,
         warehouse_id: warehouseId,
-        lot_number: lotItem.lot_number,
-        expiry_date: lotItem.expiry_date,
+        lotNumber: lotItem.lotNumber,
+        expiryDate: lotItem.expiryDate,
         qty_available: lotItem.total_qty ?? lotItem.qty_available ?? 0,
         is_expired: lotItem.is_expired ?? false,
         is_near_expiry: lotItem.is_near_expiry ?? false,
@@ -201,7 +208,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       // Filter non-expired lots with stock and sort by FEFO
       const validLots = availableLots
         .filter(l => !l.is_expired && l.qty_available > 0)
-        .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+        .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
 
       const existingLine = lines.find(l => l.item.id === item.id);
       const targetQty = existingLine ? existingLine.qty + 1 : 1;
@@ -218,24 +225,24 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       // If exactly one valid, non-expired lot exists and covers the full requested quantity, allocate automatically
       if (validLots.length === 1 && validLots[0].qty_available >= targetQty) {
         const allocation = [{
-          lot_id: validLots[0].id,
-          lot_number: validLots[0].lot_number,
-          expiry_date: validLots[0].expiry_date,
-          allocated_qty: targetQty,
-          override_reason: null
+          lotId: validLots[0].id,
+          lotNumber: validLots[0].lotNumber,
+          expiryDate: validLots[0].expiryDate,
+          allocatedQty: targetQty,
+          overrideReason: null
         }];
 
         setLines(prev => {
           const existing = prev.find(l => l.item.id === item.id);
           if (existing) {
-            return prev.map(l => l.item.id === item.id ? { ...l, qty: targetQty, lot_allocations: allocation } : l);
+            return prev.map(l => l.item.id === item.id ? { ...l, qty: targetQty, lotAllocations: allocation } : l);
           }
           return [...prev, {
             id: `new-${Date.now()}`,
             item,
             qty: targetQty,
-            uom_id: item.primary_uom.id,
-            lot_allocations: allocation
+            uomId: item.primaryUom.id,
+            lotAllocations: allocation
           }];
         });
 
@@ -257,8 +264,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
             id: `new-${Date.now()}`,
             item,
             qty: targetQty,
-            uom_id: item.primary_uom.id,
-            lot_allocations: []
+            uomId: item.primaryUom.id,
+            lotAllocations: []
           };
           setLines(prev => [...prev, lineToActivate]);
         }
@@ -286,7 +293,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     setFefoOpen(false);
     if (activeLine && activeLine.id.startsWith('new-')) {
       const currentLine = lines.find(l => l.id === activeLine.id);
-      const hasAllocations = (currentLine?.lot_allocations && currentLine.lot_allocations.length > 0);
+      const hasAllocations = (currentLine?.lotAllocations && currentLine.lotAllocations.length > 0);
       if (!hasAllocations) {
         setLines(prev => prev.filter(l => l.id !== activeLine.id));
       }
@@ -341,10 +348,10 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     }
 
     const h: StatusTimelineEntry[] = [
-      { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.created_at ?? '', by: issue.created_by ?? 'System' }
+      { status: ISSUE_STATUS.DRAFT.toLowerCase() as Status, at: issue.createdAt ?? '', by: issue.createdBy ?? 'System' }
     ];
-    if (issue.posted_at) {
-      h.push({ status: ISSUE_STATUS.POSTED.toLowerCase() as Status, at: issue.posted_at, by: issue.posted_by != null ? issue.posted_by : 'System' });
+    if (issue.postedAt) {
+      h.push({ status: ISSUE_STATUS.POSTED.toLowerCase() as Status, at: issue.postedAt, by: issue.postedBy != null ? issue.postedBy : 'System' });
     }
     return h;
   }, [issue]);
@@ -369,7 +376,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               {!isNew && (
                 <div className="px-2 py-0.5 bg-primary/10 rounded-xl flex items-center gap-1.5">
                   <span className="text-label-xxs font-semibold uppercase text-primary leading-none">
-                    {issue?.document_number || '—'}
+                    {issue?.documentNumber || '—'}
                   </span>
                 </div>
               )}
@@ -463,25 +470,25 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
                               }} 
                             />
-                            <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primary_uom.code}</span>
+                            <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom.code}</span>
                           </div>
                         )
                       },
                       {
                         header: t('allocate'),
                         cell: (line: LineItem) => {
-                          const lineAllocations = line.lot_allocations || [];
-                          const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocated_qty, 0);
+                          const lineAllocations = line.lotAllocations || [];
+                          const totalAllocated = lineAllocations.reduce((sum: number, a: LotAllocation) => sum + a.allocatedQty, 0);
                           const isFullyAllocated = totalAllocated >= line.qty;
                           
                           if (effectiveIsLocked) {
                             return (
                               <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-                                {lineAllocations.map((alloc, idx) => (
+                                {lineAllocations.map((alloc: LotAllocation, idx: number) => (
                                   <div key={idx} className="px-2.5 py-1 bg-emerald-500/10 rounded-xl flex items-center gap-1.5">
-                                    <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lot_number}</span>
+                                    <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lotNumber}</span>
                                     <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
-                                    <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocated_qty}</span>
+                                    <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocatedQty}</span>
                                   </div>
                                 ))}
                                 {lineAllocations.length === 0 && (
@@ -536,8 +543,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         <SmartCombobox
                           items={departments.map((dept) => ({
                             id: dept.id,
-                            name_en: dept.name_en,
-                            name_ar: dept.name_ar,
+                            name_en: dept.name,
+                            name_ar: dept.name,
                           }))}
                           value={destinationId}
                           onSelect={(item: ComboboxItem) => setDestinationId(item.id as string)}
@@ -603,7 +610,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         <span className="text-label-xs text-primary/20 font-semibold uppercase">{t('created_at')}</span>
                         <div className="px-3 py-1 bg-surface-container-low rounded-xl transition-colors group-hover:bg-primary/5">
                           <span className="text-label-xs font-mono font-semibold text-primary/60 group-hover:text-primary transition-colors" dir="ltr">
-                            {formatDate(issue?.created_at, locale as 'ar' | 'en')}
+                            {formatDate(issue?.createdAt, locale as 'ar' | 'en')}
                           </span>
                         </div>
                       </div>
@@ -685,7 +692,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           <div className="p-8 bg-primary/[0.02]">
             <DialogHeader>
               <DialogTitle className="text-title-lg font-semibold uppercase italic text-foreground">
-                {t('fefo_drawer_title')}: <span className="text-primary font-mono">{locale === 'ar' ? activeLine?.item.name_ar : activeLine?.item.name_en}</span>
+                {t('fefo_drawer_title')}: <span className="text-primary font-mono">{locale === 'ar' ? activeLine?.item.nameAr : activeLine?.item.nameEn}</span>
               </DialogTitle>
             </DialogHeader>
           </div>
@@ -694,11 +701,11 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               <FEFOLotAllocator
                 lots={lots}
                 requestedQty={activeLine.qty}
-                uomLabel={activeLine.item.primary_uom.code}
+                uomLabel={activeLine.item.primaryUom.code}
                 userRole={user?.role} 
                 onAllocate={(allocations) => {
                   setLines(prev => prev.map(l => l.id === activeLine.id ? {
-                    ...l, lot_allocations: allocations
+                    ...l, lotAllocations: allocations
                   } : l));
                   setFefoOpen(false);
                   setActiveLine(null);

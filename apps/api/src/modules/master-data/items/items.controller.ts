@@ -52,7 +52,7 @@ export class ItemsController {
 
   @Post()
   async create(
-    @Body() body: any,
+    @Body() body: Record<string, unknown>,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @Req() req: Request,
@@ -75,7 +75,7 @@ export class ItemsController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: Record<string, unknown>,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @Req() req: Request,

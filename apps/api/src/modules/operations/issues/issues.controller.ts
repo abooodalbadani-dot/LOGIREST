@@ -27,112 +27,135 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import type { Request } from 'express';
 
-function mapIssueDetail(issue: any) {
-  const lines = (issue.lines || []).map((line: any) => {
-    const lotAllocations = (line.lotAllocations || []).map((la: any) => ({
-      lot_id: la.lotId,
-      lot_number: la.lot?.lotNumber || '',
-      expiry_date: la.lot?.expiryDate ? la.lot.expiryDate.toISOString() : null,
-      allocated_qty: Number(la.quantityAllocated),
-      override_reason: '',
-    }));
+function mapIssueDetail(issue: Record<string, unknown>) {
+  const lines = ((issue.lines as Record<string, unknown>[]) || []).map(
+    (line: Record<string, unknown>) => {
+      const lotAllocations = (
+        (line.lotAllocations as Record<string, unknown>[]) || []
+      ).map((la: Record<string, unknown>) => {
+        const lot = la.lot as Record<string, unknown> | undefined;
+        const expiryDateVal = lot?.expiryDate as
+          | Date
+          | string
+          | number
+          | undefined;
+        return {
+          lot_id: la.lotId as string,
+          lot_number: (lot?.lotNumber as string) || '',
+          expiry_date: expiryDateVal
+            ? (expiryDateVal instanceof Date
+                ? expiryDateVal
+                : new Date(expiryDateVal)
+              ).toISOString()
+            : null,
+          allocated_qty: Number(la.quantityAllocated),
+          override_reason: '',
+        };
+      });
 
-    const firstAllocation = lotAllocations[0] || null;
+      const firstAllocation = lotAllocations[0] || null;
+      const item = line.item as Record<string, unknown> | undefined;
 
-    return {
-      id: line.id,
-      document_id: line.issueId,
-      item_id: line.itemId,
-      item: line.item
-        ? {
-            id: line.item.id,
-            code: line.item.sku,
-            name_ar: line.item.name,
-            name_en: line.item.name,
-            primary_uom: line.item.unitOfMeasure
-              ? {
-                  id: line.item.unitOfMeasure.id,
-                  code: line.item.unitOfMeasure.code,
-                  name_ar: line.item.unitOfMeasure.name,
-                  name_en: line.item.unitOfMeasure.name,
-                }
-              : { id: '', code: '', name_ar: '', name_en: '' },
-          }
-        : {
-            id: '',
-            code: '',
-            name_ar: '',
-            name_en: '',
-            primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
-          },
-      lot_id: firstAllocation ? firstAllocation.lot_id : null,
-      lot: firstAllocation
-        ? {
-            id: firstAllocation.lot_id,
-            lot_number: firstAllocation.lot_number,
-            expiry_date: firstAllocation.expiry_date,
-            is_expired: false,
-          }
-        : null,
-      qty: Number(line.quantity),
-      uom_id: line.item?.uomId || '',
-      unit_cost: line.item?.wac ? Number(line.item.wac) : null,
-      requested_qty: Number(line.quantity),
-      issued_qty: Number(line.quantity),
-      lot_allocations: lotAllocations,
-    };
-  });
+      return {
+        id: line.id as string,
+        document_id: line.issueId as string,
+        item_id: line.itemId as string,
+        item: item
+          ? {
+              id: item.id as string,
+              code: item.sku as string,
+              name_ar: item.name as string,
+              name_en: item.name as string,
+              primary_uom: item.unitOfMeasure
+                ? {
+                    id: (item.unitOfMeasure as Record<string, unknown>)
+                      .id as string,
+                    code: (item.unitOfMeasure as Record<string, unknown>)
+                      .code as string,
+                    name_ar: (item.unitOfMeasure as Record<string, unknown>)
+                      .name as string,
+                    name_en: (item.unitOfMeasure as Record<string, unknown>)
+                      .name as string,
+                  }
+                : { id: '', code: '', name_ar: '', name_en: '' },
+            }
+          : {
+              id: '',
+              code: '',
+              name_ar: '',
+              name_en: '',
+              primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
+            },
+        lot_id: firstAllocation ? firstAllocation.lot_id : null,
+        lot: firstAllocation
+          ? {
+              id: firstAllocation.lot_id,
+              lot_number: firstAllocation.lot_number,
+              expiry_date: firstAllocation.expiry_date,
+              is_expired: false,
+            }
+          : null,
+        qty: Number(line.quantity),
+        uom_id: (item?.uomId as string) || '',
+        unit_cost: item?.wac ? Number(item.wac) : null,
+        requested_qty: Number(line.quantity),
+        issued_qty: Number(line.quantity),
+        lot_allocations: lotAllocations,
+      };
+    },
+  );
+
+  const createdAtVal = issue.createdAt as Date | string | number | undefined;
+  const createdAtIso = createdAtVal
+    ? (createdAtVal instanceof Date
+        ? createdAtVal
+        : new Date(createdAtVal)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
-    id: issue.id,
-    document_number: issue.issueNumber,
-    status: issue.status,
+    id: issue.id as string,
+    document_number: issue.issueNumber as string,
+    status: issue.status as string,
     type: 'ISSUE',
-    destination_dept_id: issue.departmentId,
-    destination_department_id: issue.departmentId,
+    destination_dept_id: issue.departmentId as string,
+    destination_department_id: issue.departmentId as string,
     requested_by: 'System',
-    warehouse_id: issue.warehouseId,
-    branch_id: issue.warehouse?.branchId || '',
-    notes: issue.notes || '',
+    warehouse_id: issue.warehouseId as string,
+    branch_id:
+      ((issue.warehouse as Record<string, unknown> | undefined)
+        ?.branchId as string) || '',
+    notes: (issue.notes as string) || '',
     created_by: 'System',
-    created_at: issue.createdAt
-      ? (issue.createdAt instanceof Date
-          ? issue.createdAt
-          : new Date(issue.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    updated_at: issue.createdAt
-      ? (issue.createdAt instanceof Date
-          ? issue.createdAt
-          : new Date(issue.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
+    created_at: createdAtIso,
+    updated_at: createdAtIso,
     posted_at:
-      issue.status === 'POSTED' && issue.createdAt
-        ? (issue.createdAt instanceof Date
-            ? issue.createdAt
-            : new Date(issue.createdAt)
+      issue.status === 'POSTED' && createdAtVal
+        ? (createdAtVal instanceof Date
+            ? createdAtVal
+            : new Date(createdAtVal)
           ).toISOString()
         : null,
     posted_by: null,
-    version: issue.version,
+    version: issue.version as number,
     lines,
   };
 }
 
-function mapIssueSummary(issue: any) {
-  const createdAtIso = issue.createdAt
-    ? (issue.createdAt instanceof Date
-        ? issue.createdAt
-        : new Date(issue.createdAt)
+function mapIssueSummary(issue: Record<string, unknown>) {
+  const createdAtVal = issue.createdAt as Date | string | number | undefined;
+  const createdAtIso = createdAtVal
+    ? (createdAtVal instanceof Date
+        ? createdAtVal
+        : new Date(createdAtVal)
       ).toISOString()
     : new Date().toISOString();
   return {
-    id: issue.id,
-    document_number: issue.issueNumber,
-    status: issue.status,
-    destination_dept_id: issue.departmentId,
-    warehouse_id: issue.warehouseId,
+    id: issue.id as string,
+    document_number: issue.issueNumber as string,
+    status: issue.status as string,
+    destination_dept_id: issue.departmentId as string,
+    warehouse_id: issue.warehouseId as string,
     created_at: createdAtIso,
     posted_at: issue.status === 'POSTED' ? createdAtIso : null,
   };

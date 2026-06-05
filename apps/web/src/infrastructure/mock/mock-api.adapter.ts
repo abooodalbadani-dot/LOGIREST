@@ -12,22 +12,22 @@ import { OPERATIONAL_CONFIG } from '@/contracts/operational-config';
 
 interface HydrationLine {
   id?: string;
-  item_id: string;
+  itemId: string;
   item?: Record<string, unknown>;
   qty?: number;
-  req_qty?: number;
-  lot_id?: string | null;
-  uom_id?: string;
-  approved_qty?: number | null;
+  reqQty?: number;
+  lotId?: string | null;
+  uomId?: string;
+  approvedQty?: number | null;
 }
 
 interface HydrationBody {
   lines?: HydrationLine[];
-  department_id?: string;
-  requested_by_dept?: string;
-  expected_date?: string;
-  required_by_date?: string;
-  warehouse_id?: string;
+  departmentId?: string;
+  requestedByDept?: string;
+  expectedDate?: string;
+  requiredByDate?: string;
+  warehouseId?: string;
 }
 
 /**
@@ -47,17 +47,13 @@ async function recordMovement(params: {
 
   await db.movements.save({
     id: `mov-${Math.random().toString(36).substring(2, 11)}`,
-    posted_at: new Date().toISOString(),
-    document_id: params.documentId,
-    document_number: params.documentNumber,
-    document_type: params.documentType,
-    item_id: params.itemId,
-    item_code: item.code,
-    item_name_ar: item.name_ar,
-    item_name_en: item.name_en,
-    lot_number: params.lotNumber,
-    direction: params.direction,
-    qty: params.qty,
+    timestamp: new Date().toISOString(),
+    documentReference: params.documentNumber,
+    transactionType: params.documentType,
+    itemId: params.itemId,
+    itemName: item.nameEn,
+    quantity: params.direction === 'IN' ? params.qty : -params.qty,
+    balanceAfter: 0,
   });
 }
 
@@ -66,32 +62,32 @@ async function recordMovement(params: {
  */
 async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<PurchaseRequest> {
   const lines = await Promise.all((body.lines || []).map(async (l) => {
-    const item = await db.items.findById(l.item_id);
-    const qty = l.qty ?? l.req_qty ?? 0;
+    const item = await db.items.findById(l.itemId);
+    const qty = l.qty ?? l.reqQty ?? 0;
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      document_id: pr.id,
-      item_id: l.item_id,
+      documentId: pr.id,
+      itemId: l.itemId,
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.name_ar,
-        name_en: item.name_en,
-        primary_uom: item.primary_uom
+        name_ar: item.nameAr,
+        name_en: item.nameEn,
+        primary_uom: item.primaryUom
       } : l.item,
-      lot_id: l.lot_id || null,
+      lotId: l.lotId || null,
       lot: null,
       qty,
-      uom_id: l.uom_id || item?.primary_uom.id || '',
-      unit_cost: null,
-      requested_qty: qty,
-      req_qty: qty, // Alias for feature schema
-      approved_qty: l.approved_qty ?? null
-    } as PRLineItem & { req_qty: number };
+      uomId: l.uomId || item?.primaryUom.id || '',
+      unitCost: null,
+      requestedQty: qty,
+      reqQty: qty, // Alias for feature schema
+      approvedQty: l.approvedQty ?? null
+    } as PRLineItem & { reqQty: number };
   }));
 
-  const deptId = body.department_id || body.requested_by_dept || pr.requested_by_dept;
-  const date = body.expected_date || body.required_by_date || pr.required_by_date;
+  const deptId = body.departmentId || body.requestedByDept || pr.requestedByDept;
+  const date = body.expectedDate || body.requiredByDate || pr.requiredByDate;
 
   return {
     ...pr,
@@ -111,27 +107,27 @@ async function hydrateAdjustment(doc: any): Promise<any> {
     const item = await db.items.findById(l.item_id);
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      item_id: l.item_id,
+      itemId: l.item_id,
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.name_ar,
-        name_en: item.name_en,
+        name_ar: item.nameAr,
+        name_en: item.nameEn,
         primary_uom: {
-          id: item.primary_uom.id,
-          code: item.primary_uom.code,
+          id: item.primaryUom.id,
+          code: item.primaryUom.code,
         }
       } : {
         id: l.item_id,
         code: 'CUSTOM',
         name_ar: 'Custom Item',
         name_en: 'Custom Item',
-        primary_uom: { id: l.uom_id || 'uom-pcs', code: 'PCS' }
+        primary_uom: { id: l.uomId || 'uom-pcs', code: 'PCS' }
       },
       direction: l.direction || 'INCREASE',
       qty_before: l.qty_before ?? 0,
       qty_adjusted: l.qty_adjusted ?? 0,
-      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
+      uomId: l.uomId || item?.primaryUom.id || 'uom-pcs',
       reason_notes: l.reason_notes || undefined,
     };
   }));
@@ -143,55 +139,55 @@ async function hydrateAdjustment(doc: any): Promise<any> {
  */
 async function hydrateIssue(doc: any): Promise<any> {
   const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const item = await db.items.findById(l.item_id);
-    const lot = l.lot_id ? await db.lots.findById(l.lot_id) : null;
+    const item = await db.items.findById(l.itemId);
+    const lot = l.lotId ? await db.lots.findById(l.lotId) : null;
     
-    const lotAllocations = await Promise.all((l.lot_allocations || []).map(async (alloc: any) => {
-      const aLot = await db.lots.findById(alloc.lot_id);
+    const lotAllocations = await Promise.all((l.lotAllocations || []).map(async (alloc: any) => {
+      const aLot = await db.lots.findById(alloc.lotId);
       return {
-        lot_id: alloc.lot_id,
-        lot_number: alloc.lot_number || aLot?.lot_number || '',
-        expiry_date: alloc.expiry_date || aLot?.expiry_date || null,
-        allocated_qty: alloc.allocated_qty ?? 0,
-        override_reason: alloc.override_reason || null
+        lotId: alloc.lotId,
+        lotNumber: alloc.lotNumber || aLot?.lotNumber || '',
+        expiryDate: alloc.expiryDate || aLot?.expiryDate || null,
+        allocatedQty: alloc.allocatedQty ?? 0,
+        overrideReason: alloc.overrideReason || null
       };
     }));
 
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      document_id: doc.id,
-      item_id: l.item_id,
+      documentId: doc.id,
+      itemId: l.itemId,
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.name_ar,
-        name_en: item.name_en,
-        primary_uom: {
-          id: item.primary_uom.id,
-          code: item.primary_uom.code,
-          name_ar: item.primary_uom.name_ar || item.primary_uom.code,
-          name_en: item.primary_uom.name_en || item.primary_uom.code
+        nameAr: item.nameAr,
+        nameEn: item.nameEn,
+        primaryUom: {
+          id: item.primaryUom.id,
+          code: item.primaryUom.code,
+          nameAr: item.primaryUom.nameAr || item.primaryUom.code,
+          nameEn: item.primaryUom.nameEn || item.primaryUom.code
         }
       } : {
-        id: l.item_id,
+        id: l.itemId,
         code: 'CUSTOM',
-        name_ar: 'Custom Item',
-        name_en: 'Custom Item',
-        primary_uom: { id: l.uom_id || 'uom-pcs', code: 'PCS', name_ar: 'حبة', name_en: 'Piece' }
+        nameAr: 'Custom Item',
+        nameEn: 'Custom Item',
+        primaryUom: { id: l.uomId || 'uom-pcs', code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
       },
-      lot_id: l.lot_id || null,
+      lotId: l.lotId || null,
       lot: lot ? {
         id: lot.id,
-        lot_number: lot.lot_number,
-        expiry_date: lot.expiry_date || null,
-        is_expired: lot.is_expired || false,
+        lotNumber: lot.lotNumber,
+        expiryDate: lot.expiryDate || null,
+        isExpired: lot.isExpired || false,
       } : null,
       qty: l.qty ?? 0,
-      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
-      unit_cost: l.unit_cost ?? null,
-      requested_qty: l.requested_qty ?? l.qty ?? 0,
-      issued_qty: l.issued_qty ?? 0,
-      lot_allocations: lotAllocations
+      uomId: l.uomId || item?.primaryUom.id || 'uom-pcs',
+      unitCost: l.unitCost ?? null,
+      requestedQty: l.requestedQty ?? l.qty ?? 0,
+      issuedQty: l.issuedQty ?? 0,
+      lotAllocations: lotAllocations
     };
   }));
   return { ...doc, lines };
@@ -202,49 +198,49 @@ async function hydrateIssue(doc: any): Promise<any> {
  */
 async function hydrateTransfer(doc: any): Promise<any> {
   const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const item = await db.items.findById(l.item_id);
+    const item = await db.items.findById(l.itemId);
     
-    const lotAllocations = await Promise.all((l.lot_allocations || []).map(async (alloc: any) => {
-      const aLot = await db.lots.findById(alloc.lot_id);
+    const lotAllocations = await Promise.all((l.lotAllocations || []).map(async (alloc: any) => {
+      const aLot = await db.lots.findById(alloc.lotId);
       return {
-        lot_id: alloc.lot_id,
-        lot_number: alloc.lot_number || aLot?.lot_number || '',
-        expiry_date: alloc.expiry_date || aLot?.expiry_date || null,
-        allocated_qty: alloc.allocated_qty ?? 0,
-        override_reason: alloc.override_reason || null
+        lotId: alloc.lotId,
+        lotNumber: alloc.lotNumber || aLot?.lotNumber || '',
+        expiryDate: alloc.expiryDate || aLot?.expiryDate || null,
+        allocatedQty: alloc.allocatedQty ?? 0,
+        overrideReason: alloc.overrideReason || null
       };
     }));
 
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      document_id: doc.id,
-      item_id: l.item_id,
+      documentId: doc.id,
+      itemId: l.itemId,
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.name_ar,
-        name_en: item.name_en,
-        primary_uom: {
-          id: item.primary_uom.id,
-          code: item.primary_uom.code,
-          name_ar: item.primary_uom.name_ar || item.primary_uom.code,
-          name_en: item.primary_uom.name_en || item.primary_uom.code
+        nameAr: item.nameAr,
+        nameEn: item.nameEn,
+        primaryUom: {
+          id: item.primaryUom.id,
+          code: item.primaryUom.code,
+          nameAr: item.primaryUom.nameAr || item.primaryUom.code,
+          nameEn: item.primaryUom.nameEn || item.primaryUom.code
         }
       } : {
-        id: l.item_id,
+        id: l.itemId,
         code: 'CUSTOM',
-        name_ar: 'Custom Item',
-        name_en: 'Custom Item',
-        primary_uom: { id: l.uom_id || 'uom-pcs', code: 'PCS', name_ar: 'حبة', name_en: 'Piece' }
+        nameAr: 'Custom Item',
+        nameEn: 'Custom Item',
+        primaryUom: { id: l.uomId || 'uom-pcs', code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
       },
-      lot_id: l.lot_id || null,
+      lotId: l.lotId || null,
       lot: null,
       qty: l.qty ?? 0,
-      unit_cost: null,
-      shipped_qty: l.shipped_qty ?? l.qty ?? 0,
-      received_qty: l.received_qty !== undefined ? l.received_qty : null,
-      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
-      lot_allocations: lotAllocations
+      unitCost: null,
+      shippedQty: l.shippedQty ?? l.qty ?? 0,
+      receivedQty: l.receivedQty !== undefined ? l.receivedQty : null,
+      uomId: l.uomId || item?.primaryUom.id || 'uom-pcs',
+      lotAllocations: lotAllocations
     };
   }));
   return { ...doc, lines };
@@ -258,9 +254,9 @@ async function hydrateKitchenRequest(doc: any): Promise<any> {
     const item = await db.items.findById(l.item_id);
     return {
       id: l.id || `item-${Math.random().toString(36).substring(7)}`,
-      item_id: l.item_id,
-      item_name: item ? (item.name_en || item.name_ar) : 'Custom Item',
-      uom: item ? item.primary_uom.code : 'PCS',
+      itemId: l.item_id,
+      itemName: item ? (item.nameEn || item.nameAr) : 'Custom Item',
+      uom: item ? item.primaryUom.code : 'PCS',
       quantity: l.quantity ?? 0,
       notes: l.notes || '',
       fulfilled_quantity: l.fulfilled_quantity ?? 0
@@ -281,7 +277,7 @@ async function hydrateGRN(doc: any): Promise<any> {
     if (l.lot) {
       lotVal = {
         id: l.lot.id || `lot-${Math.random().toString(36).substring(7)}`,
-        lot_number: l.lot.lot_number || '',
+        lotNumber: l.lot.lot_number || '',
         expiry_date: l.lot.expiry_date || null
       };
     } else if (l.lot_id) {
@@ -289,8 +285,8 @@ async function hydrateGRN(doc: any): Promise<any> {
       if (dbLot) {
         lotVal = {
           id: dbLot.id,
-          lot_number: dbLot.lot_number,
-          expiry_date: dbLot.expiry_date || null
+          lotNumber: dbLot.lotNumber,
+          expiry_date: dbLot.expiryDate || null
         };
       }
     }
@@ -300,11 +296,11 @@ async function hydrateGRN(doc: any): Promise<any> {
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.name_ar,
-        name_en: item.name_en,
+        name_ar: item.nameAr,
+        name_en: item.nameEn,
         primary_uom: {
-          id: item.primary_uom.id,
-          code: item.primary_uom.code
+          id: item.primaryUom.id,
+          code: item.primaryUom.code
         }
       } : {
         id: l.item_id,
@@ -315,8 +311,8 @@ async function hydrateGRN(doc: any): Promise<any> {
       },
       lot: lotVal,
       qty: l.qty ?? 0,
-      received_qty: l.received_qty ?? l.qty ?? 0,
-      uom_id: l.uom_id || item?.primary_uom.id || 'uom-pcs',
+      receivedQty: l.receivedQty ?? l.qty ?? 0,
+      uomId: l.uom_id || item?.primaryUom.id || 'uom-pcs',
       unit_cost_foreign: l.unit_cost_foreign ?? null,
       unit_cost_base: l.unit_cost_base ?? null
     };
@@ -326,7 +322,7 @@ async function hydrateGRN(doc: any): Promise<any> {
     ...doc,
     supplier: supplier ? {
       id: supplier.id,
-      name: supplier.name_en || supplier.name_ar || ''
+      name: supplier.nameEn || supplier.nameAr || ''
     } : undefined,
     lines
   };
@@ -463,13 +459,13 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const doc = await db.warehouses.findById(id);
       if (!doc) return undefined;
       const warehouseLots = await db.lots.findAll();
-      const has_stock = warehouseLots.some(l => l?.warehouse_id === id && l.qty_available > 0);
+      const has_stock = warehouseLots.some(l => l?.warehouseId === id && l.qtyAvailable > 0);
       return { ...doc, has_stock };
     }
     if (method === 'PUT') return db.warehouses.save({ ...(body as Warehouse), id });
     if (method === 'DELETE') {
       const warehouseLots = await db.lots.findAll();
-      const hasStock = warehouseLots.some(l => l?.warehouse_id === id && l.qty_available > 0);
+      const hasStock = warehouseLots.some(l => l?.warehouseId === id && l.qtyAvailable > 0);
       if (hasStock) {
         return { error: { code: 'HAS_STOCK', message: 'Cannot delete warehouse with existing stock.' } };
       }
@@ -481,7 +477,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'GET') {
       const all = await db.departments.findAll();
       const branchId = searchParams.get('branch_id');
-      const filtered = branchId ? all.filter(d => d.branch_id === branchId) : all;
+      const filtered = branchId ? all.filter(d => d.branchId === branchId) : all;
       return MockFactory.wrapPagination(filtered);
     }
     if (method === 'POST') return db.departments.save(body as Department);
@@ -530,15 +526,15 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const doc = await db.items.findById(id);
       if (!doc) return undefined;
       const movements = await db.movements.findAll();
-      const has_transactions = movements.some(m => m.item_id === id);
+      const has_transactions = movements.some(m => m.itemId === id);
       return { ...doc, has_transactions };
     }
     if (method === 'PUT') {
       const existing = await db.items.findById(id);
       const incoming = body as Item;
-      if (existing && existing.track_lots !== incoming.track_lots) {
+      if (existing && existing.trackLots !== incoming.trackLots) {
         const movements = await db.movements.findAll();
-        const hasHistory = movements.some(m => m.item_id === id);
+        const hasHistory = movements.some(m => m.itemId === id);
         if (hasHistory) {
           return { error: { code: 'TRANSACTIONS_EXIST', message: 'Cannot modify lot tracking when transaction history exists.' } };
         }
@@ -565,7 +561,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
             message: 'Conflict detected: this record has been modified by another user.',
             current_version: 2,
             updated_by: 'Barakat Amin',
-            updated_at: new Date().toISOString()
+            updatedAt: new Date().toISOString()
           }
         };
       }
@@ -651,30 +647,30 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const action = parts[4].toUpperCase();
       const nextStatus = getNextStatusV2('ISSUE', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
+        const updated = { ...doc, status: nextStatus, updatedAt: new Date().toISOString() };
 
         // Inventory Manifestation on POST
         if (action === 'POST') {
-          updated.posted_at = new Date().toISOString();
-          updated.posted_by = 'user-1';
+          updated.postedAt = new Date().toISOString();
+          updated.postedBy = 'user-1';
 
           for (const line of doc.lines) {
             // Decement from lots
-            for (const allocation of line.lot_allocations) {
-              const lot = await db.lots.findById(allocation.lot_id);
+            for (const allocation of line.lotAllocations) {
+              const lot = await db.lots.findById(allocation.lotId);
               if (lot) {
-                lot.qty_available = Math.max(0, lot.qty_available - allocation.allocated_qty);
+                lot.qtyAvailable = Math.max(0, lot.qtyAvailable - allocation.allocatedQty);
                 await db.lots.save(lot);
 
                 // Record Movement
                 await recordMovement({
                   documentId: doc.id,
-                  documentNumber: doc.document_number,
+                  documentNumber: doc.documentNumber,
                   documentType: 'ISSUE',
-                  itemId: line.item_id,
-                  lotNumber: lot.lot_number,
+                  itemId: line.itemId,
+                  lotNumber: lot.lotNumber,
                   direction: 'OUT',
-                  qty: allocation.allocated_qty,
+                  qty: allocation.allocatedQty,
                 });
               }
             }
@@ -693,7 +689,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       let transfers = await db.transfers.findAll();
       const warehouseId = searchParams.get('warehouse_id');
       const branchId = searchParams.get('branch_id');
-      if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.to_warehouse_id === warehouseId);
+      if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.toWarehouseId === warehouseId);
       if (branchId) transfers = transfers.filter((t: any) => t.branch_id === branchId);
       return MockFactory.wrapPagination(transfers);
     }
@@ -722,80 +718,80 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         const updated: Transfer = {
           ...doc,
           status: nextStatus,
-          transfer_status: nextStatus as TransferStatus,
-          updated_at: new Date().toISOString(),
+          transferStatus: nextStatus as TransferStatus,
+          updatedAt: new Date().toISOString(),
           version: (doc.version || 0) + 1
         };
 
-        if (action === 'SHIP') updated.shipped_at = updated.updated_at;
-        if (action === 'RECEIVE') updated.received_at = updated.updated_at;
+        if (action === 'SHIP') updated.shippedAt = updated.updatedAt;
+        if (action === 'RECEIVE') updated.receivedAt = updated.updatedAt;
         if (action === 'POST') {
-          updated.posted_at = new Date().toISOString();
-          updated.posted_by = 'user-1';
+          updated.postedAt = new Date().toISOString();
+          updated.postedBy = 'user-1';
 
           for (const line of doc.lines) {
-            const sourceLot = await db.lots.findById(line.lot_id || '');
+            const sourceLot = await db.lots.findById(line.lotId || '');
             if (sourceLot) {
               // 1. Decrease from source
-              sourceLot.qty_available = Math.max(0, sourceLot.qty_available - line.shipped_qty);
+              sourceLot.qtyAvailable = Math.max(0, sourceLot.qtyAvailable - line.shippedQty);
               await db.lots.save(sourceLot);
 
               // Record OUT movement
               await recordMovement({
                 documentId: doc.id,
-                documentNumber: doc.document_number,
+                documentNumber: doc.documentNumber,
                 documentType: 'TRANSFER',
-                itemId: line.item_id,
-                lotNumber: sourceLot.lot_number,
+                itemId: line.itemId,
+                lotNumber: sourceLot.lotNumber,
                 direction: 'OUT',
-                qty: line.shipped_qty,
+                qty: line.shippedQty,
               });
 
               // 2. Increase in destination
               const allLots = await db.lots.findAll();
               const destLot = allLots.find(l =>
-                l?.warehouse_id === doc.to_warehouse_id &&
-                l?.item_id === line.item_id &&
-                l?.lot_number === sourceLot.lot_number
+                l?.warehouseId === doc.toWarehouseId &&
+                l?.itemId === line.itemId &&
+                l?.lotNumber === sourceLot.lotNumber
               );
 
               if (destLot) {
-                destLot.qty_available += (line.received_qty || line.shipped_qty);
+                destLot.qtyAvailable += (line.receivedQty || line.shippedQty);
                 await db.lots.save(destLot);
 
                 // Record IN movement
                 await recordMovement({
                   documentId: doc.id,
-                  documentNumber: doc.document_number,
+                  documentNumber: doc.documentNumber,
                   documentType: 'TRANSFER',
-                  itemId: line.item_id,
-                  lotNumber: destLot.lot_number,
+                  itemId: line.itemId,
+                  lotNumber: destLot.lotNumber,
                   direction: 'IN',
-                  qty: line.received_qty || line.shipped_qty,
+                  qty: line.receivedQty || line.shippedQty,
                 });
               } else {
                 const newLotId = `lot-${Math.random().toString(36).substring(2, 11)}`;
-                const newLot = {
+                const newLot: Lot = {
                   id: newLotId,
-                  item_id: line.item_id,
-                  warehouse_id: doc.to_warehouse_id,
-                  lot_number: sourceLot.lot_number,
-                  expiry_date: sourceLot.expiry_date,
-                  qty_available: line.received_qty || line.shipped_qty,
-                  is_expired: false,
-                  is_near_expiry: false
-                } as Lot;
+                  itemId: line.itemId,
+                  warehouseId: doc.toWarehouseId,
+                  lotNumber: sourceLot.lotNumber,
+                  expiryDate: sourceLot.expiryDate,
+                  qtyAvailable: line.receivedQty || line.shippedQty,
+                  isExpired: false,
+                  isNearExpiry: false
+                };
                 await db.lots.save(newLot);
 
                 // Record IN movement
                 await recordMovement({
                   documentId: doc.id,
-                  documentNumber: doc.document_number,
+                  documentNumber: doc.documentNumber,
                   documentType: 'TRANSFER',
-                  itemId: line.item_id,
-                  lotNumber: newLot.lot_number,
+                  itemId: line.itemId,
+                  lotNumber: newLot.lotNumber,
                   direction: 'IN',
-                  qty: line.received_qty || line.shipped_qty,
+                  qty: line.receivedQty || line.shippedQty,
                 });
               }
             }
@@ -813,8 +809,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         const updated: Transfer = {
           ...doc,
           status: 'DISPUTED' as unknown as DocumentStatus,
-          transfer_status: 'DISPUTED' as TransferStatus,
-          updated_at: new Date().toISOString(),
+          transferStatus: 'DISPUTED' as TransferStatus,
+          updatedAt: new Date().toISOString(),
           version: (doc.version || 0) + 1
         };
         const saved = await db.transfers.save(updated);
@@ -835,39 +831,39 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         const items = s.items || [];
         return {
           id: s.id,
-          session_number: s.session_number,
-          session_name: s.session_name,
-          warehouse_id: s.warehouse_id,
+          sessionNumber: s.sessionNumber,
+          sessionName: s.sessionName,
+          warehouse_id: s.warehouseId,
           status: s.status,
-          snapshot_at: s.snapshot_at,
-          created_at: s.created_at,
-          updated_at: s.updated_at,
+          snapshotAt: s.snapshotAt,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
           total_items: items.length,
-          counted_items: items.filter(i => i.counted_qty != null).length,
+          counted_items: items.filter(i => i.countedQty != null).length,
         };
       }));
     }
     if (method === 'POST') {
       // Check for active session in the same warehouse
       const sessions = await db.stocktake.findAll();
-      const active = sessions.find(s => s && s.warehouse_id === (body as HydrationBody)?.warehouse_id && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
+      const active = sessions.find(s => s && s.warehouseId === (body as HydrationBody)?.warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
       if (active) {
         return {
           error: {
             code: 'WAREHOUSE_LOCKED',
-            message: `Warehouse is locked by active session ${active.session_number}`
+            message: `Warehouse is locked by active session ${active.sessionNumber}`
           }
         };
       }
 
       // Snapshot Freeze: Capture current inventory levels from db.lots
       const warehouseLots = await db.lots.findAll();
-      const warehouseItems = warehouseLots.filter(l => l?.warehouse_id === (body as HydrationBody)?.warehouse_id);
+      const warehouseItems = warehouseLots.filter(l => l?.warehouseId === (body as HydrationBody)?.warehouseId);
 
       // Group by item to get total quantity if there are multiple lots
       const itemTotals = warehouseItems.reduce((acc, lot) => {
-        if (!acc[lot.item_id]) acc[lot.item_id] = 0;
-        acc[lot.item_id] += lot.qty_available;
+        if (!acc[lot.itemId]) acc[lot.itemId] = 0;
+        acc[lot.itemId] += lot.qtyAvailable;
         return acc;
       }, {} as Record<string, number>);
 
@@ -878,22 +874,22 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         const item = allItems.find(i => i.id === itemId);
         return {
           id: `cnt-${idx + 1}`,
-          item_id: itemId,
-          item_name: item?.name_en || 'Unknown Item',
+          itemId: itemId,
+          itemName: item?.nameEn || 'Unknown Item',
           barcode: item?.barcode || '',
-          uom: item?.primary_uom.code || 'UNIT',
-          snapshot_qty: qty,
-          counted_qty: null,
+          uom: item?.primaryUom.code || 'UNIT',
+          snapshotQty: qty,
+          countedQty: null,
           variance: null,
-          variance_reason: null,
-          unit_cost: 0 // In real system, this would come from recent GRNs or moving average
+          varianceReason: null,
+          unitCost: 0 // In real system, this would come from recent GRNs or moving average
         };
       });
 
       const newSession = MockFactory.createStocktakeSession({
         ...(body as Record<string, unknown>),
         items: stocktakeItems,
-        snapshot_at: new Date().toISOString(),
+        snapshotAt: new Date().toISOString(),
         status: STOCKTAKE_STATUS.DRAFT
       });
 
@@ -916,8 +912,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       session.items[itemIndex] = {
         ...session.items[itemIndex],
-        counted_qty: (body as Record<string, unknown>).counted_qty as number | null,
-        variance_reason: (body as Record<string, unknown>).variance_reason as string | null
+        countedQty: (body as Record<string, unknown>).countedQty as number | null,
+        varianceReason: (body as Record<string, unknown>).variance_reason as string | null
       };
 
       // Auto-transition to COUNTING if currently STARTED
@@ -960,8 +956,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       if (action === 'SUBMIT') {
         session.items.forEach(item => {
-          const counted = item.counted_qty ?? 0;
-          item.variance = counted - (item.snapshot_qty ?? 0);
+          const counted = item.countedQty ?? 0;
+          item.variance = counted - (item.snapshotQty ?? 0);
         });
       }
 
@@ -971,9 +967,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         const lotsBackup = warehouseLots.map(l => ({ ...l }));
         try {
           for (const line of session.items) {
-            const lot = warehouseLots.find(l => l && l.item_id === line.item_id && l.warehouse_id === session.warehouse_id);
+            const lot = warehouseLots.find(l => l && l.itemId === line.itemId && l.warehouseId === session.warehouseId);
             if (lot) {
-              lot.qty_available = line.counted_qty ?? 0;
+              lot.qtyAvailable = line.countedQty ?? 0;
               await db.lots.save(lot);
             }
           }
@@ -990,10 +986,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const updated = {
         ...session,
         status: nextStatus,
-        updated_at: now,
+        updatedAt: now,
         version: (session.version || 0) + 1,
-        posted_at: nextStatus === STOCKTAKE_STATUS.POSTED ? now : session.posted_at,
-        posted_by: nextStatus === STOCKTAKE_STATUS.POSTED ? 'user-1' : session.posted_by,
+        postedAt: nextStatus === STOCKTAKE_STATUS.POSTED ? now : session.postedAt,
+        postedBy: nextStatus === STOCKTAKE_STATUS.POSTED ? 'user-1' : session.postedBy,
       };
 
       return db.stocktake.save(updated as StocktakeSession);
@@ -1009,7 +1005,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         ...session,
         items: session.items.map(i => ({
           ...i,
-          snapshot_qty: hideSnapshot ? null : i.snapshot_qty
+          snapshotQty: hideSnapshot ? null : i.snapshotQty
         }))
       };
     }
@@ -1026,7 +1022,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       // Simulate CSV Export
       let csv = 'Item Code,Item Name,Expected Qty,Counted Qty,Variance,Reason\n';
       session.items.forEach(item => {
-        csv += `${item.item_id},"${item.item_name}",${item.snapshot_qty ?? 0},${item.counted_qty ?? 0},${item.variance ?? 0},"${item.variance_reason || ''}"\n`;
+        csv += `${item.itemId},"${item.itemName}",${item.snapshotQty ?? 0},${item.countedQty ?? 0},${item.variance ?? 0},"${item.varianceReason || ''}"\n`;
       });
       return { csv };
     }
@@ -1036,12 +1032,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   if (normalizedPath.startsWith('/inventory/warehouses/') && normalizedPath.endsWith('/lock')) {
     const warehouseId = normalizedPath.split('/')[3];
     const sessions = await db.stocktake.findAll();
-    const active = sessions.find(s => s && s.warehouse_id === warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
+    const active = sessions.find(s => s && s.warehouseId === warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
     return {
       isLocked: !!active,
       sessionId: active?.id || null,
-      sessionNumber: active?.session_number || null,
-      lockStartedAt: active?.snapshot_at || null
+      sessionNumber: active?.sessionNumber || null,
+      lockStartedAt: active?.snapshotAt || null
     };
   }
 
@@ -1050,9 +1046,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'GET') {
       const all = await db.movements.findAll();
       const type = searchParams.get('document_type');
-      const filtered = type ? all.filter(m => m.document_type === type) : all;
+      const filtered = type ? all.filter(m => m.transactionType === type) : all;
       // Sort by posted_at descending
-      filtered.sort((a, b) => new Date(b.posted_at).getTime() - new Date(a.posted_at).getTime());
+      filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       return MockFactory.wrapPagination(filtered);
     }
   }
@@ -1068,14 +1064,14 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       return [];
     }
     if (method === 'POST') {
-      return { id: 'yield-mock-1', ...(body as Record<string, unknown>), created_at: new Date().toISOString() };
+      return { id: 'yield-mock-1', ...(body as Record<string, unknown>), createdAt: new Date().toISOString() };
     }
     return undefined;
   }
   if (normalizedPath.startsWith('/operations/yield/')) {
     const id = normalizedPath.split('/')[3];
     if (method === 'GET') {
-      return { id, recipe_name: 'Mock Recipe', category: 'protein', input_qty: 10, output_qty: 8, waste_qty: 2, yield_pct: 80, standard_yield: 85, efficiency: 94.1, created_at: new Date().toISOString() };
+      return { id, recipe_name: 'Mock Recipe', category: 'protein', input_qty: 10, output_qty: 8, waste_qty: 2, yield_pct: 80, standard_yield: 85, efficiency: 94.1, createdAt: new Date().toISOString() };
     }
     return undefined;
   }
@@ -1115,9 +1111,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     let transfers = await db.transfers.findAll();
     const warehouseId = searchParams.get('warehouse_id');
     const branchId = searchParams.get('branch_id');
-    if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.to_warehouse_id === warehouseId);
+    if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.toWarehouseId === warehouseId);
     if (branchId) transfers = transfers.filter((t: any) => t.branch_id === branchId);
-    const inTransit = transfers.filter((t: any) => t.transfer_status === TRANSFER_STATUS.IN_TRANSIT || t.status === TRANSFER_STATUS.IN_TRANSIT);
+    const inTransit = transfers.filter((t: any) => t.transferStatus === TRANSFER_STATUS.IN_TRANSIT || t.status === TRANSFER_STATUS.IN_TRANSIT);
     const overdueDays = OPERATIONAL_CONFIG.TRANSFER_OVERDUE_DAYS;
     const overdueCount = inTransit.filter((t: any) => {
       const shippedDate = t.shipped_at || t.created_at;
@@ -1165,29 +1161,29 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const action = parts[4].toUpperCase();
       const nextStatus = getNextStatusV2('ADJUSTMENT', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
+        const updated = { ...doc, status: nextStatus, updatedAt: new Date().toISOString() };
 
         // Inventory Manifestation on POST
         if (action === 'POST') {
-          updated.posted_at = updated.updated_at;
-          updated.posted_by = 'user-1';
+          updated.postedAt = updated.updatedAt;
+          updated.postedBy = 'user-1';
 
           for (const line of doc.lines) {
-            const lot = await db.lots.findById(line.lot_id || '');
+            const lot = await db.lots.findById(line.lotId || '');
             if (lot) {
-              if (line.direction === 'INCREASE') lot.qty_available += line.qty_adjusted;
-              else lot.qty_available = Math.max(0, lot.qty_available - line.qty_adjusted);
+              if (line.direction === 'INCREASE') lot.qtyAvailable += line.qtyAdjusted;
+              else lot.qtyAvailable = Math.max(0, lot.qtyAvailable - line.qtyAdjusted);
               await db.lots.save(lot);
 
               // Record Movement
               await recordMovement({
                 documentId: doc.id,
-                documentNumber: doc.document_number,
+                documentNumber: doc.documentNumber,
                 documentType: 'ADJUSTMENT',
-                itemId: line.item_id,
-                lotNumber: lot.lot_number,
+                itemId: line.itemId,
+                lotNumber: lot.lotNumber,
                 direction: line.direction === 'INCREASE' ? 'IN' : 'OUT',
-                qty: line.qty_adjusted,
+                qty: line.qtyAdjusted,
               });
             }
           }
@@ -1296,12 +1292,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const action = parts[4].toUpperCase();
       const nextStatus = getNextStatusV2('GRN', doc.status, action as DocumentAction);
       if (nextStatus) {
-        const updated = { ...doc, status: nextStatus, updated_at: new Date().toISOString() };
+        const updated = { ...doc, status: nextStatus, updatedAt: new Date().toISOString() };
 
         // Inventory Manifestation on POST
         if (action === 'POST') {
-          updated.posted_at = updated.updated_at;
-          updated.posted_by = 'user-1';
+          updated.postedAt = updated.updatedAt;
+          updated.postedBy = 'user-1';
 
           const warehouseLots = await db.lots.findAll();
           const lotsBackup = warehouseLots.map(l => ({ ...l }));
@@ -1309,43 +1305,44 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
           try {
             for (const line of doc.lines) {
-              const lot = await db.lots.findById(line.lot_id || '');
+              const lot = await db.lots.findById(line.lotId || '');
               if (lot) {
-                lot.qty_available += line.received_qty;
+                lot.qtyAvailable += line.receivedQty;
                 await db.lots.save(lot);
 
                 // Record Movement
                 await recordMovement({
                   documentId: doc.id,
-                  documentNumber: doc.document_number,
+                  documentNumber: doc.documentNumber,
                   documentType: 'GRN',
-                  itemId: line.item_id,
-                  lotNumber: lot.lot_number,
+                  itemId: line.itemId,
+                  lotNumber: lot.lotNumber,
                   direction: 'IN',
-                  qty: line.received_qty,
+                  qty: line.receivedQty,
                 });
               } else if (line.lot) {
                 // Create new lot if it doesn't exist
-                await db.lots.save({
+                const newLot: Lot = {
                   id: line.lot.id,
-                  item_id: line.item_id,
-                  warehouse_id: doc.warehouse_id,
-                  lot_number: line.lot.lot_number,
-                  expiry_date: line.lot.expiry_date,
-                  qty_available: line.received_qty,
-                  is_expired: false,
-                  is_near_expiry: false
-                });
+                  itemId: line.itemId,
+                  warehouseId: doc.warehouseId,
+                  lotNumber: line.lot.lotNumber,
+                  expiryDate: line.lot.expiryDate,
+                  qtyAvailable: line.receivedQty,
+                  isExpired: false,
+                  isNearExpiry: false
+                };
+                await db.lots.save(newLot);
 
                 // Record Movement
                 await recordMovement({
                   documentId: doc.id,
-                  documentNumber: doc.document_number,
+                  documentNumber: doc.documentNumber,
                   documentType: 'GRN',
-                  itemId: line.item_id,
-                  lotNumber: line.lot.lot_number,
+                  itemId: line.itemId,
+                  lotNumber: line.lot.lotNumber,
                   direction: 'IN',
-                  qty: line.received_qty,
+                  qty: line.receivedQty,
                 });
               }
             }
@@ -1433,7 +1430,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         smtp_password: 'password',
         smtp_encryption: 'tls' as const,
         version: 1,
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       };
     }
     if (method === 'PUT') {
@@ -1466,7 +1463,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         smtp_password: newSettings.smtp_password || '',
         smtp_encryption: newSettings.smtp_encryption || 'tls',
         version: (newSettings.version || 1) + 1,
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       };
     }
   }
@@ -1547,7 +1544,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   if (normalizedPath === '/admin/inventory/frozen' && method === 'GET') {
     return [
       {
-        warehouseId: 'wh-central',
+        warehouse_id: 'wh-central',
         itemId: 'item-beef-02',
         qtyOnHand: 450.5,
         qtyAllocated: 20.0,
@@ -1566,7 +1563,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         }
       },
       {
-        warehouseId: 'wh-cold',
+        warehouse_id: 'wh-cold',
         itemId: 'item-salmon-01',
         qtyOnHand: 120.0,
         qtyAllocated: 5.0,
@@ -1606,31 +1603,31 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const pending_fulfillment = kitchenRequests.filter(r => r.status === 'SUBMITTED' || r.status === 'DRAFT').length || 5;
       const pending_prs = prs.filter(p => p.status === 'DRAFT').length || 2;
       const active_stocktakes = stocktakes.filter(s => s.status === 'DRAFT').length || 1;
-      const low_stock_items = items.filter(i => i.min_stock_level && i.min_stock_level > 50).length || 4;
-      const near_expiry_count = lots.filter(l => l.is_near_expiry).length || 2;
+      const low_stock_items = items.filter(i => i.minStockLevel && i.minStockLevel > 50).length || 4;
+      const near_expiry_count = lots.filter(l => l.isNearExpiry).length || 2;
       const active_pos = pos.filter(p => p.status === 'SUBMITTED').length || 2;
       const pending_grns = grns.filter(g => g.status === 'DRAFT').length || 1;
 
       const recent_requests = [
         ...issues.map(i => ({
           id: i.id,
-          document_number: i.document_number,
+          documentNumber: i.documentNumber,
           type: 'ISSUE' as const,
           status: i.status,
           priority: 'HIGH',
           items_summary: i.notes || 'Stock Issue Request',
-          created_at: i.created_at,
-          destination: i.destination_dept_id,
+          createdAt: i.createdAt,
+          destination: i.destinationDeptId,
         })),
         ...transfers.map(t => ({
           id: t.id,
-          document_number: t.document_number,
+          documentNumber: t.documentNumber,
           type: 'TRANSFER' as const,
           status: t.status,
           priority: 'NORMAL',
           items_summary: t.notes || 'Warehouse Transfer Request',
-          created_at: t.created_at,
-          destination: t.to_warehouse_id,
+          createdAt: t.createdAt,
+          destination: t.toWarehouseId,
         }))
       ].slice(0, 5);
 
@@ -1638,47 +1635,47 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         recent_requests.push(
           {
             id: 'req-1',
-            document_number: 'ISS-2026-001',
+            documentNumber: 'ISS-2026-001',
             type: 'ISSUE',
             status: 'DRAFT',
             priority: 'HIGH',
             items_summary: 'Beef (Frozen) x 20 KG, Cooking Oil x 5 L',
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             destination: 'Kitchen-Main',
           },
           {
             id: 'req-2',
-            document_number: 'TRN-2026-003',
+            documentNumber: 'TRN-2026-003',
             type: 'TRANSFER',
             status: 'POSTED',
             priority: 'NORMAL',
             items_summary: 'Chicken (Fresh) x 15 CTN',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
+            createdAt: new Date(Date.now() - 3600000).toISOString(),
             destination: 'Branch-A WH',
           }
         );
       }
 
       const activity_log = [
-        { id: 'act-1', item_name: 'Beef (Frozen)', qty: 20, uom: 'KG', time: '10:30', type: 'OUT (Issue)' },
-        { id: 'act-2', item_name: 'Cooking Oil', qty: 5, uom: 'L', time: '11:15', type: 'OUT (Issue)' },
-        { id: 'act-3', item_name: 'Tomato Paste', qty: 50, uom: 'CAN', time: '14:20', type: 'IN (GRN)' },
+        { id: 'act-1', itemName: 'Beef (Frozen)', qty: 20, uom: 'KG', time: '10:30', type: 'OUT (Issue)' },
+        { id: 'act-2', itemName: 'Cooking Oil', qty: 5, uom: 'L', time: '11:15', type: 'OUT (Issue)' },
+        { id: 'act-3', itemName: 'Tomato Paste', qty: 50, uom: 'CAN', time: '14:20', type: 'IN (GRN)' },
       ];
 
       const expiring_lots = await Promise.all(lots.map(async (l) => {
-        const item = await db.items.findById(l.item_id);
-        const wh = await db.warehouses.findById(l.warehouse_id || '');
-        const expiryDate = new Date(l.expiry_date || '');
+        const item = await db.items.findById(l.itemId);
+        const wh = await db.warehouses.findById(l.warehouseId || '');
+        const expiryDate = new Date(l.expiryDate || '');
         const daysLeft = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         return {
           id: l.id,
-          item_name: item ? item.name_en : 'Unknown Item',
-          lot_number: l.lot_number || 'LOT-UNKNOWN',
-          expiry_date: l.expiry_date,
+          itemName: item ? item.nameEn : 'Unknown Item',
+          lotNumber: l.lotNumber || 'LOT-UNKNOWN',
+          expiry_date: l.expiryDate,
           days_left: daysLeft,
-          warehouse_name: wh ? wh.name_en : 'Main Warehouse',
-          qty: l.qty_available,
-          uom: item ? item.primary_uom.code : 'PCS',
+          warehouse_name: wh ? wh.name : 'Main Warehouse',
+          qty: l.qtyAvailable,
+          uom: item ? item.primaryUom.code : 'PCS',
         };
       }));
 
@@ -1686,8 +1683,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       if (expiring_filtered.length === 0) {
         expiring_filtered.push({
           id: 'exp-1',
-          item_name: 'Milk (Fresh)',
-          lot_number: 'LOT-M-001',
+          itemName: 'Milk (Fresh)',
+          lotNumber: 'LOT-M-001',
           expiry_date: new Date(Date.now() + 5 * 24 * 3600000).toISOString().split('T')[0],
           days_left: 5,
           warehouse_name: 'Cold Storage WH',
@@ -1699,58 +1696,58 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const fulfillment_queue = [
         ...issues.filter(i => i.status === 'POSTED').map(i => ({
           id: i.id,
-          document_number: i.document_number,
+          documentNumber: i.documentNumber,
           type: 'ISSUE' as const,
           status: i.status,
           priority: 'HIGH',
           items_count: i.lines?.length || 2,
-          destination: i.destination_dept_id,
-          created_at: i.created_at,
+          destination: i.destinationDeptId,
+          createdAt: i.createdAt,
         })),
         ...transfers.filter(t => t.status === 'POSTED').map(t => ({
           id: t.id,
-          document_number: t.document_number,
+          documentNumber: t.documentNumber,
           type: 'TRANSFER' as const,
           status: t.status,
           priority: 'NORMAL',
           items_count: t.lines?.length || 3,
-          destination: t.to_warehouse_id,
-          created_at: t.created_at,
+          destination: t.toWarehouseId,
+          createdAt: t.createdAt,
         }))
       ].slice(0, 5);
 
       if (fulfillment_queue.length === 0) {
         fulfillment_queue.push({
           id: 'fq-1',
-          document_number: 'ISS-2026-004',
+          documentNumber: 'ISS-2026-004',
           type: 'ISSUE',
           status: 'POSTED',
           priority: 'HIGH',
           items_count: 3,
           destination: 'Kitchen-Pastry',
-          created_at: new Date(Date.now() - 7200000).toISOString(),
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
         });
       }
 
       const pending_approvals = [
         ...prs.filter(p => p.status === 'DRAFT').map(p => ({
           id: p.id,
-          document_number: p.document_number,
+          documentNumber: p.documentNumber,
           type: 'PR' as const,
           status: p.status,
           priority: 'NORMAL',
-          destination: p.warehouse_id || 'Main WH',
-          created_at: p.created_at,
+          destination: p.warehouseId || 'Main WH',
+          createdAt: p.createdAt,
           total_value: 12500,
         })),
         ...pos.filter(p => p.status === 'DRAFT').map(p => ({
           id: p.id,
-          document_number: p.document_number,
+          documentNumber: p.documentNumber,
           type: 'PO' as const,
           status: p.status,
           priority: 'HIGH',
-          destination: p.supplier_id || 'Supplier A',
-          created_at: p.created_at,
+          destination: p.supplierId || 'Supplier A',
+          createdAt: p.createdAt,
           total_value: 34200,
         }))
       ].slice(0, 5);
@@ -1758,12 +1755,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       if (pending_approvals.length === 0) {
         pending_approvals.push({
           id: 'app-1',
-          document_number: 'PR-2026-005',
+          documentNumber: 'PR-2026-005',
           type: 'PR',
           status: 'DRAFT',
           priority: 'HIGH',
           destination: 'Cold Storage WH',
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           total_value: 15000,
         });
       }
@@ -1823,7 +1820,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         {
           id: 'notif-1',
           targetRole: 'ADMIN',
-          warehouseId: 'wh-central',
+          warehouse_id: 'wh-central',
           message: 'Purchase Request PR-2026-HQ-00001 is awaiting approval.',
           isRead: false,
           createdAt: new Date().toISOString(),

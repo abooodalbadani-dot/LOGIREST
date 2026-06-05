@@ -56,6 +56,8 @@ export function proxy(request: NextRequest) {
 
   // 4. Security Enforcement (SSR Level)
   const token = request.cookies.get('logirest_token')?.value;
+  const reason = request.nextUrl.searchParams.get('reason');
+  const isAuthReason = reason === 'expired' || reason === 'verification_failed';
 
   // Debug log (Internal only)
   if (process.env.NODE_ENV !== 'production') {
@@ -76,6 +78,13 @@ export function proxy(request: NextRequest) {
 
   // C. Authenticated on Public Page -> Dashboard
   if (token && (isPublicPage || isRoot)) {
+    if (isAuthReason) {
+      console.log(`[Proxy] Authenticated user on public page with expired token reason: ${pathname} -> Clearing cookie and bypassing redirect`);
+      const response = intlMiddleware(request);
+      response.cookies.delete('logirest_token');
+      response.cookies.set('logirest_token', '', { path: '/', maxAge: 0 });
+      return response;
+    }
     console.log(`[Proxy] Authenticated user on public/root page: ${pathname} -> Redirecting to /dashboard`);
     return NextResponse.redirect(constructUrl('/dashboard'));
   }

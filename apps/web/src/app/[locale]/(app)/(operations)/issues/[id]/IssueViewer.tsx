@@ -34,10 +34,10 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
   
   // Adapt timeline entries
   const timelineEntries = [
-    { status: 'draft' as Status, at: issue.created_at ?? '', by: issue.created_by ?? tCommon('system_user') }
+    { status: 'draft' as Status, at: issue.createdAt ?? '', by: issue.createdBy ?? tCommon('system_user') }
   ];
-  if (issue.posted_at) {
-    timelineEntries.push({ status: 'posted' as Status, at: issue.posted_at, by: issue.posted_by ?? tCommon('system_user') });
+  if (issue.postedAt) {
+    timelineEntries.push({ status: 'posted' as Status, at: issue.postedAt, by: issue.postedBy ?? tCommon('system_user') });
   }
 
   const lines: LineItem[] = (issue.lines || []).map(l => ({
@@ -45,14 +45,14 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
     item: {
       id: l.item.id,
       code: l.item.code,
-      name_ar: l.item.name_ar,
-      name_en: l.item.name_en,
-      primary_uom: { code: l.item.primary_uom.code },
+      nameAr: l.item.nameAr,
+      nameEn: l.item.nameEn,
+      primaryUom: { code: l.item.primaryUom.code },
     },
-    lot: l.lot ? { lot_number: l.lot.lot_number, expiry_date: l.lot.expiry_date } : null,
+    lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
     qty: l.qty,
-    uom_id: l.uom_id,
-    lot_allocations: l.lot_allocations,
+    uomId: l.uomId,
+    lotAllocations: l.lotAllocations,
   }));
 
   return (
@@ -71,12 +71,12 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
           </Button>
           <div className="flex flex-col min-w-0">
             <h1 className="text-title-lg font-semibold uppercase italic truncate">
-              {issue?.document_number || '...'}
+              {issue?.documentNumber || '...'}
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
               <StatusBadge status={issueStatus} />
               <ClientOnlyTime 
-                date={issue?.created_at || new Date()} 
+                date={issue?.createdAt || new Date()} 
                 mode="date"
                 className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
               />
@@ -98,9 +98,9 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                     <span className="text-label-xs font-semibold uppercase">{t('destination')}</span>
                   </div>
                   <p className="font-bold text-body-md">
-                    {issue.destination_dept_id === 'dep-1' ? tCommon('departments.kitchen_1') : 
-                     issue.destination_dept_id === 'dep-2' ? tCommon('departments.pastry') : 
-                     issue.destination_dept_id || '—'}
+                    {issue.destinationDeptId === 'dep-1' ? tCommon('departments.kitchen_1') : 
+                     issue.destinationDeptId === 'dep-2' ? tCommon('departments.pastry') : 
+                     issue.destinationDeptId || '—'}
                   </p>
                </div>
                <div className="bg-surface-container-lowest p-6 rounded-lg shadow-sm space-y-3">
@@ -108,7 +108,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                     <User className="w-4 h-4" />
                     <span className="text-label-xs font-semibold uppercase">{t('requested_by')}</span>
                   </div>
-                  <p className="font-bold text-body-md">{issue.requested_by || '—'}</p>
+                  <p className="font-bold text-body-md">{issue.requestedBy || '—'}</p>
                </div>
                <div className="bg-surface-container-lowest p-6 rounded-lg shadow-sm space-y-3">
                   <div className="flex items-center gap-2 text-primary/40">
@@ -116,8 +116,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                     <span className="text-label-xs font-semibold uppercase">{tCommon('warehouse')}</span>
                   </div>
                   <p className="font-bold text-body-md">
-                    {issue.warehouse_id === 'wh-1' ? tCommon('warehouses.main') :
-                     issue.warehouse_id || tCommon('dash')}
+                    {issue.warehouseId === 'wh-1' ? tCommon('warehouses.main') :
+                     issue.warehouseId || tCommon('dash')}
                   </p>
                </div>
             </div>
@@ -144,21 +144,21 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                       cell: (line) => (
                         <div className="flex items-center gap-2 tabular-nums">
                           <span className="text-body-md font-bold text-foreground">{line.qty}</span>
-                          <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primary_uom.code}</span>
+                          <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom.code}</span>
                         </div>
                       )
                     },
                     {
                       header: t('allocate'),
                       cell: (line: LineItem) => {
-                        const lineAllocations = line.lot_allocations || [];
+                        const lineAllocations = line.lotAllocations || [];
                         return (
                           <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                             {lineAllocations.map((alloc: LotAllocation) => (
-                              <div key={alloc.lot_id} className="px-2.5 py-1 bg-emerald-500/10 rounded-lg flex items-center gap-1.5">
-                                <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lot_number}</span>
+                              <div key={alloc.lotId} className="px-2.5 py-1 bg-emerald-500/10 rounded-lg flex items-center gap-1.5">
+                                <span className="text-label-xxs font-mono text-emerald-500/80">{alloc.lotNumber}</span>
                                 <div className="w-1 h-1 rounded-full bg-emerald-500/30" />
-                                <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocated_qty}</span>
+                                <span className="text-label-xxs font-semibold text-emerald-500">{alloc.allocatedQty}</span>
                               </div>
                             ))}
                             {lineAllocations.length === 0 && (
@@ -218,26 +218,26 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_by')}</span>
-                  <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.created_by || tCommon('system_user')}</span>
+                  <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.createdBy || tCommon('system_user')}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('created_at')}</span>
                   <ClientOnlyTime 
-                    date={issue.created_at || new Date()} 
+                    date={issue.createdAt || new Date()} 
                     mode="datetime"
                     className="text-label-xs font-mono font-bold text-foreground/60"
                   />
                 </div>
-                {issue.posted_at && (
+                {issue.postedAt && (
                   <>
                     <div className="flex justify-between items-center py-2 pt-4 border-t border-outline-variant/5">
                       <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_by')}</span>
-                      <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.posted_by || tCommon('system_user')}</span>
+                      <span className="text-label-xs font-mono font-bold text-foreground/60">{issue.postedBy || tCommon('system_user')}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('posted_at')}</span>
                       <ClientOnlyTime 
-                        date={issue.posted_at} 
+                        date={issue.postedAt} 
                         mode="datetime"
                         className="text-label-xs font-mono font-bold text-foreground/60"
                       />

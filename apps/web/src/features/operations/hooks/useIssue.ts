@@ -5,60 +5,60 @@ import { z } from 'zod';
 import { ALL_ISSUE_STATUSES } from '@logirest/shared-types';
 
 export const IssueLineLotAllocationSchema = z.object({
- lot_id: z.string(),
- lot_number: z.string(),
- expiry_date: z.string().nullable().optional(),
- allocated_qty: z.number(),
- override_reason: z.string().nullable().optional(),
+  lotId: z.string(),
+  lotNumber: z.string(),
+  expiryDate: z.string().nullable().optional(),
+  allocatedQty: z.number(),
+  overrideReason: z.string().nullable().optional(),
 });
 
 export const IssueLineItemSchema = z.object({
- id: z.string(),
- document_id: z.string(),
- item_id: z.string(),
- item: z.object({
- id: z.string(),
- code: z.string(),
- name_ar: z.string(),
- name_en: z.string(),
- primary_uom: z.object({
- id: z.string(),
- code: z.string(),
- name_ar: z.string(),
- name_en: z.string(),
- })
- }),
- lot_id: z.string().nullable(),
- lot: z.object({
- id: z.string(),
- lot_number: z.string(),
- expiry_date: z.string().nullable(),
- is_expired: z.boolean(),
- }).nullable(),
- qty: z.number(),
- uom_id: z.string(),
- unit_cost: z.number().nullable(),
- requested_qty: z.number(),
- issued_qty: z.number(),
- lot_allocations: z.array(IssueLineLotAllocationSchema).default([])
+  id: z.string(),
+  documentId: z.string(),
+  itemId: z.string(),
+  item: z.object({
+    id: z.string(),
+    code: z.string(),
+    nameAr: z.string(),
+    nameEn: z.string(),
+    primaryUom: z.object({
+      id: z.string(),
+      code: z.string(),
+      nameAr: z.string(),
+      nameEn: z.string(),
+    })
+  }),
+  lotId: z.string().nullable(),
+  lot: z.object({
+    id: z.string(),
+    lotNumber: z.string(),
+    expiryDate: z.string().nullable(),
+    isExpired: z.boolean(),
+  }).nullable(),
+  qty: z.number(),
+  uomId: z.string(),
+  unitCost: z.number().nullable(),
+  requestedQty: z.number(),
+  issuedQty: z.number(),
+  lotAllocations: z.array(IssueLineLotAllocationSchema).default([])
 });
 
 export const StockIssueDetailSchema = z.object({
   id: z.string(),
-  document_number: z.string(),
+  documentNumber: z.string(),
   status: z.enum(ALL_ISSUE_STATUSES).default('DRAFT'),
   type: z.literal('ISSUE').default('ISSUE'),
-  destination_dept_id: z.string().default(''),
-  destination_department_id: z.string().nullable().optional(),
-  requested_by: z.string().default(''),
-  warehouse_id: z.string(),
-  branch_id: z.string().default(''),
+  destinationDeptId: z.string().default(''),
+  destinationDepartmentId: z.string().nullable().optional(),
+  requestedBy: z.string().default(''),
+  warehouseId: z.string(),
+  branchId: z.string().default(''),
   notes: z.string().nullable(),
-  created_by: z.string().default(''),
-  created_at: z.string().default(''),
-  updated_at: z.string().default(''),
-  posted_at: z.string().nullable(),
-  posted_by: z.string().nullable(),
+  createdBy: z.string().default(''),
+  createdAt: z.string().default(''),
+  updatedAt: z.string().default(''),
+  postedAt: z.string().nullable(),
+  postedBy: z.string().nullable(),
   version: z.number().default(1),
   lines: z.array(IssueLineItemSchema).default([])
 });

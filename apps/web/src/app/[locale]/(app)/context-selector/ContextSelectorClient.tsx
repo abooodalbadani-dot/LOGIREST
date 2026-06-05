@@ -42,7 +42,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  router.push('/dashboard');
  };
 
- const filteredWarehouses = warehouses?.filter(wh => wh.branch_id === selectedBranchId) || [];
+ const filteredWarehouses = warehouses?.filter(wh => wh.branchId === selectedBranchId) || [];
 
  return (
  <div className="min-h-[80vh] flex flex-col items-center justify-center py-12 px-6">
@@ -96,7 +96,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  "text-title-sm font-bold",
  selectedBranchId === branch.id ? "text-primary-foreground" : "text-foreground"
  )}>
- {branch.name || (locale === 'ar' ? branch.name_ar : branch.name_en)}
+ {branch.name}
  </p>
  </div>
  {selectedBranchId === branch.id && (
@@ -156,7 +156,7 @@ export function ContextSelectorClient({ locale }: { locale: string }) {
  "text-title-sm font-bold",
  selectedWarehouseId === wh.id ? "text-primary-foreground" : "text-foreground"
  )}>
- {wh.name || (locale === 'ar' ? wh.name_ar : wh.name_en)}
+ {wh.name}
  </p>
  </div>
  {selectedWarehouseId === wh.id && (

@@ -1,7 +1,48 @@
-import { ZodSchema } from 'zod';
+import { ZodSchema, z } from 'zod';
 import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
-import { getTokenCookie, setTokenCookie } from './cookies';
+import { getTokenCookie, setTokenCookie, deleteTokenCookie } from './cookies';
+
+type CamelCase<S extends string> = S extends `${infer T}_${infer U}`
+  ? `${T}${Capitalize<CamelCase<U>>}`
+  : S;
+
+export type CamelCaseKeys<T> = T extends Date
+  ? T
+  : T extends Array<infer U>
+  ? Array<CamelCaseKeys<U>>
+  : T extends object
+  ? { [K in keyof T as CamelCase<K & string>]: CamelCaseKeys<T[K]> }
+  : T;
+
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z0-9])/g, (_, letter) => letter.toUpperCase());
+}
+
+export function normalizeKeysToCamelCase<T>(obj: T): CamelCaseKeys<T> {
+  if (obj === null || obj === undefined) {
+    return obj as CamelCaseKeys<T>;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => normalizeKeysToCamelCase(item)) as unknown as CamelCaseKeys<T>;
+  }
+
+  if (obj instanceof Date) {
+    return obj as unknown as CamelCaseKeys<T>;
+  }
+
+  if (typeof obj === 'object') {
+    const result = {} as Record<string, unknown>;
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      const camelKey = toCamelCase(key);
+      result[camelKey] = normalizeKeysToCamelCase(value);
+    }
+    return result as unknown as CamelCaseKeys<T>;
+  }
+
+  return obj as unknown as CamelCaseKeys<T>;
+}
 
 const BASE = (typeof window === 'undefined' ? process.env.API_URL : null) ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
@@ -9,6 +50,7 @@ let refreshPromise: Promise<boolean> | null = null;
 
 function dispatchExpiredEvent(): void {
   if (typeof window === 'undefined') return;
+  deleteTokenCookie();
   window.dispatchEvent(new CustomEvent('auth:expired'));
 }
 
@@ -73,12 +115,13 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
         if (errorObj && typeof errorObj === 'object') {
           const e = errorObj as Record<string, unknown>;
           if (e.status === 409 || e.code === 'VERSION_CONFLICT') {
+            const normalizedErr = normalizeKeysToCamelCase(e);
             throw new ConflictError({
-              message: (e.message as string) || 'Conflict detected',
-              code: (e.code as string) || 'VERSION_CONFLICT',
-              currentVersion: e.current_version as number,
-              updatedBy: e.updated_by as string,
-              updatedAt: e.updated_at as string,
+              message: (normalizedErr.message as string) || 'Conflict detected',
+              code: (normalizedErr.code as string) || 'VERSION_CONFLICT',
+              currentVersion: normalizedErr.currentVersion as number,
+              updatedBy: normalizedErr.updatedBy as string,
+              updatedAt: normalizedErr.updatedAt as string,
             });
           }
           if (isAuthError(e)) {
@@ -90,7 +133,8 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
         }
         throw errorObj;
       }
-      return schema.parse(mockData);
+      const normalizedMock = normalizeKeysToCamelCase(mockData);
+      return schema.parse(normalizedMock);
     }
   }
 
@@ -149,16 +193,16 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
             const b64 = storedToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
             const payloadStr = decodeURIComponent(escape(atob(b64)));
             const payload = JSON.parse(payloadStr);
-            const user = payload.user;
+            const user = normalizeKeysToCamelCase(payload.user);
 
             if (user && Array.isArray(user.scopes) && user.scopes.length > 0) {
-              const validScope = user.scopes.find((s: any) => s.branch_id && s.warehouse_id);
+              const validScope = user.scopes.find((s: { branchId?: string; warehouseId?: string; departmentId?: string | null }) => s.branchId && s.warehouseId);
               const targetScope = validScope || user.scopes[0];
               if (targetScope) {
                 const newScope = {
-                  branchId: targetScope.branch_id || '',
-                  warehouseId: targetScope.warehouse_id || '',
-                  departmentId: targetScope.department_id || null
+                  branchId: targetScope.branchId || '',
+                  warehouseId: targetScope.warehouseId || '',
+                  departmentId: targetScope.departmentId || null
                 };
                 if (newScope.branchId && newScope.warehouseId) {
                   localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));
@@ -180,8 +224,13 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
         }
 
         if (!resolved) {
-          // Redirect the user to a fallback login or Select Branch UI by dispatching auth:expired
-          window.dispatchEvent(new CustomEvent('auth:expired'));
+          const isPublicPage = ['/login', '/forgot-password', '/reset-password'].some(
+            p => typeof window !== 'undefined' && window.location.pathname.includes(p)
+          );
+          if (!isPublicPage) {
+            // Redirect the user to a fallback login or Select Branch UI by dispatching auth:expired
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+          }
         }
       }
     }
@@ -196,33 +245,47 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
       const err: ApiError = {
         code: res.status === 401 ? 'UNAUTHORIZED' : 'FORBIDDEN',
         message: res.status === 401 ? 'errors.unauthorized' : 'errors.forbidden',
-        field_errors: null
+        fieldErrors: null
       };
       throw err;
     }
 
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
+      const normalizedData = normalizeKeysToCamelCase(data);
       throw new ConflictError({
-        message: data.message || 'Conflict detected',
-        code: data.code || 'VERSION_CONFLICT',
-        currentVersion: data.current_version,
-        updatedBy: data.updated_by,
-        updatedAt: data.updated_at,
+        message: normalizedData.message || 'Conflict detected',
+        code: normalizedData.code || 'VERSION_CONFLICT',
+        currentVersion: normalizedData.currentVersion,
+        updatedBy: normalizedData.updatedBy,
+        updatedAt: normalizedData.updatedAt,
       });
     }
 
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => {
+      const err = await res.json().catch(() => {
         console.error(`[API Error] Failed to parse error response for ${path}`);
-        return { code: 'NETWORK_ERROR', message: 'errors.network', field_errors: null };
+        return { code: 'NETWORK_ERROR', message: 'errors.network', fieldErrors: null };
       });
-      console.error(`[API Error] ${method} ${path}`, err);
-      throw err;
+      const normalizedErr = normalizeKeysToCamelCase(err) as ApiError;
+      console.error(`[API Error] ${method} ${path}`, normalizedErr);
+      throw normalizedErr;
     }
 
     const data = await res.json();
-    return schema.parse(data);
+    try {
+      const normalizedData = normalizeKeysToCamelCase(data);
+      return schema.parse(normalizedData);
+    } catch (parseError: unknown) {
+      if (parseError instanceof z.ZodError) {
+        console.error(`[Zod Parsing Error] Failed to parse response for ${method} ${path}`, {
+          error: parseError.issues,
+          payload: data
+        });
+        throw new Error(`Data validation failed for ${path}: ${parseError.issues[0]?.message || 'Invalid response format'}`);
+      }
+      throw parseError;
+    }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw error;

@@ -87,9 +87,9 @@ export function FXRateListClient({ locale }: { locale: string }) {
   const stats = useMemo(() => {
     return {
       total: rates.length,
-      active: rates.filter(r => r.is_active).length,
+      active: rates.filter(r => r.isActive).length,
       lastUpdate: rates.length > 0 
-        ? Math.max(...rates.map(r => new Date(r.effective_date).getTime()))
+        ? Math.max(...rates.map(r => new Date(r.effectiveDate).getTime()))
         : null
     };
   }, [rates]);
@@ -103,9 +103,9 @@ export function FXRateListClient({ locale }: { locale: string }) {
         header: tfx('fields.from_currency'),
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
-            <span className="font-bold text-operational-cyan font-mono uppercase px-2 py-0.5 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5">{getCurrencyCode(row.original.from_currency_id)}</span>
+            <span className="font-bold text-operational-cyan font-mono uppercase px-2 py-0.5 bg-operational-cyan/10 rounded-lg border border-operational-cyan/5">{getCurrencyCode(row.original.fromCurrencyId)}</span>
             <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground/40" />
-            <span className="font-bold text-label-sm uppercase px-2 py-0.5 bg-surface-container rounded-lg border border-surface-variant/10">{getCurrencyCode(row.original.to_currency_id)}</span>
+            <span className="font-bold text-label-sm uppercase px-2 py-0.5 bg-surface-container rounded-lg border border-surface-variant/10">{getCurrencyCode(row.original.toCurrencyId)}</span>
           </div>
         )
       },
@@ -118,19 +118,19 @@ export function FXRateListClient({ locale }: { locale: string }) {
               {formatRate(row.original.rate, locale as 'ar' | 'en', 4)}
             </span>
             <span className="text-label-xxs text-muted-foreground/60 font-medium">
-              1 {getCurrencyCode(row.original.from_currency_id)} = {formatRate(row.original.rate, locale as 'ar' | 'en', 4)} {getCurrencyCode(row.original.to_currency_id)}
+              1 {getCurrencyCode(row.original.fromCurrencyId)} = {formatRate(row.original.rate, locale as 'ar' | 'en', 4)} {getCurrencyCode(row.original.toCurrencyId)}
             </span>
           </div>
         )
       },
       {
-        accessorKey: 'effective_date',
+        accessorKey: 'effectiveDate',
         header: tfx('fields.effective_date'),
         cell: ({ row }) => (
           <div className="flex items-center gap-2 text-label-xs font-bold text-muted-foreground bg-surface-container/50 px-2.5 py-1 rounded-lg w-fit">
             <Calendar className="w-3.5 h-3.5 opacity-40 text-operational-cyan" />
             <ClientOnlyTime 
-              date={row.original.effective_date} 
+              date={row.original.effectiveDate} 
               mode="date" 
               locale={locale as 'ar' | 'en'} 
               fallback="--/--/----" 
@@ -139,10 +139,10 @@ export function FXRateListClient({ locale }: { locale: string }) {
         )
       },
       {
-        accessorKey: 'is_active',
+        accessorKey: 'isActive',
         header: t('status'),
         cell: ({ row }) => (
-          <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
+          <StatusBadge status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
         )
       }
     ];

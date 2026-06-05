@@ -1,50 +1,44 @@
 import { z } from 'zod';
 
 export const StockBalanceItemSchema = z.object({
- item_id: z.string(),
- item_code: z.string(),
- item_name_ar: z.string(),
- item_name_en: z.string(),
- warehouse_id: z.string(),
- warehouse_name_ar: z.string(),
- warehouse_name_en: z.string(),
- qty_on_hand: z.number(),
- qty_reserved: z.number(),
- qty_available: z.number(),
- reorder_point: z.number(),
+ itemId: z.string(),
+ itemCode: z.string(),
+ itemName: z.string(),
+ warehouseId: z.string(),
+ warehouseName: z.string(),
+ qtyOnHand: z.number(),
+ qtyReserved: z.number(),
+ qtyAvailable: z.number(),
+ reorderPoint: z.number(),
 });
 
 export type StockBalanceItem = z.infer<typeof StockBalanceItemSchema>;
 
 export const InventoryLotSchema = z.object({
  id: z.string(),
- item_id: z.string(),
- item_code: z.string(),
- item_name_ar: z.string(),
- item_name_en: z.string(),
- lot_number: z.string(),
- expiry_date: z.string().nullable(),
- qty_available: z.number(),
- is_expired: z.boolean(),
- is_near_expiry: z.boolean(),
+ itemId: z.string(),
+ itemCode: z.string(),
+ itemName: z.string(),
+ lotNumber: z.string(),
+ expiryDate: z.string().nullable(),
+ qtyAvailable: z.number(),
+ isExpired: z.boolean(),
+ isNearExpiry: z.boolean(),
  status: z.string().optional(),
 });
 
 export type InventoryLot = z.infer<typeof InventoryLotSchema>;
 
 export const InventoryMovementSchema = z.object({
- id: z.string(),
- posted_at: z.string(),
- document_id: z.string(),
- document_number: z.string(),
- document_type: z.enum(['GRN', 'ISSUE', 'TRANSFER', 'ADJUSTMENT']),
- item_id: z.string(),
- item_code: z.string(),
- item_name_ar: z.string(),
- item_name_en: z.string(),
- lot_number: z.string().nullable(),
- direction: z.enum(['IN', 'OUT']),
- qty: z.number(),
+  id: z.string(),
+  timestamp: z.string().or(z.date()).transform(val => new Date(val).toISOString()),
+  itemId: z.string(),
+  itemName: z.string(),
+  transactionType: z.string(),
+  documentReference: z.string(),
+  quantity: z.number(),
+  balanceAfter: z.number(),
+  performedByUserName: z.string().nullable().optional(),
 });
 
 export type InventoryMovement = z.infer<typeof InventoryMovementSchema>;

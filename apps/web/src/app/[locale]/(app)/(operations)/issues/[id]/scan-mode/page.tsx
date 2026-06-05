@@ -31,10 +31,10 @@ type ScanEntry = { barcode: string; item_name: string; timestamp: Date; success:
 
 type LineItem = {
  id: string;
- item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { id: string; code: string; name_ar: string; name_en: string } };
+ item: { id: string; code: string; nameAr: string; nameEn: string; primaryUom: { id: string; code: string; nameAr: string; nameEn: string } };
  qty: number;
- uom_id: string;
- lot_allocations: LotAllocation[];
+ uomId: string;
+ lotAllocations: LotAllocation[];
 };
 
 export default function IssueScanModePage(props: { params: Promise<{ locale: string; id: string }> }) {
@@ -74,53 +74,52 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
 
  const { data: lockState } = useWarehouseLock(warehouseId);
 
- useEffect(() => {
- if (issue) {
- // Synchronize internal state with fetched issue data
- // eslint-disable-next-line react-hooks/set-state-in-effect
-  setLines((issue.lines || []).map(l => ({
-    id: l.id,
-    item: l.item,
-    qty: l.qty,
-    uom_id: l.uom_id,
-    lot_allocations: l.lot_allocations,
-  })));
-  
- setWarehouseId(issue.warehouse_id || 'wh-1');
- }
- }, [issue]);
+  useEffect(() => {
+  if (issue) {
+    // Synchronize internal state with fetched issue data
+    setLines((issue.lines || []).map(l => ({
+      id: l.id,
+      item: l.item,
+      qty: l.qty,
+      uomId: l.uomId,
+      lotAllocations: l.lotAllocations,
+    })));
+   
+    setWarehouseId(issue.warehouseId || 'wh-1');
+  }
+  }, [issue]);
 
- const handleScan = async (barcode: string) => {
- try {
- setScanError('');
- const ItemSchema = z.object({
- data: z.array(z.object({
- id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
- primary_uom: z.object({ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string() })
- }))
- });
- const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
- if (res.data && res.data.length > 0) {
- const item = res.data[0];
- let targetLine: LineItem | undefined;
- setLines(prev => {
- const existing = prev.find(l => l.item.id === item.id);
- if (existing) {
- targetLine = { ...existing, qty: existing.qty + 1 };
- return prev.map(l => l.item.id === item.id ? targetLine! : l);
- }
- targetLine = { id: `new- ${Date.now()}`, item, qty: 1, uom_id: item.primary_uom.id, lot_allocations: [] };
- return [...prev, targetLine];
- });
- setScanLog(prev => [{ barcode, item_name: item.name_en, timestamp: new Date(), success: true }, ...prev].slice(0, 10));
- // Auto-open FEFO allocator for new scans
- setTimeout(() => {
- if (targetLine) { setActiveLine(targetLine); setFefoOpen(true); }
- }, 100);
- } else {
- setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
- setScanError(t('no_item_found'));
- }
+  const handleScan = async (barcode: string) => {
+  try {
+    setScanError('');
+    const ItemSchema = z.object({
+      data: z.array(z.object({
+        id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
+        primaryUom: z.object({ id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string() })
+      }))
+    });
+    const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
+    if (res.data && res.data.length > 0) {
+      const item = res.data[0];
+      let targetLine: LineItem | undefined;
+      setLines(prev => {
+        const existing = prev.find(l => l.item.id === item.id);
+        if (existing) {
+          targetLine = { ...existing, qty: existing.qty + 1 };
+          return prev.map(l => l.item.id === item.id ? targetLine! : l);
+        }
+        targetLine = { id: `new-${Date.now()}`, item, qty: 1, uomId: item.primaryUom.id, lotAllocations: [] };
+        return [...prev, targetLine];
+      });
+      setScanLog(prev => [{ barcode, item_name: item.nameEn, timestamp: new Date(), success: true }, ...prev].slice(0, 10));
+      // Auto-open FEFO allocator for new scans
+      setTimeout(() => {
+        if (targetLine) { setActiveLine(targetLine); setFefoOpen(true); }
+      }, 100);
+    } else {
+      setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
+      setScanError(t('no_item_found'));
+    }
  } catch {
  setScanLog(prev => [{ barcode, item_name: '', timestamp: new Date(), success: false }, ...prev].slice(0, 10));
  setScanError(t('no_item_found'));
@@ -153,7 +152,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  {/* Immersive Header */}
  <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-2xl border-s-4 border-operational-cyan shadow-xl">
  <div>
- <h1 className="text-headline-lg font-bold">{isNew ? t('create_new') : issue?.document_number}</h1>
+ <h1 className="text-headline-lg font-bold">{isNew ? t('create_new') : issue?.documentNumber}</h1>
  <div className="flex items-center gap-2 mt-1">
  <span className="relative flex h-2 w-2">
  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-operational-cyan opacity-75"></span>
@@ -187,19 +186,19 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  {lines.length > 0 ? (
  <div className="space-y-4">
  {lines.map(line => {
- const totalAllocated = (line.lot_allocations || []).reduce((sum: number, a: LotAllocation) => sum + a.allocated_qty, 0);
+ const totalAllocated = (line.lotAllocations || []).reduce((sum: number, a: LotAllocation) => sum + a.allocatedQty, 0);
  const isFullyAllocated = totalAllocated >= line.qty;
  
  return (
  <div key={line.id} className="bg-surface-container-high border border-border-muted/50 p-6 rounded-2xl shadow-md transition-all hover:scale-[1.01] flex items-center justify-between group">
  <div>
- <div className="text-title-lg font-bold group-hover:text-operational-cyan transition-colors">{line.item.name_ar} / {line.item.name_en}</div>
+ <div className="text-title-lg font-bold group-hover:text-operational-cyan transition-colors">{line.item.nameAr} / {line.item.nameEn}</div>
  <div className="text-muted-foreground text-body-md font-mono mt-1 opacity-70">{line.item.code}</div>
  </div>
  <div className="flex items-center gap-8">
  <div className="text-end">
  <div className="text-label-sm text-muted-foreground uppercase mb-1">{t('scan_mode.qty')}</div>
- <div className="text-headline-lg font-bold font-mono">{line.qty} <span className="text-body-md opacity-60">{line.item.primary_uom.code}</span></div>
+ <div className="text-headline-lg font-bold font-mono">{line.qty} <span className="text-body-md opacity-60">{line.item.primaryUom.code}</span></div>
  </div>
  <button 
  className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all ${isFullyAllocated ? 'border-operational-cyan text-operational-cyan bg-operational-cyan/5 hover:bg-operational-cyan/10' : 'border-status-error text-status-error animate-pulse bg-status-error/5 hover:bg-status-error/10'}`}
@@ -259,17 +258,17 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <Dialog open={fefoOpen} onOpenChange={setFefoOpen}>
  <DialogContent className="max-h-[90vh] max-w-2xl bg-surface-container border border-border-muted/50 overflow-y-auto">
  <DialogHeader>
- <DialogTitle className="text-headline-lg">{t('fefo_drawer_title')}: {activeLine?.item.name_en}</DialogTitle>
+ <DialogTitle className="text-headline-lg">{t('fefo_drawer_title')}: {activeLine?.item.nameEn}</DialogTitle>
  </DialogHeader>
  <div className="py-4 overflow-y-auto pb-20">
  {activeLine && (
  <FEFOLotAllocator
  lots={lots as Lot[]}
  requestedQty={activeLine.qty}
- uomLabel={activeLine.item.primary_uom.code}
+ uomLabel={activeLine.item.primaryUom.code}
  userRole={user?.role} onAllocate={(allocations) => {
  setLines(prev => prev.map(l => l.id === activeLine.id ? {
- ...l, lot_allocations: allocations
+ ...l, lotAllocations: allocations
  } : l));
  setFefoOpen(false);
  }}

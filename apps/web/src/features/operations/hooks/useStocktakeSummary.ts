@@ -7,7 +7,7 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 export const StocktakeSummaryMetricsSchema = z.object({
   total: z.number(),
-  in_progress: z.number(),
+  inProgress: z.number(),
   posted: z.number(),
 });
 

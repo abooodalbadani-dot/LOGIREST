@@ -61,10 +61,10 @@ export default function StockBalanceClient() {
     if (!data?.data) return [];
     return data.data.filter(item => {
       if (statusFilter === 'low') {
-        return item.qty_available <= item.reorder_point;
+        return item.qtyAvailable <= item.reorderPoint;
       }
       if (statusFilter === 'out') {
-        return item.qty_available === 0;
+        return item.qtyAvailable === 0;
       }
       return true;
     });
@@ -72,11 +72,11 @@ export default function StockBalanceClient() {
 
   const columns = useMemo<ColumnDef<StockBalanceItem, unknown>[]>(() => [
     {
-      accessorKey: 'item_code',
+      accessorKey: 'itemCode',
       header: tc('table_headers.code'),
       cell: ({ row }) => (
         <span dir="ltr" className="font-mono text-label-xs font-semibold text-muted-foreground/60 uppercase">
-          {row.original.item_code}#
+          {row.original.itemCode}#
         </span>
       ),
     },
@@ -89,7 +89,7 @@ export default function StockBalanceClient() {
             <Package className="w-4 h-4 text-muted-foreground/60 transition-colors" />
           </div>
           <span className="font-semibold text-label-sm text-foreground group-hover:text-operational-cyan transition-colors">
-            {isRtl ? row.original.item_name_ar : row.original.item_name_en}
+            {row.original.itemName}
           </span>
         </div>
       ),
@@ -99,16 +99,16 @@ export default function StockBalanceClient() {
       header: tc('warehouse'),
       cell: ({ row }) => (
         <span className="text-label-xs font-bold text-foreground/80">
-          {isRtl ? row.original.warehouse_name_ar : row.original.warehouse_name_en}
+          {row.original.warehouseName}
         </span>
       ),
     },
     {
-      accessorKey: 'qty_available',
+      accessorKey: 'qtyAvailable',
       header: tc('table_headers.available'),
       cell: ({ row }) => {
-        const qty = row.original.qty_available;
-        const reorderPoint = row.original.reorder_point;
+        const qty = row.original.qtyAvailable;
+        const reorderPoint = row.original.reorderPoint;
         const isOutOfStock = qty === 0;
         const isLowStock = qty <= reorderPoint;
         return (
@@ -140,8 +140,8 @@ export default function StockBalanceClient() {
       id: 'status',
       header: tc('status_label'),
       cell: ({ row }) => {
-        const qty = row.original.qty_available;
-        const reorderPoint = row.original.reorder_point;
+        const qty = row.original.qtyAvailable;
+        const reorderPoint = row.original.reorderPoint;
         
         if (qty === 0) {
           return <StatusBadge status="OUT_OF_STOCK" className="h-6" />;
@@ -175,17 +175,15 @@ export default function StockBalanceClient() {
   const handleExport = () => {
     if (!data?.data) return;
     const exportColumns = [
-      { header: tc('table_headers.code'), key: 'item_code', width: 15 },
-      { header: tc('table_headers.name'), key: 'item_name', width: 30 },
-      { header: tc('warehouse'), key: 'warehouse_name', width: 25 },
-      { header: tc('table_headers.qty'), key: 'qty_on_hand', width: 12 },
-      { header: tc('table_headers.available'), key: 'qty_available', width: 12 },
+      { header: tc('table_headers.code'), key: 'itemCode', width: 15 },
+      { header: tc('table_headers.name'), key: 'itemName', width: 30 },
+      { header: tc('warehouse'), key: 'warehouseName', width: 25 },
+      { header: tc('table_headers.qty'), key: 'qtyOnHand', width: 12 },
+      { header: tc('table_headers.available'), key: 'qtyAvailable', width: 12 },
     ];
 
     const rows = data.data.map(item => ({
       ...item,
-      item_name: isRtl ? item.item_name_ar : item.item_name_en,
-      warehouse_name: isRtl ? item.warehouse_name_ar : item.warehouse_name_en,
     }));
 
     generateExcel(exportColumns, rows, 'Stock_Balances');
@@ -336,9 +334,9 @@ export default function StockBalanceClient() {
             collectionName="inventory_orchestration_feed"
             pagination={{
               page,
-              pageSize: data?.meta?.page_size ?? 15,
+              pageSize: data?.meta?.pageSize ?? 15,
               total: data?.meta?.total ?? 0,
-              totalPages: data?.meta?.total_pages ?? 0,
+              totalPages: data?.meta?.totalPages ?? 0,
               onPageChange: setPage,
             }}
             emptyState={<EmptyState variant="minimal" title={t('empty_title') || 'No Stock Records'} description={t('empty_description') || 'No inventory items found. Try adjusting your filters or add items via master data.'} />}

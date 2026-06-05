@@ -2,25 +2,26 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
+import { toSnakeCase } from '@/lib/api/adapters';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { StockIssueDetailSchema, StockIssueDetail } from './useIssue';
+import { StockIssueDetailSchema } from './useIssue';
 
 export const CreateIssueLineAllocationSchema = z.object({
-  lot_number: z.string(),
-  allocated_qty: z.number(),
+  lotNumber: z.string(),
+  allocatedQty: z.number(),
 });
 
 export const CreateIssueLineSchema = z.object({
-  item_id: z.string().min(1),
-  requested_qty: z.number().positive(),
-  lot_allocations: z.array(CreateIssueLineAllocationSchema),
+  itemId: z.string().min(1),
+  requestedQty: z.number().positive(),
+  lotAllocations: z.array(CreateIssueLineAllocationSchema),
   notes: z.string().optional(),
 });
 
 export const CreateIssuePayloadSchema = z.object({
-  warehouse_id: z.string().min(1),
-  destination_dept_id: z.string().min(1),
+  warehouseId: z.string().min(1),
+  destinationDeptId: z.string().min(1),
   lines: z.array(CreateIssueLineSchema).min(1),
   notes: z.string().optional(),
 });
@@ -33,7 +34,12 @@ export function useCreateIssue(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ signal, ...data }: CreateIssuePayload & { signal?: AbortSignal }) =>
-      apiClient.post('/operations/issues', z.object({ data: StockIssueDetailSchema }), CreateIssuePayloadSchema.parse(data), { signal }).then(res => res.data),
+      apiClient.post(
+        '/operations/issues',
+        z.object({ data: StockIssueDetailSchema }),
+        toSnakeCase(CreateIssuePayloadSchema.parse(data) as unknown as Record<string, unknown>),
+        { signal }
+      ).then(res => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues'] });
     },

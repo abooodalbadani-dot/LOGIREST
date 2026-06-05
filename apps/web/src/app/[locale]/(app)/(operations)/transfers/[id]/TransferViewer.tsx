@@ -24,14 +24,14 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
   const tCommon = useTranslations('common');
   const router = useRouter();
 
-  const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
+  const transferStatus = transfer?.transferStatus ?? TRANSFER_STATUS.DRAFT;
 
   const timelineEntries = [
-    { status: 'draft' as Status, at: transfer.created_at, by: transfer.created_by || tCommon('system') },
-    ...((transfer.transfer_status === 'IN_TRANSIT' || transfer.status === 'IN_TRANSIT' || transfer.status === 'RECEIVED' || transfer.status === 'POSTED') ? [{ status: 'in_transit' as Status, at: transfer.shipped_at || transfer.updated_at, by: transfer.created_by || tCommon('system') }] : []),
-    ...((transfer.status === 'RECEIVED' || transfer.status === 'POSTED') ? [{ status: 'posted' as Status, at: transfer.received_at || transfer.updated_at, by: transfer.created_by || tCommon('system') }] : []),
-    ...(transfer.status === 'POSTED' ? [{ status: 'posted' as Status, at: transfer.posted_at || transfer.updated_at, by: transfer.posted_by || tCommon('system') }] : []),
-    { status: transfer.status.toLowerCase() as Status, at: transfer.updated_at || transfer.created_at, by: tCommon('system') },
+    { status: 'draft' as Status, at: transfer.createdAt, by: transfer.createdBy || tCommon('system') },
+    ...((transfer.transferStatus === 'IN_TRANSIT' || transfer.status === 'IN_TRANSIT' || transfer.status === 'RECEIVED' || transfer.status === 'POSTED') ? [{ status: 'in_transit' as Status, at: transfer.shippedAt || transfer.updatedAt, by: transfer.createdBy || tCommon('system') }] : []),
+    ...((transfer.status === 'RECEIVED' || transfer.status === 'POSTED') ? [{ status: 'posted' as Status, at: transfer.receivedAt || transfer.updatedAt, by: transfer.createdBy || tCommon('system') }] : []),
+    ...(transfer.status === 'POSTED' ? [{ status: 'posted' as Status, at: transfer.postedAt || transfer.updatedAt, by: transfer.postedBy || tCommon('system') }] : []),
+    { status: transfer.status.toLowerCase() as Status, at: transfer.updatedAt || transfer.createdAt, by: tCommon('system') },
   ];
 
   return (
@@ -59,7 +59,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
         description={
           <div className="flex items-center gap-2">
             <span>{tCommon('doc_number')}</span>
-            <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.document_number}</span>
+            <span dir="ltr" className="font-mono text-cyan-500/80">{transfer?.documentNumber}</span>
           </div>
         }
         actions={
@@ -76,23 +76,23 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
         <div className="space-y-2">
           <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('from_warehouse')}</label>
           <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-bold text-body-md">
-            {transfer?.from_warehouse_name}
+            {transfer?.fromWarehouseName}
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('to_warehouse')}</label>
           <div className="bg-surface-container-highest/40 border border-white/5 rounded-xl p-4 font-bold text-body-md">
-            {transfer?.to_warehouse_name}
+            {transfer?.toWarehouseName}
           </div>
         </div>
 
-        {transfer?.shipped_at && (
+        {transfer?.shippedAt && (
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('shipped_at')}</label>
             <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
               <ClientOnlyTime 
-                date={transfer.shipped_at} 
+                date={transfer.shippedAt} 
                 mode="datetime" 
                 className="font-mono text-body-md font-bold text-cyan-500/80"
               />
@@ -101,12 +101,12 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
           </div>
         )}
 
-        {transfer?.received_at && (
+        {transfer?.receivedAt && (
           <div className="space-y-2">
             <label className="text-label-xs font-semibold uppercase text-muted-foreground/60 ms-1">{t('received_at')}</label>
             <div className="bg-surface-container-highest/30 border border-white/5 rounded-xl p-4 flex items-center justify-between">
               <ClientOnlyTime 
-                date={transfer.received_at} 
+                date={transfer.receivedAt} 
                 mode="datetime" 
                 className="font-mono text-body-md font-bold text-emerald-500/80"
               />
@@ -122,11 +122,11 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
           </div>
         </div>
 
-        {transfer?.variance_reason && (
+        {transfer?.varianceReason && (
           <div className="col-span-1 md:col-span-4 space-y-2">
             <label className="text-label-xs font-semibold uppercase text-status-warning/80 ms-1">{t('variance_reason')}</label>
             <div className="bg-status-warning/5 border border-status-warning/20 rounded-xl p-4 font-medium text-body-md">
-              {transfer.variance_reason}
+              {transfer.varianceReason}
             </div>
           </div>
         )}
@@ -151,7 +151,7 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
               cell: (line: TransferLine) => (
                 <div className="flex justify-center">
                   <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
-                    {line.shipped_qty ?? line.qty}
+                    {line.shippedQty ?? line.qty}
                   </span>
                 </div>
               ),
@@ -160,8 +160,8 @@ export function TransferViewer({ transfer, locale }: TransferViewerProps) {
               header: t('received_qty'),
               cell: (line: TransferLine) => (
                 <div className="flex justify-center">
-                  <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.received_qty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
-                    {line.received_qty ?? '—'}
+                  <span dir="ltr" className={`font-mono text-body-md font-semibold px-3 py-1 rounded-lg border border-white/5 ${line.receivedQty ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-surface-container-highest text-muted-foreground/40'}`}>
+                    {line.receivedQty ?? '—'}
                   </span>
                 </div>
               ),

@@ -10,50 +10,50 @@ export const AdjustmentStatusSchema = z.enum(ALL_STATUSES);
 
 
 export const AdjustmentLineSchema = z.object({
- id: z.string(),
- item: z.object({
- id: z.string(),
- code: z.string(),
- name_ar: z.string(),
- name_en: z.string(),
- primary_uom: z.object({
- id: z.string(),
- code: z.string(),
- }),
- }),
- direction: z.enum(['INCREASE', 'DECREASE']),
- qty_before: z.number(),
- qty_adjusted: z.number(),
- uom_id: z.string(),
- unit_cost: z.number().nullable().optional(),
- reason_notes: z.string().optional(),
- lot_allocations: z.array(z.object({
-   lot_id: z.string(),
-   qty: z.number(),
- })).optional(),
+  id: z.string(),
+  item: z.object({
+    id: z.string(),
+    code: z.string(),
+    nameAr: z.string(),
+    nameEn: z.string(),
+    primaryUom: z.object({
+      id: z.string(),
+      code: z.string(),
+    }),
+  }),
+  direction: z.enum(['INCREASE', 'DECREASE']),
+  qtyBefore: z.number(),
+  qtyAdjusted: z.number(),
+  uomId: z.string(),
+  unitCost: z.number().nullable().optional(),
+  reasonNotes: z.string().optional(),
+  lotAllocations: z.array(z.object({
+    lotId: z.string(),
+    qty: z.number(),
+  })).optional(),
 });
 
 export const AdjustmentDetailSchema = z.object({
- id: z.string(),
- document_number: z.string(),
- status: AdjustmentStatusSchema,
- warehouse_id: z.string(),
- reason: z.string(),
- notes: z.string().nullable().optional(),
- reject: z.string().nullable().optional(),
- movement_id: z.string().nullable().optional(),
- approved_by: z.string().nullable().optional(),
- posted_at: z.string().nullable().optional(),
- created_at: z.string().optional(),
- updated_at: z.string().optional().default(''),
- version: z.number().optional(),
+  id: z.string(),
+  documentNumber: z.string(),
+  status: AdjustmentStatusSchema,
+  warehouseId: z.string(),
+  reason: z.string(),
+  notes: z.string().nullable().optional(),
+  reject: z.string().nullable().optional(),
+  movementId: z.string().nullable().optional(),
+  approvedBy: z.string().nullable().optional(),
+  postedAt: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional().default(''),
+  version: z.number().optional(),
 
- lines: z.array(AdjustmentLineSchema),
- timeline: z.array(z.object({
- status: z.string(),
- at: z.string(),
- by: z.string(),
- })).optional(),
+  lines: z.array(AdjustmentLineSchema),
+  timeline: z.array(z.object({
+    status: z.string(),
+    at: z.string(),
+    by: z.string(),
+  })).optional(),
 });
 
 

@@ -52,22 +52,22 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isDirty, isValid } } = useForm<UoMFormValues>({
     resolver: zodResolver(UoMFormSchema),
-    defaultValues: { code: '', name_ar: '', name_en: '', category: '', is_active: true, version: undefined },
+    defaultValues: { code: '', nameAr: '', nameEn: '', category: '', isActive: true, version: undefined },
     disabled: isReadOnly,
   });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const isActive = useWatch({ control, name: 'is_active' });
+  const isActive = useWatch({ control, name: 'isActive' });
 
   useEffect(() => {
     if (data) {
       reset({ 
         code: data.code, 
-        name_ar: data.name_ar, 
-        name_en: data.name_en,
+        nameAr: data.nameAr, 
+        nameEn: data.nameEn,
         category: data.category || '',
-        is_active: data.is_active,
+        isActive: data.isActive,
         version: data.version
       });
     }
@@ -114,7 +114,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('UoM form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -208,12 +208,12 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                       <Input 
                         id="uom-name-en" 
                         dir="ltr" 
-                        {...register('name_en')} 
+                        {...register('nameEn')} 
                         disabled={isReadOnly}
                         className="font-semibold" 
                         placeholder={tu('placeholders.name_en')} 
                       />
-                      {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.name_en.message}`)}</p>}
+                      {errors.nameEn && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.nameEn.message}`)}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -221,12 +221,12 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                       <Input 
                         id="uom-name-ar" 
                         dir="rtl" 
-                        {...register('name_ar')} 
+                        {...register('nameAr')} 
                         disabled={isReadOnly}
                         className="font-semibold text-end" 
                         placeholder={tu('placeholders.name_ar')} 
                       />
-                      {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.name_ar.message}`)}</p>}
+                      {errors.nameAr && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.nameAr.message}`)}</p>}
                     </div>
                   </div>
 
@@ -284,7 +284,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                   <Switch
                     id="uom-active"
                     checked={isActive}
-                    onCheckedChange={(v) => setValue('is_active', v)}
+                    onCheckedChange={(v) => setValue('isActive', v)}
                     className="data-[state=checked]:bg-status-active"
                   />
                 </div>

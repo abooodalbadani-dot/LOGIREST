@@ -14,5 +14,11 @@ export function setTokenCookie(token: string, maxAgeSeconds = 86400): void {
 
 export function deleteTokenCookie(): void {
   if (typeof document === 'undefined') return;
-  document.cookie = `${TOKEN_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  const isSecure = location.protocol === 'https:';
+  const baseOptions = `; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT${isSecure ? '; Secure' : ''}`;
+  
+  document.cookie = `${TOKEN_NAME}=${baseOptions}; SameSite=Lax`;
+  document.cookie = `${TOKEN_NAME}=${baseOptions}; SameSite=Strict`;
+  document.cookie = `${TOKEN_NAME}=${baseOptions}`;
+  document.cookie = `${TOKEN_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }

@@ -28,24 +28,24 @@ export default function CurrencySummariesClient() {
   cell: ({ row }) => formatCurrency(row.getValue('total'), row.original.currency, locale as 'ar' | 'en'),
   },
   {
-  accessorKey: 'total_base',
+  accessorKey: 'totalBase',
   header: t('table.total_base'),
   meta: { numeric: true },
-  cell: ({ row }) => formatCurrency(row.getValue('total_base'), baseCurrency, locale as 'ar' | 'en'),
+  cell: ({ row }) => formatCurrency(row.getValue('totalBase'), baseCurrency, locale as 'ar' | 'en'),
   },
   {
-  accessorKey: 'last_rate',
+  accessorKey: 'lastRate',
   header: t('table.last_rate'),
   meta: { numeric: true },
-  cell: ({ row }) => formatRate(row.getValue('last_rate'), locale as 'ar' | 'en', 6),
+  cell: ({ row }) => formatRate(row.getValue('lastRate'), locale as 'ar' | 'en', 6),
   },
   ];
 
  const exportColumns = [
- { header: t('table.currency'), key: 'currency_code', width: 15 },
- { header: t('table.total'), key: 'total_original', width: 20 },
- { header: t('table.last_rate'), key: 'exchange_rate', width: 15 },
- { header: t('table.total_base'), key: 'total_sar', width: 20 },
+ { header: t('table.currency'), key: 'currency', width: 15 },
+ { header: t('table.total'), key: 'total', width: 20 },
+ { header: t('table.last_rate'), key: 'lastRate', width: 15 },
+ { header: t('table.total_base'), key: 'totalBase', width: 20 },
  ];
 
  return (

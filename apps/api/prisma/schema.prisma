@@ -748,6 +748,7 @@ model CostLedger {
   documentId     String
   documentType   DocumentType
   idempotencyKey String       @unique
+  archivedAt     DateTime?    @map("archived_at")
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -899,6 +900,8 @@ model OutboxEvent {
   expiresAt   DateTime
   documentId  String?
   eventHash   String?   @map("event_hash") @db.VarChar(64)
+  deadLettered Boolean   @default(false) @map("dead_lettered")
+  retryHistory Json?     @map("retry_history")
 
   @@index([status, createdAt])
   @@map("outbox_events")
@@ -910,6 +913,7 @@ model ReconciliationRun {
   itemsChecked       Int
   discrepanciesFound   Int
   lotDiscrepanciesFound Int @default(0) @map("lot_discrepancies_found")
+  wacDriftCount      Int @default(0) @map("wac_drift_count")
   frozenItems          String[]
   durationMs         Int
 
@@ -936,6 +940,7 @@ model AuditLogArchive {
   afterStateJson  String
   ipAddress       String?
   createdAt       DateTime
+  integrityHash   String?  @map("integrity_hash") @db.VarChar(64)
 
   @@map("audit_logs_archive")
 }
@@ -950,6 +955,8 @@ model StockLedgerArchive {
   documentId     String
   documentType   DocumentType
   idempotencyKey String?
+  integrityHash      String?      @map("integrity_hash") @db.VarChar(64)
+  costLedgerEntries  Json?        @map("cost_ledger_entries")
 
   @@map("stock_ledger_archive")
 }
@@ -965,6 +972,7 @@ model CostLedgerArchive {
   documentId     String
   documentType   DocumentType
   idempotencyKey String?
+  integrityHash  String?      @map("integrity_hash") @db.VarChar(64)
 
   @@map("cost_ledger_archive")
 }

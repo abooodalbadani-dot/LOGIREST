@@ -14,7 +14,7 @@ const QUERY_KEY = ['fx_rates'];
 export function useFXRates() {
   return useQuery({
     queryKey: QUERY_KEY,
-    placeholderData: { data: [], meta: { total: 0, page: 1, page_size: 50, total_pages: 0 } },
+    placeholderData: { data: [], meta: { total: 0, page: 1, pageSize: 50, totalPages: 0 } },
     queryFn: ({ signal }) =>
       apiClient.get('/currencies/fx-rates', paginatedSchema(FXRateSchema), { signal }),
     staleTime: 60_000,

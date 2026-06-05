@@ -123,52 +123,82 @@ describe('Stocktake Lock Lifecycle E2E', () => {
           prisma.warehouseItemLot.deleteMany({ where: { itemId } }),
           prisma.warehouseItem.deleteMany({ where: { itemId } }),
         ]);
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
 
       try {
         await prisma.stockLedger.deleteMany({ where: { itemId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.costLedger.deleteMany({ where: { itemId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
 
       try {
         await prisma.goodsReceivedNote.deleteMany({ where: { warehouseId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.purchaseOrder.deleteMany({ where: { supplierId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.stocktakeSession.deleteMany({ where: { warehouseId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
 
       try {
         await prisma.item.deleteMany({ where: { categoryId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.unitOfMeasure.delete({ where: { id: uomId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.category.delete({ where: { id: categoryId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.supplier.delete({ where: { id: supplierId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.currency.delete({ where: { id: currencyId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.warehouse.delete({ where: { id: warehouseId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.documentSequence.deleteMany({ where: { branchId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.branch.delete({ where: { id: branchId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
       try {
         await prisma.user.delete({ where: { id: adminId } });
-      } catch (err) {}
+      } catch (err) {
+        /* ignore */
+      }
 
       await prisma.$disconnect();
     }

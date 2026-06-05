@@ -32,9 +32,9 @@ export function TransferHubClient() {
   const transfers = transfersData?.data || [];
 
   const stats = useMemo(() => {
-    const pending = transfers.filter(x => x.transfer_status === 'PENDING').length;
-    const transit = transfers.filter(x => x.transfer_status === 'IN_TRANSIT').length;
-    const completed = transfers.filter(x => x.transfer_status === 'COMPLETED').length;
+    const pending = transfers.filter(x => x.transferStatus === 'PENDING').length;
+    const transit = transfers.filter(x => x.transferStatus === 'IN_TRANSIT').length;
+    const completed = transfers.filter(x => x.transferStatus === 'COMPLETED').length;
     
     return {
       pending,
@@ -46,31 +46,31 @@ export function TransferHubClient() {
 
   const columns: ColumnDef<TransferSummary, unknown>[] = [
     {
-      accessorKey: 'document_number',
+      accessorKey: 'documentNumber',
       header: t('doc_number'),
-      cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-primary">{row.original.document_number}</span>,
+      cell: ({ row }) => <span className="font-mono text-label-xs font-bold text-primary">{row.original.documentNumber}</span>,
     },
     {
       id: 'route',
       header: t('route'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3 text-sm font-medium">
-          <span className="text-muted-foreground">{row.original.from_warehouse_id}</span>
+          <span className="text-muted-foreground">{row.original.fromWarehouseId}</span>
           <ArrowRight className="w-3 h-3 opacity-30" />
-          <span className="text-foreground">{row.original.to_warehouse_id}</span>
+          <span className="text-foreground">{row.original.toWarehouseId}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: t('transfer_date'),
-      cell: ({ row }) => <span className="tabular-nums opacity-70">{row.original.created_at?.split('T')[0]}</span>,
+      cell: ({ row }) => <span className="tabular-nums opacity-70">{row.original.createdAt?.split('T')[0]}</span>,
     },
     {
       id: 'status',
       header: t('status'),
       cell: ({ row }) => {
-        const s = row.original.transfer_status;
+        const s = row.original.transferStatus;
         const colors = {
           PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
           IN_TRANSIT: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
@@ -100,14 +100,14 @@ export function TransferHubClient() {
           >
             <Eye className="w-4 h-4 opacity-50" />
           </Button>
-          {row.original.transfer_status !== 'COMPLETED' && (
+          {row.original.transferStatus !== 'COMPLETED' && (
             <Button 
               variant="ghost" 
               size="sm" 
               className="h-8 w-8 p-0 hover:bg-emerald-500/10 hover:text-emerald-500"
               onClick={(e) => {
                 e.stopPropagation();
-                const target = row.original.transfer_status === 'PENDING' ? 'ship' : 'receive';
+                const target = row.original.transferStatus === 'PENDING' ? 'ship' : 'receive';
                 router.push(`/transfers/${row.original.id}/${target}`);
               }}
             >

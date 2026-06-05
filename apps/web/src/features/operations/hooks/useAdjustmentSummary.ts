@@ -8,7 +8,7 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 export const AdjustmentSummaryMetricsSchema = z.object({
   total: z.number(),
   pending: z.number(),
-  critical_losses: z.number(),
+  criticalLosses: z.number(),
 });
 
 export type AdjustmentSummaryMetrics = z.infer<typeof AdjustmentSummaryMetricsSchema>;

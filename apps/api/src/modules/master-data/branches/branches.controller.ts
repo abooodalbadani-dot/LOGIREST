@@ -40,7 +40,7 @@ export class BranchesController {
     const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
     const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (role !== 'ADMIN') {
       where.warehouses = {
         some: {

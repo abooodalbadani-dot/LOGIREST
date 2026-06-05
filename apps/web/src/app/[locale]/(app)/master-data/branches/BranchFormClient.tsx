@@ -57,7 +57,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   } = useForm<BranchFormValues>({
     resolver: zodResolver(BranchFormSchema),
     disabled: isReadOnly,
-    defaultValues: { code: '', name_ar: '', name_en: '', is_active: true, version: undefined },
+    defaultValues: { code: '', name: '', isActive: true, version: undefined },
   });
 
   const { 
@@ -77,11 +77,11 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const isActive = useWatch({ control, name: 'is_active' });
+  const isActive = useWatch({ control, name: 'isActive' });
 
   useEffect(() => {
     if (data) {
-      reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en, is_active: data.is_active, version: data.version });
+      reset({ code: data.code, name: data.name, isActive: data.isActive, version: data.version });
     }
   }, [data, reset]);
 
@@ -100,7 +100,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Branch form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -226,30 +226,16 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Name EN */}
                 <div className="space-y-2">
-                  <Label htmlFor="branch-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name_en')}</Label>
+                  <Label htmlFor="branch-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name')}</Label>
                   <Input 
-                    id="branch-name-en" 
+                    id="branch-name" 
                     dir="ltr" 
-                    {...register('name_en')} 
+                    {...register('name')} 
                     disabled={isReadOnly}
                     className="font-semibold" 
-                    placeholder={tb('placeholders.name_en')} 
+                    placeholder={tb('placeholders.name')} 
                   />
-                  {errors.name_en && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name_en.message as string)}</p>}
-                </div>
-
-                {/* Name AR */}
-                <div className="space-y-2">
-                  <Label htmlFor="branch-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name_ar')}</Label>
-                  <Input 
-                    id="branch-name-ar" 
-                    dir="rtl" 
-                    {...register('name_ar')} 
-                    disabled={isReadOnly}
-                    className="font-semibold text-end" 
-                    placeholder={tb('placeholders.name_ar')} 
-                  />
-                  {errors.name_ar && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name_ar.message as string)}</p>}
+                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name.message as string)}</p>}
                 </div>
               </div>
             </CardContent>
@@ -278,7 +264,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                 <Switch
                   id="branch-is-active"
                   checked={isActive}
-                  onCheckedChange={(v) => setValue('is_active', v)}
+                  onCheckedChange={(v) => setValue('isActive', v)}
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-status-active"
                 />

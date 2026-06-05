@@ -74,8 +74,9 @@ export function OutboxMonitoringClient() {
       if (res.data.length > 0 && !selectedEvent) {
         setSelectedEvent(res.data[0]);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to fetch outbox events');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to fetch outbox events');
     } finally {
       setIsLoading(false);
     }
@@ -106,9 +107,10 @@ export function OutboxMonitoringClient() {
       
       // Re-fetch current page to backfill
       fetchFailedEvents(page);
-    } catch (err: any) {
+    } catch (err: unknown) {
       playSound('error');
-      toast.error(err.message || 'Failed to retry event');
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to retry event');
     } finally {
       setIsRetryingMap(prev => ({ ...prev, [id]: false }));
     }

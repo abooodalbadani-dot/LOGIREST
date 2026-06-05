@@ -33,7 +33,7 @@ export function BranchListClient({ locale }: { locale: string }) {
  const branches = data?.data || [];
  return {
  total: data?.meta?.total || 0,
- active: branches.filter(b => b.is_active).length,
+ active: branches.filter(b => b.isActive).length,
  };
  }, [data]);
 
@@ -52,26 +52,25 @@ export function BranchListClient({ locale }: { locale: string }) {
       header: tc('name'),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs text-muted-foreground/60" dir="rtl">{row.original.name_ar}</span>
+          <span className="font-bold text-label-sm">{row.original.name}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'is_active',
+      accessorKey: 'isActive',
       header: t('fields.is_active'),
       cell: ({ row }) => (
         <StatusBadge 
-          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
+          status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
         />
       ),
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: tc('created_at'),
       cell: ({ row }) => (
         <ClientOnlyTime 
-          date={row.original.created_at} 
+          date={row.original.createdAt} 
           mode="date" 
           className="text-label-xs text-muted-foreground/60 font-medium" 
         />
@@ -182,9 +181,9 @@ export function BranchListClient({ locale }: { locale: string }) {
         }
         pagination={data?.meta ? {
           page: data.meta.page,
-          pageSize: data.meta.page_size,
+          pageSize: data.meta.pageSize,
           total: data.meta.total,
-          totalPages: data.meta.total_pages,
+          totalPages: data.meta.totalPages,
           onPageChange: setPage
         } : undefined}
         filters={

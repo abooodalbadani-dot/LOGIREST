@@ -7,8 +7,8 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 export const TransferSummaryMetricsSchema = z.object({
   total: z.number(),
-  in_transit: z.number(),
-  overdue_count: z.number(),
+  inTransit: z.number(),
+  overdueCount: z.number(),
 });
 
 export type TransferSummaryMetrics = z.infer<typeof TransferSummaryMetricsSchema>;

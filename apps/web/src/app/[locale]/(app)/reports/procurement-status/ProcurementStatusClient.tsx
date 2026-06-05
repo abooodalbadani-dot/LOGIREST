@@ -16,11 +16,11 @@ export default function ProcurementStatusClient() {
 
  const columns: ColumnDef<ProcurementStatusReport>[] = [
  {
- accessorKey: 'po_no',
+ accessorKey: 'poNo',
  header: t('table.po_no'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono opacity-70">
- {row.getValue('po_no')}
+ {row.getValue('poNo')}
  </span>
  ),
  },
@@ -59,10 +59,10 @@ export default function ProcurementStatusClient() {
  ];
 
  const exportColumns = [
- { header: t('table.po_no'), key: 'po_number', width: 15 },
+ { header: t('table.po_no'), key: 'poNo', width: 15 },
  { header: t('table.date'), key: 'date', width: 20 },
- { header: t('table.supplier'), key: 'supplier_name', width: 30 },
- { header: t('table.total'), key: 'total_amount', width: 15 },
+ { header: t('table.supplier'), key: 'supplier', width: 30 },
+ { header: t('table.total'), key: 'total', width: 15 },
  { header: t('table.currency'), key: 'currency', width: 10 },
  { header: t('table.status'), key: 'status', width: 15 },
  ];

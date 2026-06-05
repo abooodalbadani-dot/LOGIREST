@@ -74,28 +74,28 @@ export function ProcurementDashboard() {
         <h2 id="kpi-heading" className="sr-only">{t('kpi.title')}</h2>
         <KPICard
           title={t('procurement.pending_prs')}
-          value={formatNumber(stats.pending_prs, locale as 'ar' | 'en')}
+          value={formatNumber(stats.pendingPrs, locale as 'ar' | 'en')}
           icon={FileText}
           accent="cyan"
           description={t('procurement.awaiting_po')}
         />
         <KPICard
           title={t('procurement.active_pos')}
-          value={formatNumber(stats.active_pos, locale as 'ar' | 'en')}
+          value={formatNumber(stats.activePos, locale as 'ar' | 'en')}
           icon={ShoppingCart}
           accent="amber"
           description={t('procurement.issued_to_suppliers')}
         />
         <KPICard
           title={t('procurement.pending_grns')}
-          value={formatNumber(stats.pending_grns, locale as 'ar' | 'en')}
+          value={formatNumber(stats.pendingGrns, locale as 'ar' | 'en')}
           icon={Truck}
           accent="cyan"
           description={t('procurement.inbound_logistics')}
         />
         <KPICard
           title={t('procurement.monthly_spend')}
-          value={formatCurrency(stats.total_procurement_spend, baseCurrency, locale as 'ar' | 'en')}
+          value={formatCurrency(stats.totalProcurementSpend, baseCurrency, locale as 'ar' | 'en')}
           icon={TrendingUp}
           accent="cyan"
           description={t('procurement.approved_budget')}
@@ -121,12 +121,12 @@ export function ProcurementDashboard() {
                 </div>
               </div>
               <div className="divide-y divide-transparent">
-                {stats.pending_approvals.filter(doc => doc.type === 'PR').map((doc, i) => (
+                {stats.pendingApprovals.filter(doc => doc.type === 'PR').map((doc, i) => (
                   <div key={i} className="px-8 py-6 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial cursor-pointer group">
                     <div className="flex items-center gap-8">
                       <div className="flex flex-col items-center justify-center w-14 h-14 bg-surface-container-low border-none rounded-2xl font-mono text-label-sm font-semibold group-hover:bg-operational-cyan/10 transition-all duration-200">
                         <span className="opacity-10 text-label-xxs mb-1">{tc('id')}</span>
-                        {doc.document_number.split('-')[1] || doc.document_number}
+                        {doc.documentNumber.split('-')[1] || doc.documentNumber}
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-4">
@@ -136,7 +136,7 @@ export function ProcurementDashboard() {
                           </Badge>
                         </div>
                         <p className="text-label-xs text-muted-foreground/30 font-semibold uppercase">
-                          {formatCurrency(doc.total_value || 0, baseCurrency, locale as 'ar' | 'en')} • {t('procurement.purchase_request')}
+                          {formatCurrency(doc.totalValue || 0, baseCurrency, locale as 'ar' | 'en')} • {t('procurement.purchase_request')}
                         </p>
                       </div>
                     </div>
@@ -167,7 +167,7 @@ export function ProcurementDashboard() {
               <h3 className="text-title-lg font-semibold uppercase italic text-foreground leading-none">{t('procurement.top_vendors')}</h3>
             </div>
             <div className="p-8 pt-2 space-y-6">
-              {stats.top_vendors.map((vendor, i) => (
+              {stats.topVendors.map((vendor, i) => (
                 <div key={i} className="flex flex-col gap-2 border-s-2 border-surface-container-low ps-6 hover:border-operational-cyan transition-all duration-140 ease-industrial group/item">
                   <div className="flex items-center justify-between">
                     <span className="text-label-xs font-semibold text-foreground group-hover/item:text-operational-cyan transition-colors uppercase">{vendor.name}</span>
@@ -195,11 +195,11 @@ export function ProcurementDashboard() {
             </div>
             <div className="h-44 flex flex-col items-center justify-center gap-6 bg-surface-container-low/30 group-hover:bg-surface-container-low/50 transition-all duration-140 ease-industrial">
               <div className="flex items-end gap-2 h-16">
-                {stats.efficiency_metrics.conversion_chart.map((h, i) => (
+                {stats.efficiencyMetrics.conversionChart.map((h, i) => (
                   <div key={i} className="w-3 bg-operational-cyan/10 group-hover:bg-operational-cyan/40 transition-all duration-200 cursor-pointer rounded-full" style={{ height: `${h}%` }} />
                 ))}
               </div>
-              <span className="text-label-xxs font-semibold text-muted-foreground/20 uppercase">{t('procurement.avg_fulfillment_cycle', { days: stats.efficiency_metrics.fulfillment_cycle_days })}</span>
+              <span className="text-label-xxs font-semibold text-muted-foreground/20 uppercase">{t('procurement.avg_fulfillment_cycle', { days: stats.efficiencyMetrics.fulfillmentCycleDays })}</span>
             </div>
           </div>
         </section>

@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DocumentLineItemTable } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
+import { DocumentLineItemTable, type LineItem } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { DocumentExportMenu } from "@/components/shared/DocumentExportMenu";
 import { StickyGlassHeader } from "@/components/shared/StickyGlassHeader";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
@@ -38,32 +38,39 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
   
   const [manifestSearch, setManifestSearch] = React.useState('')
   const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
-  const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
+  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
+  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
 
   const filteredItems = React.useMemo(() => {
     if (!manifestSearch) return session.items
     const q = manifestSearch.toLowerCase()
     return session.items.filter(item =>
-      item.item_name.toLowerCase().includes(q) || item.barcode?.includes(q)
+      item.itemName.toLowerCase().includes(q) || item.barcode?.includes(q)
     )
   }, [session.items, manifestSearch])
 
-  const tableLines = React.useMemo(() => {
+  interface StocktakeLineItem extends LineItem {
+    snapshotQty: number | null;
+    countedQty: number | null;
+    variance: number | null;
+    uom: string;
+  }
+
+  const tableLines = React.useMemo<StocktakeLineItem[]>(() => {
     return filteredItems.map((item) => ({
       id: item.id,
       item: {
-        id: item.item_id,
+        id: item.itemId,
         code: item.barcode || '',
-        name_en: item.item_name,
-        name_ar: item.item_name,
-        primary_uom: { code: item.uom }
+        nameEn: item.itemName,
+        nameAr: item.itemName,
+        primaryUom: { code: item.uom }
       },
-      qty: item.counted_qty ?? 0,
-      uom_id: '',
+      qty: item.countedQty ?? 0,
+      uomId: '',
       lot: null,
-      snapshotQty: item.snapshot_qty,
-      countedQty: item.counted_qty,
+      snapshotQty: item.snapshotQty,
+      countedQty: item.countedQty,
       variance: item.variance,
       uom: item.uom,
     }));
@@ -76,10 +83,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold uppercase">{tp('stocktake_report_title')}</h1>
-            <p className="text-sm text-gray-600 mt-1">{session.session_name}</p>
+            <p className="text-sm text-gray-600 mt-1">{session.sessionName}</p>
           </div>
           <div className="text-right text-sm text-gray-600">
-            <p>{session.snapshot_at ? format(new Date(session.snapshot_at), 'PPP') : ''}</p>
+            <p>{session.snapshotAt ? format(new Date(session.snapshotAt), 'PPP') : ''}</p>
           </div>
         </div>
       </div>
@@ -90,10 +97,10 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             <Breadcrumb
               items={[
                 { label: t('title'), href: `/stocktake` },
-                { label: session.session_name },
+                { label: session.sessionName },
               ]}
             />
-            <span>{session.session_name}</span>
+            <span>{session.sessionName}</span>
           </div>
         }
         statusBadge={
@@ -114,9 +121,9 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
             { label: common('warehouse'), value: warehouseName, icon: Warehouse, color: 'text-primary' },
-            { label: t('owner'), value: session.posted_by || common('system'), icon: User, color: 'text-emerald-500' },
+            { label: t('owner'), value: session.postedBy || common('system'), icon: User, color: 'text-emerald-500' },
             { label: t('items_count'), value: `${session.items.length} ${t('skus')}`, icon: ClipboardList, color: 'text-rose-500' },
-            { label: t('last_updated'), value: <ClientOnlyTime date={session.updated_at ?? session.snapshot_at} mode="time" />, icon: Clock, color: 'text-amber-500' },
+            { label: t('last_updated'), value: <ClientOnlyTime date={session.updatedAt ?? session.snapshotAt} mode="time" />, icon: Clock, color: 'text-amber-500' },
           ].map((item, idx) => (
             <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 group transition-all rounded-xl relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
@@ -162,7 +169,7 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
               <p className="text-label-sm text-muted-foreground/40">{common('no_results') || 'No matching items'}</p>
             </div>
           ) : (
-            <DocumentLineItemTable
+            <DocumentLineItemTable<StocktakeLineItem>
               lines={tableLines}
               locale={locale}
               isReadOnly={true}
@@ -236,13 +243,13 @@ export function StocktakeViewer({ session, locale, actions }: StocktakeViewerPro
             <h3 className="text-label-xs font-semibold uppercase text-primary/30">{common('audit_trail') || 'Audit Trail'}</h3>
           </div>
           {(() => {
-              const timeline = (session.audit_log ?? []).map(log => ({
+              const timeline = (session.auditLog ?? []).map(log => ({
                 status: log.status.toLowerCase() as Status,
-                at: log.created_at,
-                by: log.user_name || common('system_user'),
+                at: log.createdAt,
+                by: log.userName || common('system_user'),
               }));
               if (timeline.length === 0) {
-                timeline.push({ status: 'draft' as Status, at: session.created_at ?? session.snapshot_at, by: session.started_by || common('system_user') });
+                timeline.push({ status: 'draft' as Status, at: session.createdAt ?? session.snapshotAt, by: session.startedBy || common('system_user') });
               }
               return <StatusTimeline entries={timeline} />;
             })()}

@@ -92,7 +92,7 @@ export function AdjustmentForm({
   const { data: warehousesData } = useWarehouses();
   const warehouses = warehousesData?.data || [];
 
-  const [warehouseId, setWarehouseId] = useState(document?.warehouse_id || (warehouses.length > 0 ? warehouses[0].id : ''));
+  const [warehouseId, setWarehouseId] = useState(document?.warehouseId || (warehouses.length > 0 ? warehouses[0].id : ''));
   const { data: lockState } = useWarehouseLock(warehouseId);
   const [reason, setReason] = useState<string>(document?.reason || 'DAMAGE');
   const [notes, setNotes] = useState(document?.notes || '');
@@ -100,17 +100,17 @@ export function AdjustmentForm({
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   const hasNegativeStock = useMemo(
-    () => lines.some(line => line.direction === 'DECREASE' && line.qty_adjusted > (line.qty_before ?? 0)),
+    () => lines.some(line => line.direction === 'DECREASE' && line.qtyAdjusted > (line.qtyBefore ?? 0)),
     [lines]
   );
 
   const hasInvalidCosts = useMemo(
-    () => lines.some(line => line.direction === 'INCREASE' && (line.unit_cost === null || line.unit_cost === undefined || line.unit_cost <= 0)),
+    () => lines.some(line => line.direction === 'INCREASE' && (line.unitCost === null || line.unitCost === undefined || line.unitCost <= 0)),
     [lines]
   );
 
   const warehouseItems = useMemo(() => 
-    warehouses.map(w => ({ id: w.id, name_en: w.name_en, name_ar: w.name_ar })),
+    warehouses.map(w => ({ id: w.id, name_en: w.name || '', name_ar: w.name || '' })),
   [warehouses]);
 
   const fallbackReasons = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'];
@@ -119,8 +119,8 @@ export function AdjustmentForm({
     if (reasons && reasons.length > 0) {
       return reasons.map(r => ({
         id: r.code,
-        name_en: r.name_en,
-        name_ar: r.name_ar,
+        name_en: r.nameEn,
+        name_ar: r.nameAr,
       }));
     }
     return fallbackReasons.map(opt => ({
@@ -148,7 +148,7 @@ export function AdjustmentForm({
   const [prevAdjustmentId, setPrevAdjustmentId] = useState<string | null>(null);
   if (document && document.id !== prevAdjustmentId) {
     setPrevAdjustmentId(document.id);
-    setWarehouseId(document.warehouse_id);
+    setWarehouseId(document.warehouseId);
     setReason(document.reason);
     setNotes(document.notes ?? '');
     setLines(document.lines);
@@ -162,7 +162,7 @@ export function AdjustmentForm({
       const refreshStock = async () => {
         const BalanceSchema = z.object({
           data: z.array(z.object({
-            qty_on_hand: z.number()
+            qtyOnHand: z.number()
           }))
         });
         
@@ -174,15 +174,15 @@ export function AdjustmentForm({
                 BalanceSchema,
                 { signal: abortController.signal }
               );
-              const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
-              return { ...line, qty_before: currentQty };
+              const currentQty = balanceRes.data?.[0]?.qtyOnHand ?? 0;
+              return { ...line, qtyBefore: currentQty };
             } catch (err) {
               if (err instanceof Error && err.name === 'AbortError') throw err;
               return line;
             }
           }));
           
-          const hasChanged = updatedLines.some((l, i) => l.qty_before !== lines[i].qty_before);
+          const hasChanged = updatedLines.some((l, i) => l.qtyBefore !== lines[i].qtyBefore);
           if (hasChanged && !abortController.signal.aborted) {
             setLines(updatedLines);
           }
@@ -213,17 +213,17 @@ export function AdjustmentForm({
     try {
       const payload = {
         version: document?.version || 0,
-        warehouse_id: warehouseId,
+        warehouseId,
         reason,
         notes,
         lines: lines.map(l => ({
           id: l.id.startsWith('new-') ? undefined : l.id,
-          item_id: l.item.id,
-          qty: l.qty_adjusted,
-          uom_id: l.uom_id,
+          itemId: l.item.id,
+          qty: l.qtyAdjusted,
+          uomId: l.uomId,
           direction: l.direction,
-          unit_cost: l.direction === 'INCREASE' ? l.unit_cost : null,
-          lot_allocations: l.lot_allocations?.length ? l.lot_allocations : undefined,
+          unitCost: l.direction === 'INCREASE' ? l.unitCost : null,
+          lotAllocations: l.lotAllocations?.length ? l.lotAllocations : undefined,
         }))
       };
 
@@ -318,8 +318,8 @@ export function AdjustmentForm({
 
       const ItemSchema = z.object({
         data: z.array(z.object({
-          id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string(),
-          primary_uom: z.object({ id: z.string(), code: z.string() })
+          id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
+          primaryUom: z.object({ id: z.string(), code: z.string() })
         }))
       });
       const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema, { signal: abortController.signal });
@@ -329,7 +329,7 @@ export function AdjustmentForm({
         
         const BalanceSchema = z.object({
           data: z.array(z.object({
-            qty_on_hand: z.number()
+            qtyOnHand: z.number()
           }))
         });
         const balanceRes = await apiClient.get(
@@ -337,27 +337,28 @@ export function AdjustmentForm({
           BalanceSchema,
           { signal: abortController.signal }
         );
-        const currentQty = balanceRes.data?.[0]?.qty_on_hand ?? 0;
+        const currentQty = balanceRes.data?.[0]?.qtyOnHand ?? 0;
 
         setLines(prev => {
           const existing = prev.find(l => l.item.id === item.id);
           if (existing) {
-            return prev.map(l => l.item.id === item.id ? { ...l, qty_adjusted: l.qty_adjusted + 1, qty_before: currentQty } : l);
+            return prev.map(l => l.item.id === item.id ? { ...l, qtyAdjusted: l.qtyAdjusted + 1, qtyBefore: currentQty } : l);
           }
           return [...prev, {
             id: `new-${Date.now()}`,
             item: {
-              ...item,
-              name_ar: item.name_ar,
-              name_en: item.name_en,
-              primary_uom: item.primary_uom
+              id: item.id,
+              code: item.code,
+              nameAr: item.nameAr,
+              nameEn: item.nameEn,
+              primaryUom: item.primaryUom
             },
             direction: 'INCREASE',
-            qty_before: currentQty,
-            qty_adjusted: 1,
-            unit_cost: null,
-            uom_id: item.primary_uom.id,
-            reason_notes: ''
+            qtyBefore: currentQty,
+            qtyAdjusted: 1,
+            unitCost: null,
+            uomId: item.primaryUom.id,
+            reasonNotes: ''
           }];
         });
 
@@ -401,21 +402,21 @@ export function AdjustmentForm({
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold uppercase">{tp('adjustment_voucher_title')}</h1>
-            <p className="text-sm text-gray-600 mt-1">{document?.document_number || ''}</p>
+            <p className="text-sm text-gray-600 mt-1">{document?.documentNumber || ''}</p>
           </div>
           <div className="text-right text-sm text-gray-600">
-            <p>{document?.created_at ? new Date(document.created_at).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
+            <p>{document?.createdAt ? new Date(document.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
           </div>
         </div>
       </div>
       {/* Sticky Glass Header */}
       <StickyGlassHeader
-        title={isNew ? t('create_new') : (document?.document_number || '...')}
+        title={isNew ? t('create_new') : (document?.documentNumber || '...')}
         statusBadge={!isNew ? (
           <>
             <StatusBadge status={adjustmentStatus as BadgeStatus} />
             <ClientOnlyTime 
-              date={document?.created_at} 
+              date={document?.createdAt} 
               mode="date" 
               locale={locale as 'ar' | 'en'}
               className="text-label-xxs font-semibold uppercase text-muted-foreground/40 shrink-0"
@@ -539,7 +540,7 @@ export function AdjustmentForm({
               </div>
               <div className="bg-surface-container-low/30 rounded-[2rem] border border-white/5 mx-4 mb-4 overflow-hidden">
                 <DocumentLineItemTable
-                  lines={lines.map(l => ({ ...l, qty: l.qty_adjusted, lot_allocations: undefined }))}
+                  lines={lines.map(l => ({ ...l, qty: l.qtyAdjusted, lotAllocations: undefined }))}
                   locale={locale as 'ar' | 'en'}
                   isReadOnly={!canEdit || !!lockState?.isLocked}
                   onRemoveLine={(id) => removeLine(id)}
@@ -558,7 +559,7 @@ export function AdjustmentForm({
                         readOnly={!canEdit || !!lockState?.isLocked}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
-                          updateLine(line.id, { qty_adjusted: val || 0 });
+                          updateLine(line.id, { qtyAdjusted: val || 0 });
                         }}
                         className="w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
                       />
@@ -575,17 +576,17 @@ export function AdjustmentForm({
                               type="number"
                               min="0.0001"
                               step="0.01"
-                              value={line.unit_cost ?? ''}
+                              value={line.unitCost ?? ''}
                               readOnly={!canEdit || !isIncrease}
                               disabled={!isIncrease}
                               placeholder={isIncrease ? (locale === 'ar' ? 'مطلوب' : 'Required') : '-'}
                               onChange={(e) => {
                                 const val = parseFloat(e.target.value);
-                                updateLine(line.id, { unit_cost: isNaN(val) ? null : val });
+                                updateLine(line.id, { unitCost: isNaN(val) ? null : val });
                               }}
                               className={cn(
                                 "w-24 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 font-mono text-body-md font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-30",
-                                isIncrease && (line.unit_cost === null || line.unit_cost === undefined || line.unit_cost <= 0) && "border-red-500/50 focus:ring-red-500/30"
+                                isIncrease && (line.unitCost === null || line.unitCost === undefined || line.unitCost <= 0) && "border-red-500/50 focus:ring-red-500/30"
                               )}
                             />
                           </div>
@@ -631,14 +632,14 @@ export function AdjustmentForm({
                       header: t('qty_before') || 'Qty Before',
                       cell: (line: AdjustmentLine) => (
                         <div className="flex flex-col items-center gap-0.5 tabular-nums">
-                          <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qty_before, locale as 'ar' | 'en')}</span>
+                          <span className="text-body-md font-bold text-muted-foreground/40">{formatQuantity(line.qtyBefore, locale as 'ar' | 'en')}</span>
                         </div>
                       )
                     },
                     {
                       header: t('qty_after') || 'Qty After',
                       cell: (line: AdjustmentLine) => {
-                        const after = line.direction === 'INCREASE' ? line.qty_before + line.qty_adjusted : line.qty_before - line.qty_adjusted;
+                        const after = line.direction === 'INCREASE' ? line.qtyBefore + line.qtyAdjusted : line.qtyBefore - line.qtyAdjusted;
                         return (
                           <div className="flex flex-col items-center gap-0.5 tabular-nums">
                             <span className={cn(
@@ -697,21 +698,21 @@ export function AdjustmentForm({
                     <span className="text-label-sm text-muted-foreground">{tc('status')}</span>
                     <StatusBadge status={adjustmentStatus as BadgeStatus} />
                   </div>
-                  {document?.posted_at && (
+                  {document?.postedAt && (
                     <div className="flex justify-between items-center py-3">
                       <span className="text-label-sm text-muted-foreground">{t('posted_at')}</span>
                       <ClientOnlyTime 
-                        date={document.posted_at} 
+                        date={document.postedAt} 
                         mode="datetime" 
                         locale={locale as 'ar' | 'en'}
                         className="text-label-xs font-bold"
                       />
                     </div>
                   )}
-                  {document?.approved_by && (
+                  {document?.approvedBy && (
                     <div className="flex justify-between items-center py-3">
                       <span className="text-label-sm text-muted-foreground">{t('approved_by')}</span>
-                      <span className="text-label-xs font-semibold uppercase text-foreground/70">{document.approved_by}</span>
+                      <span className="text-label-xs font-semibold uppercase text-foreground/70">{document.approvedBy}</span>
                     </div>
                   )}
                 </div>

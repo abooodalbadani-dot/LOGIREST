@@ -58,15 +58,15 @@ const t = useTranslations('operations.adjustment');
   const { data: warehousesData } = useWarehouses();
   const warehouseMap = useMemo(() => {
     const list = warehousesData?.data ?? [];
-    return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
+    return new Map(list.map((w) => [w.id, w.name || '']));
   }, [warehousesData]);
 
   const warehouseItems = useMemo(() => {
     const list = warehousesData?.data ?? [];
-    return list.map((w: { id: string; name_en: string; name_ar: string; code?: string }) => ({
+    return list.map((w) => ({
       id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
+      name_en: w.name || '',
+      name_ar: w.name || '',
       code: w.code,
     }));
   }, [warehousesData]);
@@ -263,11 +263,11 @@ const t = useTranslations('operations.adjustment');
       ),
     },
     {
-      accessorKey: 'document_number',
+      accessorKey: 'documentNumber',
       header: t('doc_number'),
       cell: ({ row }) => (
         <span dir="ltr" className="font-mono text-status-active text-body-md font-semibold">
-          {row.original.document_number}
+          {row.original.documentNumber}
         </span>
       ),
     },
@@ -286,22 +286,22 @@ const t = useTranslations('operations.adjustment');
       },
     },
     {
-      accessorKey: 'warehouse_id',
+      accessorKey: 'warehouseId',
       header: tCommon('warehouse'),
       cell: ({ row }) => {
-        const name = warehouseMap.get(row.original.warehouse_id);
-        const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.warehouse_id;
+        const name = warehouseMap.get(row.original.warehouseId);
+        const display = name || row.original.warehouseId;
         return <span className="opacity-80 font-medium">{display}</span>;
       },
     },
     {
-      accessorKey: 'approved_by',
+      accessorKey: 'approvedBy',
       header: t('approved_by'),
       cell: ({ row }) =>
-        row.original.approved_by ? (
+        row.original.approvedBy ? (
           <span className="inline-flex items-center gap-1.5 text-label-xs font-bold text-status-success">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            {row.original.approved_by}
+            {row.original.approvedBy}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-label-xs font-bold text-muted-foreground/30 italic">
@@ -311,13 +311,13 @@ const t = useTranslations('operations.adjustment');
         ),
     },
     {
-      accessorKey: 'created_at',
+      accessorKey: 'createdAt',
       header: tCommon('created_at'),
       meta: { sortBy: 'created_at' },
       cell: ({ row }) =>
-        row.original.created_at ? (
+        row.original.createdAt ? (
           <span dir="ltr" className="text-label-xs text-muted-foreground/40 font-mono font-medium">
-            <ClientOnlyTime date={row.original.created_at} mode="date" />
+            <ClientOnlyTime date={row.original.createdAt} mode="date" />
           </span>
         ) : <span className="opacity-20 text-label-xs">—</span>,
     },
@@ -344,7 +344,7 @@ const t = useTranslations('operations.adjustment');
 
   const totalAdjustments = summaryData?.total ?? data?.meta?.total ?? 0;
   const pendingApprovalsCount = summaryData?.pending ?? 0;
-  const majorAdjustmentsCount = summaryData?.critical_losses ?? 0;
+  const majorAdjustmentsCount = summaryData?.criticalLosses ?? 0;
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -447,7 +447,7 @@ const t = useTranslations('operations.adjustment');
           page: page,
           pageSize: 10,
           total: data.meta.total,
-          totalPages: data.meta.total_pages,
+          totalPages: data.meta.totalPages,
           onPageChange: setPage
         } : undefined}
         filters={

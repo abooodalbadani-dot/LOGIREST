@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback } from 'react';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, AuthUser } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { apiClient } from '@/lib/api/client';
 import { AuthUserSchema } from '@/types/auth';
@@ -48,10 +48,10 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const avatarUrl = user?.avatar_url || null;
+  const avatarUrl = user?.avatarUrl || null;
   const displayName = user?.name || '';
   const themePreferences: 'light' | 'dark' = theme === 'dark' ? 'dark' : 'light';
-  const notificationPreferences = user?.notification_preferences ?? {
+  const notificationPreferences = user?.notificationPreferences ?? {
     lowStock: true,
     expiry: true,
     pendingApproval: true,
@@ -66,10 +66,10 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     try {
       const formData = new FormData();
       formData.append('avatar', file);
-      const result = await apiClient.post('/auth/profile/avatar', z.any(), formData);
-      const url = (result as { avatar_url: string })?.avatar_url || null;
+      const result = await apiClient.post('/auth/profile/avatar', z.object({ avatarUrl: z.string() }), formData);
+      const url = result.avatarUrl || null;
       if (url) {
-        updateUser({ avatar_url: url });
+        updateUser({ avatarUrl: url });
       }
       return url;
     } catch (err: unknown) {
@@ -104,27 +104,35 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
         setTheme(fields.themePreferences);
       }
 
-      const updatedFields: Record<string, unknown> = {};
-      if (fields.displayName !== undefined) updatedFields.name = fields.displayName;
-      if (fields.avatarUrl !== undefined) updatedFields.avatar_url = fields.avatarUrl;
-      if (fields.phone !== undefined) updatedFields.phone = fields.phone;
-      if (fields.email !== undefined) updatedFields.email = fields.email;
-      if (fields.locale !== undefined) updatedFields.locale = fields.locale;
+      const apiPayload: Record<string, unknown> = {};
+      if (fields.displayName !== undefined) apiPayload.name = fields.displayName;
+      if (fields.avatarUrl !== undefined) apiPayload.avatar_url = fields.avatarUrl;
+      if (fields.phone !== undefined) apiPayload.phone = fields.phone;
+      if (fields.email !== undefined) apiPayload.email = fields.email;
+      if (fields.locale !== undefined) apiPayload.locale = fields.locale;
       if (fields.notificationPreferences !== undefined) {
-        updatedFields.notification_preferences = {
+        apiPayload.notification_preferences = {
+          ...notificationPreferences,
+          ...fields.notificationPreferences,
+        };
+      }
+
+      const localUpdatedFields: Partial<AuthUser> = {};
+      if (fields.displayName !== undefined) localUpdatedFields.name = fields.displayName;
+      if (fields.avatarUrl !== undefined) localUpdatedFields.avatarUrl = fields.avatarUrl;
+      if (fields.phone !== undefined) localUpdatedFields.phone = fields.phone;
+      if (fields.email !== undefined) localUpdatedFields.email = fields.email;
+      if (fields.locale !== undefined) localUpdatedFields.locale = fields.locale;
+      if (fields.notificationPreferences !== undefined) {
+        localUpdatedFields.notificationPreferences = {
           ...notificationPreferences,
           ...fields.notificationPreferences,
         };
       }
 
       if (user) {
-        const fullPayload = {
-          ...user,
-          ...updatedFields,
-        };
-
-        await apiClient.put('/auth/profile', AuthUserSchema, fullPayload);
-        updateUser(updatedFields);
+        await apiClient.put('/auth/profile', AuthUserSchema, apiPayload);
+        updateUser(localUpdatedFields);
       }
     } catch (err: unknown) {
       console.error('[UserProfileProvider] Failed to update profile:', err);

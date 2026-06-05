@@ -64,7 +64,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   const postMutation = usePostGRN();
 
   const { baseCurrency, isLoading: loadingSettings } = useSettings();
-  const supplierCurrency = grn?.currency_id;
+  const supplierCurrency = grn?.currencyId;
 
   // Live FX conversion logic for display
   const { data: fxRates } = useFXRates(supplierCurrency, baseCurrency);
@@ -76,7 +76,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   }, [fxRates, form]);
 
  const totalSupplier = useMemo(() => {
- return grn?.lines.reduce((acc, line) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0) || 0;
+ return grn?.lines.reduce((acc, line) => acc + (line.receivedQty * (line.unitCostForeign || 0)), 0) || 0;
  }, [grn]);
 
  const totalBase = useMemo(() => {
@@ -84,7 +84,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  }, [totalSupplier, fxRate]);
 
  // Expected rate from PO or master data (for comparison)
- const expectedRate = grn?.po_fx_rate || fxRates?.[0]?.rate || 1;
+ const expectedRate = grn?.poFxRate || fxRates?.[0]?.rate || 1;
  const rateVariance = ((fxRate - expectedRate) / expectedRate) * 100;
 
  // Enforce role and workflow status (PART 1)
@@ -150,7 +150,7 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
  return (
  <div className="flex flex-col gap-10 pb-20">
  <PageHeader
- title={`#${grn.document_number}`}
+ title={`#${grn.documentNumber}`}
  description={t('fx_capture_title')}
  showStatus
  status={grn.status}

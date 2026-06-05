@@ -63,8 +63,8 @@ export function PurchaseOrderLineItems({
   const comboboxItems = React.useMemo(() => {
     return itemsData?.data?.map((i: Item) => ({
       id: i.id,
-      name_en: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
-      name_ar: `${i.code} - ${locale === 'ar' ? i.name_ar : i.name_en}`,
+      name_en: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
+      name_ar: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
     })) ?? [];
   }, [itemsData?.data, locale]);
 
@@ -201,10 +201,10 @@ function LineItemRow({
                     if (matchedItem) {
                       update(index, {
                         item_id: matchedItem.id,
-                        item_name: locale === 'ar' ? matchedItem.name_ar : matchedItem.name_en,
+                        item_name: locale === 'ar' ? matchedItem.nameAr : matchedItem.nameEn,
                         item_code: matchedItem.code,
-                        uom_id: matchedItem.primary_uom?.id || 'PCS',
-                        unit_price: matchedItem.last_purchase_price || 0,
+                        uom_id: matchedItem.primaryUom?.id || 'PCS',
+                        unit_price: matchedItem.lastPurchasePrice || 0,
                         quantity: rowValues.quantity || 1,
                         notes: rowValues.notes || ''
                       });

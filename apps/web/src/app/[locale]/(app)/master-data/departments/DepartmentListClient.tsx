@@ -32,7 +32,7 @@ export function DepartmentListClient({ locale }: { locale: string }) {
   const stats = useMemo(() => {
     return {
       total: departments.length,
-      active: departments.filter(d => d.is_active).length,
+      active: departments.filter(d => d.isActive).length,
     };
   }, [departments]);
 
@@ -51,17 +51,16 @@ export function DepartmentListClient({ locale }: { locale: string }) {
       header: tc('name'),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs text-muted-foreground/60" dir="rtl">{row.original.name_ar}</span>
+          <span className="font-bold text-label-sm">{row.original.name}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'is_active',
+      accessorKey: 'isActive',
       header: t('fields.is_active'),
       cell: ({ row }) => (
         <StatusBadge 
-          status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
+          status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
         />
       ),
     },

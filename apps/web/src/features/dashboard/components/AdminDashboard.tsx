@@ -66,7 +66,7 @@ export function AdminDashboard() {
         <h2 id="kpi-grid-title" className="sr-only">{t('aria.kpi_grid')}</h2>
         <KPICard
           title={t('kpi.total_stock')}
-          value={formatCurrency(stats.total_value, baseCurrency, locale as 'ar' | 'en')}
+          value={formatCurrency(stats.totalValue, baseCurrency, locale as 'ar' | 'en')}
           icon={Package}
           accent="cyan"
           trend={{ value: '12%', isPositive: true }}
@@ -74,21 +74,21 @@ export function AdminDashboard() {
         />
         <KPICard
           title={t('kpi.pending_prs')}
-          value={formatNumber(stats.pending_prs, locale as 'ar' | 'en')}
+          value={formatNumber(stats.pendingPrs, locale as 'ar' | 'en')}
           icon={FileText}
           accent="amber"
           description={t('kpi.immediate_review')}
         />
         <KPICard
           title={t('kpi.active_stocktakes')}
-          value={formatNumber(stats.active_stocktakes, locale as 'ar' | 'en')}
+          value={formatNumber(stats.activeStocktakes, locale as 'ar' | 'en')}
           icon={ClipboardCheck}
           accent="cyan"
           description={t('kpi.warehouse_locked')}
         />
         <KPICard
           title={t('kpi.low_stock')}
-          value={formatNumber(stats.low_stock_items, locale as 'ar' | 'en')}
+          value={formatNumber(stats.lowStockItems, locale as 'ar' | 'en')}
           icon={AlertTriangle}
           accent="red"
           description={t('kpi.reorder_suggested')}
@@ -109,7 +109,7 @@ export function AdminDashboard() {
                   {t('system_health.optimal')}
                 </Badge>
               </div>
-              <CardTitle className="text-headline-lg font-semibold uppercase italic">{stats.system_health}% {t('system_health.health_suffix')}</CardTitle>
+              <CardTitle className="text-headline-lg font-semibold uppercase italic">{stats.systemHealth}% {t('system_health.health_suffix')}</CardTitle>
               <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('system_health.node_description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-4">
@@ -128,7 +128,7 @@ export function AdminDashboard() {
                     <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5 hover:text-operational-cyan cursor-pointer transition-colors">
                       <Users className="w-3 h-3" /> {t('system_health.online')}
                     </span>
-                    <span className="text-label-sm font-bold text-foreground">{stats.active_users} {t('system_health.sessions')}</span>
+                    <span className="text-label-sm font-bold text-foreground">{stats.activeUsers} {t('system_health.sessions')}</span>
                   </Link>
                 </div>
               </div>
@@ -152,7 +152,7 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-transparent">
-                {stats.system_audit_logs.map((log) => (
+                {stats.systemAuditLogs.map((log) => (
                   <div key={log.id} className="flex items-center justify-between p-4 hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group cursor-pointer">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-label-xs font-bold text-foreground group-hover:text-operational-cyan transition-colors uppercase">{log.action}</span>
@@ -170,8 +170,8 @@ export function AdminDashboard() {
         <section className="lg:col-span-2 space-y-8" aria-labelledby="operational-monitoring-title">
           <h2 id="operational-monitoring-title" className="sr-only">{t('aria.operational_monitoring')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <PendingDocumentsWidget locale={locale} data={stats.pending_approvals} />
-            <NearExpiryWidget locale={locale} data={stats.expiring_lots} />
+            <PendingDocumentsWidget locale={locale} data={stats.pendingApprovals} />
+            <NearExpiryWidget locale={locale} data={stats.expiringLots} />
           </div>
 
           <Card className="bg-surface-container-lowest border-none rounded-2xl relative overflow-hidden">

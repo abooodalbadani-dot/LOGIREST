@@ -12,7 +12,19 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDate, formatQuantity } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 
-function getDocumentHref(row: any): string {
+interface WacHistoryRow {
+  id: string;
+  date: string | null;
+  document_type: string;
+  document_number: string;
+  document_id: string;
+  item: string;
+  quantity: number;
+  unit_cost: number;
+  new_wac: number;
+}
+
+function getDocumentHref(row: WacHistoryRow): string {
   const type = (row.document_type || '').toLowerCase();
   if (type.includes('goods receipt') || type.includes('grn')) {
     return `/goods-receipts/${row.document_id}`;
@@ -45,8 +57,8 @@ export default function WacHistoryReportClient() {
       id: item.id,
       code: item.code,
       barcode: item.barcode,
-      name_en: item.name_en,
-      name_ar: item.name_ar,
+      name_en: item.nameEn,
+      name_ar: item.nameAr,
     }));
   }, [itemsData]);
 
@@ -67,7 +79,7 @@ export default function WacHistoryReportClient() {
     }));
   }, [wacHistoryData]);
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<WacHistoryRow>[] = [
     {
       accessorKey: 'date',
       header: t('wac_history_table.date'),

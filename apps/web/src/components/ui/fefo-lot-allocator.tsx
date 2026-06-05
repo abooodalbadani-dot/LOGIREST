@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
 
 interface AvailableLot extends IssueLot {
   availableQty: number;
-  is_expired?: boolean;
+  isExpired?: boolean;
 }
 
 interface FEFOLotAllocatorProps {
@@ -40,9 +40,9 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
   const isComplete = Math.abs(remaining) < 0.001;
   const isOver = remaining < -0.001;
 
-  const handleQtyChange = (lot_number: string, value: string) => {
+  const handleQtyChange = (lotNumber: string, value: string) => {
     const num = Math.max(0, parseFloat(value) || 0);
-    setAllocations((prev) => ({ ...prev, [lot_number]: num }));
+    setAllocations((prev) => ({ ...prev, [lotNumber]: num }));
   };
 
   const handleAutoAllocate = () => {
@@ -50,10 +50,10 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
     const auto: Record<string, number> = {};
     // FEFO: iterate sorted by expiry ASC (earliest first)
     for (const lot of availableLots) {
-      if (lot.is_expired) continue; // Skip expired lots in auto-allocation
+      if (lot.isExpired) continue; // Skip expired lots in auto-allocation
       if (left <= 0) break;
       const take = Math.min(lot.availableQty, left);
-      auto[lot.lot_number] = take;
+      auto[lot.lotNumber] = take;
       left -= take;
     }
     setAllocations(auto);
@@ -61,12 +61,12 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
 
   const handleConfirm = () => {
     const result: IssueLot[] = availableLots
-      .filter((l) => (allocations[l.lot_number] ?? 0) > 0)
+      .filter((l) => (allocations[l.lotNumber] ?? 0) > 0)
       .map((l) => ({
-        lot_number: l.lot_number,
-        expiry_date: l.expiry_date,
-        allocated_qty: allocations[l.lot_number] ?? 0,
-        is_expired: l.is_expired,
+        lotNumber: l.lotNumber,
+        expiryDate: l.expiryDate,
+        allocatedQty: allocations[l.lotNumber] ?? 0,
+        isExpired: l.isExpired,
       }));
     onAllocate(result);
     onClose();
@@ -153,20 +153,20 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
             ) : (
               <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pe-2 custom-scrollbar">
                 {availableLots.map((lot) => {
-                  const lotExpiryDate = new Date(lot.expiry_date);
-                  const isExpired = lot.is_expired || lotExpiryDate < now;
-                  const isNearExpiry = !isExpired && lotExpiryDate < nearExpiryThreshold;
+                  const lotExpiryDate = new Date(lot.expiryDate);
+                  const isExpiredFlag = lot.isExpired || lotExpiryDate < now;
+                  const isNearExpiry = !isExpiredFlag && lotExpiryDate < nearExpiryThreshold;
                   
                   return (
                     <div
-                      key={lot.lot_number}
-                      className={`p-5 rounded-2xl border transition-all duration-300 group ${ isExpired ? 'bg-status-error/5 border-status-error/20 opacity-60' : isNearExpiry ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10' : 'bg-surface-container-low hover:border-operational-cyan/30 hover:bg-muted/50' }`}
+                      key={lot.lotNumber}
+                      className={`p-5 rounded-2xl border transition-all duration-300 group ${ isExpiredFlag ? 'bg-status-error/5 border-status-error/20 opacity-60' : isNearExpiry ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10' : 'bg-surface-container-low hover:border-operational-cyan/30 hover:bg-muted/50' }`}
                     >
                       <div className="flex items-center gap-6">
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-3">
-                            <span className="text-body-md font-semibold text-foreground">{lot.lot_number}</span>
-                            {isExpired ? (
+                            <span className="text-body-md font-semibold text-foreground">{lot.lotNumber}</span>
+                            {isExpiredFlag ? (
                               <Badge variant="destructive" className="h-5 px-2 rounded-md text-label-xxs font-semibold uppercase bg-status-error/10 text-status-error border-none">
                                 <ShieldAlert className="w-2.5 h-2.5 me-1" />
                                 {t("expired_violation")}
@@ -184,9 +184,9 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                           <div className="flex items-center gap-4 text-label-xs font-bold text-muted-foreground/40 uppercase" dir="ltr">
                             <span className="flex items-center gap-1.5">
                               <Calendar className="w-3 h-3" />
-                              {t("expiry_label")} <span className={isExpired ? "text-status-error" : "text-foreground/60"}>{lot.expiry_date}</span>
+                              {t("expiry_label")} <span className={isExpiredFlag ? "text-status-error" : "text-foreground/60"}>{lot.expiryDate}</span>
                             </span>
-                            <span className="w-1 h-1 rounded-full bg-muted/20" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted/20" />
                             <span>{t("in_stock")} <span className="text-foreground/60">{lot.availableQty}</span></span>
                           </div>
                         </div>
@@ -201,8 +201,8 @@ export function FEFOLotAllocator({ isOpen, onClose, itemId, requestedQty, onAllo
                               step="0.01"
                               className="w-32 h-10 text-center font-mono font-semibold text-label-xs"
                               dir="ltr"
-                              disabled={isExpired}
-                              value={allocations[lot.lot_number] ?? ''} onChange={(e) => handleQtyChange(lot.lot_number, e.target.value)}
+                              disabled={isExpiredFlag}
+                              value={allocations[lot.lotNumber] ?? ''} onChange={(e) => handleQtyChange(lot.lotNumber, e.target.value)}
                             />
                             <div className="absolute end-3 top-1/2 -translate-y-1/2 text-label-xxs font-semibold text-muted-foreground/20 uppercase pointer-events-none">{t("units")}</div>
                           </div>

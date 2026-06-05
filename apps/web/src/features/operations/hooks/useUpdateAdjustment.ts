@@ -6,24 +6,24 @@ import { z } from 'zod';
 import { AdjustmentDetailSchema } from './useAdjustment';
 
 const LotAllocationSchema = z.object({
-  lot_id: z.string(),
+  lotId: z.string(),
   qty: z.number()
 });
 
 const UpdateAdjustmentPayloadSchema = z.object({
   version: z.number(),
-  warehouse_id: z.string().optional(),
+  warehouseId: z.string().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
   lines: z.array(z.object({
     id: z.string().optional(),
-    item_id: z.string(),
+    itemId: z.string(),
     qty: z.number().positive(),
-    uom_id: z.string(),
+    uomId: z.string(),
     direction: z.enum(['INCREASE', 'DECREASE']),
-    unit_cost: z.number().nullable().optional(),
-    is_custom: z.boolean().optional(),
-    lot_allocations: z.array(LotAllocationSchema).optional()
+    unitCost: z.number().nullable().optional(),
+    isCustom: z.boolean().optional(),
+    lotAllocations: z.array(LotAllocationSchema).optional()
   })).optional()
 });
 

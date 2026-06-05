@@ -6,6 +6,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useNotificationTemplate } from '@/features/notifications/hooks/useNotificationTemplates';
 import { interpolateTemplate, resolveTemplate } from '@/features/notifications/services/template-resolver';
+import { toSnakeCase } from '@/lib/api/adapters';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { Input } from '@/components/ui/input';
@@ -31,12 +32,12 @@ import {
 const TemplateUpdateSchema = z.object({
   id: z.string(),
   code: z.string(),
-  subject_ar: z.string(),
-  subject_en: z.string(),
-  body_ar: z.string(),
-  body_en: z.string(),
-  trigger_event: z.string(),
-  is_active: z.boolean(),
+  subjectAr: z.string(),
+  subjectEn: z.string(),
+  bodyAr: z.string(),
+  bodyEn: z.string(),
+  triggerEvent: z.string(),
+  isActive: z.boolean(),
 });
 
 interface Props {
@@ -54,10 +55,10 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   
   const { register, handleSubmit, reset, control, setValue, formState: { isDirty } } = useForm({
     defaultValues: {
-      subject_ar: '',
-      subject_en: '',
-      body_ar: '',
-      body_en: '',
+      subjectAr: '',
+      subjectEn: '',
+      bodyAr: '',
+      bodyEn: '',
     },
   });
 
@@ -69,11 +70,11 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
 
   const [subjectAr, subjectEn, bodyAr, bodyEn] = useWatch({
     control,
-    name: ['subject_ar', 'subject_en', 'body_ar', 'body_en']
+    name: ['subjectAr', 'subjectEn', 'bodyAr', 'bodyEn']
   });
 
   // State to track active field focus and cursor position range
-  const [activeField, setActiveField] = useState<'subject_ar' | 'subject_en' | 'body_ar' | 'body_en' | null>(null);
+  const [activeField, setActiveField] = useState<'subjectAr' | 'subjectEn' | 'bodyAr' | 'bodyEn' | null>(null);
   const [cursorPos, setCursorPos] = useState({ start: 0, end: 0 });
 
   // Refs for each input to access raw DOM element selection APIs
@@ -83,13 +84,13 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   const bodyEnRefField = useRef<HTMLTextAreaElement | null>(null);
 
   const refs = {
-    subject_ar: subjectArRefField,
-    body_ar: bodyArRefField,
-    subject_en: subjectEnRefField,
-    body_en: bodyEnRefField,
+    subjectAr: subjectArRefField,
+    bodyAr: bodyArRefField,
+    subjectEn: subjectEnRefField,
+    bodyEn: bodyEnRefField,
   };
 
-  const updateSelection = (fieldName: 'subject_ar' | 'subject_en' | 'body_ar' | 'body_en') => {
+  const updateSelection = (fieldName: 'subjectAr' | 'subjectEn' | 'bodyAr' | 'bodyEn') => {
     const el = refs[fieldName].current;
     if (el) {
       setCursorPos({
@@ -100,7 +101,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
     }
   };
 
-  const createTrackingProps = (fieldName: 'subject_ar' | 'subject_en' | 'body_ar' | 'body_en') => ({
+  const createTrackingProps = (fieldName: 'subjectAr' | 'subjectEn' | 'bodyAr' | 'bodyEn') => ({
     onFocus: () => setActiveField(fieldName),
     onKeyUp: () => updateSelection(fieldName),
     onMouseUp: () => updateSelection(fieldName),
@@ -131,10 +132,10 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
     }, 10);
   };
 
-  const { ref: subjectArRef, ...registerSubjectAr } = register('subject_ar');
-  const { ref: bodyArRef, ...registerBodyAr } = register('body_ar');
-  const { ref: subjectEnRef, ...registerSubjectEn } = register('subject_en');
-  const { ref: bodyEnRef, ...registerBodyEn } = register('body_en');
+  const { ref: subjectArRef, ...registerSubjectAr } = register('subjectAr');
+  const { ref: bodyArRef, ...registerBodyAr } = register('bodyAr');
+  const { ref: subjectEnRef, ...registerSubjectEn } = register('subjectEn');
+  const { ref: bodyEnRef, ...registerBodyEn } = register('bodyEn');
 
   const setSubjectArRef = useCallback((el: HTMLTextAreaElement | null) => {
     subjectArRef(el);
@@ -159,16 +160,16 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   useEffect(() => {
     if (data) {
       reset({
-        subject_ar: data.subject_ar,
-        subject_en: data.subject_en,
-        body_ar: data.body_ar,
-        body_en: data.body_en,
+        subjectAr: data.subjectAr,
+        subjectEn: data.subjectEn,
+        bodyAr: data.bodyAr,
+        bodyEn: data.bodyEn,
       });
     }
   }, [data, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
+    mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, toSnakeCase(body as Record<string, unknown>)),
     onSuccess: () => {
       playSound('success');
       qc.invalidateQueries({ queryKey: ['notifications/templates'] });
@@ -218,7 +219,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
     }
   };
 
-  const allowedParams = (data?.allowed_parameters || []) as Array<{ name: string; label_ar: string; label_en: string; sample_value: string; entity?: string; field_path?: string }>;
+  const allowedParams = (data?.allowedParameters || []) as Array<{ name: string; labelAr: string; labelEn: string; sampleValue: string; entity?: string; fieldPath?: string }>;
   const rawSubject = previewLang === 'ar' ? subjectAr : subjectEn;
   const rawBody = previewLang === 'ar' ? bodyAr : bodyEn;
 
@@ -317,7 +318,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
                             {"}"}
                           </span>
                           <span className="text-[9px] text-muted-foreground/45 border-l border-white/10 pl-2 font-sans group-hover/btn:text-black/60 group-hover/btn:border-black/20 transition-colors max-w-[120px] truncate">
-                            {locale === 'ar' ? param.label_ar : param.label_en}
+                            {locale === 'ar' ? param.labelAr : param.labelEn}
                           </span>
                         </button>
                       );
@@ -365,7 +366,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
                     dir="rtl"
                     {...registerSubjectAr}
                     ref={setSubjectArRef}
-                    {...createTrackingProps('subject_ar')}
+                    {...createTrackingProps('subjectAr')}
                     className="min-h-[60px] py-3.5 bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
@@ -381,7 +382,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
                     dir="rtl"
                     {...registerBodyAr}
                     ref={setBodyArRef}
-                    {...createTrackingProps('body_ar')}
+                    {...createTrackingProps('bodyAr')}
                     className="min-h-[220px] py-4 bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
@@ -415,7 +416,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
                     dir="ltr"
                     {...registerSubjectEn}
                     ref={setSubjectEnRef}
-                    {...createTrackingProps('subject_en')}
+                    {...createTrackingProps('subjectEn')}
                     className="h-14 font-semibold bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>
@@ -431,7 +432,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
                     dir="ltr"
                     {...registerBodyEn}
                     ref={setBodyEnRef}
-                    {...createTrackingProps('body_en')}
+                    {...createTrackingProps('bodyEn')}
                     className="min-h-[220px] py-4 bg-white dark:bg-surface-container-lowest border border-slate-300 dark:border-white/10 rounded-2xl px-5 focus-visible:ring-2 focus-visible:ring-operational-cyan focus-visible:border-operational-cyan transition-all text-sm leading-relaxed shadow-inner focus:shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.1)]"
                   />
                 </div>

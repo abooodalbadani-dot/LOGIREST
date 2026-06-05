@@ -20,13 +20,13 @@ export function TransferDetailClient({ id }: { id: string }) {
 
   if (isLoading) return <PageSkeleton variant="detail" />;
 
-  const transferStatus = transfer?.transfer_status ?? TRANSFER_STATUS.DRAFT;
+  const transferStatus = transfer?.transferStatus ?? TRANSFER_STATUS.DRAFT;
   const isDocLocked = isDocumentLocked("TRANSFER", transferStatus as DocumentStatus);
 
   if (isDocLocked && transfer) {
-    const targetScope = activeWarehouseId === transfer.to_warehouse_id
-      ? transfer.to_warehouse_id
-      : transfer.from_warehouse_id;
+    const targetScope = activeWarehouseId === transfer.toWarehouseId
+      ? transfer.toWarehouseId
+      : transfer.fromWarehouseId;
     return (
       <ScopeGuard warehouseId={targetScope}>
         <TransferViewer transfer={transfer} />
@@ -37,7 +37,7 @@ export function TransferDetailClient({ id }: { id: string }) {
   if (!transfer) return null;
 
   return (
-    <ScopeGuard warehouseId={transfer.from_warehouse_id}>
+    <ScopeGuard warehouseId={transfer.fromWarehouseId}>
       <TransferForm 
         transfer={transfer} 
         id={id} 

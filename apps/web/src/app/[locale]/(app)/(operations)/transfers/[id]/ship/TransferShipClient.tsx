@@ -58,9 +58,9 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
   const isDirty = Object.keys(scannedLines).length > 0;
   const { router } = useUnsavedChangesGuard(isDirty);
 
-  const { data: fromLockState, isError: isLockError, refetch: refetchLock } = useWarehouseLock(transfer?.from_warehouse_id ?? '');
+  const { data: fromLockState, isError: isLockError, refetch: refetchLock } = useWarehouseLock(transfer?.fromWarehouseId ?? '');
   const isWarehouseLocked = !!fromLockState?.isLocked;
-  const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
+  const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transferStatus as DocumentStatus);
   const isMutationBlocked = isWarehouseLocked || isWorkflowLocked || isLockError;
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       }));
       setScanStatus('success');
       audioAlerts.playScanSuccess();
-      setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.name_ar : line.item?.name_en}`);
+      setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.nameAr : line.item?.nameEn}`);
       setTimeout(() => setScanStatus('idle'), 2000);
     } else {
       setScanStatus('error');
@@ -153,7 +153,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
     return <ErrorState onRetry={() => window.location.reload()} />;
   }
 
-  if (!canPerformActionV2('TRANSFER', transfer?.transfer_status as DocumentStatus, 'SHIP', user?.role)) {
+  if (!canPerformActionV2('TRANSFER', transfer?.transferStatus as DocumentStatus, 'SHIP', user?.role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <AlertCircle className="w-12 h-12 text-status-error" />
@@ -173,7 +173,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
         <Breadcrumb 
           items={[
             { label: t('title'), href: `/transfers` },
-            { label: transfer.document_number, href: `/transfers/${id}` },
+            { label: transfer.documentNumber, href: `/transfers/${id}` },
             { label: t('ship') }
           ]} 
         />
@@ -209,7 +209,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
         className="space-y-8"
       >
         <DocumentLockBanner 
-          status={transfer.transfer_status as DocumentStatus} 
+          status={transfer.transferStatus as DocumentStatus} 
           isLocked={isWorkflowLocked} 
         />
 
@@ -252,12 +252,12 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
                 <div className="space-y-6">
                   <div className="space-y-1">
                     <span className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('from_warehouse')}</span>
-                    <p className="text-title-lg font-semibold">{transfer.from_warehouse_name}</p>
+                    <p className="text-title-lg font-semibold">{transfer.fromWarehouseName}</p>
                   </div>
 
                   <div className="space-y-1">
                     <span className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('to_warehouse')}</span>
-                    <p className="text-title-lg font-semibold">{transfer.to_warehouse_name}</p>
+                    <p className="text-title-lg font-semibold">{transfer.toWarehouseName}</p>
                   </div>
 
                   <div className="pt-6 border-t border-white/5">

@@ -31,19 +31,20 @@ import { useInventoryBalance } from '@/features/inventory/hooks/useInventoryBala
 import { apiClient } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
+import { mapWarehouseToCombobox, mapLineToPayload } from '@/utils/mappers';
 
 interface NewTransferLine {
   id: string;
-  item_id: string;
+  itemId: string;
   item: {
     id: string;
     code: string;
-    name_ar: string;
-    name_en: string;
-    primary_uom: { code: string };
+    nameAr: string;
+    nameEn: string;
+    primaryUom: { code: string };
   };
   qty: number;
-  uom_id: string;
+  uomId: string;
 }
 
 export function TransferNewClient() {
@@ -77,26 +78,23 @@ export function TransferNewClient() {
   }, [isBalanceError, locale]);
 
   // Filter out inactive items
-  const allItems = useMemo(() => (items || []).filter((item: Item) => item.is_active !== false), [items]);
+  const allItems = useMemo(() => (items || []).filter((item: Item) => item.isActive !== false), [items]);
 
   // Derive assigned warehouses from user scopes
   const assignedWarehouseIds = useMemo(() => {
     if (!user?.scopes) return null;
-    const ids = user.scopes.map(s => s.warehouse_id).filter(Boolean) as string[];
+    const ids = user.scopes.map(s => s.warehouseId).filter(Boolean) as string[];
     return ids.length > 0 ? ids : null;
   }, [user?.scopes]);
+
+  const hasNoScope = assignedWarehouseIds === null;
 
   // Memoize warehouses for SmartCombobox, filtered by user's assigned warehouses
   const warehouseItems = useMemo(() => {
     const filtered = !assignedWarehouseIds
       ? (warehouses || [])
       : (warehouses || []).filter(w => assignedWarehouseIds.includes(w.id));
-    return filtered.map(w => ({
-      id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
-      code: w.code,
-    }));
+    return filtered.map(w => mapWarehouseToCombobox(w));
   }, [warehouses, assignedWarehouseIds]);
 
   // Unsaved changes guard
@@ -122,15 +120,15 @@ export function TransferNewClient() {
       return;
     }
 
-    if (item.is_active === false) {
+    if (item.isActive === false) {
       audioAlerts.playScanInvalid();
       toast.error(locale === 'ar' ? `الصنف "${item.code}" غير نشط` : `Item "${item.code}" is inactive`);
       return;
     }
 
     // Check available balance in cache
-    const balance = inventoryBalances?.data?.find(b => b.item_id === item.id);
-    const availableQty = balance ? balance.qty_available : 0;
+    const balance = inventoryBalances?.data?.find(b => b.itemId === item.id);
+    const availableQty = balance ? balance.qtyAvailable : 0;
 
     if (availableQty <= 0) {
       audioAlerts.playScanInvalid();
@@ -141,7 +139,7 @@ export function TransferNewClient() {
       return;
     }
 
-    const existing = lines.find(l => l.item_id === item.id);
+    const existing = lines.find(l => l.itemId === item.id);
     const newQty = existing ? existing.qty + 1 : 1;
     if (newQty > availableQty) {
       audioAlerts.playScanInvalid();
@@ -153,22 +151,22 @@ export function TransferNewClient() {
     }
 
     setLines(prev => {
-      const existingLine = prev.find(l => l.item_id === item.id);
+      const existingLine = prev.find(l => l.itemId === item.id);
       if (existingLine) {
-        return prev.map(l => l.item_id === item.id ? { ...l, qty: l.qty + 1 } : l);
+        return prev.map(l => l.itemId === item.id ? { ...l, qty: l.qty + 1 } : l);
       }
       return [...prev, {
         id: `temp-${item.id}-${Date.now()}`,
-        item_id: item.id,
+        itemId: item.id,
         item: {
           id: item.id,
           code: item.code,
-          name_ar: item.name_ar,
-          name_en: item.name_en,
-          primary_uom: { code: item.primary_uom.code }
+          nameAr: item.nameAr,
+          nameEn: item.nameEn,
+          primaryUom: { code: item.primaryUom.code }
          },
         qty: 1,
-        uom_id: item.primary_uom.id
+        uomId: item.primaryUom.id
       }];
     });
 
@@ -186,7 +184,7 @@ export function TransferNewClient() {
     try {
       const qs = new URLSearchParams();
       qs.append('warehouse_id', fromWarehouseId);
-      lines.forEach(l => qs.append('item_id', l.item_id));
+      lines.forEach(l => qs.append('item_id', l.itemId));
 
       const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
         data: z.array(z.object({
@@ -229,17 +227,12 @@ export function TransferNewClient() {
   const handleSave = () => {
     if (!fromWarehouseId || !toWarehouseId || lines.length === 0 || hasQuantityErrors) return;
 
-    
     createTransfer.mutate({
       payload: {
         from_warehouse_id: fromWarehouseId,
         to_warehouse_id: toWarehouseId,
         notes,
-        lines: lines.map(l => ({
-          item_id: l.item_id,
-          qty: l.qty,
-          uom_id: l.uom_id
-        }))
+        lines: lines.map(l => mapLineToPayload(l))
       },
       signal: abortController.signal,
       headers: {
@@ -254,8 +247,8 @@ export function TransferNewClient() {
   };
 
   const hasQuantityErrors = !!inventoryBalances?.data && lines.some(line => {
-    const balance = inventoryBalances.data.find(b => b.item_id === line.item_id);
-    const availableQty = balance ? balance.qty_available : 0;
+    const balance = inventoryBalances.data.find(b => b.itemId === line.itemId);
+    const availableQty = balance ? balance.qtyAvailable : 0;
     return line.qty > availableQty || line.qty <= 0;
   });
 
@@ -269,6 +262,16 @@ export function TransferNewClient() {
 
   if (isLoadingWarehouses || isLoadingItems) return <PageSkeleton />;
   if (errorWarehouses || errorItems) return <ErrorState onRetry={() => window.location.reload()} />;
+
+  if (hasNoScope) {
+    return (
+      <ErrorState 
+        title={locale === 'ar' ? 'غير مصرح' : 'Access Denied'}
+        message={locale === 'ar' ? 'لم يتم تعيين أي مستودع لحسابك. يرجى التواصل مع المسؤول.' : 'No authorized warehouse scopes assigned to your account. Please contact your administrator.'}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
 
   return (
     <form 
@@ -327,6 +330,7 @@ export function TransferNewClient() {
                     setFromWarehouseId(value);
                     setLines([]); // Clear lines to prevent validation conflicts
                   }}
+                  getPrimaryLabel={(item) => item.name}
                   placeholder={t('select_warehouse') || 'Select warehouse...'}
                   triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                 />
@@ -347,6 +351,7 @@ export function TransferNewClient() {
                     }
                     setToWarehouseId(value);
                   }}
+                  getPrimaryLabel={(item) => item.name}
                   placeholder={t('select_warehouse') || 'Select warehouse...'}
                   triggerClassName="w-full bg-surface-container-highest/40 border-none h-11 px-6 text-label-sm font-bold rounded-2xl shadow-inner shadow-black/5 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                 />
@@ -423,6 +428,7 @@ export function TransferNewClient() {
                 <SmartCombobox
                   items={allItems}
                   onSelect={(item) => handleAddItem(item.code)}
+                  getPrimaryLabel={(item) => locale === 'ar' ? item.nameAr : item.nameEn}
                   placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
                   disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
                 />
@@ -444,14 +450,14 @@ export function TransferNewClient() {
                   uom: tCommon('table_headers.uom'),
                 }}
                 renderQty={(line) => {
-                  const balance = inventoryBalances?.data?.find(b => b.item_id === line.item_id);
-                  const availableQty = balance ? balance.qty_available : 0;
+                  const balance = inventoryBalances?.data?.find(b => b.itemId === line.itemId);
+                  const availableQty = balance ? balance.qtyAvailable : 0;
                   const isExceeded = balance ? line.qty > availableQty : false;
                   return (
                     <div className="flex flex-col items-center gap-1">
                       <div className="flex justify-center">
                         <input
-                          type="number"
+                           type="number"
                           min="0.001"
                           step="0.001"
                           value={line.qty}
@@ -490,3 +496,4 @@ export function TransferNewClient() {
     </form>
   );
 }
+

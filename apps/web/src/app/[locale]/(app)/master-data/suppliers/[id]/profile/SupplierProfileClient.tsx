@@ -106,11 +106,11 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
             { label: tc('home'), href: `/dashboard` },
             { label: tc('master_data'), href: `/master-data` },
             { label: t('title'), href: `/master-data/suppliers` },
-            { label: locale === 'ar' ? supplier.name_ar : supplier.name_en }
+            { label: locale === 'ar' ? supplier.nameAr : supplier.nameEn }
           ]} 
         />
         <PageHeader 
-          title={locale === 'ar' ? supplier.name_ar : supplier.name_en} 
+          title={locale === 'ar' ? supplier.nameAr : supplier.nameEn} 
           description={t('profile.title')}
           actions={
             <Button 
@@ -195,11 +195,11 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
             <div className="pt-4 border-t border-white/5 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('tax_number')}</span>
-                <span className="text-label-xs font-mono font-bold text-muted-foreground/80">{supplier.tax_number || '---'}</span>
+                <span className="text-label-xs font-mono font-bold text-muted-foreground/80">{supplier.taxNumber || '---'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('payment_terms')}</span>
-                <span className="text-label-xs font-bold text-amber-500/80 uppercase">{supplier.payment_terms || 'Net 30'}</span>
+                <span className="text-label-xs font-bold text-amber-500/80 uppercase">{supplier.paymentTerms || 'Net 30'}</span>
               </div>
             </div>
           </div>

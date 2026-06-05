@@ -55,9 +55,10 @@ export default function LotBalanceClient() {
       playSound('success');
       toast.success('Lot successfully quarantined. Stock has been locked and excluded from future stocktake allocation.');
       queryClient.invalidateQueries({ queryKey: ['inventory/lots'] });
-    } catch (err: any) {
+    } catch (err: unknown) {
       playSound('error');
-      toast.error(err.message || 'Failed to quarantine lot.');
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to quarantine lot.');
     } finally {
       setActionLoadingMap(prev => ({ ...prev, [lotId]: false }));
     }
@@ -70,9 +71,10 @@ export default function LotBalanceClient() {
       playSound('success');
       toast.success('Lot successfully released from quarantine. Stock has been unlocked for operational use.');
       queryClient.invalidateQueries({ queryKey: ['inventory/lots'] });
-    } catch (err: any) {
+    } catch (err: unknown) {
       playSound('error');
-      toast.error(err.message || 'Failed to release lot.');
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to release lot.');
     } finally {
       setActionLoadingMap(prev => ({ ...prev, [lotId]: false }));
     }
@@ -85,10 +87,9 @@ export default function LotBalanceClient() {
     const term = searchQuery.toLowerCase();
     if (!term) return true;
     return (
-      lot.lot_number.toLowerCase().includes(term) ||
-      lot.item_code.toLowerCase().includes(term) ||
-      lot.item_name_en.toLowerCase().includes(term) ||
-      lot.item_name_ar.includes(term)
+      lot.lotNumber.toLowerCase().includes(term) ||
+      lot.itemCode.toLowerCase().includes(term) ||
+      lot.itemName.toLowerCase().includes(term)
     );
   });
 
@@ -202,35 +203,35 @@ export default function LotBalanceClient() {
                 </thead>
                 <tbody className="divide-y divide-surface-highest/5">
                   {filteredLots.map((lot) => {
-                    const status = lot.status || (lot.is_expired ? 'EXPIRED' : 'ACTIVE');
+                    const status = lot.status || (lot.isExpired ? 'EXPIRED' : 'ACTIVE');
                     return (
                       <tr key={lot.id} className="group hover:bg-surface-container-lowest/30 transition-colors">
                         <td className="py-4 px-4">
                           <div className="space-y-1">
                             <span className="text-xs font-mono font-bold text-foreground bg-surface-container-high/50 px-2 py-0.5 rounded border border-white/5">
-                              {lot.lot_number}
+                              {lot.lotNumber}
                             </span>
                           </div>
                         </td>
                         <td className="py-4 px-4">
                           <div className="space-y-0.5">
                             <span className="text-[10px] font-mono text-muted-foreground">
-                              {lot.item_code}
+                              {lot.itemCode}
                             </span>
                             <p className="text-xs font-bold text-foreground">
-                              {locale === 'ar' ? lot.item_name_ar : lot.item_name_en}
+                              {lot.itemName}
                             </p>
                           </div>
                         </td>
                         <td className="py-4 px-4 text-right">
                           <span className="text-xs font-bold font-mono text-foreground">
-                            {Number(lot.qty_available).toLocaleString()}
+                            {Number(lot.qtyAvailable).toLocaleString()}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-center">
                           <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5" />
-                            {lot.expiry_date ? new Date(lot.expiry_date).toLocaleDateString() : '—'}
+                            {lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString() : '—'}
                           </div>
                         </td>
                         <td className="py-4 px-4 text-center">
@@ -299,7 +300,7 @@ export default function LotBalanceClient() {
           )}
 
           {/* Pagination Controls */}
-          {lotData?.meta && lotData.meta.total_pages > 1 && (
+          {lotData?.meta && lotData.meta.totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-surface-highest/10 pt-6 px-2">
               <Button
                 variant="outline"
@@ -312,13 +313,13 @@ export default function LotBalanceClient() {
                 Prev
               </Button>
               <span className="text-xs text-muted-foreground font-medium">
-                Page <span className="font-bold text-foreground">{page}</span> of {lotData.meta.total_pages}
+                Page <span className="font-bold text-foreground">{page}</span> of {lotData.meta.totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page === lotData.meta.total_pages}
-                onClick={() => setPage(prev => Math.min(lotData.meta.total_pages, prev + 1))}
+                disabled={page === lotData.meta.totalPages}
+                onClick={() => setPage(prev => Math.min(lotData.meta.totalPages, prev + 1))}
                 className="h-10 px-4 border-outline-low rounded-xl text-xs font-bold gap-1"
               >
                 Next

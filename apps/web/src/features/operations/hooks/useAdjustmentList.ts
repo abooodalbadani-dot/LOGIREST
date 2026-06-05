@@ -10,14 +10,14 @@ export type AdjustmentReason = z.infer<typeof AdjustmentReasonSchema>;
 
 export const AdjustmentSummarySchema = z.object({
   id: z.string(),
-  document_number: z.string(),
+  documentNumber: z.string(),
   status: BadgeStatusSchema,
-  warehouse_id: z.string(),
+  warehouseId: z.string(),
   reason: AdjustmentReasonSchema.or(z.string()),
-  approved_by: z.string().nullable().optional(),
-  created_by: z.string(),
-  created_at: z.string(),
-  posted_at: z.string().nullable().optional(),
+  approvedBy: z.string().nullable().optional(),
+  createdBy: z.string(),
+  createdAt: z.string(),
+  postedAt: z.string().nullable().optional(),
 });
 
 export type AdjustmentSummary = z.infer<typeof AdjustmentSummarySchema>;

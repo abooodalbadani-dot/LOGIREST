@@ -28,32 +28,32 @@ export default function AvailableInventoryClient() {
  header: t('table.category'),
  },
  {
- accessorKey: 'qty_physical',
+ accessorKey: 'qtyPhysical',
  header: t('table.qty_physical'),
  meta: { numeric: true },
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono">
- {formatQuantity(row.original.qty_physical, locale)}
+ {formatQuantity(row.original.qtyPhysical, locale)}
  </span>
  ),
  },
  {
- accessorKey: 'qty_reserved',
+ accessorKey: 'qtyReserved',
  header: t('table.qty_reserved'),
  meta: { numeric: true },
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono">
- {formatQuantity(row.original.qty_reserved, locale)}
+ {formatQuantity(row.original.qtyReserved, locale)}
  </span>
  ),
  },
  {
- accessorKey: 'qty_available',
+ accessorKey: 'qtyAvailable',
  header: t('table.qty_available'),
  meta: { numeric: true },
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono">
- {formatQuantity(row.original.qty_available, locale)}
+ {formatQuantity(row.original.qtyAvailable, locale)}
  </span>
  ),
  },
@@ -63,9 +63,9 @@ export default function AvailableInventoryClient() {
  { header: t('table.sku'), key: 'sku', width: 15 },
  { header: t('table.name'), key: 'name', width: 30 },
  { header: t('table.category'), key: 'category', width: 20 },
- { header: t('table.qty_physical'), key: 'qty_physical', width: 15 },
- { header: t('table.qty_reserved'), key: 'qty_reserved', width: 15 },
- { header: t('table.qty_available'), key: 'qty_available', width: 15 },
+ { header: t('table.qty_physical'), key: 'qtyPhysical', width: 15 },
+ { header: t('table.qty_reserved'), key: 'qtyReserved', width: 15 },
+ { header: t('table.qty_available'), key: 'qtyAvailable', width: 15 },
  ];
 
  return (

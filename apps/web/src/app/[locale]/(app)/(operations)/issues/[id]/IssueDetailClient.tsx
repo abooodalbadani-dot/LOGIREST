@@ -36,7 +36,7 @@ export function IssueDetailClient({ id, locale }: { id: string; locale: 'ar' | '
   }
 
   return (
-    <ScopeGuard warehouseId={issue?.warehouse_id}>
+    <ScopeGuard warehouseId={issue?.warehouseId}>
       <IssueForm 
         key={issue?.version || id}
         issue={issue} 

@@ -337,11 +337,11 @@ export default function ProfilePage() {
                       <div className="w-2 h-2 rounded-full bg-operational-cyan group-hover:shadow-[0_0_8px_rgba(var(--operational-cyan-rgb),0.6)] transition-all" />
                       <div className="flex flex-col">
                         <span className="text-label-sm font-bold text-foreground">
-                          {scope.branch_id || tc('actions.all_branches') || 'All Branches'}
+                          {scope.branchId || tc('actions.all_branches') || 'All Branches'}
                         </span>
                         <span className="text-label-xs text-muted-foreground font-medium">
-                          {scope.warehouse_id ? `${tc('warehouses.warehouses') || 'Warehouse'}: ${scope.warehouse_id}` : t('global_access') || 'Global Access'}
-                          {scope.department_id && ` • Dept: ${scope.department_id}`}
+                          {scope.warehouseId ? `${tc('warehouses.warehouses') || 'Warehouse'}: ${scope.warehouseId}` : t('global_access') || 'Global Access'}
+                          {scope.departmentId && ` • Dept: ${scope.departmentId}`}
                         </span>
                       </div>
                     </div>

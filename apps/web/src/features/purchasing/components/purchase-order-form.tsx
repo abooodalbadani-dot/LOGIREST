@@ -95,20 +95,20 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      supplier_id: initialData?.supplier_id || "",
-      pr_id: initialData?.pr_id || "",
-      currency_code: initialData?.currency_code || "",
-      exchange_rate: initialData?.exchange_rate || 1,
-      expected_date: initialData?.expected_date || "",
-      target_warehouse_id: initialData?.target_warehouse_id || "",
+      supplier_id: initialData?.supplierId || "",
+      pr_id: initialData?.prId || "",
+      currency_code: initialData?.currencyCode || "",
+      exchange_rate: initialData?.exchangeRate || 1,
+      expected_date: initialData?.expectedDate || "",
+      target_warehouse_id: initialData?.targetWarehouseId || "",
       notes: initialData?.notes || "",
       lines: initialData?.lines.map(l => ({
         item_id: l.item?.id || "",
-        item_name: locale === 'ar' ? l.item?.name_ar : l.item?.name_en,
+        item_name: locale === 'ar' ? l.item?.nameAr : l.item?.nameEn,
         item_code: l.item?.code || "",
-        quantity: l.quantity,
-        unit_price: l.unit_price,
-        uom_id: l.uom_id,
+        quantity: l.quantity || l.qty || 1,
+        unit_price: l.unitPrice || l.unitCostForeign || 0,
+        uom_id: l.uomId,
         notes: l.notes || ""
       })) || [{ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
     },
@@ -168,31 +168,31 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         const qty = (currentLines[existingIndex].quantity || 0) + 1;
         update(existingIndex, { ...currentLines[existingIndex], quantity: qty });
         setScanStatus("success");
-        setStatusMessage(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        setStatusMessage(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       } else if (isFirstLineEmpty) {
         update(0, {
           item_id: item.id,
-          item_name: locale === 'ar' ? item.name_ar : item.name_en,
+          item_name: locale === 'ar' ? item.nameAr : item.nameEn,
           item_code: item.code,
           quantity: 1,
-          unit_price: item.last_purchase_price || 0,
-          uom_id: item.primary_uom?.id || 'PCS',
+          unit_price: item.lastPurchasePrice || 0,
+          uom_id: item.primaryUom?.id || 'PCS',
           notes: ''
         });
         setScanStatus("success");
-        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       } else {
         prepend({
           item_id: item.id,
-          item_name: locale === 'ar' ? item.name_ar : item.name_en,
+          item_name: locale === 'ar' ? item.nameAr : item.nameEn,
           item_code: item.code,
           quantity: 1,
-          unit_price: item.last_purchase_price || 0,
-          uom_id: item.primary_uom?.id || 'PCS',
+          unit_price: item.lastPurchasePrice || 0,
+          uom_id: item.primaryUom?.id || 'PCS',
           notes: ''
         });
         setScanStatus("success");
-        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       }
 
       setTimeout(() => {
@@ -259,11 +259,11 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     if (!selectedPR) return;
     const prLines = selectedPR.lines.map(l => ({
       item_id: l.item.id,
-      item_name: locale === 'ar' ? l.item.name_ar : l.item.name_en,
+      item_name: locale === 'ar' ? l.item.nameAr : l.item.nameEn,
       item_code: l.item.code,
-      quantity: l.req_qty,
+      quantity: l.reqQty,
       unit_price: 0,
-      uom_id: l.uom_id,
+      uom_id: l.uomId,
       notes: '',
     }));
     form.setValue('lines', prLines);
@@ -278,24 +278,24 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const supplierItems = React.useMemo(() => {
     return suppliers?.map(s => ({
       id: s.id,
-      name_en: `${s.name_en} (${s.code})`,
-      name_ar: `${s.name_ar} (${s.code})`,
+      name_en: `${s.nameEn} (${s.code})`,
+      name_ar: `${s.nameAr} (${s.code})`,
     })) ?? [];
   }, [suppliers]);
 
   const warehouseItems = React.useMemo(() => {
     return warehouses?.map(w => ({
       id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
+      name_en: w.name,
+      name_ar: w.name,
     })) ?? [];
   }, [warehouses]);
 
   const currencyItems = React.useMemo(() => {
     return currencies?.map(c => ({
       id: c.code,
-      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
     })) ?? [];
   }, [currencies, locale]);
   
@@ -328,9 +328,9 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               <div className="flex gap-2 items-center">
                 <DocumentExportMenu />
                 <span className="px-3 py-1 bg-operational-cyan/5 text-operational-cyan rounded-full text-label-xs font-semibold uppercase">{/* i18n-ignore */}PO_ENGINE_V2</span>
-                {initialData?.document_number && (
+                {initialData?.documentNumber && (
                   <span className="px-3 py-1 bg-surface-container-high text-muted-foreground rounded-full text-label-xs font-mono font-bold uppercase tracking-tight">
-                    {initialData.document_number}
+                    {initialData.documentNumber}
                   </span>
                 )}
               </div>
@@ -410,10 +410,10 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <span className="font-mono font-bold text-label-sm text-foreground">{pr.document_number}</span>
-                                <span className="text-label-xxs text-muted-foreground/60 ms-2">{pr.department_id}</span>
+                                <span className="font-mono font-bold text-label-sm text-foreground">{pr.documentNumber}</span>
+                                <span className="text-label-xxs text-muted-foreground/60 ms-2">{pr.departmentId}</span>
                               </div>
-                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{pr.created_at?.split('T')[0]}</span>
+                              <span className="text-label-xxs font-semibold uppercase text-muted-foreground/40">{pr.createdAt?.split('T')[0]}</span>
                             </div>
                           </button>
                         ))

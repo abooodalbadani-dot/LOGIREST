@@ -9,12 +9,12 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 export interface LineItem {
  id: string;
- item: { id: string; code: string; name_ar: string; name_en: string; primary_uom: { code: string } };
- lot?: { lot_number: string; expiry_date: string | null } | null;
+ item: { id: string; code: string; nameAr: string; nameEn: string; primaryUom: { code: string } };
+ lot?: { lotNumber: string; expiryDate: string | null } | null;
  qty: number;
- uom_id: string;
- unit_cost?: number | null;
- lot_allocations?: LotAllocation[];
+ uomId: string;
+ unitCost?: number | null;
+ lotAllocations?: LotAllocation[];
 }
 
 export interface ExtraColumn<T extends LineItem = LineItem> {
@@ -170,7 +170,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                     <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
                       <div className="flex flex-col gap-0.5">
                         <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
-                          {locale === 'ar' ? line.item.name_ar : line.item.name_en}
+                          {locale === 'ar' ? line.item.nameAr : line.item.nameEn}
                         </span>
                         <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
                           {line.item.code}
@@ -180,11 +180,11 @@ export function DocumentLineItemTable<T extends LineItem>({
                     {!hideLotColumns && (
                       <>
                         <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                          {line.lot ? <span dir="ltr">{line.lot.lot_number}</span> : <span className="opacity-20">—</span>}
+                          {line.lot ? <span dir="ltr">{line.lot.lotNumber}</span> : <span className="opacity-20">—</span>}
                         </td>
                         <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                          {line.lot?.expiry_date
-                            ? <span dir="ltr">{formatDate(line.lot.expiry_date, locale as 'ar' | 'en')}</span>
+                          {line.lot?.expiryDate
+                            ? <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
                             : <span className="opacity-20">—</span>}
                         </td>
                       </>
@@ -202,7 +202,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                       {renderUom ? (
                         renderUom(line)
                       ) : (
-                        <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
+                        <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom.code}</span>
                       )}
                     </td>
                     {extraColumns.map((col, i) => (
@@ -247,7 +247,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                 <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
                   <div className="flex flex-col gap-0.5">
                     <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
-                      {locale === 'ar' ? line.item.name_ar : line.item.name_en}
+                      {locale === 'ar' ? line.item.nameAr : line.item.nameEn}
                     </span>
                     <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
                       {line.item.code}
@@ -257,11 +257,11 @@ export function DocumentLineItemTable<T extends LineItem>({
                 {!hideLotColumns && (
                   <>
                     <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                      {line.lot ? <span dir="ltr">{line.lot.lot_number}</span> : <span className="opacity-20">—</span>}
+                      {line.lot ? <span dir="ltr">{line.lot.lotNumber}</span> : <span className="opacity-20">—</span>}
                     </td>
                     <td className={cn("font-mono text-label-xs text-muted-foreground/60", dense ? "px-3 py-1.5 text-[11px]" : "px-6")}>
-                      {line.lot?.expiry_date
-                        ? <span dir="ltr">{formatDate(line.lot.expiry_date, locale as 'ar' | 'en')}</span>
+                      {line.lot?.expiryDate
+                        ? <span dir="ltr">{formatDate(line.lot.expiryDate, locale as 'ar' | 'en')}</span>
                         : <span className="opacity-20">—</span>}
                     </td>
                   </>
@@ -279,7 +279,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   {renderUom ? (
                     renderUom(line)
                   ) : (
-                    <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primary_uom.code}</span>
+                    <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom.code}</span>
                   )}
                 </td>
                 {extraColumns.map((col, i) => (

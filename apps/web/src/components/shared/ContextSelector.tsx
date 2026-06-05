@@ -123,9 +123,9 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer hover:bg-surface-container-high"
  >
  <option value="" className="bg-surface-container-lowest">{t('branch_placeholder')}</option>
- {branches.map((b) => (
+ {branches.map((b: { id: string; name?: string; code?: string }) => (
  <option key={b.id} value={b.id} className="bg-surface-container-lowest">
- {isRtl ? b.name_ar : b.name_en}
+ {b.name || b.code}
  </option>
  ))}
  </select>
@@ -148,9 +148,9 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
  >
  <option value="" className="bg-surface-container-lowest">{t('warehouse_placeholder')}</option>
- {warehouses.map((w) => (
+ {warehouses.map((w: { id: string; name?: string; code?: string }) => (
  <option key={w.id} value={w.id} className="bg-surface-container-lowest">
- {isRtl ? w.name_ar : w.name_en}
+ {w.name || w.code}
  </option>
  ))}
  </select>
@@ -169,9 +169,9 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  className="w-full bg-surface-container-lowest border border-outline-low rounded-xl px-4 py-3 text-foreground outline-none focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan/50 transition-all appearance-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container-high"
  >
  <option value="" className="bg-surface-container-lowest">{t('department_placeholder')}</option>
- {departments.map((d) => (
+ {departments.map((d: { id: string; name?: string; code?: string }) => (
  <option key={d.id} value={d.id} className="bg-surface-container-lowest">
- {isRtl ? d.name_ar : d.name_en}
+ {d.name || d.code}
  </option>
  ))}
  </select>

@@ -26,6 +26,7 @@ import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ScopeGuard } from "@/components/shared/ScopeGuard";
 import { LockBanner } from "@/components/shared/LockBanner";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -68,8 +69,8 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
   if (sessionLoading || isLoadingWarehouses || lockLoading) return <PageSkeleton variant="detail" />;
   if (sessionError || errorWarehouses || errorLock || !session) return <ErrorState onRetry={() => window.location.reload()} />;
 
- const warehouse = warehouses?.find(w => w.id === session.warehouseId);
- const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
+  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
+  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
 
  const isAlreadyLocked = !lockLoading && lockState?.isLocked && lockState.sessionId !== id;
 
@@ -97,9 +98,10 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
     });
   };
 
- return (
- <PermissionGate resource="operations_stocktake" action="edit">
- <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
+  return (
+    <ScopeGuard warehouseId={session?.warehouseId}>
+      <PermissionGate resource="operations_stocktake" action="edit">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
  <PageHeader 
  title={t('start_session_title')}
  description={t('start_session_subtitle')}
@@ -244,6 +246,7 @@ export function StocktakeStartClient({ id, locale }: StocktakeStartClientProps) 
  description={t('start_confirm_desc')}
  confirmText={t('start_action_confirm')}
  />
- </PermissionGate>
- );
+      </PermissionGate>
+    </ScopeGuard>
+  );
 }

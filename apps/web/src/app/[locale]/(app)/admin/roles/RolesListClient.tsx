@@ -59,7 +59,7 @@ export function RolesListClient({ locale: _locale }: { locale: string }) {
                   <TableCell className="py-8 px-8 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/5 border border-cyan-500/10">
                       <Users className="w-3 h-3 text-cyan-500/50" />
-                      <span className="text-label-sm font-semibold text-cyan-500">{role.users_count}</span>
+                      <span className="text-label-sm font-semibold text-cyan-500">{role.usersCount}</span>
                     </div>
                   </TableCell>
                   <TableCell className="py-8 px-8 text-end">

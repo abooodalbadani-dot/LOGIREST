@@ -34,6 +34,7 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PostConfirmDialog } from "@/components/shared/PostConfirmDialog";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ScopeGuard } from "@/components/shared/ScopeGuard";
 import {
  Dialog,
  DialogContent,
@@ -75,11 +76,11 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   const itemsWithVariance = React.useMemo(() => !session ? [] : session.items.filter(item => (item.variance || 0) !== 0), [session?.items]);
   const totalPositiveVariance = React.useMemo(() => !session ? 0 : session.items.reduce((acc, item) => {
     const variance = item.variance || 0;
-    return variance > 0 ? acc + (variance * item.unit_cost) : acc;
+    return variance > 0 ? acc + (variance * item.unitCost) : acc;
   }, 0), [session?.items]);
   const totalNegativeVariance = React.useMemo(() => !session ? 0 : session.items.reduce((acc, item) => {
     const variance = item.variance || 0;
-    return variance < 0 ? acc + (Math.abs(variance) * item.unit_cost) : acc;
+    return variance < 0 ? acc + (Math.abs(variance) * item.unitCost) : acc;
   }, 0), [session?.items]);
   const netImpact = totalPositiveVariance - totalNegativeVariance;
   const absoluteNetImpact = Math.abs(netImpact);
@@ -98,21 +99,21 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   return session.items.map((item) => ({
     id: item.id,
     item: {
-      id: item.item_id,
+      id: item.itemId,
       code: item.barcode || '',
-      name_en: item.item_name,
-      name_ar: item.item_name,
-      primary_uom: { code: item.uom }
+      nameEn: item.itemName,
+      nameAr: item.itemName,
+      primaryUom: { code: item.uom }
     },
-    qty: item.counted_qty ?? 0,
-    uom_id: '',
+    qty: item.countedQty ?? 0,
+    uomId: '',
     lot: null,
-    snapshotQty: item.snapshot_qty,
-    countedQty: item.counted_qty,
+    snapshotQty: item.snapshotQty,
+    countedQty: item.countedQty,
     variance: item.variance,
     uom: item.uom,
-    unitCost: item.unit_cost,
-    varianceReason: item.variance_reason || '',
+    unitCost: item.unitCost,
+    varianceReason: item.varianceReason || '',
   }));
  }, [session?.items]);
 
@@ -124,8 +125,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   return null;
  }
 
-  const warehouse = warehouses?.find(w => w.id === session.warehouse_id);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouse_name || session.warehouse_id);
+  const warehouse = warehouses?.find(w => w.id === session.warehouseId);
+  const warehouseName = warehouse ? warehouse.name || warehouse.code : (session.warehouseName || session.warehouseId);
 
  const handleApprove = () => {
   approveStocktake.mutate(
@@ -166,9 +167,10 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
   );
  };
 
- return (
- <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
- <PermissionGate action="approve" resource="operations_stocktake">
+  return (
+    <ScopeGuard warehouseId={session?.warehouseId}>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <PermissionGate action="approve" resource="operations_stocktake">
  <PageHeader
  title={
  <div className="flex items-center gap-4">
@@ -176,16 +178,16 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
  <BarChart3 className="w-6 h-6 text-primary" />
  </div>
  <div className="flex flex-col">
- <span className="font-semibold text-headline-lg">
- {session.session_name}
- </span>
- <div className="flex items-center gap-2 mt-1 text-muted-foreground">
-  <StatusBadge status={session.status} configMap={STOCKTAKE_STATUS_UI} />
- <span className="text-label-xs font-semibold opacity-20 uppercase leading-none">|</span>
- <span className="text-label-xs uppercase font-semibold opacity-40">{warehouseName}</span>
- </div>
- </div>
- </div>
+  <span className="font-semibold text-headline-lg">
+  {session.sessionName}
+  </span>
+  <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+   <StatusBadge status={session.status} configMap={STOCKTAKE_STATUS_UI} />
+  <span className="text-label-xs font-semibold opacity-20 uppercase leading-none">|</span>
+  <span className="text-label-xs uppercase font-semibold opacity-40">{warehouseName}</span>
+  </div>
+  </div>
+  </div>
  }
  actions={
  <div className="flex items-center gap-3">
@@ -269,7 +271,7 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
          {t('variance_details_table')}
        </h3>
      </div>
-    <DocumentLineItemTable
+    <DocumentLineItemTable<StocktakeLineItem>
       lines={tableLines}
       locale={locale}
       isReadOnly={true}
@@ -377,7 +379,8 @@ const { data: warehousesData } = useWarehouses(); const warehouses = warehousesD
  </div>
  </DialogContent>
  </Dialog>
- </PermissionGate>
- </div>
- )
+        </PermissionGate>
+      </div>
+    </ScopeGuard>
+  )
 }

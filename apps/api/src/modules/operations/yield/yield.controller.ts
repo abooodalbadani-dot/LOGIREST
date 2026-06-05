@@ -23,7 +23,7 @@ export class YieldController {
 
   @Post()
   @Roles(Role.ADMIN, Role.INV_MGR)
-  async create(@Body() body: any) {
+  async create(@Body() body: Record<string, unknown>) {
     return this.yieldService.create(body);
   }
 }

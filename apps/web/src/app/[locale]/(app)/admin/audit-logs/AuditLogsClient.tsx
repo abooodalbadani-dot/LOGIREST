@@ -51,11 +51,11 @@ export function AuditLogsClient() {
  { header: t('created_at'), key: 'date', width: 20 },
  ],
  data.data.map((entry) => ({
- type: entry.entity_type,
- id: entry.entity_id,
+ type: entry.entityType,
+ id: entry.entityId,
  action: entry.action,
- user: entry.user_name,
- date: format(new Date(entry.created_at), 'yyyy-MM-dd HH:mm'),
+ user: entry.userName,
+ date: format(new Date(entry.createdAt), 'yyyy-MM-dd HH:mm'),
  })),
  tc('actions.audit_log_filename')
  );
@@ -63,20 +63,20 @@ export function AuditLogsClient() {
 
  const columns = useMemo((): ColumnDef<AuditLogRow, unknown>[] => [
  {
- accessorKey: 'entity_type',
+ accessorKey: 'entityType',
  header: t('entity_type'),
  cell: ({ row }) => (
  <span className="font-mono text-label-xs font-semibold px-2 py-0.5 rounded-sm bg-surface-container-highest/50 text-muted-foreground border border-white/5 uppercase">
- {row.original.entity_type}
+ {row.original.entityType}
  </span>
  ),
  },
  {
- accessorKey: 'entity_id',
+ accessorKey: 'entityId',
  header: t('entity_id'),
  cell: ({ row }) => (
  <span dir="ltr" className="font-mono text-label-xs text-cyan-500 font-bold">
- {row.original.entity_id}
+ {row.original.entityId}
  </span>
  ),
  },
@@ -90,16 +90,16 @@ export function AuditLogsClient() {
  ),
  },
  {
- accessorKey: 'user_name',
+ accessorKey: 'userName',
  header: t('user_name'),
- cell: ({ row }) => <span className="text-label-sm font-bold">{row.original.user_name}</span>,
+ cell: ({ row }) => <span className="text-label-sm font-bold">{row.original.userName}</span>,
  },
  {
- accessorKey: 'created_at',
+ accessorKey: 'createdAt',
  header: t('created_at'),
  cell: ({ row }) => (
  <ClientOnlyTime 
- date={row.original.created_at} 
+ date={row.original.createdAt} 
  mode="datetime" 
  showSeconds={true}
  locale={locale}
@@ -181,9 +181,9 @@ export function AuditLogsClient() {
  }
  pagination={data?.meta ? {
  page: data.meta.page,
- pageSize: data.meta.page_size,
+ pageSize: data.meta.pageSize,
  total: data.meta.total,
- totalPages: data.meta.total_pages,
+ totalPages: data.meta.totalPages,
  onPageChange: setPage
  } : undefined}
  />

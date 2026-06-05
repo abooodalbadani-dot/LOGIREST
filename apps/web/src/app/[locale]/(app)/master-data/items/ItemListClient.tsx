@@ -31,8 +31,8 @@ export function ItemListClient({ locale }: { locale: string }) {
     const items = data?.data ?? [];
     return {
       total: items.length,
-      active: items.filter(i => i.is_active).length,
-      trackingLots: items.filter(i => i.track_lots).length,
+      active: items.filter(i => i.isActive).length,
+      trackingLots: items.filter(i => i.trackLots).length,
     };
   }, [data]);
 
@@ -55,8 +55,8 @@ export function ItemListClient({ locale }: { locale: string }) {
       header: t('name'), 
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.name_ar}</span>
+          <span className="font-bold text-label-sm">{row.original.nameEn}</span>
+          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.nameAr}</span>
         </div>
       )
     },
@@ -65,14 +65,14 @@ export function ItemListClient({ locale }: { locale: string }) {
       header: ti('fields.base_unit'), 
       cell: ({ row }) => (
         <span className="text-label-xs font-bold uppercase text-muted-foreground/80 px-2 py-0.5 bg-surface-container rounded-lg">
-          {row.original.primary_uom.code}
+          {row.original.primaryUom.code}
         </span>
       )
     },
     {
-      accessorKey: 'track_lots', 
+      accessorKey: 'trackLots', 
       header: ti('fields.track_lots'),
-      cell: ({ row }) => row.original.track_lots
+      cell: ({ row }) => row.original.trackLots
         ? <div className="flex items-center gap-1.5 text-operational-cyan font-bold text-label-xxs uppercase bg-operational-cyan/10 px-2.5 py-1 rounded-lg border border-operational-cyan/5 w-fit">
             <div className="w-1.5 h-1.5 rounded-full bg-operational-cyan shadow-[0_0_8px_currentColor]" />
             {t('yes')}
@@ -83,10 +83,10 @@ export function ItemListClient({ locale }: { locale: string }) {
           </div>,
     },
     {
-      accessorKey: 'is_active', 
+      accessorKey: 'isActive', 
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
+        <StatusBadge status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       ),
     },
     {

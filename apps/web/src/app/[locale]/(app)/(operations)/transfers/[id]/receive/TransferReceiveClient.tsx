@@ -53,9 +53,9 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
-  const { data: toLockState, isError: isLockError, refetch: refetchLock } = useWarehouseLock(transfer?.to_warehouse_id ?? '');
+  const { data: toLockState, isError: isLockError, refetch: refetchLock } = useWarehouseLock(transfer?.toWarehouseId ?? '');
   const isWarehouseLocked = !!toLockState?.isLocked;
-  const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transfer_status as DocumentStatus);
+  const isWorkflowLocked = isDocumentLocked('TRANSFER', transfer?.transferStatus as DocumentStatus);
   const isMutationBlocked = isWarehouseLocked || isWorkflowLocked || isLockError;
 
   useEffect(() => {
@@ -74,14 +74,14 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       setPrevTransferId(transfer.id);
       setLines(transfer.lines.map(l => {
         const lotReceives: Record<string, number> = {};
-        if (l.lot_allocations && l.lot_allocations.length > 0) {
-          l.lot_allocations.forEach(la => {
-            lotReceives[la.lot_id] = la.allocated_qty;
+        if (l.lotAllocations && l.lotAllocations.length > 0) {
+          l.lotAllocations.forEach(la => {
+            lotReceives[la.lotId] = la.allocatedQty;
           });
         }
         return {
           ...l,
-          _receivedQty: l.shipped_qty ?? l.qty,
+          _receivedQty: l.shippedQty ?? l.qty,
           _lotReceives: Object.keys(lotReceives).length > 0 ? lotReceives : undefined,
         };
       }));
@@ -89,7 +89,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     }
   }, [transfer?.id]);
 
-  const hasVariance = lines.some(l => (l._receivedQty ?? 0) !== (l.shipped_qty ?? l.qty));
+  const hasVariance = lines.some(l => (l._receivedQty ?? 0) !== (l.shippedQty ?? l.qty));
   const isVarianceValid = !hasVariance || varianceReason.trim().length >= 15;
 
   const isDirty = useMemo(() => {
@@ -100,7 +100,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     const linesChanged = lines.some((l) => {
       const originalLine = transfer.lines.find(ol => ol.id === l.id);
       if (!originalLine) return false;
-      const initialQty = originalLine.shipped_qty ?? originalLine.qty;
+      const initialQty = originalLine.shippedQty ?? originalLine.qty;
       return l._receivedQty !== initialQty;
     });
     
@@ -132,7 +132,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     const lineIndex = lines.findIndex(l => l.item?.code === barcode);
     if (lineIndex !== -1) {
       const line = lines[lineIndex];
-      const shippedQty = line.shipped_qty ?? line.qty;
+      const shippedQty = line.shippedQty ?? line.qty;
       const currentReceived = line._receivedQty ?? 0;
 
       if (currentReceived >= shippedQty) {
@@ -150,7 +150,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       ));
       setScanStatus('success');
       audioAlerts.playScanSuccess();
-      setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.name_ar : line.item?.name_en}`);
+      setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.nameAr : line.item?.nameEn}`);
       setTimeout(() => setScanStatus('idle'), 2000);
     } else {
       setScanStatus('error');
@@ -163,7 +163,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
 
   const handleReceiveAll = () => {
     if (isMutationBlocked) return;
-    setLines(prev => prev.map(l => ({ ...l, _receivedQty: l.shipped_qty ?? l.qty })));
+    setLines(prev => prev.map(l => ({ ...l, _receivedQty: l.shippedQty ?? l.qty })));
     toast.success(t('receive_all_success') || 'All lines marked as received.');
   };
 
@@ -176,7 +176,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
     }
 
     const receiveLines = lines.map(l => {
-      const hasLots = l.lot_allocations && l.lot_allocations.length > 0;
+      const hasLots = l.lotAllocations && l.lotAllocations.length > 0;
       const lineQty = hasLots && l._lotReceives
         ? Object.values(l._lotReceives).reduce((sum, q) => sum + q, 0)
         : (l._receivedQty ?? l.qty);
@@ -213,7 +213,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
   if (isLoading) return <PageSkeleton />;
   if (error || !transfer) return <ErrorState onRetry={() => window.location.reload()} />;
 
-  if (!canPerformActionV2('TRANSFER', transfer?.transfer_status as DocumentStatus, 'RECEIVE', user?.role)) {
+  if (!canPerformActionV2('TRANSFER', transfer?.transferStatus as DocumentStatus, 'RECEIVE', user?.role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <AlertCircle className="w-12 h-12 text-status-error" />
@@ -237,7 +237,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
         <Breadcrumb 
           items={[
             { label: t('title'), href: `/transfers` },
-            { label: transfer.document_number, href: `/transfers/${id}` },
+            { label: transfer.documentNumber, href: `/transfers/${id}` },
             { label: t('receive') }
           ]} 
         />
@@ -260,7 +260,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
       <div className="space-y-4">
         <DocumentLockBanner 
           isLocked={isWorkflowLocked}
-          status={transfer.transfer_status as DocumentStatus}
+          status={transfer.transferStatus as DocumentStatus}
         />
         
         {toLockState?.isLocked && <LockBanner lockState={toLockState} />}
@@ -311,7 +311,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('destination')}</span>
-                  <p className="text-title-lg font-semibold">{transfer.to_warehouse_name}</p>
+                  <p className="text-title-lg font-semibold">{transfer.toWarehouseName}</p>
                 </div>
                 <div className="bg-emerald-500/10 p-3 rounded-2xl">
                   <PackageCheck className="w-6 h-6 text-emerald-500" />
@@ -412,7 +412,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
               isReadOnly={isMutationBlocked}
               dense={true}
               onRemoveLine={() => {}}
-              hideLotColumns={!lines.some(l => l.lot_allocations && l.lot_allocations.length > 0)}
+              hideLotColumns={!lines.some(l => l.lotAllocations && l.lotAllocations.length > 0)}
               headers={{
                 code: tCommon('table_headers.code'),
                 name: tCommon('table_headers.name'),
@@ -425,7 +425,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                   cell: (line: TransferLine & { _receivedQty?: number }) => (
                     <div className="flex justify-center">
                       <span dir="ltr" className="font-mono text-body-md font-semibold bg-surface-container-highest px-3 py-1 rounded-lg border border-white/5">
-                        {line.shipped_qty ?? line.qty}
+                        {line.shippedQty ?? line.qty}
                       </span>
                     </div>
                   ),
@@ -433,7 +433,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                 {
                   header: t('received_qty'),
                   cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => {
-                    const hasLots = line.lot_allocations && line.lot_allocations.length > 0;
+                    const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
                     const displayQty = hasLots && line._lotReceives
                       ? Object.values(line._lotReceives).reduce((sum, q) => sum + q, 0)
                       : (line._receivedQty ?? line.qty);
@@ -446,7 +446,7 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                           className={cn(
                             "w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all",
                             isMutationBlocked || hasLots ? 'opacity-40 cursor-not-allowed' : '',
-                            displayQty !== (line.shipped_qty ?? line.qty) 
+                            displayQty !== (line.shippedQty ?? line.qty) 
                               ? 'text-status-warning border-status-warning/40 focus:ring-status-warning/30 shadow-[0_0_15px_rgba(255,152,0,0.1)]' 
                               : 'text-emerald-500 border-emerald-500/20 focus:ring-emerald-500/30'
                           )}
@@ -462,11 +462,11 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                     );
                   },
                 },
-                ...(lines.some(l => l.lot_allocations && l.lot_allocations.length > 0)
+                ...(lines.some(l => l.lotAllocations && l.lotAllocations.length > 0)
                   ? [{
                       header: t('lot') || 'Lots',
                       cell: (line: TransferLine & { _receivedQty?: number; _lotReceives?: Record<string, number> }) => {
-                        const hasLots = line.lot_allocations && line.lot_allocations.length > 0;
+                        const hasLots = line.lotAllocations && line.lotAllocations.length > 0;
                         if (!hasLots) return <span className="text-muted-foreground/30 text-label-xs">—</span>;
                         return (
                           <div className="flex justify-center">
@@ -524,13 +524,13 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            {lotModalLine && lotModalLine.lot_allocations?.map((la) => (
-              <div key={la.lot_id} className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-white/5">
+            {lotModalLine && lotModalLine.lotAllocations?.map((la) => (
+              <div key={la.lotId} className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-white/5">
                 <div className="flex-1 space-y-1">
-                  <span className="font-mono font-bold text-label-sm">{la.lot_number}</span>
-                  {la.expiry_date && (
+                  <span className="font-mono font-bold text-label-sm">{la.lotNumber}</span>
+                  {la.expiryDate && (
                     <p className="text-label-xs text-muted-foreground/50">
-                      {tCommon('expiry') || 'Expiry'}: {new Date(la.expiry_date).toLocaleDateString()}
+                      {tCommon('expiry') || 'Expiry'}: {new Date(la.expiryDate).toLocaleDateString()}
                     </p>
                   )}
                 </div>
@@ -540,20 +540,20 @@ export function TransferReceiveClient({ id, locale }: { id: string; locale: 'ar'
                   dir="ltr"
                   disabled={isMutationBlocked}
                   className="w-24 bg-surface-container-highest border rounded-lg text-center px-2 py-2 font-mono font-bold focus:ring-2 outline-none transition-all text-emerald-500 border-emerald-500/20 focus:ring-emerald-500/30"
-                  value={lotModalLine._lotReceives?.[la.lot_id] ?? la.allocated_qty}
+                  value={lotModalLine._lotReceives?.[la.lotId] ?? la.allocatedQty}
                   onChange={(e) => {
                     const val = Number(e.target.value);
                     setLotModalLine(prev => {
                       if (!prev) return prev;
                       return {
                         ...prev,
-                        _lotReceives: { ...prev._lotReceives, [la.lot_id]: val },
+                        _lotReceives: { ...prev._lotReceives, [la.lotId]: val },
                       };
                     });
                     setLines(prev =>
                       prev.map(l =>
                         l.id === lotModalLine.id
-                          ? { ...l, _lotReceives: { ...(l._lotReceives || {}), [la.lot_id]: val } }
+                          ? { ...l, _lotReceives: { ...(l._lotReceives || {}), [la.lotId]: val } }
                           : l
                       )
                     );

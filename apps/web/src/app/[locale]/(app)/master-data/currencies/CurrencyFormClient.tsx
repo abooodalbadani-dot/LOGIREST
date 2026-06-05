@@ -52,11 +52,11 @@ export function CurrencyFormClient({
       disabled: isReadOnly,
       defaultValues: { 
         code: '', 
-        name_ar: '', 
-        name_en: '', 
+        nameAr: '', 
+        nameEn: '', 
         symbol: '',
-        is_base_currency: false,
-        is_active: true,
+        isBaseCurrency: false,
+        isActive: true,
         version: undefined
       },
     });
@@ -69,11 +69,11 @@ export function CurrencyFormClient({
     if (currency) {
       reset({ 
         code: currency.code, 
-        name_ar: currency.name_ar,
-        name_en: currency.name_en, 
+        nameAr: currency.nameAr,
+        nameEn: currency.nameEn, 
         symbol: currency.symbol || '',
-        is_base_currency: currency.is_base_currency,
-        is_active: currency.is_active,
+        isBaseCurrency: currency.isBaseCurrency,
+        isActive: currency.isActive,
         version: currency.version
       });
     }
@@ -120,7 +120,7 @@ export function CurrencyFormClient({
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Currency form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -220,13 +220,13 @@ export function CurrencyFormClient({
                   </Label>
                   <Input 
                     id="curr-name-en" 
-                    {...register('name_en')} 
+                    {...register('nameEn')} 
                     disabled={isReadOnly}
                     className="h-11 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold disabled:opacity-70"
                   />
-                  {errors.name_en?.message && (
+                  {errors.nameEn?.message && (
                     <p className="text-label-xs font-semibold text-rose-400 uppercase">
-                      {t(errors.name_en.message as Parameters<typeof t>[0])}
+                      {t(errors.nameEn.message as Parameters<typeof t>[0])}
                     </p>
                   )}
                 </div>
@@ -239,13 +239,13 @@ export function CurrencyFormClient({
                   <Input 
                     id="curr-name-ar" 
                     dir="rtl"
-                    {...register('name_ar')} 
+                    {...register('nameAr')} 
                     disabled={isReadOnly}
                     className="h-11 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold disabled:opacity-70"
                   />
-                  {errors.name_ar?.message && (
+                  {errors.nameAr?.message && (
                     <p className="text-label-xs font-semibold text-rose-400 uppercase">
-                      {t(errors.name_ar.message as Parameters<typeof t>[0])}
+                      {t(errors.nameAr.message as Parameters<typeof t>[0])}
                     </p>
                   )}
                 </div>
@@ -275,7 +275,7 @@ export function CurrencyFormClient({
                   <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('placeholders.base_desc')}</p>
                 </div>
                 <Controller
-                  name="is_base_currency"
+                  name="isBaseCurrency"
                   control={control}
                   render={({ field }) => (
                     <Switch
@@ -295,7 +295,7 @@ export function CurrencyFormClient({
                   <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('placeholders.active_desc')}</p>
                 </div>
                 <Controller
-                  name="is_active"
+                  name="isActive"
                   control={control}
                   render={({ field }) => (
                     <Switch

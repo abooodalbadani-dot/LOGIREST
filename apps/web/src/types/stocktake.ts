@@ -8,7 +8,7 @@ export interface StocktakeCount {
   id: string; 
   sessionId: string; 
   itemId: string; 
-  item: { id: string; code: string; name_ar: string; name_en: string; }; 
+  item: { id: string; code: string; nameAr: string; nameEn: string; }; 
   lotId: string | null; 
   snapshotQty: number; 
   countedQty: number | null; 
@@ -43,7 +43,7 @@ export const StocktakeCountSchema = z.object({
   id: z.string(),
   sessionId: z.string(),
   itemId: z.string(),
-  item: z.object({ id: z.string(), code: z.string(), name_ar: z.string(), name_en: z.string() }),
+  item: z.object({ id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string() }),
   lotId: z.string().nullable(),
   snapshotQty: z.number(),
   countedQty: z.number().nullable(),

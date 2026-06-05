@@ -18,7 +18,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DocumentLineItemTable } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
+import { DocumentLineItemTable, type LineItem } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
 import { LockBanner } from "@/components/shared/LockBanner";
 import { StatusTimeline, type Status } from "@/components/shared/StatusTimeline";
@@ -55,7 +55,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
 
   const status = session.status as DocumentStatus;
   const warehouse = warehouses?.find(w => w.id === session.warehouseId);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
+  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
 
   const isCounting = isStocktakeCounting(status) || status === STOCKTAKE_STATUS.STARTED;
 
@@ -67,19 +67,26 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
     )
   }, [session.items, manifestSearch])
 
-  const tableLines = React.useMemo(() => {
+  interface StocktakeLineItem extends LineItem {
+    snapshotQty: number | null;
+    variance: number | null;
+    countedQty: number | null;
+    uom: string;
+  }
+
+  const tableLines = React.useMemo<StocktakeLineItem[]>(() => {
     return filteredItems.map((item) => ({
       id: item.id,
       item: {
         id: item.itemId,
         code: item.barcode || '',
-        name_en: item.itemName,
-        name_ar: item.itemName,
-        primary_uom: { code: item.uom }
+        nameEn: item.itemName,
+        nameAr: item.itemName,
+        primaryUom: { code: item.uom }
       },
       qty: item.countedQty ?? 0,
-      uom_id: '',
-      lot: item.lotNumber ? { lot_number: item.lotNumber, expiry_date: item.expiryDate || null } : null,
+      uomId: '',
+      lot: item.lotNumber ? { lotNumber: item.lotNumber, expiryDate: item.expiryDate || null } : null,
       snapshotQty: item.snapshotQty,
       variance: item.variance,
       countedQty: item.countedQty,
@@ -178,7 +185,7 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
                 <p className="text-label-sm text-muted-foreground/40">{common('no_results') || 'No matching items'}</p>
               </div>
             ) : (
-            <DocumentLineItemTable
+            <DocumentLineItemTable<StocktakeLineItem>
               lines={tableLines}
               locale={locale}
               isReadOnly={true}
@@ -237,8 +244,8 @@ export function StocktakeForm({ session, locale, actions, isLocked = false, onCo
             {(() => {
               const timeline = (session.auditLog ?? []).map(log => ({
                 status: log.status.toLowerCase() as Status,
-                at: log.created_at,
-                by: log.user_name || common('system_user'),
+                at: log.createdAt,
+                by: log.userName || common('system_user'),
               }));
               if (timeline.length === 0) {
                 timeline.push({ status: 'draft' as Status, at: session.createdAt || new Date().toISOString(), by: session.startedBy || common('system_user') });

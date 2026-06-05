@@ -2,18 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { sortLotsByFEFO, isExpired } from '@/utils/fefo';
 
 const makeLot = (expiry: string | null) => ({ 
- id: '1', item_id: '1', warehouse_id: '1', lot_number: 'L1', 
- expiry_date: expiry, qty_available: 10, is_expired: false, is_near_expiry: false 
+ id: '1', itemId: '1', warehouseId: '1', lotNumber: 'L1', 
+ expiryDate: expiry, qtyAvailable: 10, isExpired: false, isNearExpiry: false 
 });
 
 describe('sortLotsByFEFO', () => {
  it('sorts oldest expiry first', () => {
  const sorted = sortLotsByFEFO([makeLot('2030-12-01'), makeLot('2025-01-01'), makeLot('2027-06-15')]);
- expect(sorted[0].expiry_date).toBe('2025-01-01');
+ expect(sorted[0].expiryDate).toBe('2025-01-01');
  });
  it('puts null expiry last', () => {
  const sorted = sortLotsByFEFO([makeLot(null), makeLot('2025-01-01')]);
- expect(sorted[0].expiry_date).toBe('2025-01-01');
+ expect(sorted[0].expiryDate).toBe('2025-01-01');
  });
 });
 

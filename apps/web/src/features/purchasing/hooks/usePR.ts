@@ -6,33 +6,35 @@ import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 const PRLineSchema = z.object({
- id: z.string(),
- item: z.object({
- id: z.string(),
- code: z.string(),
- name_ar: z.string(),
- name_en: z.string(),
- primary_uom: z.object({
- id: z.string(),
- code: z.string(),
- }),
- }),
- req_qty: z.number(),
- uom_id: z.string(),
+  id: z.string(),
+  item: z.object({
+    id: z.string(),
+    code: z.string(),
+    nameAr: z.string(),
+    nameEn: z.string(),
+    primaryUom: z.object({
+      id: z.string(),
+      code: z.string(),
+    }),
+    minStockLevel: z.number().optional(),
+    reorderPoint: z.number().optional(),
+  }),
+  reqQty: z.number(),
+  uomId: z.string(),
 });
 
 export const PRDetailSchema = z.object({
- id: z.string(),
- document_number: z.string(),
- status: BadgeStatusSchema,
- department_id: z.string(),
- expected_date: z.string(),
- version: z.number().optional(),
- notes: z.string().nullable().optional(),
- created_at: z.string().optional(),
- created_by: z.string().optional(),
- updated_at: z.string().optional(),
- lines: z.array(PRLineSchema),
+  id: z.string(),
+  documentNumber: z.string(),
+  status: BadgeStatusSchema,
+  departmentId: z.string(),
+  expectedDate: z.string(),
+  version: z.number().optional(),
+  notes: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  createdBy: z.string().optional(),
+  updatedAt: z.string().optional(),
+  lines: z.array(PRLineSchema),
 });
 
 export type PRDetail = z.infer<typeof PRDetailSchema>;

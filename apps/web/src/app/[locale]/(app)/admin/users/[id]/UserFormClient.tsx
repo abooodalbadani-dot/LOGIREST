@@ -78,13 +78,13 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   // Cascading Logic: Warehouses depend on Branches
   const filteredWarehouses = useMemo(() => {
     if (!selectedBranches?.length) return [];
-    return warehouses.filter(wh => selectedBranches.includes(wh.branch_id));
+    return warehouses.filter(wh => wh.branchId && selectedBranches.includes(wh.branchId));
   }, [selectedBranches, warehouses]);
 
   // Cascading Logic: Departments depend on Warehouses
   const filteredDepartments = useMemo(() => {
     if (!selectedWarehouses?.length) return [];
-    return departments.filter(dep => selectedWarehouses.includes(dep.warehouse_id));
+    return departments.filter(dep => dep.warehouseId && selectedWarehouses.includes(dep.warehouseId));
   }, [selectedWarehouses, departments]);
 
   const languageItems = useMemo(() => [
@@ -125,9 +125,9 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
         role: data.role as UserRole,
         status: data.status as 'ACTIVE' | 'INACTIVE' || 'ACTIVE',
         language: (data.language as 'en' | 'ar') || 'en',
-        branch_ids: data.scopes.filter(s => s.branch_id).map(s => s.branch_id!),
-        warehouse_ids: data.scopes.filter(s => s.warehouse_id).map(s => s.warehouse_id!),
-        department_ids: data.scopes.filter(s => s.department_id).map(s => s.department_id!),
+        branch_ids: data.scopes.filter(s => s.branchId).map(s => s.branchId!),
+        warehouse_ids: data.scopes.filter(s => s.warehouseId).map(s => s.warehouseId!),
+        department_ids: data.scopes.filter(s => s.departmentId).map(s => s.departmentId!),
       });
     }
   }, [data, reset]);
@@ -138,7 +138,8 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
     } else {
       await createUser.mutateAsync(values);
     }
-    guardedRouter.push('/admin/users');
+    reset(values);
+    guardedRouter.push('/admin/users', { skipGuard: true });
   });
 
 
@@ -253,7 +254,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                 <MultiSelect
                   label={t('branch_scope')}
                   icon={<Building2 className="w-3 h-3" />}
-                  options={branches.map(b => ({ id: b.id, label: locale === 'ar' ? b.name_ar : b.name_en }))}
+                  options={branches.map(b => ({ id: b.id, label: b.name || b.code }))}
                   selected={selectedBranches}
                   onChange={(v) => setValue('branch_ids', v)}
                   disabled={isAuditor || isSelf}
@@ -263,7 +264,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                 <MultiSelect
                   label={t('warehouse_scope')}
                   icon={<Warehouse className="w-3 h-3" />}
-                  options={filteredWarehouses.map(w => ({ id: w.id, label: locale === 'ar' ? w.name_ar : w.name_en }))}
+                  options={filteredWarehouses.map(w => ({ id: w.id, label: w.name || w.code }))}
                   selected={selectedWarehouses}
                   onChange={(v) => setValue('warehouse_ids', v)}
                   disabled={isAuditor || isSelf || !selectedBranches.length}
@@ -273,7 +274,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                 <MultiSelect
                   label={t('department_scope')}
                   icon={<Building2 className="w-3 h-3" />}
-                  options={filteredDepartments.map(d => ({ id: d.id, label: locale === 'ar' ? d.name_ar : d.name_en }))}
+                  options={filteredDepartments.map(d => ({ id: d.id, label: d.name || d.code }))}
                   selected={selectedDepartments}
                   onChange={(v) => setValue('department_ids', v)}
                   disabled={isAuditor || isSelf || !selectedWarehouses.length}

@@ -275,7 +275,7 @@ const onSubmit = async (data: RestaurantProfile) => {
  <div className="relative">
  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
  <Input 
- {...register('tax_number')}
+ {...register('taxNumber')}
  dir="ltr"
  className="pl-10 font-mono font-bold"
  />
@@ -289,7 +289,7 @@ const onSubmit = async (data: RestaurantProfile) => {
  <div className="relative">
  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
  <Input 
- {...register('commercial_registration')}
+ {...register('commercialRegistration')}
  dir="ltr"
  className="pl-10 font-mono font-bold"
  />

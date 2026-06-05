@@ -32,13 +32,13 @@ export class CurrenciesController {
 
   @Post()
   @Roles(Role.ADMIN, Role.GM)
-  async create(@Body() body: any) {
+  async create(@Body() body: Record<string, unknown>) {
     return this.currenciesService.create(body);
   }
 
   @Put(':id')
   @Roles(Role.ADMIN, Role.GM)
-  async update(@Param('id') id: string, @Body() body: any) {
+  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
     return this.currenciesService.update(id, body);
   }
 

@@ -57,7 +57,7 @@ export function GRNListClient({
  return () => clearTimeout(timer);
  }, [search]);
 
-  const { data, isLoading } = useGRNList({ status, page, search: debouncedSearch, sort_field: sortField, sort_order: sortOrder });
+  const { data, isLoading } = useGRNList({ status, page, search: debouncedSearch, sortField, sortOrder });
 
   const toggleSort = (field: string) => {
     setSortField(prev => {
@@ -88,40 +88,40 @@ export function GRNListClient({
  header: tc('status_label'),
  cell: ({ row }) => <StatusBadge status={row.original.status as BadgeStatus} />,
  },
- {
- accessorKey: 'document_number',
- header: tc('doc_number'),
- cell: ({ row }) => (
- <div className="flex flex-col gap-0.5">
- <span dir="ltr" className="font-mono text-cyan-500 font-semibold text-body-md">{row.original.document_number}</span>
- <span className="text-label-xxs font-semibold uppercase opacity-30">{t('received_manifest_sub')}</span>
- </div>
- ),
- },
   {
-    accessorKey: 'supplier_id',
-    header: () => <SortHeader field="supplier_id" label={tc('supplier')} />,
-    cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span dir="ltr" className="text-label-xs font-semibold text-foreground/80 text-start">{row.original.supplier_id}</span>
-        <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
-      </div>
-    ),
+  accessorKey: 'documentNumber',
+  header: tc('doc_number'),
+  cell: ({ row }) => (
+  <div className="flex flex-col gap-0.5">
+  <span dir="ltr" className="font-mono text-cyan-500 font-semibold text-body-md">{row.original.documentNumber}</span>
+  <span className="text-label-xxs font-semibold uppercase opacity-30">{t('received_manifest_sub')}</span>
+  </div>
+  ),
   },
-  {
-    accessorKey: 'posted_at',
-    header: () => <SortHeader field="posted_at" label={tc('posted_at')} />,
-    cell: ({ row }) =>
-      row.original.posted_at ? (
-        <div className="flex items-center gap-2">
-          <ClientOnlyTime 
-            date={row.original.posted_at} 
-            mode="date" 
-            className="text-label-xs opacity-60 font-mono font-medium" 
-          />
-        </div>
-      ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
-  },
+   {
+     accessorKey: 'supplierId',
+     header: () => <SortHeader field="supplierId" label={tc('supplier')} />,
+     cell: ({ row }) => (
+       <div className="flex flex-col">
+         <span dir="ltr" className="text-label-xs font-semibold text-foreground/80 text-start">{row.original.supplierId}</span>
+         <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
+       </div>
+     ),
+   },
+   {
+     accessorKey: 'postedAt',
+     header: () => <SortHeader field="postedAt" label={tc('posted_at')} />,
+     cell: ({ row }) =>
+       row.original.postedAt ? (
+         <div className="flex items-center gap-2">
+           <ClientOnlyTime 
+             date={row.original.postedAt} 
+             mode="date" 
+             className="text-label-xs opacity-60 font-mono font-medium" 
+           />
+         </div>
+       ) : <span className="opacity-10 text-label-xs font-semibold italic">{t('pending_label')}</span>,
+   },
   {
     id: 'actions',
     header: '',
@@ -256,9 +256,9 @@ export function GRNListClient({
             }
             pagination={data?.meta ? {
               page: data.meta.page,
-              pageSize: data.meta.page_size,
+              pageSize: data.meta.pageSize,
               total: data.meta.total,
-              totalPages: data.meta.total_pages,
+              totalPages: data.meta.totalPages,
               onPageChange: setPage
             } : undefined}
             filters={

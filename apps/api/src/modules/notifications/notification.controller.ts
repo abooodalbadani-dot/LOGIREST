@@ -134,13 +134,16 @@ export class NotificationController {
 
   @Post('templates')
   @Roles(Role.ADMIN)
-  async createTemplate(@Body() body: any) {
+  async createTemplate(@Body() body: Record<string, unknown>) {
     return this.templateService.create(body);
   }
 
   @Put('templates/:id')
   @Roles(Role.ADMIN)
-  async updateTemplate(@Param('id') id: string, @Body() body: any) {
+  async updateTemplate(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return this.templateService.update(id, body);
   }
 

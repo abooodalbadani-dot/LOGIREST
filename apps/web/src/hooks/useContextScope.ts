@@ -25,9 +25,9 @@ export function useContextScope() {
  DepartmentSchema
  );
 
- const getLocalizedName = (item: { name_ar: string; name_en: string } | null | undefined) => {
- if (!item) return null;
- return isRtl ? item.name_ar : item.name_en;
+ const getLocalizedName = (item: { name?: string; code?: string } | null | undefined) => {
+  if (!item) return null;
+  return item.name || item.code || null;
  };
 
  return {

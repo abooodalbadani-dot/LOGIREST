@@ -42,16 +42,16 @@ export function UoMListClient({ locale }: { locale: string }) {
       header: t('name'), 
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.name_ar}</span>
+          <span className="font-bold text-label-sm">{row.original.nameEn}</span>
+          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.nameAr}</span>
         </div>
       )
     },
     {
-      accessorKey: 'is_active',
+      accessorKey: 'isActive',
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
+        <StatusBadge status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       )
     },
     {

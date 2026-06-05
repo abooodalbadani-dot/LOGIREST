@@ -29,90 +29,120 @@ import { CreateGrnDto } from './dto/create-grn.dto';
 import { UpdateGrnDto } from './dto/update-grn.dto';
 import type { Request } from 'express';
 
-function mapGRNDetail(grn: any) {
-  const lines = (grn.lines || []).map((line: any) => ({
-    id: line.id,
-    item: line.item
-      ? {
-          id: line.item.id,
-          code: line.item.sku,
-          name_ar: line.item.name,
-          name_en: line.item.name,
-          primary_uom: line.item.unitOfMeasure
-            ? {
-                id: line.item.unitOfMeasure.id,
-                code: line.item.unitOfMeasure.code,
-              }
-            : { id: '', code: '' },
-        }
-      : {
-          id: '',
-          code: '',
-          name_ar: '',
-          name_en: '',
-          primary_uom: { id: '', code: '' },
-        },
-    lot: line.lot
-      ? {
-          id: line.lot.id,
-          lot_number: line.lot.lotNumber,
-          expiry_date: line.lot.expiryDate
-            ? line.lot.expiryDate.toISOString()
-            : null,
-        }
-      : null,
-    qty: Number(line.quantityReceived),
-    received_qty: Number(line.quantityReceived),
-    uom_id: line.item?.uomId || '',
-    unit_cost_foreign: Number(line.unitPrice),
-    unit_cost_base: Number(line.unitPrice),
-  }));
+function mapGRNDetail(grn: Record<string, unknown>) {
+  const grnLines = (grn.lines as Record<string, unknown>[]) || [];
+  const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
+  const supplier = purchaseOrder?.supplier as Record<string, unknown> | null;
+
+  const lines = grnLines.map((line: Record<string, unknown>) => {
+    const item = line.item as Record<string, unknown> | null;
+    const lot = line.lot as Record<string, unknown> | null;
+    const unitOfMeasure = item?.unitOfMeasure as Record<string, unknown> | null;
+
+    return {
+      id: line.id as string,
+      item: item
+        ? {
+            id: item.id as string,
+            code: item.sku as string,
+            name_ar: item.name as string,
+            name_en: item.name as string,
+            primary_uom: unitOfMeasure
+              ? {
+                  id: unitOfMeasure.id as string,
+                  code: unitOfMeasure.code as string,
+                }
+              : { id: '', code: '' },
+          }
+        : {
+            id: '',
+            code: '',
+            name_ar: '',
+            name_en: '',
+            primary_uom: { id: '', code: '' },
+          },
+      lot: lot
+        ? {
+            id: lot.id as string,
+            lot_number: lot.lotNumber as string,
+            expiry_date: lot.expiryDate
+              ? (lot.expiryDate instanceof Date
+                  ? lot.expiryDate
+                  : new Date(lot.expiryDate as string)
+                ).toISOString()
+              : null,
+          }
+        : null,
+      qty: Number(line.quantityReceived),
+      received_qty: Number(line.quantityReceived),
+      uom_id: (item?.uomId as string) || '',
+      unit_cost_foreign: Number(line.unitPrice),
+      unit_cost_base: Number(line.unitPrice),
+    };
+  });
+
+  const createdAtIso = grn.createdAt
+    ? (grn.createdAt instanceof Date
+        ? grn.createdAt
+        : new Date(grn.createdAt as string)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
-    id: grn.id,
-    document_number: grn.grnNumber,
-    status: grn.status,
-    supplier_id: grn.purchaseOrder?.supplierId || '',
-    supplier: grn.purchaseOrder?.supplier
+    id: grn.id as string,
+    document_number: grn.grnNumber as string,
+    status: grn.status as string,
+    supplier_id: (purchaseOrder?.supplierId as string) || '',
+    supplier: supplier
       ? {
-          id: grn.purchaseOrder.supplier.id,
-          name: grn.purchaseOrder.supplier.name,
+          id: supplier.id as string,
+          name: supplier.name as string,
         }
       : undefined,
-    po_id: grn.poId,
-    po_number: grn.purchaseOrder?.poNumber || '',
+    po_id: grn.poId as string,
+    po_number: (purchaseOrder?.poNumber as string) || '',
     po_fx_rate: 1.0,
-    currency_id: grn.purchaseOrder?.currencyId || '',
-    warehouse_id: grn.warehouseId,
+    currency_id: (purchaseOrder?.currencyId as string) || '',
+    warehouse_id: grn.warehouseId as string,
     fx_rate: 1.0,
-    fx_rate_captured_at: grn.createdAt.toISOString(),
-    version: grn.version,
+    fx_rate_captured_at: createdAtIso,
+    version: grn.version as number,
     notes: '',
-    created_at: grn.createdAt.toISOString(),
+    created_at: createdAtIso,
     created_by: 'System',
-    updated_at: grn.createdAt.toISOString(),
+    updated_at: createdAtIso,
     lines,
   };
 }
 
-function mapGRNSummary(grn: any) {
-  const lines = grn.lines || [];
+function mapGRNSummary(grn: Record<string, unknown>) {
+  const lines = (grn.lines as Record<string, unknown>[]) || [];
+  const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
+  const supplier = purchaseOrder?.supplier as Record<string, unknown> | null;
+
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line: any) =>
+    (sum: number, line: Record<string, unknown>) =>
       sum + Number(line.quantityReceived) * Number(line.unitPrice),
     0,
   );
 
+  const createdAtIso = grn.createdAt
+    ? (grn.createdAt instanceof Date
+        ? grn.createdAt
+        : new Date(grn.createdAt as string)
+      ).toISOString()
+    : new Date().toISOString();
+
   return {
-    id: grn.id,
-    document_number: grn.grnNumber,
-    status: grn.status,
-    supplier_id: grn.purchaseOrder?.supplierId || '',
-    supplier_name: grn.purchaseOrder?.supplier?.name || '',
-    po_id: grn.poId,
-    po_number: grn.purchaseOrder?.poNumber || '',
-    warehouse_id: grn.warehouseId,
-    created_at: grn.createdAt.toISOString(),
+    id: grn.id as string,
+    document_number: grn.grnNumber as string,
+    status: grn.status as string,
+    supplier_id: (purchaseOrder?.supplierId as string) || '',
+    supplier_name: (supplier?.name as string) || '',
+    po_id: grn.poId as string,
+    po_number: (purchaseOrder?.poNumber as string) || '',
+    warehouse_id: grn.warehouseId as string,
+    created_at: createdAtIso,
     supplier_total_amount: supplierTotalAmount,
   };
 }
@@ -216,12 +246,15 @@ export class GrnController {
 
     const poId = body.poId || body.po_id;
     const warehouseId = body.warehouseId || body.warehouse_id;
-    const lines = body.lines?.map((line) => ({
-      id: line.id,
-      itemId: line.itemId || line.item_id || '',
-      lotId: line.lotId !== undefined ? line.lotId : line.lot_id,
-      quantity: line.quantity || line.qty || line.received_qty || 0,
-      unitPrice: line.unitPrice || line.unit_cost_foreign || 0,
+    const lines = (body.lines as Record<string, unknown>[])?.map((line) => ({
+      id: line.id as string | undefined,
+      itemId: String(line.itemId || line.item_id || ''),
+      lotId: (line.lotId !== undefined ? line.lotId : line.lot_id) as
+        | string
+        | null
+        | undefined,
+      quantity: Number(line.quantity || line.qty || line.received_qty || 0),
+      unitPrice: Number(line.unitPrice || line.unit_cost_foreign || 0),
     }));
 
     const grn = await this.grnService.update(id, {

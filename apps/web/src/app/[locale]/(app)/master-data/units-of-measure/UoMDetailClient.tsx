@@ -53,7 +53,7 @@ export function UoMDetailClient({ id }: Props) {
 
  return (
  <MasterDataDetailLayout
- title={data.name_en}
+ title={data.nameEn}
  backHref={`/master-data/units-of-measure`}
  editHref={`/master-data/units-of-measure/${id}/edit`}
  >
@@ -83,12 +83,12 @@ export function UoMDetailClient({ id }: Props) {
 
  <div className="space-y-1">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('fields.name_en')}</p>
- <p className="text-body-md font-semibold text-foreground dir-ltr">{data.name_en}</p>
+ <p className="text-body-md font-semibold text-foreground dir-ltr">{data.nameEn}</p>
  </div>
 
  <div className="space-y-1">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50 text-end">{t('fields.name_ar')}</p>
- <p className="text-body-md font-semibold text-foreground text-end dir-rtl">{data.name_ar}</p>
+ <p className="text-body-md font-semibold text-foreground text-end dir-rtl">{data.nameAr}</p>
  </div>
  </div>
 
@@ -103,7 +103,7 @@ export function UoMDetailClient({ id }: Props) {
  <div className="flex justify-between items-center">
  <span className="text-label-xs font-medium text-muted-foreground/40 uppercase">{tc('created_at')}</span>
  <span className="text-label-xs font-mono font-bold text-muted-foreground/70 dir-ltr">
- {data.created_at ? <ClientOnlyTime date={data.created_at} mode="datetime" /> : '-'}
+ {data.createdAt ? <ClientOnlyTime date={data.createdAt} mode="datetime" /> : '-'}
  </span>
  </div>
  <div className="flex justify-between items-center">
@@ -135,7 +135,7 @@ export function UoMDetailClient({ id }: Props) {
  <div className="space-y-1">
  <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('current_status')}</p>
  <StatusBadge 
- status={data.is_active ? 'ACTIVE' : 'INACTIVE'} className="h-5 px-3 text-label-xxs"
+ status={data.isActive ? 'ACTIVE' : 'INACTIVE'} className="h-5 px-3 text-label-xxs"
  />
  </div>
  </div>

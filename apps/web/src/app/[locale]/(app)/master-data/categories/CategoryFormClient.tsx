@@ -54,14 +54,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   const { register, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
-    defaultValues: { code: '', name_ar: '', name_en: '', version: undefined },
+    defaultValues: { code: '', nameAr: '', nameEn: '', version: undefined },
     disabled: isReadOnly,
   });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   useEffect(() => {
-    if (data) reset({ code: data.code, name_ar: data.name_ar, name_en: data.name_en, version: data.version });
+    if (data) reset({ code: data.code, nameAr: data.nameAr, nameEn: data.nameEn, version: data.version });
   }, [data, reset]);
 
   // 1. Loading State
@@ -90,17 +90,17 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   }
 
   const onValid = async (values: CategoryFormValues) => {
-    if (isReadOnly || data?.is_referenced) return;
+    if (isReadOnly || data?.isReferenced) return;
     
     try {
       if (id) {
-        // Only send editable fields (omit readonly category code, name_ar, and name_en if referenced)
+        // Only send editable fields (omit readonly category code, nameAr, and nameEn if referenced)
         const updateValues: Partial<CategoryFormValues> = {
           version: values.version,
         };
-        if (!data?.is_referenced) {
-          updateValues.name_ar = values.name_ar;
-          updateValues.name_en = values.name_en;
+        if (!data?.isReferenced) {
+          updateValues.nameAr = values.nameAr;
+          updateValues.nameEn = values.nameEn;
         }
         await update.mutateAsync({ id, values: updateValues as CategoryFormValues, signal: abortController.signal });
       } else {
@@ -113,7 +113,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: unknown) => {
     console.warn('Category form validation failed:', errors);
     toast.error(t('check_fields') || 'Please check required fields');
   };
@@ -138,7 +138,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
       isSaving={create.isPending || update.isPending}
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/categories')}
-      hideSave={isReadOnly || data?.is_referenced === true}
+      hideSave={isReadOnly || data?.isReferenced === true}
       resource="master_data"
       saveAction={id ? 'edit' : 'create'}
       isDirty={isDirty}
@@ -150,9 +150,9 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
               <Button 
                 variant="ghost"
                 onClick={() => setDeleteConfirmOpen(true)}
-                disabled={data?.is_referenced === true}
+                disabled={data?.isReferenced === true}
                 className="h-12 w-12 rounded-xl bg-status-error/5 hover:bg-status-error/10 text-status-error border-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                title={data?.is_referenced ? tc('errors.delete_linked_items') : t('actions.delete')}
+                title={data?.isReferenced ? tc('errors.delete_linked_items') : t('actions.delete')}
               >
                 <Trash2 className="w-5 h-5" />
               </Button>
@@ -174,7 +174,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
       }
     >
       <div className="space-y-8">
-        {data?.is_referenced && (
+        {data?.isReferenced && (
           <div className="p-4 rounded-xl bg-status-error/5 border border-status-error/10 flex items-start gap-3 transition-all">
             <AlertTriangle className="w-5 h-5 text-status-error shrink-0 mt-0.5" />
             <div>
@@ -226,14 +226,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 <Input
                   id="cat-name-en"
                   dir="ltr"
-                  {...register('name_en')}
-                  readOnly={isReadOnly || data?.is_referenced === true}
-                  className={`font-semibold ${data?.is_referenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
+                  {...register('nameEn')}
+                  readOnly={isReadOnly || data?.isReferenced === true}
+                  className={`font-semibold ${data?.isReferenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
                   placeholder={tc('placeholders.name_en')}
                 />
-                {errors.name_en && (
+                {errors.nameEn && (
                   <p className="text-label-xs font-semibold text-status-error uppercase">
-                    {errors.name_en.message}
+                    {errors.nameEn.message}
                   </p>
                 )}
               </div>
@@ -246,14 +246,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 <Input
                   id="cat-name-ar"
                   dir="rtl"
-                  {...register('name_ar')}
-                  readOnly={isReadOnly || data?.is_referenced === true}
-                  className={`font-semibold text-end ${data?.is_referenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
+                  {...register('nameAr')}
+                  readOnly={isReadOnly || data?.isReferenced === true}
+                  className={`font-semibold text-end ${data?.isReferenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
                   placeholder={tc('placeholders.name_ar')}
                 />
-                {errors.name_ar && (
+                {errors.nameAr && (
                   <p className="text-label-xs font-semibold text-status-error uppercase">
-                    {errors.name_ar.message}
+                    {errors.nameAr.message}
                   </p>
                 )}
               </div>

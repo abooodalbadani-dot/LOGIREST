@@ -453,9 +453,9 @@ export class ReportsController {
       async () => {
         const data =
           await this.reportsService.getAvailableInventoryRaw(warehouseId);
-        return data.map((d: any) => ({
+        return data.map((d: Record<string, unknown>) => ({
           ...d,
-          total_value: d.qty_physical * d.wac,
+          total_value: Number(d.qty_physical) * Number(d.wac),
         }));
       },
       res,
@@ -519,9 +519,9 @@ export class ReportsController {
           warehouseId,
           sessionId,
         );
-        return data.map((d: any) => ({
+        return data.map((d: Record<string, unknown>) => ({
           ...d,
-          variance_value: d.variance * d.wac,
+          variance_value: Number(d.variance) * Number(d.wac),
         }));
       },
       res,
@@ -615,16 +615,19 @@ export class ReportsController {
           startDate,
           endDate,
         );
-        return data.map((d: any) => ({
-          postedAt: d.postedAt,
-          documentType: d.documentType,
-          documentId: d.documentId,
-          quantity: Number(d.quantity),
-          unitPrice: Number(d.unitPrice),
-          newWac: Number(d.newWac),
-          itemName: d.item.name,
-          sku: d.item.sku,
-        }));
+        return data.map((d: Record<string, unknown>) => {
+          const item = d.item as Record<string, unknown> | null;
+          return {
+            postedAt: d.postedAt,
+            documentType: d.documentType,
+            documentId: d.documentId,
+            quantity: Number(d.quantity),
+            unitPrice: Number(d.unitPrice),
+            newWac: Number(d.newWac),
+            itemName: item?.name,
+            sku: item?.sku,
+          };
+        });
       },
       res,
       'wac-history',

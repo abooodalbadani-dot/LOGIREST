@@ -22,6 +22,7 @@ import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ScopeGuard } from "@/components/shared/ScopeGuard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -70,13 +71,13 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
       item: {
         id: item.itemId,
         code: item.barcode || '',
-        name_en: item.itemName,
-        name_ar: item.itemName,
-        primary_uom: { code: item.uom }
+        nameEn: item.itemName,
+        nameAr: item.itemName,
+        primaryUom: { code: item.uom }
       },
       qty: localCounts[item.id] ?? 0,
-      uom_id: '',
-      lot: item.lotNumber ? { lot_number: item.lotNumber, expiry_date: item.expiryDate || null } : null,
+      uomId: '',
+      lot: item.lotNumber ? { lotNumber: item.lotNumber, expiryDate: item.expiryDate || null } : null,
       lotNumber: item.lotNumber,
       expiryDate: item.expiryDate,
       itemId: item.itemId,
@@ -158,7 +159,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   if (sessionError || errorWarehouses || !session) return <ErrorState onRetry={() => window.location.reload()} />;
   
   const warehouse = warehouses?.find((w) => w.id === session.warehouseId);
-  const warehouseName = warehouse ? (locale === 'ar' ? warehouse.name_ar : warehouse.name_en) : (session.warehouseName || session.warehouseId);
+  const warehouseName = warehouse ? warehouse.name : (session.warehouseName || session.warehouseId);
 
   if (!isStocktakeCounting(session.status)) {
     baseRouter.replace(`/stocktake/${id}`);
@@ -234,8 +235,9 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const allCounted = uncountedItems.length === 0 && items.length > 0;
 
   return (
-    <PermissionGate action="edit" resource="operations_stocktake">
-      <div className="space-y-6" onKeyDown={handleKeyDown}>
+    <ScopeGuard warehouseId={session?.warehouseId}>
+      <PermissionGate action="edit" resource="operations_stocktake">
+        <div className="space-y-6" onKeyDown={handleKeyDown}>
         <PageHeader
           title={session.sessionName}
           subtitle={warehouseName}
@@ -347,7 +349,8 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
             }}
           />
         </Card>
-      </div>
-    </PermissionGate>
+        </div>
+      </PermissionGate>
+    </ScopeGuard>
   )
 }

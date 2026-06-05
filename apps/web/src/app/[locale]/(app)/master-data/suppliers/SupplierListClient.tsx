@@ -31,7 +31,7 @@ export function SupplierListClient({ locale }: { locale: string }) {
     const suppliers = data?.data || [];
     return {
       total: data?.meta?.total || 0,
-      active: suppliers.filter(s => s.is_active).length,
+      active: suppliers.filter(s => s.isActive).length,
     };
   }, [data]);
 
@@ -50,28 +50,28 @@ export function SupplierListClient({ locale }: { locale: string }) {
       header: t('name_en'),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.name_en}</span>
-          <span className="text-label-xs opacity-40 font-medium" dir="rtl">{row.original.name_ar}</span>
+          <span className="font-bold text-label-sm">{row.original.nameEn}</span>
+          <span className="text-label-xs opacity-40 font-medium" dir="rtl">{row.original.nameAr}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'payment_terms',
+      accessorKey: 'paymentTerms',
       header: tc('fields.payment_terms'),
-      cell: ({ row }) => row.original.payment_terms
+      cell: ({ row }) => row.original.paymentTerms
         ? (
           <div className="flex items-center gap-1.5 text-status-warning font-bold text-label-xs uppercase">
             <CreditCard className="w-3 h-3 opacity-60" />
-            {row.original.payment_terms}
+            {row.original.paymentTerms}
           </div>
         )
         : <span className="opacity-20 italic text-label-xs">{t('not_available')}</span>,
     },
     {
-      accessorKey: 'is_active',
+      accessorKey: 'isActive',
       header: t('status'),
       cell: ({ row }) => (
-        <StatusBadge status={row.original.is_active ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
+        <StatusBadge status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
       ),
     },
     {

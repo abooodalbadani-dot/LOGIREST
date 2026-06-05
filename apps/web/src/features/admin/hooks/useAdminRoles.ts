@@ -22,7 +22,7 @@ export interface AdminRole {
   id: string;
   name: string;
   description: string;
-  users_count: number;
+  usersCount: number;
   permissions: Permission[];
 }
 
@@ -56,7 +56,7 @@ export function useAdminRoles() {
         id: role.id,
         name: role.displayName,
         description: role.description,
-        users_count: role.userCount,
+        usersCount: role.userCount,
         permissions: role.permissions,
       })) as AdminRole[];
     },
@@ -76,7 +76,7 @@ export function useAdminRole(id: string | null) {
         id: role.id,
         name: role.displayName,
         description: role.description,
-        users_count: role.userCount,
+        usersCount: role.userCount,
         permissions: role.permissions,
       } as AdminRole;
     },

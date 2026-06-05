@@ -51,7 +51,7 @@ const t = useTranslations('operations.stocktake');
   const { data: warehousesData } = useWarehouses();
   const warehouseMap = useMemo(() => {
     const list = warehousesData?.data ?? [];
-    return new Map(list.map((w: { id: string; name_en: string; name_ar: string }) => [w.id, { name_en: w.name_en, name_ar: w.name_ar }]));
+    return new Map(list.map((w) => [w.id, w.name]));
   }, [warehousesData]);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,69 +120,68 @@ const { data, isLoading } = useStocktakeList({
  };
 
  const columns = useMemo<ColumnDef<StocktakeSummary>[]>(() => [
-{
-  accessorKey: 'session_number',
-  header: t('session_number') || 'Session',
-  meta: { sortBy: 'snapshot_at' },
-  cell: ({ row }) => (
- <div className="flex flex-col">
- <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
- {row.original.session_number}
- </span>
- <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">
- Operational Audit
- </span>
- <div className="flex items-center gap-1.5 opacity-20 mt-1">
- <Calendar className="w-2.5 h-2.5" />
- <ClientOnlyTime 
- date={row.original.snapshot_at} 
- mode="datetime" 
- locale={locale as 'ar' | 'en'}
- className="text-label-xxs font-semibold tabular-nums"
- />
- </div>
- </div>
- ),
- },
- {
-  accessorKey: 'warehouse_id',
-  header: tc('warehouse') || 'Warehouse',
-  cell: ({ row }) => {
-    const name = warehouseMap.get(row.original.warehouse_id);
-    const display = name ? (locale === 'ar' ? name.name_ar : name.name_en) : row.original.warehouse_id;
-    return (
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
-          <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
+    {
+      accessorKey: 'sessionNumber',
+      header: t('session_number') || 'Session',
+      meta: { sortBy: 'snapshot_at' },
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span dir="ltr" className="font-mono text-body-md font-semibold text-cyan-500 group-hover:text-cyan-400 transition-colors">
+            {row.original.sessionNumber}
+          </span>
+          <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">
+            Operational Audit
+          </span>
+          <div className="flex items-center gap-1.5 opacity-20 mt-1">
+            <Calendar className="w-2.5 h-2.5" />
+            <ClientOnlyTime 
+              date={row.original.snapshotAt} 
+              mode="datetime" 
+              locale={locale as 'ar' | 'en'}
+              className="text-label-xxs font-semibold tabular-nums"
+            />
+          </div>
         </div>
-        <span className="font-bold text-label-sm text-foreground/80">{display}</span>
-      </div>
-    );
-  },
- },
-  {
-  id: 'progress',
-  header: t('items_counted') || 'Progress',
-  cell: ({ row }) => {
-    const total = row.original.total_items || 0;
-    const counted = row.original.counted_items || 0;
-    const pct = total > 0 ? Math.round((counted / total) * 100) : 0;
-    return (
-      <div className="flex flex-col gap-1.5 min-w-[140px]">
-        <div className="flex items-center justify-between text-label-xxs font-semibold text-muted-foreground/60">
-          <span>{counted}/{total} {t('items_count')}</span>
-          <span>{pct}%</span>
-        </div>
-        <div className="w-full h-2 bg-surface-container-highest/30 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-cyan-500 rounded-full transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-    );
-  },
-  },
+      ),
+    },
+    {
+      accessorKey: 'warehouseId',
+      header: tc('warehouse') || 'Warehouse',
+      cell: ({ row }) => {
+        const display = warehouseMap.get(row.original.warehouseId) || row.original.warehouseId;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-surface-container-highest/30 flex items-center justify-center border border-outline-low">
+              <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
+            </div>
+            <span className="font-bold text-label-sm text-foreground/80">{display}</span>
+          </div>
+        );
+      },
+    },
+    {
+      id: 'progress',
+      header: t('items_counted') || 'Progress',
+      cell: ({ row }) => {
+        const total = row.original.totalItems || 0;
+        const counted = row.original.countedItems || 0;
+        const pct = total > 0 ? Math.round((counted / total) * 100) : 0;
+        return (
+          <div className="flex flex-col gap-1.5 min-w-[140px]">
+            <div className="flex items-center justify-between text-label-xxs font-semibold text-muted-foreground/60">
+              <span>{counted}/{total} {t('items_count')}</span>
+              <span>{pct}%</span>
+            </div>
+            <div className="w-full h-2 bg-surface-container-highest/30 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        );
+      },
+    },
   {
   accessorKey: 'status',
   header: tc('status_label') || 'State',
@@ -212,7 +211,7 @@ const { data, isLoading } = useStocktakeList({
  ], [t, tc, locale, router, warehouseMap]);
 
 const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
-   const inProgressCount = summaryData?.in_progress ?? 0;
+   const inProgressCount = summaryData?.inProgress ?? 0;
    const postedCount = summaryData?.posted ?? 0;
 
  return (
@@ -389,9 +388,9 @@ const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
               }
               pagination={data?.meta ? {
                 page: data.meta.page,
-                pageSize: data.meta.page_size,
+                pageSize: data.meta.pageSize,
                 total: data.meta.total,
-                totalPages: data.meta.total_pages,
+                totalPages: data.meta.totalPages,
                 onPageChange: handlePageChange
               } : undefined}
             />

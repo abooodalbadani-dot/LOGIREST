@@ -14,7 +14,7 @@ const QUERY_KEY = ['categories'];
 export function useCategories(filters?: { search?: string }) {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
-    placeholderData: { data: [], meta: { total: 0, page: 1, page_size: 50, total_pages: 0 } },
+    placeholderData: { data: [], meta: { total: 0, page: 1, pageSize: 50, totalPages: 0 } },
     queryFn: ({ signal }) => {
       const params = new URLSearchParams();
       if (filters?.search) params.append('search', filters.search);

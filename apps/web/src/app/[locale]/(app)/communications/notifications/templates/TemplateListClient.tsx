@@ -166,7 +166,7 @@ export function TemplateListClient({ locale }: { locale: string }) {
                 {t('stats_templates.active_templates')}
               </span>
               <span className="text-3xl font-extrabold text-emerald-400">
-                {data?.data?.filter(item => item.is_active).length ?? 0}
+                {data?.data?.filter(item => item.isActive).length ?? 0}
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] group-hover:scale-110 transition-transform duration-300">
@@ -184,7 +184,7 @@ export function TemplateListClient({ locale }: { locale: string }) {
                 {t('trigger_events') || 'Trigger Events'}
               </span>
               <span className="text-3xl font-extrabold text-operational-cyan">
-                {new Set(data?.data?.map(item => item.trigger_event)).size}
+                {new Set(data?.data?.map(item => item.triggerEvent)).size}
               </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-operational-cyan/10 border border-operational-cyan/20 flex items-center justify-center text-operational-cyan shadow-[0_0_15px_rgba(var(--operational-cyan-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
@@ -256,13 +256,13 @@ export function TemplateListClient({ locale }: { locale: string }) {
                       </button>
                     )}
                     <span className="w-2.5 h-2.5 rounded-full relative flex ml-1">
-                      {template.is_active && (
+                      {template.isActive && (
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       )}
-                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${template.is_active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]' : 'bg-white/10'}`}></span>
+                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${template.isActive ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]' : 'bg-white/10'}`}></span>
                     </span>
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${template.is_active ? 'text-emerald-400' : 'text-muted-foreground/35'}`}>
-                      {template.is_active ? t('active') || 'Active' : t('inactive') || 'Inactive'}
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${template.isActive ? 'text-emerald-400' : 'text-muted-foreground/35'}`}>
+                      {template.isActive ? t('active') || 'Active' : t('inactive') || 'Inactive'}
                     </span>
                   </div>
                 </div>
@@ -284,23 +284,23 @@ export function TemplateListClient({ locale }: { locale: string }) {
                     </div>
                   </div>
                   
-                  {template.subject_ar && (
+                  {template.subjectAr && (
                     <div className="space-y-1" dir="rtl">
                       <span className="text-[8px] text-muted-foreground/30 font-black tracking-widest block uppercase">الموضوع</span>
-                      <p className="text-[11px] font-bold text-foreground/80 line-clamp-1 leading-tight">{template.subject_ar}</p>
+                      <p className="text-[11px] font-bold text-foreground/80 line-clamp-1 leading-tight">{template.subjectAr}</p>
                     </div>
                   )}
 
-                  {template.subject_en && (
+                  {template.subjectEn && (
                     <div className="space-y-1 pt-1 border-t border-white/[0.02]" dir="ltr">
                       <span className="text-[8px] text-muted-foreground/30 font-black tracking-widest block uppercase font-sans">Subject</span>
-                      <p className="text-[11px] font-bold text-foreground/80 line-clamp-1 leading-tight">{template.subject_en}</p>
+                      <p className="text-[11px] font-bold text-foreground/80 line-clamp-1 leading-tight">{template.subjectEn}</p>
                     </div>
                   )}
                   
-                  <div className="space-y-2 pt-2 border-t border-white/[0.02]" dir={template.subject_en ? "ltr" : "rtl"}>
+                  <div className="space-y-2 pt-2 border-t border-white/[0.02]" dir={template.subjectEn ? "ltr" : "rtl"}>
                     <p className="text-[10px] text-muted-foreground/45 line-clamp-2 leading-relaxed italic">
-                      {template.subject_en ? template.body_en : template.body_ar}
+                      {template.subjectEn ? template.bodyEn : template.bodyAr}
                     </p>
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export function TemplateListClient({ locale }: { locale: string }) {
                 <div className="flex items-center gap-2 max-w-[80%]">
                   <Activity className="w-3.5 h-3.5 text-operational-cyan/50 animate-pulse" />
                   <span className="text-[10px] font-bold text-muted-foreground/50 truncate uppercase tracking-wider font-mono">
-                    {template.trigger_event}
+                    {template.triggerEvent}
                   </span>
                 </div>
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-operational-cyan/10 group-hover:border-operational-cyan/20 group-hover:text-operational-cyan transition-all duration-300 shadow-md">
@@ -324,9 +324,9 @@ export function TemplateListClient({ locale }: { locale: string }) {
       </motion.div>
 
       {/* Pagination component */}
-      {data?.meta && data.meta.total_pages > 1 && (
+      {data?.meta && data.meta.totalPages > 1 && (
         <div className="bg-surface-container-low/30 backdrop-blur-md rounded-[2.5rem] border border-white/5 p-4 flex justify-center animate-in fade-in duration-700 shadow-inner">
-          <Pagination page={page} totalPages={data.meta.total_pages} onPageChange={setPage} />
+          <Pagination page={page} totalPages={data.meta.totalPages} onPageChange={setPage} />
         </div>
       )}
 

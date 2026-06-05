@@ -3,12 +3,24 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { apiClient } from '@/lib/api/client';
+import { apiClient, normalizeKeysToCamelCase } from '@/lib/api/client';
 import { getTokenCookie, setTokenCookie, deleteTokenCookie } from '@/lib/api/cookies';
 import { AuthUserSchema } from '@/types/auth';
 
 export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR';
-export interface UserScope { branch_id: string | null; warehouse_id: string | null; department_id: string | null; }
+export interface UserScope { 
+  branchId: string | null; 
+  warehouseId: string | null; 
+  departmentId: string | null; 
+  warehouse?: {
+    id: string;
+    name: string;
+    branch?: {
+      id: string;
+      name: string;
+    } | null;
+  } | null;
+}
 export interface ActiveScope { branchId: string | null; warehouseId: string | null; departmentId: string | null; }
 export interface AuthUser { 
   id: string; 
@@ -17,9 +29,9 @@ export interface AuthUser {
   role: UserRole; 
   scopes: UserScope[]; 
   locale?: 'ar' | 'en'; 
-  avatar_url?: string | null;
+  avatarUrl?: string | null;
   phone?: string | null;
-  notification_preferences?: {
+  notificationPreferences?: {
     lowStock: boolean;
     expiry: boolean;
     pendingApproval: boolean;
@@ -79,11 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const currentPath = window.location.pathname + window.location.search;
         const isLogin = currentPath.includes('/login');
-        const redirectPath = !isLogin ? `&redirect=${encodeURIComponent(currentPath)}` : '';
-        const locale = document.documentElement.lang || 'ar';
-        
-        // Aggressively redirect via window.location.href to break free from any crashed React render loop
-        window.location.href = `/${locale}/login?reason=expired${redirectPath}`;
+        if (!isLogin) {
+          const redirectPath = `&redirect=${encodeURIComponent(currentPath)}`;
+          const locale = document.documentElement.lang || 'ar';
+          // Aggressively redirect via window.location.href to break free from any crashed React render loop
+          window.location.href = `/${locale}/login?reason=expired${redirectPath}`;
+        }
       } else {
         router.replace('/login?reason=expired');
       }
@@ -112,7 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const b64 = storedToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
         const payloadStr = decodeURIComponent(escape(atob(b64)));
         const payload = JSON.parse(payloadStr);
-        let parsedUser = AuthUserSchema.parse(payload.user);
+        const camelPayloadUser = normalizeKeysToCamelCase(payload.user);
+        let parsedUser = AuthUserSchema.parse(camelPayloadUser);
 
         setTimeout(async () => {
           try {
@@ -142,10 +156,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               const currentPath = window.location.pathname + window.location.search;
               const isLogin = currentPath.includes('/login');
-              const redirectPath = !isLogin ? `&redirect=${encodeURIComponent(currentPath)}` : '';
-              const locale = document.documentElement.lang || 'ar';
-              
-              window.location.href = `/${locale}/login?reason=${reason}${redirectPath}`;
+              if (!isLogin) {
+                const redirectPath = `&redirect=${encodeURIComponent(currentPath)}`;
+                const locale = document.documentElement.lang || 'ar';
+                window.location.href = `/${locale}/login?reason=${reason}${redirectPath}`;
+              }
             } else {
               router.replace(`/login?reason=${reason}`);
             }
@@ -168,23 +183,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
               const scopeObj = JSON.parse(storedScope);
               const isValid = parsedUser.scopes.some(
-                (s: any) => s.branch_id === scopeObj.branchId && s.warehouse_id === scopeObj.warehouseId
+                (s: UserScope) => s.branchId === scopeObj.branchId && s.warehouseId === scopeObj.warehouseId
               );
               if (isValid) {
                 setActiveScopeState(scopeObj);
               } else {
-                if (parsedUser.scopes.length > 0) {
-                  const first = parsedUser.scopes[0];
-                  const newScope = {
-                    branchId: first.branch_id,
-                    warehouseId: first.warehouse_id,
-                    departmentId: first.department_id
-                  };
-                  localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));
-                  setActiveScopeState(newScope);
-                } else {
-                  setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
-                }
+                setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
+                localStorage.removeItem('logirest_active_scope');
               }
             } catch (err) {
               console.error('Failed to parse active scope from localStorage:', err);
@@ -193,9 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (parsedUser.scopes.length > 0) {
             const first = parsedUser.scopes[0];
             setActiveScopeState({
-              branchId: first.branch_id,
-              warehouseId: first.warehouse_id,
-              departmentId: first.department_id
+              branchId: first.branchId,
+              warehouseId: first.warehouseId,
+              departmentId: first.departmentId
             });
           }
           setIsLoading(false);
@@ -204,6 +209,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.error('Failed to restore auth session:', e);
         deleteTokenCookie();
+        localStorage.removeItem('logirest_active_scope');
+        localStorage.removeItem('logirest_user_overrides');
+        setUser(null);
+        setToken(null);
+        setIsLoading(false);
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.clear();
+          } catch (err) {
+            console.error('Failed to clear session storage:', err);
+          }
+          document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+          const currentPath = window.location.pathname + window.location.search;
+          const isLogin = currentPath.includes('/login');
+          if (!isLogin) {
+            const redirectPath = `&redirect=${encodeURIComponent(currentPath)}`;
+            const locale = document.documentElement.lang || 'ar';
+            window.location.href = `/${locale}/login?reason=expired${redirectPath}`;
+          }
+        } else {
+          router.replace('/login?reason=expired');
+        }
+        return;
       }
     }
 
@@ -211,6 +239,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }, 0);
   }, []);
+
+  useEffect(() => {
+    if (isLoading || !user) return;
+    const storedScope = localStorage.getItem('logirest_active_scope');
+    if (storedScope) {
+      try {
+        const parsed = JSON.parse(storedScope);
+        if (parsed.branchId && parsed.warehouseId) {
+          return;
+        }
+      } catch (e) {}
+    }
+
+    let active = true;
+    const autoSelect = async () => {
+      try {
+        const branchesRes = await apiClient.get('/branches', z.object({ data: z.array(z.object({ id: z.string() })) }));
+        if (!active) return;
+        const branches = branchesRes.data;
+        if (branches && branches.length > 0) {
+          const firstBranch = branches[0];
+          const warehousesRes = await apiClient.get(`/warehouses?branch_id=${firstBranch.id}`, z.object({ data: z.array(z.object({ id: z.string() })) }));
+          if (!active) return;
+          const warehouses = warehousesRes.data;
+          if (warehouses && warehouses.length > 0) {
+            const firstWarehouse = warehouses[0];
+            const newScope = {
+              branchId: firstBranch.id,
+              warehouseId: firstWarehouse.id,
+              departmentId: null
+            };
+            setActiveScope(newScope);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-select scope:', err);
+      }
+    };
+
+    autoSelect();
+    return () => {
+      active = false;
+    };
+  }, [user, isLoading]);
 
   useEffect(() => {
     if (!token) return;
@@ -252,20 +324,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const b64 = data.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
       const payloadStr = decodeURIComponent(escape(atob(b64)));
       const payload = JSON.parse(payloadStr);
-      const parsedUser = AuthUserSchema.parse(payload.user);
+      const camelPayloadUser = normalizeKeysToCamelCase(payload.user);
+      const parsedUser = AuthUserSchema.parse(camelPayloadUser);
 
       setUser(parsedUser);
       setToken(data.token);
 
       // Forcefully overwrite or initialize active scope in LocalStorage and state
       if (parsedUser.scopes && parsedUser.scopes.length > 0) {
-        const validScope = parsedUser.scopes.find(s => s.branch_id && s.warehouse_id);
+        const validScope = parsedUser.scopes.find(s => s.branchId && s.warehouseId);
         const targetScope = validScope || parsedUser.scopes[0];
         if (targetScope) {
           const newScope = {
-            branchId: targetScope.branch_id || null,
-            warehouseId: targetScope.warehouse_id || null,
-            departmentId: targetScope.department_id || null
+            branchId: targetScope.branchId || null,
+            warehouseId: targetScope.warehouseId || null,
+            departmentId: targetScope.departmentId || null
           };
           setActiveScopeState(newScope);
           localStorage.setItem('logirest_active_scope', JSON.stringify(newScope));

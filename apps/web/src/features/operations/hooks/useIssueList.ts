@@ -8,12 +8,12 @@ import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 export const IssueSummarySchema = z.object({
   id: z.string(),
-  document_number: z.string(),
+  documentNumber: z.string(),
   status: BadgeStatusSchema,
-  destination_dept_id: z.string().nullable().optional(),
-  warehouse_id: z.string(),
-  created_at: z.string(),
-  posted_at: z.string().nullable().optional()
+  destinationDeptId: z.string().nullable().optional(),
+  warehouseId: z.string(),
+  createdAt: z.string(),
+  postedAt: z.string().nullable().optional()
 });
 
 export type IssueSummary = z.infer<typeof IssueSummarySchema>;

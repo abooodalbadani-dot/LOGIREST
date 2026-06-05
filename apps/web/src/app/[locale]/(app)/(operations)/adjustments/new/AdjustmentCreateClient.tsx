@@ -12,7 +12,7 @@ import { useUoMs } from '@/features/uoms/hooks/useUoMs';
 import { useVarianceReasons } from '@/features/operations/api/useVarianceReasons';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
-import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
+import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { FormFooter } from '@/components/shared/FormFooter';
@@ -75,29 +75,19 @@ function CreateLotDialog({ isOpen, onClose, onSave, defaultItemName }: { isOpen:
   );
 }
 
-interface NewAdjustmentLine {
-  id: string;
-  item_id: string;
-  item: {
-    id: string;
-    code: string;
-    name_ar: string;
-    name_en: string;
-    primary_uom: { id: string; code: string };
-  };
-  qty: number;
-  uom_id: string;
+interface NewAdjustmentLine extends LineItem {
+  itemId: string;
   direction: 'INCREASE' | 'DECREASE';
-  lot_number?: string;
+  lotNumber?: string;
 }
 
 interface ItemOption {
   id: string;
   code: string;
   barcode: string;
-  name_en: string;
-  name_ar: string;
-  primary_uom: { id: string; code: string };
+  nameEn: string;
+  nameAr: string;
+  primaryUom: { id: string; code: string };
 }
 
 export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
@@ -127,10 +117,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       return;
     }
     
-    const emptyLines = lines.filter(l => !l.lot_number && l.direction === 'DECREASE');
+    const emptyLines = lines.filter(l => !l.lotNumber && l.direction === 'DECREASE');
     if (emptyLines.length === 0) return;
 
-    const itemIds = [...new Set(emptyLines.map(l => l.item_id))];
+    const itemIds = [...new Set(emptyLines.map(l => l.itemId))];
 
     setIsSuggestingFIFO(true);
     try {
@@ -141,35 +131,35 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
         data: z.array(z.object({
           id: z.string(),
-          item_id: z.string(),
-          lot_number: z.string(),
-          expiry_date: z.string().nullable().optional(),
-          total_qty: z.number().optional(),
-          qty_available: z.number().optional(),
+          itemId: z.string(),
+          lotNumber: z.string(),
+          expiryDate: z.string().nullable().optional(),
+          totalQty: z.number().optional(),
+          qtyAvailable: z.number().optional(),
         }))
       }));
 
       const lotsAvailable = res.data;
 
       const lotsByItem = lotsAvailable.reduce((acc, lot) => {
-        if (!acc[lot.item_id]) acc[lot.item_id] = [];
-        acc[lot.item_id].push({
+        if (!acc[lot.itemId]) acc[lot.itemId] = [];
+        acc[lot.itemId].push({
           id: lot.id,
-          lot_number: lot.lot_number,
-          qty_available: lot.total_qty ?? lot.qty_available ?? 0,
-          expiry_date: lot.expiry_date
+          lotNumber: lot.lotNumber,
+          qtyAvailable: lot.totalQty ?? lot.qtyAvailable ?? 0,
+          expiryDate: lot.expiryDate
         });
         return acc;
-      }, {} as Record<string, { id: string, lot_number: string, qty_available: number, expiry_date?: string | null }[]>);
+      }, {} as Record<string, { id: string, lotNumber: string, qtyAvailable: number, expiryDate?: string | null }[]>);
 
-      const manualLines = lines.filter(l => l.lot_number || l.direction === 'INCREASE');
+      const manualLines = lines.filter(l => l.lotNumber || l.direction === 'INCREASE');
       manualLines.forEach(l => {
-        if (l.direction === 'DECREASE' && l.lot_number) {
-          const itemLots = lotsByItem[l.item_id];
+        if (l.direction === 'DECREASE' && l.lotNumber) {
+          const itemLots = lotsByItem[l.itemId];
           if (itemLots) {
-            const lot = itemLots.find(il => il.id === l.lot_number || il.lot_number === l.lot_number);
+            const lot = itemLots.find(il => il.id === l.lotNumber || il.lotNumber === l.lotNumber);
             if (lot) {
-              lot.qty_available = Math.max(0, lot.qty_available - l.qty);
+              lot.qtyAvailable = Math.max(0, lot.qtyAvailable - l.qty);
             }
           }
         }
@@ -177,10 +167,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
       Object.keys(lotsByItem).forEach(itemId => {
         lotsByItem[itemId].sort((a, b) => {
-          if (!a.expiry_date && !b.expiry_date) return 0;
-          if (!a.expiry_date) return 1;
-          if (!b.expiry_date) return -1;
-          return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+          if (!a.expiryDate && !b.expiryDate) return 0;
+          if (!a.expiryDate) return 1;
+          if (!b.expiryDate) return -1;
+          return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
         });
       });
 
@@ -191,24 +181,24 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       const linesToKeep = [...manualLines];
 
       emptyLines.forEach((emptyLine, index) => {
-        const itemLots = lotsByItem[emptyLine.item_id] || [];
+        const itemLots = lotsByItem[emptyLine.itemId] || [];
         let remainingQty = emptyLine.qty;
         let allocatedAny = false;
 
         for (const lot of itemLots) {
           if (remainingQty <= 0) break;
-          if (lot.qty_available <= 0) continue;
+          if (lot.qtyAvailable <= 0) continue;
 
-          const qtyToAllocate = Math.min(remainingQty, lot.qty_available);
+          const qtyToAllocate = Math.min(remainingQty, lot.qtyAvailable);
           
           newLines.push({
             ...emptyLine,
             id: `clone-${emptyLine.id}-${lot.id}-${index}-${Date.now()}`,
-            lot_number: lot.id,
+            lotNumber: lot.id,
             qty: qtyToAllocate
           });
 
-          lot.qty_available -= qtyToAllocate;
+          lot.qtyAvailable -= qtyToAllocate;
           remainingQty -= qtyToAllocate;
           allocatedAny = true;
         }
@@ -251,13 +241,13 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const isLocked = !!lockState?.isLocked;
 
   const uoms = uomsResult?.data || [];
-  const activeUoMs = uoms.filter(u => u.is_active !== false);
+  const activeUoMs = uoms.filter(u => u.isActive !== false);
 
   const warehouseItems = useMemo(() => {
     return (warehouses || []).map(w => ({
       id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
+      name_en: w.name || w.code,
+      name_ar: w.name || w.code,
       code: w.code,
     }));
   }, [warehouses]);
@@ -268,8 +258,8 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     if (reasons && reasons.length > 0) {
       return reasons.map(r => ({
         id: r.code,
-        name_en: r.name_en,
-        name_ar: r.name_ar,
+        name_en: r.nameEn,
+        name_ar: r.nameAr,
       }));
     }
     return fallbackReasons.map(r => ({
@@ -284,11 +274,11 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       id: i.id,
       code: i.code,
       barcode: i.barcode,
-      name_en: i.name_en,
-      name_ar: i.name_ar,
-      primary_uom: {
-        id: i.primary_uom.id,
-        code: i.primary_uom.code,
+      nameEn: i.nameEn,
+      nameAr: i.nameAr,
+      primaryUom: {
+        id: i.primaryUom.id,
+        code: i.primaryUom.code,
       },
     }));
     return [...mappedItems, ...customItems];
@@ -303,27 +293,26 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     }
 
     setLines(prev => {
-      const existing = prev.find(l => l.item_id === item.id);
+      const existing = prev.find(l => l.itemId === item.id);
       if (existing) {
-        return prev.map(l => l.item_id === item.id ? { ...l, qty: l.qty + 1 } : l);
+        return prev.map(l => l.itemId === item.id ? { ...l, qty: l.qty + 1 } : l);
       }
       return [...prev, {
         id: `temp-${item.id}-${Date.now()}`,
-        item_id: item.id,
+        itemId: item.id,
         item: {
           id: item.id,
           code: item.code,
-          name_ar: item.name_ar,
-          name_en: item.name_en,
-          primary_uom: { 
-            id: item.primary_uom.id,
-            code: item.primary_uom.code 
+          nameAr: item.nameAr,
+          nameEn: item.nameEn,
+          primaryUom: { 
+            code: item.primaryUom.code 
           }
         },
         qty: 1,
-        uom_id: item.primary_uom.id,
+        uomId: item.primaryUom.id,
         direction: 'INCREASE',
-        lot_number: ''
+        lotNumber: ''
       }];
     });
 
@@ -335,16 +324,16 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
 
     createAdjustment.mutate({
       payload: {
-        warehouse_id: warehouseId,
+        warehouseId: warehouseId,
         reason: reasonCategory,
         notes,
         lines: lines.map(l => ({
-          item_id: l.item_id,
+          itemId: l.itemId,
           qty: l.qty,
-          uom_id: l.uom_id,
+          uomId: l.uomId,
           direction: l.direction,
-          lot_allocations: l.lot_number ? [{ lot_id: l.lot_number, qty: l.qty }] : undefined,
-          is_custom: l.item_id.startsWith('cust-') ? true : undefined
+          lotAllocations: l.lotNumber ? [{ lotId: l.lotNumber, qty: l.qty }] : undefined,
+          isCustom: l.itemId.startsWith('cust-') ? true : undefined
         }))
       },
       signal: abortController.signal,
@@ -413,10 +402,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
           <input
             type="text"
             placeholder={t('lot_placeholder') || 'Lot...'}
-            value={line.lot_number || ''}
+            value={line.lotNumber || ''}
             onChange={(e) => {
               const val = e.target.value;
-              setLines(prev => prev.map(l => l.id === line.id ? { ...l, lot_number: val } : l));
+              setLines(prev => prev.map(l => l.id === line.id ? { ...l, lotNumber: val } : l));
             }}
             className="w-32 bg-surface-container-highest/60 border border-white/5 rounded-lg text-center h-9 px-2 font-mono text-label-xs font-semibold focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all hover:bg-surface-container-highest/80 disabled:opacity-50"
           />
@@ -639,14 +628,14 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
                   </div>
                 )}
                 renderUom={(line) => {
-                  const uomOption = activeUoMs.find(u => u.id === line.uom_id);
+                  const uomOption = activeUoMs.find(u => u.id === line.uomId);
                   return (
                     <div className="flex items-center min-w-[120px]">
                       <SmartCombobox
                         items={activeUoMs}
-                        value={line.uom_id}
+                        value={line.uomId}
                         onSelect={(uom) => {
-                          setLines(prev => prev.map(l => l.id === line.id ? { ...l, uom_id: uom.id } : l));
+                          setLines(prev => prev.map(l => l.id === line.id ? { ...l, uomId: uom.id } : l));
                         }}
                         placeholder="PCS" // i18n-ignore
                       />
@@ -676,33 +665,48 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         defaultName={customItemNameQuery}
         onCreate={async (newItem) => {
           try {
-            await apiClient.post('/master-data/items', z.any(), {
+            await apiClient.post('/master-data/items', z.unknown(), {
               id: newItem.id,
               code: newItem.code,
               barcode: newItem.barcode,
-              name_en: newItem.name_en,
-              name_ar: newItem.name_ar,
-              primary_uom: newItem.primary_uom,
-              track_lots: false,
-              is_active: true,
+              nameEn: newItem.name_en,
+              nameAr: newItem.name_ar,
+              primaryUom: newItem.primary_uom,
+              trackLots: false,
+              isActive: true,
               version: 1
             });
           } catch (err) {
             console.error('Failed to register custom item', err);
           }
 
-          setCustomItems(prev => [...prev, newItem]);
+          setCustomItems(prev => [...prev, {
+            id: newItem.id,
+            code: newItem.code,
+            barcode: newItem.barcode,
+            nameEn: newItem.name_en,
+            nameAr: newItem.name_ar,
+            primaryUom: newItem.primary_uom,
+          }]);
           setLines(prev => {
-            const existing = prev.find(l => l.item_id === newItem.id);
+            const existing = prev.find(l => l.itemId === newItem.id);
             if (existing) return prev;
             return [...prev, {
               id: newItem.id,
-              item_id: newItem.id,
-              item: newItem,
+              itemId: newItem.id,
+              item: {
+                id: newItem.id,
+                code: newItem.code,
+                nameAr: newItem.name_ar,
+                nameEn: newItem.name_en,
+                primaryUom: {
+                  code: newItem.primary_uom.code
+                }
+              },
               qty: 1,
-              uom_id: newItem.primary_uom.id,
+              uomId: newItem.primary_uom.id,
               direction: 'INCREASE',
-              lot_number: ''
+              lotNumber: ''
             }];
           });
         }}
@@ -711,10 +715,10 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       <CreateLotDialog
         isOpen={creatingLotForLineId !== null}
         onClose={() => setCreatingLotForLineId(null)}
-        defaultItemName={creatingLotForLineId ? (locale === 'ar' ? lines.find(l => l.id === creatingLotForLineId)?.item.name_ar : lines.find(l => l.id === creatingLotForLineId)?.item.name_en) || '' : ''}
+        defaultItemName={creatingLotForLineId ? (locale === 'ar' ? lines.find(l => l.id === creatingLotForLineId)?.item.nameAr : lines.find(l => l.id === creatingLotForLineId)?.item.nameEn) || '' : ''}
         onSave={(lotNumber, expiryDate) => {
           if (creatingLotForLineId) {
-            setLines(prev => prev.map(l => l.id === creatingLotForLineId ? { ...l, lot_number: lotNumber } : l));
+            setLines(prev => prev.map(l => l.id === creatingLotForLineId ? { ...l, lotNumber: lotNumber } : l));
             // In a real app we might also save the expiryDate to the payload if the API expects it for NEW lots
             // For now, we set the lot_number in the UI. 
             toast.success(tCommon('success') || "Lot created locally.");

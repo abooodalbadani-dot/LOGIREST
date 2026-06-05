@@ -13,13 +13,13 @@ import {
 
 const KitchenRequestSummarySchema = z.object({
  id: z.string(),
- request_number: z.string(),
+ requestNumber: z.string(),
  status: BadgeStatusSchema,
- department_id: z.string(),
- warehouse_id: z.string(),
- requested_by: z.string(),
- requested_at: z.string(),
- created_at: z.string(),
+ departmentId: z.string(),
+ warehouseId: z.string(),
+ requestedBy: z.string(),
+ requestedAt: z.string(),
+ createdAt: z.string(),
 });
 
 export type KitchenRequestSummary = z.infer<typeof KitchenRequestSummarySchema>;

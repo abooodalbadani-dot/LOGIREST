@@ -10,46 +10,46 @@ export const LineItemSchema = z.object({
  item: z.object({
  id: z.string(),
  code: z.string(),
- name_ar: z.string(),
- name_en: z.string(),
- primary_uom: z.object({
+ nameAr: z.string(),
+ nameEn: z.string(),
+ primaryUom: z.object({
  id: z.string(),
  code: z.string()
  })
  }),
  lot: z.object({
  id: z.string(),
- lot_number: z.string(),
- expiry_date: z.string().nullable()
+ lotNumber: z.string(),
+ expiryDate: z.string().nullable()
  }).nullable(),
  qty: z.number(),
- received_qty: z.number(),
- uom_id: z.string(),
- unit_cost_foreign: z.number().nullable(),
- unit_cost_base: z.number().nullable()
+ receivedQty: z.number(),
+ uomId: z.string(),
+ unitCostForeign: z.number().nullable(),
+ unitCostBase: z.number().nullable()
 });
 
 export const GRNDetailSchema = z.object({
  id: z.string(),
- document_number: z.string(),
+ documentNumber: z.string(),
  status: BadgeStatusSchema,
- supplier_id: z.string(),
+ supplierId: z.string(),
  supplier: z.object({
  id: z.string(),
  name: z.string()
  }).optional(),
- po_id: z.string().nullable(),
- po_number: z.string().nullable(),
- po_fx_rate: z.number().nullable().optional(),
- currency_id: z.string(),
- warehouse_id: z.string(),
- fx_rate: z.number().nullable(),
- fx_rate_captured_at: z.string().nullable().optional(),
+ poId: z.string().nullable(),
+ poNumber: z.string().nullable(),
+ poFxRate: z.number().nullable().optional(),
+ currencyId: z.string(),
+ warehouseId: z.string(),
+ fxRate: z.number().nullable(),
+ fxRateCapturedAt: z.string().nullable().optional(),
  version: z.number(),
  notes: z.string().nullable(),
- created_at: z.string().optional(),
- created_by: z.string().optional(),
- updated_at: z.string().optional(),
+ createdAt: z.string().optional(),
+ createdBy: z.string().optional(),
+ updatedAt: z.string().optional(),
  lines: z.array(LineItemSchema)
 });
 

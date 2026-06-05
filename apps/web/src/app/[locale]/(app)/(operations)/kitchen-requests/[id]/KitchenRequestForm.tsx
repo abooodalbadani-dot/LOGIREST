@@ -89,7 +89,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const [fulfillmentData, setFulfillmentData] = useState<{ item_id: string; fulfilled_quantity: number }[]>([]);
   const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
 
-  const { data: warehouseLockState } = useWarehouseLock(request.warehouse_id || null);
+  const { data: warehouseLockState } = useWarehouseLock(request.warehouseId || null);
   const isWriteBlocked = updateStatus.isPending || fulfillRequest.isPending || !!warehouseLockState?.isLocked;
 
   const status = request.status as DocumentStatus;
@@ -102,15 +102,15 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     return request.items.map((item) => ({
       id: item.id,
       item: {
-        id: item.item_id,
-        code: item.item_id,
-        name_en: item.item_name,
-        name_ar: item.item_name,
-        primary_uom: { code: item.uom }
+        id: item.itemId,
+        code: item.itemId,
+        nameEn: item.itemName,
+        nameAr: item.itemName,
+        primaryUom: { code: item.uom }
       },
       qty: item.quantity,
-      fulfilledQty: item.fulfilled_quantity ?? 0,
-      uom_id: '',
+      fulfilledQty: item.fulfilledQuantity ?? 0,
+      uomId: '',
       lot: null,
       notes: item.notes ?? null,
     }));
@@ -142,22 +142,22 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
   const history = useMemo((): StatusTimelineEntry[] => {
     const h: StatusTimelineEntry[] = [
-      { status: 'draft' as Status, at: request.created_at, by: request.requested_by }
+      { status: 'draft' as Status, at: request.createdAt, by: request.requestedBy }
     ];
     if (!canPerformActionV2('KITCHEN_REQUEST', request.status as DocumentStatus, 'SUBMIT', user?.role)) {
-      h.push({ status: 'submitted' as Status, at: request.requested_at, by: request.requested_by });
+      h.push({ status: 'submitted' as Status, at: request.requestedAt, by: request.requestedBy });
     }
-    if (request.approved_at) {
-      h.push({ status: 'approved' as Status, at: request.approved_at, by: request.approved_by || 'Approver' });
+    if (request.approvedAt) {
+      h.push({ status: 'approved' as Status, at: request.approvedAt, by: request.approvedBy || 'Approver' });
     }
-    if (request.rejected_at) {
-      h.push({ status: 'rejected' as Status, at: request.rejected_at, by: request.rejected_by || 'Rejecter' });
+    if (request.rejectedAt) {
+      h.push({ status: 'rejected' as Status, at: request.rejectedAt, by: request.rejectedBy || 'Rejecter' });
     }
     if (request.status === 'CANCELLED') {
-      h.push({ status: 'cancelled' as Status, at: request.updated_at || request.created_at, by: request.rejected_by || 'System' });
+      h.push({ status: 'cancelled' as Status, at: request.updatedAt || request.createdAt, by: request.rejectedBy || 'System' });
     }
-    if (request.fulfilled_at) {
-      h.push({ status: request.status.toLowerCase() as Status, at: request.fulfilled_at, by: request.fulfilled_by || 'Store Keeper' });
+    if (request.fulfilledAt) {
+      h.push({ status: request.status.toLowerCase() as Status, at: request.fulfilledAt, by: request.fulfilledBy || 'Store Keeper' });
     }
     return h;
   }, [request, user?.role]);
@@ -243,7 +243,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const openFulfillDialog = () => {
     setFulfillmentData(
       request.items.map((item: KitchenRequestItem) => ({
-        item_id: item.item_id,
+        item_id: item.itemId,
         fulfilled_quantity: item.quantity
       }))
     );
@@ -251,20 +251,20 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   };
 
   const handleSuggestFIFO = async () => {
-    if (!request.warehouse_id) return;
+    if (!request.warehouseId) return;
     setIsSuggestingFIFO(true);
     try {
-      const itemIds = request.items.map(i => i.item_id);
+      const itemIds = request.items.map(i => i.itemId);
       const qs = new URLSearchParams();
-      qs.append('warehouse_id', request.warehouse_id);
+      qs.append('warehouse_id', request.warehouseId);
       itemIds.forEach(id => qs.append('item_id', id));
 
       const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
         data: z.array(z.object({
-          item_id: z.string(),
-          lot_number: z.string(),
-          expiry_date: z.string().nullable().optional(),
-          qty_available: z.number().optional(),
+          itemId: z.string(),
+          lotNumber: z.string(),
+          expiryDate: z.string().nullable().optional(),
+          qtyAvailable: z.number().optional(),
         }))
       }));
 
@@ -272,14 +272,14 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
       const prioritized: Record<string, number> = {};
       for (const item of request.items) {
         const itemLots = lots
-          .filter(l => l.item_id === item.item_id)
+          .filter(l => l.itemId === item.itemId)
           .sort((a, b) => {
-            if (!a.expiry_date) return 1;
-            if (!b.expiry_date) return -1;
-            return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+            if (!a.expiryDate) return 1;
+            if (!b.expiryDate) return -1;
+            return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
           });
-        const totalAvailable = itemLots.reduce((sum, l) => sum + (l.qty_available || 0), 0);
-        prioritized[item.item_id] = Math.min(totalAvailable, item.quantity);
+        const totalAvailable = itemLots.reduce((sum, l) => sum + (l.qtyAvailable || 0), 0);
+        prioritized[item.itemId] = Math.min(totalAvailable, item.quantity);
       }
 
       setFulfillmentData(prev => prev.map(f => ({
@@ -364,7 +364,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
               items={[
                 { label: tCommon('inventory'), href: '#' },
                 { label: t('title'), href: "/kitchen-requests" },
-                { label: request.request_number }
+                { label: request.requestNumber }
               ]} 
             />
             <div className="flex items-center gap-4">
@@ -372,12 +372,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                 <ArrowLeft className={cn("w-5 h-5", locale === 'ar' && "rotate-180")} />
               </Button>
               <div>
-                <h1 className="text-headline-lg font-semibold uppercase italic">{request.request_number}</h1>
+                <h1 className="text-headline-lg font-semibold uppercase italic">{request.requestNumber}</h1>
                 <div className="flex items-center gap-3 mt-1">
                   <StatusBadge status={request.status} />
                   <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
-                    <ClientOnlyTime date={request.created_at} mode="date" locale={locale} className="tabular-nums" />
+                    <ClientOnlyTime date={request.createdAt} mode="date" locale={locale} className="tabular-nums" />
                   </span>
                 </div>
               </div>
@@ -402,21 +402,21 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                       <Building2 className="w-3.5 h-3.5" />
                       {t('department')}
                     </span>
-                    <p className="text-body-md font-bold">{request.department_name}</p>
+                    <p className="text-body-md font-bold">{request.departmentName}</p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
                       <Warehouse className="w-3.5 h-3.5" />
                       {t('warehouse')}
                     </span>
-                    <p className="text-body-md font-bold">{request.warehouse_name}</p>
+                    <p className="text-body-md font-bold">{request.warehouseName}</p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-label-xs font-semibold uppercase text-muted-foreground/40 flex items-center gap-2">
                       <User className="w-3.5 h-3.5" />
                       {t('requested_by')}
                     </span>
-                    <p className="text-body-md font-bold">{request.requested_by}</p>
+                    <p className="text-body-md font-bold">{request.requestedBy}</p>
                   </div>
                   {request.notes && (
                     <div className="md:col-span-3 pt-4 border-t border-surface-container-high/50 space-y-1">
@@ -427,13 +427,13 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                       <p className="text-label-sm text-muted-foreground italic leading-relaxed">&quot;{request.notes}&quot;</p>
                     </div>
                   )}
-                  {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejection_reason && (
+                  {status !== KITCHEN_REQUEST_STATUS.DRAFT && request.rejectionReason && (
                     <div className="md:col-span-3 p-4 bg-red-500/5 border border-red-500/10 rounded-lg space-y-1">
                       <span className="text-label-xs font-semibold uppercase text-red-500/60 flex items-center gap-2">
                         <AlertCircle className="w-3.5 h-3.5" />
                         {t('rejection_reason_label')}
                       </span>
-                      <p className="text-label-sm font-bold text-red-500">{request.rejection_reason}</p>
+                      <p className="text-label-sm font-bold text-red-500">{request.rejectionReason}</p>
                     </div>
                   )}
                 </div>
@@ -466,7 +466,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                 )}
                 renderUom={(line) => (
                   <span className="text-label-xxs font-semibold uppercase text-muted-foreground/30">
-                    {line.item.primary_uom?.code || '---'}
+                    {line.item.primaryUom?.code || '---'}
                   </span>
                 )}
                 extraColumns={extraColumns}
@@ -554,7 +554,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
           {request.items.map((item: KitchenRequestItem) => (
             <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 items-center p-4 bg-surface-container-high/30 rounded-2xl border border-surface-container-high/50">
               <div className="space-y-1">
-                <p className="text-label-sm font-bold">{item.item_name}</p>
+                <p className="text-label-sm font-bold">{item.itemName}</p>
                 <p className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('requested')}: {item.quantity} {item.uom}</p>
               </div>
               <div className="text-center">
@@ -564,12 +564,12 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   step="0.01"
                   dir="ltr"
                   disabled={isWriteBlocked}
-                  aria-label={t('fulfilling') + " " + item.item_name}
+                  aria-label={t('fulfilling') + " " + item.itemName}
                   className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30"
-                  value={fulfillmentData.find(f => f.item_id === item.item_id)?.fulfilled_quantity || 0}
+                  value={fulfillmentData.find(f => f.item_id === item.itemId)?.fulfilled_quantity || 0}
                   onChange={(e) => {
                     const val = Number(e.target.value);
-                    setFulfillmentData(prev => prev.map(f => f.item_id === item.item_id ? { ...f, fulfilled_quantity: val } : f));
+                    setFulfillmentData(prev => prev.map(f => f.item_id === item.itemId ? { ...f, fulfilled_quantity: val } : f));
                   }}
                 />
               </div>

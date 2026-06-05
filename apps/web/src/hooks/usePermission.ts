@@ -1,5 +1,5 @@
 'use client';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, type UserRole } from '@/providers/AuthProvider';
 import { ROLE_CAPABILITIES, type DocumentType, type CapabilityAction, canRolePerformAction } from '@logirest/shared-types';
 import { PERMISSION_MATRIX, type ResourceType, type ActionType } from '@/types/rbac';
 
@@ -43,12 +43,12 @@ const ACTION_TO_DOCUMENT_ACTION: Partial<Record<ActionType, CapabilityAction>> =
   update: 'edit',
 };
 
-function checkCapability(role: string, action: ActionType, resource: ResourceType): boolean {
+function checkCapability(role: UserRole, action: ActionType, resource: ResourceType): boolean {
   const documentType = RESOURCE_TO_DOCUMENT_TYPE[resource];
   const documentAction = ACTION_TO_DOCUMENT_ACTION[action];
 
   if (documentType && documentAction) {
-    return canRolePerformAction(documentType, documentAction, role as any);
+    return canRolePerformAction(documentType, documentAction, role);
   }
 
   return false;

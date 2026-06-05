@@ -5,6 +5,8 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
+import { toSnakeCase } from '@/lib/api/adapters';
+import { TriggerEvent, EntityField } from '@/types/notifications';
 import { 
   ArrowLeft,
   ArrowRight,
@@ -36,24 +38,24 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
   const { data: triggerEventsData, isLoading: eventsLoading } = useTriggerEvents();
   const { data: parameterRegistry, isLoading: registryLoading } = useParameterRegistry();
 
-  const triggerEvents = useMemo(() => (triggerEventsData as { data?: Array<{ code: string; name_ar: string; name_en: string; entity_type: string; description: string; suggested_fields: string[] }> })?.data || (triggerEventsData as Array<{ code: string; name_ar: string; name_en: string; entity_type: string; description: string; suggested_fields: string[] }>) || [], [triggerEventsData]);
+  const triggerEvents = useMemo(() => (triggerEventsData as { data?: Array<TriggerEvent> })?.data || (triggerEventsData as Array<TriggerEvent>) || [], [triggerEventsData]);
 
   const getSuggestedParams = (eventCode: string) => {
-    const event = triggerEvents.find((e: { code: string }) => e.code === eventCode);
+    const event = triggerEvents.find((e: TriggerEvent) => e.code === eventCode);
     if (!event || !parameterRegistry) return [];
-    const entityFields = (parameterRegistry as Record<string, Array<{ entity: string; field: string; type: string; label_ar: string; label_en: string; sample_value: string }>>)[event.entity_type];
+    const entityFields = (parameterRegistry as Record<string, Array<EntityField>>)[event.entityType];
     if (!entityFields) return [];
-    const result: Array<{ name: string; label_ar: string; label_en: string; sample_value: string; entity: string; field_path: string }> = [];
-    event.suggested_fields.forEach((fieldName: string) => {
-      const match = entityFields.find((f: { field: string }) => f.field === fieldName);
+    const result: Array<{ name: string; labelAr: string; labelEn: string; sampleValue: string; entity: string; fieldPath: string }> = [];
+    event.suggestedFields.forEach((fieldName: string) => {
+      const match = entityFields.find((f: EntityField) => f.field === fieldName);
       if (match) {
         result.push({
           name: `${match.entity.toLowerCase()}_${match.field}`,
-          label_ar: match.label_ar,
-          label_en: match.label_en,
-          sample_value: match.sample_value,
+          labelAr: match.labelAr,
+          labelEn: match.labelEn,
+          sampleValue: match.sampleValue,
           entity: match.entity,
-          field_path: match.field,
+          fieldPath: match.field,
         });
       }
     });
@@ -63,20 +65,20 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
   const [step, setStep] = useState(1);
   const [template, setTemplate] = useState({
     code: '',
-    trigger_event: 'LOW_STOCK',
-    subject_ar: '',
-    subject_en: '',
-    body_ar: '',
-    body_en: '',
-    allowed_parameters: [] as Array<{ name: string; label_ar: string; label_en: string; sample_value: string; entity?: string; field_path?: string }>,
-    is_active: true,
+    triggerEvent: 'LOW_STOCK',
+    subjectAr: '',
+    subjectEn: '',
+    bodyAr: '',
+    bodyEn: '',
+    allowedParameters: [] as Array<{ name: string; labelAr: string; labelEn: string; sampleValue: string; entity?: string; fieldPath?: string }>,
+    isActive: true,
   });
 
   const [paramForm, setParamForm] = useState({
     name: '',
-    label_ar: '',
-    label_en: '',
-    sample_value: '',
+    labelAr: '',
+    labelEn: '',
+    sampleValue: '',
   });
 
   const [entitySearch, setEntitySearch] = useState('');
@@ -103,26 +105,26 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
     const suggested = getSuggestedParams(val);
     setTemplate(prev => ({
       ...prev,
-      trigger_event: val,
-      allowed_parameters: [...suggested]
+      triggerEvent: val,
+      allowedParameters: [...suggested]
     }));
     setSelectedEntity(null);
   };
 
-  const addRegistryField = (field: { entity: string; field: string; label_ar: string; label_en: string; sample_value: string }) => {
+  const addRegistryField = (field: EntityField) => {
     const paramName = `${field.entity.toLowerCase()}_${field.field}`;
-    if (template.allowed_parameters.some(p => p.name === paramName)) return;
+    if (template.allowedParameters.some(p => p.name === paramName)) return;
     setTemplate(prev => ({
       ...prev,
-      allowed_parameters: [
-        ...prev.allowed_parameters,
+      allowedParameters: [
+        ...prev.allowedParameters,
         {
           name: paramName,
-          label_ar: field.label_ar,
-          label_en: field.label_en,
-          sample_value: field.sample_value,
+          labelAr: field.labelAr,
+          labelEn: field.labelEn,
+          sampleValue: field.sampleValue,
           entity: field.entity,
-          field_path: field.field,
+          fieldPath: field.field,
         }
       ]
     }));
@@ -130,43 +132,43 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
   };
 
   const addCustomParam = () => {
-    if (!paramForm.name || !paramForm.label_en || !paramForm.sample_value) return;
+    if (!paramForm.name || !paramForm.labelEn || !paramForm.sampleValue) return;
     const nameSanitized = paramForm.name.toLowerCase().replace(/[^a-z0-9_]/g, '');
 
-    if (template.allowed_parameters.some(p => p.name === nameSanitized)) {
+    if (template.allowedParameters.some(p => p.name === nameSanitized)) {
       setError('Parameter name already exists');
       return;
     }
 
     setTemplate(prev => ({
       ...prev,
-      allowed_parameters: [
-        ...prev.allowed_parameters,
+      allowedParameters: [
+        ...prev.allowedParameters,
         {
           name: nameSanitized,
-          label_ar: paramForm.label_ar || paramForm.label_en,
-          label_en: paramForm.label_en,
-          sample_value: paramForm.sample_value
+          labelAr: paramForm.labelAr || paramForm.labelEn,
+          labelEn: paramForm.labelEn,
+          sampleValue: paramForm.sampleValue
         }
       ]
     }));
-    setParamForm({ name: '', label_ar: '', label_en: '', sample_value: '' });
+    setParamForm({ name: '', labelAr: '', labelEn: '', sampleValue: '' });
     setError(null);
   };
 
   const removeParam = (name: string) => {
     setTemplate(prev => ({
       ...prev,
-      allowed_parameters: prev.allowed_parameters.filter(p => p.name !== name)
+      allowedParameters: prev.allowedParameters.filter(p => p.name !== name)
     }));
   };
 
   const executeCreate = () => {
-    if (!template.code || !template.trigger_event) {
+    if (!template.code || !template.triggerEvent) {
       setError('Please fill in the template code');
       return;
     }
-    createMutation.mutate(template);
+    createMutation.mutate(toSnakeCase(template as Record<string, unknown>));
   };
 
   return (
@@ -238,7 +240,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
               </div>
 
               <div className="grid gap-4">
-                <Label htmlFor="trigger_event" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
+                <Label htmlFor="triggerEvent" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                   EVENT TRIGGER
                 </Label>
                 {eventsLoading ? (
@@ -249,14 +251,14 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                 ) : (
                   <div className="relative">
                     <select
-                      id="trigger_event"
-                      value={template.trigger_event}
+                      id="triggerEvent"
+                      value={template.triggerEvent}
                       onChange={handleTriggerChange}
                       className="w-full h-14 bg-surface-container border border-white/10 rounded-none px-5 focus:outline-none focus:ring-1 focus:ring-operational-cyan text-sm font-semibold transition-all appearance-none cursor-pointer"
                     >
-                      {triggerEvents.map((evt: { code: string; name_en: string; entity_type: string }) => (
+                       {triggerEvents.map((evt: TriggerEvent) => (
                         <option key={evt.code} value={evt.code}>
-                          {evt.name_en.toUpperCase()} ({evt.code}) — {evt.entity_type}
+                          {evt.nameEn.toUpperCase()} ({evt.code}) — {evt.entityType}
                         </option>
                       ))}
                       <option value="CUSTOM">FULLY CUSTOM EVENT TEMPLATE (CUSTOM)</option>
@@ -264,11 +266,11 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/45">
                       ▼
                     </div>
-                    {template.trigger_event !== 'CUSTOM' && (() => {
-                      const evt = triggerEvents.find((e: { code: string }) => e.code === template.trigger_event);
+                    {template.triggerEvent !== 'CUSTOM' && (() => {
+                      const evt = triggerEvents.find((e: TriggerEvent) => e.code === template.triggerEvent);
                       return evt ? (
                         <p className="text-[9px] text-muted-foreground/45 font-medium mt-1.5 ml-1">
-                          {evt.description} — Entity: <span className="font-mono text-operational-cyan">{evt.entity_type}</span>
+                          {evt.description} — Entity: <span className="font-mono text-operational-cyan">{evt.entityType}</span>
                         </p>
                       ) : null;
                     })()}
@@ -290,20 +292,20 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
               {/* Current Parameters List */}
               <div className="space-y-3">
                 <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 block">
-                  ALLOWED PARAMETERS FOR TRIGGER: {template.trigger_event}
+                  ALLOWED PARAMETERS FOR TRIGGER: {template.triggerEvent}
                   <span className="ml-2 text-[9px] font-mono text-muted-foreground/45 bg-white/5 px-1.5 py-0.5">
-                    {template.allowed_parameters.length} TOKENS
+                    {template.allowedParameters.length} TOKENS
                   </span>
                 </Label>
                 
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                  {template.allowed_parameters.length === 0 ? (
+                  {template.allowedParameters.length === 0 ? (
                     <div className="py-8 border border-dashed border-white/10 rounded-none flex flex-col items-center justify-center text-center text-muted-foreground/40 gap-2">
                       <p className="text-xs italic font-medium">No parameters defined yet. Add from the entity browser below or create custom tokens.</p>
                     </div>
                   ) : (
-                    template.allowed_parameters.map((param) => {
-                      const isEntityBound = !!(param.entity && param.field_path);
+                    template.allowedParameters.map((param) => {
+                      const isEntityBound = !!(param.entity && param.fieldPath);
                       return (
                         <div 
                           key={param.name}
@@ -315,13 +317,13 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                             </span>
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <span className="text-[10px] font-bold text-foreground/80 truncate">
-                                {param.label_en} / {param.label_ar}
+                                {param.labelEn} / {param.labelAr}
                               </span>
                               <span className="text-[9px] font-mono text-muted-foreground/45 truncate">
-                                Sample: {param.sample_value}
+                                Sample: {param.sampleValue}
                                 {isEntityBound && (
                                   <span className="ml-2 text-[8px] uppercase tracking-wider text-operational-cyan/60">
-                                    · {param.entity}.{param.field_path}
+                                    · {param.entity}.{param.fieldPath}
                                   </span>
                                 )}
                               </span>
@@ -359,11 +361,11 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                     <div className="relative w-48">
                       <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
                       <input
-                        type="text"
-                        value={entitySearch}
-                        onChange={(e) => setEntitySearch(e.target.value)}
-                        placeholder="Search fields..."
-                        className="w-full h-7 text-[10px] bg-surface-container-lowest border border-white/10 rounded-none pl-7 pr-2 outline-none focus:border-operational-cyan/40 text-foreground placeholder:text-muted-foreground/30 font-mono"
+                          type="text"
+                          value={entitySearch}
+                          onChange={(e) => setEntitySearch(e.target.value)}
+                          placeholder="Search fields..."
+                          className="w-full h-7 text-[10px] bg-surface-container-lowest border border-white/10 rounded-none pl-7 pr-2 outline-none focus:border-operational-cyan/40 text-foreground placeholder:text-muted-foreground/30 font-mono"
                       />
                     </div>
                   </div>
@@ -393,16 +395,17 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                     <div className="flex-1 max-h-[250px] overflow-y-auto p-2">
                       {selectedEntity ? (
                         <div className="space-y-1">
-                          {(parameterRegistry as Record<string, Array<{ entity: string; field: string; type: string; label_ar: string; label_en: string; sample_value: string }>>)[selectedEntity]
+                          {(parameterRegistry as Record<string, Array<EntityField>>)[selectedEntity]
                             .filter((f) =>
                               !entitySearch ||
                               f.field.toLowerCase().includes(entitySearch.toLowerCase()) ||
-                              f.label_en.toLowerCase().includes(entitySearch.toLowerCase()) ||
-                              f.label_ar.includes(entitySearch)
+                              f.labelEn.toLowerCase().includes(entitySearch.toLowerCase()) ||
+                              f.labelAr.includes(entitySearch)
                             )
                             .map((field) => {
-                              const alreadyAdded = template.allowed_parameters.some(
-                                p => p.name === `${field.entity.toLowerCase()}_${field.field}`
+                              const paramName = `${field.entity.toLowerCase()}_${field.field}`;
+                              const alreadyAdded = template.allowedParameters.some(
+                                p => p.name === paramName
                               );
                               return (
                                 <button
@@ -421,7 +424,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                                       {field.field}
                                     </span>
                                     <span className="text-muted-foreground/40 truncate">
-                                      {locale === 'ar' ? field.label_ar : field.label_en}
+                                      {locale === 'ar' ? field.labelAr : field.labelEn}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1.5 shrink-0">
@@ -453,7 +456,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full text-muted-foreground/40 gap-2 py-8">
-                          <Database className="w-6 h-6" />
+                           <Database className="w-6 h-6" />
                           <p className="text-[10px] italic font-medium">Select an entity on the left to browse its fields.</p>
                         </div>
                       )}
@@ -486,8 +489,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                     </Label>
                     <Input
                       id="p_sample"
-                      value={paramForm.sample_value}
-                      onChange={(e) => setParamForm(prev => ({ ...prev, sample_value: e.target.value }))}
+                      value={paramForm.sampleValue}
+                      onChange={(e) => setParamForm(prev => ({ ...prev, sampleValue: e.target.value }))}
                       placeholder="e.g. ORD-1002"
                       className="h-9 text-[11px] rounded-none bg-surface-container border border-white/10 px-3"
                     />
@@ -498,8 +501,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                     </Label>
                     <Input
                       id="p_en"
-                      value={paramForm.label_en}
-                      onChange={(e) => setParamForm(prev => ({ ...prev, label_en: e.target.value }))}
+                      value={paramForm.labelEn}
+                      onChange={(e) => setParamForm(prev => ({ ...prev, labelEn: e.target.value }))}
                       placeholder="e.g. Order ID"
                       className="h-9 text-[11px] rounded-none bg-surface-container border border-white/10 px-3"
                     />
@@ -510,8 +513,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                     </Label>
                     <Input
                       id="p_ar"
-                      value={paramForm.label_ar}
-                      onChange={(e) => setParamForm(prev => ({ ...prev, label_ar: e.target.value }))}
+                      value={paramForm.labelAr}
+                      onChange={(e) => setParamForm(prev => ({ ...prev, labelAr: e.target.value }))}
                       placeholder="e.g. رقم الطلب"
                       className="h-9 text-[11px] rounded-none bg-surface-container border border-white/10 px-3"
                     />
@@ -520,7 +523,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                 <Button
                   type="button"
                   onClick={addCustomParam}
-                  disabled={!paramForm.name || !paramForm.label_en || !paramForm.sample_value}
+                  disabled={!paramForm.name || !paramForm.labelEn || !paramForm.sampleValue}
                   className="w-full h-9 border border-white/10 hover:border-operational-cyan/35 bg-surface-container-lowest rounded-none font-bold uppercase text-[9px] tracking-widest transition-all"
                 >
                   Register Variable to List
@@ -549,8 +552,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                   <Label htmlFor="sub_ar" className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground/60">Subject (Arabic)</Label>
                   <Input
                     id="sub_ar"
-                    value={template.subject_ar}
-                    onChange={(e) => setTemplate(prev => ({ ...prev, subject_ar: e.target.value }))}
+                    value={template.subjectAr}
+                    onChange={(e) => setTemplate(prev => ({ ...prev, subjectAr: e.target.value }))}
                     placeholder="تنبيه نقص المخزون: {{item_name}}"
                     dir="rtl"
                     className="h-11 text-xs rounded-none bg-surface-container border border-white/10 px-3"
@@ -561,8 +564,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                   <Label htmlFor="body_ar" className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground/60">Message Body (Arabic)</Label>
                   <Textarea
                     id="body_ar"
-                    value={template.body_ar}
-                    onChange={(e) => setTemplate(prev => ({ ...prev, body_ar: e.target.value }))}
+                    value={template.bodyAr}
+                    onChange={(e) => setTemplate(prev => ({ ...prev, bodyAr: e.target.value }))}
                     placeholder="الصنف {{item_name}} وصل إلى كمية {{qty}}..."
                     dir="rtl"
                     className="min-h-[80px] text-xs rounded-none bg-surface-container border border-white/10 px-3 py-2"
@@ -581,8 +584,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                   <Label htmlFor="sub_en" className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground/60">Subject (English)</Label>
                   <Input
                     id="sub_en"
-                    value={template.subject_en}
-                    onChange={(e) => setTemplate(prev => ({ ...prev, subject_en: e.target.value }))}
+                    value={template.subjectEn}
+                    onChange={(e) => setTemplate(prev => ({ ...prev, subjectEn: e.target.value }))}
                     placeholder="Low Stock Alert: {{item_name}}"
                     dir="ltr"
                     className="h-11 text-xs rounded-none bg-surface-container border border-white/10 px-3"
@@ -593,8 +596,8 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                   <Label htmlFor="body_en" className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground/60">Message Body (English)</Label>
                   <Textarea
                     id="body_en"
-                    value={template.body_en}
-                    onChange={(e) => setTemplate(prev => ({ ...prev, body_en: e.target.value }))}
+                    value={template.bodyEn}
+                    onChange={(e) => setTemplate(prev => ({ ...prev, bodyEn: e.target.value }))}
                     placeholder="Item {{item_name}} reached low quantity of {{qty}}..."
                     dir="ltr"
                     className="min-h-[80px] text-xs rounded-none bg-surface-container border border-white/10 px-3 py-2"

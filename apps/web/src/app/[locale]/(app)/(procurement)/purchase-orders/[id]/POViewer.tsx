@@ -32,10 +32,10 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
   const tCommon = useTranslations('common');
   const router = useRouter();
 
-  const timeline = document?.audit_log?.map((log: AuditLog) => ({
+  const timeline = document?.auditLog?.map((log: AuditLog) => ({
     status: log.status.toLowerCase() as Status,
-    at: log.created_at,
-    by: log.user_name || tCommon('system')
+    at: log.createdAt,
+    by: log.userName || tCommon('system')
   })) || [];
 
   interface MappedPOLine {
@@ -43,39 +43,39 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
     item: {
       id: string;
       code: string;
-      name_ar: string;
-      name_en: string;
-      primary_uom: { code: string };
+      nameAr: string;
+      nameEn: string;
+      primaryUom: { code: string };
     };
     qty: number;
-    uom_id: string;
-    unit_cost: number;
+    uomId: string;
+    unitCost: number;
   }
 
   const documentLines = document?.lines;
   const mappedLines = React.useMemo(() => {
     return documentLines?.map((line: POLine, idx: number) => ({
-      id: line.item_id || String(idx),
+      id: line.id || String(idx),
       item: {
-        id: line.item_id || '',
-        code: line.item_sku || line.item_id || '',
-        name_ar: line.item_name || '',
-        name_en: line.item_name || '',
-        primary_uom: { code: line.uom_id || 'EA' }
+        id: line.itemId || '',
+        code: line.item?.code || line.itemSku || line.itemId || '',
+        nameAr: line.item?.nameAr || line.itemName || '',
+        nameEn: line.item?.nameEn || line.itemName || '',
+        primaryUom: { code: line.item?.primaryUom?.code || line.uomId || 'EA' }
       },
       qty: line.quantity ?? line.qty ?? 0,
-      uom_id: line.uom_id || 'EA',
-      unit_cost: line.unit_price ?? line.unit_cost_foreign ?? 0
+      uomId: line.uomId || 'EA',
+      unitCost: line.unitPrice ?? line.unitCostForeign ?? 0
     })) || [];
   }, [documentLines]);
 
-  const currencyId = document?.currency_id;
+  const currencyId = document?.currencyId;
   const extraColumns = React.useMemo(() => [
     {
       header: t('unit_price'),
       cell: (line: MappedPOLine) => (
         <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">
-          {line.unit_cost}
+          {line.unitCost}
         </span>
       )
     },
@@ -83,7 +83,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
       header: tCommon('subtotal') || 'Subtotal',
       cell: (line: MappedPOLine) => (
         <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
-          {formatCurrency((line.qty || 0) * (line.unit_cost || 0), currencyId, locale)}
+          {formatCurrency((line.qty || 0) * (line.unitCost || 0), currencyId, locale)}
         </span>
       )
     }
@@ -102,7 +102,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
         }
         statusBadge={
           <span className="font-mono text-label-xs font-semibold text-muted-foreground/60">
-            {tCommon('read_only_view')} • {document.document_number}
+            {tCommon('read_only_view')} • {document.documentNumber}
           </span>
         }
         actions={
@@ -124,10 +124,10 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
           {/* Header Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
-              { label: tCommon('supplier'), value: document?.supplier_name || document?.supplier_id, icon: User, color: 'text-primary' },
-              { label: tCommon('order_currency'), value: document?.currency_id, icon: Wallet, color: 'text-operational-cyan' },
-              { label: t('target_warehouse'), value: document?.warehouse_name || document?.target_warehouse_id, icon: Warehouse, color: 'text-emerald-500' },
-              { label: t('expected_delivery_date'), value: document?.expected_delivery_date || '—', icon: Clock, color: 'text-amber-500' },
+              { label: tCommon('supplier'), value: document?.supplierName || document?.supplierId, icon: User, color: 'text-primary' },
+              { label: tCommon('order_currency'), value: document?.currencyId, icon: Wallet, color: 'text-operational-cyan' },
+              { label: t('target_warehouse'), value: document?.warehouseName || document?.targetWarehouseId, icon: Warehouse, color: 'text-emerald-500' },
+              { label: t('expected_delivery_date'), value: document?.expectedDeliveryDate || '—', icon: Clock, color: 'text-amber-500' },
             ].map((item, idx) => (
               <Card key={idx} className="p-5 bg-surface-container-lowest border-none shadow-sm flex flex-col gap-3 rounded-2xl relative overflow-hidden group">
                 <div className="flex items-center justify-between relative z-10">
@@ -168,7 +168,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
                   <div className="flex flex-col items-end">
                     <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('order_total')}</p>
                     <p dir="ltr" className="text-headline-lg font-semibold text-primary">
-                      {formatCurrency(document?.total || 0, document?.currency_id, locale)}
+                      {formatCurrency(document?.total || 0, document?.currencyId, locale)}
                     </p>
                   </div>
                 </div>

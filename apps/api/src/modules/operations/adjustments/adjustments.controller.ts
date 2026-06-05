@@ -29,72 +29,75 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import type { Request } from 'express';
 
-function mapAdjustmentDetail(adj: any) {
-  const lines = (adj.lines || []).map((line: any) => ({
-    id: line.id,
-    item: line.item
-      ? {
-          id: line.item.id,
-          code: line.item.sku,
-          name_ar: line.item.name,
-          name_en: line.item.name,
-          primary_uom: line.item.unitOfMeasure
-            ? {
-                id: line.item.unitOfMeasure.id,
-                code: line.item.unitOfMeasure.code,
-              }
-            : { id: '', code: '' },
-        }
-      : {
-          id: '',
-          code: '',
-          name_ar: '',
-          name_en: '',
-          primary_uom: { id: '', code: '' },
-        },
-    direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
-    qty_before: 0,
-    qty_adjusted: Number(line.quantity),
-    uom_id: line.item?.uomId || '',
-    unit_cost: line.unitCost ? Number(line.unitCost) : null,
-    reason_notes: line.reason || '',
-    lot_allocations: line.lotId
-      ? [{ lot_id: line.lotId, qty: Number(line.quantity) }]
-      : [],
-  }));
+function mapAdjustmentDetail(adj: Record<string, unknown>) {
+  const rawLines = (adj.lines as Record<string, unknown>[]) || [];
+  const lines = rawLines.map((line: Record<string, unknown>) => {
+    const item = line.item as Record<string, unknown> | undefined;
+    return {
+      id: line.id as string,
+      item: item
+        ? {
+            id: item.id as string,
+            code: item.sku as string,
+            name_ar: item.name as string,
+            name_en: item.name as string,
+            primary_uom: item.unitOfMeasure
+              ? {
+                  id: (item.unitOfMeasure as Record<string, unknown>)
+                    .id as string,
+                  code: (item.unitOfMeasure as Record<string, unknown>)
+                    .code as string,
+                }
+              : { id: '', code: '' },
+          }
+        : {
+            id: '',
+            code: '',
+            name_ar: '',
+            name_en: '',
+            primary_uom: { id: '', code: '' },
+          },
+      direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
+      qty_before: 0,
+      qty_adjusted: Number(line.quantity),
+      uom_id: (item?.uomId as string) || '',
+      unit_cost: line.unitCost ? Number(line.unitCost) : null,
+      reason_notes: (line.reason as string) || '',
+      lot_allocations: line.lotId
+        ? [{ lot_id: line.lotId as string, qty: Number(line.quantity) }]
+        : [],
+    };
+  });
 
-  const mainReason = adj.lines?.[0]?.reason || 'CORRECTION';
+  const mainReason = (rawLines[0]?.reason as string) || 'CORRECTION';
+  const createdAtVal = adj.createdAt as Date | string | number | undefined;
+  const createdAtIso = createdAtVal
+    ? (createdAtVal instanceof Date
+        ? createdAtVal
+        : new Date(createdAtVal)
+      ).toISOString()
+    : new Date().toISOString();
 
   return {
-    id: adj.id,
-    document_number: adj.adjustmentNumber,
-    status: adj.status,
-    warehouse_id: adj.warehouseId,
+    id: adj.id as string,
+    document_number: adj.adjustmentNumber as string,
+    status: adj.status as string,
+    warehouse_id: adj.warehouseId as string,
     reason: mainReason,
     notes: '',
     reject: null,
     movement_id: null,
     approved_by: null,
     posted_at:
-      adj.status === 'POSTED' && adj.createdAt
-        ? (adj.createdAt instanceof Date
-            ? adj.createdAt
-            : new Date(adj.createdAt)
+      adj.status === 'POSTED' && createdAtVal
+        ? (createdAtVal instanceof Date
+            ? createdAtVal
+            : new Date(createdAtVal)
           ).toISOString()
         : null,
-    created_at: adj.createdAt
-      ? (adj.createdAt instanceof Date
-          ? adj.createdAt
-          : new Date(adj.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    updated_at: adj.createdAt
-      ? (adj.createdAt instanceof Date
-          ? adj.createdAt
-          : new Date(adj.createdAt)
-        ).toISOString()
-      : new Date().toISOString(),
-    version: adj.version,
+    created_at: createdAtIso,
+    updated_at: createdAtIso,
+    version: adj.version as number,
     lines,
     timeline: [],
   };
@@ -219,13 +222,19 @@ export class AdjustmentsController {
     }
 
     const warehouseId = body.warehouseId || body.warehouse_id;
-    const lines = body.lines?.map((line) => ({
-      id: line.id,
-      itemId: line.itemId || line.item_id,
-      qty: line.qty,
-      direction: line.direction,
-      unitCost: line.unitCost !== undefined ? line.unitCost : line.unit_cost,
-      lotId: line.lotId !== undefined ? line.lotId : line.lot_id,
+    const lines = (body.lines as Record<string, unknown>[])?.map((line) => ({
+      id: line.id as string | undefined,
+      itemId: (line.itemId || line.item_id) as string,
+      qty: Number(line.qty),
+      direction: line.direction as 'INCREASE' | 'DECREASE',
+      unitCost:
+        line.unitCost !== undefined
+          ? (line.unitCost as number | null | undefined)
+          : (line.unit_cost as number | null | undefined),
+      lotId:
+        line.lotId !== undefined
+          ? (line.lotId as string | null | undefined)
+          : (line.lot_id as string | null | undefined),
     }));
 
     const adj = await this.adjustmentsService.update(id, {

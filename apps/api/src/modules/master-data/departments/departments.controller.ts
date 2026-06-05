@@ -39,7 +39,7 @@ export class DepartmentsController {
     const take = limit ? Math.min(parseInt(limit, 10), 500) : undefined;
     const skip = page && take ? (parseInt(page, 10) - 1) * take : undefined;
 
-    const where: any = branchId ? { branchId } : {};
+    const where: Record<string, unknown> = branchId ? { branchId } : {};
     if (role !== 'ADMIN') {
       where.branch = {
         warehouses: {

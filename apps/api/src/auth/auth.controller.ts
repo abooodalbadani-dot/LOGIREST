@@ -94,7 +94,10 @@ export class AuthController {
   }
 
   @Post('profile/avatar')
-  async uploadAvatar(@CurrentUser('id') userId: string, @Body() body: any) {
+  async uploadAvatar(
+    @CurrentUser('id') userId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return this.authService.uploadAvatar(userId, body);
   }
 

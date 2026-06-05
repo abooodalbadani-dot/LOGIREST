@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api/client';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toSnakeCase } from '@/lib/api/adapters';
 import { 
   Mail, 
   Server, 
@@ -62,8 +63,8 @@ export function MailSettingsClient() {
 
   useUnsavedChangesGuard(isDirty);
 
-  const watchedProvider = useWatch({ control, name: 'mail_provider' });
-  const watchedEncryption = useWatch({ control, name: 'smtp_encryption' });
+  const watchedProvider = useWatch({ control, name: 'mailProvider' });
+  const watchedEncryption = useWatch({ control, name: 'smtpEncryption' });
 
   const onSubmit: SubmitHandler<AdminSettings> = async (data) => {
     try {
@@ -84,7 +85,7 @@ export function MailSettingsClient() {
       const res = await apiClient.post(
         '/admin/settings/test-email',
         z.object({ ok: z.boolean(), error: z.string().optional() }),
-        formValues
+        toSnakeCase(formValues)
       );
       setIsTesting(false);
       if (res.ok) {
@@ -94,10 +95,11 @@ export function MailSettingsClient() {
         playSound('error');
         toast.error(res.error || 'Failed to verify SMTP connection.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsTesting(false);
       playSound('error');
-      toast.error(err.message || 'SMTP connection test failed.');
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'SMTP connection test failed.');
     }
   };
 
@@ -243,7 +245,7 @@ export function MailSettingsClient() {
                     <button
                       key={provider.id}
                       type="button"
-                      onClick={() => setValue('mail_provider', provider.id as 'smtp' | 'ses', { shouldDirty: true })}
+                      onClick={() => setValue('mailProvider', provider.id as 'smtp' | 'ses', { shouldDirty: true })}
                       className={cn(
                         "relative flex items-center justify-between p-5 rounded-2xl border transition-all duration-300",
                         watchedProvider === provider.id 
@@ -289,7 +291,7 @@ export function MailSettingsClient() {
                     <div className="relative group">
                       <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
                       <Input
-                        {...register('smtp_host')}
+                        {...register('smtpHost')}
                         placeholder={t('placeholder_host')}
                         dir="ltr"
                         className="pl-12 h-14 font-bold bg-surface-container-lowest border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
@@ -305,7 +307,7 @@ export function MailSettingsClient() {
                       <Server className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
                       <Input
                         type="number"
-                        {...register('smtp_port', { valueAsNumber: true })}
+                        {...register('smtpPort', { valueAsNumber: true })}
                         placeholder={t('placeholder_port')}
                         dir="ltr"
                         className="pl-12 h-14 font-bold bg-surface-container-lowest border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
@@ -322,7 +324,7 @@ export function MailSettingsClient() {
                     <div className="relative group">
                       <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
                       <Input
-                        {...register('smtp_user')}
+                        {...register('smtpUser')}
                         dir="ltr"
                         className="pl-12 h-14 font-bold bg-surface-container-lowest border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
                       />
@@ -337,7 +339,7 @@ export function MailSettingsClient() {
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-operational-cyan transition-colors" />
                       <Input
                         type={showPassword ? "text" : "password"}
-                        {...register('smtp_password')}
+                        {...register('smtpPassword')}
                         dir="ltr"
                         className="pl-12 pr-12 h-14 font-bold bg-surface-container-lowest border-outline-low rounded-2xl focus:ring-operational-cyan focus:border-operational-cyan transition-all"
                       />
@@ -369,7 +371,7 @@ export function MailSettingsClient() {
                     <div className="w-full md:w-64">
                       <Select
                         value={watchedEncryption}
-                        onValueChange={(value) => setValue('smtp_encryption', value as 'none' | 'ssl' | 'tls', { shouldDirty: true })}
+                        onValueChange={(value) => setValue('smtpEncryption', value as 'none' | 'ssl' | 'tls', { shouldDirty: true })}
                       >
                         <SelectTrigger className="h-12 bg-surface-container-lowest border-outline-low rounded-xl font-bold">
                           <SelectValue />

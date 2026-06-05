@@ -52,17 +52,17 @@ export function StocktakeArchiveClient({
 
   const columns = useMemo<ColumnDef<StocktakeSummary>[]>(() => [
     {
-      accessorKey: 'session_number',
+      accessorKey: 'sessionNumber',
       header: t('session_number') || 'Session',
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span dir="ltr" className="font-mono text-body-md font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-            {row.original.session_number}
+            {row.original.sessionNumber}
           </span>
           <div className="flex items-center gap-1.5 opacity-40 mt-1">
             <Calendar className="w-2.5 h-2.5" />
             <ClientOnlyTime 
-              date={row.original.snapshot_at} 
+              date={row.original.snapshotAt} 
               mode="datetime" 
               locale={locale as 'ar' | 'en'}
               className="text-label-xxs font-semibold tabular-nums"
@@ -72,12 +72,12 @@ export function StocktakeArchiveClient({
       ),
     },
     {
-      accessorKey: 'warehouse_id',
+      accessorKey: 'warehouseId',
       header: tc('warehouse') || 'Warehouse',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
-          <span className="font-medium text-label-sm">{row.original.warehouse_id}</span>
+          <span className="font-medium text-label-sm">{row.original.warehouseId}</span>
         </div>
       ),
     },
@@ -168,8 +168,8 @@ export function StocktakeArchiveClient({
               className="h-12 px-8 bg-operational-cyan/10 hover:bg-operational-cyan/20 text-operational-cyan text-label-xs font-semibold uppercase rounded-md transition-all border border-operational-cyan/20"
               onClick={async () => {
                 try {
-                  const res = await apiClient.get('/operations/stocktakes/variance-export', z.any());
-                  const blob = new Blob([res], { type: 'text/csv;charset=utf-8;' });
+                  const res = await apiClient.get('/operations/stocktakes/variance-export', z.unknown());
+                  const blob = new Blob([res as string], { type: 'text/csv;charset=utf-8;' });
                   const link = document.createElement("a");
                   const url = URL.createObjectURL(blob);
                   link.setAttribute("href", url);
@@ -204,9 +204,9 @@ export function StocktakeArchiveClient({
               }
               pagination={data?.meta ? {
                 page: data.meta.page,
-                pageSize: data.meta.page_size,
+                pageSize: data.meta.pageSize,
                 total: data.meta.total,
-                totalPages: data.meta.total_pages,
+                totalPages: data.meta.totalPages,
                 onPageChange: handlePageChange
               } : undefined}
             />

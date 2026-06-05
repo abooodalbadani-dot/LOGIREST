@@ -60,8 +60,9 @@ export function FrozenItemsClient() {
         FrozenItemsResponseSchema
       );
       setData(res);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to fetch frozen items');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to fetch frozen items');
     } finally {
       setIsLoading(false);
     }
@@ -85,9 +86,10 @@ export function FrozenItemsClient() {
       
       // Update local state by removing unfrozen item
       setData(prev => prev.filter(item => !(item.warehouseId === warehouseId && item.itemId === itemId)));
-    } catch (err: any) {
+    } catch (err: unknown) {
       playSound('error');
-      toast.error(err.message || 'Failed to unfreeze item');
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || 'Failed to unfreeze item');
     } finally {
       setIsUnfreezingMap(prev => ({ ...prev, [compositeId]: false }));
     }

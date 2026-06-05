@@ -120,7 +120,7 @@ export function POApproveClient({ id }: Props) {
         </div>
         <PageHeader
           title={t('approval.title')}
-          description={`${t('approval.description')} #${po.document_number}`}
+          description={`${t('approval.description')} #${po.documentNumber}`}
         />
       </div>
 
@@ -146,21 +146,21 @@ export function POApproveClient({ id }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 <div className="space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{tc('supplier')}</p>
-                  <p className="font-bold text-title-sm">{po.supplier_name || po.supplier_id}</p>
+                  <p className="font-bold text-title-sm">{po.supplierName || po.supplierId}</p>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.order_total')}</p>
                   <p className="font-mono font-semibold text-title-lg text-operational-cyan">
-                    {formatCurrency(po.total || 0, po.currency_id, locale as 'ar' | 'en')}
+                    {formatCurrency(po.total || 0, po.currencyId, locale as 'ar' | 'en')}
                   </p>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.target_warehouse')}</p>
-                  <p className="font-bold text-title-sm">{po.warehouse_name || po.target_warehouse_id}</p>
+                  <p className="font-bold text-title-sm">{po.warehouseName || po.targetWarehouseId}</p>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.expected_delivery_date')}</p>
-                  <p dir="ltr" className="font-mono font-bold text-title-sm">{po.expected_delivery_date || '—'}</p>
+                  <p dir="ltr" className="font-mono font-bold text-title-sm">{po.expectedDeliveryDate || '—'}</p>
                 </div>
               </div>
             </CardContent>
@@ -199,7 +199,7 @@ export function POApproveClient({ id }: Props) {
         <div className="space-y-8">
           <MetricCard
             label={t('budget_consumption') || 'Budget Consumption'}
-            value={po ? formatCurrency(po.total || 0, po.currency_id, locale as 'ar' | 'en') : '--'}
+            value={po ? formatCurrency(po.total || 0, po.currencyId, locale as 'ar' | 'en') : '--'}
             trend={t('department_budget_placeholder') || 'Department Budget: -- / --'}
             icon={AlertCircle}
             color="amber"

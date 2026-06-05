@@ -6,9 +6,9 @@ import { z } from 'zod';
 export const SupplierSchema = z.object({
  id: z.string(),
  code: z.string(),
- name_ar: z.string(),
- name_en: z.string(),
- currency_id: z.string(),
+ nameAr: z.string(),
+ nameEn: z.string(),
+ currencyId: z.string(),
 });
 
 export type Supplier = z.infer<typeof SupplierSchema>;

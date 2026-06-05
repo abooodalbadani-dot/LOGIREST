@@ -8,15 +8,15 @@ export const QUERY_KEY = ['yield'] as const;
 
 export const YieldBatchSchema = z.object({
   id: z.string(),
-  recipe_name: z.string(),
+  recipeName: z.string(),
   category: z.string(),
-  input_qty: z.number(),
-  output_qty: z.number(),
-  waste_qty: z.number(),
-  yield_pct: z.number(),
-  standard_yield: z.number(),
+  inputQty: z.number(),
+  outputQty: z.number(),
+  wasteQty: z.number(),
+  yieldPct: z.number(),
+  standardYield: z.number(),
   efficiency: z.number(),
-  created_at: z.string().optional(),
+  createdAt: z.string().optional(),
 });
 
 export type YieldBatch = z.infer<typeof YieldBatchSchema>;

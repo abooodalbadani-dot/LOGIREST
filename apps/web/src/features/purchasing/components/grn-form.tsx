@@ -51,9 +51,9 @@ import { cn } from '@/lib/utils';
 const isExpiryInPast = (date: string) => new Date(date) < new Date(new Date().toDateString());
 
 const grnFormSchema = z.object({
-  supplier_id: z.string().min(1, 'Required'),
-  currency_id: z.string().min(1, 'Required'),
-  warehouse_id: z.string().min(1, 'Required'),
+  supplierId: z.string().min(1, 'Required'),
+  currencyId: z.string().min(1, 'Required'),
+  warehouseId: z.string().min(1, 'Required'),
   notes: z.string().optional(),
   lines: z.array(LineItemSchema)
 });
@@ -87,24 +87,24 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const supplierItems = useMemo(() => {
     return suppliers?.map(s => ({
       id: s.id,
-      name_en: `${s.name_en} (${s.code})`,
-      name_ar: `${s.name_ar} (${s.code})`,
+      name_en: `${s.nameEn} (${s.code})`,
+      name_ar: `${s.nameAr} (${s.code})`,
     })) ?? [];
   }, [suppliers]);
 
   const warehouseItems = useMemo(() => {
     return warehouses?.map(w => ({
       id: w.id,
-      name_en: w.name_en,
-      name_ar: w.name_ar,
+      name_en: w.name,
+      name_ar: w.name,
     })) ?? [];
   }, [warehouses]);
 
   const currencyItems = useMemo(() => {
     return currencies?.map(c => ({
       id: c.code,
-      name_en: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.name_ar : c.name_en}`,
+      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
     })) ?? [];
   }, [currencies, locale]);
 
@@ -124,9 +124,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { handleSubmit, reset, control, register, getValues, formState: { errors, isDirty } } = useForm<GRNFormValues>({
     resolver: zodResolver(grnFormSchema),
     defaultValues: {
-      supplier_id: initialData?.supplier_id || '',
-      currency_id: initialData?.currency_id || '',
-      warehouse_id: initialData?.warehouse_id || 'wh-1',
+      supplierId: initialData?.supplierId || '',
+      currencyId: initialData?.currencyId || '',
+      warehouseId: initialData?.warehouseId || 'wh-1',
       notes: initialData?.notes || '',
       lines: initialData?.lines || []
     }
@@ -139,8 +139,8 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   const { router } = useUnsavedChangesGuard(isDirty);
 
-  const currencyId = useWatch({ control, name: 'currency_id' });
-  const warehouseId = useWatch({ control, name: 'warehouse_id' });
+  const currencyId = useWatch({ control, name: 'currencyId' });
+  const warehouseId = useWatch({ control, name: 'warehouseId' });
   const { data: warehouseLock } = useWarehouseLock(warehouseId || null);
   const isWarehouseLocked = !!warehouseLock?.isLocked;
   const watchedLines = useWatch({ control, name: 'lines' });
@@ -152,16 +152,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
 
   const totalForeign = useMemo(() => {
-    return (watchedLines || []).reduce((acc, line) => acc + (line.received_qty * (line.unit_cost_foreign || 0)), 0);
+    return (watchedLines || []).reduce((acc, line) => acc + (line.receivedQty * (line.unitCostForeign || 0)), 0);
   }, [watchedLines]);
 
   useEffect(() => {
     if (initialData && initialData.id !== lastResetId.current) {
       lastResetId.current = initialData.id;
       reset({
-        supplier_id: initialData.supplier_id || '',
-        currency_id: initialData.currency_id || '',
-        warehouse_id: initialData.warehouse_id || 'wh-1',
+        supplierId: initialData.supplierId || '',
+        currencyId: initialData.currencyId || '',
+        warehouseId: initialData.warehouseId || 'wh-1',
         notes: initialData.notes || '',
         lines: initialData.lines || []
       }, {
@@ -174,7 +174,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
   useEffect(() => {
     const expired = (watchedLines || [])
-      .filter(line => line.lot?.expiry_date && isExpiryInPast(line.lot.expiry_date))
+      .filter(line => line.lot?.expiryDate && isExpiryInPast(line.lot.expiryDate))
       .map(line => line.id);
     setExpiredLineIds(expired);
     if (expired.length === 0) {
@@ -199,32 +199,32 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         const existing = currentLines[index];
         update(index, {
           ...existing,
-          received_qty: (existing.received_qty || 0) + 1
+          receivedQty: (existing.receivedQty || 0) + 1
         });
         playSound('success');
-        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       } else {
         append({
           id: `new-${Date.now()}`,
           item: {
             id: item.id,
             code: item.code,
-            name_ar: item.name_ar,
-            name_en: item.name_en,
-            primary_uom: {
-              id: item.primary_uom?.id || 'EA',
-              code: item.primary_uom?.code || 'EA'
+            nameAr: item.nameAr,
+            nameEn: item.nameEn,
+            primaryUom: {
+              id: item.primaryUom?.id || 'EA',
+              code: item.primaryUom?.code || 'EA'
             }
           },
           lot: null,
           qty: 1,
-          received_qty: 1,
-          uom_id: item.primary_uom?.id || 'EA',
-          unit_cost_foreign: item.last_purchase_price || 0,
-          unit_cost_base: 0
+          receivedQty: 1,
+          uomId: item.primaryUom?.id || 'EA',
+          unitCostForeign: item.lastPurchasePrice || 0,
+          unitCostBase: 0
         });
         playSound('success');
-        toast.success(tc('item_added', { name: locale === 'ar' ? item.name_ar : item.name_en }));
+        toast.success(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
       }
       setScanError('');
     } else {
@@ -268,7 +268,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     }
 
     const expiredLines = values.lines
-      .filter(line => line.lot?.expiry_date && isExpiryInPast(line.lot.expiry_date));
+      .filter(line => line.lot?.expiryDate && isExpiryInPast(line.lot.expiryDate));
 
     if (expiredLines.length > 0) {
       const role = user?.role;
@@ -285,15 +285,18 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     }
     try {
       const payload = {
-        ...values,
+        supplier_id: values.supplierId,
+        currency_id: values.currencyId,
+        warehouse_id: values.warehouseId,
+        notes: values.notes,
         lines: values.lines.map(l => ({
           id: l.id.startsWith('new-') ? undefined : l.id,
           item_id: l.item.id,
           lot_id: l.lot?.id || null,
-          qty: l.received_qty,
-          received_qty: l.received_qty,
-          uom_id: l.uom_id,
-          unit_cost_foreign: l.unit_cost_foreign || 0,
+          qty: l.receivedQty,
+          received_qty: l.receivedQty,
+          uom_id: l.uomId,
+          unit_cost_foreign: l.unitCostForeign || 0,
         }))
       };
 
@@ -335,7 +338,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
         <div className="flex items-center justify-between px-2">
           <div className="flex flex-col">
             <h1 className="text-headline-lg font-semibold uppercase italic text-foreground flex items-center gap-4">
-              {isNew ? t('create_new') : `#${initialData?.document_number}`}
+              {isNew ? t('create_new') : `#${initialData?.documentNumber}`}
             </h1>
             <p className="text-label-xs font-semibold uppercase text-primary/40 mt-1">
               {isNew ? t('new_manifest_sub') : t('detail_sub')}
@@ -362,7 +365,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           initialBarcode={customItemBarcode}
           onCreate={async (newItem) => {
             try {
-              await apiClient.post('/master-data/items', z.any(), {
+              await apiClient.post('/master-data/items', z.unknown(), {
                 id: newItem.id,
                 code: newItem.code,
                 barcode: newItem.barcode,
@@ -378,19 +381,19 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 item: {
                   id: newItem.id,
                   code: newItem.code,
-                  name_ar: newItem.name_ar,
-                  name_en: newItem.name_en,
-                  primary_uom: {
+                  nameAr: newItem.name_ar,
+                  nameEn: newItem.name_en,
+                  primaryUom: {
                     id: newItem.primary_uom.id,
                     code: newItem.primary_uom.code
                   }
                 },
                 lot: null,
                 qty: 1,
-                received_qty: 1,
-                uom_id: newItem.primary_uom.id,
-                unit_cost_foreign: 0,
-                unit_cost_base: 0
+                receivedQty: 1,
+                uomId: newItem.primary_uom.id,
+                unitCostForeign: 0,
+                unitCostBase: 0
               });
               playSound('success');
               toast.success(tc('item_added', { name: locale === 'ar' ? newItem.name_ar : newItem.name_en }));
@@ -409,7 +412,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
                   <Label htmlFor="supplier-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('supplier')}</Label>
                   <Controller
-                    name="supplier_id"
+                    name="supplierId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -422,7 +425,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                       />
                     )}
                   />
-                  {errors.supplier_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplier_id.message}</span>}
+                  {errors.supplierId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.supplierId.message}</span>}
                 </div>
 
                 <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
@@ -431,7 +434,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   </div>
                   <Label htmlFor="currency-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</Label>
                   <Controller
-                    name="currency_id"
+                    name="currencyId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -444,7 +447,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                       />
                     )}
                   />
-                  {errors.currency_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currency_id.message}</span>}
+                  {errors.currencyId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.currencyId.message}</span>}
                 </div>
 
                 <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
@@ -453,9 +456,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   </div>
                   <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
                   <div className="mt-2">
-                    {initialData?.po_number ? (
+                    {initialData?.poNumber ? (
                       <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
-                        <span dir="ltr" className="font-mono">{initialData.po_number}</span>
+                        <span dir="ltr" className="font-mono">{initialData.poNumber}</span>
                       </Badge>
                     ) : (
                       <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
@@ -466,7 +469,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-visible">
                   <Label htmlFor="warehouse-select" className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('warehouse')}</Label>
                   <Controller
-                    name="warehouse_id"
+                    name="warehouseId"
                     control={control}
                     render={({ field }) => (
                       <SmartCombobox
@@ -479,7 +482,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                       />
                     )}
                   />
-                  {errors.warehouse_id && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouse_id.message}</span>}
+                  {errors.warehouseId && <span className="text-label-xs text-destructive mt-1 font-bold">{errors.warehouseId.message}</span>}
                 </div>
 
                 <div className="col-span-full bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-1 group relative overflow-hidden">
@@ -527,15 +530,20 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
                   <DocumentLineItemTable<LineItem>
                     lines={fields.map(f => ({
-                      ...f,
+                      id: f.id,
+                      qty: f.qty,
+                      receivedQty: f.receivedQty,
+                      uomId: f.uomId,
+                      unitCostForeign: f.unitCostForeign,
+                      unitCostBase: f.unitCostBase,
                       item: {
                         id: f.item.id,
                         code: f.item.code,
-                        name_ar: f.item.name_ar,
-                        name_en: f.item.name_en,
-                        primary_uom: { id: f.item.primary_uom.id, code: f.item.primary_uom.code },
+                        nameAr: f.item.nameAr,
+                        nameEn: f.item.nameEn,
+                        primaryUom: { id: f.item.primaryUom.id, code: f.item.primaryUom.code },
                       },
-                      lot: f.lot ? { id: f.lot.id, lot_number: f.lot.lot_number, expiry_date: f.lot.expiry_date } : null,
+                      lot: f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null,
                     }))}
                     isReadOnly={isLocked || isWarehouseLocked}
                     dense={true}
@@ -549,7 +557,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         header: tc('table_headers.received_qty'),
                         cell: (field: LineItem) => {
                           const index = fields.findIndex(f => f.id === field.id);
-                          const isOver = field.received_qty > field.qty;
+                          const isOver = field.receivedQty > field.qty;
                           return (
                             <input type="number"
                               dir="ltr"
@@ -558,10 +566,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                                 "w-20 rounded-sm border border-surface-container-high/30 bg-surface-container-low text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 h-7",
                                 isOver ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
                               )}
-                              {...register(`lines.${index}.received_qty` as const, { valueAsNumber: true })}
+                              {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
                               onChange={e => {
                                 const val = Number(e.target.value);
-                                update(index, { ...fields[index], received_qty: val } as LineItem);
+                                update(index, { ...fields[index], receivedQty: val });
                               }}
                             />
                           );
@@ -576,7 +584,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                             onClick={() => handleLotClick(field)}
                           >
                             {field.lot ? (
-                              <span dir="ltr" className="font-mono">{field.lot.lot_number}</span>
+                              <span dir="ltr" className="font-mono">{field.lot.lotNumber}</span>
                             ) : t('allocate_lot')}
                           </button>
                         )

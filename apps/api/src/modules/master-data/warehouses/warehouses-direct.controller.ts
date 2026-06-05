@@ -37,7 +37,7 @@ export class WarehousesDirectController {
     @Query('limit') limit?: string,
   ) {
     const take = limit ? parseInt(limit, 10) : undefined;
-    const filter: any = { isActive: true };
+    const filter: Record<string, unknown> = { isActive: true };
     if (branchId) {
       filter.branchId = branchId;
     }
@@ -109,8 +109,8 @@ export class WarehousesDirectController {
 
   @Post()
   @Roles(Role.ADMIN, Role.GM)
-  async create(@Body() body: any) {
-    let code = body.code;
+  async create(@Body() body: Record<string, unknown>) {
+    let code = body.code as string;
     if (!code || code.trim() === '') {
       const allWarehouses = await this.prisma.warehouse.findMany({
         where: {
@@ -137,9 +137,9 @@ export class WarehousesDirectController {
 
     return this.prisma.warehouse.create({
       data: {
-        name: body.name,
+        name: body.name as string,
         code,
-        branchId: body.branchId,
+        branchId: body.branchId as string,
         isActive: true,
       },
     });
@@ -147,13 +147,13 @@ export class WarehousesDirectController {
 
   @Put(':id')
   @Roles(Role.ADMIN, Role.GM)
-  async update(@Param('id') id: string, @Body() body: any) {
+  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
     return this.prisma.warehouse.update({
       where: { id },
       data: {
-        name: body.name,
-        code: body.code,
-        branchId: body.branchId,
+        name: body.name as string,
+        code: body.code as string,
+        branchId: body.branchId as string,
         version: body.version ? { increment: 1 } : undefined,
       },
     });

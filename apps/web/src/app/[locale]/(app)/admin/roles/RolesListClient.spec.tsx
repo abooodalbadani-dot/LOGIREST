@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { RolesListClient } from './RolesListClient';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -11,7 +12,7 @@ vi.mock('@/providers/AuthProvider', () => ({
 }));
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href }: any) => <a href={href}>{children}</a>,
+  Link: ({ children, href }: { children: React.ReactNode, href: string }) => <a href={href}>{children}</a>,
   redirect: vi.fn(),
   usePathname: vi.fn(),
   useRouter: vi.fn(),
@@ -45,7 +46,7 @@ describe('RolesListClient', () => {
           id: 'ADMIN',
           name: 'Administrator',
           description: 'Full Access',
-          users_count: 5,
+          usersCount: 5,
         },
       ],
       isLoading: false,
