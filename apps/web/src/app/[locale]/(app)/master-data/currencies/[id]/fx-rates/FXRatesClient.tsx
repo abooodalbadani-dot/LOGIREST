@@ -45,11 +45,11 @@ export function FXRatesClient({ currencyId, locale }: Props) {
       ?.filter((c) => c.id !== currencyId)
       .map((c) => ({
         id: c.id,
-        name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-        name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+        name_en: `${c.code} — ${c.name}`,
+        name_ar: `${c.code} — ${c.name}`,
       })) || [];
     return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
-  }, [currencies?.data, currencyId, locale]);
+  }, [currencies?.data, currencyId]);
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FXRateFormValues>({
     resolver: zodResolver(FXRateFormSchema),
@@ -76,7 +76,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
   <span className="text-label-xs font-mono font-bold text-cyan-500">{row.original.toCurrencyId}</span>
   </div>
   <span className="text-body-md font-medium">
-  {currencies?.data?.find(c => c.id === row.original.toCurrencyId)?.[locale === 'ar' ? 'nameAr' : 'nameEn'] || row.original.toCurrencyId}
+  {currencies?.data?.find(c => c.id === row.original.toCurrencyId)?.name || row.original.toCurrencyId}
   </span>
   </div>
   )

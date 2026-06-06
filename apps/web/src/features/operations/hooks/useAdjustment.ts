@@ -14,8 +14,9 @@ export const AdjustmentLineSchema = z.object({
   item: z.object({
     id: z.string(),
     code: z.string(),
-    nameAr: z.string(),
-    nameEn: z.string(),
+    name: z.string(),
+    nameAr: z.string().optional(),
+    nameEn: z.string().optional(),
     primaryUom: z.object({
       id: z.string(),
       code: z.string(),

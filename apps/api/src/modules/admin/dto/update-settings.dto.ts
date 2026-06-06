@@ -28,55 +28,57 @@ export enum Locale {
 
 export class UpdateSettingsDto {
   @IsString()
-  @IsNotEmpty()
-  system_name!: string;
+  @IsOptional()
+  systemName?: string;
 
   @IsString()
-  @IsNotEmpty()
-  base_currency!: string;
+  @IsOptional()
+  baseCurrency?: string;
 
   @IsString()
-  @IsNotEmpty()
-  branch_id!: string;
+  @IsOptional()
+  branchId?: string;
 
   @IsString()
-  @IsNotEmpty()
-  timezone!: string;
+  @IsOptional()
+  timezone?: string;
 
   @IsEnum(Locale)
-  locale_default!: Locale;
+  @IsOptional()
+  localeDefault?: Locale;
 
   @IsString()
-  @IsNotEmpty()
-  sender_name!: string;
+  @IsOptional()
+  senderName?: string;
 
   @IsEmail()
-  reply_to_email!: string;
+  @IsOptional()
+  replyToEmail?: string;
 
   @IsEnum(MailProvider)
   @IsOptional()
-  mail_provider?: MailProvider;
+  mailProvider?: MailProvider;
 
   @IsString()
   @IsOptional()
-  smtp_host?: string;
+  smtpHost?: string;
 
   @IsNumber()
   @Min(1)
   @Max(65535)
   @Type(() => Number)
   @IsOptional()
-  smtp_port?: number;
+  smtpPort?: number;
 
   @IsString()
   @IsOptional()
-  smtp_user?: string;
+  smtpUser?: string;
 
   @IsString()
   @IsOptional()
-  smtp_password?: string;
+  smtpPassword?: string;
 
   @IsEnum(SmtpEncryption)
   @IsOptional()
-  smtp_encryption?: SmtpEncryption;
+  smtpEncryption?: SmtpEncryption;
 }

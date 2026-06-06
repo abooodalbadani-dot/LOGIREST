@@ -5,7 +5,7 @@ from collections import defaultdict
 # Force UTF-8 for output
 sys.stdout.reconfigure(encoding='utf-8')
 
-report_path = r'e:\Kitchen‑Store Inventory System\apps\web\lint-report.json'
+report_path = r'e:\kitchen-store-inventory-system\apps\web\lint-report.json'
 target_rule = 'react-hooks/set-state-in-effect'
 
 with open(report_path, 'r', encoding='utf-8') as f:

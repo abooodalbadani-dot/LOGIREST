@@ -1,7 +1,7 @@
 import os
 import re
 
-src_dir = r"E:\Kitchen‑Store Inventory System\apps\web\src"
+src_dir = r"E:\kitchen-store-inventory-system\apps\web\src"
 
 # Regular expression to match apiClient method calls: get, post, put, patch, del
 api_call_pattern = re.compile(r'apiClient\.(get|post|put|patch|del)\((.*?)\)', re.DOTALL)

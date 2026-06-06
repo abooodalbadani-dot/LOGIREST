@@ -24,7 +24,7 @@ describe('PurchaseOrderService', () => {
     },
     $transaction: jest
       .fn()
-      .mockImplementation((cb: (tx: any) => Promise<unknown>) =>
+      .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
         cb(mockPrisma),
       ),
   };
@@ -34,7 +34,7 @@ describe('PurchaseOrderService', () => {
   };
 
   const mockDocumentNumberService = {
-    generateNext: jest.fn().mockImplementation((tx, type) => {
+    next: jest.fn().mockImplementation((tx, type) => {
       return `${type}-SEQ-00001`;
     }),
   };

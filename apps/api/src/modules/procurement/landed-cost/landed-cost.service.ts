@@ -90,8 +90,8 @@ export class LandedCostService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }

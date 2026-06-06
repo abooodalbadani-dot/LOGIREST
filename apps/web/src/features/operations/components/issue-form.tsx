@@ -65,8 +65,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
     item: {
       id: l.item.id,
       code: l.item.code,
-      nameAr: l.item.nameAr,
-      nameEn: l.item.nameEn,
+      name: l.item.name,
       primaryUom: { code: l.item.primaryUom.code },
     },
     lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
@@ -153,13 +152,15 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         data: z.array(z.object({
           id: z.string(),
           code: z.string(),
-          nameAr: z.string(),
-          nameEn: z.string(),
+          name: z.string(),
+          nameAr: z.string().optional(),
+          nameEn: z.string().optional(),
           primaryUom: z.object({
             id: z.string(),
             code: z.string(),
-            nameAr: z.string(),
-            nameEn: z.string()
+            name: z.string().optional(),
+            nameAr: z.string().optional(),
+            nameEn: z.string().optional()
           })
         }))
       });
@@ -239,7 +240,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           }
           return [...prev, {
             id: `new-${Date.now()}`,
-            item,
+            item: {
+              id: item.id,
+              code: item.code,
+              name: item.name || (locale === 'ar' ? item.nameAr : item.nameEn) || '',
+              nameAr: item.nameAr,
+              nameEn: item.nameEn,
+              primaryUom: { code: item.primaryUom.code }
+            },
             qty: targetQty,
             uomId: item.primaryUom.id,
             lotAllocations: allocation
@@ -262,7 +270,14 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
         } else {
           lineToActivate = {
             id: `new-${Date.now()}`,
-            item,
+            item: {
+              id: item.id,
+              code: item.code,
+              name: item.name || (locale === 'ar' ? item.nameAr : item.nameEn) || '',
+              nameAr: item.nameAr,
+              nameEn: item.nameEn,
+              primaryUom: { code: item.primaryUom.code }
+            },
             qty: targetQty,
             uomId: item.primaryUom.id,
             lotAllocations: []
@@ -543,8 +558,9 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                         <SmartCombobox
                           items={departments.map((dept) => ({
                             id: dept.id,
-                            name_en: dept.name,
-                            name_ar: dept.name,
+                            name: dept.name || '',
+                            name_en: dept.name || '',
+                            name_ar: dept.name || '',
                           }))}
                           value={destinationId}
                           onSelect={(item: ComboboxItem) => setDestinationId(item.id as string)}
@@ -692,7 +708,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
           <div className="p-8 bg-primary/[0.02]">
             <DialogHeader>
               <DialogTitle className="text-title-lg font-semibold uppercase italic text-foreground">
-                {t('fefo_drawer_title')}: <span className="text-primary font-mono">{locale === 'ar' ? activeLine?.item.nameAr : activeLine?.item.nameEn}</span>
+                {t('fefo_drawer_title')}: <span className="text-primary font-mono">{activeLine?.item.name || (locale === 'ar' ? activeLine?.item.nameAr : activeLine?.item.nameEn)}</span>
               </DialogTitle>
             </DialogHeader>
           </div>

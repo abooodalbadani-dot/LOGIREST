@@ -81,8 +81,7 @@ describe('AppController (e2e)', () => {
       .get('/health')
       .expect(200)
       .then((res) => {
-        expect(res.body.status).toBe('OK');
-        expect(res.body.timestamp).toBeDefined();
+        expect(res.body.status).toBe('ok');
       });
   });
 

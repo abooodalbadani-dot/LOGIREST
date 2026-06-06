@@ -31,7 +31,7 @@ type ScanEntry = { barcode: string; item_name: string; timestamp: Date; success:
 
 type LineItem = {
  id: string;
- item: { id: string; code: string; nameAr: string; nameEn: string; primaryUom: { id: string; code: string; nameAr: string; nameEn: string } };
+ item: { id: string; code: string; name: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string } };
  qty: number;
  uomId: string;
  lotAllocations: LotAllocation[];
@@ -50,7 +50,7 @@ export default function IssueScanModePage(props: { params: Promise<{ locale: str
 
 function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  const t = useTranslations('operations.issue');
- const { user } = useAuth();
+ const { user, activeScope } = useAuth();
  const router = useRouter();
  
  const isNew = id === 'new';
@@ -58,7 +58,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
   const postIssue = usePostIssue();
  
  const [lines, setLines] = useState<LineItem[]>([]);
- const [warehouseId, setWarehouseId] = useState('wh-1');
+ const [warehouseId, setWarehouseId] = useState(activeScope?.warehouseId || '');
  const [scanLog, setScanLog] = useState<ScanEntry[]>([]);
  const [scanError, setScanError] = useState('');
  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
@@ -73,29 +73,35 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  });
 
  const { data: lockState } = useWarehouseLock(warehouseId);
-
+ 
   useEffect(() => {
-  if (issue) {
-    // Synchronize internal state with fetched issue data
-    setLines((issue.lines || []).map(l => ({
-      id: l.id,
-      item: l.item,
-      qty: l.qty,
-      uomId: l.uomId,
-      lotAllocations: l.lotAllocations,
-    })));
-   
-    setWarehouseId(issue.warehouseId || 'wh-1');
-  }
-  }, [issue]);
+    if (activeScope?.warehouseId && !issue) {
+      setWarehouseId(activeScope.warehouseId);
+    }
+  }, [activeScope?.warehouseId, issue]);
+
+   useEffect(() => {
+   if (issue) {
+     // Synchronize internal state with fetched issue data
+     setLines((issue.lines || []).map(l => ({
+       id: l.id,
+       item: l.item,
+       qty: l.qty,
+       uomId: l.uomId,
+       lotAllocations: l.lotAllocations,
+     })));
+    
+     setWarehouseId(issue.warehouseId || activeScope?.warehouseId || '');
+   }
+   }, [issue, activeScope?.warehouseId]);
 
   const handleScan = async (barcode: string) => {
   try {
     setScanError('');
     const ItemSchema = z.object({
       data: z.array(z.object({
-        id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
-        primaryUom: z.object({ id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string() })
+        id: z.string(), code: z.string(), name: z.string(),
+        primaryUom: z.object({ id: z.string(), code: z.string() })
       }))
     });
     const res = await apiClient.get(`/master-data/items?barcode=${barcode}`, ItemSchema);
@@ -111,7 +117,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
         targetLine = { id: `new-${Date.now()}`, item, qty: 1, uomId: item.primaryUom.id, lotAllocations: [] };
         return [...prev, targetLine];
       });
-      setScanLog(prev => [{ barcode, item_name: item.nameEn, timestamp: new Date(), success: true }, ...prev].slice(0, 10));
+      setScanLog(prev => [{ barcode, item_name: item.name, timestamp: new Date(), success: true }, ...prev].slice(0, 10));
       // Auto-open FEFO allocator for new scans
       setTimeout(() => {
         if (targetLine) { setActiveLine(targetLine); setFefoOpen(true); }
@@ -126,21 +132,26 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  }
  };
 
-  const handlePost = async () => {
-    try {
-      await postIssue.mutateAsync({ 
-        id,
-        confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', 
-        version: issue?.version || 0 
-      });
-      setIsPostDialogOpen(false);
-      router.push("/issues");
-    } catch (err: unknown) {
-      const apiErr = err as { code?: string };
-      if (apiErr?.code === 'WAREHOUSE_LOCKED') setIsWarehouseLockedError(true);
-      setIsPostDialogOpen(false);
-    }
-  };
+   const handlePost = async () => {
+     try {
+       await postIssue.mutateAsync({ 
+         id,
+         confirmation: 'ACKNOWLEDGE_IRREVERSIBLE', 
+         version: issue?.version || 0 
+       });
+       setIsPostDialogOpen(false);
+       router.push("/issues");
+     } catch (err: unknown) {
+       const apiErr = err as { code?: string; message?: string };
+       if (apiErr?.code === 'WAREHOUSE_LOCKED') {
+         setIsWarehouseLockedError(true);
+       } else {
+         const message = err instanceof Error ? err.message : (apiErr?.message || 'Failed to post issue');
+         toast.error(message);
+       }
+       setIsPostDialogOpen(false);
+     }
+   };
 
   const isPosted = isIssuePosted(issue?.status);
  const isLocked = (lockState?.isLocked ?? false) || isWarehouseLockedError;
@@ -192,7 +203,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  return (
  <div key={line.id} className="bg-surface-container-high border border-border-muted/50 p-6 rounded-2xl shadow-md transition-all hover:scale-[1.01] flex items-center justify-between group">
  <div>
- <div className="text-title-lg font-bold group-hover:text-operational-cyan transition-colors">{line.item.nameAr} / {line.item.nameEn}</div>
+ <div className="text-title-lg font-bold group-hover:text-operational-cyan transition-colors">{line.item.name}</div>
  <div className="text-muted-foreground text-body-md font-mono mt-1 opacity-70">{line.item.code}</div>
  </div>
  <div className="flex items-center gap-8">
@@ -258,7 +269,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <Dialog open={fefoOpen} onOpenChange={setFefoOpen}>
  <DialogContent className="max-h-[90vh] max-w-2xl bg-surface-container border border-border-muted/50 overflow-y-auto">
  <DialogHeader>
- <DialogTitle className="text-headline-lg">{t('fefo_drawer_title')}: {activeLine?.item.nameEn}</DialogTitle>
+ <DialogTitle className="text-headline-lg">{t('fefo_drawer_title')}: {activeLine?.item.name}</DialogTitle>
  </DialogHeader>
  <div className="py-4 overflow-y-auto pb-20">
  {activeLine && (

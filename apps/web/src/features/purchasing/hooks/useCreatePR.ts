@@ -6,14 +6,13 @@ import { z } from 'zod';
 import { PRDetailSchema } from './usePR';
 
 const CreatePRPayloadSchema = z.object({
- department_id: z.string(),
- expected_date: z.string(),
- notes: z.string().optional().or(z.literal('')),
- lines: z.array(z.object({
- item_id: z.string(),
- req_qty: z.number().positive(),
- uom_id: z.string()
- }))
+  branchId: z.string(),
+  warehouseId: z.string(),
+  notes: z.string().optional().or(z.literal('')),
+  lines: z.array(z.object({
+    itemId: z.string(),
+    quantity: z.number().positive(),
+  }))
 });
 
 export type CreatePRPayload = z.infer<typeof CreatePRPayloadSchema>;

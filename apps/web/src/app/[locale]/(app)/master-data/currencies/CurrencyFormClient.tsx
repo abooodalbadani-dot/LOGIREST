@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props {
   id: string | null;
@@ -52,8 +53,7 @@ export function CurrencyFormClient({
       disabled: isReadOnly,
       defaultValues: { 
         code: '', 
-        nameAr: '', 
-        nameEn: '', 
+        name: '', 
         symbol: '',
         isBaseCurrency: false,
         isActive: true,
@@ -69,8 +69,7 @@ export function CurrencyFormClient({
     if (currency) {
       reset({ 
         code: currency.code, 
-        nameAr: currency.nameAr,
-        nameEn: currency.nameEn, 
+        name: currency.name,
         symbol: currency.symbol || '',
         isBaseCurrency: currency.isBaseCurrency,
         isActive: currency.isActive,
@@ -120,12 +119,7 @@ export function CurrencyFormClient({
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Currency form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const displayTitle = isReadOnly ? viewTitle : (id ? editTitle : createTitle);
 
@@ -212,40 +206,21 @@ export function CurrencyFormClient({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Name EN */}
+              <div className="grid grid-cols-1 gap-8">
+                {/* Name Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="curr-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {t('fields.name_en')}
+                  <Label htmlFor="curr-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+                    {t('fields.name') || 'Name'}
                   </Label>
                   <Input 
-                    id="curr-name-en" 
-                    {...register('nameEn')} 
+                    id="curr-name" 
+                    {...register('name')} 
                     disabled={isReadOnly}
                     className="h-11 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold disabled:opacity-70"
                   />
-                  {errors.nameEn?.message && (
+                  {errors.name?.message && (
                     <p className="text-label-xs font-semibold text-rose-400 uppercase">
-                      {t(errors.nameEn.message as Parameters<typeof t>[0])}
-                    </p>
-                  )}
-                </div>
-
-                {/* Name AR */}
-                <div className="space-y-2">
-                  <Label htmlFor="curr-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                    {t('fields.name_ar')}
-                  </Label>
-                  <Input 
-                    id="curr-name-ar" 
-                    dir="rtl"
-                    {...register('nameAr')} 
-                    disabled={isReadOnly}
-                    className="h-11 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold disabled:opacity-70"
-                  />
-                  {errors.nameAr?.message && (
-                    <p className="text-label-xs font-semibold text-rose-400 uppercase">
-                      {t(errors.nameAr.message as Parameters<typeof t>[0])}
+                      {t(errors.name.message as Parameters<typeof t>[0])}
                     </p>
                   )}
                 </div>

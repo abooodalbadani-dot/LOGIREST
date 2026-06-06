@@ -2,8 +2,8 @@ import os
 import re
 import json
 
-base_dir = "e:/Kitchen‑Store Inventory System/apps/web/src/app/[locale]"
-src_dir = "e:/Kitchen‑Store Inventory System/apps/web/src"
+base_dir = "e:/kitchen-store-inventory-system/apps/web/src/app/[locale]"
+src_dir = "e:/kitchen-store-inventory-system/apps/web/src"
 
 pages = []
 screens_dict = {}
@@ -190,5 +190,5 @@ for p in pages:
     if issues:
         report.append(f"- **{p['route']}**: {', '.join(issues)}")
 
-with open('e:/Kitchen‑Store Inventory System/UX_Audit_Report.md', 'w', encoding='utf-8') as f:
+with open('e:/kitchen-store-inventory-system/UX_Audit_Report.md', 'w', encoding='utf-8') as f:
     f.write('\n'.join(report))

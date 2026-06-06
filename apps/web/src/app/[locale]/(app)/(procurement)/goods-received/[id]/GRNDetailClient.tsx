@@ -134,13 +134,11 @@ export function GRNDetailClient({ id }: GRNDetailClientProps) {
               item: {
                 id: l.item.id,
                 code: l.item.code,
-                nameAr: l.item.nameAr,
-                nameEn: l.item.nameEn,
+                name: l.item.name,
                 primaryUom: {
                   id: l.item.primaryUom.id,
                   code: l.item.primaryUom.code,
-                  nameAr: '',
-                  nameEn: '',
+                  name: '',
                 },
               },
               lotId: l.lot?.id ?? null,

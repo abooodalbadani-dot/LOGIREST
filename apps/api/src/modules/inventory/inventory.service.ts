@@ -16,24 +16,21 @@ export class InventoryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getBalance(warehouseId: string, query: InventoryBalanceQuery) {
-    const whereClause: any = { warehouseId };
-
-    if (query.itemId) {
-      whereClause.itemId = query.itemId;
-    }
-
-    if (query.categoryId || query.search) {
-      whereClause.item = {};
-      if (query.categoryId) {
-        whereClause.item.categoryId = query.categoryId;
-      }
-      if (query.search) {
-        whereClause.item.OR = [
-          { name: { contains: query.search, mode: 'insensitive' } },
-          { sku: { contains: query.search, mode: 'insensitive' } },
-        ];
-      }
-    }
+    const whereClause: Prisma.WarehouseItemWhereInput = {
+      warehouseId,
+      ...(query.itemId && { itemId: query.itemId }),
+      ...((query.categoryId || query.search) && {
+        item: {
+          ...(query.categoryId && { categoryId: query.categoryId }),
+          ...(query.search && {
+            OR: [
+              { name: { contains: query.search, mode: 'insensitive' } },
+              { sku: { contains: query.search, mode: 'insensitive' } },
+            ],
+          }),
+        },
+      }),
+    };
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
@@ -43,6 +40,7 @@ export class InventoryService {
       this.prisma.warehouseItem.findMany({
         where: whereClause,
         include: {
+          warehouse: true,
           item: {
             include: {
               category: true,
@@ -67,10 +65,12 @@ export class InventoryService {
       itemId: wItem.itemId,
       itemCode: wItem.item.sku,
       itemName: wItem.item.name,
-      categoryName: wItem.item.category.name,
-      onHandQty: Number(wItem.qtyOnHand),
-      weightedAvgCost: Number(wItem.wac),
-      defaultUomSymbol: wItem.item.unitOfMeasure.code,
+      warehouseId: wItem.warehouseId,
+      warehouseName: wItem.warehouse.name,
+      qtyOnHand: Number(wItem.qtyOnHand),
+      qtyReserved: Number(wItem.qtyAllocated),
+      qtyAvailable: Math.max(0, Number(wItem.qtyOnHand) - Number(wItem.qtyAllocated)),
+      reorderPoint: wItem.item.reorderPoint !== null ? Number(wItem.item.reorderPoint) : 0,
     }));
 
     return {
@@ -78,24 +78,22 @@ export class InventoryService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }
 
   async getLots(warehouseId: string, query: InventoryLotsQuery) {
-    const whereClause: any = { warehouseId };
-
-    if (query.itemId) {
-      whereClause.itemId = query.itemId;
-    }
-
-    if (query.status) {
-      whereClause.lot = {
-        status: query.status,
-      };
-    }
+    const whereClause: Prisma.WarehouseItemLotWhereInput = {
+      warehouseId,
+      ...(query.itemId && { itemId: query.itemId }),
+      ...(query.status && {
+        lot: {
+          status: query.status,
+        },
+      }),
+    };
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
@@ -137,8 +135,8 @@ export class InventoryService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }
@@ -220,8 +218,8 @@ export class InventoryService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }

@@ -243,7 +243,7 @@ export class AuthService {
       avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,
       phone: body.phone || null,
       locale: body.locale || 'en',
-      notification_preferences: body.notification_preferences || {
+      notification_preferences: body.notificationPreferences || {
         lowStock: true,
         expiry: true,
         pendingApproval: true,

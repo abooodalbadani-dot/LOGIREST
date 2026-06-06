@@ -110,7 +110,7 @@ export function AdjustmentForm({
   );
 
   const warehouseItems = useMemo(() => 
-    warehouses.map(w => ({ id: w.id, name_en: w.name || '', name_ar: w.name || '' })),
+    warehouses.map(w => ({ id: w.id, name: w.name || '' })),
   [warehouses]);
 
   const fallbackReasons = ['DAMAGE', 'EXPIRY', 'THEFT', 'COUNTING_ERROR', 'CORRECTION', 'OTHER'];
@@ -119,14 +119,12 @@ export function AdjustmentForm({
     if (reasons && reasons.length > 0) {
       return reasons.map(r => ({
         id: r.code,
-        name_en: r.nameEn,
-        name_ar: r.nameAr,
+        name: r.name,
       }));
     }
     return fallbackReasons.map(opt => ({
       id: opt,
-      name_en: t(`reason_${opt.toLowerCase()}`) || opt,
-      name_ar: t(`reason_${opt.toLowerCase()}`) || opt,
+      name: t(`reason_${opt.toLowerCase()}`) || opt,
     }));
   }, [t, varianceReasonsData]);
 
@@ -318,7 +316,7 @@ export function AdjustmentForm({
 
       const ItemSchema = z.object({
         data: z.array(z.object({
-          id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
+          id: z.string(), code: z.string(), name: z.string(),
           primaryUom: z.object({ id: z.string(), code: z.string() })
         }))
       });
@@ -338,7 +336,7 @@ export function AdjustmentForm({
           { signal: abortController.signal }
         );
         const currentQty = balanceRes.data?.[0]?.qtyOnHand ?? 0;
-
+ 
         setLines(prev => {
           const existing = prev.find(l => l.item.id === item.id);
           if (existing) {
@@ -349,8 +347,7 @@ export function AdjustmentForm({
             item: {
               id: item.id,
               code: item.code,
-              nameAr: item.nameAr,
-              nameEn: item.nameEn,
+              name: item.name,
               primaryUom: item.primaryUom
             },
             direction: 'INCREASE',

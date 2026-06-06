@@ -100,8 +100,8 @@ export class ItemsService {
       meta: {
         total,
         page: pageNum,
-        page_size: limitNum,
-        total_pages: Math.ceil(total / limitNum),
+        pageSize: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       },
     };
   }

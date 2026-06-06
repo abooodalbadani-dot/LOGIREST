@@ -1,6 +1,6 @@
 import json
 
-en_path = r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json"
+en_path = r"e:\kitchen-store-inventory-system\apps\web\messages\en.json"
 untranslated_keys = [
     "common.document_locked", "common.document_status", "common.read_only_mode", "common.back_to_list", "common.locales.en",
     "masterData.common.placeholder_sku", "notifications.subject_en", "notifications.body_en",

@@ -8,14 +8,10 @@ import { PRDetailSchema } from './usePR';
 
 const UpdatePRPayloadSchema = z.object({
   version: z.number(),
-  department_id: z.string().optional(),
-  expected_date: z.string().optional(),
-  notes: z.string().optional().or(z.literal('')),
   lines: z.array(z.object({
-    id: z.string().optional(), // For existing lines
-    item_id: z.string(),
-    req_qty: z.number().positive(),
-    uom_id: z.string()
+    id: z.string().optional(),
+    itemId: z.string(),
+    quantity: z.number().positive(),
   })).optional()
 });
 
@@ -36,8 +32,6 @@ export function useUpdatePR(options?: { onConflict?: () => void }) {
     },
     onError: (error) => {
       console.error('[useUpdatePR] Failed to update PR:', error);
-      const message = error instanceof Error ? error.message : 'Operation failed';
-      toast.error(message);
     }
   });
 }

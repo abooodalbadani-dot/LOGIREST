@@ -61,8 +61,8 @@ export class WarehousesDirectController {
       meta: {
         total: warehouses.length,
         page: 1,
-        page_size: take || warehouses.length,
-        total_pages: 1,
+        pageSize: take || warehouses.length,
+        totalPages: 1,
       },
     };
   }

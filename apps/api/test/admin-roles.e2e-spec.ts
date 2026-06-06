@@ -102,6 +102,9 @@ describe('AdminRoles (e2e)', () => {
         prisma.refreshToken.deleteMany({
           where: { userId: { in: [adminId, viewerId] } },
         }),
+        prisma.auditLog.deleteMany({
+          where: { userId: { in: [adminId, viewerId] } },
+        }),
       ]);
       await prisma.user.deleteMany({
         where: { id: { in: [adminId, viewerId] } },
@@ -144,14 +147,18 @@ describe('AdminRoles (e2e)', () => {
           expect(Array.isArray(res.body)).toBe(true);
           expect(res.body.length).toBe(10); // 10 core roles
 
-          const adminDescriptor = res.body.find((r: any) => r.id === 'ADMIN');
+          const adminDescriptor = res.body.find(
+            (r: { id: string; displayName: string; userCount: number }) =>
+              r.id === 'ADMIN',
+          );
           expect(adminDescriptor).toBeDefined();
           expect(adminDescriptor.displayName).toBe('Administrator');
           expect(typeof adminDescriptor.userCount).toBe('number');
           expect(adminDescriptor.userCount).toBeGreaterThanOrEqual(1); // at least current admin
 
           const whKeeperDescriptor = res.body.find(
-            (r: any) => r.id === 'WH_KEEPER',
+            (r: { id: string; displayName: string; permissions: string[] }) =>
+              r.id === 'WH_KEEPER',
           );
           expect(whKeeperDescriptor).toBeDefined();
           expect(whKeeperDescriptor.displayName).toBe('Warehouse Keeper');

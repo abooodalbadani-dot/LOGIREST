@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props {
   id: string | null;
@@ -39,6 +40,7 @@ interface Props {
 export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tu = useTranslations('master_data.uoms');
+  const tv = useTranslations();
   const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useUoM(id);
@@ -52,7 +54,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isDirty, isValid } } = useForm<UoMFormValues>({
     resolver: zodResolver(UoMFormSchema),
-    defaultValues: { code: '', nameAr: '', nameEn: '', category: '', isActive: true, version: undefined },
+    defaultValues: { code: '', name: '', category: '', isActive: true, version: undefined },
     disabled: isReadOnly,
   });
 
@@ -64,8 +66,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
     if (data) {
       reset({ 
         code: data.code, 
-        nameAr: data.nameAr, 
-        nameEn: data.nameEn,
+        name: data.name, 
         category: data.category || '',
         isActive: data.isActive,
         version: data.version
@@ -114,12 +115,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('UoM form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -199,35 +195,19 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                           />
                       )}
                     />
-                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.code.message}`)}</p>}
+                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                      <Label htmlFor="uom-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name_en')}</Label>
-                      <Input 
-                        id="uom-name-en" 
-                        dir="ltr" 
-                        {...register('nameEn')} 
-                        disabled={isReadOnly}
-                        className="font-semibold" 
-                        placeholder={tu('placeholders.name_en')} 
-                      />
-                      {errors.nameEn && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.nameEn.message}`)}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="uom-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name_ar')}</Label>
-                      <Input 
-                        id="uom-name-ar" 
-                        dir="rtl" 
-                        {...register('nameAr')} 
-                        disabled={isReadOnly}
-                        className="font-semibold text-end" 
-                        placeholder={tu('placeholders.name_ar')} 
-                      />
-                      {errors.nameAr && <p className="text-label-xs font-semibold text-status-error uppercase">{tu(`validation.${errors.nameAr.message}`)}</p>}
-                    </div>
+                  <div className="space-y-2 max-w-md">
+                    <Label htmlFor="uom-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name') || 'Name'}</Label>
+                    <Input 
+                      id="uom-name" 
+                      {...register('name')} 
+                      disabled={isReadOnly}
+                      className="font-semibold" 
+                      placeholder={tu('placeholders.name') || 'Enter UoM Name'} 
+                    />
+                    {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
                   </div>
 
                   <div className="space-y-2 max-w-sm">

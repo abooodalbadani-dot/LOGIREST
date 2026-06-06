@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
+import { toast } from 'sonner';
 
 export function usePostGRN(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
@@ -17,6 +18,8 @@ export function usePostGRN(options?: { onConflict?: () => void }) {
     },
     onError: (error) => {
       console.error('[usePostGRN] Failed to post GRN:', error);
+      const message = error instanceof Error ? error.message : 'Failed to post GRN';
+      toast.error(message);
     }
   });
 }

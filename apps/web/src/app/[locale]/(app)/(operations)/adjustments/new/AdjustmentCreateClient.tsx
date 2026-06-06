@@ -85,8 +85,9 @@ interface ItemOption {
   id: string;
   code: string;
   barcode: string;
-  nameEn: string;
-  nameAr: string;
+  name: string;
+  nameEn?: string;
+  nameAr?: string;
   primaryUom: { id: string; code: string };
 }
 
@@ -246,8 +247,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const warehouseItems = useMemo(() => {
     return (warehouses || []).map(w => ({
       id: w.id,
-      name_en: w.name || w.code,
-      name_ar: w.name || w.code,
+      name: w.name || w.code,
       code: w.code,
     }));
   }, [warehouses]);
@@ -258,14 +258,12 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     if (reasons && reasons.length > 0) {
       return reasons.map(r => ({
         id: r.code,
-        name_en: r.nameEn,
-        name_ar: r.nameAr,
+        name: r.name,
       }));
     }
     return fallbackReasons.map(r => ({
       id: r,
-      name_en: t(`reasons.${r.toLowerCase()}`) || r,
-      name_ar: t(`reasons.${r.toLowerCase()}`) || r,
+      name: t(`reasons.${r.toLowerCase()}`) || r,
     }));
   }, [t, varianceReasonsData]);
 
@@ -274,8 +272,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       id: i.id,
       code: i.code,
       barcode: i.barcode,
-      nameEn: i.nameEn,
-      nameAr: i.nameAr,
+      name: i.name,
       primaryUom: {
         id: i.primaryUom.id,
         code: i.primaryUom.code,
@@ -303,8 +300,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
         item: {
           id: item.id,
           code: item.code,
-          nameAr: item.nameAr,
-          nameEn: item.nameEn,
+          name: item.name,
           primaryUom: { 
             code: item.primaryUom.code 
           }
@@ -684,8 +680,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
             id: newItem.id,
             code: newItem.code,
             barcode: newItem.barcode,
-            nameEn: newItem.name_en,
-            nameAr: newItem.name_ar,
+            name: newItem.name_en || newItem.name_ar || '',
             primaryUom: newItem.primary_uom,
           }]);
           setLines(prev => {
@@ -697,8 +692,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
               item: {
                 id: newItem.id,
                 code: newItem.code,
-                nameAr: newItem.name_ar,
-                nameEn: newItem.name_en,
+                name: newItem.name_en || newItem.name_ar || '',
                 primaryUom: {
                   code: newItem.primary_uom.code
                 }
@@ -715,7 +709,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
       <CreateLotDialog
         isOpen={creatingLotForLineId !== null}
         onClose={() => setCreatingLotForLineId(null)}
-        defaultItemName={creatingLotForLineId ? (locale === 'ar' ? lines.find(l => l.id === creatingLotForLineId)?.item.nameAr : lines.find(l => l.id === creatingLotForLineId)?.item.nameEn) || '' : ''}
+        defaultItemName={creatingLotForLineId ? lines.find(l => l.id === creatingLotForLineId)?.item.name || '' : ''}
         onSave={(lotNumber, expiryDate) => {
           if (creatingLotForLineId) {
             setLines(prev => prev.map(l => l.id === creatingLotForLineId ? { ...l, lotNumber: lotNumber } : l));

@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowRightLeft, Plus, Trash2, Package, Search, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import { onFormError } from "@/hooks/useFormError";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useMasterDataList } from "@/features/master-data/hooks/useMasterDataCRUD";
 import { ScanInput } from "@/components/shared/ScanInput/ScanInput";
@@ -56,22 +57,22 @@ import { isDocumentLocked, type DocumentStatus } from "@logirest/shared-types";
 import { PO_STATUS } from "@logirest/shared-types";
 
 export const lineItemSchema = z.object({
-  item_id: z.string().min(1),
-  item_name: z.string().optional(),
-  item_code: z.string().optional(),
+  itemId: z.string().min(1),
+  itemName: z.string().optional(),
+  itemCode: z.string().optional(),
   quantity: z.number().positive(),
-  unit_price: z.number().nonnegative(),
-  uom_id: z.string().min(1),
+  unitPrice: z.number().nonnegative(),
+  uomId: z.string().min(1),
   notes: z.string().optional(),
 });
 
 export const formSchema = z.object({
-  supplier_id: z.string().min(1),
-  pr_id: z.string().optional(),
-  currency_code: z.string().min(1),
-  exchange_rate: z.number().min(0.0001),
-  expected_date: z.string().min(1),
-  target_warehouse_id: z.string().min(1),
+  supplierId: z.string().min(1),
+  prId: z.string().optional(),
+  currencyId: z.string().min(1),
+  exchangeRate: z.number().min(0.0001),
+  expectedDate: z.string().min(1),
+  targetWarehouseId: z.string().min(1),
   notes: z.string().optional(),
   lines: z.array(lineItemSchema).min(1),
 });
@@ -95,22 +96,22 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      supplier_id: initialData?.supplierId || "",
-      pr_id: initialData?.prId || "",
-      currency_code: initialData?.currencyCode || "",
-      exchange_rate: initialData?.exchangeRate || 1,
-      expected_date: initialData?.expectedDate || "",
-      target_warehouse_id: initialData?.targetWarehouseId || "",
+      supplierId: initialData?.supplierId || "",
+      prId: initialData?.prId || "",
+      currencyId: initialData?.currencyId || "",
+      exchangeRate: initialData?.exchangeRate || 1,
+      expectedDate: initialData?.expectedDate || "",
+      targetWarehouseId: initialData?.targetWarehouseId || "",
       notes: initialData?.notes || "",
       lines: initialData?.lines.map(l => ({
-        item_id: l.item?.id || "",
-        item_name: locale === 'ar' ? l.item?.nameAr : l.item?.nameEn,
-        item_code: l.item?.code || "",
+        itemId: l.item?.id || "",
+        itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn),
+        itemCode: l.item?.code || "",
         quantity: l.quantity || l.qty || 1,
-        unit_price: l.unitPrice || l.unitCostForeign || 0,
-        uom_id: l.uomId,
+        unitPrice: l.unitPrice || l.unitCostForeign || 0,
+        uomId: l.uomId,
         notes: l.notes || ""
-      })) || [{ item_id: "", item_name: "", item_code: "", quantity: 1, unit_price: 0, uom_id: "PCS", notes: "" }]
+      })) || [{ itemId: "", itemName: "", itemCode: "", quantity: 1, unitPrice: 0, uomId: "PCS", notes: "" }]
     },
   });
 
@@ -132,13 +133,13 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     control: form.control,
     name: "lines",
   });
-  const currency = useWatch({
+  const currencyId = useWatch({
     control: form.control,
-    name: "currency_code",
+    name: "currencyId",
   });
   const rate = useWatch({
     control: form.control,
-    name: "exchange_rate",
+    name: "exchangeRate",
   });
 
   const [scanStatus, setScanStatus] = React.useState<"idle" | "success" | "error">("idle");
@@ -160,39 +161,39 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     if (item) {
       const currentLines = form.getValues('lines') as PurchaseOrderFormValues['lines'];
       // If the first line is empty, replace it instead of appending
-      const isFirstLineEmpty = currentLines.length === 1 && !currentLines[0].item_id;
+      const isFirstLineEmpty = currentLines.length === 1 && !currentLines[0].itemId;
       
-      const existingIndex = currentLines.findIndex(l => l.item_id === item.id);
+      const existingIndex = currentLines.findIndex(l => l.itemId === item.id);
       
       if (existingIndex >= 0 && !isFirstLineEmpty) {
         const qty = (currentLines[existingIndex].quantity || 0) + 1;
         update(existingIndex, { ...currentLines[existingIndex], quantity: qty });
         setScanStatus("success");
-        setStatusMessage(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        setStatusMessage(tc('item_added_quantity_updated', { name: item.name }));
       } else if (isFirstLineEmpty) {
         update(0, {
-          item_id: item.id,
-          item_name: locale === 'ar' ? item.nameAr : item.nameEn,
-          item_code: item.code,
+          itemId: item.id,
+          itemName: item.name,
+          itemCode: item.code,
           quantity: 1,
-          unit_price: item.lastPurchasePrice || 0,
-          uom_id: item.primaryUom?.id || 'PCS',
+          unitPrice: item.lastPurchasePrice || 0,
+          uomId: item.primaryUom?.id || 'PCS',
           notes: ''
         });
         setScanStatus("success");
-        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        setStatusMessage(tc('item_added', { name: item.name }));
       } else {
         prepend({
-          item_id: item.id,
-          item_name: locale === 'ar' ? item.nameAr : item.nameEn,
-          item_code: item.code,
+          itemId: item.id,
+          itemName: item.name,
+          itemCode: item.code,
           quantity: 1,
-          unit_price: item.lastPurchasePrice || 0,
-          uom_id: item.primaryUom?.id || 'PCS',
+          unitPrice: item.lastPurchasePrice || 0,
+          uomId: item.primaryUom?.id || 'PCS',
           notes: ''
         });
         setScanStatus("success");
-        setStatusMessage(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        setStatusMessage(tc('item_added', { name: item.name }));
       }
 
       setTimeout(() => {
@@ -209,7 +210,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
     }
   };
 
-  const supplierTotalAmount = lines.reduce((sum, line) => sum + ((line.quantity || 0) * (line.unit_price || 0)), 0);
+  const supplierTotalAmount = lines.reduce((sum, line) => sum + ((line.quantity || 0) * (line.unitPrice || 0)), 0);
   const baseTotalAmount = supplierTotalAmount * (rate || 1);
 
   // Workflow Integration
@@ -258,50 +259,63 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
   const handleImportPR = React.useCallback(() => {
     if (!selectedPR) return;
     const prLines = selectedPR.lines.map(l => ({
-      item_id: l.item.id,
-      item_name: locale === 'ar' ? l.item.nameAr : l.item.nameEn,
-      item_code: l.item.code,
+      itemId: l.item.id,
+      itemName: l.item.name || (locale === 'ar' ? l.item.nameAr : l.item.nameEn) || '',
+      itemCode: l.item.code,
       quantity: l.reqQty,
-      unit_price: 0,
-      uom_id: l.uomId,
+      unitPrice: 0,
+      uomId: l.uomId,
       notes: '',
     }));
     form.setValue('lines', prLines);
-    form.setValue('pr_id', selectedPR.id);
+    form.setValue('prId', selectedPR.id);
     setImportDialogOpen(false);
     setSelectedPRId(null);
   }, [selectedPR, form, locale]);
 
+  const selectedCurrencyCode = React.useMemo(() => {
+    return currencies?.find(c => c.id === currencyId)?.code || '';
+  }, [currencies, currencyId]);
+
   const { currency: baseCurrency, isLoading: loadingSettings } = useBaseCurrency();
-  const { data: fxRates } = useFXRates(currency, baseCurrency || 'SAR');
+  const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency || 'SAR');
 
   const supplierItems = React.useMemo(() => {
-    return suppliers?.map(s => ({
-      id: s.id,
-      name_en: `${s.nameEn} (${s.code})`,
-      name_ar: `${s.nameAr} (${s.code})`,
-    })) ?? [];
+    return suppliers?.map(s => {
+      const displayName = s.name || '';
+      return {
+        id: s.id,
+        name: displayName,
+        name_en: `${displayName} (${s.code})`,
+        name_ar: `${displayName} (${s.code})`,
+      };
+    }) ?? [];
   }, [suppliers]);
 
   const warehouseItems = React.useMemo(() => {
     return warehouses?.map(w => ({
       id: w.id,
-      name_en: w.name,
-      name_ar: w.name,
+      name: w.name || '',
+      name_en: w.name || '',
+      name_ar: w.name || '',
     })) ?? [];
   }, [warehouses]);
 
   const currencyItems = React.useMemo(() => {
-    return currencies?.map(c => ({
-      id: c.code,
-      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-    })) ?? [];
-  }, [currencies, locale]);
+    return currencies?.map(c => {
+      const displayName = c.name || '';
+      return {
+        id: c.id,
+        name: displayName,
+        name_en: `${c.code} — ${displayName}`,
+        name_ar: `${c.code} — ${displayName}`,
+      };
+    }) ?? [];
+  }, [currencies]);
   
   React.useEffect(() => {
     if (fxRates?.[0]?.rate && !initialData) {
-      form.setValue("exchange_rate", fxRates[0].rate);
+      form.setValue("exchangeRate", fxRates[0].rate);
     }
   }, [fxRates, form, initialData]);
 
@@ -316,7 +330,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0 w-full min-h-screen bg-surface-container-low flex flex-col pb-32">
+      <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-0 w-full min-h-screen bg-surface-container-low flex flex-col pb-32">
         <DocumentLockBanner isLocked={isLocked} status={status} />
 
         <div className="px-8 pt-8">
@@ -340,7 +354,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
-                  name="supplier_id"
+                  name="supplierId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier')}</FormLabel>
@@ -361,7 +375,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
                 <FormField
                   control={form.control}
-                  name="pr_id"
+                  name="prId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('linked_pr')}</FormLabel>
@@ -441,7 +455,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
                 <FormField
                   control={form.control}
-                  name="expected_date"
+                  name="expectedDate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('expected_date')}</FormLabel>
@@ -455,7 +469,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
 
                 <FormField
                   control={form.control}
-                  name="target_warehouse_id"
+                  name="targetWarehouseId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('target_warehouse')}</FormLabel>
@@ -478,7 +492,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 mt-4">
                 <FormField
                   control={form.control}
-                  name="currency_code"
+                  name="currencyId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('supplier_currency')}</FormLabel>
@@ -498,7 +512,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                 />
                 <FormField
                   control={form.control}
-                  name="exchange_rate"
+                  name="exchangeRate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground/40 text-label-xs uppercase font-semibold">{t('fx_rate')}</FormLabel>
@@ -568,7 +582,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   form={form}
                   itemsData={itemsData}
                   isLocked={isLocked}
-                  currency={currency}
+                  currency={selectedCurrencyCode}
                   fields={fields}
                   remove={remove}
                   update={update}
@@ -580,7 +594,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
                   <div className="bg-surface-container-high/20 px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px]">
                     <span className="text-label-xs uppercase font-semibold text-muted-foreground/40">{t('supplier_total')}</span>
                     <span className="text-title-lg font-mono font-semibold text-foreground" dir="ltr">
-                      {formatCurrency(supplierTotalAmount, currency, locale as 'ar' | 'en')}
+                      {formatCurrency(supplierTotalAmount, selectedCurrencyCode, locale as 'ar' | 'en')}
                     </span>
                   </div>
                   <div className="bg-operational-cyan/[0.03] px-8 py-5 rounded-2xl border-none flex items-center justify-between gap-10 min-w-[300px] backdrop-blur-sm relative overflow-hidden">
@@ -599,7 +613,7 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         <FormFooter 
           isLocked={isLocked}
           onCancel={() => router.push('/purchase-orders', { skipGuard: !form.formState.isDirty })}
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(onSubmit, onFormError)}
           isPending={isSubmitting}
           submitLabel={mode === "edit" ? tc('save') : t('actions.submit')}
           actions={actions}

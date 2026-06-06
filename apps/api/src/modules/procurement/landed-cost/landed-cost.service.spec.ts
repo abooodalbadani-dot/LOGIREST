@@ -46,6 +46,10 @@ describe('LandedCostService', () => {
     mockTx.goodsReceivedNote.findUnique.mockResolvedValue({
       id: 'grn-1',
       warehouseId: 'wh-1',
+      warehouse: {
+        id: 'wh-1',
+        branchId: 'LCV',
+      },
     });
     mockTx.userWarehouseScope.findUnique.mockResolvedValue({ id: 'scope-1' });
     mockTx.landedCostVoucher.create.mockResolvedValue({

@@ -45,8 +45,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
     item: {
       id: l.item.id,
       code: l.item.code,
-      nameAr: l.item.nameAr,
-      nameEn: l.item.nameEn,
+      name: l.item.name,
       primaryUom: { code: l.item.primaryUom.code },
     },
     lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,

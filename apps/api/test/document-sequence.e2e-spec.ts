@@ -112,7 +112,7 @@ describe('Document Sequence Concurrency (e2e)', () => {
     // Fire 20 requests concurrently, each with a unique idempotency key
     const reqPromises = Array.from({ length: 20 }).map(() =>
       request(app.getHttpServer())
-        .post('/api/v1/purchase-requests')
+        .post('/api/v1/procurement/purchase-requests')
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -130,8 +130,8 @@ describe('Document Sequence Concurrency (e2e)', () => {
     const prNumbers: string[] = [];
     for (const res of responses) {
       expect(res.status).toBe(201);
-      expect(res.body.requestNumber).toBeDefined();
-      prNumbers.push(res.body.requestNumber);
+      expect(res.body.data.document_number).toBeDefined();
+      prNumbers.push(res.body.data.document_number);
     }
 
     // Verify all 20 are unique

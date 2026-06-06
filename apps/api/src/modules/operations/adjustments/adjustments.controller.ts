@@ -191,21 +191,17 @@ export class AdjustmentsController {
     @Body()
     body: {
       version: number;
-      warehouse_id?: string;
       warehouseId?: string;
       reason?: string;
       notes?: string;
       lines?: Array<{
         id?: string;
-        item_id: string;
         itemId?: string;
-        qty: number;
-        uom_id: string;
-        direction: 'INCREASE' | 'DECREASE';
-        unit_cost?: number | null;
+        qty?: number;
+        uomId?: string;
+        direction?: 'INCREASE' | 'DECREASE';
         unitCost?: number | null;
         lotId?: string | null;
-        lot_id?: string | null;
       }>;
     },
   ) {
@@ -221,10 +217,12 @@ export class AdjustmentsController {
       );
     }
 
-    const warehouseId = body.warehouseId || body.warehouse_id;
-    const lines = (body.lines as Record<string, unknown>[])?.map((line) => ({
+    const rawBody = body as Record<string, unknown>;
+    const warehouseId =
+      body.warehouseId ?? (rawBody.warehouse_id as string | undefined);
+    const lines = (rawBody.lines as Record<string, unknown>[])?.map((line) => ({
       id: line.id as string | undefined,
-      itemId: (line.itemId || line.item_id) as string,
+      itemId: (line.itemId ?? line.item_id) as string,
       qty: Number(line.qty),
       direction: line.direction as 'INCREASE' | 'DECREASE',
       unitCost:

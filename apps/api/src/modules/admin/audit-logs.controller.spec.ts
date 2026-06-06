@@ -62,8 +62,8 @@ describe('AuditLogsController', () => {
     expect(result.meta).toEqual({
       total: 1,
       page: 1,
-      page_size: 50,
-      total_pages: 1,
+      pageSize: 50,
+      totalPages: 1,
     });
   });
 

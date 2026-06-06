@@ -33,7 +33,7 @@ describe('PurchaseRequestsService', () => {
   };
 
   const mockDocumentNumberService = {
-    generateNext: jest.fn().mockImplementation((tx, type) => {
+    next: jest.fn().mockImplementation((tx, type) => {
       return `${type}-SEQ-00001`;
     }),
   };

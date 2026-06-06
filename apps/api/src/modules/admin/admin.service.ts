@@ -222,7 +222,22 @@ export class AdminService {
       }
     }
 
-    let password = dto.smtp_password;
+    const rawDto = dto as Record<string, unknown>;
+    const systemName = dto.systemName ?? rawDto.system_name;
+    const baseCurrency = dto.baseCurrency ?? rawDto.base_currency;
+    const branchId = dto.branchId ?? rawDto.branch_id;
+    const timezone = dto.timezone;
+    const localeDefault = dto.localeDefault ?? rawDto.locale_default;
+    const senderName = dto.senderName ?? rawDto.sender_name;
+    const replyToEmail = dto.replyToEmail ?? rawDto.reply_to_email;
+    const mailProvider = dto.mailProvider ?? rawDto.mail_provider;
+    const smtpHost = dto.smtpHost ?? rawDto.smtp_host;
+    const smtpPort = dto.smtpPort ?? rawDto.smtp_port;
+    const smtpUser = dto.smtpUser ?? rawDto.smtp_user;
+    const smtpPassword = dto.smtpPassword ?? rawDto.smtp_password;
+    const smtpEncryption = dto.smtpEncryption ?? rawDto.smtp_encryption;
+
+    let password = smtpPassword;
     if (password === '********') {
       password = savedConfig.smtp_password
         ? decrypt(savedConfig.smtp_password)
@@ -233,19 +248,19 @@ export class AdminService {
 
     const newConfig = {
       ...savedConfig,
-      system_name: dto.system_name,
-      base_currency: dto.base_currency,
-      branch_id: dto.branch_id,
-      timezone: dto.timezone,
-      locale_default: dto.locale_default,
-      sender_name: dto.sender_name,
-      reply_to_email: dto.reply_to_email,
-      mail_provider: dto.mail_provider || 'smtp',
-      smtp_host: dto.smtp_host || '',
-      smtp_port: Number(dto.smtp_port) || 587,
-      smtp_user: dto.smtp_user || '',
+      system_name: systemName,
+      base_currency: baseCurrency,
+      branch_id: branchId,
+      timezone: timezone,
+      locale_default: localeDefault,
+      sender_name: senderName,
+      reply_to_email: replyToEmail,
+      mail_provider: mailProvider || 'smtp',
+      smtp_host: smtpHost || '',
+      smtp_port: Number(smtpPort) || 587,
+      smtp_user: smtpUser || '',
       smtp_password: encryptedPassword,
-      smtp_encryption: dto.smtp_encryption || 'none',
+      smtp_encryption: smtpEncryption || 'none',
       updated_by: userId,
     };
 
@@ -284,8 +299,8 @@ export class AdminService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }

@@ -146,19 +146,42 @@ export class OutboxWorker extends WorkerHost {
           `Failed to process event ${eventId}. Error: ${errorMsg}`,
         );
 
+        if (
+          errorMsg.includes('Engine is not yet connected') ||
+          errorMsg.includes('Response from the Engine was empty') ||
+          ((errorMsg.includes('connection') ||
+            errorMsg.includes('Connection')) &&
+            (errorMsg.includes('Prisma') ||
+              errorMsg.includes('database') ||
+              errorMsg.includes('db')))
+        ) {
+          this.logger.warn(
+            `Outbox worker detected database disconnection. Skipping retry status update.`,
+          );
+          return;
+        }
+
         this.metricsService.failedOutboxEventsCounter.inc();
 
         const nextAttempts = event.attempts + 1;
         const finalStatus = nextAttempts >= 5 ? 'FAILED' : 'PENDING';
 
-        await this.prisma.outboxEvent.update({
-          where: { id: eventId },
-          data: {
-            status: finalStatus,
-            attempts: nextAttempts,
-            lastError: errorMsg,
-          },
-        });
+        try {
+          await this.prisma.outboxEvent.update({
+            where: { id: eventId },
+            data: {
+              status: finalStatus,
+              attempts: nextAttempts,
+              lastError: errorMsg,
+            },
+          });
+        } catch (updateErr) {
+          const errString =
+            updateErr instanceof Error ? updateErr.message : String(updateErr);
+          this.logger.warn(
+            `Failed to update outbox event retry status: ${errString}`,
+          );
+        }
 
         if (finalStatus === 'PENDING') {
           throw error;

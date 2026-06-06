@@ -1,11 +1,11 @@
 <!-- File name suggestion: RFC_LogiRest-Kitchen-Store-Inventory-System.md -->
 
-# RFC: LogiRest (Kitchen‑Store Inventory System) — Internal Web Inventory & Procurement
+# RFC: LogiRest (kitchen-store-inventory-system) — Internal Web Inventory & Procurement
 **Status:** Draft  
 **Version:** 1.0  
 **Last Updated:** 2026-04-18  
 **Primary Language:** Arabic (RTL) — English supported (LTR)  
-**Source:** “Kitchen‑Store Inventory System — Project Proposal” (7 pages)
+**Source:** “kitchen-store-inventory-system — Project Proposal” (7 pages)
 
 ---
 
@@ -263,7 +263,7 @@
 
 ## 14. Appendix (ملاحق)
 
-This appendix enumerates the **expected UI screens** for the system based on the **Kitchen‑Store Inventory System Proposal** (ledger-based inventory, lots/expiry + FEFO, stocktake snapshot+lock, approvals, email/outbox, i18n AR/EN, multi-currency FX at GRN post).
+This appendix enumerates the **expected UI screens** for the system based on the **kitchen-store-inventory-system Proposal** (ledger-based inventory, lots/expiry + FEFO, stocktake snapshot+lock, approvals, email/outbox, i18n AR/EN, multi-currency FX at GRN post).
 
 ## A.0 Global Conventions (Applies to All Screens)
 - **Default locale:** Arabic (**RTL**)  

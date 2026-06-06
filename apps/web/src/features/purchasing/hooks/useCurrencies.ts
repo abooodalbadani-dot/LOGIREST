@@ -7,8 +7,9 @@ export const CurrencySchema = z.object({
   id: z.string(),
   code: z.string(),
   isBase: z.boolean(),
-  nameAr: z.string(),
-  nameEn: z.string(),
+  name: z.string(),
+  nameAr: z.string().optional(),
+  nameEn: z.string().optional(),
 });
 
 export type Currency = z.infer<typeof CurrencySchema>;

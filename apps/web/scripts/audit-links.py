@@ -3,7 +3,7 @@ import re
 import json
 
 # Configuration
-SRC_ROOT = "e:\\Kitchen‑Store Inventory System\\apps\\web\\src"
+SRC_ROOT = "e:\\kitchen-store-inventory-system\\apps\\web\\src"
 LOCALIZED_NAV_IMPORT = "@/i18n/navigation"
 
 # Regex patterns
@@ -112,7 +112,7 @@ def main():
                 audit_file(os.path.join(root, file))
     
     # Save results
-    output_path = "e:\\Kitchen‑Store Inventory System\\apps\\web\\audit\\link-integrity-results.json"
+    output_path = "e:\\kitchen-store-inventory-system\\apps\\web\\audit\\link-integrity-results.json"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2)

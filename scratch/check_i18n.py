@@ -21,8 +21,8 @@ def compare_keys(en_data, ar_data, path=""):
             
     return missing_in_ar, missing_in_en
 
-en_path = "e:/Kitchen‑Store Inventory System/apps/web/messages/en.json"
-ar_path = "e:/Kitchen‑Store Inventory System/apps/web/messages/ar.json"
+en_path = "e:/kitchen-store-inventory-system/apps/web/messages/en.json"
+ar_path = "e:/kitchen-store-inventory-system/apps/web/messages/ar.json"
 
 with open(en_path, 'r', encoding='utf-8') as f:
     en_data = json.load(f)

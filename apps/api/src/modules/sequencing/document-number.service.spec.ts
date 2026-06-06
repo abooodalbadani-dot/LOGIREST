@@ -6,9 +6,13 @@ describe('DocumentNumberService', () => {
   let service: DocumentNumberService;
 
   const mockQueryRaw = jest.fn();
+  const mockBranchFindUnique = jest.fn();
 
   const mockPrismaTx = {
     $queryRaw: mockQueryRaw,
+    branch: {
+      findUnique: mockBranchFindUnique,
+    },
   } as unknown as Prisma.TransactionClient;
 
   beforeEach(async () => {
@@ -20,49 +24,57 @@ describe('DocumentNumberService', () => {
     jest.clearAllMocks();
   });
 
-  it('should generate the next sequence number and format the date key correctly', async () => {
-    // Mock the raw SQL query to return a sequence number and a Date object
-    const mockDate = new Date(Date.UTC(2026, 5, 3)); // 2026-06-03 UTC
+  it('should generate the next sequence number and format it with current year and branch code', async () => {
+    mockBranchFindUnique.mockResolvedValue({ code: 'BR01' });
     mockQueryRaw.mockResolvedValue([
       {
         last_seq: 42,
-        date_key: mockDate,
       },
     ]);
 
     const result = await service.next(
       mockPrismaTx,
       'LANDED_COST_VOUCHER',
-      'LCV',
+      'branch-1',
     );
 
-    expect(result).toBe('LCV-20260603-0042');
+    const currentYear = new Date().getFullYear();
+    expect(result).toBe(`LCV-${currentYear}-BR01-00042`);
+    expect(mockBranchFindUnique).toHaveBeenCalledWith({
+      where: { id: 'branch-1' },
+      select: { code: true },
+    });
     expect(mockQueryRaw).toHaveBeenCalled();
-
-    // Verify the query parameters
-    const sqlCall = mockQueryRaw.mock.calls[0];
-    expect(sqlCall).toBeDefined();
   });
 
   it('should throw an error if the raw query execution returns empty list', async () => {
+    mockBranchFindUnique.mockResolvedValue({ code: 'BR01' });
     mockQueryRaw.mockResolvedValue([]);
 
     await expect(
-      service.next(mockPrismaTx, 'LANDED_COST_VOUCHER', 'LCV'),
+      service.next(mockPrismaTx, 'LANDED_COST_VOUCHER', 'branch-1'),
     ).rejects.toThrow('Failed to generate sequence for LANDED_COST_VOUCHER');
   });
 
-  it('should handle single digit days and months correctly by padding with zeroes', async () => {
-    const mockDateSingleDigits = new Date(Date.UTC(2026, 0, 5)); // 2026-01-05 UTC
+  it('should pad the sequence number with zeroes to 5 digits', async () => {
+    mockBranchFindUnique.mockResolvedValue({ code: 'BR02' });
     mockQueryRaw.mockResolvedValue([
       {
-        last_seq: 1,
-        date_key: mockDateSingleDigits,
+        last_seq: 7,
       },
     ]);
 
-    const result = await service.next(mockPrismaTx, 'TEST_TYPE', 'TST');
+    const result = await service.next(mockPrismaTx, 'TEST_TYPE', 'branch-2');
 
-    expect(result).toBe('TST-20260105-0001');
+    const currentYear = new Date().getFullYear();
+    expect(result).toBe(`TEST_TYPE-${currentYear}-BR02-00007`);
+  });
+
+  it('should throw an error if the branch is not found', async () => {
+    mockBranchFindUnique.mockResolvedValue(null);
+
+    await expect(
+      service.next(mockPrismaTx, 'TEST_TYPE', 'non-existent-branch'),
+    ).rejects.toThrow('Branch with ID non-existent-branch not found');
   });
 });

@@ -1,6 +1,6 @@
 
 const fs = require('fs');
-const content = fs.readFileSync('e:/Kitchen‑Store Inventory System/messages/en.json', 'utf8');
+const content = fs.readFileSync('e:/kitchen-store-inventory-system/messages/en.json', 'utf8');
 const lines = content.split('\n');
 
 let level = 0;

@@ -65,6 +65,6 @@ def compare_dirs(dir1, dir2):
         print(f"  ... and {len(different_files) - 15} more")
 
 if __name__ == '__main__':
-    dir1 = r"E:\Kitchen‑Store Inventory System\app"
-    dir2 = r"E:\Kitchen‑Store Inventory System\apps\web\src\app"
+    dir1 = r"E:\kitchen-store-inventory-system\app"
+    dir2 = r"E:\kitchen-store-inventory-system\apps\web\src\app"
     compare_dirs(dir1, dir2)

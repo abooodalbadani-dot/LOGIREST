@@ -111,7 +111,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       if (fields.email !== undefined) apiPayload.email = fields.email;
       if (fields.locale !== undefined) apiPayload.locale = fields.locale;
       if (fields.notificationPreferences !== undefined) {
-        apiPayload.notification_preferences = {
+        apiPayload.notificationPreferences = {
           ...notificationPreferences,
           ...fields.notificationPreferences,
         };

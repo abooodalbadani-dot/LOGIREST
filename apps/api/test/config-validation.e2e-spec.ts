@@ -18,7 +18,7 @@ describe('Config Validation', () => {
     process.exit = mockExit as unknown as (
       code?: string | number | null,
     ) => never;
-    console.error = mockError as any;
+    console.error = mockError as typeof console.error;
   });
 
   afterAll(() => {
@@ -48,7 +48,11 @@ describe('Config Validation', () => {
       PORT: '3000',
     };
 
-    validate(invalidConfig);
+    try {
+      validate(invalidConfig);
+    } catch (err) {
+      // expected error
+    }
 
     expect(mockExit).toHaveBeenCalledWith(1);
     expect(mockError).toHaveBeenCalled();
@@ -61,7 +65,9 @@ describe('Config Validation', () => {
     expect(logObj.message).toContain('Configuration validation failed');
     expect(logObj.errorDetails).toBeDefined();
     expect(
-      logObj.errorDetails.some((d: any) => d.field === 'JWT_ACCESS_SECRET'),
+      logObj.errorDetails.some(
+        (d: { field: string }) => d.field === 'JWT_ACCESS_SECRET',
+      ),
     ).toBe(true);
   });
 
@@ -75,7 +81,11 @@ describe('Config Validation', () => {
       ENCRYPTION_KEY: 'too-short',
     };
 
-    validate(shortKeyConfig);
+    try {
+      validate(shortKeyConfig);
+    } catch (err) {
+      // expected error
+    }
 
     expect(mockExit).toHaveBeenCalledWith(1);
     expect(mockError).toHaveBeenCalled();
@@ -83,7 +93,9 @@ describe('Config Validation', () => {
     const loggedText = mockError.mock.calls[0][0] as string;
     const logObj = JSON.parse(loggedText);
     expect(
-      logObj.errorDetails.some((d: any) => d.field === 'ENCRYPTION_KEY'),
+      logObj.errorDetails.some(
+        (d: { field: string }) => d.field === 'ENCRYPTION_KEY',
+      ),
     ).toBe(true);
   });
 });

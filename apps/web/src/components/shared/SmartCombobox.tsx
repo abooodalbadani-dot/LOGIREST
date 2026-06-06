@@ -13,6 +13,9 @@ export interface ComboboxItem {
   id: string | number;
   code?: string;
   barcode?: string;
+  name?: string;
+  nameEn?: string;
+  nameAr?: string;
   name_en?: string;
   name_ar?: string;
 }
@@ -90,7 +93,10 @@ export function SmartCombobox<T extends ComboboxItem>({
   const isRTL = locale === 'ar';
   
   const defaultGetPrimaryLabel = useCallback((item: T) => {
-    return (isRTL ? item.name_ar || item.name_en : item.name_en || item.name_ar) || '';
+    const legacyName = isRTL 
+      ? item.nameAr || item.name_ar || item.nameEn || item.name_en
+      : item.nameEn || item.name_en || item.nameAr || item.name_ar;
+    return item.name || legacyName || item.code || '';
   }, [isRTL]);
   
   const defaultGetSecondaryLabel = useCallback((item: T) => {
@@ -104,9 +110,10 @@ export function SmartCombobox<T extends ComboboxItem>({
     const q = query.toLowerCase().trim();
     const code = item.code?.toLowerCase() || '';
     const barcode = item.barcode?.toLowerCase() || '';
-    const nameEn = item.name_en?.toLowerCase() || '';
-    const nameAr = item.name_ar?.toLowerCase() || '';
-    return code.includes(q) || barcode.includes(q) || nameEn.includes(q) || nameAr.includes(q);
+    const name = item.name?.toLowerCase() || '';
+    const nameEn = item.nameEn?.toLowerCase() || item.name_en?.toLowerCase() || '';
+    const nameAr = item.nameAr?.toLowerCase() || item.name_ar?.toLowerCase() || '';
+    return code.includes(q) || barcode.includes(q) || name.includes(q) || nameEn.includes(q) || nameAr.includes(q);
   }, []);
 
   const actualGetPrimaryLabel = getPrimaryLabel || defaultGetPrimaryLabel;

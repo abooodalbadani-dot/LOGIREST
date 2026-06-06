@@ -5,7 +5,7 @@ const lines = content.split('\n');
 console.log('--- ESLINT ERRORS ---');
 let currentFile = '';
 lines.forEach(line => {
-  if (line.includes('E:\\Kitchen‑Store Inventory System')) {
+  if (line.includes('E:\\kitchen-store-inventory-system')) {
     currentFile = line.trim();
   }
   if (line.includes('error') && !line.includes('npm error')) {

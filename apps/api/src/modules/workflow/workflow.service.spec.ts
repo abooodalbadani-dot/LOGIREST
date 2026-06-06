@@ -156,7 +156,7 @@ describe('WorkflowService', () => {
       let callCount = 0;
       mockPrisma.purchaseRequest.findUnique.mockImplementation(() => {
         callCount++;
-        if (callCount === 3) {
+        if (callCount === 2) {
           return Promise.resolve({
             ...mockDoc,
             status: 'SUBMITTED',

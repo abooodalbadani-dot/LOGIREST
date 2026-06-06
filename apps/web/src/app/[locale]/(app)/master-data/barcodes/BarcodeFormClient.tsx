@@ -23,6 +23,7 @@ import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { apiClient } from '@/infrastructure/api/client';
 import { z } from 'zod';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props { 
   id: string | null; 
@@ -69,18 +70,18 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const itemItems = useMemo(() => {
     return items?.data?.map((i) => ({
       id: i.id,
-      name_en: `${i.code} — ${locale === 'ar' ? i.nameAr : i.nameEn}`,
-      name_ar: `${i.code} — ${locale === 'ar' ? i.nameAr : i.nameEn}`,
+      name_en: `${i.code} — ${i.name}`,
+      name_ar: `${i.code} — ${i.name}`,
     })) || [];
-  }, [items?.data, locale]);
+  }, [items?.data]);
 
   const uomItems = useMemo(() => {
     return uoms?.data?.map((u) => ({
       id: u.id,
-      name_en: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
-      name_ar: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
+      name_en: `${u.code} — ${u.name}`,
+      name_ar: `${u.code} — ${u.name}`,
     })) || [];
-  }, [uoms?.data, locale]);
+  }, [uoms?.data]);
 
   useEffect(() => {
     if (barcode) {
@@ -129,10 +130,10 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
       }
       reset(values);
       guardedRouter.push('/master-data/barcodes', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    } catch (e) {
+      console.error(e);
     }
-  });
+  }, onFormError);
 
   return (
     <>

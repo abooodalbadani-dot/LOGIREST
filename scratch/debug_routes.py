@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-REPO_ROOT = Path(r"e:\Kitchen‑Store Inventory System")
+REPO_ROOT = Path(r"e:\kitchen-store-inventory-system")
 APP_DIR = REPO_ROOT / "apps" / "web" / "src" / "app"
 ROUTE_GROUPS = ("(app)", "(auth)", "(operations)", "(procurement)", "(master-data)")
 LOCALE_SEGMENT = "[locale]"

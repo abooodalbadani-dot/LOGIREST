@@ -83,8 +83,8 @@ export class AdminController {
       meta: {
         total,
         page: pageNum,
-        page_size: limitNum,
-        total_pages: Math.ceil(total / limitNum) || 1,
+        pageSize: limitNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     };
   }
@@ -180,9 +180,9 @@ export class AdminController {
       email: user.email,
       role: user.role,
       scopes: (user.warehouseScopes || []).map((s) => ({
-        branch_id: s.warehouse?.branchId ?? null,
-        warehouse_id: s.warehouseId,
-        department_id: null,
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
         warehouse: s.warehouse
           ? {
               id: s.warehouse.id,
@@ -205,9 +205,9 @@ export class AdminController {
       data: mappedUsers,
       meta: {
         page: pageNum,
-        page_size: limitNum,
+        pageSize: limitNum,
         total,
-        total_pages: Math.ceil(total / limitNum),
+        totalPages: Math.ceil(total / limitNum),
       },
     };
   }
@@ -239,9 +239,9 @@ export class AdminController {
       email: user.email,
       role: user.role,
       scopes: (user.warehouseScopes || []).map((s) => ({
-        branch_id: s.warehouse?.branchId ?? null,
-        warehouse_id: s.warehouseId,
-        department_id: null,
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
         warehouse: s.warehouse
           ? {
               id: s.warehouse.id,

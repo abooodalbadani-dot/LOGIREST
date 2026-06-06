@@ -163,8 +163,15 @@ export class GrnController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
-    const poId = body.poId || body.po_id;
-    const warehouseId = body.warehouseId || body.warehouse_id;
+    const rawBody = body as unknown as Record<string, unknown>;
+    const poId =
+      body.poId ??
+      (typeof rawBody.po_id === 'string' ? rawBody.po_id : undefined);
+    const warehouseId =
+      body.warehouseId ??
+      (typeof rawBody.warehouse_id === 'string'
+        ? rawBody.warehouse_id
+        : undefined);
     if (!poId || !warehouseId) {
       throw new BadRequestException('poId and warehouseId are required');
     }
@@ -175,12 +182,26 @@ export class GrnController {
       warehouseId,
     );
 
-    const lines = body.lines.map((line) => ({
-      itemId: line.itemId || line.item_id || '',
-      lotId: line.lotId !== undefined ? line.lotId : line.lot_id,
-      quantity: line.quantity || line.qty || line.received_qty || 0,
-      unitPrice: line.unitPrice || line.unit_cost_foreign || 0,
-    }));
+    const rawLines = (rawBody.lines ?? []) as Record<string, unknown>[];
+    const lines = rawLines.map((line) => {
+      const itemId = (line.itemId ?? line.item_id) as string | undefined;
+      const lotId = (line.lotId !== undefined ? line.lotId : line.lot_id) as
+        | string
+        | null
+        | undefined;
+      const quantity = Number(
+        line.receivedQty ?? line.received_qty ?? line.quantity ?? line.qty ?? 0,
+      );
+      const unitPrice = Number(
+        line.unitCostForeign ?? line.unit_cost_foreign ?? line.unitPrice ?? 0,
+      );
+      return {
+        itemId: itemId || '',
+        lotId,
+        quantity,
+        unitPrice,
+      };
+    });
 
     const grn = await this.grnService.create(
       { poId, warehouseId, notes: body.notes, lines },
@@ -244,18 +265,52 @@ export class GrnController {
       );
     }
 
-    const poId = body.poId || body.po_id;
-    const warehouseId = body.warehouseId || body.warehouse_id;
-    const lines = (body.lines as Record<string, unknown>[])?.map((line) => ({
-      id: line.id as string | undefined,
-      itemId: String(line.itemId || line.item_id || ''),
-      lotId: (line.lotId !== undefined ? line.lotId : line.lot_id) as
-        | string
-        | null
-        | undefined,
-      quantity: Number(line.quantity || line.qty || line.received_qty || 0),
-      unitPrice: Number(line.unitPrice || line.unit_cost_foreign || 0),
-    }));
+    const rawBody = body as unknown as Record<string, unknown>;
+    const poId =
+      body.poId ??
+      (typeof rawBody.po_id === 'string' ? rawBody.po_id : undefined);
+    const warehouseId =
+      body.warehouseId ??
+      (typeof rawBody.warehouse_id === 'string'
+        ? rawBody.warehouse_id
+        : undefined);
+
+    let lines:
+      | Array<{
+          id?: string;
+          itemId: string;
+          lotId?: string | null;
+          quantity: number;
+          unitPrice: number;
+        }>
+      | undefined = undefined;
+    if (rawBody.lines) {
+      const rawLines = rawBody.lines as Record<string, unknown>[];
+      lines = rawLines.map((line) => {
+        const itemId = (line.itemId ?? line.item_id) as string | undefined;
+        const lotId = (line.lotId !== undefined ? line.lotId : line.lot_id) as
+          | string
+          | null
+          | undefined;
+        const quantity = Number(
+          line.receivedQty ??
+            line.received_qty ??
+            line.quantity ??
+            line.qty ??
+            0,
+        );
+        const unitPrice = Number(
+          line.unitCostForeign ?? line.unit_cost_foreign ?? line.unitPrice ?? 0,
+        );
+        return {
+          id: line.id as string | undefined,
+          itemId: itemId || '',
+          lotId,
+          quantity,
+          unitPrice,
+        };
+      });
+    }
 
     const grn = await this.grnService.update(id, {
       poId,

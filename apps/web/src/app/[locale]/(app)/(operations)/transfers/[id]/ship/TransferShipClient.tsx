@@ -111,7 +111,7 @@ export function TransferShipClient({ id, locale }: { id: string; locale: 'ar' | 
       }));
       setScanStatus('success');
       audioAlerts.playScanSuccess();
-      setStatusMessage(`${t('scan_success')}: ${locale === 'ar' ? line.item?.nameAr : line.item?.nameEn}`);
+      setStatusMessage(`${t('scan_success')}: ${line.item?.name}`);
       setTimeout(() => setScanStatus('idle'), 2000);
     } else {
       setScanStatus('error');

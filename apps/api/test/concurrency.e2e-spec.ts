@@ -66,7 +66,7 @@ describe('Concurrency Control E2E', () => {
     itemId = item.id;
 
     const email = `${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const user = await prisma.user.create({
       data: {
         email,
@@ -84,7 +84,7 @@ describe('Concurrency Control E2E', () => {
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email, password: 'password123' });
+      .send({ email, password: 'Password123!' });
     procOfficerToken = loginRes.body.token || loginRes.body.accessToken;
   });
 
@@ -163,7 +163,7 @@ describe('Concurrency Control E2E', () => {
   it('should return a structured 409 Conflict with last editor details on version mismatch', async () => {
     // 1. Create a purchase request (version 1, DRAFT)
     const createRes = await request(app.getHttpServer())
-      .post('/api/v1/purchase-requests')
+      .post('/api/v1/procurement/purchase-requests')
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -175,14 +175,14 @@ describe('Concurrency Control E2E', () => {
       })
       .expect(201);
 
-    const prId = createRes.body.id;
-    expect(createRes.body.version).toBe(1);
-    expect(createRes.body.status).toBe('DRAFT');
+    const prId = createRes.body.data.id;
+    expect(createRes.body.data.version).toBe(1);
+    expect(createRes.body.data.status).toBe('DRAFT');
 
     // 2. Attempt to submit using a mismatched/stale version (e.g. 999)
     // This is a valid transition (DRAFT -> SUBMIT) but will fail optimistic locking check in transaction.
     const conflictRes = await request(app.getHttpServer())
-      .post(`/api/v1/purchase-requests/${prId}/submit`)
+      .post(`/api/v1/procurement/purchase-requests/${prId}/submit`)
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -199,14 +199,14 @@ describe('Concurrency Control E2E', () => {
 
     // 3. Submit with matching version (version 1 -> 2)
     const submitRes = await request(app.getHttpServer())
-      .post(`/api/v1/purchase-requests/${prId}/submit`)
+      .post(`/api/v1/procurement/purchase-requests/${prId}/submit`)
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
       .send({ comments: 'Valid Submit', version: 1 })
       .expect(200);
 
-    expect(submitRes.body.status).toBe('SUBMITTED');
-    expect(submitRes.body.version).toBe(2);
+    expect(submitRes.body.data.status).toBe('SUBMITTED');
+    expect(submitRes.body.data.version).toBe(2);
   });
 });

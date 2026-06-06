@@ -86,7 +86,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const [rejectionReason, setRejectionReason] = useState('');
   
   const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
-  const [fulfillmentData, setFulfillmentData] = useState<{ item_id: string; fulfilled_quantity: number }[]>([]);
+  const [fulfillmentData, setFulfillmentData] = useState<{ itemId: string; fulfilledQty: number }[]>([]);
   const [isSuggestingFIFO, setIsSuggestingFIFO] = useState(false);
 
   const { data: warehouseLockState } = useWarehouseLock(request.warehouseId || null);
@@ -230,7 +230,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     try {
       await fulfillRequest.mutateAsync({ 
         id, 
-        items: fulfillmentData, 
+        fulfillments: fulfillmentData, 
         version: request.version ?? 0,
         headers: { 'X-Idempotency-Key': crypto.randomUUID() }
       });
@@ -243,8 +243,8 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
   const openFulfillDialog = () => {
     setFulfillmentData(
       request.items.map((item: KitchenRequestItem) => ({
-        item_id: item.itemId,
-        fulfilled_quantity: item.quantity
+        itemId: item.itemId,
+        fulfilledQty: item.quantity
       }))
     );
     setFulfillDialogOpen(true);
@@ -284,7 +284,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
 
       setFulfillmentData(prev => prev.map(f => ({
         ...f,
-        fulfilled_quantity: prioritized[f.item_id] ?? f.fulfilled_quantity,
+        fulfilledQty: prioritized[f.itemId] ?? f.fulfilledQty,
       })));
 
       toast.success(locale === 'ar' ? 'تم تطبيق اقتراح FIFO بناءً على تواريخ انتهاء الصلاحية' : 'FIFO suggestion applied based on expiry dates');
@@ -566,10 +566,10 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
                   disabled={isWriteBlocked}
                   aria-label={t('fulfilling') + " " + item.itemName}
                   className="bg-surface-container-highest/50 border-none h-11 text-center font-semibold text-body-md rounded-xl transition-all focus:ring-1 focus:ring-operational-cyan/30"
-                  value={fulfillmentData.find(f => f.item_id === item.itemId)?.fulfilled_quantity || 0}
+                  value={fulfillmentData.find(f => f.itemId === item.itemId)?.fulfilledQty || 0}
                   onChange={(e) => {
                     const val = Number(e.target.value);
-                    setFulfillmentData(prev => prev.map(f => f.item_id === item.itemId ? { ...f, fulfilled_quantity: val } : f));
+                    setFulfillmentData(prev => prev.map(f => f.itemId === item.itemId ? { ...f, fulfilledQty: val } : f));
                   }}
                 />
               </div>

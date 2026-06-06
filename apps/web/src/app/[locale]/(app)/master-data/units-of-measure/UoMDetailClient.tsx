@@ -53,7 +53,7 @@ export function UoMDetailClient({ id }: Props) {
 
  return (
  <MasterDataDetailLayout
- title={data.nameEn}
+ title={data.name}
  backHref={`/master-data/units-of-measure`}
  editHref={`/master-data/units-of-measure/${id}/edit`}
  >
@@ -82,13 +82,8 @@ export function UoMDetailClient({ id }: Props) {
  </div>
 
  <div className="space-y-1">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('fields.name_en')}</p>
- <p className="text-body-md font-semibold text-foreground dir-ltr">{data.nameEn}</p>
- </div>
-
- <div className="space-y-1">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/50 text-end">{t('fields.name_ar')}</p>
- <p className="text-body-md font-semibold text-foreground text-end dir-rtl">{data.nameAr}</p>
+ <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{t('fields.name') || tc('name')}</p>
+ <p className="text-body-md font-semibold text-foreground dir-ltr">{data.name}</p>
  </div>
  </div>
 

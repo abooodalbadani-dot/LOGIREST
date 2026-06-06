@@ -4,7 +4,7 @@ from pathlib import Path
 from graphify.cache import save_semantic_cache
 
 def main():
-    root_dir = Path("e:/Kitchen‑Store Inventory System")
+    root_dir = Path("e:/kitchen-store-inventory-system")
     graphify_out = root_dir / "graphify-out"
     
     chunks = sorted(glob.glob(str(graphify_out / ".graphify_chunk_*.json")))

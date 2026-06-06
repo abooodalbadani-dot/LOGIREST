@@ -54,10 +54,7 @@ export function ItemListClient({ locale }: { locale: string }) {
       accessorKey: 'name', 
       header: t('name'), 
       cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.nameEn}</span>
-          <span className="text-label-xs text-muted-foreground/60 font-medium" dir="rtl">{row.original.nameAr}</span>
-        </div>
+        <span className="font-bold text-label-sm">{row.original.name}</span>
       )
     },
     { 

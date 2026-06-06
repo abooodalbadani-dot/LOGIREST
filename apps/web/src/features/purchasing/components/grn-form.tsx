@@ -25,6 +25,7 @@ import { FormFooter } from '@/components/shared/FormFooter';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { DocumentLineItemTable } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
 import { toast } from 'sonner';
+import { onFormError } from '@/hooks/useFormError';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
@@ -85,28 +86,37 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { data: currencies } = useCurrencies();
 
   const supplierItems = useMemo(() => {
-    return suppliers?.map(s => ({
-      id: s.id,
-      name_en: `${s.nameEn} (${s.code})`,
-      name_ar: `${s.nameAr} (${s.code})`,
-    })) ?? [];
+    return suppliers?.map(s => {
+      const displayName = s.name || '';
+      return {
+        id: s.id,
+        name: displayName,
+        name_en: `${displayName} (${s.code})`,
+        name_ar: `${displayName} (${s.code})`,
+      };
+    }) ?? [];
   }, [suppliers]);
 
   const warehouseItems = useMemo(() => {
     return warehouses?.map(w => ({
       id: w.id,
-      name_en: w.name,
-      name_ar: w.name,
+      name: w.name || '',
+      name_en: w.name || '',
+      name_ar: w.name || '',
     })) ?? [];
   }, [warehouses]);
 
   const currencyItems = useMemo(() => {
-    return currencies?.map(c => ({
-      id: c.code,
-      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-    })) ?? [];
-  }, [currencies, locale]);
+    return currencies?.map(c => {
+      const displayName = c.name || '';
+      return {
+        id: c.id,
+        name: displayName,
+        name_en: `${c.code} — ${displayName}`,
+        name_ar: `${c.code} — ${displayName}`,
+      };
+    }) ?? [];
+  }, [currencies]);
 
   const createMutation = useCreateGRN({ onConflict });
   const updateMutation = useUpdateGRN({ onConflict });
@@ -126,7 +136,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     defaultValues: {
       supplierId: initialData?.supplierId || '',
       currencyId: initialData?.currencyId || '',
-      warehouseId: initialData?.warehouseId || 'wh-1',
+      warehouseId: initialData?.warehouseId || '',
       notes: initialData?.notes || '',
       lines: initialData?.lines || []
     }
@@ -145,8 +155,12 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const isWarehouseLocked = !!warehouseLock?.isLocked;
   const watchedLines = useWatch({ control, name: 'lines' });
 
+  const selectedCurrencyCode = useMemo(() => {
+    return currencies?.find(c => c.id === currencyId)?.code || '';
+  }, [currencies, currencyId]);
+
   const { currency: baseCurrency } = useBaseCurrency();
-  const { data: fxRates } = useFXRates(currencyId, baseCurrency);
+  const { data: fxRates } = useFXRates(selectedCurrencyCode, baseCurrency);
   const currentFxRate = fxRates?.[0]?.rate || 1;
 
   const { data: itemsData } = useMasterDataList<Item>('items', ItemSchema);
@@ -161,7 +175,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       reset({
         supplierId: initialData.supplierId || '',
         currencyId: initialData.currencyId || '',
-        warehouseId: initialData.warehouseId || 'wh-1',
+        warehouseId: initialData.warehouseId || '',
         notes: initialData.notes || '',
         lines: initialData.lines || []
       }, {
@@ -202,15 +216,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           receivedQty: (existing.receivedQty || 0) + 1
         });
         playSound('success');
-        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        toast.success(tc('item_added_quantity_updated', { name: item.name }));
       } else {
         append({
           id: `new-${Date.now()}`,
           item: {
             id: item.id,
             code: item.code,
-            nameAr: item.nameAr,
-            nameEn: item.nameEn,
+            name: item.name,
+            nameAr: item.name,
+            nameEn: item.name,
             primaryUom: {
               id: item.primaryUom?.id || 'EA',
               code: item.primaryUom?.code || 'EA'
@@ -224,7 +239,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           unitCostBase: 0
         });
         playSound('success');
-        toast.success(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        toast.success(tc('item_added', { name: item.name }));
       }
       setScanError('');
     } else {
@@ -285,18 +300,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     }
     try {
       const payload = {
-        supplier_id: values.supplierId,
-        currency_id: values.currencyId,
-        warehouse_id: values.warehouseId,
+        poId: initialData?.poId || '',
+        currencyId: values.currencyId,
+        warehouseId: values.warehouseId,
         notes: values.notes,
         lines: values.lines.map(l => ({
           id: l.id.startsWith('new-') ? undefined : l.id,
-          item_id: l.item.id,
-          lot_id: l.lot?.id || null,
-          qty: l.receivedQty,
-          received_qty: l.receivedQty,
-          uom_id: l.uomId,
-          unit_cost_foreign: l.unitCostForeign || 0,
+          itemId: l.item.id,
+          lotId: l.lot?.id || null,
+          receivedQty: l.receivedQty,
+          unitCostForeign: l.unitCostForeign || 0,
         }))
       };
 
@@ -334,7 +347,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       <DocumentLockBanner status={status} isLocked={isLocked} />
       <LockBanner lockState={warehouseLock} />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
+      <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
         <div className="flex items-center justify-between px-2">
           <div className="flex flex-col">
             <h1 className="text-headline-lg font-semibold uppercase italic text-foreground flex items-center gap-4">
@@ -381,6 +394,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                 item: {
                   id: newItem.id,
                   code: newItem.code,
+                  name: newItem.name_en || newItem.name_ar || '',
                   nameAr: newItem.name_ar,
                   nameEn: newItem.name_en,
                   primaryUom: {
@@ -539,6 +553,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                       item: {
                         id: f.item.id,
                         code: f.item.code,
+                        name: f.item.name || f.item.nameEn || f.item.nameAr || '',
                         nameAr: f.item.nameAr,
                         nameEn: f.item.nameEn,
                         primaryUom: { id: f.item.primaryUom.id, code: f.item.primaryUom.code },
@@ -620,7 +635,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
               <div className="flex items-center gap-2 text-primary">
                 <TrendingUp className="w-3 h-3" />
                 <p dir="ltr" className="text-label-sm font-mono font-semibold">
-                  1 {currencyId} = {currentFxRate} {baseCurrency}
+                  1 {selectedCurrencyCode} = {currentFxRate} {baseCurrency}
                 </p>
               </div>
             </div>
@@ -630,9 +645,9 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
 
               <div className="space-y-6 relative z-10">
                 <div className="flex justify-between items-baseline gap-10">
-                  <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: currencyId || '' })}</p>
+                  <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: selectedCurrencyCode || '' })}</p>
                   <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">
-                    {formatCurrency(totalForeign, currencyId, locale as 'ar' | 'en')}
+                    {formatCurrency(totalForeign, selectedCurrencyCode, locale as 'ar' | 'en')}
                   </p>
                 </div>
 
@@ -653,7 +668,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
           isLocked={isLocked || isWarehouseLocked}
           onCancel={() => router.push('/goods-received', { skipGuard: !isDirty })}
           actions={actions || workflowActions}
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, onFormError)}
           isPending={isPending}
           submitLabel={isNew ? t('actions.submit') : tc('save')}
         />

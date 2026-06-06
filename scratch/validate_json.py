@@ -19,5 +19,5 @@ def validate_json(file_path):
                 print(f"{prefix} {i+1}: {lines[i].strip()}")
 
 if __name__ == "__main__":
-    validate_json(r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json")
-    validate_json(r"e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json")
+    validate_json(r"e:\kitchen-store-inventory-system\apps\web\messages\en.json")
+    validate_json(r"e:\kitchen-store-inventory-system\apps\web\messages\ar.json")

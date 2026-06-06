@@ -1,19 +1,19 @@
 ﻿
 Path                                                                                                                
 ----                                                                                                                
-E:\Kitchen‑Store Inventory System\.turbo\cache\404780103ac2ff9a.tar.zst                                             
-E:\Kitchen‑Store Inventory System\.turbo\cache\5c38193f48ebac1e.tar.zst                                             
-E:\Kitchen‑Store Inventory System\.turbo\cache\f347eb79206abd2b.tar.zst                                             
-E:\Kitchen‑Store Inventory System\apps\web\.next\dev\logs\next-development.log                                      
-E:\Kitchen‑Store Inventory System\apps\web\messages\ar.json                                                         
-E:\Kitchen‑Store Inventory System\node_modules\@img\sharp-win32-x64\lib\libvips-42.dll                              
-E:\Kitchen‑Store Inventory System\node_modules\@rolldown\binding-win32-x64-msvc\rolldown-binding.win32-x64-msvc.node
-E:\Kitchen‑Store Inventory System\node_modules\@ts-morph\common\dist\typescript.js                                  
-E:\Kitchen‑Store Inventory System\node_modules\@turbo\windows-64\bin\turbo.exe                                      
-E:\Kitchen‑Store Inventory System\node_modules\playwright\lib\runner\rebase.js                                      
-E:\Kitchen‑Store Inventory System\node_modules\playwright-core\lib\vite\recorder\assets\codicon-DCmgc-ay.ttf        
-E:\Kitchen‑Store Inventory System\node_modules\playwright-core\lib\vite\traceViewer\codicon.DCmgc-ay.ttf            
-E:\Kitchen‑Store Inventory System\node_modules\typescript\lib\typescript.js                                         
-E:\Kitchen‑Store Inventory System\node_modules\typescript\lib\_tsc.js                                               
+E:\kitchen-store-inventory-system\.turbo\cache\404780103ac2ff9a.tar.zst                                             
+E:\kitchen-store-inventory-system\.turbo\cache\5c38193f48ebac1e.tar.zst                                             
+E:\kitchen-store-inventory-system\.turbo\cache\f347eb79206abd2b.tar.zst                                             
+E:\kitchen-store-inventory-system\apps\web\.next\dev\logs\next-development.log                                      
+E:\kitchen-store-inventory-system\apps\web\messages\ar.json                                                         
+E:\kitchen-store-inventory-system\node_modules\@img\sharp-win32-x64\lib\libvips-42.dll                              
+E:\kitchen-store-inventory-system\node_modules\@rolldown\binding-win32-x64-msvc\rolldown-binding.win32-x64-msvc.node
+E:\kitchen-store-inventory-system\node_modules\@ts-morph\common\dist\typescript.js                                  
+E:\kitchen-store-inventory-system\node_modules\@turbo\windows-64\bin\turbo.exe                                      
+E:\kitchen-store-inventory-system\node_modules\playwright\lib\runner\rebase.js                                      
+E:\kitchen-store-inventory-system\node_modules\playwright-core\lib\vite\recorder\assets\codicon-DCmgc-ay.ttf        
+E:\kitchen-store-inventory-system\node_modules\playwright-core\lib\vite\traceViewer\codicon.DCmgc-ay.ttf            
+E:\kitchen-store-inventory-system\node_modules\typescript\lib\typescript.js                                         
+E:\kitchen-store-inventory-system\node_modules\typescript\lib\_tsc.js                                               
 
 

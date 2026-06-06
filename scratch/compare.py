@@ -2,9 +2,9 @@ import os
 import hashlib
 import difflib
 
-backup_dir = r"E:\Kitchen‑Store Inventory System\scratch\app_backup"
-active_dir = r"E:\Kitchen‑Store Inventory System\apps\web\src\app"
-output_file = r"E:\Kitchen‑Store Inventory System\scratch\compare_output.txt"
+backup_dir = r"E:\kitchen-store-inventory-system\scratch\app_backup"
+active_dir = r"E:\kitchen-store-inventory-system\apps\web\src\app"
+output_file = r"E:\kitchen-store-inventory-system\scratch\compare_output.txt"
 
 def get_relative_files(root_dir):
     file_list = {}

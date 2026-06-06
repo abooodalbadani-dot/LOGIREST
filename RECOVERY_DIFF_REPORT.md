@@ -1,6 +1,6 @@
 # FRONTEND STABILIZATION: RECOVERY & INTEGRITY AUDIT REPORT
 **System:** Kitchen-Store Inventory System (LogiRest)  
-**Workspace Path:** `E:\Kitchen‑Store Inventory System`  
+**Workspace Path:** `E:\kitchen-store-inventory-system`  
 **Standard Case Format:** `snake_case` (Fully Consistent with Backend Contracts)
 
 ---

@@ -78,7 +78,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
     };
 
     setMappingHistory([newMapping, ...mappingHistory]);
-    toast.success(t('success.mapped', { item: locale === 'ar' ? selectedItem.nameAr : selectedItem.nameEn }));
+    toast.success(t('success.mapped', { item: selectedItem.name }));
     
     setScannedCode('');
     setSelectedItem(null);
@@ -99,10 +99,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
       id: 'name',
       header: tc('name'), 
       cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-label-sm">{row.original.nameEn}</span>
-          <span className="text-label-xs opacity-40" dir="rtl">{row.original.nameAr}</span>
-        </div>
+        <span className="font-bold text-label-sm">{row.original.name}</span>
       )
     },
     { 
@@ -298,7 +295,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                         <Package className="w-4 h-4 text-amber-500" />
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <p className="text-label-sm font-bold truncate text-foreground">{locale === 'ar' ? selectedItem.nameAr : selectedItem.nameEn}</p>
+                        <p className="text-label-sm font-bold truncate text-foreground">{selectedItem.name}</p>
                         <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">{selectedItem.code}</p>
                       </div>
                       <motion.button 
@@ -420,7 +417,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1.5 overflow-hidden">
                           <p className="text-label-xs font-bold truncate group-hover:text-operational-cyan transition-colors text-foreground">
-                            {locale === 'ar' ? entry.item.nameAr : entry.item.nameEn}
+                            {entry.item.name}
                           </p>
                           <div className="flex items-center gap-2">
                             <BarcodeIcon className="w-3.5 h-3.5 text-muted-foreground/40" />

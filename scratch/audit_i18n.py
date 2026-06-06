@@ -49,6 +49,6 @@ def compare_json(base_file, target_file):
     print("\nChecking for potentially untranslated strings in Arabic file:")
     check_english_values(target_data)
 
-base = r'e:\Kitchen‑Store Inventory System\apps\web\messages\en.json'
-target = r'e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json'
+base = r'e:\kitchen-store-inventory-system\apps\web\messages\en.json'
+target = r'e:\kitchen-store-inventory-system\apps\web\messages\ar.json'
 compare_json(base, target)

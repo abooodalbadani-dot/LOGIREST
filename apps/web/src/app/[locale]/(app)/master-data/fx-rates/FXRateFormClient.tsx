@@ -24,6 +24,7 @@ import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { toast } from 'sonner';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props { 
   id: string | null; 
@@ -79,18 +80,18 @@ export function FXRateFormClient({
   const fromCurrencyItems = useMemo(() => {
     return activeCurrencies.map((c: Currency) => ({
       id: c.id,
-      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_en: `${c.code} — ${c.name}`,
+      name_ar: `${c.code} — ${c.name}`,
     }));
-  }, [activeCurrencies, locale]);
+  }, [activeCurrencies]);
 
   const toCurrencyItems = useMemo(() => {
     return activeCurrencies.map((c: Currency) => ({
       id: c.id,
-      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_en: `${c.code} — ${c.name}`,
+      name_ar: `${c.code} — ${c.name}`,
     }));
-  }, [activeCurrencies, locale]);
+  }, [activeCurrencies]);
 
   const getUnauthorizedMessage = () => {
     try {
@@ -201,12 +202,7 @@ export function FXRateFormClient({
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('FXRate form validation failed:', errors);
-    toast.error(tCommon('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const displayTitle = (isReadOnlyProp || normalizedRole === 'auditor') ? (viewTitle || t('view_title') || editTitle) : (id ? editTitle : createTitle);
 

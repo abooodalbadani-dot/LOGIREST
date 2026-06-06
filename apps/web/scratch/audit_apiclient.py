@@ -1,8 +1,8 @@
 import os
 import re
 
-src_dir = r"e:\Kitchen‑Store Inventory System\apps\web\src"
-output_file = r"e:\Kitchen‑Store Inventory System\apps\web\scratch\apiclient_audit_results.txt"
+src_dir = r"e:\kitchen-store-inventory-system\apps\web\src"
+output_file = r"e:\kitchen-store-inventory-system\apps\web\scratch\apiclient_audit_results.txt"
 
 # Regex to match apiClient calls
 # We want to find apiClient.<method>(...)

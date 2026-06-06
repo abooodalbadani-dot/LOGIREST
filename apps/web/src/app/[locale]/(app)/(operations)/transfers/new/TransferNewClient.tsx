@@ -39,8 +39,7 @@ interface NewTransferLine {
   item: {
     id: string;
     code: string;
-    nameAr: string;
-    nameEn: string;
+    name: string;
     primaryUom: { code: string };
   };
   qty: number;
@@ -161,8 +160,7 @@ export function TransferNewClient() {
         item: {
           id: item.id,
           code: item.code,
-          nameAr: item.nameAr,
-          nameEn: item.nameEn,
+          name: item.name,
           primaryUom: { code: item.primaryUom.code }
          },
         qty: 1,
@@ -229,8 +227,8 @@ export function TransferNewClient() {
 
     createTransfer.mutate({
       payload: {
-        from_warehouse_id: fromWarehouseId,
-        to_warehouse_id: toWarehouseId,
+        fromWarehouseId,
+        toWarehouseId,
         notes,
         lines: lines.map(l => mapLineToPayload(l))
       },
@@ -428,7 +426,7 @@ export function TransferNewClient() {
                 <SmartCombobox
                   items={allItems}
                   onSelect={(item) => handleAddItem(item.code)}
-                  getPrimaryLabel={(item) => locale === 'ar' ? item.nameAr : item.nameEn}
+                  getPrimaryLabel={(item) => item.name}
                   placeholder={locale === 'ar' ? 'ابحث عن صنف لإضافته...' : 'Search item to add...'}
                   disabled={!fromWarehouseId || isBalanceLoading || isBalanceError}
                 />

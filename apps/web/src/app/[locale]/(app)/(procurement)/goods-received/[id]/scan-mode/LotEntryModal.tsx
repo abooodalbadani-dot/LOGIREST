@@ -33,6 +33,7 @@ import {
  PopoverContent,
  PopoverTrigger,
 } from "@/components/ui/popover"
+import { onFormError } from "@/hooks/useFormError"
 
 const _lotFormSchema = z.object({
  lotNumber: z.string().min(1, "lot_required"),
@@ -112,7 +113,7 @@ export function LotEntryModal({
  </div>
 
  <Form {...form}>
- <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+ <form onSubmit={form.handleSubmit(onSubmit, onFormError)} className="space-y-4">
  <FormField
  control={form.control}
  name="lotNumber"
@@ -207,10 +208,10 @@ export function LotEntryModal({
  </Button>
  <Button 
  type="submit" 
- disabled={isSubmitting}
+ isLoading={isSubmitting}
  className="rounded-xl font-semibold text-label-xs uppercase min-w-[120px]"
  >
- {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("confirm_lot")}
+ {t("confirm_lot")}
  </Button>
  </DialogFooter>
  </form>

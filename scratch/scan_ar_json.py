@@ -1,7 +1,7 @@
 import json
 import re
 
-file_path = r'e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json'
+file_path = r'e:\kitchen-store-inventory-system\apps\web\messages\ar.json'
 
 try:
     with open(file_path, 'r', encoding='utf-8') as f:

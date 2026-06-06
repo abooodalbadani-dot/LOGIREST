@@ -2,7 +2,7 @@
 import json
 import os
 
-file_path = r'E:\Kitchen‑Store Inventory System\apps\web\messages\ar.json'
+file_path = r'E:\kitchen-store-inventory-system\apps\web\messages\ar.json'
 
 with open(file_path, 'r', encoding='utf-8') as f:
     data = json.load(f)

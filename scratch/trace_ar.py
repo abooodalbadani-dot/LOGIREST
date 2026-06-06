@@ -1,5 +1,5 @@
-ar_path = r"e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json"
-out_path = r"e:\Kitchen‑Store Inventory System\scratch\trace_ar.txt"
+ar_path = r"e:\kitchen-store-inventory-system\apps\web\messages\ar.json"
+out_path = r"e:\kitchen-store-inventory-system\scratch\trace_ar.txt"
 
 with open(ar_path, 'r', encoding='utf-8') as f:
     lines = f.readlines()

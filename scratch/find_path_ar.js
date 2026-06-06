@@ -1,7 +1,7 @@
 
 const fs = require('fs');
 
-const content = fs.readFileSync('e:/Kitchen‑Store Inventory System/messages/ar.json', 'utf8');
+const content = fs.readFileSync('e:/kitchen-store-inventory-system/messages/ar.json', 'utf8');
 const lines = content.split('\n');
 
 let path = [];

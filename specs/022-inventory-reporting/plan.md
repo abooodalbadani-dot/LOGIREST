@@ -1,6 +1,6 @@
 # Implementation Plan: Inventory Query, Reporting, & Administrative Jobs
 
-**Branch**: `022-inventory-reporting` | **Date**: 2026-05-23 | **Spec**: [specs/022-inventory-reporting/spec.md](file:///e:/Kitchen‑Store Inventory System/specs/022-inventory-reporting/spec.md)
+**Branch**: `022-inventory-reporting` | **Date**: 2026-05-23 | **Spec**: [specs/022-inventory-reporting/spec.md](file:///e:/kitchen-store-inventory-system/specs/022-inventory-reporting/spec.md)
 **Input**: Feature specification from `/specs/022-inventory-reporting/spec.md`
 
 ## Summary

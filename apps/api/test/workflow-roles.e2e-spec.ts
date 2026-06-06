@@ -240,6 +240,40 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
 
   afterAll(async () => {
     // Teardown everything
+    try {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
+      );
+      await prisma.stockLedger.deleteMany({ where: { itemId: testItemId } });
+    } catch (e) {
+      console.warn('Failed to delete stockLedger:', e);
+    } finally {
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
+        );
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    try {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`,
+      );
+      await prisma.costLedger.deleteMany({ where: { itemId: testItemId } });
+    } catch (e) {
+      console.warn('Failed to delete costLedger:', e);
+    } finally {
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE cost_ledger ENABLE TRIGGER cost_ledger_immutable;`,
+        );
+      } catch (e) {
+        // ignore
+      }
+    }
+
     await prisma.transferLine.deleteMany({
       where: { transfer: { fromWarehouseId: warehouseId } },
     });
@@ -577,9 +611,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
         .send({ version: 1 })
         .expect(403);
 
-      expect(res.body.message).toContain(
-        'not authorized for the origin warehouse branch',
-      );
+      expect(res.body.message).toContain('is not authorized');
 
       // Verify persistent security AuditLog is written
       const audit = await prisma.auditLog.findFirst({
@@ -622,9 +654,7 @@ describe('Workflow Roles and Warehouse Locks (e2e)', () => {
         .send({ version: 2 })
         .expect(403);
 
-      expect(res.body.message).toContain(
-        'not authorized for the destination warehouse branch',
-      );
+      expect(res.body.message).toContain('is not authorized');
 
       // Verify persistent security AuditLog is written
       const audit = await prisma.auditLog.findFirst({

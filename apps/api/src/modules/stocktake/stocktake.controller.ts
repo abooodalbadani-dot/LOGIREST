@@ -154,11 +154,11 @@ export class StocktakeController {
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
-    @Body() body: { warehouseId?: string; warehouse_id?: string },
+    @Body() body: { warehouseId: string },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
-    const warehouseId = body.warehouseId || body.warehouse_id;
+    const warehouseId = body.warehouseId;
     if (!warehouseId) {
       throw new BadRequestException('warehouseId is required');
     }
@@ -217,26 +217,23 @@ export class StocktakeController {
     @Param('lineId') lineId: string,
     @Body()
     body: {
-      counted_qty?: number;
-      countedQty?: number;
-      variance_reason?: string;
+      countedQty: number;
       varianceReason?: string;
     },
     @CurrentUser('id') userId: string,
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
     await this.validateSessionScope(stocktakeId, activeWarehouseId);
-    const counted_qty =
-      body.countedQty !== undefined ? body.countedQty : body.counted_qty;
+    const counted_qty = body.countedQty;
     if (counted_qty === undefined) {
-      throw new Error('counted_qty is required');
+      throw new BadRequestException('countedQty is required');
     }
     const session = await this.stocktakeService.updateLineItem(
       stocktakeId,
       lineId,
       {
         counted_qty,
-        variance_reason: body.varianceReason || body.variance_reason,
+        variance_reason: body.varianceReason,
       },
       userId,
     );
@@ -249,26 +246,23 @@ export class StocktakeController {
     @Param('countId') countId: string,
     @Body()
     body: {
-      counted_qty?: number;
-      countedQty?: number;
-      variance_reason?: string;
+      countedQty: number;
       varianceReason?: string;
     },
     @CurrentUser('id') userId: string,
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
     await this.validateSessionScope(sessionId, activeWarehouseId);
-    const counted_qty =
-      body.countedQty !== undefined ? body.countedQty : body.counted_qty;
+    const counted_qty = body.countedQty;
     if (counted_qty === undefined) {
-      throw new Error('counted_qty is required');
+      throw new BadRequestException('countedQty is required');
     }
     const session = await this.stocktakeService.updateLineItem(
       sessionId,
       countId,
       {
         counted_qty,
-        variance_reason: body.varianceReason || body.variance_reason,
+        variance_reason: body.varianceReason,
       },
       userId,
     );
@@ -414,7 +408,7 @@ export class StocktakeController {
   async recount(
     @Param('id') id: string,
     @Body()
-    body: { item_ids?: string[]; itemIds?: string[] | null; version?: number },
+    body: { itemIds: string[]; version?: number },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
     @ActiveScope('warehouseId') activeWarehouseId: string,
@@ -431,7 +425,7 @@ export class StocktakeController {
     const session = await this.stocktakeService.recount(
       id,
       {
-        item_ids: body.itemIds || body.item_ids || [],
+        item_ids: body.itemIds || [],
         version: body.version,
         ipAddress,
       },
@@ -447,7 +441,7 @@ export class StocktakeController {
     @Param('id') id: string,
     @Body()
     body: {
-      items: Array<{ line_id: string; variance_reason?: string }>;
+      items: Array<{ lineId: string; varianceReason?: string }>;
       version?: number;
     },
     @CurrentUser('id') userId: string,
@@ -466,7 +460,10 @@ export class StocktakeController {
     const session = await this.stocktakeService.reviewVariance(
       id,
       {
-        items: body.items,
+        items: (body.items || []).map((i) => ({
+          line_id: i.lineId,
+          variance_reason: i.varianceReason,
+        })),
         version: body.version,
         ipAddress,
       },

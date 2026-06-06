@@ -34,6 +34,7 @@ import { mapWarehouseToCombobox, mapItemToCombobox } from '@/utils/mappers';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useAuth } from '@/providers/AuthProvider';
+import { onFormError } from '@/hooks/useFormError';
 
 type KitchenRequestFormValues = CreateKitchenRequestDTO;
 
@@ -113,8 +114,8 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
   }, [departmentsList, assignedDepartmentIds]);
 
   const itemItems = useMemo(() => {
-    return items.map(item => mapItemToCombobox(item, locale));
-  }, [items, locale]);
+    return items.map(item => mapItemToCombobox(item));
+  }, [items]);
 
   const onSubmit = (values: KitchenRequestFormValues, isDraft: boolean) => {
     createRequest.mutate({ data: { ...values, isDraft } }, {
@@ -161,8 +162,8 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
             <Button 
               type="button"
               variant="outline"
-              onClick={form.handleSubmit((data) => onSubmit(data, true))} 
-              disabled={createRequest.isPending}
+              onClick={form.handleSubmit((data) => onSubmit(data, true), onFormError)} 
+              isLoading={createRequest.isPending}
               className="rounded-2xl h-11 px-6 text-label-xs font-semibold uppercase transition-all"
             >
               <Save className="w-4 h-4 me-2" />
@@ -170,8 +171,8 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
             </Button>
             <Button 
               type="button"
-              onClick={form.handleSubmit((data) => onSubmit(data, false))} 
-              disabled={createRequest.isPending}
+              onClick={form.handleSubmit((data) => onSubmit(data, false), onFormError)} 
+              isLoading={createRequest.isPending}
               className={cn(
                 "bg-primary hover:bg-primary/90 text-white rounded-2xl h-11 px-8 text-label-xs font-semibold uppercase transition-all shadow-md"
               )}
@@ -289,8 +290,7 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
                       item: {
                         id: selectedItemId || '',
                         code: selectedItem?.barcode || '',
-                        nameEn: selectedItem?.nameEn || '',
-                        nameAr: selectedItem?.nameAr || '',
+                        name: selectedItem?.name || '',
                         primaryUom: { code: selectedItem?.primaryUom?.code || '' }
                       },
                       qty: watchedItems?.[index]?.quantity ?? 1,

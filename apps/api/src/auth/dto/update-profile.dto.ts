@@ -37,5 +37,5 @@ export class UpdateProfileDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => NotificationPreferencesDto)
-  notification_preferences?: NotificationPreferencesDto;
+  notificationPreferences?: NotificationPreferencesDto;
 }

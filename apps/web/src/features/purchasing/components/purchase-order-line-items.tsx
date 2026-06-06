@@ -61,12 +61,16 @@ export function PurchaseOrderLineItems({
     prevFieldsLength.current = fields.length;
   }, [fields.length, virtualizer]);
   const comboboxItems = React.useMemo(() => {
-    return itemsData?.data?.map((i: Item) => ({
-      id: i.id,
-      name_en: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
-      name_ar: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
-    })) ?? [];
-  }, [itemsData?.data, locale]);
+    return itemsData?.data?.map((i: Item) => {
+      const displayName = i.name || '';
+      return {
+        id: i.id,
+        name: `${i.code} - ${displayName}`,
+        name_en: `${i.code} - ${displayName}`,
+        name_ar: `${i.code} - ${displayName}`,
+      };
+    }) ?? [];
+  }, [itemsData?.data]);
 
   return (
     <div className="w-full space-y-4">
@@ -189,7 +193,7 @@ function LineItemRow({
       <div className="px-6 py-3 flex-[3] border-e border-white/5 h-full flex items-center min-w-[300px]">
         <FormField
           control={form.control}
-          name={`lines.${index}.item_id`}
+          name={`lines.${index}.itemId`}
           render={({ field: inputField }) => (
             <FormItem className="space-y-0 w-full">
               <FormControl>
@@ -200,11 +204,11 @@ function LineItemRow({
                     const matchedItem = itemsData?.data?.find((i: Item) => i.id === item.id);
                     if (matchedItem) {
                       update(index, {
-                        item_id: matchedItem.id,
-                        item_name: locale === 'ar' ? matchedItem.nameAr : matchedItem.nameEn,
-                        item_code: matchedItem.code,
-                        uom_id: matchedItem.primaryUom?.id || 'PCS',
-                        unit_price: matchedItem.lastPurchasePrice || 0,
+                        itemId: matchedItem.id,
+                        itemName: matchedItem.name,
+                        itemCode: matchedItem.code,
+                        uomId: matchedItem.primaryUom?.id || 'PCS',
+                        unitPrice: matchedItem.lastPurchasePrice || 0,
                         quantity: rowValues.quantity || 1,
                         notes: rowValues.notes || ''
                       });
@@ -247,7 +251,7 @@ function LineItemRow({
       <div className="px-4 py-3 w-28 border-e border-white/5 h-full flex items-center justify-center">
         <FormField
           control={form.control}
-          name={`lines.${index}.uom_id`}
+          name={`lines.${index}.uomId`}
           render={({ field: inputField }) => (
             <FormItem className="space-y-0 w-full">
               <FormControl>
@@ -264,7 +268,7 @@ function LineItemRow({
       <div className="px-4 py-3 w-36 text-center border-e border-white/5 h-full flex items-center justify-center">
         <FormField
           control={form.control}
-          name={`lines.${index}.unit_price`}
+          name={`lines.${index}.unitPrice`}
           render={({ field: inputField }) => (
             <FormItem className="space-y-0 w-full">
               <FormControl>
@@ -295,7 +299,7 @@ function LineItemRow({
                 <Input
                   placeholder={t('notes_placeholder')}
                   disabled={isLocked}
-                  className="bg-surface-container-low border border-white/10 h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-body-sm font-medium transition-all group-hover:bg-surface-container-high"
+                  className="bg-surface-container-low border-none h-11 rounded-xl focus-visible:ring-operational-cyan/30 text-body-sm font-medium transition-all group-hover:bg-surface-container-high"
                   {...inputField}
                 />
               </FormControl>

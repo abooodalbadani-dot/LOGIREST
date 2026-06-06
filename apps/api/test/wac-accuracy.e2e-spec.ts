@@ -191,53 +191,133 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
   afterAll(async () => {
     console.log('[E2E Cleanup] afterAll: Cleaning up database records...');
     if (prisma) {
-      await prisma.auditLog.deleteMany({
-        where: { userId: { in: [adminId, procOfficerId] } },
-      });
-      await prisma.approvalEvent.deleteMany({
-        where: { userId: { in: [adminId, procOfficerId] } },
-      });
-      await prisma.userWarehouseScope.deleteMany({
-        where: { userId: { in: [adminId, procOfficerId] } },
-      });
-      await prisma.costLedger.deleteMany({ where: { itemId } });
-      await prisma.stockLedger.deleteMany({ where: { itemId } });
-      await prisma.lotAllocation.deleteMany({
-        where: { transferLine: { itemId } },
-      });
-      await prisma.transferLine.deleteMany({ where: { itemId } });
-      await prisma.transfer.deleteMany({
-        where: { fromWarehouseId: warehouseAId },
-      });
-      await prisma.inventoryIssueLine.deleteMany({ where: { itemId } });
-      await prisma.inventoryIssue.deleteMany({
-        where: { warehouseId: warehouseAId },
-      });
-      await prisma.gRNLine.deleteMany({ where: { itemId } });
-      await prisma.pOLine.deleteMany({ where: { itemId } });
-      await prisma.goodsReceivedNote.deleteMany({
-        where: { warehouseId: { in: [warehouseAId, warehouseBId] } },
-      });
-      await prisma.purchaseOrder.deleteMany({ where: { supplierId } });
-      await prisma.warehouseItem.deleteMany({ where: { itemId } });
-      await prisma.item.deleteMany({ where: { categoryId } });
-      await prisma.unitOfMeasure.delete({ where: { id: uomId } });
-      await prisma.category.delete({ where: { id: categoryId } });
-      await prisma.supplier.delete({ where: { id: supplierId } });
-      await prisma.currency.delete({ where: { id: currencyId } });
-      await prisma.warehouse.deleteMany({
-        where: { id: { in: [warehouseAId, warehouseBId] } },
-      });
-      await prisma.department.deleteMany({
-        where: { id: departmentId },
-      });
-      await prisma.documentSequence.deleteMany({
-        where: { branchId },
-      });
-      await prisma.branch.delete({ where: { id: branchId } });
-      await prisma.user.deleteMany({
-        where: { id: { in: [adminId, procOfficerId] } },
-      });
+      const safeDelete = async (fn: () => Promise<unknown>) => {
+        try {
+          await fn();
+        } catch (e) {
+          // ignore
+        }
+      };
+
+      await safeDelete(() =>
+        prisma.auditLog.deleteMany({
+          where: { userId: { in: [adminId, procOfficerId] } },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.approvalEvent.deleteMany({
+          where: { userId: { in: [adminId, procOfficerId] } },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.userWarehouseScope.deleteMany({
+          where: { userId: { in: [adminId, procOfficerId] } },
+        }),
+      );
+
+      // Disable triggers to clean up ledger tables
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
+        );
+        await prisma.stockLedger.deleteMany({ where: { itemId } });
+      } catch (e) {
+        console.warn('Failed to delete stockLedger:', e);
+      } finally {
+        try {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
+          );
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`,
+        );
+        await prisma.costLedger.deleteMany({ where: { itemId } });
+      } catch (e) {
+        console.warn('Failed to delete costLedger:', e);
+      } finally {
+        try {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE cost_ledger ENABLE TRIGGER cost_ledger_immutable;`,
+          );
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      await safeDelete(() =>
+        prisma.lotAllocation.deleteMany({
+          where: { transferLine: { itemId } },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.transferLine.deleteMany({ where: { itemId } }),
+      );
+      await safeDelete(() =>
+        prisma.transfer.deleteMany({
+          where: { fromWarehouseId: warehouseAId },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.inventoryIssueLine.deleteMany({ where: { itemId } }),
+      );
+      await safeDelete(() =>
+        prisma.inventoryIssue.deleteMany({
+          where: { warehouseId: warehouseAId },
+        }),
+      );
+      await safeDelete(() => prisma.gRNLine.deleteMany({ where: { itemId } }));
+      await safeDelete(() => prisma.pOLine.deleteMany({ where: { itemId } }));
+      await safeDelete(() =>
+        prisma.goodsReceivedNote.deleteMany({
+          where: { warehouseId: { in: [warehouseAId, warehouseBId] } },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.purchaseOrder.deleteMany({ where: { supplierId } }),
+      );
+      await safeDelete(() =>
+        prisma.warehouseItem.deleteMany({ where: { itemId } }),
+      );
+      await safeDelete(() => prisma.item.deleteMany({ where: { categoryId } }));
+      await safeDelete(() =>
+        prisma.unitOfMeasure.delete({ where: { id: uomId } }),
+      );
+      await safeDelete(() =>
+        prisma.category.delete({ where: { id: categoryId } }),
+      );
+      await safeDelete(() =>
+        prisma.supplier.delete({ where: { id: supplierId } }),
+      );
+      await safeDelete(() =>
+        prisma.currency.delete({ where: { id: currencyId } }),
+      );
+      await safeDelete(() =>
+        prisma.warehouse.deleteMany({
+          where: { id: { in: [warehouseAId, warehouseBId] } },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.department.deleteMany({
+          where: { id: departmentId },
+        }),
+      );
+      await safeDelete(() =>
+        prisma.documentSequence.deleteMany({
+          where: { branchId },
+        }),
+      );
+      await safeDelete(() => prisma.branch.delete({ where: { id: branchId } }));
+      await safeDelete(() =>
+        prisma.user.deleteMany({
+          where: { id: { in: [adminId, procOfficerId] } },
+        }),
+      );
       await prisma.$disconnect();
     }
     console.log(
@@ -266,7 +346,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       '[WAC Flow] 1. Posting GRN A (Triggering WacService recalculation on Warehouse A)...',
     );
     await request(app.getHttpServer())
-      .post(`/api/v1/procurement/goods-received/${grnA.id}/post`)
+      .post(`/api/v1/procurement/grns/${grnA.id}/post`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-warehouse-id', warehouseAId)
       .set('x-branch-id', branchId)
@@ -301,7 +381,7 @@ describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
       '[WAC Flow] 2. Posting GRN B (Triggering WacService recalculation on Warehouse B)...',
     );
     await request(app.getHttpServer())
-      .post(`/api/v1/procurement/goods-received/${grnB.id}/post`)
+      .post(`/api/v1/procurement/grns/${grnB.id}/post`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('x-warehouse-id', warehouseBId)
       .set('x-branch-id', branchId)

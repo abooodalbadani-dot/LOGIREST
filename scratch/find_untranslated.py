@@ -1,7 +1,7 @@
 import json
 
-ar_path = r'e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json'
-en_path = r'e:\Kitchen‑Store Inventory System\apps\web\messages\en.json'
+ar_path = r'e:\kitchen-store-inventory-system\apps\web\messages\ar.json'
+en_path = r'e:\kitchen-store-inventory-system\apps\web\messages\en.json'
 
 def get_all_leaf_nodes(data, prefix=''):
     leaves = {}

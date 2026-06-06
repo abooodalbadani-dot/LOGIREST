@@ -16,58 +16,34 @@ export class UpdateGrnLineDto {
   id?: string;
 
   @IsString()
-  @IsOptional()
-  item_id?: string;
-
-  @IsString()
-  @IsOptional()
-  itemId?: string;
-
-  @IsString()
-  @IsOptional()
-  lot_id?: string | null;
+  @IsNotEmpty()
+  itemId!: string;
 
   @IsString()
   @IsOptional()
   lotId?: string | null;
 
   @IsNumber()
-  @IsOptional()
-  qty?: number;
+  @Min(0)
+  receivedQty!: number;
 
   @IsNumber()
-  @IsOptional()
-  quantity?: number;
-
-  @IsNumber()
-  @IsOptional()
-  received_qty?: number;
-
-  @IsNumber()
-  @IsOptional()
-  unit_cost_foreign?: number;
-
-  @IsNumber()
-  @IsOptional()
-  unitPrice?: number;
+  @Min(0)
+  unitCostForeign!: number;
 }
 
 export class UpdateGrnDto {
-  @IsString()
-  @IsOptional()
-  po_id?: string;
-
   @IsString()
   @IsOptional()
   poId?: string;
 
   @IsString()
   @IsOptional()
-  warehouse_id?: string;
+  warehouseId?: string;
 
   @IsString()
   @IsOptional()
-  warehouseId?: string;
+  currencyId?: string;
 
   @IsInt()
   @IsNotEmpty()

@@ -57,8 +57,8 @@ def compare_translations(en_path, ar_path):
     }
 
 if __name__ == "__main__":
-    en_file = r'e:/Kitchen‑Store Inventory System/apps/web/messages/en.json'
-    ar_file = r'e:/Kitchen‑Store Inventory System/apps/web/messages/ar.json'
+    en_file = r'e:/kitchen-store-inventory-system/apps/web/messages/en.json'
+    ar_file = r'e:/kitchen-store-inventory-system/apps/web/messages/ar.json'
     
     results = compare_translations(en_file, ar_file)
     

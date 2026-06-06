@@ -31,7 +31,7 @@ describe('CsrfGuard (e2e) — T023/T024', () => {
     it('should block POST request without X-XSRF-TOKEN header', async () => {
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.app', password: 'password' });
+        .send({ email: 'admin@logirest.app', password: 'Password123!' });
 
       const cookies = loginRes.headers['set-cookie'];
       const xsrfCookie = (Array.isArray(cookies) ? cookies : [cookies]).find(
@@ -63,7 +63,7 @@ describe('CsrfGuard (e2e) — T023/T024', () => {
     });
 
     it('should allow GET requests without CSRF header (safe method)', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/health');
+      const res = await request(app.getHttpServer()).get('/health');
 
       expect(res.status).toBe(200);
     });
@@ -73,7 +73,7 @@ describe('CsrfGuard (e2e) — T023/T024', () => {
     it('should process POST with matching XSRF-TOKEN cookie and X-XSRF-TOKEN header', async () => {
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.app', password: 'password' });
+        .send({ email: 'admin@logirest.app', password: 'Password123!' });
 
       const cookies = loginRes.headers['set-cookie'];
       const xsrfCookie = (Array.isArray(cookies) ? cookies : [cookies]).find(
@@ -103,7 +103,7 @@ describe('CsrfGuard (e2e) — T023/T024', () => {
     it('should reject POST with mismatched CSRF token', async () => {
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ email: 'admin@logirest.app', password: 'password' });
+        .send({ email: 'admin@logirest.app', password: 'Password123!' });
 
       const cookies = loginRes.headers['set-cookie'];
       const xsrfCookie = (Array.isArray(cookies) ? cookies : [cookies]).find(

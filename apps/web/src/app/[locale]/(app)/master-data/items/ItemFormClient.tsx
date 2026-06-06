@@ -27,6 +27,7 @@ import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { toast } from 'sonner';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props { 
   id: string | null; 
@@ -61,7 +62,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
       resolver: zodResolver(ItemFormSchema),
       disabled: isReadOnly,
       defaultValues: {
-        code: '', barcode: '', nameAr: '', nameEn: '', categoryId: '', primaryUomId: '',
+        code: '', barcode: '', name: '', categoryId: '', primaryUomId: '',
         trackLots: false, minStockLevel: 0, reorderPoint: 0, uomConversions: [], isActive: true,
         version: undefined,
       },
@@ -74,7 +75,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   useEffect(() => {
     if (data) {
       reset({
-        code: data.code, barcode: data.barcode, nameAr: data.nameAr, nameEn: data.nameEn,
+        code: data.code, barcode: data.barcode, name: data.name,
         categoryId: data.categoryId, primaryUomId: data.primaryUom.id,
         trackLots: data.trackLots, minStockLevel: data.minStockLevel,
         reorderPoint: data.reorderPoint,
@@ -90,8 +91,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const categoryItems = useMemo(() => {
     const list = categories?.data?.map((c: Category) => ({
       id: c.id,
-      name_en: c.nameEn,
-      name_ar: c.nameAr,
+      name_en: c.name,
+      name_ar: c.name,
     })) || [];
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [categories?.data, tm]);
@@ -99,8 +100,8 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
   const uomItems = useMemo(() => {
     const list = uoms?.data?.map((u) => ({
       id: u.id,
-      name_en: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
-      name_ar: `${u.code} — ${locale === 'ar' ? u.nameAr : u.nameEn}`,
+      name_en: `${u.code} — ${u.name}`,
+      name_ar: `${u.code} — ${u.name}`,
     })) || [];
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [uoms?.data, locale, tm]);
@@ -130,12 +131,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Item form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -269,17 +265,10 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                   {errors.barcode?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.barcode.message as never)}</p>}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="item-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_en')}</Label>
-                    <Input id="item-name-en" dir="ltr" {...register('nameEn')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.nameEn?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameEn.message as never)}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="item-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name_ar')}</Label>
-                    <Input id="item-name-ar" dir="rtl" {...register('nameAr')} disabled={isReadOnly} className="font-semibold" />
-                    {errors.nameAr?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameAr.message as never)}</p>}
-                  </div>
+                <div className="space-y-2 max-w-md">
+                  <Label htmlFor="item-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ti('fields.name') || tm('name') || 'Name'}</Label>
+                  <Input id="item-name" {...register('name')} disabled={isReadOnly} className="font-semibold" />
+                  {errors.name?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
                 </div>
               </CardContent>
             </Card>

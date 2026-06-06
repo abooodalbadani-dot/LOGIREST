@@ -250,12 +250,13 @@ export class IssuePostService {
         });
       } catch (error) {
         const isSerializationError =
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          (error.code === 'P2034' ||
-            error.message?.includes('40001') ||
-            error.message?.includes('40P01') ||
-            error.message?.includes('serialization') ||
-            error.message?.includes('deadlock'));
+          (error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2034') ||
+          (error instanceof Error &&
+            (error.message?.includes('40001') ||
+              error.message?.includes('40P01') ||
+              error.message?.includes('serialization') ||
+              error.message?.includes('deadlock')));
         if (isSerializationError && attempt < maxAttempts) {
           const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
           await new Promise((resolve) => setTimeout(resolve, delay));

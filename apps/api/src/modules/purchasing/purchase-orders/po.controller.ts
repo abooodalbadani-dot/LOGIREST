@@ -164,19 +164,57 @@ export class PurchaseOrderController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
+    const rawBody = body as unknown as Record<string, unknown>;
+    const supplierId =
+      body.supplierId ??
+      (typeof rawBody.supplier_id === 'string'
+        ? rawBody.supplier_id
+        : undefined);
+    const currencyId =
+      body.currencyId ??
+      (typeof rawBody.currency_id === 'string'
+        ? rawBody.currency_id
+        : undefined);
+    const prId =
+      body.prId ??
+      (typeof rawBody.pr_id === 'string' ? rawBody.pr_id : undefined);
+
+    if (!supplierId || !currencyId) {
+      throw new BadRequestException('supplierId and currencyId are required');
+    }
+
+    const rawLines = (rawBody.lines ?? []) as Record<string, unknown>[];
+    const lines = rawLines.map((line) => {
+      const itemId = (line.itemId ?? line.item_id) as string | undefined;
+      const quantity = (line.quantity ?? line.qty) as number | undefined;
+      const unitPrice = (line.unitPrice ??
+        line.unit_price ??
+        line.unit_cost_foreign) as number | undefined;
+      if (!itemId || quantity === undefined || unitPrice === undefined) {
+        throw new BadRequestException(
+          'itemId, quantity, and unitPrice are required for each line',
+        );
+      }
+      return {
+        itemId,
+        quantity,
+        unitPrice,
+      };
+    });
+
     if (role !== Role.ADMIN) {
-      if (!body.prId) {
+      if (!prId) {
         throw new BadRequestException(
           'prId is required for non-administrative users to create a Purchase Order.',
         );
       }
       const pr = await this.prisma.purchaseRequest.findUnique({
-        where: { id: body.prId },
+        where: { id: prId },
         select: { warehouseId: true },
       });
       if (!pr) {
         throw new NotFoundException(
-          `Purchase Request with ID ${body.prId} not found.`,
+          `Purchase Request with ID ${prId} not found.`,
         );
       }
       await this.scopeValidationService.validateWarehouse(
@@ -185,7 +223,10 @@ export class PurchaseOrderController {
         pr.warehouseId,
       );
     }
-    const po = await this.poService.create(body, userId);
+    const po = await this.poService.create(
+      { supplierId, currencyId, prId, lines },
+      userId,
+    );
     return { data: mapPODetail(po) };
   }
 
@@ -257,7 +298,55 @@ export class PurchaseOrderController {
         'Access denied: Cannot update a Purchase Order lacking warehouse scope.',
       );
     }
-    const updated = await this.poService.update(id, body);
+
+    const rawBody = body as unknown as Record<string, unknown>;
+    const supplierId =
+      body.supplierId ??
+      (typeof rawBody.supplier_id === 'string'
+        ? rawBody.supplier_id
+        : undefined);
+    const currencyId =
+      body.currencyId ??
+      (typeof rawBody.currency_id === 'string'
+        ? rawBody.currency_id
+        : undefined);
+
+    let lines:
+      | Array<{
+          id?: string;
+          itemId: string;
+          quantity: number;
+          unitPrice: number;
+        }>
+      | undefined = undefined;
+    if (rawBody.lines) {
+      const rawLines = rawBody.lines as Record<string, unknown>[];
+      lines = rawLines.map((line) => {
+        const itemId = (line.itemId ?? line.item_id) as string | undefined;
+        const quantity = (line.quantity ?? line.qty) as number | undefined;
+        const unitPrice = (line.unitPrice ??
+          line.unit_price ??
+          line.unit_cost_foreign) as number | undefined;
+        if (!itemId || quantity === undefined || unitPrice === undefined) {
+          throw new BadRequestException(
+            'itemId, quantity, and unitPrice are required for each line',
+          );
+        }
+        return {
+          id: line.id as string | undefined,
+          itemId,
+          quantity,
+          unitPrice,
+        };
+      });
+    }
+
+    const updated = await this.poService.update(id, {
+      supplierId,
+      currencyId,
+      version: body.version,
+      lines,
+    });
     return { data: mapPODetail(updated) };
   }
 

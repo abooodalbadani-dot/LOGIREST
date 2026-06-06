@@ -1,27 +1,25 @@
 import { useAuth } from '@/providers/AuthProvider';
 import { useMasterDataItem } from '@/features/master-data/hooks/useMasterDataCRUD';
 import { BranchSchema, WarehouseSchema, DepartmentSchema } from '@/types/master-data';
-import { useLocale } from './useLocale';
 
 export function useContextScope() {
  const { activeScope, setActiveScope } = useAuth();
- const { isRtl } = useLocale();
 
  const { data: branch, isLoading: isBranchLoading } = useMasterDataItem(
  'branches', 
- activeScope.branchId, 
+ activeScope?.branchId || null, 
  BranchSchema
  );
 
  const { data: warehouse, isLoading: isWarehouseLoading } = useMasterDataItem(
  'warehouses', 
- activeScope.warehouseId, 
+ activeScope?.warehouseId || null, 
  WarehouseSchema
  );
 
  const { data: department, isLoading: isDepartmentLoading } = useMasterDataItem(
  'departments', 
- activeScope.departmentId, 
+ activeScope?.departmentId || null, 
  DepartmentSchema
  );
 
@@ -31,7 +29,7 @@ export function useContextScope() {
  };
 
  return {
- activeScope,
+ activeScope: activeScope || { branchId: null, warehouseId: null, departmentId: null },
  setActiveScope,
  branch,
  warehouse,

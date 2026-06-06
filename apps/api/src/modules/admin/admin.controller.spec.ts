@@ -94,16 +94,16 @@ describe('AdminController', () => {
 
     it('should pass validation with a valid settings payload', async () => {
       const validDto = {
-        system_name: 'LogiRest Test',
-        base_currency: 'USD',
-        branch_id: 'HQ',
+        systemName: 'LogiRest Test',
+        baseCurrency: 'USD',
+        branchId: 'HQ',
         timezone: 'Asia/Riyadh',
-        locale_default: 'en',
-        sender_name: 'Alerts',
-        reply_to_email: 'alerts@test.com',
-        mail_provider: 'smtp',
-        smtp_port: 587,
-        smtp_encryption: 'tls',
+        localeDefault: 'en',
+        senderName: 'Alerts',
+        replyToEmail: 'alerts@test.com',
+        mailProvider: 'smtp',
+        smtpPort: 587,
+        smtpEncryption: 'tls',
       };
 
       const result = await validationPipe.transform(validDto, {
@@ -112,19 +112,19 @@ describe('AdminController', () => {
       });
 
       expect(result).toBeDefined();
-      expect(result.system_name).toBe('LogiRest Test');
+      expect(result.systemName).toBe('LogiRest Test');
     });
 
     it('should throw validation errors if payload is invalid', async () => {
       const invalidDto = {
-        system_name: '', // Empty
-        base_currency: 'USD',
-        branch_id: 'HQ',
+        systemName: '', // Empty
+        baseCurrency: 'USD',
+        branchId: 'HQ',
         timezone: 'Asia/Riyadh',
-        locale_default: 'invalid_locale', // Invalid enum
-        sender_name: 'Alerts',
-        reply_to_email: 'not-an-email', // Invalid email
-        smtp_port: 9999999, // Too high
+        localeDefault: 'invalid_locale', // Invalid enum
+        senderName: 'Alerts',
+        replyToEmail: 'not-an-email', // Invalid email
+        smtpPort: 9999999, // Too high
       };
 
       await expect(

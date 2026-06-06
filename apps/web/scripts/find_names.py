@@ -1,7 +1,7 @@
 import os
 
 target_strings = ["أحمد المنصور", "احمد المنصور", "Ahmed Al-Mansour", "Mansour", "المنصور"]
-search_dir = r"e:\Kitchen‑Store Inventory System\apps\web"
+search_dir = r"e:\kitchen-store-inventory-system\apps\web"
 
 def search_files(dir_path):
     for root, dirs, files in os.walk(dir_path):
@@ -23,4 +23,4 @@ def search_files(dir_path):
 if __name__ == "__main__":
     search_files(search_dir)
     # Also search messages directory
-    search_files(r"e:\Kitchen‑Store Inventory System\apps\web\messages")
+    search_files(r"e:\kitchen-store-inventory-system\apps\web\messages")

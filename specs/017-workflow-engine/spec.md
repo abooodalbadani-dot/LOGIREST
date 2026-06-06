@@ -3,7 +3,7 @@
 **Feature Branch**: `017-workflow-engine`  
 **Created**: 2026-05-22  
 **Status**: Draft  
-**Input**: User description: "read this e:\Kitchen‑Store Inventory System\PROJECT_MAP.md file and creat a specification for the phase 4 only"
+**Input**: User description: "read this e:\kitchen-store-inventory-system\PROJECT_MAP.md file and creat a specification for the phase 4 only"
 
 ## Clarifications
 

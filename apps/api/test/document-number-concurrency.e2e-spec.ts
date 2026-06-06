@@ -198,7 +198,7 @@ describe('Document Number Concurrency (e2e)', () => {
         .send({
           poId,
           warehouseId,
-          lines: [{ itemId, quantity: 1, unitPrice: 10.0 }],
+          lines: [{ itemId, receivedQty: 1, unitCostForeign: 10.0 }],
         }),
     );
 

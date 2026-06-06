@@ -14,7 +14,7 @@ def analyze_diffs(dir_backup, dir_active):
     backup_files = get_files_dict(dir_backup)
     active_files = get_files_dict(dir_active)
     
-    with open(r"E:\Kitchen‑Store Inventory System\scratch\diff_full_output.txt", "w", encoding="utf-8") as out:
+    with open(r"E:\kitchen-store-inventory-system\scratch\diff_full_output.txt", "w", encoding="utf-8") as out:
         out.write("FULL DIFFERENCE REPORT BETWEEN BACKUP AND ACTIVE FILES\n")
         out.write("=====================================================\n\n")
         
@@ -54,7 +54,7 @@ def analyze_diffs(dir_backup, dir_active):
                     out.write("\n\n" + "="*80 + "\n\n")
 
 if __name__ == "__main__":
-    backup_dir = r"E:\Kitchen‑Store Inventory System\scratch\app_backup"
-    active_dir = r"E:\Kitchen‑Store Inventory System\apps\web\src\app"
+    backup_dir = r"E:\kitchen-store-inventory-system\scratch\app_backup"
+    active_dir = r"E:\kitchen-store-inventory-system\apps\web\src\app"
     analyze_diffs(backup_dir, active_dir)
     print("Done writing full diff output to scratch/diff_full_output.txt")

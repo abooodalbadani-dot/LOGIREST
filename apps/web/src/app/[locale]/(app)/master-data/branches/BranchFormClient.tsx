@@ -29,6 +29,7 @@ import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
 import { toast } from 'sonner';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
+import { onFormError } from '@/hooks/useFormError';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
@@ -100,12 +101,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Branch form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleDelete = async () => {
     if (!id) return;

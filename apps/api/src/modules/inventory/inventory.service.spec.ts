@@ -50,11 +50,15 @@ describe('InventoryService', () => {
       mockPrismaService.warehouseItem.findMany.mockResolvedValue([
         {
           itemId: 'item-1',
+          warehouseId: 'wh-1',
           qtyOnHand: 120.5,
+          qtyAllocated: 10.0,
           wac: 2.5,
+          warehouse: { name: 'Main Warehouse' },
           item: {
             sku: 'ITEM-001',
             name: 'Fresh Tomato',
+            reorderPoint: 5.0,
             category: { name: 'Vegetables' },
             unitOfMeasure: { code: 'kg' },
           },
@@ -76,17 +80,19 @@ describe('InventoryService', () => {
             itemId: 'item-1',
             itemCode: 'ITEM-001',
             itemName: 'Fresh Tomato',
-            categoryName: 'Vegetables',
-            onHandQty: 120.5,
-            weightedAvgCost: 2.5,
-            defaultUomSymbol: 'kg',
+            warehouseId: 'wh-1',
+            warehouseName: 'Main Warehouse',
+            qtyOnHand: 120.5,
+            qtyReserved: 10.0,
+            qtyAvailable: 110.5,
+            reorderPoint: 5.0,
           },
         ],
         meta: {
           total: 1,
           page: 1,
-          page_size: 50,
-          total_pages: 1,
+          pageSize: 50,
+          totalPages: 1,
         },
       });
 
@@ -103,6 +109,7 @@ describe('InventoryService', () => {
           },
         },
         include: {
+          warehouse: true,
           item: {
             include: {
               category: true,
@@ -176,8 +183,8 @@ describe('InventoryService', () => {
         meta: {
           total: 1,
           page: 1,
-          page_size: 50,
-          total_pages: 1,
+          pageSize: 50,
+          totalPages: 1,
         },
       });
 
@@ -254,8 +261,8 @@ describe('InventoryService', () => {
         meta: {
           total: 10,
           page: 2,
-          page_size: 5,
-          total_pages: 2,
+          pageSize: 5,
+          totalPages: 2,
         },
       });
 

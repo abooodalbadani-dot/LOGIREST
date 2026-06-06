@@ -32,8 +32,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  const s = search.toLowerCase();
  return currencies.filter((c: Currency) => 
  c.code.toLowerCase().includes(s) || 
- c.nameEn.toLowerCase().includes(s) || 
- c.nameAr.includes(s)
+ c.name.toLowerCase().includes(s)
  );
  }, [currencies, search]);
 
@@ -42,7 +41,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  return {
  total: currencies.length,
  active: currencies.filter((c: Currency) => c.isActive).length,
- baseCurrency: base ? (locale === 'ar' ? base.nameAr : base.nameEn) : '---'
+ baseCurrency: base ? base.name : '---'
  };
  }, [currencies, locale]);
 
@@ -63,10 +62,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  accessorKey: 'name', 
  header: tc('name'), 
  cell: ({ row }) => (
- <div className="flex flex-col gap-0.5">
- <span className="font-bold text-label-sm">{row.original.nameEn}</span>
- <span className="text-label-xs opacity-40" dir="rtl">{row.original.nameAr}</span>
- </div>
+ <span className="font-bold text-label-sm">{row.original.name}</span>
  )
  },
  { 

@@ -70,8 +70,8 @@ export class BranchesController {
       meta: {
         total,
         page: pageNum,
-        page_size: limitNum,
-        total_pages: take ? Math.ceil(total / take) : 1,
+        pageSize: limitNum,
+        totalPages: take ? Math.ceil(total / take) : 1,
       },
     };
   }

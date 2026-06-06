@@ -101,7 +101,7 @@ describe('PR to PO Conversion (e2e)', () => {
     });
     item2Id = item2.id;
 
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
 
     // Create Procurement Officer
     const procEmail = `proc-${suffix}@logirest.com`;
@@ -122,7 +122,7 @@ describe('PR to PO Conversion (e2e)', () => {
 
     const procLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: procEmail, password: 'password123' });
+      .send({ email: procEmail, password: 'Password123!' });
     procOfficerToken = procLogin.body.token || procLogin.body.accessToken;
 
     // Create Admin
@@ -144,7 +144,7 @@ describe('PR to PO Conversion (e2e)', () => {
 
     const adminLogin = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: adminEmail, password: 'password123' });
+      .send({ email: adminEmail, password: 'Password123!' });
     adminToken = adminLogin.body.token || adminLogin.body.accessToken;
   });
 
@@ -216,7 +216,7 @@ describe('PR to PO Conversion (e2e)', () => {
     it('should create and progress a PR to APPROVED status', async () => {
       // 1. Create DRAFT PR
       const createRes = await request(app.getHttpServer())
-        .post('/api/v1/purchase-requests')
+        .post('/api/v1/procurement/purchase-requests')
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -231,37 +231,37 @@ describe('PR to PO Conversion (e2e)', () => {
         })
         .expect(201);
 
-      prId = createRes.body.id;
-      expect(createRes.body.status).toBe('DRAFT');
+      prId = createRes.body.data.id;
+      expect(createRes.body.data.status).toBe('DRAFT');
 
       // 2. Submit PR
       const submitRes = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/submit`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/submit`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
         .send({ comments: 'Submit PR', version: prVersion })
         .expect(200);
 
-      expect(submitRes.body.status).toBe('SUBMITTED');
-      prVersion = submitRes.body.version; // should be 2
+      expect(submitRes.body.data.status).toBe('SUBMITTED');
+      prVersion = submitRes.body.data.version; // should be 2
 
       // 3. Approve PR
       const approveRes = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/approve`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/approve`)
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
         .send({ comments: 'Approve PR', version: prVersion })
         .expect(200);
 
-      expect(approveRes.body.status).toBe('APPROVED');
-      prVersion = approveRes.body.version; // should be 3
+      expect(approveRes.body.data.status).toBe('APPROVED');
+      prVersion = approveRes.body.data.version; // should be 3
     });
 
     it('should block conversion if lines are missing unit prices', async () => {
       const res = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/convert-to-po`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/convert-to-po`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -281,7 +281,7 @@ describe('PR to PO Conversion (e2e)', () => {
 
     it('should successfully convert APPROVED PR to a draft PO', async () => {
       const convertRes = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/convert-to-po`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/convert-to-po`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -298,21 +298,27 @@ describe('PR to PO Conversion (e2e)', () => {
         .expect(201);
 
       // Verify the returned PO properties
-      expect(convertRes.body.id).toBeDefined();
-      expect(convertRes.body.status).toBe('DRAFT');
-      expect(convertRes.body.prId).toBe(prId);
-      expect(convertRes.body.supplierId).toBe(supplierId);
-      expect(convertRes.body.currencyId).toBe(currencyId);
+      expect(convertRes.body.data.id).toBeDefined();
+      expect(convertRes.body.data.status).toBe('DRAFT');
+      expect(convertRes.body.data.prId).toBe(prId);
+      expect(convertRes.body.data.supplierId).toBe(supplierId);
+      expect(convertRes.body.data.currencyId).toBe(currencyId);
 
-      const lines = convertRes.body.lines;
+      const lines = convertRes.body.data.lines;
       expect(lines).toHaveLength(2);
 
-      const line1 = lines.find((l: any) => l.itemId === item1Id);
+      const line1 = lines.find(
+        (l: { itemId: string; quantity: number; unitPrice: number }) =>
+          l.itemId === item1Id,
+      );
       expect(line1).toBeDefined();
       expect(Number(line1.quantity)).toBe(10);
       expect(Number(line1.unitPrice)).toBe(12.5);
 
-      const line2 = lines.find((l: any) => l.itemId === item2Id);
+      const line2 = lines.find(
+        (l: { itemId: string; quantity: number; unitPrice: number }) =>
+          l.itemId === item2Id,
+      );
       expect(line2).toBeDefined();
       expect(Number(line2.quantity)).toBe(20);
       expect(Number(line2.unitPrice)).toBe(8);
@@ -336,7 +342,7 @@ describe('PR to PO Conversion (e2e)', () => {
 
     it('should reject duplicate PR-to-PO conversion (409 Conflict)', async () => {
       const res = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/convert-to-po`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/convert-to-po`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)

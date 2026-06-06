@@ -1,7 +1,7 @@
 import json
 import os
 
-report_path = 'e:/Kitchen‑Store Inventory System/apps/web/lint-report.json'
+report_path = 'e:/kitchen-store-inventory-system/apps/web/lint-report.json'
 
 def try_read(path, encoding):
     try:
@@ -31,7 +31,7 @@ for result in data:
     messages = result.get('messages', [])
     errors = [m for m in messages if m.get('severity') == 2]
     if errors:
-        rel_path = os.path.relpath(result['filePath'], 'e:/Kitchen‑Store Inventory System/apps/web')
+        rel_path = os.path.relpath(result['filePath'], 'e:/kitchen-store-inventory-system/apps/web')
         error_files[rel_path] = len(errors)
 
 # Sort by number of errors descending

@@ -61,10 +61,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         const item = items.find(i => i.id === row.original.itemId);
         if (!item) return <span className="opacity-40 italic">---</span>;
         return (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-label-sm">{item.nameEn}</span>
-            <span className="text-label-xs opacity-40" dir="rtl">{item.nameAr}</span>
-          </div>
+          <span className="font-bold text-label-sm">{item.name}</span>
         );
       }
     },
@@ -75,10 +72,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         const uom = uoms.find(u => u.id === row.original.uomId);
         if (!uom) return <span className="opacity-40 italic">---</span>;
         return (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-label-sm">{uom.nameEn}</span>
-            <span className="text-label-xs opacity-40" dir="rtl">{uom.nameAr}</span>
-          </div>
+          <span className="font-bold text-label-sm">{uom.name}</span>
         );
       }
     },

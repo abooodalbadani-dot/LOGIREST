@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { apiClient, normalizeKeysToCamelCase } from '@/lib/api/client';
 import { getTokenCookie, setTokenCookie, deleteTokenCookie } from '@/lib/api/cookies';
 import { AuthUserSchema } from '@/types/auth';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR';
 export interface UserScope { 
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [activeScope, setActiveScopeState] = useState<ActiveScope>({ branchId: null, warehouseId: null, departmentId: null });
   const [isLoading, setIsLoading] = useState(true);
+  const [hasAttemptedAutoSelect, setHasAttemptedAutoSelect] = useState(false);
   const router = useRouter();
   const t = useTranslations('auth');
 
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setToken(null);
       setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
+      setHasAttemptedAutoSelect(false);
       
       if (typeof window !== 'undefined') {
         try {
@@ -120,128 +123,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedToken = getTokenCookie();
     const storedScope = localStorage.getItem('logirest_active_scope');
 
-    if (storedToken) {
+    const verifyTokenAndLoad = async () => {
+      if (!storedToken) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const b64 = storedToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        const payloadStr = decodeURIComponent(escape(atob(b64)));
-        const payload = JSON.parse(payloadStr);
-        const camelPayloadUser = normalizeKeysToCamelCase(payload.user);
-        let parsedUser = AuthUserSchema.parse(camelPayloadUser);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const meResponse = await apiClient.get('/auth/me', AuthUserSchema, { signal: controller.signal });
+        clearTimeout(timeoutId);
 
-        setTimeout(async () => {
+        let finalUser = meResponse;
+        const storedOverrides = localStorage.getItem('logirest_user_overrides');
+        if (storedOverrides) {
           try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
-            const meResponse = await apiClient.get('/auth/me', AuthUserSchema, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            parsedUser = meResponse;
+            finalUser = { ...meResponse, ...JSON.parse(storedOverrides) };
           } catch (err) {
-            deleteTokenCookie();
+            console.error('Failed to parse user overrides:', err);
             localStorage.removeItem('logirest_user_overrides');
-            localStorage.removeItem('logirest_active_scope');
-            setUser(null);
-            setToken(null);
-            setIsLoading(false);
-            
-            const isTimeout = err instanceof DOMException && err.name === 'AbortError';
-            const reason = isTimeout ? 'verification_failed' : 'expired';
-            
-            if (typeof window !== 'undefined') {
-              try {
-                sessionStorage.clear();
-              } catch (e) {
-                console.error('Failed to clear session storage:', e);
-              }
-              document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+          }
+        }
+        setUser(finalUser);
+        setToken(storedToken);
 
-              const currentPath = window.location.pathname + window.location.search;
-              const isLogin = currentPath.includes('/login');
-              if (!isLogin) {
-                const redirectPath = `&redirect=${encodeURIComponent(currentPath)}`;
-                const locale = document.documentElement.lang || 'ar';
-                window.location.href = `/${locale}/login?reason=${reason}${redirectPath}`;
-              }
+        if (storedScope) {
+          try {
+            const scopeObj = JSON.parse(storedScope);
+            const isValid = meResponse.scopes.some(
+              (s: UserScope) => s.branchId === scopeObj.branchId && s.warehouseId === scopeObj.warehouseId
+            );
+            if (isValid) {
+              setActiveScopeState(scopeObj);
             } else {
-              router.replace(`/login?reason=${reason}`);
-            }
-            return;
-          }
-
-          let finalUser = parsedUser;
-          const storedOverrides = localStorage.getItem('logirest_user_overrides');
-          if (storedOverrides) {
-            try {
-              finalUser = { ...parsedUser, ...JSON.parse(storedOverrides) };
-            } catch (err) {
-              console.error('Failed to parse user overrides:', err);
-            }
-          }
-          setUser(finalUser);
-          setToken(storedToken);
-
-          if (storedScope) {
-            try {
-              const scopeObj = JSON.parse(storedScope);
-              const isValid = parsedUser.scopes.some(
-                (s: UserScope) => s.branchId === scopeObj.branchId && s.warehouseId === scopeObj.warehouseId
-              );
-              if (isValid) {
-                setActiveScopeState(scopeObj);
-              } else {
-                setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
-                localStorage.removeItem('logirest_active_scope');
-              }
-            } catch (err) {
-              console.error('Failed to parse active scope from localStorage:', err);
+              setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
               localStorage.removeItem('logirest_active_scope');
             }
-          } else if (parsedUser.scopes.length > 0) {
-            const first = parsedUser.scopes[0];
-            setActiveScopeState({
-              branchId: first.branchId,
-              warehouseId: first.warehouseId,
-              departmentId: first.departmentId
-            });
+          } catch (err) {
+            console.error('Failed to parse active scope from localStorage:', err);
+            localStorage.removeItem('logirest_active_scope');
           }
-          setIsLoading(false);
-        }, 0);
-        return;
-      } catch (e) {
-        console.error('Failed to restore auth session:', e);
+        } else if (meResponse.scopes.length > 0) {
+          const first = meResponse.scopes[0];
+          setActiveScopeState({
+            branchId: first.branchId,
+            warehouseId: first.warehouseId,
+            departmentId: first.departmentId
+          });
+        }
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Failed to restore auth session:', err);
         deleteTokenCookie();
         localStorage.removeItem('logirest_active_scope');
         localStorage.removeItem('logirest_user_overrides');
         setUser(null);
         setToken(null);
         setIsLoading(false);
+
+        const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+        const reason = isTimeout ? 'verification_failed' : 'expired';
+
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.clear();
-          } catch (err) {
-            console.error('Failed to clear session storage:', err);
+          } catch (e) {
+            console.error('Failed to clear session storage:', e);
           }
           document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+
           const currentPath = window.location.pathname + window.location.search;
           const isLogin = currentPath.includes('/login');
           if (!isLogin) {
             const redirectPath = `&redirect=${encodeURIComponent(currentPath)}`;
             const locale = document.documentElement.lang || 'ar';
-            window.location.href = `/${locale}/login?reason=expired${redirectPath}`;
+            window.location.href = `/${locale}/login?reason=${reason}${redirectPath}`;
           }
         } else {
-          router.replace('/login?reason=expired');
+          router.replace(`/login?reason=${reason}`);
         }
-        return;
       }
-    }
+    };
 
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 0);
+    verifyTokenAndLoad();
   }, []);
 
   useEffect(() => {
-    if (isLoading || !user) return;
+    if (isLoading || !user || hasAttemptedAutoSelect) return;
     const storedScope = localStorage.getItem('logirest_active_scope');
     if (storedScope) {
       try {
@@ -249,9 +217,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (parsed.branchId && parsed.warehouseId) {
           return;
         }
-      } catch (e) {}
+      } catch (e) {
+        localStorage.removeItem('logirest_active_scope');
+      }
     }
 
+    setHasAttemptedAutoSelect(true);
     let active = true;
     const autoSelect = async () => {
       try {
@@ -376,8 +347,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setToken(null);
     setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
+    setHasAttemptedAutoSelect(false);
     router.replace('/login');
   };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, updateUser, isLoading, activeScope, setActiveScope }}>

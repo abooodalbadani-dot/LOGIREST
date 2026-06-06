@@ -3,7 +3,7 @@
 **Feature Branch**: `023-api-db-core-hardening`  
 **Created**: 2026-05-23  
 **Status**: Approved  
-**Input**: User description: "read this file e:/Kitchen‑Store Inventory System/production_hardening_roadmap.md and creat a specification for the phase 1 only"
+**Input**: User description: "read this file e:/kitchen-store-inventory-system/production_hardening_roadmap.md and creat a specification for the phase 1 only"
 
 ## User Scenarios & Testing *(mandatory)*
 

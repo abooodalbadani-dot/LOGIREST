@@ -60,8 +60,8 @@ describe('API List Response Shape Contract (e2e)', () => {
       expect.objectContaining({
         total: expect.any(Number),
         page: expect.any(Number),
-        page_size: expect.any(Number),
-        total_pages: expect.any(Number),
+        pageSize: expect.any(Number),
+        totalPages: expect.any(Number),
       }),
     );
   }

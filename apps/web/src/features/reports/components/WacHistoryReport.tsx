@@ -57,8 +57,9 @@ export default function WacHistoryReportClient() {
       id: item.id,
       code: item.code,
       barcode: item.barcode,
-      name_en: item.nameEn,
-      name_ar: item.nameAr,
+      name: item.name,
+      name_en: item.name,
+      name_ar: item.name,
     }));
   }, [itemsData]);
 

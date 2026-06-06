@@ -6,8 +6,9 @@ import { z } from 'zod';
 export const SupplierSchema = z.object({
  id: z.string(),
  code: z.string(),
- nameAr: z.string(),
- nameEn: z.string(),
+ name: z.string(),
+ nameAr: z.string().optional(),
+ nameEn: z.string().optional(),
  currencyId: z.string(),
 });
 

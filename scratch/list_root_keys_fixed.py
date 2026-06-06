@@ -31,6 +31,6 @@ def list_root_keys(filename):
                 level = 0
 
 print("EN Root Keys:")
-list_root_keys(r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json")
+list_root_keys(r"e:\kitchen-store-inventory-system\apps\web\messages\en.json")
 print("\nAR Root Keys:")
-list_root_keys(r"e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json")
+list_root_keys(r"e:\kitchen-store-inventory-system\apps\web\messages\ar.json")

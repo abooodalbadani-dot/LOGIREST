@@ -1,6 +1,6 @@
 import os
 
-file_path = r'e:\Kitchen‑Store Inventory System\apps\web\src\lib\api\mocks\admin.ts'
+file_path = r'e:\kitchen-store-inventory-system\apps\web\src\lib\api\mocks\admin.ts'
 with open(file_path, 'r', encoding='utf-8') as f:
     content = f.read()
 

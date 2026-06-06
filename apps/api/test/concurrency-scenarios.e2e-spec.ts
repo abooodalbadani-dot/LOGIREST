@@ -113,36 +113,120 @@ describe('Concurrency Scenarios (Double-Post Prevention) E2E', () => {
 
   afterAll(async () => {
     if (prisma) {
-      await Promise.all([
+      const safeDelete = async (fn: () => Promise<unknown>) => {
+        try {
+          await fn();
+        } catch (e) {
+          // ignore
+        }
+      };
+
+      await safeDelete(() =>
         prisma.userWarehouseScope.deleteMany({ where: { userId: adminId } }),
+      );
+      await safeDelete(() =>
         prisma.approvalEvent.deleteMany({ where: { userId: adminId } }),
+      );
+      await safeDelete(() =>
         prisma.refreshToken.deleteMany({ where: { userId: adminId } }),
+      );
+      await safeDelete(() =>
         prisma.auditLog.deleteMany({ where: { userId: adminId } }),
+      );
+      await safeDelete(() =>
         prisma.warehouseLock.deleteMany({ where: { warehouseId } }),
+      );
+      await safeDelete(() =>
         prisma.stocktakeCount.deleteMany({ where: { itemId } }),
+      );
+      await safeDelete(() =>
         prisma.stocktakeSnapshot.deleteMany({ where: { itemId } }),
-        prisma.stockLedger.deleteMany({ where: { itemId } }),
-        prisma.costLedger.deleteMany({ where: { itemId } }),
+      );
+
+      // Disable triggers to clean up ledger tables
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
+        );
+        await prisma.stockLedger.deleteMany({ where: { itemId } });
+      } catch (e) {
+        console.warn('Failed to delete stockLedger:', e);
+      } finally {
+        try {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
+          );
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      try {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`,
+        );
+        await prisma.costLedger.deleteMany({ where: { itemId } });
+      } catch (e) {
+        console.warn('Failed to delete costLedger:', e);
+      } finally {
+        try {
+          await prisma.$executeRawUnsafe(
+            `ALTER TABLE cost_ledger ENABLE TRIGGER cost_ledger_immutable;`,
+          );
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      await safeDelete(() =>
         prisma.lotAllocation.deleteMany({ where: { lot: { itemId } } }),
-        prisma.gRNLine.deleteMany({ where: { itemId } }),
-        prisma.pOLine.deleteMany({ where: { itemId } }),
-      ]);
+      );
+      await safeDelete(() => prisma.gRNLine.deleteMany({ where: { itemId } }));
+      await safeDelete(() => prisma.pOLine.deleteMany({ where: { itemId } }));
 
-      await prisma.inventoryIssue.deleteMany({ where: { warehouseId } });
-      await prisma.goodsReceivedNote.deleteMany({ where: { warehouseId } });
-      await prisma.purchaseOrder.deleteMany({ where: { supplierId } });
-      await prisma.stocktakeSession.deleteMany({ where: { warehouseId } });
+      await safeDelete(() =>
+        prisma.inventoryIssue.deleteMany({ where: { warehouseId } }),
+      );
+      await safeDelete(() =>
+        prisma.goodsReceivedNote.deleteMany({ where: { warehouseId } }),
+      );
+      await safeDelete(() =>
+        prisma.purchaseOrder.deleteMany({ where: { supplierId } }),
+      );
+      await safeDelete(() =>
+        prisma.stocktakeSession.deleteMany({ where: { warehouseId } }),
+      );
 
-      await prisma.item.deleteMany({ where: { categoryId } });
-      await prisma.unitOfMeasure.delete({ where: { id: uomId } });
-      await prisma.category.delete({ where: { id: categoryId } });
-      await prisma.supplier.delete({ where: { id: supplierId } });
-      await prisma.currency.delete({ where: { id: currencyId } });
-      await prisma.department.delete({ where: { id: departmentId } });
-      await prisma.warehouse.delete({ where: { id: warehouseId } });
-      await prisma.documentSequence.deleteMany({ where: { branchId } });
-      await prisma.branch.delete({ where: { id: branchId } });
-      await prisma.user.delete({ where: { id: adminId } });
+      await safeDelete(() =>
+        prisma.warehouseItemLot.deleteMany({ where: { itemId } }),
+      );
+      await safeDelete(() =>
+        prisma.warehouseItem.deleteMany({ where: { itemId } }),
+      );
+      await safeDelete(() => prisma.item.deleteMany({ where: { categoryId } }));
+      await safeDelete(() =>
+        prisma.unitOfMeasure.delete({ where: { id: uomId } }),
+      );
+      await safeDelete(() =>
+        prisma.category.delete({ where: { id: categoryId } }),
+      );
+      await safeDelete(() =>
+        prisma.supplier.delete({ where: { id: supplierId } }),
+      );
+      await safeDelete(() =>
+        prisma.currency.delete({ where: { id: currencyId } }),
+      );
+      await safeDelete(() =>
+        prisma.department.delete({ where: { id: departmentId } }),
+      );
+      await safeDelete(() =>
+        prisma.warehouse.delete({ where: { id: warehouseId } }),
+      );
+      await safeDelete(() =>
+        prisma.documentSequence.deleteMany({ where: { branchId } }),
+      );
+      await safeDelete(() => prisma.branch.delete({ where: { id: branchId } }));
+      await safeDelete(() => prisma.user.delete({ where: { id: adminId } }));
 
       await prisma.$disconnect();
     }
@@ -178,13 +262,13 @@ describe('Concurrency Scenarios (Double-Post Prevention) E2E', () => {
       // Fire both GRN post requests concurrently
       const [res1, res2] = await Promise.all([
         request(app.getHttpServer())
-          .post(`/api/v1/procurement/goods-received/${grn.id}/post`)
+          .post(`/api/v1/procurement/grns/${grn.id}/post`)
           .set('Authorization', `Bearer ${adminToken}`)
           .set('x-warehouse-id', warehouseId)
           .set('x-branch-id', branchId)
           .send({ version: 1 }),
         request(app.getHttpServer())
-          .post(`/api/v1/procurement/goods-received/${grn.id}/post`)
+          .post(`/api/v1/procurement/grns/${grn.id}/post`)
           .set('Authorization', `Bearer ${adminToken}`)
           .set('x-warehouse-id', warehouseId)
           .set('x-branch-id', branchId)
@@ -225,6 +309,7 @@ describe('Concurrency Scenarios (Double-Post Prevention) E2E', () => {
           warehouseId,
           departmentId,
           status: 'SUBMITTED',
+          createdAt: new Date(Date.now() + 600000), // 10 minutes in the future
           lines: {
             create: [{ itemId, quantity: 5 }],
           },
@@ -237,6 +322,7 @@ describe('Concurrency Scenarios (Double-Post Prevention) E2E', () => {
           warehouseId,
           departmentId,
           status: 'SUBMITTED',
+          createdAt: new Date(Date.now() + 600000), // 10 minutes in the future
           lines: {
             create: [{ itemId, quantity: 8 }],
           },

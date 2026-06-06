@@ -3,7 +3,7 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import type { WarehouseLockState } from '@/types/stocktake';
-import { Loader2 } from 'lucide-react';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 interface WarehouseScopeContextValue {
   isLocked: boolean;
@@ -14,13 +14,14 @@ interface WarehouseScopeContextValue {
 const WarehouseScopeContext = createContext<WarehouseScopeContextValue | null>(null);
 
 export function WarehouseScopeProvider({ children }: { children: ReactNode }) {
-  const { activeScope, isLoading: authLoading } = useAuth();
+  const { user, activeScope, isLoading: authLoading } = useAuth();
   
   // Guard the hook argument and loading check
   const warehouseId = activeScope?.warehouseId;
   const { data: lockState, isLoading: lockLoading } = useWarehouseLock(warehouseId ?? null);
 
-  const isLoadingCombined = authLoading || (!!warehouseId && lockLoading);
+  const scopeNotResolved = !!user && (!activeScope?.branchId || !activeScope?.warehouseId);
+  const isLoadingCombined = authLoading || scopeNotResolved || (!!warehouseId && lockLoading);
 
   const value: WarehouseScopeContextValue = {
     isLocked: lockState?.isLocked ?? false,
@@ -29,14 +30,7 @@ export function WarehouseScopeProvider({ children }: { children: ReactNode }) {
   };
 
   if (isLoadingCombined) {
-    return (
-      <div className="flex w-full items-center justify-center min-h-screen bg-[#050505]">
-        <div className="relative">
-          <Loader2 className="w-12 h-12 animate-spin text-operational-cyan" />
-          <div className="absolute inset-0 blur-xl bg-operational-cyan/20 animate-pulse" />
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (

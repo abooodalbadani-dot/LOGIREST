@@ -13,8 +13,8 @@ function getKeys(obj, prefix = '') {
   return keys;
 }
 
-const en = JSON.parse(fs.readFileSync('e:/Kitchen‑Store Inventory System/messages/en.json', 'utf8'));
-const ar = JSON.parse(fs.readFileSync('e:/Kitchen‑Store Inventory System/messages/ar.json', 'utf8'));
+const en = JSON.parse(fs.readFileSync('e:/kitchen-store-inventory-system/messages/en.json', 'utf8'));
+const ar = JSON.parse(fs.readFileSync('e:/kitchen-store-inventory-system/messages/ar.json', 'utf8'));
 
 const enKitchenKeys = getKeys(en.operations.kitchen_request);
 const arKitchenKeys = getKeys(ar.operations.kitchen_request);

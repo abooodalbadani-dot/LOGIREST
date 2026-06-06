@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props {
   id: string | null;
@@ -47,6 +48,7 @@ interface Props {
 export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const tw = useTranslations('master_data.warehouses');
+  const tv = useTranslations();
   const locale = useLocale();
   const abortController = useAbortController();
 
@@ -135,12 +137,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Warehouse form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleArchive = async () => {
     if (!id) return;
@@ -231,7 +228,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                       />
                     )}
                   />
-                  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.branchId.message}`)}</p>}
+                  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.branchId.message as never)}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -246,7 +243,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                     className="font-mono font-semibold uppercase text-status-active"
                     placeholder={tw('code_placeholder')}
                   />
-                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.code.message}`)}</p>}
+                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
                 </div>
               </div>
 
@@ -261,7 +258,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                     disabled={isReadOnly}
                     className="font-semibold" 
                   />
-                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tw(`validation.${errors.name.message}`)}</p>}
+                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
                 </div>
               </div>
             </CardContent>

@@ -106,11 +106,11 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
             { label: tc('home'), href: `/dashboard` },
             { label: tc('master_data'), href: `/master-data` },
             { label: t('title'), href: `/master-data/suppliers` },
-            { label: locale === 'ar' ? supplier.nameAr : supplier.nameEn }
+            { label: supplier.name }
           ]} 
         />
         <PageHeader 
-          title={locale === 'ar' ? supplier.nameAr : supplier.nameEn} 
+          title={supplier.name} 
           description={t('profile.title')}
           actions={
             <Button 

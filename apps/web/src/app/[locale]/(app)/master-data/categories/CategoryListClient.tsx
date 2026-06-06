@@ -37,17 +37,14 @@ export function CategoryListClient() {
       ),
     },
     {
-      accessorKey: 'name_en',
+      accessorKey: 'name',
       header: t('name'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-operational-cyan/10 flex items-center justify-center shrink-0">
             <Layers className="w-4 h-4 text-operational-cyan" />
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-label-sm">{row.original.nameEn}</span>
-            <span className="text-label-xs text-muted-foreground/50" dir="rtl">{row.original.nameAr}</span>
-          </div>
+          <span className="font-bold text-label-sm">{row.original.name}</span>
         </div>
       ),
     },

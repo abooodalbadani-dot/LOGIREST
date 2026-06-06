@@ -16,7 +16,7 @@
 **Purpose**: Audit script initialization
 
 - [x] T001 [P] Verify `research.md` decisions and project structure in `specs/009-runtime-error-sweep/`
-- [x] T002 [P] Create the React Key audit script at `e:\Kitchen‑Store Inventory System\scratch\find_missing_keys.py`
+- [x] T002 [P] Create the React Key audit script at `e:\kitchen-store-inventory-system\scratch\find_missing_keys.py`
 
 ---
 

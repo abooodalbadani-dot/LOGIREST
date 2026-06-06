@@ -28,7 +28,7 @@ function findDuplicateKeys(jsonString) {
     return duplicates;
 }
 
-const arPath = path.join('E:', 'Kitchen‑Store Inventory System', 'apps', 'web', 'messages', 'ar.json');
+const arPath = path.join('E:', 'kitchen-store-inventory-system', 'apps', 'web', 'messages', 'ar.json');
 const content = fs.readFileSync(arPath, 'utf8');
 const dups = findDuplicateKeys(content);
 

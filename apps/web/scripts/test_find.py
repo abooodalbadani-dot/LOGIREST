@@ -1,5 +1,5 @@
 target = "Ahmed Al-Mansour"
-file_path = r"e:\Kitchen‑Store Inventory System\apps\web\src\infrastructure\mock\seeds\operations.seed.ts"
+file_path = r"e:\kitchen-store-inventory-system\apps\web\src\infrastructure\mock\seeds\operations.seed.ts"
 try:
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()

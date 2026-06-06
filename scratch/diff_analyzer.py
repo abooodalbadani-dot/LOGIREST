@@ -46,8 +46,8 @@ def compare_dirs(dir_backup, dir_active):
     return only_in_backup, only_in_active, differing_files, identical_files
 
 if __name__ == "__main__":
-    backup_dir = r"E:\Kitchen‑Store Inventory System\scratch\app_backup"
-    active_dir = r"E:\Kitchen‑Store Inventory System\apps\web\src\app"
+    backup_dir = r"E:\kitchen-store-inventory-system\scratch\app_backup"
+    active_dir = r"E:\kitchen-store-inventory-system\apps\web\src\app"
     
     only_in_backup, only_in_active, differing_files, identical_files = compare_dirs(backup_dir, active_dir)
     

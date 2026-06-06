@@ -6,7 +6,16 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { Prisma, DocumentType, Role } from '@prisma/client';
+import {
+  Prisma,
+  DocumentType,
+  Role,
+  StockLedger,
+  WarehouseItemLot,
+  CostLedger,
+  Item,
+  Lot,
+} from '@prisma/client';
 
 const MAX_EXPORT_ROWS = 50000;
 const EXPORT_CHUNK_SIZE = 1000;
@@ -30,6 +39,19 @@ export interface ExportCursorResult<T> {
   data: T[];
   nextCursor: string | null;
   hasMore: boolean;
+}
+
+export interface StockLedgerWithItem extends StockLedger {
+  item: Item;
+}
+
+export interface WarehouseItemLotWithItemAndLot extends WarehouseItemLot {
+  item: Item;
+  lot: Lot;
+}
+
+export interface CostLedgerWithItem extends CostLedger {
+  item: Item;
 }
 
 @Injectable()
@@ -832,7 +854,7 @@ export class ReportsService {
 
     const results = (await this.prisma.stockLedger.findMany(
       queryOpts,
-    )) as any[];
+    )) as StockLedgerWithItem[];
     const hasMore =
       results.length > currentChunkSize &&
       currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
@@ -882,19 +904,15 @@ export class ReportsService {
       include: { item: true, lot: true },
       orderBy: [
         { lot: { expiryDate: 'asc' as const } },
-        { id: 'asc' as const },
+        { lotId: 'asc' as const },
       ],
+      skip: currentOffset,
       take: currentChunkSize + 1,
     };
 
-    if (decoded) {
-      queryOpts.cursor = { id: decoded.id };
-      queryOpts.skip = 1;
-    }
-
     const results = (await this.prisma.warehouseItemLot.findMany(
       queryOpts,
-    )) as any[];
+    )) as WarehouseItemLotWithItemAndLot[];
     const hasMore =
       results.length > currentChunkSize &&
       currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
@@ -902,7 +920,7 @@ export class ReportsService {
 
     const newOffset = currentOffset + data.length;
     const nextCursor = hasMore
-      ? this.encodeCursor(data[data.length - 1].id, newOffset)
+      ? this.encodeCursor(data[data.length - 1].lotId, newOffset)
       : null;
 
     const now = new Date();
@@ -958,7 +976,9 @@ export class ReportsService {
       queryOpts.skip = 1;
     }
 
-    const results = (await this.prisma.costLedger.findMany(queryOpts)) as any[];
+    const results = (await this.prisma.costLedger.findMany(
+      queryOpts,
+    )) as CostLedgerWithItem[];
     const hasMore =
       results.length > currentChunkSize &&
       currentOffset + currentChunkSize < MAX_EXPORT_ROWS;
@@ -1058,7 +1078,7 @@ export class ReportsService {
 
     const results = (await this.prisma.stockLedger.findMany(
       queryOpts,
-    )) as any[];
+    )) as StockLedgerWithItem[];
     const hasMore =
       results.length > currentChunkSize &&
       currentOffset + currentChunkSize < MAX_EXPORT_ROWS;

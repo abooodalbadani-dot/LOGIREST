@@ -1759,6 +1759,7 @@
         "cost_center": "Cost Center ID",
         "is_active": "Status",
         "manager": "Unit Manager",
+        "name": "Department Name",
         "name_ar": "Department Name (AR)",
         "name_en": "Department Name (EN)",
         "warehouse": "Parent Warehouse"

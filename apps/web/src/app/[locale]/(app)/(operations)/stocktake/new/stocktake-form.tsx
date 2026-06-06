@@ -40,6 +40,7 @@ import { PermissionGate } from "@/components/shared/PermissionGate";
 import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { useAuth } from "@/providers/AuthProvider";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from "@/hooks/useFormError";
 
 const buildFormSchema = (t: (k: string) => string) => z.object({
  warehouseId: z.string().min(1, t('validation.warehouse_required')),
@@ -135,7 +136,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
  <PermissionGate resource="operations_stocktake" action="create">
  <Form {...form}>
  <form 
- onSubmit={form.handleSubmit(() => setConfirmOpen(true))} 
+ onSubmit={form.handleSubmit(() => setConfirmOpen(true), onFormError)} 
  className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto"
  >
  <PageHeader 
@@ -284,7 +285,7 @@ export function StocktakeForm({ locale }: { locale: 'ar' | 'en' }) {
     onOpenChange={setConfirmOpen}
     onConfirm={() => {
       setConfirmOpen(false);
-      form.handleSubmit(onSubmit)();
+      form.handleSubmit(onSubmit, onFormError)();
     }}
     title={t('create_confirm_title')}
     description={isBalanceLoading

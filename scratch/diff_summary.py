@@ -2,8 +2,8 @@ import os
 import difflib
 
 def analyze_diffs():
-    backup_root = r"e:\Kitchen‑Store Inventory System\scratch\app_backup"
-    app_root = r"e:\Kitchen‑Store Inventory System\apps\web\src\app"
+    backup_root = r"e:\kitchen-store-inventory-system\scratch\app_backup"
+    app_root = r"e:\kitchen-store-inventory-system\apps\web\src\app"
 
     modified_files = [
         r"[locale]\(app)\(operations)\adjustments\AdjustmentListClient.tsx",
@@ -102,7 +102,7 @@ def analyze_diffs():
             out_report.append("No text differences found (maybe line endings or encoding).")
         out_report.append("\n\n")
 
-    with open(r"e:\Kitchen‑Store Inventory System\scratch\diff_details.txt", 'w', encoding='utf-8') as fout:
+    with open(r"e:\kitchen-store-inventory-system\scratch\diff_details.txt", 'w', encoding='utf-8') as fout:
         fout.write("\n".join(out_report))
 
     print("Diff analysis complete. Saved to scratch/diff_details.txt.")

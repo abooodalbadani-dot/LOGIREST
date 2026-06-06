@@ -66,7 +66,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
 
     // Admin User
     const adminEmail = `admin-${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const adminUser = await prisma.user.create({
       data: {
         email: adminEmail,
@@ -84,7 +84,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
 
     const adminLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: adminEmail, password: 'password123' });
+      .send({ email: adminEmail, password: 'Password123!' });
     adminToken = adminLoginRes.body.token || adminLoginRes.body.accessToken;
 
     // Non-Admin User (Proc Officer)
@@ -106,7 +106,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
 
     const procLoginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: procEmail, password: 'password123' });
+      .send({ email: procEmail, password: 'Password123!' });
     nonAdminToken = procLoginRes.body.token || procLoginRes.body.accessToken;
   });
 
@@ -230,7 +230,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
         .set('Authorization', `Bearer ${nonAdminToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
-        .send({ reason_notes: 'Bypassing locks for stocktake override' })
+        .send({ reasonNotes: 'Bypassing locks for stocktake override' })
         .expect(403);
     } finally {
       await prisma.warehouseLock.delete({ where: { id: lock.id } });
@@ -254,11 +254,11 @@ describe('Warehouse Lock & Admin Override E2E', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
-        .send({ reason_notes: 'short' })
+        .send({ reasonNotes: 'short' })
         .expect(400);
 
       expect(res.body.message).toBe(
-        'reason_notes must be longer than or equal to 10 characters',
+        'reasonNotes must be longer than or equal to 10 characters',
       );
     } finally {
       await prisma.warehouseLock.delete({ where: { id: lock.id } });
@@ -292,7 +292,7 @@ describe('Warehouse Lock & Admin Override E2E', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
-        .send({ reason_notes: 'Bypassing locks for stocktake override' })
+        .send({ reasonNotes: 'Bypassing locks for stocktake override' })
         .expect(201);
 
       // 3. Verify lock is disabled in DB

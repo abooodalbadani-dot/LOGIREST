@@ -5,6 +5,7 @@ import {
   UseGuards,
   UseInterceptors,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -24,6 +25,16 @@ export class SearchController {
     }
 
     const query = q.trim();
+    if (query.length < 2) {
+      throw new BadRequestException(
+        'Search query must be at least 2 characters',
+      );
+    }
+    if (query.length > 100) {
+      throw new BadRequestException(
+        'Search query must be at most 100 characters',
+      );
+    }
     const allowedWarehouseIds = (req as unknown as Record<string, unknown>)
       .allowedWarehouseIds as string[] | undefined;
 

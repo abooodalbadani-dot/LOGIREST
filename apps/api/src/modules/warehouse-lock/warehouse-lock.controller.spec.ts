@@ -38,7 +38,7 @@ describe('WarehouseLockController', () => {
           'lock-1',
           'user-1',
           'PROC_OFFICER',
-          { reason_notes: 'Some long enough reason notes' },
+          { reasonNotes: 'Some long enough reason notes' },
           req,
         ),
       ).rejects.toThrow(new ForbiddenException('Forbidden resource'));
@@ -46,32 +46,32 @@ describe('WarehouseLockController', () => {
       expect(mockWarehouseLockService.forceUnlock).not.toHaveBeenCalled();
     });
 
-    it('should throw BadRequestException if reason_notes is missing', async () => {
+    it('should throw BadRequestException if reasonNotes is missing', async () => {
       const req = mockRequest();
       await expect(
         controller.forceUnlock(
           'lock-1',
           'admin-1',
           'ADMIN',
-          undefined as any,
+          undefined as unknown as { reasonNotes: string },
           req,
         ),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if reason_notes is too short', async () => {
+    it('should throw BadRequestException if reasonNotes is too short', async () => {
       const req = mockRequest();
       await expect(
         controller.forceUnlock(
           'lock-1',
           'admin-1',
           'ADMIN',
-          { reason_notes: 'short' },
+          { reasonNotes: 'short' },
           req,
         ),
       ).rejects.toThrow(
         new BadRequestException(
-          'reason_notes must be longer than or equal to 10 characters',
+          'reasonNotes must be longer than or equal to 10 characters',
         ),
       );
     });
@@ -85,7 +85,7 @@ describe('WarehouseLockController', () => {
         'lock-1',
         'admin-1',
         'ADMIN',
-        { reason_notes: 'This is a long enough note' },
+        { reasonNotes: 'This is a long enough note' },
         req,
       );
 

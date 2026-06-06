@@ -1,4 +1,4 @@
-# Functional Completion Matrix — Kitchen‑Store Inventory System
+# Functional Completion Matrix — kitchen-store-inventory-system
 
 **Generated**: 2026-06-01 | **Based on**: Post-Stabilization Codebase Analysis & Verification
 **Scoring**: ✅ = YES (fully implemented/tested/secured) | ⚡ = PARTIAL | ❌ = NO | N/A = NOT APPLICABLE

@@ -21,29 +21,29 @@ export const initialDepartments: Department[] = [
 ];
 
 export const initialSuppliers: Supplier[] = [
-  { id: 'sup-1', code: 'SUP-001', nameAr: 'مورد اللحوم', nameEn: 'Meat Supplier', currencyId: 'cur-sar', paymentTerms: 'Net 30', isActive: true },
-  { id: 'sup-2', code: 'SUP-002', nameAr: 'مورد الخضار', nameEn: 'Veggie Supplier', currencyId: 'cur-usd', paymentTerms: 'Cash', isActive: true }
+  { id: 'sup-1', code: 'SUP-001', name: 'Meat Supplier', currencyId: 'cur-sar', paymentTerms: 'Net 30', isActive: true },
+  { id: 'sup-2', code: 'SUP-002', name: 'Veggie Supplier', currencyId: 'cur-usd', paymentTerms: 'Cash', isActive: true }
 ];
 
 export const initialCategories: Category[] = [
-  { id: 'CAT-001', code: 'CAT-001', nameAr: 'الأغذية والمشروبات', nameEn: 'Food & Beverage', isReferenced: true },
-  { id: 'CAT-002', code: 'CAT-002', nameAr: 'معدات المطبخ', nameEn: 'Kitchen Equipment', isReferenced: true }
+  { id: 'CAT-001', code: 'CAT-001', name: 'Food & Beverage', isReferenced: true },
+  { id: 'CAT-002', code: 'CAT-002', name: 'Kitchen Equipment', isReferenced: true }
 ];
 
 export const initialUoMs: UoM[] = [
-  { id: 'uom-kg', code: 'KG', nameAr: 'كيلوجرام', nameEn: 'Kilogram', isActive: true, createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'uom-ctn', code: 'CTN', nameAr: 'كرتون', nameEn: 'Carton', isActive: true, createdAt: '2026-01-01T00:00:00Z' }
+  { id: 'uom-kg', code: 'KG', name: 'Kilogram', isActive: true, createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'uom-ctn', code: 'CTN', name: 'Carton', isActive: true, createdAt: '2026-01-01T00:00:00Z' }
 ];
 
 export const initialItems: Item[] = [
   { 
-    id: 'item-1', code: 'ITM-001', barcode: '000001', nameAr: 'لحم بقر', nameEn: 'Beef', categoryId: 'CAT-001', 
-    primaryUom: { id: 'uom-kg', code: 'KG', nameAr: 'كيلوجرام', nameEn: 'Kilogram', isActive: true, createdAt: '2026-01-01T00:00:00Z' }, 
+    id: 'item-1', code: 'ITM-001', barcode: '000001', name: 'Beef', categoryId: 'CAT-001', 
+    primaryUom: { id: 'uom-kg', code: 'KG', name: 'Kilogram', isActive: true, createdAt: '2026-01-01T00:00:00Z' }, 
     uomConversions: [], trackLots: true, minStockLevel: 50, reorderPoint: 100, isActive: true 
   },
   { 
-    id: 'item-2', code: 'ITM-002', barcode: '000002', nameAr: 'دجاج', nameEn: 'Chicken', categoryId: 'CAT-001', 
-    primaryUom: { id: 'uom-ctn', code: 'CTN', nameAr: 'كرتون', nameEn: 'Carton', isActive: true, createdAt: '2026-01-01T00:00:00Z' }, 
+    id: 'item-2', code: 'ITM-002', barcode: '000002', name: 'Chicken', categoryId: 'CAT-001', 
+    primaryUom: { id: 'uom-ctn', code: 'CTN', name: 'Carton', isActive: true, createdAt: '2026-01-01T00:00:00Z' }, 
     uomConversions: [], trackLots: true, minStockLevel: 20, reorderPoint: 50, isActive: true 
   }
 ];
@@ -54,8 +54,8 @@ export const initialBarcodes: Barcode[] = [
 ];
 
 export const initialCurrencies: Currency[] = [
-  { id: 'cur-sar', code: 'SAR', nameAr: 'ريال سعودي', nameEn: 'Saudi Riyal', symbol: 'ر.س', isBaseCurrency: true, isActive: true, createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'cur-usd', code: 'USD', nameAr: 'دولار أمريكي', nameEn: 'US Dollar', symbol: '$', isBaseCurrency: false, isActive: true, createdAt: '2026-01-01T00:00:00Z' }
+  { id: 'cur-sar', code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س', isBaseCurrency: true, isActive: true, createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'cur-usd', code: 'USD', name: 'US Dollar', symbol: '$', isBaseCurrency: false, isActive: true, createdAt: '2026-01-01T00:00:00Z' }
 ];
 
 export const initialFXRates: FXRate[] = [
@@ -63,12 +63,12 @@ export const initialFXRates: FXRate[] = [
 ];
 
 export const initialVarianceReasons: VarianceReason[] = [
-  { id: 'vr-damage', code: 'DAMAGE', nameAr: 'تلف', nameEn: 'Damage', isActive: true },
-  { id: 'vr-expiry', code: 'EXPIRY', nameAr: 'انتهاء صلاحية', nameEn: 'Expiry', isActive: true },
-  { id: 'vr-theft', code: 'THEFT', nameAr: 'سرقة', nameEn: 'Theft', isActive: true },
-  { id: 'vr-counting-error', code: 'COUNTING_ERROR', nameAr: 'خطأ في العد', nameEn: 'Counting Error', isActive: true },
-  { id: 'vr-correction', code: 'CORRECTION', nameAr: 'تصحيح', nameEn: 'Correction', isActive: true },
-  { id: 'vr-other', code: 'OTHER', nameAr: 'أخرى', nameEn: 'Other', isActive: true },
+  { id: 'vr-damage', code: 'DAMAGE', name: 'Damage', isActive: true },
+  { id: 'vr-expiry', code: 'EXPIRY', name: 'Expiry', isActive: true },
+  { id: 'vr-theft', code: 'THEFT', name: 'Theft', isActive: true },
+  { id: 'vr-counting-error', code: 'COUNTING_ERROR', name: 'Counting Error', isActive: true },
+  { id: 'vr-correction', code: 'CORRECTION', name: 'Correction', isActive: true },
+  { id: 'vr-other', code: 'OTHER', name: 'Other', isActive: true },
 ];
 
 export const initialLots: Lot[] = [

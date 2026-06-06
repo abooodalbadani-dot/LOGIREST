@@ -33,8 +33,8 @@ export class UomService {
       meta: {
         total: data.length,
         page: 1,
-        page_size: data.length || 1,
-        total_pages: 1,
+        pageSize: data.length || 1,
+        totalPages: 1,
       },
     };
   }

@@ -42,6 +42,6 @@ def find_premature_closure(file_path):
 
 if __name__ == "__main__":
     print("Checking en.json...")
-    find_premature_closure(r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json")
+    find_premature_closure(r"e:\kitchen-store-inventory-system\apps\web\messages\en.json")
     print("\nChecking ar.json...")
-    find_premature_closure(r"e:\Kitchen‑Store Inventory System\apps\web\messages\ar.json")
+    find_premature_closure(r"e:\kitchen-store-inventory-system\apps\web\messages\ar.json")

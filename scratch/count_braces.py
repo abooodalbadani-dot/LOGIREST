@@ -1,4 +1,4 @@
-en_path = r"e:\Kitchen‑Store Inventory System\apps\web\messages\en.json"
+en_path = r"e:\kitchen-store-inventory-system\apps\web\messages\en.json"
 
 with open(en_path, 'r', encoding='utf-8') as f:
     content = f.read()

@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-REPO_ROOT = Path(r"e:\Kitchen‑Store Inventory System")
+REPO_ROOT = Path(r"e:\kitchen-store-inventory-system")
 FORM_FILE = REPO_ROOT / "apps" / "web" / "src" / "features" / "purchasing" / "components" / "purchase-request-form.tsx"
 
 RE_ROUTER_PUSH_TEMPLATE = re.compile(r'''(?:router|useRouter)\s*(?:\.|\.\s*)push\s*\(\s*[`"']([^"`']*?\$\{[^}]+?\}[^"`']*?)[`"']''', re.IGNORECASE)

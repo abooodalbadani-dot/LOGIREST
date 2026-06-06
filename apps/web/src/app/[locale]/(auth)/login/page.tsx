@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import LocaleSwitcher from '@/components/shared/LocaleSwitcher';
+import { Button } from '@/components/ui/button';
+import { onFormError } from '@/hooks/useFormError';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -191,7 +193,7 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+                    <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-3">
                         {/* Operator ID Input */}
                         <div className="space-y-1.5">
                             <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-black/80 dark:text-white/80 ms-1 flex items-center gap-2">
@@ -273,22 +275,16 @@ export default function LoginPage() {
                             </div>
                         )}
 
-                        <button
+                        <Button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="w-full h-9 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan dark:hover:bg-operational-cyan hover:text-white transition-all duration-300 rounded relative overflow-hidden group/btn shadow-[0_4px_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)] disabled:opacity-50 mt-0.5"
+                            isLoading={isSubmitting}
+                            className="w-full h-9 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan dark:hover:bg-operational-cyan hover:text-white transition-all duration-300 rounded relative overflow-hidden group/btn shadow-[0_4px_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(255,255,255,0.1)] mt-0.5"
                         >
                             <span className="relative flex items-center justify-center gap-1.5 uppercase tracking-[0.15em] text-[10px]">
-                                {isSubmitting ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                    <>
-                                        <LogIn className="w-3 h-3" />
-                                        {t('login.initialize_session')}
-                                    </>
-                                )}
+                                <LogIn className="w-3 h-3" />
+                                {t('login.initialize_session')}
                             </span>
-                        </button>
+                        </Button>
                     </form>
 
                     {/* Quick-Switch Operator Portal (Demo Helper) */}

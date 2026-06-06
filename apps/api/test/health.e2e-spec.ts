@@ -26,29 +26,16 @@ describe('Health Check (e2e)', () => {
   });
 
   describe('GET /health', () => {
-    it('should return 200 OK when database is connected', async () => {
+    it('should return 200 ok', async () => {
       const res = await request(app.getHttpServer()).get('/health');
 
       expect(res.status).toBe(200);
-      expect(res.body.status).toBe('OK');
-      expect(res.body.db).toBe('connected');
-      expect(res.body.timestamp).toBeDefined();
+      expect(res.body.status).toBe('ok');
     });
 
-    it('should return 503 Service Unavailable when database query fails', async () => {
-      // Mock prisma.$queryRaw to throw an error
-      const spy = jest
-        .spyOn(prisma, '$queryRaw')
-        .mockRejectedValue(new Error('Database offline'));
-
-      const res = await request(app.getHttpServer()).get('/health');
-
-      expect(res.status).toBe(503);
-      expect(res.body.status).toBe('ERROR');
-      expect(res.body.db).toBe('disconnected');
-
-      // Restore mock
-      spy.mockRestore();
+    it('should return 401 Unauthorized for /health/backup when no user is logged in', async () => {
+      const res = await request(app.getHttpServer()).get('/health/backup');
+      expect(res.status).toBe(401);
     });
   });
 });

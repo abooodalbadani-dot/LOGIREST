@@ -26,6 +26,7 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import type { Request } from 'express';
 
 function mapKitchenRequestDetail(kr: Record<string, unknown>) {
@@ -38,12 +39,12 @@ function mapKitchenRequestDetail(kr: Record<string, unknown>) {
     const unitOfMeasure = it?.unitOfMeasure as Record<string, unknown> | null;
     return {
       id: item.id as string,
-      item_id: item.itemId as string,
-      item_name: (it?.name as string) || '',
+      itemId: item.itemId as string,
+      itemName: (it?.name as string) || '',
       uom: (unitOfMeasure?.code as string) || 'PCS',
       quantity: Number(item.quantityRequested),
       notes: '',
-      fulfilled_quantity: Number(item.quantityFulfilled),
+      fulfilledQuantity: Number(item.quantityFulfilled),
     };
   });
 
@@ -56,23 +57,24 @@ function mapKitchenRequestDetail(kr: Record<string, unknown>) {
 
   return {
     id: kr.id as string,
-    request_number: kr.requestNumber as string,
-    department_id: kr.departmentId as string,
-    department_name: (department?.name as string) || '',
-    warehouse_id: kr.warehouseId as string,
-    warehouse_name: (warehouse?.name as string) || '',
+    requestNumber: kr.requestNumber as string,
+    departmentId: kr.departmentId as string,
+    departmentName: (department?.name as string) || '',
+    warehouseId: kr.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     status: kr.status as string,
     notes: (kr.notes as string) || '',
-    requested_by: 'System',
-    requested_at: createdAtIso,
-    created_at: createdAtIso,
-    updated_at: createdAtIso,
+    requestedBy: 'System',
+    requestedAt: createdAtIso,
+    createdAt: createdAtIso,
+    updatedAt: createdAtIso,
     version: kr.version as number,
     items,
   };
 }
 
 @Controller('operations/kitchen-requests')
+@UseGuards(JwtAuthGuard)
 @ApiSecureController()
 export class KitchenRequestsController {
   constructor(

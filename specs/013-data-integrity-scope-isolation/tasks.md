@@ -16,7 +16,7 @@
 ## Path Conventions
 
 - Monorepo web app: `apps/web/src/`
-- All paths relative to repository root: `E:\Kitchen‑Store Inventory System\`
+- All paths relative to repository root: `E:\kitchen-store-inventory-system\`
 
 ---
 

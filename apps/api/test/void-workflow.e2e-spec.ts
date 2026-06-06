@@ -49,7 +49,8 @@ jest.mock('ioredis', () => {
     emit: jest.fn(),
   };
   const mockRedisClass = jest.fn().mockImplementation(() => mockRedisInstance);
-  (mockRedisClass as any).default = mockRedisClass;
+  (mockRedisClass as unknown as Record<string, unknown>).default =
+    mockRedisClass;
   return mockRedisClass;
 });
 
@@ -191,7 +192,7 @@ describe('Void Workflow (e2e)', () => {
     currencyId = currency.id;
 
     const email = `admin-void-${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const admin = await prisma.user.create({
       data: {
         email,

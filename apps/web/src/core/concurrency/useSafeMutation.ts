@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
-
+import { toast } from 'sonner';
 import { ConflictError } from '@/lib/api/ConflictError';
 
 /**
@@ -11,6 +11,9 @@ import { ConflictError } from '@/lib/api/ConflictError';
 export interface AxiosLikeError {
   response?: {
     status: number;
+    data?: {
+      message?: string;
+    };
   };
   name?: string;
   code?: string;
@@ -61,6 +64,17 @@ export function useSafeMutation<
           onConflict();
           return;
         }
+      }
+
+      // Automatically surface error message via toast if it's not a conflict or aborted
+      const isAbortError = 
+        error.name === 'AbortError' || 
+        error.message === 'Aborted' || 
+        error.message === 'AbortError';
+
+      if (!isConflict && !isAbortError) {
+        const message = error.message || error.response?.data?.message || 'Operation failed / فشلت العملية';
+        toast.error(message);
       }
 
       // 2. Forward to original error handler for all other cases

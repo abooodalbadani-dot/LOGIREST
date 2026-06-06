@@ -113,8 +113,17 @@ export class ScopeInterceptor implements NestInterceptor {
           },
         },
       });
-    } catch (e) {
-      // Handle potential DB query errors for invalid formats by keeping scope as null
+    } catch (e: any) {
+      this.logger.error(
+        `Database query failed in ScopeInterceptor: ${e.message}`,
+        e.stack,
+      );
+      const isOutage =
+        (e.code && String(e.code).startsWith('P1')) ||
+        (e.message && /connection/i.test(e.message));
+      if (isOutage && !isExempt) {
+        throw e;
+      }
     }
 
     // If scope is not found or branchId does not match

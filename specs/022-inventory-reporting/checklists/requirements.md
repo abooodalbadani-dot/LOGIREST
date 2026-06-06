@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning  
 **Created**: 2026-05-23  
-**Feature**: [spec.md](file:///e:/Kitchen‑Store Inventory System/specs/022-inventory-reporting/spec.md)  
+**Feature**: [spec.md](file:///e:/kitchen-store-inventory-system/specs/022-inventory-reporting/spec.md)  
 
 ## Content Quality
 

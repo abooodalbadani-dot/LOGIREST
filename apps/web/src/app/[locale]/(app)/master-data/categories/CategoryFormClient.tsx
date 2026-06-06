@@ -29,6 +29,7 @@ import { useState } from 'react';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props { 
   id: string | null; 
@@ -54,14 +55,14 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   const { register, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
-    defaultValues: { code: '', nameAr: '', nameEn: '', version: undefined },
+    defaultValues: { code: '', name: '', version: undefined },
     disabled: isReadOnly,
   });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
   
   useEffect(() => {
-    if (data) reset({ code: data.code, nameAr: data.nameAr, nameEn: data.nameEn, version: data.version });
+    if (data) reset({ code: data.code, name: data.name, version: data.version });
   }, [data, reset]);
 
   // 1. Loading State
@@ -99,8 +100,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
           version: values.version,
         };
         if (!data?.isReferenced) {
-          updateValues.nameAr = values.nameAr;
-          updateValues.nameEn = values.nameEn;
+          updateValues.name = values.name;
         }
         await update.mutateAsync({ id, values: updateValues as CategoryFormValues, signal: abortController.signal });
       } else {
@@ -113,12 +113,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Category form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -218,42 +213,21 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
                 </p>
               </div>
 
-              {/* Name EN */}
-              <div className="space-y-2">
-                <Label htmlFor="cat-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                  {tc('fields.name_en')}
+              {/* Name Field */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="cat-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
+                  {tc('fields.name') || 'Name'}
                 </Label>
                 <Input
-                  id="cat-name-en"
-                  dir="ltr"
-                  {...register('nameEn')}
+                  id="cat-name"
+                  {...register('name')}
                   readOnly={isReadOnly || data?.isReferenced === true}
                   className={`font-semibold ${data?.isReferenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
-                  placeholder={tc('placeholders.name_en')}
+                  placeholder={tc('placeholders.name') || 'Name'}
                 />
-                {errors.nameEn && (
+                {errors.name && (
                   <p className="text-label-xs font-semibold text-status-error uppercase">
-                    {errors.nameEn.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Name AR */}
-              <div className="space-y-2">
-                <Label htmlFor="cat-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                  {tc('fields.name_ar')}
-                </Label>
-                <Input
-                  id="cat-name-ar"
-                  dir="rtl"
-                  {...register('nameAr')}
-                  readOnly={isReadOnly || data?.isReferenced === true}
-                  className={`font-semibold text-end ${data?.isReferenced ? 'bg-surface-container-high/50 cursor-not-allowed border-dashed' : ''}`}
-                  placeholder={tc('placeholders.name_ar')}
-                />
-                {errors.nameAr && (
-                  <p className="text-label-xs font-semibold text-status-error uppercase">
-                    {errors.nameAr.message}
+                    {errors.name.message}
                   </p>
                 )}
               </div>

@@ -1,7 +1,7 @@
 import os
 import re
 
-src_dir = r"e:\Kitchen‑Store Inventory System\apps\web\src"
+src_dir = r"e:\kitchen-store-inventory-system\apps\web\src"
 calls = []
 
 # Regex to match apiClient.<method>(...)
@@ -42,7 +42,7 @@ for root, dirs, files in os.walk(src_dir):
                     "text": call_text.strip()
                 })
 
-out_path = r"e:\Kitchen‑Store Inventory System\scratch\api_calls.txt"
+out_path = r"e:\kitchen-store-inventory-system\scratch\api_calls.txt"
 with open(out_path, "w", encoding="utf-8") as f:
     f.write(f"Found {len(calls)} apiClient calls:\n")
     for c in sorted(calls, key=lambda x: (x["file"], x["line"])):

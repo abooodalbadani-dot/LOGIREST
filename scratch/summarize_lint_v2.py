@@ -6,7 +6,7 @@ import os
 # Force UTF-8 for output
 sys.stdout.reconfigure(encoding='utf-8')
 
-report_path = r'e:\Kitchen‑Store Inventory System\apps\web\lint-report.json'
+report_path = r'e:\kitchen-store-inventory-system\apps\web\lint-report.json'
 
 if not os.path.exists(report_path):
     print(f"File not found: {report_path}")
@@ -26,7 +26,7 @@ for file_entry in data:
             rule_id = msg.get('ruleId', 'unknown')
             file_path = file_entry.get('filePath', 'unknown')
             # Make path relative to workspace root for readability
-            rel_path = os.path.relpath(file_path, r'e:\Kitchen‑Store Inventory System')
+            rel_path = os.path.relpath(file_path, r'e:\kitchen-store-inventory-system')
             rule_files[rule_id].add(rel_path)
 
 print("Detailed Error Summary:")

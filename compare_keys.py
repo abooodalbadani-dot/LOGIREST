@@ -14,8 +14,8 @@ def compare_json(file1, file2, section):
     
     return missing_in_2, missing_in_1
 
-en_path = 'e:/Kitchen‑Store Inventory System/apps/web/messages/en.json'
-ar_path = 'e:/Kitchen‑Store Inventory System/apps/web/messages/ar.json'
+en_path = 'e:/kitchen-store-inventory-system/apps/web/messages/en.json'
+ar_path = 'e:/kitchen-store-inventory-system/apps/web/messages/ar.json'
 
 
 for section in ['common', 'dashboard', 'inventory', 'operational', 'admin']:

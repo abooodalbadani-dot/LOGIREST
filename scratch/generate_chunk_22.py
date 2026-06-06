@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 
 def main():
-    root_dir = Path("e:/Kitchen‑Store Inventory System")
-    base_dir = Path("e:/Kitchen‑Store Inventory System/apps/web")
+    root_dir = Path("e:/kitchen-store-inventory-system")
+    base_dir = Path("e:/kitchen-store-inventory-system/apps/web")
     graphify_out = root_dir / "graphify-out"
     
     ast_path = graphify_out / ".graphify_ast.json"

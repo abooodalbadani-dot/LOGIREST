@@ -25,8 +25,8 @@ def compare_keys(en_path, ar_path, section):
     walk(en_section, ar_section)
     return missing_in_ar
 
-en_file = 'e:/Kitchen‑Store Inventory System/messages/en.json'
-ar_file = 'e:/Kitchen‑Store Inventory System/messages/ar.json'
+en_file = 'e:/kitchen-store-inventory-system/messages/en.json'
+ar_file = 'e:/kitchen-store-inventory-system/messages/ar.json'
 
 missing = compare_keys(en_file, ar_file, 'procurement')
 print("Missing keys in procurement section of ar.json:")

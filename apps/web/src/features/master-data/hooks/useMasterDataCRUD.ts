@@ -16,14 +16,14 @@ export function useMasterDataList<T>(
 ) {
   const params = new URLSearchParams(filters as Record<string, string>);
   const { activeScope } = useAuth();
-  const isUnscoped = ['branches', 'warehouses', 'currencies'].includes(entity);
+  const isUnscoped = ['branches', 'warehouses', 'currencies', 'items'].includes(entity);
 
   return useQuery({ 
     queryKey: [entity, filters], 
     queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, paginatedSchema(schema), { signal }), 
     staleTime: 60_000,
     ...options,
-    enabled: options?.enabled !== undefined ? options.enabled : (isUnscoped ? true : !!activeScope.warehouseId)
+    enabled: options?.enabled !== undefined ? options.enabled : (isUnscoped ? true : !!activeScope?.warehouseId)
   });
 }
 
@@ -34,39 +34,39 @@ export function useMasterDataItem<T>(
   options?: { enabled?: boolean }
 ) {
   const { activeScope } = useAuth();
-  const isUnscoped = ['branches', 'warehouses', 'currencies'].includes(entity);
+  const isUnscoped = ['branches', 'warehouses', 'currencies', 'items'].includes(entity);
 
   return useQuery({ 
     queryKey: [entity, id], 
     queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, schema, { signal }), 
     ...options,
-    enabled: options?.enabled !== undefined ? options.enabled : (isUnscoped ? !!id : (!!id && !!activeScope.warehouseId))
+    enabled: options?.enabled !== undefined ? options.enabled : (isUnscoped ? !!id : (!!id && !!activeScope?.warehouseId))
   });
 }
 
-export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>) {
+export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>, options?: { messages?: { successMessage?: string; errorMessage?: string } }) {
   const qc = useQueryClient();
   return useMutation({ 
     mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, toSnakeCase(body), { signal }), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
-      toast.success('Resource created successfully');
+      toast.success(options?.messages?.successMessage || 'Resource created successfully');
     },
-    onError: () => toast.error('Failed to create resource')
+    onError: () => toast.error(options?.messages?.errorMessage || 'Failed to create resource')
   });
 }
 
-export function useMasterDataUpdate<T>(entity: string, schema: ZodSchema<T>, options?: { onConflict?: () => void }) {
+export function useMasterDataUpdate<T>(entity: string, schema: ZodSchema<T>, options?: { onConflict?: () => void, messages?: { successMessage?: string; errorMessage?: string } }) {
   const qc = useQueryClient();
   return useSafeMutation({ 
     onConflict: options?.onConflict,
     mutationFn: ({ id, body, signal }: { id: string; body: unknown; signal?: AbortSignal }) => apiClient.put(`/${entity}/${id}`, schema, toSnakeCase(body), { signal }), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
-      toast.success('Resource updated successfully');
+      toast.success(options?.messages?.successMessage || 'Resource updated successfully');
     },
     onError: () => {
-      toast.error('Failed to update resource');
+      toast.error(options?.messages?.errorMessage || 'Failed to update resource');
     }
   });
 }

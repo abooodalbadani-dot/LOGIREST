@@ -7,18 +7,16 @@ import { GRNDetailSchema } from './useGRN';
 
 const UpdateGRNPayloadSchema = z.object({
   version: z.number(),
-  supplier_id: z.string(),
-  currency_id: z.string(),
-  warehouse_id: z.string(),
+  poId: z.string().optional(),
+  currencyId: z.string().optional(),
+  warehouseId: z.string().optional(),
   notes: z.string().optional(),
   lines: z.array(z.object({
-    id: z.string().optional(), // Existing line ID if updating
-    item_id: z.string(),
-    lot_id: z.string().nullable(),
-    qty: z.number().positive(),
-    received_qty: z.number().positive(),
-    uom_id: z.string(),
-    unit_cost_foreign: z.number().nonnegative(),
+    id: z.string().optional(),
+    itemId: z.string(),
+    lotId: z.string().nullable().optional(),
+    receivedQty: z.number().positive(),
+    unitCostForeign: z.number().nonnegative(),
   }))
 });
 

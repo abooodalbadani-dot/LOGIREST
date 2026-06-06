@@ -124,8 +124,8 @@ export class KitchenRequestsService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }
@@ -211,21 +211,25 @@ export class KitchenRequestsService {
             fulfilledQty: Number(i.quantityRequested),
           }));
 
+      const itemIds = linesToCheck.map((l) => l.itemId);
+      const whItems = await tx.warehouseItem.findMany({
+        where: {
+          warehouseId: kr.warehouseId,
+          itemId: { in: itemIds },
+        },
+        select: { itemId: true, qtyOnHand: true, qtyAllocated: true },
+      });
+
+      const whItemMap = new Map(
+        whItems.map((wi) => [wi.itemId, Number(wi.qtyOnHand) - Number(wi.qtyAllocated)]),
+      );
+
       for (const lineInput of linesToCheck) {
-        const whItem = await tx.warehouseItem.findUnique({
-          where: {
-            warehouseId_itemId: {
-              warehouseId: kr.warehouseId,
-              itemId: lineInput.itemId,
-            },
-          },
-          select: { qtyOnHand: true },
-        });
-        const available = Number(whItem?.qtyOnHand ?? 0);
+        const available = whItemMap.get(lineInput.itemId) ?? 0;
         if (available < lineInput.fulfilledQty) {
           throw new BadRequestException(
             `Insufficient stock: cannot fulfill item ${lineInput.itemId}. ` +
-              `Requested: ${lineInput.fulfilledQty}, Available: ${available}.`,
+              `Requested: ${lineInput.fulfilledQty}, Available (net of allocations): ${available}.`,
           );
         }
       }

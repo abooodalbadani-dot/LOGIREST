@@ -64,7 +64,7 @@ describe('Idempotency Subsystem E2E', () => {
     itemId = item.id;
 
     const email = `${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const user = await prisma.user.create({
       data: {
         email,
@@ -82,7 +82,7 @@ describe('Idempotency Subsystem E2E', () => {
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email, password: 'password123' });
+      .send({ email, password: 'Password123!' });
     procOfficerToken = loginRes.body.token || loginRes.body.accessToken;
   });
 
@@ -157,7 +157,7 @@ describe('Idempotency Subsystem E2E', () => {
 
   it('should return a 400 Bad Request when x-idempotency-key is missing', async () => {
     const res = await request(app.getHttpServer())
-      .post('/api/v1/purchase-requests')
+      .post('/api/v1/procurement/purchase-requests')
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -173,7 +173,7 @@ describe('Idempotency Subsystem E2E', () => {
 
   it('should return a 400 Bad Request when x-idempotency-key format is invalid', async () => {
     const res = await request(app.getHttpServer())
-      .post('/api/v1/purchase-requests')
+      .post('/api/v1/procurement/purchase-requests')
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -198,14 +198,14 @@ describe('Idempotency Subsystem E2E', () => {
 
     const [res1, res2] = await Promise.all([
       request(app.getHttpServer())
-        .post('/api/v1/purchase-requests')
+        .post('/api/v1/procurement/purchase-requests')
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
         .set('x-idempotency-key', key)
         .send(payload),
       request(app.getHttpServer())
-        .post('/api/v1/purchase-requests')
+        .post('/api/v1/procurement/purchase-requests')
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -237,7 +237,7 @@ describe('Idempotency Subsystem E2E', () => {
 
     // First request
     const res1 = await request(app.getHttpServer())
-      .post('/api/v1/purchase-requests')
+      .post('/api/v1/procurement/purchase-requests')
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)
@@ -249,7 +249,7 @@ describe('Idempotency Subsystem E2E', () => {
 
     // Second request (sequentially)
     const res2 = await request(app.getHttpServer())
-      .post('/api/v1/purchase-requests')
+      .post('/api/v1/procurement/purchase-requests')
       .set('Authorization', `Bearer ${procOfficerToken}`)
       .set('x-warehouse-id', warehouseId)
       .set('x-branch-id', branchId)

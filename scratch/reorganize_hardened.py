@@ -7,7 +7,7 @@ if sys.platform == 'win32':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-base = r"e:\Kitchen‑Store Inventory System\src\app\[locale]\(app)"
+base = r"e:\kitchen-store-inventory-system\src\app\[locale]\(app)"
 
 to_rename = {
     "(admin)": "admin",

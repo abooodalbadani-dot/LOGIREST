@@ -22,7 +22,7 @@ def _extract_router_refs_from_file(filepath: Path, results: dict):
     if refs:
         results[str(filepath)] = refs
 
-filepath = Path(r'e:\Kitchen‑Store Inventory System\apps\web\src\features\purchasing\components\purchase-request-form.tsx')
+filepath = Path(r'e:\kitchen-store-inventory-system\apps\web\src\features\purchasing\components\purchase-request-form.tsx')
 results = {}
 _extract_router_refs_from_file(filepath, results)
 

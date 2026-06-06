@@ -1,6 +1,6 @@
 # Production Readiness Verification Plan
 
-> **System:** Kitchen‑Store Inventory System  
+> **System:** kitchen-store-inventory-system  
 > **Context:** Multi-warehouse inventory management with procurement, operations, stocktake, and reporting  
 > **Goal:** Prove the system works under production conditions  
 > **Methodology:** Evidence-based verification — each criterion must produce a signed-off artifact  

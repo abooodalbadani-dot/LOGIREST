@@ -64,8 +64,8 @@ def analyze_diffs(dir_backup, dir_active):
     return diff_report
 
 if __name__ == "__main__":
-    backup_dir = r"E:\Kitchen‑Store Inventory System\scratch\app_backup"
-    active_dir = r"E:\Kitchen‑Store Inventory System\apps\web\src\app"
+    backup_dir = r"E:\kitchen-store-inventory-system\scratch\app_backup"
+    active_dir = r"E:\kitchen-store-inventory-system\apps\web\src\app"
     
     report = analyze_diffs(backup_dir, active_dir)
     print(f"Total differing files: {len(report)}")

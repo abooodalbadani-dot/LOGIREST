@@ -7,18 +7,18 @@ import { toast } from 'sonner';
 import { PODetailSchema } from './usePO';
 
 const CreatePOPayloadSchema = z.object({
- pr_id: z.string().optional(),
- target_warehouse_id: z.string().optional(),
- supplier_id: z.string(),
- currency_code: z.string(),
- exchange_rate: z.number(),
- expected_date: z.string(),
+ prId: z.string().optional(),
+ targetWarehouseId: z.string().optional(),
+ supplierId: z.string(),
+ currencyId: z.string(),
+ exchangeRate: z.number(),
+ expectedDate: z.string(),
  notes: z.string().optional().or(z.literal('')),
  lines: z.array(z.object({
- item_id: z.string(),
+ itemId: z.string(),
  quantity: z.number().positive(),
- unit_price: z.number().nonnegative(),
- uom_id: z.string(),
+ unitPrice: z.number().nonnegative(),
+ uomId: z.string(),
  notes: z.string().optional().or(z.literal(''))
  }))
 });
@@ -36,9 +36,8 @@ onSuccess: (data) => {
   queryClient.setQueryData(['purchase-orders', data.id], data);
   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
   },
-  onError: (error: unknown) => {
-    const message = error instanceof Error ? error.message : 'Operation failed';
-    toast.error(message);
-  },
+    onError: (error: unknown) => {
+      // Handled globally by useSafeMutation
+    },
   });
 }

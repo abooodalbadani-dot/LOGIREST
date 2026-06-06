@@ -3,7 +3,8 @@
 import { usePathname, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { Layers, Database, History, Scan } from 'lucide-react';
+import { Layers, Database, History, Scan, Loader2 } from 'lucide-react';
+import { useAuth } from '@/providers/AuthProvider';
 
 export default function InventoryLayout({
  children,
@@ -12,6 +13,28 @@ export default function InventoryLayout({
 }) {
  const pathname = usePathname();
  const t = useTranslations('operational.inventory.tabs');
+ const { user, activeScope, isLoading } = useAuth();
+
+ if (isLoading) {
+  return (
+   <div className="flex h-screen items-center justify-center">
+    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+   </div>
+  );
+ }
+
+ if (!user) {
+  return null;
+ }
+
+ // Ensure warehouse context is resolved before rendering inventory pages
+ if (!activeScope?.warehouseId) {
+  return (
+   <div className="flex h-screen items-center justify-center">
+    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+   </div>
+  );
+ }
 
  const tabs = [
  { name: t('balance'), href: `/inventory/balance`, icon: Layers },

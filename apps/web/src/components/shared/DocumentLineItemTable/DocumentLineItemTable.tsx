@@ -9,7 +9,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 export interface LineItem {
  id: string;
- item: { id: string; code: string; nameAr: string; nameEn: string; primaryUom: { code: string } };
+ item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { code: string } };
  lot?: { lotNumber: string; expiryDate: string | null } | null;
  qty: number;
  uomId: string;
@@ -170,7 +170,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                     <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
                       <div className="flex flex-col gap-0.5">
                         <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
-                          {locale === 'ar' ? line.item.nameAr : line.item.nameEn}
+                          {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                         </span>
                         <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
                           {line.item.code}
@@ -247,7 +247,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                 <td className={cn(dense ? "px-4 py-1.5" : "px-8 py-5")}>
                   <div className="flex flex-col gap-0.5">
                     <span className={cn("font-bold text-foreground group-hover:text-operational-cyan transition-colors", dense ? "text-xs" : "text-body-md")}>
-                      {locale === 'ar' ? line.item.nameAr : line.item.nameEn}
+                      {locale === 'ar' ? (line.item.nameAr || line.item.name || line.item.nameEn || '') : (line.item.nameEn || line.item.name || line.item.nameAr || '')}
                     </span>
                     <span className={cn("font-mono font-semibold text-muted-foreground/40 tracking-wider uppercase", dense ? "text-[9px]" : "text-[10px]")} dir="ltr">
                       {line.item.code}

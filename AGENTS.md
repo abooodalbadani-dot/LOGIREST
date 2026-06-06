@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\Kitchen‑Store Inventory System\specs\047-hardening-e2e-validation\plan.md
+E:\kitchen-store-inventory-system\specs\047-hardening-e2e-validation\plan.md
 <!-- SPECKIT END -->
 
 
@@ -57,7 +57,7 @@ CRITICAL RULE:
 ## UI DESIGN
 
 - Always follow the UI design system when creating or reviewing components or pages.
-- Design System: @DESIGN.md , E:\Kitchen‑Store Inventory System\.impeccable\design.json
+- Design System: @DESIGN.md , E:\kitchen-store-inventory-system\.impeccable\design.json
 
 ## DATA INTEGRITY & STATE
 - NEVER mutate database records directly. Always follow the state machine transitions defined in the project.

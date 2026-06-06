@@ -1,5 +1,5 @@
 
-const en = require('e:/Kitchen‑Store Inventory System/messages/en.json');
+const en = require('e:/kitchen-store-inventory-system/messages/en.json');
 
 function get(obj, path) {
   return path.split('.').reduce((acc, part) => acc && acc[part], obj);

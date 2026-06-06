@@ -1,6 +1,6 @@
 # Implementation Plan: i18n Full Parity & Key Hardening (Phase 2)
 
-**Branch**: `004-i18n-parity-hardening` | **Date**: 2026-05-10 | **Spec**: [spec.md](file:///e:/Kitchen‑Store Inventory System/specs/004-i18n-parity-hardening/spec.md)
+**Branch**: `004-i18n-parity-hardening` | **Date**: 2026-05-10 | **Spec**: [spec.md](file:///e:/kitchen-store-inventory-system/specs/004-i18n-parity-hardening/spec.md)
 **Input**: Feature specification from `/specs/004-i18n-parity-hardening/spec.md`
 
 ## Summary

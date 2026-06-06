@@ -15,7 +15,7 @@
 ## Setup
 
 ```bash
-cd "e:\Kitchen‑Store Inventory System"
+cd "e:\kitchen-store-inventory-system"
 git checkout 012-core-workflow-fixes
 npm install
 ```

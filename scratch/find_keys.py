@@ -1,6 +1,6 @@
 import re
 
-with open("e:/Kitchen‑Store Inventory System/apps/web/messages/en.json", 'r', encoding='utf-8') as f:
+with open("e:/kitchen-store-inventory-system/apps/web/messages/en.json", 'r', encoding='utf-8') as f:
     for i, line in enumerate(f):
         if re.match(r'^\s+"[a-z_]+": \{', line):
             # Check indentation

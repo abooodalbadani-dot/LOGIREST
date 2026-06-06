@@ -161,8 +161,8 @@ export class AdjustmentsService {
       meta: {
         total,
         page,
-        page_size: limit,
-        total_pages: Math.ceil(total / limit) || 1,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }
@@ -173,20 +173,25 @@ export class AdjustmentsService {
       where.warehouseId = warehouseId;
     }
 
-    const adjustments = await this.prisma.adjustment.findMany({
-      where,
-      include: {
-        lines: true,
-      },
-    });
-
-    const total = adjustments.length;
-    const pending = adjustments.filter(
-      (a) => a.status === 'DRAFT' || a.status === 'SUBMITTED',
-    ).length;
-    const criticalLosses = adjustments.filter((a) =>
-      a.lines.some((l) => l.reason === 'DAMAGE' || l.reason === 'THEFT'),
-    ).length;
+    const [total, pending, criticalLosses] = await Promise.all([
+      this.prisma.adjustment.count({ where }),
+      this.prisma.adjustment.count({
+        where: {
+          ...where,
+          status: { in: ['DRAFT', 'SUBMITTED'] },
+        },
+      }),
+      this.prisma.adjustment.count({
+        where: {
+          ...where,
+          lines: {
+            some: {
+              reason: { in: [AdjustmentReason.DAMAGE, AdjustmentReason.THEFT] },
+            },
+          },
+        },
+      }),
+    ]);
 
     return {
       total,
@@ -257,10 +262,10 @@ export class AdjustmentsService {
 
       if (body.lines) {
         for (const line of body.lines) {
-          if (
+          const isIncrease =
             line.direction === 'INCREASE' ||
-            line.direction === ('IN' as any)
-          ) {
+            (line.direction as string) === 'IN';
+          if (isIncrease) {
             if (
               line.unitCost === undefined ||
               line.unitCost === null ||
@@ -277,6 +282,14 @@ export class AdjustmentsService {
         });
       }
 
+      const reason =
+        body.reason &&
+        Object.values(AdjustmentReason).includes(
+          body.reason as AdjustmentReason,
+        )
+          ? (body.reason as AdjustmentReason)
+          : AdjustmentReason.CORRECTION;
+
       return tx.adjustment.update({
         where: { id },
         data: {
@@ -284,14 +297,21 @@ export class AdjustmentsService {
           version: { increment: 1 },
           ...(body.lines && {
             lines: {
-              create: body.lines.map((line) => ({
-                itemId: line.itemId,
-                lotId: line.lotId || null,
-                quantity: line.qty,
-                direction: line.direction === 'INCREASE' ? 'IN' : 'OUT',
-                reason: (body.reason as any) || 'CORRECTION',
-                unitCost: line.unitCost || null,
-              })),
+              create: body.lines.map((line) => {
+                const isIncrease =
+                  line.direction === 'INCREASE' ||
+                  (line.direction as string) === 'IN';
+                return {
+                  itemId: line.itemId,
+                  lotId: line.lotId || null,
+                  quantity: line.qty,
+                  direction: isIncrease
+                    ? AdjustmentDirection.IN
+                    : AdjustmentDirection.OUT,
+                  reason: reason,
+                  unitCost: line.unitCost || null,
+                };
+              }),
             },
           }),
         },

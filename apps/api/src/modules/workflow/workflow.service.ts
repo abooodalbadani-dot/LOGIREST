@@ -21,6 +21,36 @@ import {
   canPerformActionV2,
 } from '@logirest/shared-types';
 
+export interface DynamicDocument {
+  id: string;
+  status: string;
+  version: number;
+  warehouseId?: string | null;
+  fromWarehouseId?: string | null;
+  toWarehouseId?: string | null;
+  requestNumber?: string;
+  grnNumber?: string;
+  poNumber?: string;
+  transferNumber?: string;
+  adjustmentNumber?: string;
+  sessionNumber?: string;
+  createdById?: string;
+  poId?: string;
+  supplierId?: string;
+  [key: string]: unknown;
+}
+
+type PrismaDynamicDelegate = {
+  findUnique: (args: {
+    where: { id: string };
+    select?: Record<string, boolean>;
+  }) => Promise<DynamicDocument | null>;
+  updateMany: (args: {
+    where: { id: string; version: number };
+    data: Record<string, unknown>;
+  }) => Promise<{ count: number }>;
+};
+
 export const MODEL_TO_TABLE: Record<string, string> = {
   purchaseRequest: 'purchase_requests',
   purchaseOrder: 'purchase_orders',
@@ -137,7 +167,11 @@ export class WorkflowService {
   async verifyWarehouseLocks(
     docType: DocumentType,
     action: DocumentAction,
-    document: any,
+    document: {
+      warehouseId?: string | null;
+      fromWarehouseId?: string | null;
+      toWarehouseId?: string | null;
+    },
   ): Promise<void> {
     const normalizedType = docType.toLowerCase();
     let isMutating = false;
@@ -185,8 +219,8 @@ export class WorkflowService {
     action: string,
     targetTable: string,
     targetId: string,
-    beforeState: any,
-    afterState: any,
+    beforeState: unknown,
+    afterState: unknown,
     ipAddress?: string,
   ): Promise<void> {
     try {
@@ -222,7 +256,7 @@ export class WorkflowService {
     clientVersion?: number,
     ipAddress?: string,
     tx?: Prisma.TransactionClient,
-  ): Promise<any> {
+  ): Promise<DynamicDocument> {
     const docType = this.mapModelToDocType(modelName);
     const targetTable = MODEL_TO_TABLE[modelName] || modelName;
 
@@ -230,66 +264,14 @@ export class WorkflowService {
       throw new BadRequestException('Comments are mandatory for REJECT action');
     }
 
-    const existingDoc = await (this.prisma as any)[modelName].findUnique({
-      where: { id: documentId },
-    });
+    let fetchedDoc: DynamicDocument | null = null;
 
-    if (!existingDoc) {
-      throw new NotFoundException(
-        `Document not found: ${modelName} with ID ${documentId}`,
-      );
-    }
-
-    // Role Validation Check
-    const hasRolePermission = canPerformActionV2(
-      docType,
-      existingDoc.status as DocumentStatus,
-      action,
-      userRole,
-    );
-    if (!hasRolePermission) {
-      const errorMsg = `User with role ${userRole} is not authorized to perform action ${action} on ${docType} in status ${existingDoc.status}`;
-      await this.writeAuditLog(
-        userId,
-        `WORKFLOW_${action}_FAILED`,
-        targetTable,
-        documentId,
-        { status: existingDoc.status, version: existingDoc.version },
-        { error: errorMsg, userRole },
-        ipAddress,
-      );
-      throw new ForbiddenException(errorMsg);
-    }
-
-    // Transition Status check
-    const targetStatus = getNextStatusV2(
-      docType,
-      existingDoc.status as DocumentStatus,
-      action,
-    );
-    if (!targetStatus) {
-      const errorMsg = `Invalid status transition: Action ${action} is not allowed on ${docType} in status ${existingDoc.status}`;
-      await this.writeAuditLog(
-        userId,
-        `WORKFLOW_${action}_FAILED`,
-        targetTable,
-        documentId,
-        { status: existingDoc.status, version: existingDoc.version },
-        { error: errorMsg },
-        ipAddress,
-      );
-      throw new BadRequestException(errorMsg);
-    }
-
-    // Check warehouse operational locks
-    await this.verifyWarehouseLocks(docType, action, existingDoc);
-
-    // Run update in transaction
     try {
-      const execute = async (tx: Prisma.TransactionClient) => {
-        const doc = await (tx as any)[modelName].findUnique({
+      const execute = async (transaction: Prisma.TransactionClient) => {
+        const doc = await (
+          transaction as unknown as Record<string, PrismaDynamicDelegate>
+        )[modelName].findUnique({
           where: { id: documentId },
-          select: { status: true, version: true },
         });
 
         if (!doc) {
@@ -298,19 +280,49 @@ export class WorkflowService {
           );
         }
 
+        fetchedDoc = doc;
+
+        // Role Validation Check
+        const hasRolePermission = canPerformActionV2(
+          docType,
+          doc.status as DocumentStatus,
+          action,
+          userRole,
+        );
+        if (!hasRolePermission) {
+          const errorMsg = `User with role ${userRole} is not authorized to perform action ${action} on ${docType} in status ${doc.status}`;
+          throw new ForbiddenException(errorMsg);
+        }
+
+        // Transition Status check
+        const targetStatus = getNextStatusV2(
+          docType,
+          doc.status as DocumentStatus,
+          action,
+        );
+        if (!targetStatus) {
+          const errorMsg = `Invalid status transition: Action ${action} is not allowed on ${docType} in status ${doc.status}`;
+          throw new BadRequestException(errorMsg);
+        }
+
+        // Check warehouse operational locks
+        await this.verifyWarehouseLocks(docType, action, doc);
+
         // Optimistic locking verification
         if (clientVersion !== undefined && doc.version !== clientVersion) {
           await this.concurrencyService.handleConflict(
             documentId,
             modelName,
             clientVersion,
-            tx,
+            transaction,
           );
         }
 
         // Perform the status update
         const currentVersion = doc.version;
-        const updateResult = await (tx as any)[modelName].updateMany({
+        const updateResult = await (
+          transaction as unknown as Record<string, PrismaDynamicDelegate>
+        )[modelName].updateMany({
           where: { id: documentId, version: currentVersion },
           data: {
             status: targetStatus,
@@ -323,18 +335,26 @@ export class WorkflowService {
             documentId,
             modelName,
             currentVersion,
-            tx,
+            transaction,
           );
         }
 
         // Fetch updated document to return it
-        const updatedDoc = await (tx as any)[modelName].findUnique({
+        const updatedDoc = await (
+          transaction as unknown as Record<string, PrismaDynamicDelegate>
+        )[modelName].findUnique({
           where: { id: documentId },
         });
 
+        if (!updatedDoc) {
+          throw new NotFoundException(
+            `Document not found after update: ${modelName} with ID ${documentId}`,
+          );
+        }
+
         // Determine stepNumber for ApprovalEvent
         const stepNumber =
-          (await tx.approvalEvent.count({
+          (await transaction.approvalEvent.count({
             where: {
               documentId,
               documentType: this.mapToPrismaDocType(docType),
@@ -342,7 +362,7 @@ export class WorkflowService {
           })) + 1;
 
         // Create ApprovalEvent
-        await tx.approvalEvent.create({
+        await transaction.approvalEvent.create({
           data: {
             documentId,
             documentType: this.mapToPrismaDocType(docType),
@@ -350,14 +370,14 @@ export class WorkflowService {
             toStatus: targetStatus,
             actionPerformed: action,
             userId,
-            userRole: userRole as any,
+            userRole,
             stepNumber,
             comments: comments || null,
           },
         });
 
         // Successful AuditLog inside the transaction
-        await tx.auditLog.create({
+        await transaction.auditLog.create({
           data: {
             userId,
             action: `WORKFLOW_${action}_SUCCESS`,
@@ -377,7 +397,7 @@ export class WorkflowService {
 
         // Dispatch notifications for key status changes
         if (docType === 'pr' && targetStatus === 'SUBMITTED') {
-          await tx.notificationLog.create({
+          await transaction.notificationLog.create({
             data: {
               targetRole: 'APPROVER',
               warehouseId: updatedDoc.warehouseId,
@@ -386,13 +406,17 @@ export class WorkflowService {
               documentId: updatedDoc.id,
             },
           });
-          await this.outboxService.writeEvent(tx, 'PR_SUBMITTED', {
+          await this.outboxService.writeEvent(transaction, 'PR_SUBMITTED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.requestNumber,
             warehouseId: updatedDoc.warehouseId,
           });
-        } else if (docType === 'pr' && targetStatus === 'APPROVED') {
-          await tx.notificationLog.create({
+        } else if (
+          docType === 'pr' &&
+          targetStatus === 'APPROVED' &&
+          action === 'APPROVE'
+        ) {
+          await transaction.notificationLog.create({
             data: {
               targetRole: 'PROC_OFFICER',
               warehouseId: updatedDoc.warehouseId,
@@ -401,14 +425,14 @@ export class WorkflowService {
               documentId: updatedDoc.id,
             },
           });
-          await this.outboxService.writeEvent(tx, 'PR_APPROVED', {
+          await this.outboxService.writeEvent(transaction, 'PR_APPROVED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.requestNumber,
             warehouseId: updatedDoc.warehouseId,
             createdById: updatedDoc.createdById,
           });
         } else if (docType === 'transfer' && targetStatus === 'IN_TRANSIT') {
-          await tx.notificationLog.create({
+          await transaction.notificationLog.create({
             data: {
               targetRole: 'WH_KEEPER',
               warehouseId: updatedDoc.toWarehouseId,
@@ -417,7 +441,7 @@ export class WorkflowService {
               documentId: updatedDoc.id,
             },
           });
-          await this.outboxService.writeEvent(tx, 'TRANSFER_SHIPPED', {
+          await this.outboxService.writeEvent(transaction, 'TRANSFER_SHIPPED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.transferNumber,
             warehouseId: updatedDoc.toWarehouseId,
@@ -426,67 +450,91 @@ export class WorkflowService {
 
         // New Outbox Notification triggers:
         if (docType === 'grn' && targetStatus === 'POSTED') {
-          await this.outboxService.writeEvent(tx, 'GRN_POSTED', {
+          await this.outboxService.writeEvent(transaction, 'GRN_POSTED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.grnNumber,
             warehouseId: updatedDoc.warehouseId,
           });
-          const po = await tx.purchaseOrder.findUnique({
+          const po = await transaction.purchaseOrder.findUnique({
             where: { id: updatedDoc.poId },
             include: { supplier: true },
           });
           if (po?.supplier?.contactEmail) {
-            await this.outboxService.writeEvent(tx, 'SUPPLIER_GRN_NOTIFIED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.grnNumber,
-              supplierId: po.supplier.id,
-              supplierEmail: po.supplier.contactEmail,
-            });
+            await this.outboxService.writeEvent(
+              transaction,
+              'SUPPLIER_GRN_NOTIFIED',
+              {
+                id: updatedDoc.id,
+                documentNumber: updatedDoc.grnNumber,
+                supplierId: po.supplier.id,
+                supplierEmail: po.supplier.contactEmail,
+              },
+            );
           }
         } else if (docType === 'po' && targetStatus === 'APPROVED') {
-          const supplier = await tx.supplier.findUnique({
+          const supplier = await transaction.supplier.findUnique({
             where: { id: updatedDoc.supplierId },
           });
           if (supplier?.contactEmail) {
-            await this.outboxService.writeEvent(tx, 'SUPPLIER_PO_NOTIFIED', {
-              id: updatedDoc.id,
-              documentNumber: updatedDoc.poNumber,
-              supplierId: supplier.id,
-              supplierEmail: supplier.contactEmail,
-            });
+            await this.outboxService.writeEvent(
+              transaction,
+              'SUPPLIER_PO_NOTIFIED',
+              {
+                id: updatedDoc.id,
+                documentNumber: updatedDoc.poNumber,
+                supplierId: supplier.id,
+                supplierEmail: supplier.contactEmail,
+              },
+            );
           }
         } else if (docType === 'adjustment' && targetStatus === 'POSTED') {
-          await this.outboxService.writeEvent(tx, 'ADJUSTMENT_POSTED', {
-            id: updatedDoc.id,
-            documentNumber: updatedDoc.adjustmentNumber,
-            warehouseId: updatedDoc.warehouseId,
-          });
+          await this.outboxService.writeEvent(
+            transaction,
+            'ADJUSTMENT_POSTED',
+            {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.adjustmentNumber,
+              warehouseId: updatedDoc.warehouseId,
+            },
+          );
         } else if (
           docType === 'kitchen_request' &&
           targetStatus === 'SUBMITTED'
         ) {
-          await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_SUBMITTED', {
-            id: updatedDoc.id,
-            documentNumber: updatedDoc.requestNumber,
-            warehouseId: updatedDoc.warehouseId,
-          });
+          await this.outboxService.writeEvent(
+            transaction,
+            'KITCHEN_REQUEST_SUBMITTED',
+            {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.requestNumber,
+              warehouseId: updatedDoc.warehouseId,
+            },
+          );
         } else if (docType === 'kitchen_request' && targetStatus === 'POSTED') {
-          await this.outboxService.writeEvent(tx, 'KITCHEN_REQUEST_POSTED', {
-            id: updatedDoc.id,
-            documentNumber: updatedDoc.requestNumber,
-            warehouseId: updatedDoc.warehouseId,
-          });
+          await this.outboxService.writeEvent(
+            transaction,
+            'KITCHEN_REQUEST_POSTED',
+            {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.requestNumber,
+              warehouseId: updatedDoc.warehouseId,
+            },
+          );
           this.metricsService.postingOperationsCounter.inc({
             document_type: 'KITCHEN_REQUEST',
           });
         } else if (docType === 'stocktake' && targetStatus === 'STARTED') {
-          await this.outboxService.writeEvent(tx, 'STOCKTAKE_STARTED', {
-            id: updatedDoc.id,
-            documentNumber: updatedDoc.sessionNumber,
-            warehouseId: updatedDoc.warehouseId,
-          });
+          await this.outboxService.writeEvent(
+            transaction,
+            'STOCKTAKE_STARTED',
+            {
+              id: updatedDoc.id,
+              documentNumber: updatedDoc.sessionNumber,
+              warehouseId: updatedDoc.warehouseId,
+            },
+          );
         } else if (docType === 'stocktake' && targetStatus === 'POSTED') {
-          await this.outboxService.writeEvent(tx, 'STOCKTAKE_POSTED', {
+          await this.outboxService.writeEvent(transaction, 'STOCKTAKE_POSTED', {
             id: updatedDoc.id,
             documentNumber: updatedDoc.sessionNumber,
             warehouseId: updatedDoc.warehouseId,
@@ -497,19 +545,25 @@ export class WorkflowService {
       };
 
       if (tx) {
-        return execute(tx);
+        return await execute(tx);
       }
       return await this.prisma.$transaction(execute, { timeout: 30000 });
     } catch (error) {
       // Failed transition logging outside the transaction
       const errorMsg = error instanceof Error ? error.message : String(error);
+      const beforeState = fetchedDoc
+        ? {
+            status: (fetchedDoc as any).status,
+            version: (fetchedDoc as any).version,
+          }
+        : undefined;
       await this.writeAuditLog(
         userId,
         `WORKFLOW_${action}_FAILED`,
         targetTable,
         documentId,
-        { status: existingDoc.status, version: existingDoc.version },
-        { error: errorMsg },
+        beforeState,
+        { error: errorMsg, userRole },
         ipAddress,
       );
       throw error;

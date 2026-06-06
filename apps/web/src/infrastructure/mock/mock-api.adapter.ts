@@ -13,11 +13,15 @@ import { OPERATIONAL_CONFIG } from '@/contracts/operational-config';
 interface HydrationLine {
   id?: string;
   itemId: string;
+  item_id?: string;
   item?: Record<string, unknown>;
   qty?: number;
+  quantity?: number;
   reqQty?: number;
   lotId?: string | null;
+  lot_id?: string | null;
   uomId?: string;
+  uom_id?: string;
   approvedQty?: number | null;
 }
 
@@ -28,6 +32,7 @@ interface HydrationBody {
   expectedDate?: string;
   requiredByDate?: string;
   warehouseId?: string;
+  warehouse_id?: string;
 }
 
 /**
@@ -51,7 +56,7 @@ async function recordMovement(params: {
     documentReference: params.documentNumber,
     transactionType: params.documentType,
     itemId: params.itemId,
-    itemName: item.nameEn,
+    itemName: item.name,
     quantity: params.direction === 'IN' ? params.qty : -params.qty,
     balanceAfter: 0,
   });
@@ -62,23 +67,24 @@ async function recordMovement(params: {
  */
 async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<PurchaseRequest> {
   const lines = await Promise.all((body.lines || []).map(async (l) => {
-    const item = await db.items.findById(l.itemId);
-    const qty = l.qty ?? l.reqQty ?? 0;
+    const itemId = l.itemId || l.item_id || '';
+    const item = await db.items.findById(itemId);
+    const qty = l.qty ?? l.reqQty ?? l.quantity ?? 0;
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
       documentId: pr.id,
-      itemId: l.itemId,
+      itemId,
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.nameAr,
-        name_en: item.nameEn,
+        name_ar: item.name,
+        name_en: item.name,
         primary_uom: item.primaryUom
       } : l.item,
-      lotId: l.lotId || null,
+      lotId: l.lotId || l.lot_id || null,
       lot: null,
       qty,
-      uomId: l.uomId || item?.primaryUom.id || '',
+      uomId: l.uomId || l.uom_id || item?.primaryUom.id || '',
       unitCost: null,
       requestedQty: qty,
       reqQty: qty, // Alias for feature schema
@@ -86,7 +92,7 @@ async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<Purc
     } as PRLineItem & { reqQty: number };
   }));
 
-  const deptId = body.departmentId || body.requestedByDept || pr.requestedByDept;
+  const deptId = body.departmentId || body.requestedByDept || body.warehouseId || body.warehouse_id || pr.requestedByDept;
   const date = body.expectedDate || body.requiredByDate || pr.requiredByDate;
 
   return {
@@ -111,8 +117,9 @@ async function hydrateAdjustment(doc: any): Promise<any> {
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.nameAr,
-        name_en: item.nameEn,
+        name: item.name,
+        name_ar: item.name,
+        name_en: item.name,
         primary_uom: {
           id: item.primaryUom.id,
           code: item.primaryUom.code,
@@ -160,13 +167,14 @@ async function hydrateIssue(doc: any): Promise<any> {
       item: item ? {
         id: item.id,
         code: item.code,
-        nameAr: item.nameAr,
-        nameEn: item.nameEn,
+        name: item.name,
+        nameAr: item.name,
+        nameEn: item.name,
         primaryUom: {
           id: item.primaryUom.id,
           code: item.primaryUom.code,
-          nameAr: item.primaryUom.nameAr || item.primaryUom.code,
-          nameEn: item.primaryUom.nameEn || item.primaryUom.code
+          nameAr: item.primaryUom.name || item.primaryUom.code,
+          nameEn: item.primaryUom.name || item.primaryUom.code
         }
       } : {
         id: l.itemId,
@@ -198,48 +206,52 @@ async function hydrateIssue(doc: any): Promise<any> {
  */
 async function hydrateTransfer(doc: any): Promise<any> {
   const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const item = await db.items.findById(l.itemId);
+    const itemId = l.itemId || l.item_id;
+    const item = await db.items.findById(itemId);
     
-    const lotAllocations = await Promise.all((l.lotAllocations || []).map(async (alloc: any) => {
-      const aLot = await db.lots.findById(alloc.lotId);
+    const lotAllocations = await Promise.all((l.lotAllocations || l.lot_allocations || []).map(async (alloc: any) => {
+      const aLot = await db.lots.findById(alloc.lotId || alloc.lot_id);
       return {
-        lotId: alloc.lotId,
-        lotNumber: alloc.lotNumber || aLot?.lotNumber || '',
-        expiryDate: alloc.expiryDate || aLot?.expiryDate || null,
-        allocatedQty: alloc.allocatedQty ?? 0,
-        overrideReason: alloc.overrideReason || null
+        lotId: alloc.lotId || alloc.lot_id,
+        lotNumber: alloc.lotNumber || alloc.lot_number || aLot?.lotNumber || '',
+        expiryDate: alloc.expiryDate || alloc.expiry_date || aLot?.expiryDate || null,
+        allocatedQty: alloc.allocatedQty || alloc.allocated_qty || alloc.qty || 0,
+        overrideReason: alloc.overrideReason || alloc.override_reason || null
       };
     }));
+
+    const shippedQty = l.quantityShipped ?? l.shippedQty ?? l.qty ?? 0;
 
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
       documentId: doc.id,
-      itemId: l.itemId,
+      itemId,
       item: item ? {
         id: item.id,
         code: item.code,
-        nameAr: item.nameAr,
-        nameEn: item.nameEn,
+        name: item.name,
+        nameAr: item.name,
+        nameEn: item.name,
         primaryUom: {
           id: item.primaryUom.id,
           code: item.primaryUom.code,
-          nameAr: item.primaryUom.nameAr || item.primaryUom.code,
-          nameEn: item.primaryUom.nameEn || item.primaryUom.code
+          nameAr: item.primaryUom.name || item.primaryUom.code,
+          nameEn: item.primaryUom.name || item.primaryUom.code
         }
       } : {
-        id: l.itemId,
+        id: itemId,
         code: 'CUSTOM',
         nameAr: 'Custom Item',
         nameEn: 'Custom Item',
-        primaryUom: { id: l.uomId || 'uom-pcs', code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
+        primaryUom: { id: l.uomId || l.uom_id || 'uom-pcs', code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
       },
-      lotId: l.lotId || null,
+      lotId: l.lotId || l.lot_id || null,
       lot: null,
-      qty: l.qty ?? 0,
+      qty: shippedQty,
       unitCost: null,
-      shippedQty: l.shippedQty ?? l.qty ?? 0,
+      shippedQty: shippedQty,
       receivedQty: l.receivedQty !== undefined ? l.receivedQty : null,
-      uomId: l.uomId || item?.primaryUom.id || 'uom-pcs',
+      uomId: l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs',
       lotAllocations: lotAllocations
     };
   }));
@@ -255,7 +267,7 @@ async function hydrateKitchenRequest(doc: any): Promise<any> {
     return {
       id: l.id || `item-${Math.random().toString(36).substring(7)}`,
       itemId: l.item_id,
-      itemName: item ? (item.nameEn || item.nameAr) : 'Custom Item',
+      itemName: item ? item.name : 'Custom Item',
       uom: item ? item.primaryUom.code : 'PCS',
       quantity: l.quantity ?? 0,
       notes: l.notes || '',
@@ -269,19 +281,21 @@ async function hydrateKitchenRequest(doc: any): Promise<any> {
  * Hydrates a Goods Received Note (GRN) with nested supplier/lots
  */
 async function hydrateGRN(doc: any): Promise<any> {
-  const supplier = doc.supplier_id ? await db.suppliers.findById(doc.supplier_id) : null;
+  const supplierId = doc.supplierId || doc.supplier_id;
+  const supplier = supplierId ? await db.suppliers.findById(supplierId) : null;
   const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const item = await db.items.findById(l.item_id);
+    const itemId = l.itemId || l.item_id;
+    const item = await db.items.findById(itemId);
     
     let lotVal = null;
     if (l.lot) {
       lotVal = {
         id: l.lot.id || `lot-${Math.random().toString(36).substring(7)}`,
-        lotNumber: l.lot.lot_number || '',
-        expiry_date: l.lot.expiry_date || null
+        lotNumber: l.lot.lotNumber || l.lot.lot_number || '',
+        expiry_date: l.lot.expiryDate || l.lot.expiry_date || null
       };
-    } else if (l.lot_id) {
-      const dbLot = await db.lots.findById(l.lot_id);
+    } else if (l.lotId || l.lot_id) {
+      const dbLot = await db.lots.findById(l.lotId || l.lot_id);
       if (dbLot) {
         lotVal = {
           id: dbLot.id,
@@ -291,29 +305,34 @@ async function hydrateGRN(doc: any): Promise<any> {
       }
     }
 
+    const qty = l.receivedQty || l.qty || l.received_qty || 0;
+    const uomId = l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs';
+    const unitCostForeign = l.unitCostForeign || l.unit_cost_foreign || null;
+
     return {
       id: l.id || `line-${Math.random().toString(36).substring(7)}`,
       item: item ? {
         id: item.id,
         code: item.code,
-        name_ar: item.nameAr,
-        name_en: item.nameEn,
+        name: item.name,
+        name_ar: item.name,
+        name_en: item.name,
         primary_uom: {
           id: item.primaryUom.id,
           code: item.primaryUom.code
         }
       } : {
-        id: l.item_id,
+        id: itemId,
         code: 'CUSTOM',
         name_ar: 'Custom Item',
         name_en: 'Custom Item',
         primary_uom: { id: 'uom-pcs', code: 'PCS' }
       },
       lot: lotVal,
-      qty: l.qty ?? 0,
-      receivedQty: l.receivedQty ?? l.qty ?? 0,
-      uomId: l.uom_id || item?.primaryUom.id || 'uom-pcs',
-      unit_cost_foreign: l.unit_cost_foreign ?? null,
+      qty,
+      receivedQty: qty,
+      uomId,
+      unit_cost_foreign: unitCostForeign,
       unit_cost_base: l.unit_cost_base ?? null
     };
   }));
@@ -322,7 +341,7 @@ async function hydrateGRN(doc: any): Promise<any> {
     ...doc,
     supplier: supplier ? {
       id: supplier.id,
-      name: supplier.nameEn || supplier.nameAr || ''
+      name: supplier.name || ''
     } : undefined,
     lines
   };
@@ -381,7 +400,7 @@ const MOCK_USERS = [
     email: 'admin@kitchen.io',
     role: 'ADMIN' as const,
     locale: 'en' as const,
-    scopes: [{ branch_id: 'br-main', warehouse_id: 'wh-central', department_id: 'dept-kitchen' }],
+    scopes: [{ branchId: 'br-main', warehouseId: 'wh-central', departmentId: 'dept-kitchen' }],
     notification_preferences: { lowStock: true, expiry: true, pendingApproval: true, poFinalized: false, security: true },
   },
   {
@@ -390,7 +409,7 @@ const MOCK_USERS = [
     email: 'store@kitchen.io',
     role: 'STORE_MGR' as const,
     locale: 'ar' as const,
-    scopes: [{ branch_id: 'br-main', warehouse_id: 'wh-central', department_id: 'dept-kitchen' }],
+    scopes: [{ branchId: 'br-main', warehouseId: 'wh-central', departmentId: 'dept-kitchen' }],
     notification_preferences: { lowStock: true, expiry: true, pendingApproval: true, poFinalized: false, security: true },
   },
 ];
@@ -823,9 +842,9 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   if (normalizedPath === '/stocktake/sessions') {
     if (method === 'GET') {
       let sessions = await db.stocktake.findAll();
-      const warehouseId = searchParams.get('warehouse_id');
-      const branchId = searchParams.get('branch_id');
-      if (warehouseId) sessions = sessions.filter((s: any) => s.warehouse_id === warehouseId);
+      const warehouseId = searchParams.get('warehouse_id') || searchParams.get('warehouseId');
+      const branchId = searchParams.get('branch_id') || searchParams.get('branchId');
+      if (warehouseId) sessions = sessions.filter((s: any) => s.warehouseId === warehouseId);
       if (branchId) sessions = sessions.filter((s: any) => s.branch_id === branchId);
       return MockFactory.wrapPagination(sessions.map(s => {
         const items = s.items || [];
@@ -844,9 +863,11 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       }));
     }
     if (method === 'POST') {
+      const bodyObj = body as HydrationBody | undefined;
+      const warehouseId = bodyObj?.warehouseId || bodyObj?.warehouse_id;
       // Check for active session in the same warehouse
       const sessions = await db.stocktake.findAll();
-      const active = sessions.find(s => s && s.warehouseId === (body as HydrationBody)?.warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
+      const active = sessions.find(s => s && s.warehouseId === warehouseId && s.status && !['POSTED', 'CANCELLED'].includes(s.status));
       if (active) {
         return {
           error: {
@@ -858,7 +879,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       // Snapshot Freeze: Capture current inventory levels from db.lots
       const warehouseLots = await db.lots.findAll();
-      const warehouseItems = warehouseLots.filter(l => l?.warehouseId === (body as HydrationBody)?.warehouseId);
+      const warehouseItems = warehouseLots.filter(l => l?.warehouseId === warehouseId);
 
       // Group by item to get total quantity if there are multiple lots
       const itemTotals = warehouseItems.reduce((acc, lot) => {
@@ -875,7 +896,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         return {
           id: `cnt-${idx + 1}`,
           itemId: itemId,
-          itemName: item?.nameEn || 'Unknown Item',
+          itemName: item?.name || 'Unknown Item',
           barcode: item?.barcode || '',
           uom: item?.primaryUom.code || 'UNIT',
           snapshotQty: qty,
@@ -888,6 +909,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
 
       const newSession = MockFactory.createStocktakeSession({
         ...(body as Record<string, unknown>),
+        warehouseId,
         items: stocktakeItems,
         snapshotAt: new Date().toISOString(),
         status: STOCKTAKE_STATUS.DRAFT
@@ -1669,7 +1691,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         const daysLeft = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         return {
           id: l.id,
-          itemName: item ? item.nameEn : 'Unknown Item',
+          itemName: item ? item.name : 'Unknown Item',
           lotNumber: l.lotNumber || 'LOT-UNKNOWN',
           expiry_date: l.expiryDate,
           days_left: daysLeft,

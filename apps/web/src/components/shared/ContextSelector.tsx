@@ -20,9 +20,9 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  const { isRtl } = useLocale();
 
  // Local state for selections before confirming
- const [selectedBranchId, setSelectedBranchId] = useState(activeScope.branchId || '');
- const [selectedWarehouseId, setSelectedWarehouseId] = useState(activeScope.warehouseId || '');
- const [selectedDepartmentId, setSelectedDepartmentId] = useState(activeScope.departmentId || '');
+ const [selectedBranchId, setSelectedBranchId] = useState(activeScope?.branchId || '');
+ const [selectedWarehouseId, setSelectedWarehouseId] = useState(activeScope?.warehouseId || '');
+ const [selectedDepartmentId, setSelectedDepartmentId] = useState(activeScope?.departmentId || '');
 
  // Fetch all branches
  const { data: branchesData } = useMasterDataList('branches', BranchSchema, { limit: '100' });
@@ -46,9 +46,9 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  useEffect(() => {
  if (open) {
  setTimeout(() => {
- setSelectedBranchId(activeScope.branchId || '');
- setSelectedWarehouseId(activeScope.warehouseId || '');
- setSelectedDepartmentId(activeScope.departmentId || '');
+ setSelectedBranchId(activeScope?.branchId || '');
+ setSelectedWarehouseId(activeScope?.warehouseId || '');
+ setSelectedDepartmentId(activeScope?.departmentId || '');
  }, 0);
  }
  }, [open, activeScope]);

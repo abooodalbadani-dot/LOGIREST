@@ -41,6 +41,7 @@ import { useWarehouseLock } from "@/hooks/useWarehouseLock";
 import { DocumentLineItemTable, type LineItem, type ExtraColumn } from "@/components/shared/DocumentLineItemTable/DocumentLineItemTable";
 import { cn } from "@/lib/utils";
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from "@/hooks/useFormError";
 
 const buildLineSchema = (t: (k: string) => string) => z.object({
   itemId: z.string().min(1, t('validation.item_required')),
@@ -127,8 +128,7 @@ export function IssueForm() {
         item: {
           id: lineVal?.itemId || '',
           code: selectedItem?.barcode || selectedItem?.code || '',
-          nameAr: selectedItem?.nameAr || '',
-          nameEn: selectedItem?.nameEn || '',
+          name: selectedItem?.name || '',
           primaryUom: {
             code: selectedItem?.primaryUom?.code || '',
           }
@@ -274,7 +274,7 @@ export function IssueForm() {
 
  return (
  <Form {...form}>
- <form onSubmit={form.handleSubmit(() => setConfirmOpen(true))} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
+ <form onSubmit={form.handleSubmit(() => setConfirmOpen(true), onFormError)} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
  
  {/* Fulfillment Orchestration Header */}
  <div className="bg-surface-container-low p-10 rounded-[2.5rem] border border-surface-container-high/20 shadow-2xl shadow-primary/5">
@@ -484,7 +484,7 @@ export function IssueForm() {
  onOpenChange={setConfirmOpen}
  onConfirm={() => {
  setConfirmOpen(false);
- form.handleSubmit(onSubmit)();
+ form.handleSubmit(onSubmit, onFormError)();
  }}
  title={t('post_confirm_title')}
  description={t('post_confirm_desc')}

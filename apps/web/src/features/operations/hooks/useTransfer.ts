@@ -19,13 +19,11 @@ export const TransferLineSchema = z.object({
  item: z.object({
    id: z.string(),
    code: z.string(),
-   nameAr: z.string(),
-   nameEn: z.string(),
+   name: z.string(),
    primaryUom: z.object({
      id: z.string(),
      code: z.string(),
-     nameAr: z.string(),
-     nameEn: z.string(),
+     name: z.string(),
    }),
  }),
   lotId: z.string().nullable(),

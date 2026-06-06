@@ -20,13 +20,13 @@ export function mapWarehouseToCombobox(warehouse: Warehouse): ComboboxItem & { n
  * Maps an item to a ComboboxItem format compatible with SmartCombobox.
  * Throws an error if the item id is missing (Fail loudly).
  */
-export function mapItemToCombobox(item: Item, locale: 'ar' | 'en' = 'en'): ComboboxItem & { name: string } {
+export function mapItemToCombobox(item: Item): ComboboxItem & { name: string } {
   if (!item.id) {
     throw new Error('Item mapping failed: Item ID is required');
   }
   return {
     id: item.id,
-    name: locale === 'ar' ? item.nameAr : item.nameEn,
+    name: item.name || '',
     code: item.code,
     barcode: item.barcode,
   };
@@ -38,10 +38,6 @@ export interface LineItemForPayload {
   uomId: string;
 }
 
-/**
- * Maps frontend camelCase line items to backend snake_case payloads.
- * Throws if critical fields are missing.
- */
 export function mapLineToPayload(line: LineItemForPayload) {
   if (!line.itemId) {
     throw new Error('Line mapping failed: itemId is required');
@@ -50,8 +46,8 @@ export function mapLineToPayload(line: LineItemForPayload) {
     throw new Error('Line mapping failed: uomId is required');
   }
   return {
-    item_id: line.itemId,
-    qty: line.qty,
-    uom_id: line.uomId,
+    itemId: line.itemId,
+    quantityShipped: line.qty,
+    uomId: line.uomId,
   };
 }

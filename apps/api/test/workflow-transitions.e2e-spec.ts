@@ -66,7 +66,7 @@ describe('Workflow Transitions (e2e)', () => {
 
     // Create a procurement officer user
     const email = `proc-${suffix}@logirest.com`;
-    const passwordHash = await bcrypt.hash('password123');
+    const passwordHash = await bcrypt.hash('Password123!');
     const user = await prisma.user.create({
       data: {
         email,
@@ -86,7 +86,7 @@ describe('Workflow Transitions (e2e)', () => {
     // Log in to get accessToken
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email, password: 'password123' });
+      .send({ email, password: 'Password123!' });
     procOfficerToken = loginRes.body.token || loginRes.body.accessToken;
   });
 
@@ -144,7 +144,7 @@ describe('Workflow Transitions (e2e)', () => {
 
     it('should create a PR in DRAFT status', async () => {
       const res = await request(app.getHttpServer())
-        .post('/api/v1/purchase-requests')
+        .post('/api/v1/procurement/purchase-requests')
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -160,22 +160,22 @@ describe('Workflow Transitions (e2e)', () => {
       }
 
       expect(res.status).toBe(201);
-      expect(res.body.status).toBe('DRAFT');
-      expect(res.body.version).toBe(1);
-      prId = res.body.id;
+      expect(res.body.data.status).toBe('DRAFT');
+      expect(res.body.data.version).toBe(1);
+      prId = res.body.data.id;
     });
 
     it('should transition DRAFT PR to SUBMITTED status', async () => {
       const res = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/submit`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/submit`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
         .send({ comments: 'Please review and approve', version: 1 })
         .expect(200);
 
-      expect(res.body.status).toBe('SUBMITTED');
-      expect(res.body.version).toBe(2);
+      expect(res.body.data.status).toBe('SUBMITTED');
+      expect(res.body.data.version).toBe(2);
 
       // Verify ApprovalEvent exists in DB
       const approvalEvent = await prisma.approvalEvent.findFirst({
@@ -199,7 +199,7 @@ describe('Workflow Transitions (e2e)', () => {
 
     it('should block duplicate submissions (already SUBMITTED)', async () => {
       const res = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${prId}/submit`)
+        .post(`/api/v1/procurement/purchase-requests/${prId}/submit`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -227,7 +227,7 @@ describe('Workflow Transitions (e2e)', () => {
     it('should block transition when version is stale (optimistic locking)', async () => {
       // Create another PR to test version conflict
       const setupRes = await request(app.getHttpServer())
-        .post('/api/v1/purchase-requests')
+        .post('/api/v1/procurement/purchase-requests')
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)
@@ -239,11 +239,11 @@ describe('Workflow Transitions (e2e)', () => {
         })
         .expect(201);
 
-      const newPrId = setupRes.body.id;
+      const newPrId = setupRes.body.data.id;
 
       // Submit with a stale version 999
       const res = await request(app.getHttpServer())
-        .post(`/api/v1/purchase-requests/${newPrId}/submit`)
+        .post(`/api/v1/procurement/purchase-requests/${newPrId}/submit`)
         .set('Authorization', `Bearer ${procOfficerToken}`)
         .set('x-warehouse-id', warehouseId)
         .set('x-branch-id', branchId)

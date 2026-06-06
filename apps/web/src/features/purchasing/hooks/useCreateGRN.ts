@@ -7,18 +7,15 @@ import { toast } from 'sonner';
 import { GRNDetailSchema } from './useGRN';
 
 const CreateGRNPayloadSchema = z.object({
-  po_id: z.string().nullable().optional(),
-  supplier_id: z.string(),
-  currency_id: z.string(),
-  warehouse_id: z.string(),
+  poId: z.string(),
+  currencyId: z.string().optional(),
+  warehouseId: z.string(),
   notes: z.string().optional(),
   lines: z.array(z.object({
-    item_id: z.string(),
-    lot_id: z.string().nullable(),
-    qty: z.number().positive(),
-    received_qty: z.number().positive(),
-    uom_id: z.string(),
-    unit_cost_foreign: z.number().nonnegative(),
+    itemId: z.string(),
+    lotId: z.string().nullable().optional(),
+    receivedQty: z.number().positive(),
+    unitCostForeign: z.number().nonnegative(),
   }))
 });
 
@@ -35,8 +32,7 @@ export function useCreateGRN(options?: { onConflict?: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['grns'] });
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : 'Operation failed';
-      toast.error(message);
+      // Handled globally by useSafeMutation
     },
   });
 }

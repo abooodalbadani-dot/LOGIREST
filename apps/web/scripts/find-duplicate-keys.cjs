@@ -23,8 +23,8 @@ function findDuplicates(filePath) {
   return duplicates;
 }
 
-const enPath = 'e:/Kitchen‑Store Inventory System/apps/web/messages/en.json';
-const arPath = 'e:/Kitchen‑Store Inventory System/apps/web/messages/ar.json';
+const enPath = 'e:/kitchen-store-inventory-system/apps/web/messages/en.json';
+const arPath = 'e:/kitchen-store-inventory-system/apps/web/messages/ar.json';
 
 console.log('Duplicates in en.json:');
 console.log(findDuplicates(enPath));

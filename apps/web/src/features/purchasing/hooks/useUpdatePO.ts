@@ -8,18 +8,18 @@ import { PODetailSchema } from './usePO';
 
 const UpdatePOPayloadSchema = z.object({
   version: z.number(),
-  pr_id: z.string().optional(),
-  target_warehouse_id: z.string().optional(),
-  supplier_id: z.string(),
-  currency_code: z.string(),
-  exchange_rate: z.number(),
-  expected_date: z.string(),
+  prId: z.string().optional(),
+  targetWarehouseId: z.string().optional(),
+  supplierId: z.string(),
+  currencyId: z.string(),
+  exchangeRate: z.number(),
+  expectedDate: z.string(),
   notes: z.string().optional().or(z.literal('')),
   lines: z.array(z.object({
-    item_id: z.string(),
+    itemId: z.string(),
     quantity: z.number().positive(),
-    unit_price: z.number().nonnegative(),
-    uom_id: z.string(),
+    unitPrice: z.number().nonnegative(),
+    uomId: z.string(),
     notes: z.string().optional().or(z.literal(''))
   }))
 });
@@ -40,8 +40,6 @@ export function useUpdatePO(options?: { onConflict?: () => void }) {
     },
     onError: (error) => {
       console.error('[useUpdatePO] Failed to update PO:', error);
-      const message = error instanceof Error ? error.message : 'Operation failed';
-      toast.error(message);
     }
   });
 }

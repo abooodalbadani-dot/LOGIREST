@@ -3,7 +3,7 @@
 **Feature Branch**: `010-phase-0-security-hardening`  
 **Created**: 2026-05-21  
 **Status**: Draft  
-**Input**: User description: "read @[e:\Kitchen‑Store Inventory System\audit\implementation-plan.md] and creat a specification for the phase 0 only"
+**Input**: User description: "read @[e:\kitchen-store-inventory-system\audit\implementation-plan.md] and creat a specification for the phase 0 only"
 
 ## User Scenarios & Testing *(mandatory)*
 

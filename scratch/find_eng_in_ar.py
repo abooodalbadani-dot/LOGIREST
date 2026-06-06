@@ -25,13 +25,13 @@ def find_english_in_arabic(data, path=""):
     return results
 
 try:
-    with open('E:/Kitchen‑Store Inventory System/apps/web/messages/ar.json', 'r', encoding='utf-8') as f:
+    with open('E:/kitchen-store-inventory-system/apps/web/messages/ar.json', 'r', encoding='utf-8') as f:
         ar_data = json.load(f)
     
     eng_strings = find_english_in_arabic(ar_data)
     
-    os.makedirs('E:/Kitchen‑Store Inventory System/scratch', exist_ok=True)
-    with open('E:/Kitchen‑Store Inventory System/scratch/eng_in_ar.txt', 'w', encoding='utf-8') as f:
+    os.makedirs('E:/kitchen-store-inventory-system/scratch', exist_ok=True)
+    with open('E:/kitchen-store-inventory-system/scratch/eng_in_ar.txt', 'w', encoding='utf-8') as f:
         for path, val in eng_strings:
             f.write(f"{path}: {val}\n")
     

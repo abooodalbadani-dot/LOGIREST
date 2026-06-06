@@ -16,6 +16,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { onFormError } from '@/hooks/useFormError';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +47,7 @@ interface Props {
 export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, isReadOnly = false }: Props) {
   const t = useTranslations('common');
   const td = useTranslations('master_data.departments');
+  const tv = useTranslations();
   const locale = useLocale();
   const abortController = useAbortController();
   
@@ -124,12 +126,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Department form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -234,7 +231,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     />
   )}
   />
-  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.branchId.message}`)}</p>}
+  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.branchId.message as never)}</p>}
   </div>
 
  {/* Warehouse Select */}
@@ -254,7 +251,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     />
   )}
   />
-  {errors.warehouseId && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.warehouseId.message}`)}</p>}
+  {errors.warehouseId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.warehouseId.message as never)}</p>}
   </div>
  </div>
 
@@ -270,7 +267,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
                   className="font-mono font-semibold uppercase text-status-active" 
                   placeholder={td('placeholders.code')} 
                 />
- {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.code.message}`)}</p>}
+ {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
  </div>
 
  <div className="grid grid-cols-2 gap-4">
@@ -284,7 +281,7 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
                     disabled={isReadOnly}
                     className="font-semibold" 
                   />
- {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{td(`validation.${errors.name.message}`)}</p>}
+ {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
  </div>
  </div>
  </div>

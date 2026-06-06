@@ -14,7 +14,7 @@
 ## Setup
 
 ```bash
-cd "e:\Kitchen‑Store Inventory System"
+cd "e:\kitchen-store-inventory-system"
 git checkout 011-critical-operational-safety
 npm install
 ```

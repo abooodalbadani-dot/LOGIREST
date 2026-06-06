@@ -1,6 +1,6 @@
 import re
 
-file_path = r"e:/Kitchen‑Store Inventory System/apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx"
+file_path = r"e:/kitchen-store-inventory-system/apps/web/src/app/[locale]/(app)/master-data/items/ItemFormClient.tsx"
 
 with open(file_path, 'r', encoding='utf-8') as f:
     lines = f.readlines()

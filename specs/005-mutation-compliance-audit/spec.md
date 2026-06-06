@@ -3,7 +3,7 @@
 **Feature Branch**: `005-mutation-compliance-audit`  
 **Created**: 2026-05-10  
 **Status**: Draft  
-**Input**: User description: "read e:\Kitchen‑Store Inventory System\STRICT FRONTEND RECOVERY MASTER PLAN.md and creat a specification for the phase 3 only"
+**Input**: User description: "read e:\kitchen-store-inventory-system\STRICT FRONTEND RECOVERY MASTER PLAN.md and creat a specification for the phase 3 only"
 
 ## Clarifications
 

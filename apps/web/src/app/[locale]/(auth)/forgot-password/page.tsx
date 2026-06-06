@@ -20,6 +20,8 @@ import {
 import { apiClient } from '@/lib/api/client';
 import { AuthSuccessResponseSchema } from '@/types/auth';
 import LocaleSwitcher from '@/components/shared/LocaleSwitcher';
+import { Button } from '@/components/ui/button';
+import { onFormError } from '@/hooks/useFormError';
 
 const forgotPasswordSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -60,13 +62,13 @@ export default function ForgotPasswordPage() {
             <p className="text-[11px] text-black/60 dark:text-white/60 mb-8 leading-relaxed px-4">
                 {t('email_sent_desc', { email: getValues('email') })}
             </p>
-            <button
+            <Button
                 onClick={() => router.push('/login')}
-                className="w-full h-10 flex items-center justify-center gap-2 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan transition-all rounded-lg uppercase tracking-widest shadow-lg shadow-black/5 dark:shadow-white/5"
+                className="w-full h-10 flex items-center justify-center gap-2 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan transition-all rounded-lg uppercase tracking-widest shadow-lg shadow-black/5 dark:shadow-white/5 border-none"
             >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 {t('back_to_login')}
-            </button>
+            </Button>
         </div>
     );
 
@@ -172,7 +174,7 @@ export default function ForgotPasswordPage() {
                                 </p>
                             </div>
 
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                            <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-4">
                                 <div className="space-y-1.5">
                                     <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-black/80 dark:text-white/80 ms-1 flex items-center gap-2">
                                         <Mail className="w-3 h-3" />
@@ -196,13 +198,13 @@ export default function ForgotPasswordPage() {
                                     </div>
                                 )}
 
-                                <button
+                                <Button
                                     type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full h-9 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan transition-all duration-300 rounded uppercase tracking-[0.15em] disabled:opacity-50"
+                                    isLoading={isSubmitting}
+                                    className="w-full h-9 text-[10px] font-bold bg-black dark:bg-white text-white dark:text-[#050505] hover:bg-operational-cyan transition-all duration-300 rounded uppercase tracking-[0.15em]"
                                 >
-                                    {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : t('send_reset_link')}
-                                </button>
+                                    {t('send_reset_link')}
+                                </Button>
 
                                 <div className="text-center pt-2">
                                     <button

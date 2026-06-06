@@ -210,7 +210,7 @@ describe('AdminService', () => {
         expect(result.data).toHaveLength(2);
         expect(result.meta.total).toBe(2);
         expect(result.meta.page).toBe(1);
-        expect(result.meta.total_pages).toBe(1);
+        expect(result.meta.totalPages).toBe(1);
         expect(mockOutboxEventCount).toHaveBeenCalledWith({
           where: { status: 'FAILED' },
         });

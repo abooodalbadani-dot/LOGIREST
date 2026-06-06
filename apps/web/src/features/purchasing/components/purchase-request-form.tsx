@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
+import { onFormError } from '@/hooks/useFormError';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 
@@ -61,8 +62,9 @@ const lineItemSchema = z.object({
   item: z.object({
     id: z.string(),
     code: z.string(),
-    name_ar: z.string(),
-    name_en: z.string(),
+    name: z.string(),
+    name_ar: z.string().optional(),
+    name_en: z.string().optional(),
     primary_uom: z.object({
       code: z.string()
     }),
@@ -113,18 +115,23 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const departmentItems = React.useMemo(() => {
     return warehouses?.data?.map((w: Warehouse) => ({
       id: w.id,
+      name: w.name || '',
       name_en: w.name || '',
       name_ar: w.name || '',
     })) ?? [];
   }, [warehouses?.data]);
 
   const comboboxItems = React.useMemo(() => {
-    return itemsData?.data?.map((i: Item) => ({
-      id: i.id,
-      name_en: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
-      name_ar: `${i.code} - ${locale === 'ar' ? i.nameAr : i.nameEn}`,
-    })) ?? [];
-  }, [itemsData?.data, locale]);
+    return itemsData?.data?.map((i: Item) => {
+      const displayName = i.name || '';
+      return {
+        id: i.id,
+        name: `${i.code} - ${displayName}`,
+        name_en: `${i.code} - ${displayName}`,
+        name_ar: `${i.code} - ${displayName}`,
+      };
+    }) ?? [];
+  }, [itemsData?.data]);
 
   const form = useForm<PurchaseRequestFormValues>({
     resolver: zodResolver(formSchema),
@@ -138,8 +145,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         item: {
           id: l.item.id,
           code: l.item.code,
-          name_ar: l.item.nameAr,
-          name_en: l.item.nameEn,
+          name: l.item.name || l.item.nameEn || l.item.nameAr || '',
+          name_ar: l.item.nameAr || '',
+          name_en: l.item.nameEn || '',
           primary_uom: {
             code: l.item.primaryUom?.code || 'EA'
           },
@@ -175,15 +183,16 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
         const existing = currentLines[index];
         form.setValue(`lines.${index}.req_qty`, (existing.req_qty || 0) + 1);
         playSound('success');
-        toast.success(tc('item_added_quantity_updated', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        toast.success(tc('item_added_quantity_updated', { name: item.name }));
       } else {
         append({
           item_id: item.id,
           item: {
             id: item.id,
             code: item.code,
-            name_ar: item.nameAr,
-            name_en: item.nameEn,
+            name: item.name,
+            name_ar: item.name,
+            name_en: item.name,
             primary_uom: {
               code: item.primaryUom?.code || 'EA'
             },
@@ -194,7 +203,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           uom_id: item.primaryUom?.id || 'EA',
         });
         playSound('success');
-        toast.success(tc('item_added', { name: locale === 'ar' ? item.nameAr : item.nameEn }));
+        toast.success(tc('item_added', { name: item.name }));
       }
     } else {
       playSound('error');
@@ -208,13 +217,17 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
       let prId = initialData?.id;
 
       // Map back to API format
+      const selectedWh = warehouses?.data?.find((w: Warehouse) => w.id === values.department_id);
+      const branchId = selectedWh?.branchId || '';
+
       const payload = {
-        ...values,
+        branchId,
+        warehouseId: values.department_id,
+        notes: values.notes || '',
         lines: values.lines.map(l => ({
           id: l.id,
-          item_id: l.item_id,
-          req_qty: l.req_qty,
-          uom_id: l.uom_id
+          itemId: l.item_id,
+          quantity: l.req_qty,
         }))
       };
 
@@ -263,7 +276,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
             type="button"
             variant="outline"
             disabled={isSubmitting}
-            onClick={form.handleSubmit((v) => onSave(v, false))}
+            onClick={form.handleSubmit((v) => onSave(v, false), onFormError)}
             className="h-12 px-8 border-none bg-surface-container-low text-foreground text-label-xs font-semibold uppercase rounded-xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
           >
             <Save className="w-3.5 h-3.5 me-2" />
@@ -272,7 +285,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           <Button
             type="button"
             disabled={isSubmitting}
-            onClick={form.handleSubmit(handleSubmitClick)}
+            onClick={form.handleSubmit(handleSubmitClick, onFormError)}
             className="h-12 px-10 bg-operational-cyan hover:brightness-110 text-white text-label-xs font-semibold uppercase rounded-xl transition-all active:scale-95 shadow-xl shadow-operational-cyan/20"
           >
             {isSubmitting ? tc('saving') : (
@@ -545,8 +558,9 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
                                   form.setValue(`lines.${index}.item`, {
                                     id: matchedItem?.id || '',
                                     code: matchedItem?.code || '',
-                                    name_ar: matchedItem?.nameAr || '',
-                                    name_en: matchedItem?.nameEn || '',
+                                    name: matchedItem?.name || '',
+                                    name_ar: matchedItem?.name || '',
+                                    name_en: matchedItem?.name || '',
                                     primary_uom: { code: matchedItem?.primaryUom?.code || 'EA' },
                                     min_stock_level: matchedItem?.minStockLevel,
                                     reorder_point: matchedItem?.reorderPoint,

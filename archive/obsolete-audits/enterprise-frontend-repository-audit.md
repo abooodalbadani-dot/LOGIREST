@@ -1016,4 +1016,4 @@ All endpoints listed in [Section 5](#5-api-dependency-map) must be implemented. 
 
 *End of Audit Report*
 
-*This audit was performed by direct source code analysis of the frontend repository at `E:\Kitchen‑Store Inventory System\apps\web\src`. All findings are based on actual code inspection, not assumptions or visual review.*
+*This audit was performed by direct source code analysis of the frontend repository at `E:\kitchen-store-inventory-system\apps\web\src`. All findings are based on actual code inspection, not assumptions or visual review.*

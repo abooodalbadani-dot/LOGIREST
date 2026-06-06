@@ -59,8 +59,8 @@ AI agents executing implementation within this repository MUST operate under str
 
 ### 2.1 Graphify First
 * **DIRECTIVE**: Before searching the codebase, requesting file contents, or tracing dependencies, all agents MUST:
-  1. Consult `E:\Kitchen‑Store Inventory System\graphify-out\GRAPH_REPORT.md` to identify components and dependencies.
-  2. Query `E:\Kitchen‑Store Inventory System\graphify-out\graph.json` to resolve exact module mappings.
+  1. Consult `E:\kitchen-store-inventory-system\graphify-out\GRAPH_REPORT.md` to identify components and dependencies.
+  2. Query `E:\kitchen-store-inventory-system\graphify-out\graph.json` to resolve exact module mappings.
 * **FORBIDDEN**: Eager or blind recursive directory searches (e.g., executing broad file listings or guessing NestJS/Next.js file paths) are strictly FORBIDDEN.
 * **REQUIRED**: Every time code files are modified or added in a session, agents MUST run:
   ```powershell

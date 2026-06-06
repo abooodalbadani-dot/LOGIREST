@@ -30,6 +30,7 @@ import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRU
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
 import { Item, Warehouse, ItemSchema, WarehouseSchema } from '@/types/master-data';
 import { isDocumentLocked, type DocumentStatus } from '@logirest/shared-types';
+import { onFormError } from '@/hooks/useFormError';
 
 const lineItemSchema = z.object({
  id: z.string().optional(), // For existing lines
@@ -50,8 +51,8 @@ const formSchema = z.object({
 type PurchaseRequestFormValues = z.infer<typeof formSchema>;
 
 interface PurchaseRequestFormProps {
-  initialData?: PRDetail;
-  onConflict?: () => void;
+   initialData?: PRDetail;
+   onConflict?: () => void;
 }
 
 export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequestFormProps) {
@@ -84,7 +85,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  lines: initialData.lines.map(l => ({
  id: l.id,
  item_id: l.item.id,
- item_name: locale === 'ar' ? l.item.nameAr : l.item.nameEn,
+ item_name: l.item.name,
  item_code: l.item.code,
  req_qty: l.reqQty,
  uom_id: l.uomId,
@@ -107,33 +108,47 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  if (item) {
  append({
  item_id: item.id,
- item_name: locale === 'ar' ? item.nameAr : item.nameEn,
+ item_name: item.name,
  item_code: item.code,
  req_qty: 1,
  uom_id: item.primaryUom?.id || 'EA',
  });
   playSound('success');
-  toast.success(tc('items') + ': ' + (locale === 'ar' ? item.nameAr : item.nameEn));
+  toast.success(tc('items') + ': ' + item.name);
   } else {
     playSound('error');
     toast.error(tc('not_found'));
   }
  };
 
- const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
- setIsSubmitting(true);
- try {
- let prId = initialData?.id;
- 
-  if (prId) {
-  await updatePR.mutateAsync({ 
-  id: prId, 
-  payload: { ...values, version: initialData?.version ?? 0 } 
-  });
-  } else {
-  const res = await createPR.mutateAsync(values);
-  prId = res.id;
-  }
+  const onSave = async (values: PurchaseRequestFormValues, submitAfterSave = false) => {
+    setIsSubmitting(true);
+    try {
+      let prId = initialData?.id;
+      
+      const selectedWh = warehouses?.data?.find((w: Warehouse) => w.id === values.department_id);
+      const branchId = selectedWh?.branchId || '';
+
+      const payload = {
+        branchId,
+        warehouseId: values.department_id,
+        notes: values.notes || '',
+        lines: values.lines.map(l => ({
+          id: l.id,
+          itemId: l.item_id,
+          quantity: l.req_qty,
+        }))
+      };
+
+      if (prId) {
+        await updatePR.mutateAsync({ 
+          id: prId, 
+          payload: { ...payload, version: initialData?.version ?? 0 } 
+        });
+      } else {
+        const res = await createPR.mutateAsync(payload);
+        prId = res.id;
+      }
 
   if (submitAfterSave && prId) {
   const currentVersion = initialData ? ((initialData.version ?? 0) + 1) : 1;
@@ -151,8 +166,8 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   playSound('error');
   toast.error(tc('error'));
  } finally {
- setIsSubmitting(false);
- setSubmitConfirmOpen(false);
+  setIsSubmitting(false);
+  setSubmitConfirmOpen(false);
  }
  };
 
@@ -163,7 +178,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
 
  return (
  <Form {...form}>
- <form onSubmit={form.handleSubmit((v) => onSave(v, false))} className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative pb-20">
+ <form onSubmit={form.handleSubmit((v) => onSave(v, false), onFormError)} className="space-y-10 w-full bg-surface-container-lowest p-8 rounded-[2rem] relative pb-20">
  <div className="flex items-center justify-between">
  <h3 className="text-title-lg font-semibold text-operational-cyan uppercase">{t('detail_title')}</h3>
  {initialData?.documentNumber && (
@@ -293,7 +308,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  onValueChange={(val) => {
  const item = itemsData?.data?.find((i: Item) => i.id === val);
  form.setValue(`lines.${index}.item_id`, val as string);
- form.setValue(`lines.${index}.item_name`, locale === 'ar' ? item?.nameAr : item?.nameEn);
+ form.setValue(`lines.${index}.item_name`, item?.name);
  form.setValue(`lines.${index}.item_code`, item?.code);
  form.setValue(`lines.${index}.uom_id`, item?.primaryUom?.id || 'EA');
  }} 
@@ -307,7 +322,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
  <SelectContent className="bg-surface-container-low border-none rounded-2xl max-h-[300px]">
  {itemsData?.data?.map((i: Item) => (
  <SelectItem key={i.id} value={i.id} className="text-label-xs font-bold">
- {i.code} - {locale === 'ar' ? i.nameAr : i.nameEn}
+ {i.code} - {i.name}
  </SelectItem>
  ))}
  </SelectContent>
@@ -397,30 +412,26 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
     {tc('cancel')}
   </Button>
  
- <div className="flex items-center gap-4 w-full md:w-auto">
-  <Button
-    type="submit"
-    disabled={isSubmitting}
-    variant="outline"
-    className="flex-1 md:flex-none h-14 px-10 border-none bg-surface-container-low text-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
-  >
-    <Save className="w-5 h-5 me-3" />
-    {tc('save')}
-  </Button>
-  <Button
-    type="button"
-    disabled={isSubmitting}
-    onClick={form.handleSubmit(handleSubmitClick)}
-    className="flex-1 md:flex-none h-14 px-12 bg-operational-cyan hover:brightness-110 text-primary-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-2xl shadow-operational-cyan/30"
-  >
-    {isSubmitting ? tc('saving') : (
-      <>
-        <Send className="w-5 h-5 me-3" />
-        {t('submit')}
-      </>
-    )}
-  </Button>
- </div>
+  <div className="flex items-center gap-4 w-full md:w-auto">
+   <Button
+     type="submit"
+     isLoading={isSubmitting || createPR.isPending || updatePR.isPending}
+     variant="outline"
+     className="flex-1 md:flex-none h-14 px-10 border-none bg-surface-container-low text-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl hover:bg-surface-container-high/50 active:scale-95 transition-all shadow-xl shadow-black/5"
+   >
+     <Save className="w-5 h-5 me-3" />
+     {tc('save')}
+   </Button>
+   <Button
+     type="button"
+     isLoading={isSubmitting || submitPR.isPending}
+     onClick={form.handleSubmit(handleSubmitClick, onFormError)}
+     className="flex-1 md:flex-none h-14 px-12 bg-operational-cyan hover:brightness-110 text-primary-foreground text-label-xs font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-2xl shadow-operational-cyan/30"
+   >
+     <Send className="w-5 h-5 me-3" />
+     {t('submit')}
+   </Button>
+  </div>
  </div>
  </form>
  <PostConfirmDialog

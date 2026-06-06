@@ -19,7 +19,7 @@ export class OutboxService {
   async writeEvent(
     tx: Prisma.TransactionClient,
     eventType: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ): Promise<OutboxEvent> {
     this.logger.log(`Writing outbox event of type: ${eventType}`);
 
@@ -35,38 +35,27 @@ export class OutboxService {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days TTL
 
-    let event: OutboxEvent;
-
-    try {
-      event = await tx.outboxEvent.create({
-        data: {
-          eventType,
-          payload: payload as Prisma.InputJsonValue,
-          status: 'PENDING',
-          attempts: 0,
-          expiresAt,
-          documentId,
-          eventHash,
-        },
-      });
-    } catch (error) {
-      // Catch Prisma duplicate unique constraint error (P2002)
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        this.logger.warn(
-          `Concurrent duplicate outbox event prevented for type ${eventType} with eventHash ${eventHash}.`,
-        );
-        const existing = await tx.outboxEvent.findFirst({
-          where: { eventHash },
-        });
-        if (existing) {
-          return existing;
-        }
-      }
-      throw error;
+    const existing = await tx.outboxEvent.findFirst({
+      where: { eventHash },
+    });
+    if (existing) {
+      this.logger.warn(
+        `Concurrent duplicate outbox event prevented for type ${eventType} with eventHash ${eventHash}.`,
+      );
+      return existing;
     }
+
+    const event = await tx.outboxEvent.create({
+      data: {
+        eventType,
+        payload: payload as Prisma.InputJsonValue,
+        status: 'PENDING',
+        attempts: 0,
+        expiresAt,
+        documentId,
+        eventHash,
+      },
+    });
 
     const correlationId = correlationStorage.getStore();
 

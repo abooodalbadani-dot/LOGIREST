@@ -26,20 +26,22 @@ export class WarehouseLockController {
     @Param('id') id: string,
     @CurrentUser('id') adminId: string,
     @CurrentUser('role') role: Role,
-    @Body() body: { reason_notes: string },
+    @Body() body: { reasonNotes: string },
     @Req() req: Request,
   ) {
     if (role !== 'ADMIN') {
       throw new ForbiddenException('Forbidden resource');
     }
 
+    const reasonNotes = body?.reasonNotes;
+
     if (
-      !body ||
-      typeof body.reason_notes !== 'string' ||
-      body.reason_notes.length < 10
+      !reasonNotes ||
+      typeof reasonNotes !== 'string' ||
+      reasonNotes.length < 10
     ) {
       throw new BadRequestException(
-        'reason_notes must be longer than or equal to 10 characters',
+        'reasonNotes must be longer than or equal to 10 characters',
       );
     }
 
@@ -48,7 +50,7 @@ export class WarehouseLockController {
     return this.warehouseLockService.forceUnlock(
       id,
       adminId,
-      body.reason_notes,
+      reasonNotes,
       ipAddress,
     );
   }

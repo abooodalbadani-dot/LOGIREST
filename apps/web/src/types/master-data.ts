@@ -16,16 +16,16 @@ export interface Department {
  version?: number; 
 }
 
-export interface UoM { id: string; code: string; nameAr: string; nameEn: string; category?: string; isActive: boolean; createdAt: string; version?: number; }
+export interface UoM { id: string; code: string; name: string; category?: string; isActive: boolean; createdAt: string; version?: number; }
 export interface UoMConversion { fromUomId: string; toUomId: string; factor: number; }
-export interface Category { id: string; code: string; nameAr: string; nameEn: string; isReferenced?: boolean; version?: number; }
-export interface Item { id: string; code: string; barcode: string; nameAr: string; nameEn: string; categoryId: string; primaryUom: UoM; uomConversions: UoMConversion[]; trackLots: boolean; minStockLevel: number; reorderPoint: number; lastPurchasePrice?: number; isActive: boolean; version?: number; hasTransactions?: boolean; }
+export interface Category { id: string; code: string; name: string; isReferenced?: boolean; version?: number; }
+export interface Item { id: string; code: string; barcode: string; name: string; categoryId: string; primaryUom: UoM; uomConversions: UoMConversion[]; trackLots: boolean; minStockLevel: number; reorderPoint: number; lastPurchasePrice?: number; isActive: boolean; version?: number; hasTransactions?: boolean; }
 export interface Lot { id: string; itemId: string; warehouseId: string; lotNumber: string; expiryDate: string | null; qtyAvailable: number; isExpired: boolean; isNearExpiry: boolean; }
-export interface Supplier { id: string; code: string; nameAr: string; nameEn: string; email?: string; phone?: string; taxNumber?: string; currencyId: string; paymentTerms: string; isActive: boolean; version?: number; }
-export interface Currency { id: string; code: string; nameAr: string; nameEn: string; symbol?: string; isBaseCurrency: boolean; isActive: boolean; createdAt: string; version?: number; }
+export interface Supplier { id: string; code: string; name: string; email?: string; phone?: string; taxNumber?: string; currencyId: string; paymentTerms: string; isActive: boolean; version?: number; }
+export interface Currency { id: string; code: string; name: string; symbol?: string; isBaseCurrency: boolean; isActive: boolean; createdAt: string; version?: number; }
 export interface FXRate { id: string; fromCurrencyId: string; toCurrencyId: string; rate: number; effectiveDate: string; isActive: boolean; createdAt: string; version?: number; }
 export interface Barcode { id: string; itemId: string; uomId: string; code: string; defaultQty: number; isActive: boolean; version?: number; }
-export interface VarianceReason { id: string; code: string; nameAr: string; nameEn: string; isActive: boolean; }
+export interface VarianceReason { id: string; code: string; name: string; isActive: boolean; }
 
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -54,12 +54,12 @@ export const DepartmentSchema = z.object({
 });
 
 export const UoMSchema = z.object({
-  id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
+  id: z.string(), code: z.string(), name: z.string(),
   category: z.string().optional(), isActive: z.boolean(), createdAt: z.string(), version: z.number().optional()
 });
 
 export const CategorySchema = z.object({
-  id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(), isReferenced: z.boolean().optional(), version: z.number().optional()
+  id: z.string(), code: z.string(), name: z.string(), isReferenced: z.boolean().optional(), version: z.number().optional()
 });
 
 export const UoMConversionSchema = z.object({
@@ -67,7 +67,7 @@ export const UoMConversionSchema = z.object({
 });
 
 export const ItemSchema = z.object({
-  id: z.string(), code: z.string(), barcode: z.string(), nameAr: z.string(), nameEn: z.string(),
+  id: z.string(), code: z.string(), barcode: z.string(), name: z.string(),
   categoryId: z.string(),
   primaryUom: UoMSchema,
   uomConversions: z.array(UoMConversionSchema),
@@ -84,13 +84,13 @@ export const LotSchema = z.object({
 });
 
 export const SupplierSchema = z.object({
-  id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
+  id: z.string(), code: z.string(), name: z.string(),
   email: z.string().optional(), phone: z.string().optional(), taxNumber: z.string().optional(),
   currencyId: z.string(), paymentTerms: z.string(), isActive: z.boolean(), version: z.number().optional()
 });
 
 export const CurrencySchema = z.object({
-  id: z.string(), code: z.string(), nameAr: z.string(), nameEn: z.string(),
+  id: z.string(), code: z.string(), name: z.string(),
   symbol: z.string().optional(), isBaseCurrency: z.boolean(), isActive: z.boolean(), createdAt: z.string(),
   version: z.number().optional()
 });
@@ -114,8 +114,7 @@ export const BarcodeSchema = z.object({
 export const VarianceReasonSchema = z.object({
   id: z.string(),
   code: z.string(),
-  nameAr: z.string(),
-  nameEn: z.string(),
+  name: z.string(),
   isActive: z.boolean(),
 });
 
@@ -158,8 +157,7 @@ export const UoMFormSchema = z.object({
   code: z.string().nullish()
     .refine(val => !val || val.length >= 1, { message: 'master_data.uoms.validation.code_required' })
     .refine(val => !val || /^[A-Z]+$/.test(val), { message: 'master_data.uoms.validation.code_uppercase' }),
-  nameAr: z.string().min(1, 'master_data.uoms.validation.name_ar_required'),
-  nameEn: z.string().min(1, 'master_data.uoms.validation.name_en_required'),
+  name: z.string().min(1, 'master_data.uoms.validation.name_required'),
   category: z.string().optional(),
   isActive: z.boolean(),
   version: z.number().optional()
@@ -167,7 +165,7 @@ export const UoMFormSchema = z.object({
 
 export const CategoryFormSchema = z.object({
   code: z.string().optional(),
-  nameAr: z.string().min(1), nameEn: z.string().min(1),
+  name: z.string().min(1),
   isReferenced: z.boolean().optional(),
   version: z.number().optional()
 });
@@ -176,8 +174,7 @@ export const ItemFormSchema = z.object({
   code: z.string().nullish()
     .refine(val => !val || val.length >= 1, { message: 'master_data.items.validation.code_required' }),
   barcode: z.string().min(1, 'master_data.items.validation.barcode_required'),
-  nameAr: z.string().min(1, 'master_data.items.validation.name_ar_required'),
-  nameEn: z.string().min(1, 'master_data.items.validation.name_en_required'),
+  name: z.string().min(1, 'master_data.items.validation.name_required'),
   categoryId: z.string().min(1, 'master_data.items.validation.category_required'),
   primaryUomId: z.string().min(1, 'master_data.items.validation.uom_required'),
   trackLots: z.boolean(),
@@ -195,8 +192,7 @@ export const ItemFormSchema = z.object({
 export const SupplierFormSchema = z.object({
   code: z.string().nullish()
     .refine(val => !val || val.length >= 1, { message: 'master_data.suppliers.validation.code_required' }),
-  nameAr: z.string().min(1, 'master_data.suppliers.validation.name_ar_required'),
-  nameEn: z.string().min(1, 'master_data.suppliers.validation.name_en_required'),
+  name: z.string().min(1, 'master_data.suppliers.validation.name_required'),
   currencyId: z.string().min(1, 'master_data.suppliers.validation.currency_required'),
   paymentTerms: z.string(),
   isActive: z.boolean(),
@@ -207,8 +203,7 @@ export const CurrencyFormSchema = z.object({
   code: z.string().nullish()
     .refine(val => !val || val.length === 3, { message: 'master_data.currencies.validation.code_length' })
     .refine(val => !val || /^[A-Z]{3}$/.test(val), { message: 'master_data.currencies.validation.code_format' }),
-  nameAr: z.string().min(1, 'master_data.currencies.validation.name_ar_required'),
-  nameEn: z.string().min(1, 'master_data.currencies.validation.name_en_required'),
+  name: z.string().min(1, 'master_data.currencies.validation.name_required'),
   symbol: z.string().optional(),
   isBaseCurrency: z.boolean(),
   isActive: z.boolean(),

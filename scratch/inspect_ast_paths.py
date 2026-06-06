@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 def main():
-    ast_path = Path("e:/Kitchen‑Store Inventory System/graphify-out/.graphify_ast.json")
+    ast_path = Path("e:/kitchen-store-inventory-system/graphify-out/.graphify_ast.json")
     with open(ast_path, "r", encoding="utf-8") as f:
         ast_data = json.load(f)
         

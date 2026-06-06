@@ -55,11 +55,8 @@ describe('OutboxService', () => {
 
     expect(mockTxSpy.outboxEvent.findFirst).toHaveBeenCalledWith({
       where: {
-        eventType: 'PR_SUBMITTED',
-        payload: {
-          path: ['id'],
-          equals: 'pr-1',
-        },
+        eventHash:
+          '598ae1891a6adb18416ef30e4a895cf566434a992efcf3b12f7591d0fb72b4ca',
       },
     });
 
@@ -108,11 +105,8 @@ describe('OutboxService', () => {
 
     expect(mockTxSpy.outboxEvent.findFirst).toHaveBeenCalledWith({
       where: {
-        eventType: 'PR_SUBMITTED',
-        payload: {
-          path: ['id'],
-          equals: 'pr-1',
-        },
+        eventHash:
+          '598ae1891a6adb18416ef30e4a895cf566434a992efcf3b12f7591d0fb72b4ca',
       },
     });
 

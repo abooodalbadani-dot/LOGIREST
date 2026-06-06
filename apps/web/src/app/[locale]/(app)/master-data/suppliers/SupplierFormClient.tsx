@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { onFormError } from '@/hooks/useFormError';
 
 interface Props {
   id: string | null;
@@ -58,7 +59,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     useForm<SupplierFormValues>({
       resolver: zodResolver(SupplierFormSchema),
       disabled: isReadOnly,
-      defaultValues: { code: '', nameAr: '', nameEn: '', currencyId: '', paymentTerms: '', isActive: true, version: undefined },
+      defaultValues: { code: '', name: '', currencyId: '', paymentTerms: '', isActive: true, version: undefined },
     });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
@@ -78,8 +79,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     if (data) {
       reset({
         code: data.code,
-        nameAr: data.nameAr,
-        nameEn: data.nameEn,
+        name: data.name,
         currencyId: data.currencyId,
         paymentTerms: data.paymentTerms || '',
         isActive: data.isActive,
@@ -104,12 +104,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     }
   };
 
-  const onInvalid = (errors: unknown) => {
-    console.warn('Supplier form validation failed:', errors);
-    toast.error(t('check_fields') || 'Please check required fields');
-  };
-
-  const onSubmit = handleSubmit(onValid, onInvalid);
+  const onSubmit = handleSubmit(onValid, onFormError);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -203,32 +198,16 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   <div className="hidden md:block" /> {/* Spacer for consistent grid alignment */}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="sup-name-en" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('name_en')}</Label>
-                    <Input 
-                      id="sup-name-en" 
-                      dir="ltr" 
-                      {...register('nameEn')} 
-                      disabled={isReadOnly}
-                      className="font-semibold" 
-                      placeholder={ts('name_en_placeholder')} 
-                    />
-                    {errors.nameEn?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameEn.message as never)}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sup-name-ar" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('name_ar')}</Label>
-                    <Input 
-                      id="sup-name-ar" 
-                      dir="rtl" 
-                      {...register('nameAr')} 
-                      disabled={isReadOnly}
-                      className="font-semibold" 
-                      placeholder={ts('name_ar_placeholder')} 
-                    />
-                    {errors.nameAr?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.nameAr.message as never)}</p>}
-                  </div>
+                <div className="space-y-2 max-w-md">
+                  <Label htmlFor="sup-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{tm('name') || 'Name'}</Label>
+                  <Input 
+                    id="sup-name" 
+                    {...register('name')} 
+                    disabled={isReadOnly}
+                    className="font-semibold" 
+                    placeholder={ts('name_placeholder') || 'Enter Supplier Name'} 
+                  />
+                  {errors.name?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
                 </div>
               </div>
             </CardContent>
