@@ -405,12 +405,12 @@ export class ReportsController {
       [
         { header: 'SKU', key: 'sku', width: 20 },
         { header: 'Item Name', key: 'name', width: 35 },
-        { header: 'Lot Number', key: 'lot_no', width: 25 },
-        { header: 'Expiry Date', key: 'expiry_date', width: 25, isDate: true },
+        { header: 'Lot Number', key: 'lotNo', width: 25 },
+        { header: 'Expiry Date', key: 'expiryDate', width: 25, isDate: true },
         { header: 'Qty On Hand', key: 'qtyOnHand', width: 15, isNumber: true },
         {
           header: 'Days Remaining',
-          key: 'days_remaining',
+          key: 'daysRemaining',
           width: 18,
           isNumber: true,
         },
@@ -455,7 +455,7 @@ export class ReportsController {
           await this.reportsService.getAvailableInventoryRaw(warehouseId);
         return data.map((d: Record<string, unknown>) => ({
           ...d,
-          total_value: Number(d.qty_physical) * Number(d.wac),
+          totalValue: Number(d.qtyPhysical) * Number(d.wac),
         }));
       },
       res,
@@ -469,26 +469,26 @@ export class ReportsController {
         { header: 'UoM', key: 'uom', width: 12 },
         {
           header: 'Qty On Hand',
-          key: 'qty_physical',
+          key: 'qtyPhysical',
           width: 18,
           isNumber: true,
         },
         {
           header: 'Qty Allocated',
-          key: 'qty_reserved',
+          key: 'qtyReserved',
           width: 18,
           isNumber: true,
         },
         {
           header: 'Qty Available',
-          key: 'qty_available',
+          key: 'qtyAvailable',
           width: 18,
           isNumber: true,
         },
         { header: 'WAC', key: 'wac', width: 15, isNumber: true },
         {
           header: 'Total Value',
-          key: 'total_value',
+          key: 'totalValue',
           width: 18,
           isNumber: true,
         },
@@ -521,7 +521,7 @@ export class ReportsController {
         );
         return data.map((d: Record<string, unknown>) => ({
           ...d,
-          variance_value: Number(d.variance) * Number(d.wac),
+          varianceValue: Number(d.variance) * Number(d.wac),
         }));
       },
       res,
@@ -532,10 +532,10 @@ export class ReportsController {
         { header: 'SKU', key: 'sku', width: 20 },
         { header: 'Item Name', key: 'name', width: 35 },
         { header: 'Lot Number', key: 'lotNumber', width: 25 },
-        { header: 'System Qty', key: 'system_qty', width: 15, isNumber: true },
+        { header: 'System Qty', key: 'systemQty', width: 15, isNumber: true },
         {
           header: 'Counted Qty',
-          key: 'counted_qty',
+          key: 'countedQty',
           width: 15,
           isNumber: true,
         },
@@ -543,7 +543,7 @@ export class ReportsController {
         { header: 'WAC', key: 'wac', width: 15, isNumber: true },
         {
           header: 'Variance Value',
-          key: 'variance_value',
+          key: 'varianceValue',
           width: 18,
           isNumber: true,
         },
@@ -587,7 +587,7 @@ export class ReportsController {
       'Procurement Status Report',
       userName,
       [
-        { header: 'PO Number', key: 'po_no', width: 25 },
+        { header: 'PO Number', key: 'poNo', width: 25 },
         { header: 'Date', key: 'date', width: 25, isDate: true },
         { header: 'Supplier Name', key: 'supplier', width: 35 },
         { header: 'Currency', key: 'currency', width: 15 },

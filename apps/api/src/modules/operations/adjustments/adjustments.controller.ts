@@ -39,9 +39,9 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
         ? {
             id: item.id as string,
             code: item.sku as string,
-            name_ar: item.name as string,
-            name_en: item.name as string,
-            primary_uom: item.unitOfMeasure
+            nameAr: item.name as string,
+            nameEn: item.name as string,
+            primaryUom: item.unitOfMeasure
               ? {
                   id: (item.unitOfMeasure as Record<string, unknown>)
                     .id as string,
@@ -53,18 +53,18 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
         : {
             id: '',
             code: '',
-            name_ar: '',
-            name_en: '',
-            primary_uom: { id: '', code: '' },
+            nameAr: '',
+            nameEn: '',
+            primaryUom: { id: '', code: '' },
           },
       direction: line.direction === 'IN' ? 'INCREASE' : 'DECREASE',
-      qty_before: 0,
-      qty_adjusted: Number(line.quantity),
-      uom_id: (item?.uomId as string) || '',
-      unit_cost: line.unitCost ? Number(line.unitCost) : null,
-      reason_notes: (line.reason as string) || '',
-      lot_allocations: line.lotId
-        ? [{ lot_id: line.lotId as string, qty: Number(line.quantity) }]
+      qtyBefore: 0,
+      qtyAdjusted: Number(line.quantity),
+      uomId: (item?.uomId as string) || '',
+      unitCost: line.unitCost ? Number(line.unitCost) : null,
+      reasonNotes: (line.reason as string) || '',
+      lotAllocations: line.lotId
+        ? [{ lotId: line.lotId as string, qty: Number(line.quantity) }]
         : [],
     };
   });
@@ -80,23 +80,23 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
 
   return {
     id: adj.id as string,
-    document_number: adj.adjustmentNumber as string,
+    documentNumber: adj.adjustmentNumber as string,
     status: adj.status as string,
-    warehouse_id: adj.warehouseId as string,
+    warehouseId: adj.warehouseId as string,
     reason: mainReason,
     notes: '',
     reject: null,
-    movement_id: null,
-    approved_by: null,
-    posted_at:
+    movementId: null,
+    approvedBy: null,
+    postedAt:
       adj.status === 'POSTED' && createdAtVal
         ? (createdAtVal instanceof Date
             ? createdAtVal
             : new Date(createdAtVal)
           ).toISOString()
         : null,
-    created_at: createdAtIso,
-    updated_at: createdAtIso,
+    createdAt: createdAtIso,
+    updatedAt: createdAtIso,
     version: adj.version as number,
     lines,
     timeline: [],

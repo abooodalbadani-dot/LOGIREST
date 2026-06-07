@@ -55,9 +55,9 @@ function mapPODetail(po: Record<string, unknown>) {
         ? {
             id: item.id as string,
             code: item.sku as string,
-            name_ar: item.name as string,
-            name_en: item.name as string,
-            primary_uom: unitOfMeasure
+            nameAr: item.name as string,
+            nameEn: item.name as string,
+            primaryUom: unitOfMeasure
               ? {
                   id: unitOfMeasure.id as string,
                   code: unitOfMeasure.code as string,
@@ -65,20 +65,20 @@ function mapPODetail(po: Record<string, unknown>) {
               : undefined,
           }
         : undefined,
-      item_id: line.itemId as string,
-      item_sku: item?.sku as string,
-      item_name: item?.name as string,
+      itemId: line.itemId as string,
+      itemSku: item?.sku as string,
+      itemName: item?.name as string,
       quantity: Number(line.quantity),
       qty: Number(line.quantity),
-      unit_cost_foreign: Number(line.unitPrice),
-      unit_price: Number(line.unitPrice),
-      uom_id: (item?.uomId as string) || '',
+      unitCostForeign: Number(line.unitPrice),
+      unitPrice: Number(line.unitPrice),
+      uomId: (item?.uomId as string) || '',
       notes: '',
     };
   });
 
   const supplierTotalAmount = lines.reduce(
-    (sum: number, line) => sum + line.quantity * line.unit_price,
+    (sum: number, line) => sum + line.quantity * line.unitPrice,
     0,
   );
 
@@ -91,28 +91,28 @@ function mapPODetail(po: Record<string, unknown>) {
 
   return {
     id: po.id as string,
-    document_number: po.poNumber as string,
+    documentNumber: po.poNumber as string,
     status: po.status as string,
-    pr_id: po.prId as string,
+    prId: po.prId as string,
     version: po.version as number,
-    supplier_id: po.supplierId as string,
-    supplier_name: (supplier?.name as string) || '',
-    warehouse_name: (warehouse?.name as string) || '',
-    currency_code: (currency?.code as string) || '',
-    currency_id: po.currencyId as string,
-    exchange_rate: 1.0,
-    expected_date: createdAtIso,
-    expected_delivery_date: createdAtIso,
-    target_warehouse_id: (purchaseRequest?.warehouseId as string) || undefined,
+    supplierId: po.supplierId as string,
+    supplierName: (supplier?.name as string) || '',
+    warehouseName: (warehouse?.name as string) || '',
+    currencyCode: (currency?.code as string) || '',
+    currencyId: po.currencyId as string,
+    exchangeRate: 1.0,
+    expectedDate: createdAtIso,
+    expectedDeliveryDate: createdAtIso,
+    targetWarehouseId: (purchaseRequest?.warehouseId as string) || undefined,
     lines,
-    supplier_total_amount: supplierTotalAmount,
-    base_total_amount: supplierTotalAmount,
+    supplierTotalAmount: supplierTotalAmount,
+    baseTotalAmount: supplierTotalAmount,
     total: supplierTotalAmount,
     notes: '',
-    audit_log: [],
-    created_at: createdAtIso,
-    created_by: 'System',
-    updated_at: createdAtIso,
+    auditLog: [],
+    createdAt: createdAtIso,
+    createdBy: 'System',
+    updatedAt: createdAtIso,
   };
 }
 
@@ -136,14 +136,14 @@ function mapPOSummary(po: Record<string, unknown>) {
 
   return {
     id: po.id as string,
-    document_number: po.poNumber as string,
+    documentNumber: po.poNumber as string,
     status: po.status as string,
-    supplier_id: po.supplierId as string,
-    supplier_name: (supplier?.name as string) || '',
-    currency_code: (currency?.code as string) || '',
-    expected_date: createdAtIso,
-    supplier_total_amount: supplierTotalAmount,
-    created_at: createdAtIso,
+    supplierId: po.supplierId as string,
+    supplierName: (supplier?.name as string) || '',
+    currencyCode: (currency?.code as string) || '',
+    expectedDate: createdAtIso,
+    supplierTotalAmount: supplierTotalAmount,
+    createdAt: createdAtIso,
   };
 }
 

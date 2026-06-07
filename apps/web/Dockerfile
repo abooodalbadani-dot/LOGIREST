@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL
@@ -15,8 +15,8 @@ RUN npm ci --workspace=apps/web
 RUN npm run build --workspace=apps/web
 
 # Stage 2: Production Runner
-FROM node:20-alpine AS production
-RUN apk add --no-cache curl
+FROM node:20-slim AS production
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 ENV NODE_ENV=production

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ROLES } from '../schemas/enums';
+import { ROLES, Role } from '../schemas/enums';
 
 export const AllocationMethodEnum = z.enum(['VALUE', 'QUANTITY', 'WEIGHT', 'VOLUME']);
 export type AllocationMethod = z.infer<typeof AllocationMethodEnum>;
@@ -34,7 +34,7 @@ export const PostLandedCostVoucherSchema = z.object({
 export type PostLandedCostVoucher = z.infer<typeof PostLandedCostVoucherSchema>;
 
 export const AssignUserRoleSchema = z.object({
-  role: z.enum(ROLES, { error: `Role must be one of: ${ROLES.join(', ')}` }),
+  role: z.enum(ROLES as unknown as [Role, ...Role[]]),
 });
 
 export type AssignUserRole = z.infer<typeof AssignUserRoleSchema>;

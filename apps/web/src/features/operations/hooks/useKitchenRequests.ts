@@ -5,6 +5,7 @@ import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 import { 
  KitchenRequestDetailSchema,
@@ -56,7 +57,9 @@ export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
  },
  onError: (error) => {
- console.error('Failed to create kitchen request:', error);
+   console.error('Failed to create kitchen request:', error);
+   const message = error instanceof Error ? error.message : 'Failed to create kitchen request';
+   toast.error(message);
  },
  });
 }
@@ -73,6 +76,8 @@ export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => voi
   },
   onError: (error) => {
     console.error('Failed to update kitchen request status:', error);
+    const message = error instanceof Error ? error.message : 'Failed to update kitchen request status';
+    toast.error(message);
   },
   });
 }
@@ -81,15 +86,21 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
   const queryClient = useQueryClient();
    return useSafeMutation({
      onConflict: options?.onConflict,
-      mutationFn: ({ id, fulfillments, version, headers, signal }: { id: string; fulfillments: { itemId: string; fulfilledQty: number }[]; version: number; headers?: Record<string, string>; signal?: AbortSignal }) =>
-        apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { fulfillments, version }, { headers, signal }),
+      mutationFn: ({ id, fulfillments, version, headers, signal }: { id: string; fulfillments: { itemId: string; fulfilledQty: number }[]; version: number; headers?: Record<string, string>; signal?: AbortSignal }) => {
+        if (fulfillments.some(f => f.fulfilledQty <= 0)) {
+          throw new Error("Fulfilled quantity must be greater than zero");
+        }
+        return apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { fulfillments, version }, { headers, signal });
+      },
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
-  queryClient.invalidateQueries({ queryKey: ['inventory-balance'] });
+  queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
   },
   onError: (error) => {
     console.error('Failed to fulfill kitchen request:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fulfill kitchen request';
+    toast.error(message);
   },
   });
 }

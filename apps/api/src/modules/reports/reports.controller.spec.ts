@@ -245,9 +245,9 @@ describe('ReportsController', () => {
             name: 'Item 1',
             category: 'Veg',
             uom: 'PCS',
-            qty_physical: 100,
-            qty_reserved: 10,
-            qty_available: 90,
+            qtyPhysical: 100,
+            qtyReserved: 10,
+            qtyAvailable: 90,
             wac: 5.5,
           },
         ],
@@ -301,7 +301,7 @@ describe('ReportsController', () => {
         expect.objectContaining({
           sku: 'SKU-1',
           name: 'Milk',
-          lot_no: 'LOT-1',
+          lotNo: 'LOT-1',
           qtyOnHand: 50,
         }),
       );
@@ -333,8 +333,8 @@ describe('ReportsController', () => {
         {
           sku: 'SKU-A',
           name: 'Item A',
-          system_qty: 10,
-          counted_qty: 9.5,
+          systemQty: 10,
+          countedQty: 9.5,
           variance: -0.5,
           reason: '',
           lotNumber: 'LOT-A',
@@ -373,7 +373,7 @@ describe('ReportsController', () => {
       const result = await controller.getProcurementStatus('wh-1');
       expect(result).toEqual([
         {
-          po_no: 'PO-0001',
+          poNo: 'PO-0001',
 
           date: expect.any(String),
           supplier: 'ABC Supplier',
@@ -410,8 +410,8 @@ describe('ReportsController', () => {
 
       const result = await controller.getCurrencySummaries('wh-1');
       expect(result).toEqual([
-        { currency: 'SAR', total: 100, total_base: 100, last_rate: 1 },
-        { currency: 'USD', total: 50, total_base: 187.5, last_rate: 3.75 },
+        { currency: 'SAR', total: 100, totalBase: 100, lastRate: 1 },
+        { currency: 'USD', total: 50, totalBase: 187.5, lastRate: 3.75 },
       ]);
     });
   });

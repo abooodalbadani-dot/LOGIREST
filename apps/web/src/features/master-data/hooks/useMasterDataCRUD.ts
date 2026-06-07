@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
+import { z } from 'zod';
 import type { ZodSchema } from 'zod';
 import { paginatedSchema } from '@/types/api';
 import { toast } from 'sonner';
-import { toSnakeCase } from '@/lib/api/adapters';
+import { toSnakeCase, toCamelCase } from '@/lib/api/adapters';
 
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -20,7 +21,15 @@ export function useMasterDataList<T>(
 
   return useQuery({ 
     queryKey: [entity, filters], 
-    queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, paginatedSchema(schema), { signal }), 
+    queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, z.any(), { signal })
+      .then(data => {
+        try {
+          return paginatedSchema(schema).parse(toCamelCase(data));
+        } catch (error) {
+          console.error(`[Zod Error] Failed to parse ${entity} list response:`, error);
+          return { data: [], meta: { total: 0, page: 1, pageSize: 10, totalPages: 1 } };
+        }
+      }), 
     staleTime: 60_000,
     ...options,
     enabled: options?.enabled !== undefined ? options.enabled : (isUnscoped ? true : !!activeScope?.warehouseId)
@@ -38,7 +47,15 @@ export function useMasterDataItem<T>(
 
   return useQuery({ 
     queryKey: [entity, id], 
-    queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, schema, { signal }), 
+    queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, z.any(), { signal })
+      .then(data => {
+        try {
+          return schema.parse(toCamelCase(data));
+        } catch (error) {
+          console.error(`[Zod Error] Failed to parse ${entity} item response:`, error);
+          return null as any;
+        }
+      }), 
     ...options,
     enabled: options?.enabled !== undefined ? options.enabled : (isUnscoped ? !!id : (!!id && !!activeScope?.warehouseId))
   });

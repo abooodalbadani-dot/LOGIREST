@@ -107,8 +107,8 @@ export function PurchaseOrderForm({ initialData, mode = "create", onConflict, ac
         itemId: l.item?.id || "",
         itemName: l.item?.name || (locale === 'ar' ? l.item?.nameAr : l.item?.nameEn),
         itemCode: l.item?.code || "",
-        quantity: l.quantity || l.qty || 1,
-        unitPrice: l.unitPrice || l.unitCostForeign || 0,
+        quantity: l.quantity || 1,
+        unitPrice: l.unitPrice || 0,
         uomId: l.uomId,
         notes: l.notes || ""
       })) || [{ itemId: "", itemName: "", itemCode: "", quantity: 1, unitPrice: 0, uomId: "PCS", notes: "" }]

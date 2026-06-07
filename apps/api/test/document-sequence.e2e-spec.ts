@@ -130,8 +130,8 @@ describe('Document Sequence Concurrency (e2e)', () => {
     const prNumbers: string[] = [];
     for (const res of responses) {
       expect(res.status).toBe(201);
-      expect(res.body.data.document_number).toBeDefined();
-      prNumbers.push(res.body.data.document_number);
+      expect(res.body.data.documentNumber).toBeDefined();
+      prNumbers.push(res.body.data.documentNumber);
     }
 
     // Verify all 20 are unique

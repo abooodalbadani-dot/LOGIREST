@@ -29,7 +29,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import type { Request } from 'express';
 
-function mapKitchenRequestDetail(kr: Record<string, unknown>) {
+function mapKitchenRequestDetail(kr: Record<string, unknown>, currentUserId?: string) {
   const krItems = (kr.items as Record<string, unknown>[]) || [];
   const department = kr.department as Record<string, unknown> | null;
   const warehouse = kr.warehouse as Record<string, unknown> | null;
@@ -64,7 +64,7 @@ function mapKitchenRequestDetail(kr: Record<string, unknown>) {
     warehouseName: (warehouse?.name as string) || '',
     status: kr.status as string,
     notes: (kr.notes as string) || '',
-    requestedBy: 'System',
+    requestedBy: currentUserId || 'System',
     requestedAt: createdAtIso,
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
@@ -102,7 +102,7 @@ export class KitchenRequestsController {
       body.warehouseId,
     );
     const kr = await this.krService.create(body, userId);
-    return { data: mapKitchenRequestDetail(kr) };
+    return { data: mapKitchenRequestDetail(kr, userId) };
   }
 
   @Get()
@@ -120,7 +120,7 @@ export class KitchenRequestsController {
     );
 
     return {
-      data: result.data.map(mapKitchenRequestDetail),
+      data: result.data.map(kr => mapKitchenRequestDetail(kr)),
       meta: result.meta,
     };
   }
@@ -137,7 +137,7 @@ export class KitchenRequestsController {
       role,
       kr.warehouseId,
     );
-    return { data: mapKitchenRequestDetail(kr) };
+    return { data: mapKitchenRequestDetail(kr, userId) };
   }
 
   @Put(':id')
@@ -169,7 +169,7 @@ export class KitchenRequestsController {
       undefined;
 
     const updated = await this.krService.update(id, dto, userId, ipAddress);
-    return { data: mapKitchenRequestDetail(updated) };
+    return { data: mapKitchenRequestDetail(updated, userId) };
   }
 
   @Post(':id/submit')
@@ -198,7 +198,7 @@ export class KitchenRequestsController {
       ...body,
       ipAddress,
     });
-    return { data: mapKitchenRequestDetail(kr) };
+    return { data: mapKitchenRequestDetail(kr, userId) };
   }
 
   @Post(':id/fulfill')
@@ -232,7 +232,7 @@ export class KitchenRequestsController {
       ...body,
       ipAddress,
     });
-    return { data: mapKitchenRequestDetail(kr) };
+    return { data: mapKitchenRequestDetail(kr, userId) };
   }
 
   @Post(':id/cancel')
@@ -261,6 +261,6 @@ export class KitchenRequestsController {
       ...body,
       ipAddress,
     });
-    return { data: mapKitchenRequestDetail(kr) };
+    return { data: mapKitchenRequestDetail(kr, userId) };
   }
 }

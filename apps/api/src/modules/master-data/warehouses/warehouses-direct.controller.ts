@@ -103,7 +103,7 @@ export class WarehousesDirectController {
 
     return {
       ...warehouse,
-      has_stock: stockCount > 0,
+      hasStock: stockCount > 0,
     };
   }
 

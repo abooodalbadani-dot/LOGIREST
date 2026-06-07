@@ -41,9 +41,7 @@ export interface ExportCursorResult<T> {
   hasMore: boolean;
 }
 
-export interface StockLedgerWithItem extends StockLedger {
-  item: Item;
-}
+export type StockLedgerWithItem = any;
 
 export interface WarehouseItemLotWithItemAndLot extends WarehouseItemLot {
   item: Item;
@@ -225,14 +223,25 @@ export class ReportsService {
       },
     });
 
-    return items.map((wi) => ({
+    return items.map(
+      (wi: {
+        qtyOnHand: any;
+        qtyAllocated: any;
+        wac: any;
+        item: {
+          sku: string;
+          name: string;
+          category: { name: string };
+          unitOfMeasure: { code: string };
+        };
+      }) => ({
       sku: wi.item.sku,
       name: wi.item.name,
       category: wi.item.category.name,
       uom: wi.item.unitOfMeasure.code,
-      qty_physical: Number(wi.qtyOnHand),
-      qty_reserved: Number(wi.qtyAllocated),
-      qty_available: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+      qtyPhysical: Number(wi.qtyOnHand),
+      qtyReserved: Number(wi.qtyAllocated),
+      qtyAvailable: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
       wac: Number(wi.wac || 0),
     }));
   }
@@ -249,7 +258,7 @@ export class ReportsService {
     const skip = (pageNum - 1) * limitNum;
 
     const ids = warehouseIds ?? [warehouseId];
-    const where: Prisma.WarehouseItemWhereInput = { warehouseId: { in: ids } };
+    const where: any = { warehouseId: { in: ids } };
     if (search) {
       where.item = {
         OR: [
@@ -281,14 +290,25 @@ export class ReportsService {
       total,
       page: pageNum,
       limit: limitNum,
-      data: items.map((wi) => ({
+      data: items.map(
+        (wi: {
+          qtyOnHand: any;
+          qtyAllocated: any;
+          wac: any;
+          item: {
+            sku: string;
+            name: string;
+            category: { name: string };
+            unitOfMeasure: { code: string };
+          };
+        }) => ({
         sku: wi.item.sku,
         name: wi.item.name,
         category: wi.item.category.name,
         uom: wi.item.unitOfMeasure.code,
-        qty_physical: Number(wi.qtyOnHand),
-        qty_reserved: Number(wi.qtyAllocated),
-        qty_available: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+        qtyPhysical: Number(wi.qtyOnHand),
+        qtyReserved: Number(wi.qtyAllocated),
+        qtyAvailable: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
         wac: Number(wi.wac || 0),
       })),
     };
@@ -309,7 +329,7 @@ export class ReportsService {
     const skip = (pageNum - 1) * limitNum;
 
     const ids = warehouseIds ?? [warehouseId];
-    const where: Prisma.StockLedgerWhereInput = { warehouseId: { in: ids } };
+    const where: any = { warehouseId: { in: ids } };
     if (itemId) {
       where.itemId = itemId;
     }
@@ -317,7 +337,7 @@ export class ReportsService {
       where.documentType = transactionType as DocumentType;
     }
     if (startDate || endDate) {
-      const postedAtFilter: Prisma.DateTimeFilter = {};
+      const postedAtFilter: any = {};
       if (startDate) {
         postedAtFilter.gte = new Date(startDate);
       }
@@ -372,7 +392,7 @@ export class ReportsService {
     });
 
     const now = new Date();
-    return lots.map((l) => {
+    return lots.map((l: any) => {
       const expiryDate = l.lot.expiryDate as Date;
       const diffTime = expiryDate.getTime() - now.getTime();
       const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -386,9 +406,9 @@ export class ReportsService {
       return {
         sku: l.item.sku,
         name: l.item.name,
-        lot_no: l.lot.lotNumber,
-        expiry_date: expiryDate.toISOString(),
-        days_remaining: daysRemaining,
+        lotNo: l.lot.lotNumber,
+        expiryDate: expiryDate.toISOString(),
+        daysRemaining: daysRemaining,
         status,
         qtyOnHand: Number(l.qtyOnHand),
       };
@@ -432,7 +452,7 @@ export class ReportsService {
       countMap.set(key, (countMap.get(key) || 0) + Number(count.qtyCounted));
     }
 
-    return snapshots.map((s) => {
+    return snapshots.map((s: any) => {
       const key = `${s.itemId}_${s.lotId || 'null'}`;
       const qtyCounted = countMap.get(key) || 0;
       const qtySnapshot = Number(s.qtySnapshot);
@@ -441,8 +461,8 @@ export class ReportsService {
       return {
         sku: s.item.sku,
         name: s.item.name,
-        system_qty: qtySnapshot,
-        counted_qty: qtyCounted,
+        systemQty: qtySnapshot,
+        countedQty: qtyCounted,
         variance,
         reason: '',
         lotNumber: s.lot?.lotNumber || null,
@@ -469,13 +489,13 @@ export class ReportsService {
       },
     });
 
-    return orders.map((po) => {
+    return orders.map((po: any) => {
       const total = po.lines.reduce(
-        (sum, line) => sum + Number(line.quantity) * Number(line.unitPrice),
+        (sum: number, line: any) => sum + Number(line.quantity) * Number(line.unitPrice),
         0,
       );
       return {
-        po_no: po.poNumber,
+        poNo: po.poNumber,
         date: po.createdAt.toISOString(),
         supplier: po.supplier.name,
         currency: po.currency.code,
@@ -528,7 +548,7 @@ export class ReportsService {
 
     const currencyGroups = new Map<
       string,
-      { currency: string; total: number; total_base: number; last_rate: number }
+      { currency: string; total: number; totalBase: number; lastRate: number }
     >();
 
     for (const po of orders) {
@@ -560,12 +580,12 @@ export class ReportsService {
       const existing = currencyGroups.get(po.currencyId) || {
         currency: po.currency.code,
         total: 0,
-        total_base: 0,
-        last_rate: latestRateForGroup,
+        totalBase: 0,
+        lastRate: latestRateForGroup,
       };
       existing.total += orderVal;
-      existing.total_base += baseVal;
-      existing.last_rate = latestRateForGroup;
+      existing.totalBase += baseVal;
+      existing.lastRate = latestRateForGroup;
       currencyGroups.set(po.currencyId, existing);
     }
 
@@ -583,12 +603,12 @@ export class ReportsService {
       throw new BadRequestException('itemId is required');
     }
     const ids = warehouseIds ?? [warehouseId];
-    const where: Prisma.CostLedgerWhereInput = {
+    const where: any = {
       warehouseId: { in: ids },
       itemId,
     };
     if (startDate || endDate) {
-      const postedAtFilter: Prisma.DateTimeFilter = {};
+      const postedAtFilter: any = {};
       if (startDate) {
         postedAtFilter.gte = new Date(startDate);
       }
@@ -652,7 +672,7 @@ export class ReportsService {
       receivedDate: lot.receivedDate,
       expiryDate: lot.expiryDate,
       status: lot.status,
-      allocations: allocations.map((a) => {
+      allocations: allocations.map((a: any) => {
         let documentNumber = 'N/A';
         let documentType = 'UNKNOWN';
         let quantity = 0;
@@ -704,7 +724,7 @@ export class ReportsService {
 
     switch (reportType) {
       case 'movements': {
-        const where: Prisma.StockLedgerWhereInput = {
+        const where: any = {
           warehouseId: { in: ids },
         };
         this.applyDateFilter(where, filters.startDate, filters.endDate);
@@ -715,7 +735,7 @@ export class ReportsService {
         break;
       }
       case 'expiry': {
-        const where: Prisma.WarehouseItemLotWhereInput = {
+        const where: any = {
           warehouseId: { in: ids },
           qtyOnHand: { gt: 0 },
           lot: { expiryDate: { not: null } },
@@ -731,7 +751,7 @@ export class ReportsService {
         break;
       }
       case 'wac-history': {
-        const where: Prisma.CostLedgerWhereInput = { warehouseId: { in: ids } };
+        const where: any = { warehouseId: { in: ids } };
         this.applyDateFilter(where, filters.startDate, filters.endDate);
         if (filters.itemId) where.itemId = filters.itemId;
         count = await this.prisma.costLedger.count({ where });
@@ -834,7 +854,7 @@ export class ReportsService {
     const currentChunkSize = Math.min(EXPORT_CHUNK_SIZE, remainingLimit);
 
     const ids = warehouseIds ?? [warehouseId];
-    const where: Prisma.StockLedgerWhereInput = { warehouseId: { in: ids } };
+    const where: any = { warehouseId: { in: ids } };
     if (filters?.itemId) where.itemId = filters.itemId;
     if (filters?.transactionType)
       where.documentType = filters.transactionType as DocumentType;
@@ -932,9 +952,9 @@ export class ReportsService {
         return {
           sku: l.item.sku,
           name: l.item.name,
-          lot_no: l.lot.lotNumber,
-          expiry_date: expiryDate.toISOString(),
-          days_remaining: daysRemaining,
+          lotNo: l.lot.lotNumber,
+          expiryDate: expiryDate.toISOString(),
+          daysRemaining: daysRemaining,
           qtyOnHand: Number(l.qtyOnHand),
         };
       }),
@@ -960,7 +980,7 @@ export class ReportsService {
     const currentChunkSize = Math.min(EXPORT_CHUNK_SIZE, remainingLimit);
 
     const ids = warehouseIds ?? [warehouseId];
-    const where: Prisma.CostLedgerWhereInput = { warehouseId: { in: ids } };
+    const where: any = { warehouseId: { in: ids } };
     if (filters?.itemId) where.itemId = filters.itemId;
     this.applyDateFilter(where, filters?.startDate, filters?.endDate);
 
@@ -1058,7 +1078,7 @@ export class ReportsService {
     }
 
     const ids = warehouseIds ?? [warehouseId];
-    const where: Prisma.StockLedgerWhereInput = { warehouseId: { in: ids } };
+    const where: any = { warehouseId: { in: ids } };
     if (filters?.itemId) where.itemId = filters.itemId;
     if (filters?.transactionType)
       where.documentType = filters.transactionType as DocumentType;
@@ -1240,38 +1260,38 @@ export class ReportsService {
       0,
     );
 
-    // Build recent_requests from issues + transfers combined
+    // Build recentRequests from issues + transfers combined
     const recentRequests = [
       ...recentIssues.map((i) => ({
         id: i.id,
-        document_number: i.issueNumber,
+        documentNumber: i.issueNumber,
         type: 'ISSUE' as const,
         status: i.status,
         priority: 'NORMAL',
-        items_summary: '',
-        created_at: i.createdAt.toISOString(),
+        itemsSummary: '',
+        createdAt: i.createdAt.toISOString(),
         destination: i.department?.name ?? '',
       })),
       ...recentTransfers.map((t) => ({
         id: t.id,
-        document_number: t.transferNumber,
+        documentNumber: t.transferNumber,
         type: 'TRANSFER' as const,
         status: t.status,
         priority: 'NORMAL',
-        items_summary: '',
-        created_at: t.createdAt.toISOString(),
+        itemsSummary: '',
+        createdAt: t.createdAt.toISOString(),
         destination: t.toWarehouse?.name ?? '',
       })),
     ]
       .sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
       .slice(0, 5);
 
     const activityLog = activityLedger.map((l) => ({
       id: l.id,
-      item_name: l.item.name,
+      itemName: l.item.name,
       qty: Number(l.quantity),
       uom: l.item.unitOfMeasure?.code ?? '',
       time: l.postedAt.toISOString(),
@@ -1285,11 +1305,11 @@ export class ReportsService {
       const wil = lot.warehouseItemLots[0];
       return {
         id: lot.id,
-        item_name: lot.item.name,
-        lot_number: lot.lotNumber,
-        expiry_date: lot.expiryDate?.toISOString() ?? '',
-        days_left: daysLeft,
-        warehouse_name: wil?.warehouse?.name ?? '',
+        itemName: lot.item.name,
+        lotNumber: lot.lotNumber,
+        expiryDate: lot.expiryDate?.toISOString() ?? '',
+        daysLeft,
+        warehouseName: wil?.warehouse?.name ?? '',
         qty: Number(wil?.qtyOnHand ?? 0),
         uom: lot.item.unitOfMeasure?.code ?? '',
       };
@@ -1297,44 +1317,44 @@ export class ReportsService {
 
     const pendingApprovalsFormatted = pendingApprovals.map((pr) => ({
       id: pr.id,
-      document_number: pr.requestNumber,
+      documentNumber: pr.requestNumber,
       type: 'PR' as const,
       status: pr.status,
       priority: 'NORMAL',
       destination: pr.warehouse?.name ?? '',
-      created_at: pr.createdAt.toISOString(),
+      createdAt: pr.createdAt.toISOString(),
     }));
 
     return {
-      total_value: totalValue,
-      pending_fulfillment: 0,
+      totalValue,
+      pendingFulfillment: 0,
       shortages: lowStockCount,
-      warehouse_capacity: 78,
-      pending_prs: pendingPrs,
-      active_stocktakes: activeStocktakes,
-      low_stock_items: lowStockCount,
-      system_health: 100,
-      active_users: activeUserCount,
-      near_expiry_count: nearExpiryCount,
-      today_consumption: 0,
-      stock_health: 100,
-      active_pos: activePOs,
-      pending_grns: pendingGRNs,
-      total_procurement_spend: 184500,
-      recent_requests: recentRequests,
-      activity_log: activityLog,
-      expiring_lots: expiringLotsFormatted,
-      fulfillment_queue: [],
-      pending_approvals: pendingApprovalsFormatted,
-      top_vendors: [],
-      efficiency_metrics: {
-        po_conversion_rate: 87.5,
-        fulfillment_cycle_days: 2.4,
-        throughput_week: 142,
-        conversion_chart: [70, 75, 80, 85, 87, 87.5],
-        velocity_chart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
+      warehouseCapacity: 78,
+      pendingPrs,
+      activeStocktakes,
+      lowStockItems: lowStockCount,
+      systemHealth: 100,
+      activeUsers: activeUserCount,
+      nearExpiryCount,
+      todayConsumption: 0,
+      stockHealth: 100,
+      activePos: activePOs,
+      pendingGrns: pendingGRNs,
+      totalProcurementSpend: 184500,
+      recentRequests,
+      activityLog,
+      expiringLots: expiringLotsFormatted,
+      fulfillmentQueue: [],
+      pendingApprovals: pendingApprovalsFormatted,
+      topVendors: [],
+      efficiencyMetrics: {
+        poConversionRate: 87.5,
+        fulfillmentCycleDays: 2.4,
+        throughputWeek: 142,
+        conversionChart: [70, 75, 80, 85, 87, 87.5],
+        velocityChart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
       },
-      system_audit_logs: [],
+      systemAuditLogs: [],
     };
   }
 
@@ -1451,43 +1471,43 @@ export class ReportsService {
       orderBy: { createdAt: 'desc' },
       take: 5,
     });
-    const recent_requests = [
+    const recentRequests = [
       ...issuesList.map((i) => ({
         id: i.id,
-        document_number: i.issueNumber,
+        documentNumber: i.issueNumber,
         type: 'ISSUE' as const,
         status: i.status,
         priority: 'HIGH',
-        items_summary: 'Stock Issue Request',
-        created_at: i.createdAt.toISOString(),
+        itemsSummary: 'Stock Issue Request',
+        createdAt: i.createdAt.toISOString(),
         destination: i.departmentId,
       })),
       ...transfersList.map((t) => ({
         id: t.id,
-        document_number: t.transferNumber,
+        documentNumber: t.transferNumber,
         type: 'TRANSFER' as const,
         status: t.status,
         priority: 'NORMAL',
-        items_summary: 'Warehouse Transfer Request',
-        created_at: t.createdAt.toISOString(),
+        itemsSummary: 'Warehouse Transfer Request',
+        createdAt: t.createdAt.toISOString(),
         destination: t.toWarehouseId,
       })),
     ]
       .sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
       .slice(0, 5);
 
-    if (recent_requests.length === 0) {
-      recent_requests.push({
+    if (recentRequests.length === 0) {
+      recentRequests.push({
         id: 'req-1',
-        document_number: 'ISS-2026-001',
+        documentNumber: 'ISS-2026-001',
         type: 'ISSUE',
         status: 'DRAFT',
         priority: 'HIGH',
-        items_summary: 'Beef (Frozen) x 20 KG, Cooking Oil x 5 L',
-        created_at: new Date().toISOString(),
+        itemsSummary: 'Beef (Frozen) x 20 KG, Cooking Oil x 5 L',
+        createdAt: new Date().toISOString(),
         destination: 'Kitchen-Main',
       });
     }
@@ -1497,9 +1517,9 @@ export class ReportsService {
       take: 5,
       include: { user: true },
     });
-    const activity_log = auditLogsList.map((log) => ({
+    const activityLog = auditLogsList.map((log) => ({
       id: log.id,
-      item_name: log.targetTable,
+      itemName: log.targetTable,
       qty: 1,
       uom: 'PCS',
       time: log.createdAt.toLocaleTimeString([], {
@@ -1509,11 +1529,11 @@ export class ReportsService {
       type: log.action,
     }));
 
-    if (activity_log.length === 0) {
-      activity_log.push(
+    if (activityLog.length === 0) {
+      activityLog.push(
         {
           id: 'act-1',
-          item_name: 'Beef (Frozen)',
+          itemName: 'Beef (Frozen)',
           qty: 20,
           uom: 'KG',
           time: '10:30',
@@ -1521,7 +1541,7 @@ export class ReportsService {
         },
         {
           id: 'act-2',
-          item_name: 'Cooking Oil',
+          itemName: 'Cooking Oil',
           qty: 5,
           uom: 'L',
           time: '11:15',
@@ -1548,71 +1568,71 @@ export class ReportsService {
       },
       take: 5,
     });
-    const expiring_lots = expiringLotsList.map((l) => ({
+    const expiringLots = expiringLotsList.map((l) => ({
       id: l.id,
-      item_name: l.item.name,
-      lot_number: l.lotNumber,
-      expiry_date: l.expiryDate?.toISOString().split('T')[0] || '',
-      days_left: Math.ceil(
+      itemName: l.item.name,
+      lotNumber: l.lotNumber,
+      expiryDate: l.expiryDate?.toISOString().split('T')[0] || '',
+      daysLeft: Math.ceil(
         ((l.expiryDate?.getTime() || 0) - Date.now()) / (1000 * 60 * 60 * 24),
       ),
-      warehouse_name: 'Main Warehouse',
+      warehouseName: 'Main Warehouse',
       qty: 10,
       uom: 'PCS',
     }));
 
-    if (expiring_lots.length === 0) {
-      expiring_lots.push({
+    if (expiringLots.length === 0) {
+      expiringLots.push({
         id: 'exp-1',
-        item_name: 'Milk (Fresh)',
-        lot_number: 'LOT-M-001',
-        expiry_date: new Date(Date.now() + 5 * 24 * 3600000)
+        itemName: 'Milk (Fresh)',
+        lotNumber: 'LOT-M-001',
+        expiryDate: new Date(Date.now() + 5 * 24 * 3600000)
           .toISOString()
           .split('T')[0],
-        days_left: 5,
-        warehouse_name: 'Cold Storage WH',
+        daysLeft: 5,
+        warehouseName: 'Cold Storage WH',
         qty: 12,
         uom: 'LTR',
       });
     }
 
-    const fulfillment_queue = [
+    const fulfillmentQueue = [
       ...issuesList
         .filter((i) => i.status === 'POSTED')
         .map((i) => ({
           id: i.id,
-          document_number: i.issueNumber,
+          documentNumber: i.issueNumber,
           type: 'ISSUE' as const,
           status: i.status,
           priority: 'HIGH',
-          items_count: 2,
+          itemsCount: 2,
           destination: i.departmentId,
-          created_at: i.createdAt.toISOString(),
+          createdAt: i.createdAt.toISOString(),
         })),
       ...transfersList
         .filter((t) => t.status === 'POSTED')
         .map((t) => ({
           id: t.id,
-          document_number: t.transferNumber,
+          documentNumber: t.transferNumber,
           type: 'TRANSFER' as const,
           status: t.status,
           priority: 'NORMAL',
-          items_count: 3,
+          itemsCount: 3,
           destination: t.toWarehouseId,
-          created_at: t.createdAt.toISOString(),
+          createdAt: t.createdAt.toISOString(),
         })),
     ].slice(0, 5);
 
-    if (fulfillment_queue.length === 0) {
-      fulfillment_queue.push({
+    if (fulfillmentQueue.length === 0) {
+      fulfillmentQueue.push({
         id: 'fq-1',
-        document_number: 'ISS-2026-004',
+        documentNumber: 'ISS-2026-004',
         type: 'ISSUE',
         status: 'POSTED',
         priority: 'HIGH',
-        items_count: 3,
+        itemsCount: 3,
         destination: 'Kitchen-Pastry',
-        created_at: new Date(Date.now() - 7200000).toISOString(),
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
       });
     }
 
@@ -1620,45 +1640,45 @@ export class ReportsService {
       where: { warehouseId, status: 'SUBMITTED' },
       take: 5,
     });
-    const pending_approvals = pendingPRsList.map((pr) => ({
+    const pendingApprovals = pendingPRsList.map((pr) => ({
       id: pr.id,
-      document_number: pr.requestNumber,
+      documentNumber: pr.requestNumber,
       type: 'PR' as const,
       status: pr.status,
       priority: 'HIGH',
       destination: pr.warehouseId,
-      created_at: pr.createdAt.toISOString(),
-      total_value: 15000,
+      createdAt: pr.createdAt.toISOString(),
+      totalValue: 15000,
     }));
 
-    if (pending_approvals.length === 0) {
-      pending_approvals.push({
+    if (pendingApprovals.length === 0) {
+      pendingApprovals.push({
         id: 'app-1',
-        document_number: 'PR-2026-005',
+        documentNumber: 'PR-2026-005',
         type: 'PR',
         status: 'DRAFT',
         priority: 'HIGH',
         destination: 'Cold Storage WH',
-        created_at: new Date().toISOString(),
-        total_value: 15000,
+        createdAt: new Date().toISOString(),
+        totalValue: 15000,
       });
     }
 
-    const top_vendors = [
+    const topVendors = [
       { name: 'National Poultry Co', spend: 85000, status: 'Active' },
       { name: 'Gulf Canned Goods', spend: 45000, status: 'Active' },
       { name: 'Almarai Dairy', spend: 32000, status: 'Active' },
     ];
 
-    const efficiency_metrics = {
-      po_conversion_rate: 87.5,
-      fulfillment_cycle_days: 2.4,
-      throughput_week: 142,
-      conversion_chart: [70, 75, 80, 85, 87, 87.5],
-      velocity_chart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
+    const efficiencyMetrics = {
+      poConversionRate: 87.5,
+      fulfillmentCycleDays: 2.4,
+      throughputWeek: 142,
+      conversionChart: [70, 75, 80, 85, 87, 87.5],
+      velocityChart: [1.2, 1.5, 1.8, 2.0, 2.2, 2.4],
     };
 
-    const system_audit_logs = auditLogsList.map((log) => ({
+    const systemAuditLogs = auditLogsList.map((log) => ({
       id: log.id,
       action: log.action,
       user: log.user?.name || log.userId || 'System',
@@ -1666,8 +1686,8 @@ export class ReportsService {
       type: log.targetTable,
     }));
 
-    if (system_audit_logs.length === 0) {
-      system_audit_logs.push({
+    if (systemAuditLogs.length === 0) {
+      systemAuditLogs.push({
         id: 'sa-1',
         action: 'Update Item Info',
         user: 'بركات امين',
@@ -1677,29 +1697,29 @@ export class ReportsService {
     }
 
     return {
-      total_value,
-      pending_fulfillment,
+      totalValue: total_value,
+      pendingFulfillment: pending_fulfillment,
       shortages,
-      warehouse_capacity: 78,
-      pending_prs,
-      active_stocktakes,
-      low_stock_items: shortages,
-      system_health: 99,
-      active_users,
-      near_expiry_count,
-      today_consumption: 1240,
-      stock_health: 94,
-      active_pos,
-      pending_grns,
-      total_procurement_spend,
-      recent_requests,
-      activity_log,
-      expiring_lots,
-      fulfillment_queue,
-      pending_approvals,
-      top_vendors,
-      efficiency_metrics,
-      system_audit_logs,
+      warehouseCapacity: 78,
+      pendingPrs: pending_prs,
+      activeStocktakes: active_stocktakes,
+      lowStockItems: shortages,
+      systemHealth: 99,
+      activeUsers: active_users,
+      nearExpiryCount: near_expiry_count,
+      todayConsumption: 1240,
+      stockHealth: 94,
+      activePos: active_pos,
+      pendingGrns: pending_grns,
+      totalProcurementSpend: total_procurement_spend,
+      recentRequests,
+      activityLog,
+      expiringLots,
+      fulfillmentQueue,
+      pendingApprovals,
+      topVendors,
+      efficiencyMetrics,
+      systemAuditLogs,
     };
   }
 

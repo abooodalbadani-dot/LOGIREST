@@ -236,8 +236,8 @@ describe('ReportsService', () => {
       const result = await service.exportExpiryCursor('wh-1');
       expect(result.data.length).toBe(10);
       expect(result.data[0]).toHaveProperty('sku');
-      expect(result.data[0]).toHaveProperty('lot_no');
-      expect(result.data[0]).toHaveProperty('days_remaining');
+      expect(result.data[0]).toHaveProperty('lotNo');
+      expect(result.data[0]).toHaveProperty('daysRemaining');
       expect(result.hasMore).toBe(false);
     });
   });

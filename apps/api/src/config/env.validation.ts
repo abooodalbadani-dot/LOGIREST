@@ -61,12 +61,12 @@ export function validate(config: Record<string, unknown>) {
   const result = envSchema.safeParse(config);
 
   if (!result.success) {
-    const errorDetails = result.error.errors.map((err) => ({
+    const errorDetails = result.error.issues.map((err) => ({
       field: err.path.join('.'),
       issue: err.message,
     }));
 
-    const missingKeys = result.error.errors.map((err) => err.path.join('.'));
+    const missingKeys = result.error.issues.map((err) => err.path.join('.'));
 
     const errorLog = {
       timestamp: new Date().toISOString(),

@@ -21,7 +21,7 @@ const CreateGRNPayloadSchema = z.object({
 
 export type CreateGRNPayload = z.infer<typeof CreateGRNPayloadSchema>;
 
-export function useCreateGRN(options?: { onConflict?: () => void }) {
+export function useCreateGRN(options?: { onConflict?: () => void, messages?: { successMessage?: string } }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
@@ -30,6 +30,7 @@ export function useCreateGRN(options?: { onConflict?: () => void }) {
     onSuccess: (data) => {
       queryClient.setQueryData(['grn', data.id], data);
       queryClient.invalidateQueries({ queryKey: ['grns'] });
+      toast.success(options?.messages?.successMessage || 'Goods received note created successfully');
     },
     onError: (error: unknown) => {
       // Handled globally by useSafeMutation

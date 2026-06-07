@@ -8,6 +8,7 @@ import { WorkflowService } from '../workflow/workflow.service';
 import { Role, UpdateKitchenRequestDto } from '@logirest/shared-types';
 import { DocumentNumberService } from '../sequencing/document-number.service';
 import { IssuePostService } from '../operations/issue-post.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class KitchenRequestsService {
@@ -26,7 +27,7 @@ export class KitchenRequestsService {
     },
     userId: string,
   ) {
-    return this.prisma.$transaction(async (tx) => {
+    const execute = async (tx: Prisma.TransactionClient) => {
       const warehouse = await tx.warehouse.findUnique({
         where: { id: body.warehouseId },
         select: { branchId: true },
@@ -72,7 +73,34 @@ export class KitchenRequestsService {
           warehouse: true,
         },
       });
-    });
+    };
+
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await this.prisma.$transaction(execute, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          timeout: 30000,
+        });
+      } catch (error: any) {
+        const isSerializationError =
+          (error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2034') ||
+          (error instanceof Error &&
+            (error.message?.includes('40001') ||
+              error.message?.includes('40P01') ||
+              error.message?.includes('serialization') ||
+              error.message?.includes('deadlock')));
+        if (isSerializationError && attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
   }
 
   async findAll(
@@ -354,7 +382,7 @@ export class KitchenRequestsService {
     userId: string,
     ipAddress?: string,
   ) {
-    return this.prisma.$transaction(async (tx) => {
+    const execute = async (tx: Prisma.TransactionClient) => {
       const kr = await tx.kitchenRequest.findUnique({
         where: { id },
         include: { items: true },
@@ -435,7 +463,7 @@ export class KitchenRequestsService {
             departmentId: kr.departmentId,
             warehouseId: kr.warehouseId,
             version: kr.version,
-            items: kr.items.map((i) => ({
+            items: kr.items.map((i: any) => ({
               itemId: i.itemId,
               qty: i.quantityRequested,
             })),
@@ -444,7 +472,7 @@ export class KitchenRequestsService {
             departmentId: updated.departmentId,
             warehouseId: updated.warehouseId,
             version: updated.version,
-            items: updated.items.map((i) => ({
+            items: updated.items.map((i: any) => ({
               itemId: i.itemId,
               qty: i.quantityRequested,
             })),
@@ -454,6 +482,33 @@ export class KitchenRequestsService {
       });
 
       return updated;
-    });
+    };
+
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await this.prisma.$transaction(execute, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          timeout: 30000,
+        });
+      } catch (error: any) {
+        const isSerializationError =
+          (error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2034') ||
+          (error instanceof Error &&
+            (error.message?.includes('40001') ||
+              error.message?.includes('40P01') ||
+              error.message?.includes('serialization') ||
+              error.message?.includes('deadlock')));
+        if (isSerializationError && attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
   }
 }

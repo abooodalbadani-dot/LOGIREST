@@ -63,9 +63,9 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
         nameEn: line.item?.nameEn || line.itemName || '',
         primaryUom: { code: line.item?.primaryUom?.code || line.uomId || 'EA' }
       },
-      qty: line.quantity ?? line.qty ?? 0,
+      qty: line.quantity ?? 0,
       uomId: line.uomId || 'EA',
-      unitCost: line.unitPrice ?? line.unitCostForeign ?? 0
+      unitCost: line.unitPrice ?? 0
     })) || [];
   }, [documentLines]);
 

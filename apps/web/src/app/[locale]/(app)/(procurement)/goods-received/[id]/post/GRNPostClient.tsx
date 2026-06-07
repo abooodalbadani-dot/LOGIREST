@@ -113,8 +113,6 @@ export function GRNPostClient({ id, locale }: GRNPostClientProps) {
   const handlePost = () => {
     postMutation.mutate({
       id,
-      fx_rate: fxRate,
-      confirmation: 'ACKNOWLEDGE_IRREVERSIBLE',
       version: grn?.version || 1
     }, {
       onSuccess: () => {

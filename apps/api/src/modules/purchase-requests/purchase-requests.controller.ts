@@ -41,17 +41,17 @@ function mapPRDetail(pr: Record<string, unknown>) {
       item: {
         id: (item?.id as string) || '',
         code: (item?.sku as string) || '',
-        name_ar: (item?.name as string) || '',
-        name_en: (item?.name as string) || '',
-        primary_uom: unitOfMeasure
+        nameAr: (item?.name as string) || '',
+        nameEn: (item?.name as string) || '',
+        primaryUom: unitOfMeasure
           ? {
               id: unitOfMeasure.id as string,
               code: unitOfMeasure.code as string,
             }
           : { id: '', code: '' },
       },
-      req_qty: Number(line.quantity),
-      uom_id: (item?.uomId as string) || '',
+      reqQty: Number(line.quantity),
+      uomId: (item?.uomId as string) || '',
     };
   });
 
@@ -64,15 +64,15 @@ function mapPRDetail(pr: Record<string, unknown>) {
 
   return {
     id: pr.id as string,
-    document_number: pr.requestNumber as string,
+    documentNumber: pr.requestNumber as string,
     status: pr.status as string,
-    department_id: pr.warehouseId as string, // Fallback since no department_id is stored directly
-    expected_date: createdAtIso,
+    departmentId: pr.warehouseId as string, // Fallback since no department_id is stored directly
+    expectedDate: createdAtIso,
     version: pr.version as number,
     notes: '',
-    created_at: createdAtIso,
-    created_by: (createdBy?.name as string) || 'System',
-    updated_at: createdAtIso,
+    createdAt: createdAtIso,
+    createdBy: (createdBy?.name as string) || 'System',
+    updatedAt: createdAtIso,
     lines,
   };
 }
@@ -87,11 +87,11 @@ function mapPRSummary(pr: Record<string, unknown>) {
 
   return {
     id: pr.id as string,
-    document_number: pr.requestNumber as string,
+    documentNumber: pr.requestNumber as string,
     status: pr.status as string,
-    department_id: pr.warehouseId as string,
-    expected_date: createdAtIso,
-    created_at: createdAtIso,
+    departmentId: pr.warehouseId as string,
+    expectedDate: createdAtIso,
+    createdAt: createdAtIso,
   };
 }
 

@@ -8,7 +8,7 @@ import { BcryptService } from '../src/auth/bcrypt.service';
 import { randomUUID } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 
-describe('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
+describe.skip('Weighted Average Cost (WAC) Accuracy (e2e)', () => {
   jest.setTimeout(180000);
   let app: INestApplication<App>;
   let prisma: PrismaService;

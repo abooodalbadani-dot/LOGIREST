@@ -4,5 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "zod": ">=3.23.8"
   }
 }

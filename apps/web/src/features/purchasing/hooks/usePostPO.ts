@@ -3,8 +3,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { successSchema } from '@/types/api';
+import { toast } from 'sonner';
 
-export function usePostPO(options?: { onConflict?: () => void }) {
+export function usePostPO(options?: { onConflict?: () => void, messages?: { successMessage?: string } }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
@@ -13,6 +14,7 @@ export function usePostPO(options?: { onConflict?: () => void }) {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
+      toast.success(options?.messages?.successMessage || 'Purchase order posted successfully');
     },
     onError: (error) => {
       console.error('[usePostPO] Failed to post PO:', error);

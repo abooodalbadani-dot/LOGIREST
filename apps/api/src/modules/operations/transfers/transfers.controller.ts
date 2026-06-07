@@ -42,40 +42,40 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
       > | null;
       return {
         id: line.id as string,
-        document_id: line.transferId as string,
-        item_id: line.itemId as string,
+        documentId: line.transferId as string,
+        itemId: line.itemId as string,
         item: item
           ? {
               id: item.id as string,
               code: item.sku as string,
-              name_ar: item.name as string,
-              name_en: item.name as string,
-              primary_uom: unitOfMeasure
+              nameAr: item.name as string,
+              nameEn: item.name as string,
+              primaryUom: unitOfMeasure
                 ? {
                     id: unitOfMeasure.id as string,
                     code: unitOfMeasure.code as string,
-                    name_ar: unitOfMeasure.name as string,
-                    name_en: unitOfMeasure.name as string,
+                    nameAr: unitOfMeasure.name as string,
+                    nameEn: unitOfMeasure.name as string,
                   }
-                : { id: '', code: '', name_ar: '', name_en: '' },
+                : { id: '', code: '', nameAr: '', nameEn: '' },
             }
           : {
               id: '',
               code: '',
-              name_ar: '',
-              name_en: '',
-              primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
+              nameAr: '',
+              nameEn: '',
+              primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
             },
-        lot_id: null,
+        lotId: null,
         lot: null,
         qty: Number(line.quantityShipped),
-        shipped_qty: Number(line.quantityShipped),
-        received_qty: line.quantityReceived
+        shippedQty: Number(line.quantityShipped),
+        receivedQty: line.quantityReceived
           ? Number(line.quantityReceived)
           : null,
-        uom_id: (item?.uomId as string) || '',
-        unit_cost: item?.wac ? Number(item.wac) : null,
-        lot_allocations: [],
+        uomId: (item?.uomId as string) || '',
+        unitCost: item?.wac ? Number(item.wac) : null,
+        lotAllocations: [],
       };
     },
   );
@@ -94,25 +94,25 @@ function mapTransferDetail(transfer: Record<string, unknown>) {
 
   return {
     id: transfer.id as string,
-    document_number: transfer.transferNumber as string,
+    documentNumber: transfer.transferNumber as string,
     type: 'TRANSFER',
     status: transfer.status as string,
-    transfer_status: transfer.status as string,
-    from_warehouse_id: transfer.fromWarehouseId as string,
-    from_warehouse_name: (fromWarehouse?.name as string) || '',
-    to_warehouse_id: transfer.toWarehouseId as string,
-    to_warehouse_name: (toWarehouse?.name as string) || '',
-    warehouse_id: transfer.fromWarehouseId as string,
-    branch_id: (fromWarehouse?.branchId as string) || '',
+    transferStatus: transfer.status as string,
+    fromWarehouseId: transfer.fromWarehouseId as string,
+    fromWarehouseName: (fromWarehouse?.name as string) || '',
+    toWarehouseId: transfer.toWarehouseId as string,
+    toWarehouseName: (toWarehouse?.name as string) || '',
+    warehouseId: transfer.fromWarehouseId as string,
+    branchId: (fromWarehouse?.branchId as string) || '',
     notes: '',
-    shipped_at: isShipped ? createdAtIso : null,
-    received_at: isReceived ? createdAtIso : null,
-    variance_reason: null,
-    created_by: 'System',
-    created_at: createdAtIso,
-    updated_at: createdAtIso,
-    posted_at: transfer.status === 'POSTED' ? createdAtIso : null,
-    posted_by: null,
+    shippedAt: isShipped ? createdAtIso : null,
+    receivedAt: isReceived ? createdAtIso : null,
+    varianceReason: null,
+    createdBy: 'System',
+    createdAt: createdAtIso,
+    updatedAt: createdAtIso,
+    postedAt: transfer.status === 'POSTED' ? createdAtIso : null,
+    postedBy: null,
     version: transfer.version as number,
     lines,
   };

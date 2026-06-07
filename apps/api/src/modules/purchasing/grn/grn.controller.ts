@@ -43,74 +43,74 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       id: line.id as string,
       item: item
         ? {
-            id: item.id as string,
-            code: item.sku as string,
-            name_ar: item.name as string,
-            name_en: item.name as string,
-            primary_uom: unitOfMeasure
-              ? {
-                  id: unitOfMeasure.id as string,
-                  code: unitOfMeasure.code as string,
-                }
-              : { id: '', code: '' },
-          }
+          id: item.id as string,
+          code: item.sku as string,
+          nameAr: item.name as string,
+          nameEn: item.name as string,
+          primaryUom: unitOfMeasure
+            ? {
+              id: unitOfMeasure.id as string,
+              code: unitOfMeasure.code as string,
+            }
+            : { id: '', code: '' },
+        }
         : {
-            id: '',
-            code: '',
-            name_ar: '',
-            name_en: '',
-            primary_uom: { id: '', code: '' },
-          },
+          id: '',
+          code: '',
+          nameAr: '',
+          nameEn: '',
+          primaryUom: { id: '', code: '' },
+        },
       lot: lot
         ? {
-            id: lot.id as string,
-            lot_number: lot.lotNumber as string,
-            expiry_date: lot.expiryDate
-              ? (lot.expiryDate instanceof Date
-                  ? lot.expiryDate
-                  : new Date(lot.expiryDate as string)
-                ).toISOString()
-              : null,
-          }
+          id: lot.id as string,
+          lotNumber: lot.lotNumber as string,
+          expiryDate: lot.expiryDate
+            ? (lot.expiryDate instanceof Date
+              ? lot.expiryDate
+              : new Date(lot.expiryDate as string)
+            ).toISOString()
+            : null,
+        }
         : null,
       qty: Number(line.quantityReceived),
-      received_qty: Number(line.quantityReceived),
-      uom_id: (item?.uomId as string) || '',
-      unit_cost_foreign: Number(line.unitPrice),
-      unit_cost_base: Number(line.unitPrice),
+      receivedQty: Number(line.quantityReceived),
+      uomId: (item?.uomId as string) || '',
+      unitCostForeign: Number(line.unitPrice),
+      unitCostBase: Number(line.unitPrice),
     };
   });
 
   const createdAtIso = grn.createdAt
     ? (grn.createdAt instanceof Date
-        ? grn.createdAt
-        : new Date(grn.createdAt as string)
-      ).toISOString()
+      ? grn.createdAt
+      : new Date(grn.createdAt as string)
+    ).toISOString()
     : new Date().toISOString();
 
   return {
     id: grn.id as string,
-    document_number: grn.grnNumber as string,
+    documentNumber: grn.grnNumber as string,
     status: grn.status as string,
-    supplier_id: (purchaseOrder?.supplierId as string) || '',
+    supplierId: (purchaseOrder?.supplierId as string) || '',
     supplier: supplier
       ? {
-          id: supplier.id as string,
-          name: supplier.name as string,
-        }
+        id: supplier.id as string,
+        name: supplier.name as string,
+      }
       : undefined,
-    po_id: grn.poId as string,
-    po_number: (purchaseOrder?.poNumber as string) || '',
-    po_fx_rate: 1.0,
-    currency_id: (purchaseOrder?.currencyId as string) || '',
-    warehouse_id: grn.warehouseId as string,
-    fx_rate: 1.0,
-    fx_rate_captured_at: createdAtIso,
+    poId: grn.poId as string,
+    poNumber: (purchaseOrder?.poNumber as string) || '',
+    poFxRate: 1.0,
+    currencyId: (purchaseOrder?.currencyId as string) || '',
+    warehouseId: grn.warehouseId as string,
+    fxRate: 1.0,
+    fxRateCapturedAt: createdAtIso,
     version: grn.version as number,
     notes: '',
-    created_at: createdAtIso,
-    created_by: 'System',
-    updated_at: createdAtIso,
+    createdAt: createdAtIso,
+    createdBy: 'System',
+    updatedAt: createdAtIso,
     lines,
   };
 }
@@ -128,22 +128,22 @@ function mapGRNSummary(grn: Record<string, unknown>) {
 
   const createdAtIso = grn.createdAt
     ? (grn.createdAt instanceof Date
-        ? grn.createdAt
-        : new Date(grn.createdAt as string)
-      ).toISOString()
+      ? grn.createdAt
+      : new Date(grn.createdAt as string)
+    ).toISOString()
     : new Date().toISOString();
 
   return {
     id: grn.id as string,
-    document_number: grn.grnNumber as string,
+    documentNumber: grn.grnNumber as string,
     status: grn.status as string,
-    supplier_id: (purchaseOrder?.supplierId as string) || '',
-    supplier_name: (supplier?.name as string) || '',
-    po_id: grn.poId as string,
-    po_number: (purchaseOrder?.poNumber as string) || '',
-    warehouse_id: grn.warehouseId as string,
-    created_at: createdAtIso,
-    supplier_total_amount: supplierTotalAmount,
+    supplierId: (purchaseOrder?.supplierId as string) || '',
+    supplierName: (supplier?.name as string) || '',
+    poId: grn.poId as string,
+    poNumber: (purchaseOrder?.poNumber as string) || '',
+    warehouseId: grn.warehouseId as string,
+    createdAt: createdAtIso,
+    supplierTotalAmount: supplierTotalAmount,
   };
 }
 
@@ -155,7 +155,7 @@ export class GrnController {
     private readonly grnPostService: GrnPostService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   @Post()
   async create(
@@ -277,12 +277,12 @@ export class GrnController {
 
     let lines:
       | Array<{
-          id?: string;
-          itemId: string;
-          lotId?: string | null;
-          quantity: number;
-          unitPrice: number;
-        }>
+        id?: string;
+        itemId: string;
+        lotId?: string | null;
+        quantity: number;
+        unitPrice: number;
+      }>
       | undefined = undefined;
     if (rawBody.lines) {
       const rawLines = rawBody.lines as Record<string, unknown>[];
@@ -294,10 +294,10 @@ export class GrnController {
           | undefined;
         const quantity = Number(
           line.receivedQty ??
-            line.received_qty ??
-            line.quantity ??
-            line.qty ??
-            0,
+          line.received_qty ??
+          line.quantity ??
+          line.qty ??
+          0,
         );
         const unitPrice = Number(
           line.unitCostForeign ?? line.unit_cost_foreign ?? line.unitPrice ?? 0,

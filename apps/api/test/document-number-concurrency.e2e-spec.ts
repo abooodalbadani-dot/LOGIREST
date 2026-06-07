@@ -214,8 +214,8 @@ describe('Document Number Concurrency (e2e)', () => {
         );
       }
       expect(res.status).toBe(201);
-      expect(res.body.data.document_number).toBeDefined();
-      numbers.push(res.body.data.document_number);
+      expect(res.body.data.documentNumber).toBeDefined();
+      numbers.push(res.body.data.documentNumber);
     }
 
     const uniqueNumbers = new Set(numbers);
@@ -265,8 +265,8 @@ describe('Document Number Concurrency (e2e)', () => {
         );
       }
       expect(res.status).toBe(201);
-      expect(res.body.document_number).toBeDefined();
-      numbers.push(res.body.document_number);
+      expect(res.body.documentNumber).toBeDefined();
+      numbers.push(res.body.documentNumber);
     }
 
     const uniqueNumbers = new Set(numbers);
@@ -317,8 +317,8 @@ describe('Document Number Concurrency (e2e)', () => {
         );
       }
       expect(res.status).toBe(201);
-      expect(res.body.document_number).toBeDefined();
-      numbers.push(res.body.document_number);
+      expect(res.body.documentNumber).toBeDefined();
+      numbers.push(res.body.documentNumber);
     }
 
     const uniqueNumbers = new Set(numbers);

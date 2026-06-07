@@ -25,7 +25,7 @@ const CreatePOPayloadSchema = z.object({
 
 export type CreatePOPayload = z.infer<typeof CreatePOPayloadSchema>;
 
-export function useCreatePO(options?: { onConflict?: () => void }) {
+export function useCreatePO(options?: { onConflict?: () => void, messages?: { successMessage?: string } }) {
  const queryClient = useQueryClient();
  return useSafeMutation({
  onConflict: options?.onConflict,
@@ -33,9 +33,10 @@ export function useCreatePO(options?: { onConflict?: () => void }) {
  apiClient.post('/procurement/purchase-orders', z.object({ data: PODetailSchema }), CreatePOPayloadSchema.parse(payload), { signal }).then(res => res.data),
 onSuccess: (data) => {
   // Seed the cache for the newly created PO
-  queryClient.setQueryData(['purchase-orders', data.id], data);
-  queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-  },
+   queryClient.setQueryData(['purchase-orders', data.id], data);
+   queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+   toast.success(options?.messages?.successMessage || 'Purchase order created successfully');
+   },
     onError: (error: unknown) => {
       // Handled globally by useSafeMutation
     },

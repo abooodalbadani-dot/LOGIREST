@@ -52,71 +52,71 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
 
     return {
       id: snapshot.id as string,
-      item_id: snapshot.itemId as string,
-      item_name: (item?.name as string) || '',
+      itemId: snapshot.itemId as string,
+      itemName: (item?.name as string) || '',
       barcode: (barcodeMappings[0]?.barcode as string) || '',
       uom: (unitOfMeasure?.code as string) || 'PCS',
-      snapshot_qty: snapshotQty,
-      counted_qty: countedQty,
+      snapshotQty: snapshotQty,
+      countedQty: countedQty,
       variance: variance,
-      variance_reason: null,
-      lot_number: (lot?.lotNumber as string) || undefined,
-      expiry_date: lot?.expiryDate
+      varianceReason: null,
+      lotNumber: (lot?.lotNumber as string) || undefined,
+      expiryDate: lot?.expiryDate
         ? (lot.expiryDate instanceof Date
             ? lot.expiryDate
             : new Date(lot.expiryDate as string)
           ).toISOString()
         : undefined,
-      unit_cost: Number(snapshot.wacSnapshot),
+      unitCost: Number(snapshot.wacSnapshot),
     };
   });
 
   return {
     id: session.id as string,
-    session_number: session.sessionNumber as number,
-    session_name: `Stocktake ${String(session.sessionNumber)}`,
-    warehouse_id: session.warehouseId as string,
-    warehouse_name: (warehouse?.name as string) || '',
+    sessionNumber: session.sessionNumber as number,
+    sessionName: `Stocktake ${String(session.sessionNumber)}`,
+    warehouseId: session.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     status: session.status as string,
-    snapshot_at: session.createdAt
+    snapshotAt: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
           : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
-    started_by: 'System',
-    started_at: session.createdAt
+    startedBy: 'System',
+    startedAt: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
           : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
-    posted_at:
+    postedAt:
       session.status === 'POSTED' && session.createdAt
         ? (session.createdAt instanceof Date
             ? session.createdAt
             : new Date(session.createdAt as string)
           ).toISOString()
         : null,
-    posted_by: null,
+    postedBy: null,
     items,
     version: session.version as number,
     description: '',
-    approver_comment: '',
-    approved_at: undefined,
-    created_at: session.createdAt
+    approverComment: '',
+    approvedAt: undefined,
+    createdAt: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
           : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
-    updated_at: session.createdAt
+    updatedAt: session.createdAt
       ? (session.createdAt instanceof Date
           ? session.createdAt
           : new Date(session.createdAt as string)
         ).toISOString()
       : new Date().toISOString(),
-    audit_log: [],
+    auditLog: [],
   };
 }
 

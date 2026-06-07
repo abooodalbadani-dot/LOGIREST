@@ -40,16 +40,16 @@ function mapIssueDetail(issue: Record<string, unknown>) {
           | number
           | undefined;
         return {
-          lot_id: la.lotId as string,
-          lot_number: (lot?.lotNumber as string) || '',
-          expiry_date: expiryDateVal
+          lotId: la.lotId as string,
+          lotNumber: (lot?.lotNumber as string) || '',
+          expiryDate: expiryDateVal
             ? (expiryDateVal instanceof Date
                 ? expiryDateVal
                 : new Date(expiryDateVal)
               ).toISOString()
             : null,
-          allocated_qty: Number(la.quantityAllocated),
-          override_reason: '',
+          allocatedQty: Number(la.quantityAllocated),
+          overrideReason: '',
         };
       });
 
@@ -58,49 +58,49 @@ function mapIssueDetail(issue: Record<string, unknown>) {
 
       return {
         id: line.id as string,
-        document_id: line.issueId as string,
-        item_id: line.itemId as string,
+        documentId: line.issueId as string,
+        itemId: line.itemId as string,
         item: item
           ? {
               id: item.id as string,
               code: item.sku as string,
-              name_ar: item.name as string,
-              name_en: item.name as string,
-              primary_uom: item.unitOfMeasure
+              nameAr: item.name as string,
+              nameEn: item.name as string,
+              primaryUom: item.unitOfMeasure
                 ? {
                     id: (item.unitOfMeasure as Record<string, unknown>)
                       .id as string,
                     code: (item.unitOfMeasure as Record<string, unknown>)
                       .code as string,
-                    name_ar: (item.unitOfMeasure as Record<string, unknown>)
+                    nameAr: (item.unitOfMeasure as Record<string, unknown>)
                       .name as string,
-                    name_en: (item.unitOfMeasure as Record<string, unknown>)
+                    nameEn: (item.unitOfMeasure as Record<string, unknown>)
                       .name as string,
                   }
-                : { id: '', code: '', name_ar: '', name_en: '' },
+                : { id: '', code: '', nameAr: '', nameEn: '' },
             }
           : {
               id: '',
               code: '',
-              name_ar: '',
-              name_en: '',
-              primary_uom: { id: '', code: '', name_ar: '', name_en: '' },
+              nameAr: '',
+              nameEn: '',
+              primaryUom: { id: '', code: '', nameAr: '', nameEn: '' },
             },
-        lot_id: firstAllocation ? firstAllocation.lot_id : null,
+        lotId: firstAllocation ? firstAllocation.lotId : null,
         lot: firstAllocation
           ? {
-              id: firstAllocation.lot_id,
-              lot_number: firstAllocation.lot_number,
-              expiry_date: firstAllocation.expiry_date,
-              is_expired: false,
+              id: firstAllocation.lotId,
+              lotNumber: firstAllocation.lotNumber,
+              expiryDate: firstAllocation.expiryDate,
+              isExpired: false,
             }
           : null,
         qty: Number(line.quantity),
-        uom_id: (item?.uomId as string) || '',
-        unit_cost: item?.wac ? Number(item.wac) : null,
-        requested_qty: Number(line.quantity),
-        issued_qty: Number(line.quantity),
-        lot_allocations: lotAllocations,
+        uomId: (item?.uomId as string) || '',
+        unitCost: item?.wac ? Number(item.wac) : null,
+        requestedQty: Number(line.quantity),
+        issuedQty: Number(line.quantity),
+        lotAllocations: lotAllocations,
       };
     },
   );
@@ -115,28 +115,28 @@ function mapIssueDetail(issue: Record<string, unknown>) {
 
   return {
     id: issue.id as string,
-    document_number: issue.issueNumber as string,
+    documentNumber: issue.issueNumber as string,
     status: issue.status as string,
     type: 'ISSUE',
-    destination_dept_id: issue.departmentId as string,
-    destination_department_id: issue.departmentId as string,
-    requested_by: 'System',
-    warehouse_id: issue.warehouseId as string,
-    branch_id:
+    destinationDeptId: issue.departmentId as string,
+    destinationDepartmentId: issue.departmentId as string,
+    requestedBy: 'System',
+    warehouseId: issue.warehouseId as string,
+    branchId:
       ((issue.warehouse as Record<string, unknown> | undefined)
         ?.branchId as string) || '',
     notes: (issue.notes as string) || '',
-    created_by: 'System',
-    created_at: createdAtIso,
-    updated_at: createdAtIso,
-    posted_at:
+    createdBy: 'System',
+    createdAt: createdAtIso,
+    updatedAt: createdAtIso,
+    postedAt:
       issue.status === 'POSTED' && createdAtVal
         ? (createdAtVal instanceof Date
             ? createdAtVal
             : new Date(createdAtVal)
           ).toISOString()
         : null,
-    posted_by: null,
+    postedBy: null,
     version: issue.version as number,
     lines,
   };
@@ -152,12 +152,12 @@ function mapIssueSummary(issue: Record<string, unknown>) {
     : new Date().toISOString();
   return {
     id: issue.id as string,
-    document_number: issue.issueNumber as string,
+    documentNumber: issue.issueNumber as string,
     status: issue.status as string,
-    destination_dept_id: issue.departmentId as string,
-    warehouse_id: issue.warehouseId as string,
-    created_at: createdAtIso,
-    posted_at: issue.status === 'POSTED' ? createdAtIso : null,
+    destinationDeptId: issue.departmentId as string,
+    warehouseId: issue.warehouseId as string,
+    createdAt: createdAtIso,
+    postedAt: issue.status === 'POSTED' ? createdAtIso : null,
   };
 }
 

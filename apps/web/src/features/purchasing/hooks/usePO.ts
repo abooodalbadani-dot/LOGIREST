@@ -27,9 +27,7 @@ const POLineSchema = z.object({
   itemSku: z.string().optional(),
   itemName: z.string().optional(),
   quantity: z.number().optional(),
-  qty: z.number().optional(),
   unitPrice: z.number().optional(),
-  unitCostForeign: z.number().optional(),
   uomId: z.string(),
   notes: z.string().optional(),
 });

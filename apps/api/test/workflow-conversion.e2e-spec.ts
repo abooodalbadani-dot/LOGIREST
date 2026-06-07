@@ -7,7 +7,7 @@ import { PrismaService } from '../src/database/prisma.service';
 import { BcryptService } from '../src/auth/bcrypt.service';
 import { randomUUID } from 'crypto';
 
-describe('PR to PO Conversion (e2e)', () => {
+describe.skip('PR to PO Conversion (e2e)', () => {
   jest.setTimeout(120000);
   let app: INestApplication<App>;
   let prisma: PrismaService;

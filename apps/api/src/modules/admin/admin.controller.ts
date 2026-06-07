@@ -198,7 +198,7 @@ export class AdminController {
       })),
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',
-      created_at: user.createdAt.toISOString(),
+      createdAt: user.createdAt.toISOString(),
     }));
 
     return {
@@ -257,7 +257,7 @@ export class AdminController {
       })),
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',
-      created_at: user.createdAt.toISOString(),
+      createdAt: user.createdAt.toISOString(),
     };
   }
 
