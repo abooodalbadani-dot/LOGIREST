@@ -9,7 +9,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 export interface LineItem {
  id: string;
- item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { code: string } };
+ item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom?: { code: string } | null };
  lot?: { lotNumber: string; expiryDate: string | null } | null;
  qty: number;
  uomId: string;
@@ -202,7 +202,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                       {renderUom ? (
                         renderUom(line)
                       ) : (
-                        <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom.code}</span>
+                        <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom?.code || line.uomId || ''}</span>
                       )}
                     </td>
                     {extraColumns.map((col, i) => (
@@ -279,7 +279,7 @@ export function DocumentLineItemTable<T extends LineItem>({
                   {renderUom ? (
                     renderUom(line)
                   ) : (
-                    <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom.code}</span>
+                    <span dir="ltr" className="text-label-xs font-black uppercase text-muted-foreground/30">{line.item.primaryUom?.code || line.uomId || ''}</span>
                   )}
                 </td>
                 {extraColumns.map((col, i) => (

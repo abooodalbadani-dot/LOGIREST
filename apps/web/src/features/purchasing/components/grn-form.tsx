@@ -28,8 +28,11 @@ import { toast } from 'sonner';
 import { onFormError } from '@/hooks/useFormError';
 import { ActionGuard } from '@/core/workflow/ActionGuard';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useSearchParams } from 'next/navigation';
 import { useCurrencies } from '@/features/purchasing/hooks/useCurrencies';
 import { useFXRates } from '@/features/purchasing/hooks/useFXRates';
+import { usePO } from '@/features/purchasing/hooks/usePO';
+import { usePOList } from '@/features/purchasing/hooks/usePOList';
 import { apiClient } from '@/lib/api/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { type GRNDetail, LineItemSchema } from '@/features/purchasing/hooks/useGRN';
@@ -46,12 +49,14 @@ import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRU
 import { Item, ItemSchema } from '@/types/master-data';
 import { useWarehouseLock } from '@/hooks/useWarehouseLock';
 import { LockBanner } from '@/components/shared/LockBanner';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { cn } from '@/lib/utils';
 
 const isExpiryInPast = (date: string) => new Date(date) < new Date(new Date().toDateString());
 
 const grnFormSchema = z.object({
+  poId: z.string().min(1, 'Required'),
   supplierId: z.string().min(1, 'Required'),
   currencyId: z.string().min(1, 'Required'),
   warehouseId: z.string().min(1, 'Required'),
@@ -76,6 +81,11 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const locale = useLocale();
   const { user } = useAuth();
 
+  const searchParams = useSearchParams();
+  const queryPoId = searchParams ? searchParams.get('po_id') : null;
+  const { data: poResponse, isLoading: isLoadingPO } = usePO(queryPoId || '');
+  const poData = poResponse;
+
   const isNew = id === 'new';
   const lastResetId = useRef<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
@@ -84,6 +94,18 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { data: suppliers } = useSuppliers();
   const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: currencies } = useCurrencies();
+
+  const { data: poListResponse } = usePOList({ status: 'APPROVED' });
+  const approvedPOs = poListResponse?.data || [];
+
+  const poItems = useMemo(() => {
+    return approvedPOs?.map(po => ({
+      id: po.id,
+      name: po.documentNumber || '',
+      name_en: po.documentNumber || '',
+      name_ar: po.documentNumber || '',
+    })) ?? [];
+  }, [approvedPOs]);
 
   const supplierItems = useMemo(() => {
     return suppliers?.map(s => {
@@ -134,6 +156,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
   const { handleSubmit, reset, control, register, getValues, formState: { errors, isDirty } } = useForm<GRNFormValues>({
     resolver: zodResolver(grnFormSchema),
     defaultValues: {
+      poId: initialData?.poId || queryPoId || '',
       supplierId: initialData?.supplierId || '',
       currencyId: initialData?.currencyId || '',
       warehouseId: initialData?.warehouseId || '',
@@ -173,6 +196,7 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     if (initialData && initialData.id !== lastResetId.current) {
       lastResetId.current = initialData.id;
       reset({
+        poId: initialData.poId || '',
         supplierId: initialData.supplierId || '',
         currencyId: initialData.currencyId || '',
         warehouseId: initialData.warehouseId || '',
@@ -185,6 +209,49 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
       setIdempotencyKey(crypto.randomUUID());
     }
   }, [initialData, reset]);
+
+  useEffect(() => {
+    if (isNew && poData) {
+      reset({
+        poId: poData.id,
+        supplierId: poData.supplierId || '',
+        currencyId: poData.currencyId || '',
+        warehouseId: poData.targetWarehouseId || '',
+        notes: poData.notes || '',
+        lines: poData.lines.map(line => {
+          const itemId = line.item?.id || line.itemId || '';
+          const itemCode = line.item?.code || line.itemSku || '';
+          const itemName = line.item?.name || line.itemName || '';
+          const uomId = line.item?.primaryUom?.id || line.uomId || '';
+          const uomCode = line.item?.primaryUom?.code || line.uomId || '';
+          return {
+            id: line.id,
+            item: {
+              id: itemId,
+              code: itemCode,
+              name: itemName,
+              nameAr: line.item?.nameAr || itemName,
+              nameEn: line.item?.nameEn || itemName,
+              primaryUom: {
+                id: uomId,
+                code: uomCode
+              }
+            },
+            lot: null,
+            qty: line.quantity || 0,
+            receivedQty: line.quantity || 0,
+            uomId: uomId,
+            unitCostForeign: line.unitPrice || 0,
+            unitCostBase: 0
+          };
+        })
+      }, {
+        keepDirty: false,
+        keepTouched: false
+      });
+      setIdempotencyKey(crypto.randomUUID());
+    }
+  }, [isNew, poData, reset]);
 
   useEffect(() => {
     const expired = (watchedLines || [])
@@ -300,16 +367,16 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     }
     try {
       const payload = {
-        poId: initialData?.poId || '',
+        poId: values.poId,
         currencyId: values.currencyId,
         warehouseId: values.warehouseId,
         notes: values.notes,
-        lines: values.lines.map(l => ({
-          id: l.id.startsWith('new-') ? undefined : l.id,
+        lines: (values.lines || []).map(l => ({
+          id: (l.id && l.id.startsWith('new-')) ? undefined : l.id,
           itemId: l.item.id,
           lotId: l.lot?.id || null,
-          receivedQty: l.receivedQty,
-          unitCostForeign: l.unitCostForeign || 0,
+          receivedQty: isNaN(Number(l.receivedQty)) ? 0 : Number(l.receivedQty),
+          unitCostForeign: isNaN(Number(l.unitCostForeign)) ? 0 : Number(l.unitCostForeign || 0),
         }))
       };
 
@@ -342,12 +409,17 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
     }
   };
 
+  if (isNew && queryPoId && isLoadingPO) {
+    return <PageSkeleton variant="detail" />;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-surface-container-low pb-32">
       <DocumentLockBanner status={status} isLocked={isLocked} />
       <LockBanner lockState={warehouseLock} />
 
       <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">
+        <input type="hidden" {...register('poId')} />
         <div className="flex items-center justify-between px-2">
           <div className="flex flex-col">
             <h1 className="text-headline-lg font-semibold uppercase italic text-foreground flex items-center gap-4">
@@ -470,10 +542,20 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                   </div>
                   <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('ref_document')}</p>
                   <div className="mt-2">
-                    {initialData?.poNumber ? (
+                    {initialData?.poNumber || poData?.documentNumber ? (
                       <Badge variant="outline" className="h-8 px-4 bg-primary/5 text-primary border-primary/20 text-label-xs font-semibold uppercase rounded-xl">
-                        <span dir="ltr" className="font-mono">{initialData.poNumber}</span>
+                        <span dir="ltr" className="font-mono">{initialData?.poNumber || poData?.documentNumber}</span>
                       </Badge>
+                    ) : isNew ? (
+                      <SmartCombobox
+                        items={poItems}
+                        value=""
+                        onSelect={(item) => {
+                          router.replace(`/goods-received/new?po_id=${item.id}`);
+                        }}
+                        placeholder={t('select_po') || "Select Purchase Order"}
+                        className="h-10 bg-surface-container-low border-none rounded-xl px-4 font-semibold font-mono text-foreground shadow-none"
+                      />
                     ) : (
                       <p className="font-semibold text-title-sm text-primary/10 italic uppercase">{t('direct_receipt')}</p>
                     )}
@@ -556,7 +638,10 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         name: f.item.name || f.item.nameEn || f.item.nameAr || '',
                         nameAr: f.item.nameAr,
                         nameEn: f.item.nameEn,
-                        primaryUom: { id: f.item.primaryUom.id, code: f.item.primaryUom.code },
+                        primaryUom: { 
+                          id: f.item.primaryUom?.id || f.uomId || '', 
+                          code: f.item.primaryUom?.code || f.uomId || '' 
+                        },
                       },
                       lot: f.lot ? { id: f.lot.id, lotNumber: f.lot.lotNumber, expiryDate: f.lot.expiryDate } : null,
                     }))}
@@ -573,19 +658,20 @@ export function GRNForm({ initialData, id, onConflict, actions }: GRNFormProps) 
                         cell: (field: LineItem) => {
                           const index = fields.findIndex(f => f.id === field.id);
                           const isOver = field.receivedQty > field.qty;
+                          const hasError = !!errors.lines?.[index]?.receivedQty;
                           return (
                             <input type="number"
                               dir="ltr"
                               disabled={isLocked || isWarehouseLocked}
                               className={cn(
-                                "w-20 rounded-sm border border-surface-container-high/30 bg-surface-container-low text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 h-7",
-                                isOver ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400" : "focus:ring-1 focus:ring-primary-fixed-dim/10"
+                                "w-20 rounded-sm border text-center px-2 py-0.5 font-mono text-xs outline-none transition-all disabled:opacity-50 h-7",
+                                hasError
+                                  ? "border-destructive ring-1 ring-destructive bg-destructive/10 text-destructive focus:border-destructive"
+                                  : isOver
+                                    ? "border-amber-500 ring-1 ring-amber-500 bg-amber-500/10 text-amber-500 focus:border-amber-400"
+                                    : "border-surface-container-high/30 bg-surface-container-low focus:ring-1 focus:ring-primary-fixed-dim/10"
                               )}
                               {...register(`lines.${index}.receivedQty` as const, { valueAsNumber: true })}
-                              onChange={e => {
-                                const val = Number(e.target.value);
-                                update(index, { ...fields[index], receivedQty: val });
-                              }}
                             />
                           );
                         }

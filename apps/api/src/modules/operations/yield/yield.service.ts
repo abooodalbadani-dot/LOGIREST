@@ -7,33 +7,54 @@ import { PrismaService } from '../../../database/prisma.service';
 
 export interface YieldBatch {
   id: string;
-  recipe_name: string;
+  recipeName: string;
   category: string;
-  input_qty: number;
-  output_qty: number;
-  waste_qty: number;
-  yield_pct: number;
-  standard_yield: number;
+  inputQty: number;
+  outputQty: number;
+  wasteQty: number;
+  yieldPct: number;
+  standardYield: number;
   efficiency: number;
-  created_at: string;
+  createdAt: string;
+}
+
+export interface CreateYieldBatchDto {
+  recipeName: string;
+  category: string;
+  inputQty: number;
+  outputQty: number;
+  standardYield?: number;
+  warehouseId?: string;
 }
 
 @Injectable()
 export class YieldService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapToYieldBatch(dbBatch: any): YieldBatch {
+  private mapToYieldBatch(dbBatch: {
+    id: string;
+    recipeName: string;
+    category: string;
+    inputQty: number;
+    outputQty: number;
+    wasteQty: number;
+    yieldPct: number;
+    standardYield: number;
+    efficiency: number;
+    createdAt: Date;
+    warehouseId: string | null;
+  }): YieldBatch {
     return {
       id: dbBatch.id,
-      recipe_name: dbBatch.recipeName,
+      recipeName: dbBatch.recipeName,
       category: dbBatch.category,
-      input_qty: dbBatch.inputQty,
-      output_qty: dbBatch.outputQty,
-      waste_qty: dbBatch.wasteQty,
-      yield_pct: dbBatch.yieldPct,
-      standard_yield: dbBatch.standardYield,
+      inputQty: dbBatch.inputQty,
+      outputQty: dbBatch.outputQty,
+      wasteQty: dbBatch.wasteQty,
+      yieldPct: dbBatch.yieldPct,
+      standardYield: dbBatch.standardYield,
       efficiency: dbBatch.efficiency,
-      created_at:
+      createdAt:
         dbBatch.createdAt instanceof Date
           ? dbBatch.createdAt.toISOString()
           : new Date(dbBatch.createdAt).toISOString(),
@@ -57,36 +78,33 @@ export class YieldService {
     return this.mapToYieldBatch(batch);
   }
 
-  async create(body: any): Promise<YieldBatch> {
-    const recipe_name = body.recipe_name || body.recipeName;
-    const category = body.category;
-    const input_qty =
-      body.input_qty !== undefined ? body.input_qty : body.inputQty;
-    const output_qty =
-      body.output_qty !== undefined ? body.output_qty : body.outputQty;
-    const standard_yield =
-      body.standard_yield !== undefined
-        ? body.standard_yield
-        : body.standardYield;
-    const warehouse_id = body.warehouse_id || body.warehouseId;
+  async create(body: CreateYieldBatchDto): Promise<YieldBatch> {
+    const {
+      recipeName,
+      category,
+      inputQty,
+      outputQty,
+      standardYield,
+      warehouseId,
+    } = body;
 
     if (
-      !recipe_name ||
+      !recipeName ||
       !category ||
-      input_qty === undefined ||
-      output_qty === undefined
+      inputQty === undefined ||
+      outputQty === undefined
     ) {
       throw new BadRequestException(
-        'recipe_name, category, input_qty, and output_qty are required',
+        'recipeName, category, inputQty, and outputQty are required',
       );
     }
 
-    const input = parseFloat(input_qty);
-    const output = parseFloat(output_qty);
-    const stdYield = standard_yield ? parseFloat(standard_yield) : 100.0;
+    const input = Number(inputQty);
+    const output = Number(outputQty);
+    const stdYield = standardYield ? Number(standardYield) : 100.0;
 
     if (input <= 0) {
-      throw new BadRequestException('input_qty must be greater than zero');
+      throw new BadRequestException('inputQty must be greater than zero');
     }
 
     const waste = parseFloat((input - output).toFixed(4));
@@ -95,7 +113,7 @@ export class YieldService {
 
     const dbBatch = await this.prisma.yieldBatch.create({
       data: {
-        recipeName: recipe_name,
+        recipeName,
         category,
         inputQty: input,
         outputQty: output,
@@ -103,7 +121,7 @@ export class YieldService {
         yieldPct,
         standardYield: stdYield,
         efficiency,
-        warehouseId: warehouse_id || null,
+        warehouseId: warehouseId || null,
       },
     });
 

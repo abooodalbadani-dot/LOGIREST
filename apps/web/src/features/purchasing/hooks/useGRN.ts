@@ -6,28 +6,30 @@ import { z } from 'zod';
 import { BadgeStatusSchema } from '@/components/shared/StatusBadge';
 
 export const LineItemSchema = z.object({
- id: z.string(),
- item: z.object({
- id: z.string(),
- code: z.string(),
- name: z.string(),
- nameAr: z.string().optional(),
- nameEn: z.string().optional(),
- primaryUom: z.object({
- id: z.string(),
- code: z.string()
- })
- }),
- lot: z.object({
- id: z.string(),
- lotNumber: z.string(),
- expiryDate: z.string().nullable()
- }).nullable(),
- qty: z.number(),
- receivedQty: z.number(),
- uomId: z.string(),
- unitCostForeign: z.number().nullable(),
- unitCostBase: z.number().nullable()
+  id: z.string(),
+  item: z.object({
+    id: z.string().min(1, 'Required'),
+    code: z.string(),
+    name: z.string(),
+    nameAr: z.string().optional(),
+    nameEn: z.string().optional(),
+    primaryUom: z.object({
+      id: z.string(),
+      code: z.string()
+    })
+  }),
+  lot: z.object({
+    id: z.string(),
+    lotNumber: z.string(),
+    expiryDate: z.string().nullable()
+  }).nullable(),
+  qty: z.number(),
+  receivedQty: z.number().min(0, 'Must not be less than 0'),
+  uomId: z.string(),
+  unitCostForeign: z.number().nullable().refine(val => val === null || val >= 0, {
+    message: 'Must not be less than 0'
+  }),
+  unitCostBase: z.number().nullable()
 });
 
 export const GRNDetailSchema = z.object({

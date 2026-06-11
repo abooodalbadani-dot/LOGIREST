@@ -27,7 +27,7 @@ interface WacHistoryRow {
 function getDocumentHref(row: WacHistoryRow): string {
   const type = (row.document_type || '').toLowerCase();
   if (type.includes('goods receipt') || type.includes('grn')) {
-    return `/goods-receipts/${row.document_id}`;
+    return `/goods-received/${row.document_id}`;
   }
   if (type.includes('adjustment')) {
     return `/adjustments/${row.document_id}`;

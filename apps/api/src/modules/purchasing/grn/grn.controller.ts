@@ -43,35 +43,35 @@ function mapGRNDetail(grn: Record<string, unknown>) {
       id: line.id as string,
       item: item
         ? {
-          id: item.id as string,
-          code: item.sku as string,
-          nameAr: item.name as string,
-          nameEn: item.name as string,
-          primaryUom: unitOfMeasure
-            ? {
-              id: unitOfMeasure.id as string,
-              code: unitOfMeasure.code as string,
-            }
-            : { id: '', code: '' },
-        }
+            id: item.id as string,
+            code: item.sku as string,
+            nameAr: item.name as string,
+            nameEn: item.name as string,
+            primaryUom: unitOfMeasure
+              ? {
+                  id: unitOfMeasure.id as string,
+                  code: unitOfMeasure.code as string,
+                }
+              : { id: '', code: '' },
+          }
         : {
-          id: '',
-          code: '',
-          nameAr: '',
-          nameEn: '',
-          primaryUom: { id: '', code: '' },
-        },
+            id: '',
+            code: '',
+            nameAr: '',
+            nameEn: '',
+            primaryUom: { id: '', code: '' },
+          },
       lot: lot
         ? {
-          id: lot.id as string,
-          lotNumber: lot.lotNumber as string,
-          expiryDate: lot.expiryDate
-            ? (lot.expiryDate instanceof Date
-              ? lot.expiryDate
-              : new Date(lot.expiryDate as string)
-            ).toISOString()
-            : null,
-        }
+            id: lot.id as string,
+            lotNumber: lot.lotNumber as string,
+            expiryDate: lot.expiryDate
+              ? (lot.expiryDate instanceof Date
+                  ? lot.expiryDate
+                  : new Date(lot.expiryDate as string)
+                ).toISOString()
+              : null,
+          }
         : null,
       qty: Number(line.quantityReceived),
       receivedQty: Number(line.quantityReceived),
@@ -83,9 +83,9 @@ function mapGRNDetail(grn: Record<string, unknown>) {
 
   const createdAtIso = grn.createdAt
     ? (grn.createdAt instanceof Date
-      ? grn.createdAt
-      : new Date(grn.createdAt as string)
-    ).toISOString()
+        ? grn.createdAt
+        : new Date(grn.createdAt as string)
+      ).toISOString()
     : new Date().toISOString();
 
   return {
@@ -95,9 +95,9 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     supplierId: (purchaseOrder?.supplierId as string) || '',
     supplier: supplier
       ? {
-        id: supplier.id as string,
-        name: supplier.name as string,
-      }
+          id: supplier.id as string,
+          name: supplier.name as string,
+        }
       : undefined,
     poId: grn.poId as string,
     poNumber: (purchaseOrder?.poNumber as string) || '',
@@ -128,9 +128,9 @@ function mapGRNSummary(grn: Record<string, unknown>) {
 
   const createdAtIso = grn.createdAt
     ? (grn.createdAt instanceof Date
-      ? grn.createdAt
-      : new Date(grn.createdAt as string)
-    ).toISOString()
+        ? grn.createdAt
+        : new Date(grn.createdAt as string)
+      ).toISOString()
     : new Date().toISOString();
 
   return {
@@ -144,6 +144,12 @@ function mapGRNSummary(grn: Record<string, unknown>) {
     warehouseId: grn.warehouseId as string,
     createdAt: createdAtIso,
     supplierTotalAmount: supplierTotalAmount,
+    postedAt: grn.postedAt
+      ? (grn.postedAt instanceof Date
+          ? grn.postedAt
+          : new Date(grn.postedAt as string)
+        ).toISOString()
+      : null,
   };
 }
 
@@ -155,7 +161,7 @@ export class GrnController {
     private readonly grnPostService: GrnPostService,
     private readonly scopeValidationService: ScopeValidationService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   @Post()
   async create(
@@ -163,15 +169,8 @@ export class GrnController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
-    const rawBody = body as unknown as Record<string, unknown>;
-    const poId =
-      body.poId ??
-      (typeof rawBody.po_id === 'string' ? rawBody.po_id : undefined);
-    const warehouseId =
-      body.warehouseId ??
-      (typeof rawBody.warehouse_id === 'string'
-        ? rawBody.warehouse_id
-        : undefined);
+    const poId = body.poId;
+    const warehouseId = body.warehouseId;
     if (!poId || !warehouseId) {
       throw new BadRequestException('poId and warehouseId are required');
     }
@@ -182,19 +181,11 @@ export class GrnController {
       warehouseId,
     );
 
-    const rawLines = (rawBody.lines ?? []) as Record<string, unknown>[];
-    const lines = rawLines.map((line) => {
-      const itemId = (line.itemId ?? line.item_id) as string | undefined;
-      const lotId = (line.lotId !== undefined ? line.lotId : line.lot_id) as
-        | string
-        | null
-        | undefined;
-      const quantity = Number(
-        line.receivedQty ?? line.received_qty ?? line.quantity ?? line.qty ?? 0,
-      );
-      const unitPrice = Number(
-        line.unitCostForeign ?? line.unit_cost_foreign ?? line.unitPrice ?? 0,
-      );
+    const lines = (body.lines || []).map((line) => {
+      const itemId = line.itemId;
+      const lotId = line.lotId;
+      const quantity = Number(line.receivedQty);
+      const unitPrice = Number(line.unitCostForeign);
       return {
         itemId: itemId || '',
         lotId,
@@ -265,45 +256,26 @@ export class GrnController {
       );
     }
 
-    const rawBody = body as unknown as Record<string, unknown>;
-    const poId =
-      body.poId ??
-      (typeof rawBody.po_id === 'string' ? rawBody.po_id : undefined);
-    const warehouseId =
-      body.warehouseId ??
-      (typeof rawBody.warehouse_id === 'string'
-        ? rawBody.warehouse_id
-        : undefined);
+    const poId = body.poId;
+    const warehouseId = body.warehouseId;
 
     let lines:
       | Array<{
-        id?: string;
-        itemId: string;
-        lotId?: string | null;
-        quantity: number;
-        unitPrice: number;
-      }>
+          id?: string;
+          itemId: string;
+          lotId?: string | null;
+          quantity: number;
+          unitPrice: number;
+        }>
       | undefined = undefined;
-    if (rawBody.lines) {
-      const rawLines = rawBody.lines as Record<string, unknown>[];
-      lines = rawLines.map((line) => {
-        const itemId = (line.itemId ?? line.item_id) as string | undefined;
-        const lotId = (line.lotId !== undefined ? line.lotId : line.lot_id) as
-          | string
-          | null
-          | undefined;
-        const quantity = Number(
-          line.receivedQty ??
-          line.received_qty ??
-          line.quantity ??
-          line.qty ??
-          0,
-        );
-        const unitPrice = Number(
-          line.unitCostForeign ?? line.unit_cost_foreign ?? line.unitPrice ?? 0,
-        );
+    if (body.lines) {
+      lines = body.lines.map((line) => {
+        const itemId = line.itemId;
+        const lotId = line.lotId;
+        const quantity = Number(line.receivedQty);
+        const unitPrice = Number(line.unitCostForeign);
         return {
-          id: line.id as string | undefined,
+          id: line.id,
           itemId: itemId || '',
           lotId,
           quantity,

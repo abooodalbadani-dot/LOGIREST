@@ -6,7 +6,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useNotificationTemplate } from '@/features/notifications/hooks/useNotificationTemplates';
 import { interpolateTemplate, resolveTemplate } from '@/features/notifications/services/template-resolver';
-import { toSnakeCase } from '@/lib/api/adapters';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { Input } from '@/components/ui/input';
@@ -169,7 +168,7 @@ export function TemplateEditorClient({ id, title, locale }: Props) {
   }, [data, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, toSnakeCase(body as Record<string, unknown>)),
+    mutationFn: (body: unknown) => apiClient.put(`/notifications/templates/${id}`, TemplateUpdateSchema, body),
     onSuccess: () => {
       playSound('success');
       qc.invalidateQueries({ queryKey: ['notifications/templates'] });

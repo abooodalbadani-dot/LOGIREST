@@ -4,8 +4,8 @@ import { useTranslations } from 'next-intl';
 
 interface DiffEntry {
  field: string;
- oldValue: unknown;
- newValue: unknown;
+ oldValue?: unknown;
+ newValue?: unknown;
 }
 
 export function AuditDiffViewer({ changes }: { changes: DiffEntry[] }) {

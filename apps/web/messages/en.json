@@ -1605,6 +1605,7 @@
         "update_failed": "Failed to update record"
       },
       "fields": {
+        "name": "Category Name",
         "name_ar": "Category Name (AR)",
         "name_en": "Category Name (EN)",
         "code": "Category Code",
@@ -1815,6 +1816,9 @@
         "effective_date": "Effective Date",
         "from": "From",
         "from_currency": "From Currency",
+        "from_currency_id": "Source Currency",
+        "to_currency_id": "Target Currency",
+        "is_active": "Status",
         "rate": "Rate",
         "status": "Status",
         "to": "To",
@@ -1838,7 +1842,9 @@
         "immutable_desc": "Rates should not be deleted to maintain audit trail integrity.",
         "immutable_title": "Historical Integrity",
         "temporal_desc": "Rates are applied based on the document date matching the effective date sequence.",
-        "temporal_title": "Temporal Logic"
+        "temporal_title": "Temporal Logic",
+        "precision_desc": "Exchange rates support up to 6 decimal places for high precision calculations.",
+        "temporal_integrity_desc": "Rates are temporally locked when documents are posted to prevent historic changes."
       },
       "title": "FX Rates",
       "to_currency": "To Currency",
@@ -2204,6 +2210,8 @@
         "save_failed": "Failed to save data",
         "update_failed": "Failed to update record"
       },
+      "archive_confirm_title": "Archive Warehouse",
+      "archive_confirm_desc": "Are you sure you want to archive this warehouse? This will hide it from active operational selection but preserve historical transaction logs.",
       "fields": {
         "branch": "Operating Branch",
         "code": "Warehouse Code",
@@ -2681,7 +2689,12 @@
       },
       "create_lot": "Create New Lot",
       "warehouse": "Warehouse",
-      "refreshing_stock": "Updating stock levels..."
+      "refreshing_stock": "Updating stock levels...",
+      "batch_post_title": "Batch Post Adjustments",
+      "batch_post_desc": "Are you sure you want to post all selected adjustments? This will commit their stock changes to the ledger.",
+      "batch_approve_title": "Batch Approve Adjustments",
+      "batch_approve_desc": "Are you sure you want to approve all selected adjustments?",
+      "approve_irreversible": "Approving will move these documents to the next stage in the workflow."
     },
     "expired_override": {
       "cancel_scan": "Cancel Scan",
@@ -2877,6 +2890,12 @@
         "submitted": "Submitted"
       },
       "submit": "Submit Request",
+      "submit_request": "Submit Request",
+      "cancel_request": "Cancel Request",
+      "cancellation_reason_description": "Please provide a reason for cancelling this request.",
+      "confirm_cancellation": "Confirm Cancellation",
+      "cancellation_reason_label": "Cancellation Reason",
+      "cancellation_reason_placeholder": "Enter cancellation reason...",
       "title": "Operational Requisitions",
       "validation": {
         "department_required": "Department is required",
@@ -3083,6 +3102,7 @@
       "confirm_receipt": "Confirm Receipt",
       "confirm_shipment": "Confirm Shipment",
       "create_new": "New Transfer",
+      "new_description": "Create a new stock transfer between warehouses",
       "created_success": "Stock Transfer created successfully",
       "delivered_posted": "Delivered & Posted",
       "description": "Internal warehouse transfers and movement tracking",
@@ -3160,7 +3180,10 @@
       "verified_label": "Verified",
       "warehouse_locked": "Cannot proceed: One or more warehouses are locked due to an active stocktake.",
       "warehouse_match_error": "Source and destination warehouses cannot be the same",
-      "search_placeholder": "Search by document number or warehouse"
+      "search_placeholder": "Search by document number or warehouse",
+      "transfer": "Transfer",
+      "overdue_transfer": "overdue",
+      "resolve_overdue_transfers": "Resolve overdue transfers"
     }
   },
   "procurement": {
@@ -3189,6 +3212,7 @@
       "detail_sub": "Goods Received Notification Detail",
       "detail_title": "Goods Received Note",
       "direct_receipt": "Direct Receipt",
+      "select_po": "Select Purchase Order",
       "document_specification": "Goods Receipt Specification",
       "errors": {
         "no_currencies_available": "No currencies available for FX selection."
@@ -3399,6 +3423,7 @@
       },
       "import_from_pr": "Import from Purchase Request",
       "import_lines": "Import Lines",
+      "no_approved_prs": "No approved purchase requests found",
       "warning_irreversible": "This action will post the order to the ledger and cannot be reversed."
     },
     "pr": {
@@ -3428,7 +3453,8 @@
         "summary_title": "Request Summary",
         "sync_context": "Syncing Request Data...",
         "title": "Purchase Request Approval",
-        "workflow": "Approval Workflow"
+        "workflow": "Approval Workflow",
+        "generate_po": "Generate Purchase Order"
       },
       "approval_desc": "Review items and confirm or reject the request",
       "approval_title": "Purchase Request Approval",

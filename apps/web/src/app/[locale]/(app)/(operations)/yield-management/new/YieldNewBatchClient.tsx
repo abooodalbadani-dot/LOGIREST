@@ -44,8 +44,10 @@ export function YieldNewBatchClient() {
     if (!recipeSearch || !inputQty) return;
     
     createBatch({
-      recipe_id: recipeSearch, // Simplified for now as it's a search string in UI
-      input_qty: parseFloat(inputQty),
+      recipeName: recipeSearch,
+      category: 'GENERAL',
+      inputQty: parseFloat(inputQty),
+      outputQty: parseFloat(inputQty), // Will be refined once recipe lookup is implemented
     }, {
       onSuccess: () => {
         playSound('success');

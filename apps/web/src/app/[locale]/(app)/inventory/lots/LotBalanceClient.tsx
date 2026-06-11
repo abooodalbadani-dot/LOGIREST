@@ -98,7 +98,7 @@ export default function LotBalanceClient() {
       <div className="max-w-[1600px] mx-auto space-y-8">
         
         {/* Premium Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+        <div data-slot="page-header" className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
           <div className="space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Inventory Ledger Control

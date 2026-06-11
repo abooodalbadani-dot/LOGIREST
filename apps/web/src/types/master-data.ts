@@ -90,16 +90,80 @@ export const SupplierSchema = z.object({
 });
 
 export const CurrencySchema = z.object({
-  id: z.string(), code: z.string(), name: z.string(),
-  symbol: z.string().optional(), isBaseCurrency: z.boolean(), isActive: z.boolean(), createdAt: z.string(),
+  id: z.string(),
+  code: z.string(),
+  name: z.string().optional(),
+  nameEn: z.string().optional(),
+  nameAr: z.string().optional(),
+  symbol: z.string().optional(),
+  isBaseCurrency: z.boolean().optional(),
+  isBase: z.boolean().optional(),
+  isActive: z.boolean(),
+  createdAt: z.string().optional(),
   version: z.number().optional()
-});
+}).transform((data) => ({
+  ...data,
+  name: data.name || data.nameEn || data.nameAr || '',
+  nameEn: data.nameEn || data.name || '',
+  nameAr: data.nameAr || data.name || '',
+  isBaseCurrency: data.isBaseCurrency ?? data.isBase ?? false,
+  isBase: data.isBase ?? data.isBaseCurrency ?? false,
+  createdAt: data.createdAt || new Date().toISOString(),
+}));
 
-export const FXRateSchema = z.object({
-  id: z.string(), fromCurrencyId: z.string(), toCurrencyId: z.string(),
-  rate: z.number(), effectiveDate: z.string(), isActive: z.boolean(), createdAt: z.string(),
-  version: z.number().optional()
-});
+const preprocessDecimal = (val: unknown) => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') return parseFloat(val);
+  if (val && typeof val === 'object') {
+    const raw = val as Record<string, unknown>;
+    if (typeof raw.toNumber === 'function') {
+      return (raw as { toNumber: () => number }).toNumber();
+    }
+    if ('d' in raw && 's' in raw && 'e' in raw && Array.isArray(raw.d)) {
+      try {
+        const s = raw.s as number;
+        const e = raw.e as number;
+        const d = raw.d as number[];
+        let digits = '';
+        for (let i = 0; i < d.length; i++) {
+          let segment = String(d[i]);
+          if (i > 0) {
+            segment = segment.padStart(7, '0');
+          }
+          digits += segment;
+        }
+        return s * parseInt(digits, 10) * Math.pow(10, e - digits.length + 1);
+      } catch (err) {
+        console.error('Error parsing decimal object:', err);
+      }
+    }
+  }
+  return val;
+};
+
+export const FXRateSchema = z.preprocess(
+  (data: unknown) => {
+    if (data && typeof data === 'object') {
+      const raw = data as Record<string, unknown>;
+      return {
+        ...raw,
+        rate: preprocessDecimal(raw.rate),
+        effectiveDate: (raw.effectiveDate as string) || (raw.effectiveFrom as string) || '',
+      };
+    }
+    return data;
+  },
+  z.object({
+    id: z.string(),
+    fromCurrencyId: z.string(),
+    toCurrencyId: z.string(),
+    rate: z.number(),
+    effectiveDate: z.string(),
+    isActive: z.boolean(),
+    createdAt: z.string(),
+    version: z.number().optional()
+  })
+);
 
 export const BarcodeSchema = z.object({
   id: z.string(),

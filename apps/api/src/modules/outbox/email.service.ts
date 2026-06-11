@@ -32,8 +32,14 @@ export class EmailService {
         where: { key: 'system_settings' },
       });
       if (setting) {
-        const config = JSON.parse(setting.value);
-        if (config.mail_provider === 'smtp' && config.smtp_host) {
+        const config = JSON.parse(setting.value) as Record<string, unknown>;
+        const mailProvider = (config.mailProvider ?? config.mail_provider) as
+          | string
+          | undefined;
+        const smtpHost = (config.smtpHost ?? config.smtp_host) as
+          | string
+          | undefined;
+        if (mailProvider === 'smtp' && smtpHost) {
           this.hasDbConfig = true;
           this.logger.log('SMTP dynamic configuration detected from database.');
           return;
@@ -58,13 +64,31 @@ export class EmailService {
       });
 
       if (setting) {
-        const config = JSON.parse(setting.value);
-        if (config.mail_provider === 'smtp' && config.smtp_host) {
+        const config = JSON.parse(setting.value) as Record<string, unknown>;
+        const mailProvider = (config.mailProvider ?? config.mail_provider) as
+          | string
+          | undefined;
+        const smtpHost = (config.smtpHost ?? config.smtp_host) as
+          | string
+          | undefined;
+        const smtpPassword = (config.smtpPassword ?? config.smtp_password) as
+          | string
+          | undefined;
+        const smtpUser = (config.smtpUser ?? config.smtp_user) as
+          | string
+          | undefined;
+        const smtpPort = (config.smtpPort ?? config.smtp_port) as
+          | string
+          | number
+          | undefined;
+        const smtpEncryption = (config.smtpEncryption ??
+          config.smtp_encryption) as string | undefined;
+        if (mailProvider === 'smtp' && smtpHost) {
           this.hasDbConfig = true;
           let password = '';
-          if (config.smtp_password) {
+          if (smtpPassword) {
             try {
-              password = decrypt(config.smtp_password);
+              password = decrypt(smtpPassword);
             } catch (err) {
               this.logger.error(
                 `Failed to decrypt SMTP password: ${err instanceof Error ? err.message : String(err)}`,
@@ -72,14 +96,14 @@ export class EmailService {
             }
           }
 
-          const port = Number(config.smtp_port) || 587;
+          const port = Number(smtpPort) || 587;
           return nodemailer.createTransport({
-            host: config.smtp_host,
+            host: smtpHost,
             port,
-            secure: port === 465 || config.smtp_encryption === 'ssl',
+            secure: port === 465 || smtpEncryption === 'ssl',
             auth:
-              config.smtp_user && password
-                ? { user: config.smtp_user, pass: password }
+              smtpUser && password
+                ? { user: smtpUser, pass: password }
                 : undefined,
           });
         }
@@ -230,28 +254,37 @@ export class EmailService {
     `;
   }
 
-  async testConnection(config: any): Promise<{ ok: boolean; error?: string }> {
+  async testConnection(config: {
+    smtpHost?: string;
+    smtpPort?: number | string;
+    smtpUser?: string;
+    smtpPassword?: string;
+    smtpEncryption?: string;
+  }): Promise<{ ok: boolean; error?: string }> {
     try {
-      let password = config.smtp_password;
+      let password = config.smtpPassword;
       if (password === '********') {
         const setting = await this.prisma.systemSetting.findUnique({
           where: { key: 'system_settings' },
         });
         if (setting) {
-          const saved = JSON.parse(setting.value);
-          if (saved.smtp_password) {
-            password = decrypt(saved.smtp_password);
+          const saved = JSON.parse(setting.value) as Record<string, unknown>;
+          const storedPass = (saved.smtpPassword ?? saved.smtp_password) as
+            | string
+            | undefined;
+          if (storedPass) {
+            password = decrypt(storedPass);
           }
         }
       }
-      const port = Number(config.smtp_port) || 587;
+      const port = Number(config.smtpPort) || 587;
       const transporter = nodemailer.createTransport({
-        host: config.smtp_host,
+        host: config.smtpHost,
         port,
-        secure: port === 465 || config.smtp_encryption === 'ssl',
+        secure: port === 465 || config.smtpEncryption === 'ssl',
         auth:
-          config.smtp_user && password
-            ? { user: config.smtp_user, pass: password }
+          config.smtpUser && password
+            ? { user: config.smtpUser, pass: password }
             : undefined,
         connectionTimeout: 5000,
       });

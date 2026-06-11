@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import {
   useCreateCategory,
   useUpdateCategory,
   useDeleteCategory,
+  useCategories,
 } from '@/features/categories/hooks/useCategories';
 import { CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,11 +26,11 @@ import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { toast } from 'sonner';
-import { useState } from 'react';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
+import { generateNextCode } from '@/lib/code-generator';
 
 interface Props { 
   id: string | null; 
@@ -45,6 +46,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useCategory(id);
+  const { data: categoriesData } = useCategories();
   const create = useCreateCategory();
   const conflict = useConflictHandler('category', id ?? '');
   const update = useUpdateCategory({ onConflict: conflict.triggerConflict });
@@ -52,18 +54,30 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const { playSound } = useAudioFeedback();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isAutoPopulated, setIsAutoPopulated] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<CategoryFormValues>({
     resolver: zodResolver(CategoryFormSchema),
     defaultValues: { code: '', name: '', version: undefined },
     disabled: isReadOnly,
   });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
+
+  const codeValue = useWatch({ control, name: 'code' });
   
   useEffect(() => {
     if (data) reset({ code: data.code, name: data.name, version: data.version });
   }, [data, reset]);
+
+  useEffect(() => {
+    if (!id && categoriesData?.data && !codeValue && !isAutoPopulated) {
+      const existingCodes = categoriesData.data.map((c: any) => c.code);
+      const nextCode = generateNextCode(existingCodes, 'CAT-', 3);
+      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
+      setIsAutoPopulated(true);
+    }
+  }, [id, categoriesData, setValue, codeValue, isAutoPopulated]);
 
   // 1. Loading State
   if (id && isLoading) {
@@ -196,21 +210,24 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Category Code (Read-Only System Generated) */}
-              <div className="space-y-2 md:col-span-2">
+              {/* Category Code */}
+              <div className="space-y-2 md:col-span-2 max-w-md">
                 <Label htmlFor="cat-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
                   {tc('fields.code')}
                 </Label>
                 <Input
                   id="cat-code"
                   dir="ltr"
-                  value={id ? (data?.code || '') : tc('fields.code_auto')}
-                  readOnly
-                  className="font-mono font-bold bg-surface-container-high/50 cursor-not-allowed select-all border-dashed"
+                  {...register('code')}
+                  disabled={isReadOnly || data?.isReferenced === true}
+                  className="font-mono font-semibold uppercase text-status-active"
+                  placeholder={tc('placeholders.code') || 'CAT-001'}
                 />
-                <p className="text-label-xs font-medium text-muted-foreground/50">
-                  {tc('fields.code_hint')}
-                </p>
+                {errors.code && (
+                  <p className="text-label-xs font-semibold text-status-error uppercase">
+                    {errors.code.message}
+                  </p>
+                )}
               </div>
 
               {/* Name Field */}

@@ -1,8 +1,8 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { paginatedSchema } from '@/types/api';
-import { InventoryLotSchema } from '@/types/inventory';
+import { paginatedSchema, PaginatedResponse } from '@/types/api';
+import { InventoryLotSchema, InventoryLot } from '@/types/inventory';
 import { useAuth } from '@/providers/AuthProvider';
 
 export function useInventoryLots(
@@ -17,7 +17,7 @@ export function useInventoryLots(
       if (filters.include_expired) qs.append('include_expired', 'true');
       if (filters.page) qs.append('page', filters.page.toString());
       const path = `/inventory/lots${qs.toString() ? `?${qs.toString()}` : ''}`;
-      return apiClient.get(path, paginatedSchema(InventoryLotSchema), { signal });
+      return apiClient.get<PaginatedResponse<InventoryLot>>(path, paginatedSchema(InventoryLotSchema), { signal });
     },
     staleTime: 60_000,
     ...options,

@@ -6,7 +6,7 @@ export class GenericMockRepository<T extends { id: string | number }> implements
   constructor(
     private storage: StorageDriver,
     private key: string,
-    private schema: z.ZodType<T>,
+    private schema: z.ZodType<T, any, any>,
     private defaultData: T[] = []
   ) {
     this.init();

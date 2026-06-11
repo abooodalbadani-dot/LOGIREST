@@ -1,4 +1,4 @@
-import { ZodSchema, z } from 'zod';
+import { z } from 'zod';
 import type { ApiError } from '@/types/api';
 import { ConflictError } from './ConflictError';
 import { getTokenCookie, setTokenCookie, deleteTokenCookie } from './cookies';
@@ -87,7 +87,18 @@ function getCookie(name: string): string | null {
   return null;
 }
 
-async function request<T>(method: string, path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions): Promise<T> {
+function generateIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+async function request<T>(method: string, path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions): Promise<T> {
   const token = typeof window !== 'undefined' ? getTokenCookie() : null;
   const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
   const signal = options?.signal;
@@ -104,47 +115,20 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
   const isAuthError = (e: Record<string, unknown>) =>
     e.status === 401 || e.code === 'UNAUTHORIZED' || e.code === 'SESSION_EXPIRED';
 
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true' ||
-    (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_MOCKS !== 'false');
-  if (useMocks) {
-    const { getMockResponse } = await import('@/infrastructure/mock/mock-api.adapter');
-    const mockData = await getMockResponse(method, path, body);
-    if (mockData !== undefined) {
-      if (mockData && typeof mockData === 'object' && 'error' in mockData) {
-        const errorObj = (mockData as { error: Record<string, unknown> }).error;
-        if (errorObj && typeof errorObj === 'object') {
-          const e = errorObj as Record<string, unknown>;
-          if (e.status === 409 || e.code === 'VERSION_CONFLICT') {
-            const normalizedErr = normalizeKeysToCamelCase(e);
-            throw new ConflictError({
-              message: (normalizedErr.message as string) || 'Conflict detected',
-              code: (normalizedErr.code as string) || 'VERSION_CONFLICT',
-              currentVersion: normalizedErr.currentVersion as number,
-              updatedBy: normalizedErr.updatedBy as string,
-              updatedAt: normalizedErr.updatedAt as string,
-            });
-          }
-          if (isAuthError(e)) {
-            await handleAuthError();
-            if (path !== '/auth/login' && path !== '/auth/refresh') {
-              return request(method, path, schema, body, options);
-            }
-          }
-        }
-        throw errorObj;
-      }
-      const normalizedMock = normalizeKeysToCamelCase(mockData);
-      return schema.parse(normalizedMock);
-    }
-  }
-
   const csrfToken = getCookie('XSRF-TOKEN');
+
+  const methodUpper = method.toUpperCase();
+  const isModifying = methodUpper === 'POST' || methodUpper === 'PUT' || methodUpper === 'PATCH';
+  const hasIdempotencyKey = customHeaders && Object.keys(customHeaders).some(
+    k => k.toLowerCase() === 'x-idempotency-key'
+  );
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Accept-Language': locale,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
+    ...(isModifying && !hasIdempotencyKey ? { 'x-idempotency-key': generateIdempotencyKey() } : {}),
     ...customHeaders,
   };
 
@@ -272,6 +256,18 @@ async function request<T>(method: string, path: string, schema: ZodSchema<T>, bo
       throw normalizedErr;
     }
 
+    // Handle 204 No Content or empty body gracefully — parse against schema with empty object
+    if (res.status === 204) {
+      return schema.parse({});
+    }
+
+    const contentLength = res.headers.get('content-length');
+    const contentType = res.headers.get('content-type') ?? '';
+    if (contentLength === '0' || !contentType.includes('application/json')) {
+      // Non-JSON or empty response — try schema.parse({}) as a safe fallback
+      return schema.parse({});
+    }
+
     const data = await res.json();
     try {
       const normalizedData = normalizeKeysToCamelCase(data);
@@ -301,9 +297,9 @@ export interface RequestOptions {
 }
 
 export const apiClient = {
-  get: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('GET', path, schema, undefined, options),
-  post: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('POST', path, schema, body, options),
-  put: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, schema, body, options),
-  patch: <T>(path: string, schema: ZodSchema<T>, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, schema, body, options),
-  del: <T>(path: string, schema: ZodSchema<T>, options?: RequestOptions) => request<T>('DELETE', path, schema, undefined, options),
+  get: <T>(path: string, schema: z.ZodType<T, any, any>, options?: RequestOptions) => request<T>('GET', path, schema, undefined, options),
+  post: <T>(path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions) => request<T>('POST', path, schema, body, options),
+  put: <T>(path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, schema, body, options),
+  patch: <T>(path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, schema, body, options),
+  del: <T>(path: string, schema: z.ZodType<T, any, any>, options?: RequestOptions) => request<T>('DELETE', path, schema, undefined, options),
 };

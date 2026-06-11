@@ -7,8 +7,12 @@ import { toast } from 'sonner';
 import { QUERY_KEY, YieldBatchSchema } from './useYield';
 
 export interface CreateYieldBatchRequest {
-  recipe_id: string;
-  input_qty: number;
+  recipeName: string;
+  category: string;
+  inputQty: number;
+  outputQty: number;
+  standardYield?: number;
+  warehouseId?: string;
 }
 
 export function useCreateYieldBatch() {

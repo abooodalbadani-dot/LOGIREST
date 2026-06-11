@@ -40,6 +40,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      target: builder
       network: host
     container_name: logirest-api
     restart: unless-stopped
@@ -49,7 +50,8 @@ services:
       REDIS_URL: redis://redis:6379
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       PORT: 4000
-      NODE_ENV: production
+      NODE_ENV: development
+      NODE_OPTIONS: --max-old-space-size=1024
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
@@ -67,26 +69,31 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 512M
+          cpus: '1.5'
+          memory: 1536M
         reservations:
-          cpus: '0.25'
-          memory: 256M
+          cpus: '0.5'
+          memory: 768M
     ports:
       - "4000:4000"
     volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./packages/shared-types/src:/app/packages/shared-types/src
       - ./backups:/backups:ro
+    working_dir: /app/apps/api
+    command: sh -c "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi && ../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma migrate deploy && npm run start:dev"
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:4000/v1/health || exit 1" ]
+      test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: 'localhost', port: 4000, path: '/v1/health', timeout: 2000}, (res) => { if (res.statusCode === 200) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 120s
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      target: builder
       network: host
       # NEXT_PUBLIC_API_URL is required at build time because Next.js bakes 
       # NEXT_PUBLIC_ environment variables directly into the compiled client-side bundles.
@@ -96,27 +103,36 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
-      NODE_ENV: production
-      NEXT_PUBLIC_USE_MOCKS: false
+      NODE_ENV: development
+      NODE_OPTIONS: --max-old-space-size=2048
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_USE_MOCKS: "false"
+      WATCHPACK_POLLING: "true"
     depends_on:
       api:
         condition: service_healthy
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 384M
+          cpus: '2.0'
+          memory: 2560M
         reservations:
-          cpus: '0.1'
-          memory: 128M
+          cpus: '0.5'
+          memory: 1024M
     ports:
       - "3000:3000"
+    working_dir: /app
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/messages:/app/apps/web/messages
+      - ./packages/shared-types/src:/app/packages/shared-types/src
+    command: sh -c "cd apps/web && npx next start -H 0.0.0.0 --port 3000"
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f -L http://localhost:3000/ || exit 1" ]
+      test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: '127.0.0.1', port: 3000, path: '/', timeout: 2000}, (res) => { if (res.statusCode >= 200 && res.statusCode < 400) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]
       interval: 15s
       timeout: 5s
-      retries: 3
-      start_period: 20s
+      retries: 5
+      start_period: 180s
 
   caddy:
     image: caddy:2-alpine

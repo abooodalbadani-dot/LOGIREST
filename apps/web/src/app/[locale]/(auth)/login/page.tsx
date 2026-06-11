@@ -53,7 +53,7 @@ export default function LoginPage() {
     }, [user, authLoading, router]);
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginValues>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(loginSchema as z.ZodType<LoginValues, any, any>),
     });
 
     const onSubmit = async (values: LoginValues) => {
@@ -90,6 +90,7 @@ export default function LoginPage() {
                         alt={t('login.professional_kitchen_alt')}
                         fill
                         priority
+                        sizes="(max-width: 1024px) 100vw, 50vw"
                         className="object-cover scale-105"
                     />
                     {/* Multi-layer overlays for depth and legibility */}
@@ -185,7 +186,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mb-3 text-center lg:text-start">
-                        <h2 className="text-title-sm font-bold text-black dark:text-white mb-1 tracking-tight">
+                        <h2 data-slot="card-title" className="text-title-sm font-bold text-black dark:text-white mb-1 tracking-tight">
                             {t('login.title')}
                         </h2>
                         <p className="text-[10px] text-black/60 dark:text-white/60">
@@ -204,6 +205,7 @@ export default function LoginPage() {
                                     <BadgeCheck className="w-3 h-3 text-black/30 dark:text-white/40 group-focus-within:text-operational-cyan transition-colors duration-300" />
                                 </div>
                                 <input
+                                    id="email"
                                     type="email"
                                     placeholder={t('login.operator_id_placeholder')}
                                     className="w-full bg-black/[0.02] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-3 outline-none placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"
@@ -228,6 +230,7 @@ export default function LoginPage() {
                                     <Key className="w-3 h-3 text-black/30 dark:text-white/40 group-focus-within:text-operational-cyan transition-colors duration-300" />
                                 </div>
                                 <input
+                                    id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder={t('login.password_placeholder')}
                                     className="w-full bg-black/[0.02] dark:bg-white/[0.03] border border-black/10 dark:border-white/10 focus:border-operational-cyan focus:ring-2 focus:ring-operational-cyan/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] transition-all h-9 rounded text-[11px] ps-9 pe-9 outline-none placeholder:text-black/30 dark:placeholder:text-white/40 text-black dark:text-white"
@@ -286,39 +289,6 @@ export default function LoginPage() {
                             </span>
                         </Button>
                     </form>
-
-                    {/* Quick-Switch Operator Portal (Demo Helper) */}
-                    <div className="mt-5 pt-3 border-t border-black/5 dark:border-white/5">
-                        <div className="flex items-center justify-between mb-2 px-1">
-                            <span className="text-[7.5px] font-bold text-black/30 dark:text-white/30 uppercase tracking-[0.2em]">{t('login.demo_access')}</span>
-                            <div className="flex gap-1">
-                                <div className="w-0.5 h-0.5 rounded-full bg-operational-cyan" />
-                                <div className="w-0.5 h-0.5 rounded-full bg-operational-cyan/40" />
-                                <div className="w-0.5 h-0.5 rounded-full bg-operational-cyan/10" />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            {[
-                                { role: t('roles.admin'), email: 'admin@kitchen.io' },
-                                { role: t('roles.manager'), email: 'store@kitchen.io' },
-                                { role: t('roles.chief'), email: 'kitchen@kitchen.io' },
-                                { role: t('roles.procurement'), email: 'procurement@kitchen.io' }
-                            ].map((cred, i) => (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    className="text-start p-2 rounded bg-black/[0.01] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 hover:border-operational-cyan/30 hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-all group"
-                                    onClick={() => {
-                                        setValue('email', cred.email, { shouldValidate: true });
-                                        setValue('password', 'password123', { shouldValidate: true });
-                                    }}
-                                >
-                                    <div className="text-[9px] font-bold text-black/70 dark:text-white/70 group-hover:text-operational-cyan transition-colors mb-0.5 uppercase tracking-wider">{cred.role}</div>
-                                    <div className="text-[8.5px] font-mono text-black/40 dark:text-white/40 truncate">{cred.email}</div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

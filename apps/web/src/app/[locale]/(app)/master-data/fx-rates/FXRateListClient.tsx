@@ -37,7 +37,7 @@ export function FXRateListClient({ locale }: { locale: string }) {
   const { data: currencies } = useCurrencies();
   const { user, isLoading: authLoading } = useAuth();
 
-  const rates = data?.data ?? [];
+  const rates = data ?? [];
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

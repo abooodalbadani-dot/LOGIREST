@@ -50,7 +50,7 @@ interface IssueFormProps {
 export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
   const t = useTranslations('operations.issue');
   const locale = useLocale();
-  const { user } = useAuth();
+  const { user, activeScope } = useAuth();
   const abortController = useAbortController();
   
   const postIssue = usePostIssue({ onConflict });
@@ -66,7 +66,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       id: l.item.id,
       code: l.item.code,
       name: l.item.name,
-      primaryUom: { code: l.item.primaryUom.code },
+      primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
     },
     lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
     qty: l.qty,
@@ -76,7 +76,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
   const [lines, setLines] = useState<LineItem[]>(() => (issue?.lines || []).map(toLineItem));
   const [destinationId, setDestinationId] = useState(() => issue?.destinationDeptId ?? '');
-  const [warehouseId] = useState(() => issue?.warehouseId || 'wh-1');
+  const [warehouseId] = useState(() => issue?.warehouseId || activeScope.warehouseId || '');
   const [notes, setNotes] = useState(() => issue?.notes || '');
   const [scanError, setScanError] = useState('');
   const [requestedBy, setRequestedBy] = useState(() => issue?.requestedBy ?? '');
@@ -132,8 +132,8 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
 
   // Auto fetch lots when activeLine changes
   const { data: lots = [] } = useLotsByItem({ 
-    item_id: activeLine?.item?.id || '', 
-    warehouse_id: warehouseId 
+    itemId: activeLine?.item?.id || '', 
+    warehouseId: warehouseId 
   });
 
   // Lock Banner state
@@ -179,41 +179,40 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       const LotsResponseSchema = z.object({
         data: z.array(z.object({
           id: z.string(),
-          item_id: z.string(),
+          itemId: z.string(),
           lotNumber: z.string(),
           expiryDate: z.string(),
-          total_qty: z.number().optional(),
-          qty_available: z.number().optional(),
-          is_expired: z.boolean().optional(),
-          is_near_expiry: z.boolean().optional(),
+          totalQty: z.number().optional(),
+          qtyAvailable: z.number().optional(),
+          isExpired: z.boolean().optional(),
+          isNearExpiry: z.boolean().optional(),
         }))
       });
 
       const lotsRes = await apiClient.get(
-        `/operations/lots-available?item_id=${item.id}&warehouse_id=${warehouseId}`, 
+        `/operations/lots-available?itemId=${item.id}&warehouseId=${warehouseId}`, 
         LotsResponseSchema, 
         { signal: abortController.signal }
       );
 
       const availableLots = (lotsRes.data || []).map((lotItem) => ({
         id: lotItem.id,
-        item_id: lotItem.item_id,
-        warehouse_id: warehouseId,
+        itemId: lotItem.itemId,
+        warehouseId: warehouseId,
         lotNumber: lotItem.lotNumber,
         expiryDate: lotItem.expiryDate,
-        qty_available: lotItem.total_qty ?? lotItem.qty_available ?? 0,
-        is_expired: lotItem.is_expired ?? false,
-        is_near_expiry: lotItem.is_near_expiry ?? false,
+        qtyAvailable: lotItem.totalQty ?? lotItem.qtyAvailable ?? 0,
+        isExpired: lotItem.isExpired ?? false,
+        isNearExpiry: lotItem.isNearExpiry ?? false,
       }));
 
-      // Filter non-expired lots with stock and sort by FEFO
       const validLots = availableLots
-        .filter(l => !l.is_expired && l.qty_available > 0)
+        .filter(l => !l.isExpired && l.qtyAvailable > 0)
         .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
 
       const existingLine = lines.find(l => l.item.id === item.id);
       const targetQty = existingLine ? existingLine.qty + 1 : 1;
-      const totalAvailable = validLots.reduce((sum, lot) => sum + lot.qty_available, 0);
+      const totalAvailable = validLots.reduce((sum, lot) => sum + lot.qtyAvailable, 0);
 
       if (totalAvailable <= 0) {
         audioAlerts.playScanInvalid();
@@ -224,7 +223,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
       }
 
       // If exactly one valid, non-expired lot exists and covers the full requested quantity, allocate automatically
-      if (validLots.length === 1 && validLots[0].qty_available >= targetQty) {
+      if (validLots.length === 1 && validLots[0].qtyAvailable >= targetQty) {
         const allocation = [{
           lotId: validLots[0].id,
           lotNumber: validLots[0].lotNumber,
@@ -485,7 +484,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
                                 setLines(prev => prev.map(l => l.id === line.id ? { ...l, qty: val } : l));
                               }} 
                             />
-                            <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom.code}</span>
+                            <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom?.code || line.uomId || ''}</span>
                           </div>
                         )
                       },
@@ -717,7 +716,7 @@ export function IssueForm({ issue, id, isNew, onConflict }: IssueFormProps) {
               <FEFOLotAllocator
                 lots={lots}
                 requestedQty={activeLine.qty}
-                uomLabel={activeLine.item.primaryUom.code}
+                uomLabel={activeLine.item.primaryUom?.code || activeLine.uomId || ''}
                 userRole={user?.role} 
                 onAllocate={(allocations) => {
                   setLines(prev => prev.map(l => l.id === activeLine.id ? {

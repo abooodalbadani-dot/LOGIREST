@@ -42,7 +42,7 @@ export function useKitchenRequestList(filters: { status?: string; department_id?
 export function useKitchenRequest(id: string) {
   return useQuery({
     queryKey: ['kitchen-requests', id],
-    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests/${id}`, KitchenRequestDetailSchema, { signal }),
+    queryFn: ({ signal }) => apiClient.get(`/operations/kitchen-requests/${id}`, z.object({ data: KitchenRequestDetailSchema }), { signal }).then(r => r.data),
     enabled: !!id,
   });
 }
@@ -52,7 +52,7 @@ export function useCreateKitchenRequest(options?: { onConflict?: () => void }) {
  return useSafeMutation({
  onConflict: options?.onConflict,
   mutationFn: ({ data, signal }: { data: CreateKitchenRequestDTO & { isDraft?: boolean }; signal?: AbortSignal }) => 
-  apiClient.post('/operations/kitchen-requests', KitchenRequestDetailSchema, data, { signal }),
+  apiClient.post('/operations/kitchen-requests', z.object({ data: KitchenRequestDetailSchema }), data, { signal }).then(r => r.data),
  onSuccess: () => {
  queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
  },
@@ -69,7 +69,7 @@ export function useUpdateKitchenRequestStatus(options?: { onConflict?: () => voi
    return useSafeMutation({
      onConflict: options?.onConflict,
       mutationFn: ({ id, status, reason, version, headers, signal }: { id: string; status: string; reason?: string; version: number; headers?: Record<string, string>; signal?: AbortSignal }) =>
-        apiClient.post(`/operations/kitchen-requests/${id}/status`, KitchenRequestDetailSchema, { status, reason, version }, { headers, signal }),
+        apiClient.post(`/operations/kitchen-requests/${id}/status`, z.object({ data: KitchenRequestDetailSchema }), { status, reason, version }, { headers, signal }).then(r => r.data),
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
@@ -90,7 +90,7 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
         if (fulfillments.some(f => f.fulfilledQty <= 0)) {
           throw new Error("Fulfilled quantity must be greater than zero");
         }
-        return apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, KitchenRequestDetailSchema, { fulfillments, version }, { headers, signal });
+        return apiClient.post(`/operations/kitchen-requests/${id}/fulfill`, z.object({ data: KitchenRequestDetailSchema }), { fulfillments, version }, { headers, signal }).then(r => r.data);
       },
   onSuccess: (_, variables) => {
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests'] });

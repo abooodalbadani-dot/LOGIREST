@@ -8,6 +8,7 @@ import {
   Permission,
 } from '@logirest/shared-types';
 import { encrypt, decrypt } from './crypto.util';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 @Injectable()
 export class AdminService {
@@ -155,7 +156,25 @@ export class AdminService {
     return rolesList;
   }
 
-  async getSettings(): Promise<any> {
+  async getSettings(): Promise<{
+    id: string;
+    systemName: string;
+    baseCurrency: string;
+    branchId: string;
+    timezone: string;
+    localeDefault: string;
+    senderName: string;
+    replyToEmail: string;
+    hasTransactions: boolean;
+    mailProvider: string;
+    smtpHost: string;
+    smtpPort: number;
+    smtpUser: string;
+    smtpPassword: string;
+    smtpEncryption: string;
+    version: number;
+    updatedAt: string;
+  }> {
     const setting = await this.prisma.systemSetting.findUnique({
       where: { key: 'system_settings' },
     });
@@ -166,102 +185,126 @@ export class AdminService {
 
     const defaultSettings = {
       id: 'system_settings',
-      system_name: 'LogiRest System',
-      base_currency: process.env.BASE_CURRENCY_CODE || 'SAR',
-      branch_id: 'HQ',
+      systemName: 'LogiRest System',
+      baseCurrency: process.env.BASE_CURRENCY_CODE || 'SAR',
+      branchId: 'HQ',
       timezone: 'Asia/Riyadh',
-      locale_default: 'en' as const,
-      sender_name: 'LogiRest Alerts',
-      reply_to_email: 'alerts@logirest.app',
-      has_transactions: hasTransactions,
-      mail_provider: 'smtp' as const,
-      smtp_host: process.env.SMTP_HOST || '',
-      smtp_port: Number(process.env.SMTP_PORT) || 587,
-      smtp_user: process.env.SMTP_USER || '',
-      smtp_password: process.env.SMTP_PASS ? '********' : '',
-      smtp_encryption: 'tls' as const,
+      localeDefault: 'en',
+      senderName: 'LogiRest Alerts',
+      replyToEmail: 'alerts@logirest.app',
+      hasTransactions,
+      mailProvider: 'smtp',
+      smtpHost: process.env.SMTP_HOST || '',
+      smtpPort: Number(process.env.SMTP_PORT) || 587,
+      smtpUser: process.env.SMTP_USER || '',
+      smtpPassword: process.env.SMTP_PASS ? '********' : '',
+      smtpEncryption: 'tls',
       version: 1,
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     if (!setting) {
       return defaultSettings;
     }
 
-    let saved: any = {};
+    let saved: Record<string, unknown> = {};
     try {
-      saved = JSON.parse(setting.value);
-    } catch (e: any) {
+      saved = JSON.parse(setting.value) as Record<string, unknown>;
+    } catch (e: unknown) {
       this.logger.error(
-        `Failed to parse system settings JSON from DB: ${e.message}`,
+        `Failed to parse system settings JSON from DB: ${e instanceof Error ? e.message : String(e)}`,
       );
     }
+
+    // Stored blob may be in snake_case (legacy) – normalize to camelCase on read
     return {
-      ...defaultSettings,
-      ...saved,
-      has_transactions: hasTransactions,
-      smtp_password: saved.smtp_password ? '********' : '',
+      id: 'system_settings',
+      systemName: (saved.systemName ??
+        saved.system_name ??
+        defaultSettings.systemName) as string,
+      baseCurrency: (saved.baseCurrency ??
+        saved.base_currency ??
+        defaultSettings.baseCurrency) as string,
+      branchId: (saved.branchId ??
+        saved.branch_id ??
+        defaultSettings.branchId) as string,
+      timezone: (saved.timezone ?? defaultSettings.timezone) as string,
+      localeDefault: (saved.localeDefault ??
+        saved.locale_default ??
+        defaultSettings.localeDefault) as string,
+      senderName: (saved.senderName ??
+        saved.sender_name ??
+        defaultSettings.senderName) as string,
+      replyToEmail: (saved.replyToEmail ??
+        saved.reply_to_email ??
+        defaultSettings.replyToEmail) as string,
+      hasTransactions,
+      mailProvider: (saved.mailProvider ??
+        saved.mail_provider ??
+        defaultSettings.mailProvider) as string,
+      smtpHost: (saved.smtpHost ??
+        saved.smtp_host ??
+        defaultSettings.smtpHost) as string,
+      smtpPort: Number(
+        saved.smtpPort ?? saved.smtp_port ?? defaultSettings.smtpPort,
+      ),
+      smtpUser: (saved.smtpUser ??
+        saved.smtp_user ??
+        defaultSettings.smtpUser) as string,
+      smtpPassword:
+        (saved.smtpPassword ?? saved.smtp_password) ? '********' : '',
+      smtpEncryption: (saved.smtpEncryption ??
+        saved.smtp_encryption ??
+        defaultSettings.smtpEncryption) as string,
       version: setting.version,
-      updated_at: setting.updatedAt.toISOString(),
+      updatedAt: setting.updatedAt.toISOString(),
     };
   }
 
-  async updateSettings(dto: any, userId: string): Promise<any> {
+  async updateSettings(
+    dto: UpdateSettingsDto,
+    userId: string,
+  ): Promise<ReturnType<AdminService['getSettings']>> {
     const existing = await this.prisma.systemSetting.findUnique({
       where: { key: 'system_settings' },
     });
 
-    let savedConfig: any = {};
+    let savedConfig: Record<string, unknown> = {};
     if (existing) {
       try {
-        savedConfig = JSON.parse(existing.value);
-      } catch (e: any) {
+        savedConfig = JSON.parse(existing.value) as Record<string, unknown>;
+      } catch (e: unknown) {
         this.logger.error(
-          `Failed to parse existing system settings JSON from DB: ${e.message}`,
+          `Failed to parse existing system settings JSON from DB: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
     }
 
-    const rawDto = dto as Record<string, unknown>;
-    const systemName = dto.systemName ?? rawDto.system_name;
-    const baseCurrency = dto.baseCurrency ?? rawDto.base_currency;
-    const branchId = dto.branchId ?? rawDto.branch_id;
-    const timezone = dto.timezone;
-    const localeDefault = dto.localeDefault ?? rawDto.locale_default;
-    const senderName = dto.senderName ?? rawDto.sender_name;
-    const replyToEmail = dto.replyToEmail ?? rawDto.reply_to_email;
-    const mailProvider = dto.mailProvider ?? rawDto.mail_provider;
-    const smtpHost = dto.smtpHost ?? rawDto.smtp_host;
-    const smtpPort = dto.smtpPort ?? rawDto.smtp_port;
-    const smtpUser = dto.smtpUser ?? rawDto.smtp_user;
-    const smtpPassword = dto.smtpPassword ?? rawDto.smtp_password;
-    const smtpEncryption = dto.smtpEncryption ?? rawDto.smtp_encryption;
-
-    let password = smtpPassword;
+    let password = dto.smtpPassword;
     if (password === '********') {
-      password = savedConfig.smtp_password
-        ? decrypt(savedConfig.smtp_password)
-        : '';
+      const storedPass = savedConfig.smtpPassword ?? savedConfig.smtp_password;
+      password = storedPass ? decrypt(storedPass as string) : '';
     }
 
     const encryptedPassword = password ? encrypt(password) : '';
 
-    const newConfig = {
+    // Store internally in camelCase going forward
+    const newConfig: Record<string, unknown> = {
       ...savedConfig,
-      system_name: systemName,
-      base_currency: baseCurrency,
-      branch_id: branchId,
-      timezone: timezone,
-      locale_default: localeDefault,
-      sender_name: senderName,
-      reply_to_email: replyToEmail,
-      mail_provider: mailProvider || 'smtp',
-      smtp_host: smtpHost || '',
-      smtp_port: Number(smtpPort) || 587,
-      smtp_user: smtpUser || '',
-      smtp_password: encryptedPassword,
-      smtp_encryption: smtpEncryption || 'none',
-      updated_by: userId,
+      systemName: dto.systemName,
+      baseCurrency: dto.baseCurrency,
+      branchId: dto.branchId,
+      timezone: dto.timezone,
+      localeDefault: dto.localeDefault,
+      senderName: dto.senderName,
+      replyToEmail: dto.replyToEmail,
+      mailProvider: dto.mailProvider || 'smtp',
+      smtpHost: dto.smtpHost || '',
+      smtpPort: dto.smtpPort || 587,
+      smtpUser: dto.smtpUser || '',
+      smtpPassword: encryptedPassword,
+      smtpEncryption: dto.smtpEncryption || 'none',
+      updatedBy: userId,
     };
 
     await this.prisma.systemSetting.upsert({

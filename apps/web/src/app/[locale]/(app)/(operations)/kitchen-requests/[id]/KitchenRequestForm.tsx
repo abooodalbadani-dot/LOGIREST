@@ -359,7 +359,7 @@ export function KitchenRequestForm({ request, locale }: KitchenRequestFormProps)
     <div className="min-h-screen bg-surface-container-low flex flex-col animate-in fade-in duration-1000 pb-32">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-10 w-full space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-4">
+          <div data-slot="page-header" className="space-y-4">
             <Breadcrumb 
               items={[
                 { label: tCommon('inventory'), href: '#' },

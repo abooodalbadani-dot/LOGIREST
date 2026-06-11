@@ -116,17 +116,17 @@ describe('AdminService', () => {
       mockIssueCount.mockResolvedValue(0);
 
       const settings = await service.getSettings();
-      expect(settings.system_name).toBe('LogiRest System');
-      expect(settings.base_currency).toBe('SAR');
-      expect(settings.smtp_password).toBe('');
+      expect(settings.systemName).toBe('LogiRest System');
+      expect(settings.baseCurrency).toBe('SAR');
+      expect(settings.smtpPassword).toBe('');
     });
 
     it('should return saved settings with masked password', async () => {
       const encryptedPassword = encrypt('my-secret-password');
       const mockSavedSettings = {
-        system_name: 'Custom Rest',
-        base_currency: 'USD',
-        smtp_password: encryptedPassword,
+        systemName: 'Custom Rest',
+        baseCurrency: 'USD',
+        smtpPassword: encryptedPassword,
       };
 
       mockSystemSettingFindUnique.mockResolvedValue({
@@ -138,9 +138,9 @@ describe('AdminService', () => {
       mockIssueCount.mockResolvedValue(0);
 
       const settings = await service.getSettings();
-      expect(settings.system_name).toBe('Custom Rest');
-      expect(settings.base_currency).toBe('USD');
-      expect(settings.smtp_password).toBe('********');
+      expect(settings.systemName).toBe('Custom Rest');
+      expect(settings.baseCurrency).toBe('USD');
+      expect(settings.smtpPassword).toBe('********');
     });
 
     it('should encrypt new password on update', async () => {
@@ -148,9 +148,9 @@ describe('AdminService', () => {
       mockSystemSettingUpsert.mockResolvedValue({});
 
       const dto = {
-        system_name: 'Resto',
-        base_currency: 'SAR',
-        smtp_password: 'supersecretpass',
+        systemName: 'Resto',
+        baseCurrency: 'SAR',
+        smtpPassword: 'supersecretpass',
       };
 
       await service.updateSettings(dto, 'user-admin');
@@ -159,18 +159,18 @@ describe('AdminService', () => {
       const upsertArgs = mockSystemSettingUpsert.mock.calls[0][0];
       const savedConfig = JSON.parse(upsertArgs.create.value);
 
-      expect(savedConfig.system_name).toBe('Resto');
+      expect(savedConfig.systemName).toBe('Resto');
       // Password must be encrypted (not plaintext)
-      expect(savedConfig.smtp_password).not.toBe('supersecretpass');
-      expect(savedConfig.smtp_password).toBeDefined();
+      expect(savedConfig.smtpPassword).not.toBe('supersecretpass');
+      expect(savedConfig.smtpPassword).toBeDefined();
     });
 
     it('should retain existing encrypted password if update request sends masking stars', async () => {
       const encryptedPassword = encrypt('my-secret-password');
       const mockSavedSettings = {
-        system_name: 'Custom Rest',
-        base_currency: 'USD',
-        smtp_password: encryptedPassword,
+        systemName: 'Custom Rest',
+        baseCurrency: 'USD',
+        smtpPassword: encryptedPassword,
       };
 
       mockSystemSettingFindUnique.mockResolvedValue({
@@ -181,9 +181,9 @@ describe('AdminService', () => {
       mockSystemSettingUpsert.mockResolvedValue({});
 
       const dto = {
-        system_name: 'Custom Rest Updated',
-        base_currency: 'USD',
-        smtp_password: '********',
+        systemName: 'Custom Rest Updated',
+        baseCurrency: 'USD',
+        smtpPassword: '********',
       };
 
       await service.updateSettings(dto, 'user-admin');
@@ -192,8 +192,8 @@ describe('AdminService', () => {
       const upsertArgs = mockSystemSettingUpsert.mock.calls[0][0];
       const savedConfig = JSON.parse(upsertArgs.update.value);
 
-      expect(savedConfig.system_name).toBe('Custom Rest Updated');
-      expect(decrypt(savedConfig.smtp_password)).toBe('my-secret-password');
+      expect(savedConfig.systemName).toBe('Custom Rest Updated');
+      expect(decrypt(savedConfig.smtpPassword)).toBe('my-secret-password');
     });
   });
 

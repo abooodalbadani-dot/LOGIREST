@@ -20,10 +20,11 @@ import { MasterDataFormLayout } from '@/features/master-data/components/MasterDa
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import {
- useBranch,
- useCreateBranch,
- useUpdateBranch,
- useDeleteBranch,
+  useBranch,
+  useCreateBranch,
+  useUpdateBranch,
+  useDeleteBranch,
+  useBranches,
 } from '@/features/branches/hooks/useBranches';
 import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
 import { toast } from 'sonner';
@@ -33,6 +34,7 @@ import { onFormError } from '@/hooks/useFormError';
 
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { generateNextCode } from '@/lib/code-generator';
 
 interface Props {
   id: string | null;
@@ -68,6 +70,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     refetch,
     fetchStatus 
   } = useBranch(id);
+  const { data: branchesData } = useBranches();
   const create = useCreateBranch();
   const conflict = useConflictHandler('branch', id ?? '');
   const update = useUpdateBranch({ onConflict: conflict.triggerConflict });
@@ -75,16 +78,27 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
   const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isAutoPopulated, setIsAutoPopulated] = useState(false);
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'isActive' });
+  const codeValue = useWatch({ control, name: 'code' });
 
   useEffect(() => {
     if (data) {
       reset({ code: data.code, name: data.name, isActive: data.isActive, version: data.version });
     }
   }, [data, reset]);
+
+  useEffect(() => {
+    if (!id && branchesData?.data && !codeValue && !isAutoPopulated) {
+      const existingCodes = branchesData.data.map((b: any) => b.code);
+      const nextCode = generateNextCode(existingCodes, 'BR-', 3);
+      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
+      setIsAutoPopulated(true);
+    }
+  }, [id, branchesData, setValue, codeValue, isAutoPopulated]);
 
   const onValid = async (values: BranchFormValues) => {
     if (isReadOnly) return;
@@ -206,7 +220,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
               </div>
 
               {/* Code */}
-              <div className="space-y-2 max-w-sm">
+              <div className="space-y-2 max-w-md">
                 <Label htmlFor="branch-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
                 <Input 
                   id="branch-code" 

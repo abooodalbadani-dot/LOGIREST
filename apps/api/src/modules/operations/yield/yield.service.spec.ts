@@ -53,15 +53,15 @@ describe('YieldService', () => {
       expect(result).toEqual([
         {
           id: 'yield-1',
-          recipe_name: 'Beef Stroganoff Prep',
+          recipeName: 'Beef Stroganoff Prep',
           category: 'protein',
-          input_qty: 15.0,
-          output_qty: 12.6,
-          waste_qty: 2.4,
-          yield_pct: 84.0,
-          standard_yield: 85.0,
+          inputQty: 15.0,
+          outputQty: 12.6,
+          wasteQty: 2.4,
+          yieldPct: 84.0,
+          standardYield: 85.0,
           efficiency: 98.8,
-          created_at: '2026-05-29T10:00:00.000Z',
+          createdAt: '2026-05-29T10:00:00.000Z',
         },
       ]);
     });
@@ -91,15 +91,15 @@ describe('YieldService', () => {
       });
       expect(result).toEqual({
         id: 'yield-1',
-        recipe_name: 'Beef Stroganoff Prep',
+        recipeName: 'Beef Stroganoff Prep',
         category: 'protein',
-        input_qty: 15.0,
-        output_qty: 12.6,
-        waste_qty: 2.4,
-        yield_pct: 84.0,
-        standard_yield: 85.0,
+        inputQty: 15.0,
+        outputQty: 12.6,
+        wasteQty: 2.4,
+        yieldPct: 84.0,
+        standardYield: 85.0,
         efficiency: 98.8,
-        created_at: '2026-05-29T10:00:00.000Z',
+        createdAt: '2026-05-29T10:00:00.000Z',
       });
     });
 
@@ -115,11 +115,11 @@ describe('YieldService', () => {
   describe('create', () => {
     it('should calculate and persist new yield batch', async () => {
       const createBody = {
-        recipe_name: 'Tomatoes Prep',
+        recipeName: 'Tomatoes Prep',
         category: 'produce',
-        input_qty: 10.0,
-        output_qty: 9.1,
-        standard_yield: 90.0,
+        inputQty: 10.0,
+        outputQty: 9.1,
+        standardYield: 90.0,
       };
 
       const mockCreated = {
@@ -156,31 +156,33 @@ describe('YieldService', () => {
 
       expect(result).toEqual({
         id: 'yield-new',
-        recipe_name: 'Tomatoes Prep',
+        recipeName: 'Tomatoes Prep',
         category: 'produce',
-        input_qty: 10.0,
-        output_qty: 9.1,
-        waste_qty: 0.9,
-        yield_pct: 91.0,
-        standard_yield: 90.0,
+        inputQty: 10.0,
+        outputQty: 9.1,
+        wasteQty: 0.9,
+        yieldPct: 91.0,
+        standardYield: 90.0,
         efficiency: 101.11,
-        created_at: '2026-05-30T10:00:00.000Z',
+        createdAt: '2026-05-30T10:00:00.000Z',
       });
     });
 
     it('should throw BadRequestException if required fields are missing', async () => {
       await expect(
-        service.create({ recipe_name: 'Tomatoes Prep' }),
+        service.create({ recipeName: 'Tomatoes Prep' } as Parameters<
+          typeof service.create
+        >[0]),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if input_qty is less than or equal to zero', async () => {
+    it('should throw BadRequestException if inputQty is less than or equal to zero', async () => {
       await expect(
         service.create({
-          recipe_name: 'Tomatoes Prep',
+          recipeName: 'Tomatoes Prep',
           category: 'produce',
-          input_qty: 0,
-          output_qty: 0,
+          inputQty: 0,
+          outputQty: 0,
         }),
       ).rejects.toThrow(BadRequestException);
     });

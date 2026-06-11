@@ -1,7 +1,41 @@
-{$DOMAIN:localhost} {
-    reverse_proxy web:3000
+(cors) {
+    @options method OPTIONS
+    handle @options {
+        header Access-Control-Allow-Origin "http://localhost:3000"
+        header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type, Accept, Authorization, x-branch-id, x-warehouse-id, x-xsrf-token"
+        header Access-Control-Allow-Credentials "true"
+        header Access-Control-Max-Age "3600"
+        respond "" 204
+    }
+    header Access-Control-Allow-Origin "http://localhost:3000"
+    header Access-Control-Allow-Credentials "true"
 }
 
-{$API_DOMAIN:api.localhost} {
-    reverse_proxy api:4000
+http://{$DOMAIN:localhost} {
+    handle /api/* {
+        import cors
+        reverse_proxy api:4000 {
+            header_up Host {http.request.host}
+            header_up X-Real-IP {http.request.remote}
+            header_up X-Forwarded-For {http.request.remote}
+            header_up X-Forwarded-Proto {http.request.scheme}
+        }
+    }
+    handle {
+        reverse_proxy web:3000
+    }
 }
+
+http://{$API_DOMAIN:api.localhost} {
+    handle {
+        import cors
+        reverse_proxy api:4000 {
+            header_up Host {http.request.host}
+            header_up X-Real-IP {http.request.remote}
+            header_up X-Forwarded-For {http.request.remote}
+            header_up X-Forwarded-Proto {http.request.scheme}
+        }
+    }
+}
+

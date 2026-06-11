@@ -46,7 +46,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
       id: l.item.id,
       code: l.item.code,
       name: l.item.name,
-      primaryUom: { code: l.item.primaryUom.code },
+      primaryUom: { code: l.item.primaryUom?.code || l.uomId || '' },
     },
     lot: l.lot ? { lotNumber: l.lot.lotNumber, expiryDate: l.lot.expiryDate } : null,
     qty: l.qty,
@@ -143,7 +143,7 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
                       cell: (line) => (
                         <div className="flex items-center gap-2 tabular-nums">
                           <span className="text-body-md font-bold text-foreground">{line.qty}</span>
-                          <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom.code}</span>
+                          <span className="text-label-xs font-semibold uppercase text-primary/20">{line.item.primaryUom?.code || line.uomId || ''}</span>
                         </div>
                       )
                     },

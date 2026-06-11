@@ -18,7 +18,8 @@ import { Trash2 } from 'lucide-react';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
-import { useUoM, useCreateUoM, useUpdateUoM, useDeleteUoM } from '@/features/uoms/hooks/useUoMs';
+import { useUoM, useCreateUoM, useUpdateUoM, useDeleteUoM, useUoMs } from '@/features/uoms/hooks/useUoMs';
+import { generateNextCode } from '@/lib/code-generator';
 import { UoMFormSchema, type UoMFormValues } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
@@ -44,6 +45,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
   const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useUoM(id);
+  const { data: uomsData } = useUoMs();
   const create = useCreateUoM();
   const conflict = useConflictHandler('uom', id ?? '');
   const update = useUpdateUoM({ onConflict: conflict.triggerConflict });
@@ -51,6 +53,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
   const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isAutoPopulated, setIsAutoPopulated] = useState(false);
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isDirty, isValid } } = useForm<UoMFormValues>({
     resolver: zodResolver(UoMFormSchema),
@@ -61,6 +64,8 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'isActive' });
+
+  const codeValue = useWatch({ control, name: 'code' });
 
   useEffect(() => {
     if (data) {
@@ -73,6 +78,15 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
       });
     }
   }, [data, reset]);
+
+  useEffect(() => {
+    if (!id && uomsData?.data && !codeValue && !isAutoPopulated) {
+      const existingCodes = uomsData.data.map((u: any) => u.code);
+      const nextCode = generateNextCode(existingCodes, 'UOM-', 3);
+      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
+      setIsAutoPopulated(true);
+    }
+  }, [id, uomsData, setValue, codeValue, isAutoPopulated]);
 
   // 1. Loading State
   if (id && isLoading) {
@@ -177,7 +191,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
                 </div>
 
                 <div className="space-y-6">
-                  <div className="space-y-2 max-w-sm">
+                  <div className="space-y-2 max-w-md">
                     <Label htmlFor="uom-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
                     <Controller
                       name="code"

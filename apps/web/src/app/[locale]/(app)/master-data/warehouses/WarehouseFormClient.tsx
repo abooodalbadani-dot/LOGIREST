@@ -16,15 +16,16 @@ import { Button } from '@/components/ui/button';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import {
- useWarehouse,
- useCreateWarehouse,
- useUpdateWarehouse,
- useArchiveWarehouse,
+  useWarehouse,
+  useCreateWarehouse,
+  useUpdateWarehouse,
+  useArchiveWarehouse,
+  useWarehouses,
 } from '@/features/warehouses/hooks/useWarehouses';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 import {
- WarehouseFormSchema,
- type WarehouseFormValues,
+  WarehouseFormSchema,
+  type WarehouseFormValues,
 } from '@/types/master-data';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +37,7 @@ import { toast } from 'sonner';
 import { useAbortController } from '@/hooks/useAbortController';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
+import { generateNextCode } from '@/lib/code-generator';
 
 interface Props {
   id: string | null;
@@ -53,6 +55,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const abortController = useAbortController();
 
   const { data, isLoading, isError, isFetched, refetch } = useWarehouse(id);
+  const { data: warehousesData } = useWarehouses();
   const { data: branchesData, isLoading: isLoadingBranches, isError: isErrorBranches } = useBranches();
   const branches = branchesData?.data || [];
   const create = useCreateWarehouse();
@@ -62,6 +65,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const { playSound } = useAudioFeedback();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isAutoPopulated, setIsAutoPopulated] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<WarehouseFormValues>({
@@ -73,6 +77,16 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
   const isActive = useWatch({ control, name: 'isActive' });
+  const codeValue = useWatch({ control, name: 'code' });
+
+  useEffect(() => {
+    if (!id && warehousesData?.data && !codeValue && !isAutoPopulated) {
+      const existingCodes = warehousesData.data.map((w: any) => w.code);
+      const nextCode = generateNextCode(existingCodes, 'WH-', 3);
+      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
+      setIsAutoPopulated(true);
+    }
+  }, [id, warehousesData, setValue, codeValue, isAutoPopulated]);
 
   const branchItems = useMemo(() => {
     return branches.map((b) => ({

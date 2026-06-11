@@ -12,6 +12,7 @@ COPY apps/web/ apps/web/
 
 # Install dependencies and build Next.js Standalone
 RUN npm ci --workspace=apps/web
+ENV EXPERIMENTAL_CPUS=1
 RUN npm run build --workspace=apps/web
 
 # Stage 2: Production Runner

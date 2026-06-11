@@ -103,7 +103,16 @@ export class AdminController {
   }
 
   @Post('settings/test-email')
-  async testEmail(@Body() dto: Record<string, unknown>) {
+  async testEmail(
+    @Body()
+    dto: {
+      smtpHost?: string;
+      smtpPort?: number;
+      smtpUser?: string;
+      smtpPassword?: string;
+      smtpEncryption?: string;
+    },
+  ) {
     return this.emailService.testConnection(dto);
   }
 

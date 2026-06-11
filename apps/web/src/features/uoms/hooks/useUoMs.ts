@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type UoM, type UoMFormValues, UoMSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
-import { paginatedSchema } from '@/types/api';
+import { paginatedSchema, PaginatedResponse } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['uoms'];
@@ -19,7 +19,7 @@ export function useUoMs(filters?: { search?: string }) {
       const params = new URLSearchParams();
       if (filters?.search) params.append('search', filters.search);
 
-      return apiClient.get(`/units-of-measure${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(UoMSchema), { signal });
+      return apiClient.get<PaginatedResponse<UoM>>(`/units-of-measure${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(UoMSchema), { signal });
     },
     staleTime: 60_000,
   });

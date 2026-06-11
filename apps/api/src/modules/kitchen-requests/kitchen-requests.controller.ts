@@ -29,7 +29,10 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import type { Request } from 'express';
 
-function mapKitchenRequestDetail(kr: Record<string, unknown>, currentUserId?: string) {
+function mapKitchenRequestDetail(
+  kr: Record<string, unknown>,
+  currentUserId?: string,
+) {
   const krItems = (kr.items as Record<string, unknown>[]) || [];
   const department = kr.department as Record<string, unknown> | null;
   const warehouse = kr.warehouse as Record<string, unknown> | null;
@@ -120,7 +123,7 @@ export class KitchenRequestsController {
     );
 
     return {
-      data: result.data.map(kr => mapKitchenRequestDetail(kr)),
+      data: result.data.map((kr) => mapKitchenRequestDetail(kr)),
       meta: result.meta,
     };
   }

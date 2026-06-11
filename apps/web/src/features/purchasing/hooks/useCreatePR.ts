@@ -21,10 +21,8 @@ export function useCreatePR(options?: { onConflict?: () => void }) {
   const queryClient = useQueryClient();
   return useSafeMutation({
     onConflict: options?.onConflict,
-    mutationFn: (payload: CreatePRPayload & { signal?: AbortSignal }) => {
-      const { signal, ...data } = payload;
-      return apiClient.post('/procurement/purchase-requests', PRDetailSchema, CreatePRPayloadSchema.parse(data), { signal });
-    },
+    mutationFn: ({ payload, signal, headers }: { payload: CreatePRPayload; signal?: AbortSignal; headers?: Record<string, string> }) =>
+      apiClient.post('/procurement/purchase-requests', z.object({ data: PRDetailSchema }), CreatePRPayloadSchema.parse(payload), { signal, headers }).then(r => r.data),
     onSuccess: (data) => {
       // Seed the cache for the newly created PR
       queryClient.setQueryData(['purchase-requests', data.id], data);

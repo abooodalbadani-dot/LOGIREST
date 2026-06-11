@@ -249,7 +249,10 @@ export class KitchenRequestsService {
       });
 
       const whItemMap = new Map(
-        whItems.map((wi) => [wi.itemId, Number(wi.qtyOnHand) - Number(wi.qtyAllocated)]),
+        whItems.map((wi) => [
+          wi.itemId,
+          Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+        ]),
       );
 
       for (const lineInput of linesToCheck) {

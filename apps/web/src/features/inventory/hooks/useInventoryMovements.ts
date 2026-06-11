@@ -1,8 +1,8 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { paginatedSchema } from '@/types/api';
-import { InventoryMovementSchema } from '@/types/inventory';
+import { paginatedSchema, PaginatedResponse } from '@/types/api';
+import { InventoryMovementSchema, InventoryMovement } from '@/types/inventory';
 
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -24,7 +24,7 @@ export function useInventoryMovements(
       if (filters.document_type) qs.append('document_type', filters.document_type);
       
       const path = `/inventory/movements${qs.toString() ? `?${qs.toString()}` : ''}`;
-      return apiClient.get(path, paginatedSchema(InventoryMovementSchema), { signal });
+      return apiClient.get<PaginatedResponse<InventoryMovement>>(path, paginatedSchema(InventoryMovementSchema), { signal });
     },
     staleTime: 60_000,
     ...options,

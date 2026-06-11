@@ -5,7 +5,6 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { toSnakeCase } from '@/lib/api/adapters';
 import { TriggerEvent, EntityField } from '@/types/notifications';
 import { 
   ArrowLeft,
@@ -168,7 +167,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
       setError('Please fill in the template code');
       return;
     }
-    createMutation.mutate(toSnakeCase(template as Record<string, unknown>));
+    createMutation.mutate(template);
   };
 
   return (

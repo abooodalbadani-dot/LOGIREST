@@ -217,27 +217,18 @@ export class AdjustmentsController {
       );
     }
 
-    const rawBody = body as Record<string, unknown>;
-    const warehouseId =
-      body.warehouseId ?? (rawBody.warehouse_id as string | undefined);
-    const lines = (rawBody.lines as Record<string, unknown>[])?.map((line) => ({
-      id: line.id as string | undefined,
-      itemId: (line.itemId ?? line.item_id) as string,
+    const lines = body.lines?.map((line) => ({
+      id: line.id,
+      itemId: line.itemId ?? '',
       qty: Number(line.qty),
       direction: line.direction as 'INCREASE' | 'DECREASE',
-      unitCost:
-        line.unitCost !== undefined
-          ? (line.unitCost as number | null | undefined)
-          : (line.unit_cost as number | null | undefined),
-      lotId:
-        line.lotId !== undefined
-          ? (line.lotId as string | null | undefined)
-          : (line.lot_id as string | null | undefined),
+      unitCost: line.unitCost,
+      lotId: line.lotId,
     }));
 
     const adj = await this.adjustmentsService.update(id, {
       version: body.version,
-      warehouseId,
+      warehouseId: body.warehouseId,
       reason: body.reason,
       notes: body.notes,
       lines,

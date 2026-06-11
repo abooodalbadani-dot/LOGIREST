@@ -2,16 +2,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
-import type { ZodSchema } from 'zod';
+
 import { paginatedSchema } from '@/types/api';
 import { toast } from 'sonner';
-import { toSnakeCase, toCamelCase } from '@/lib/api/adapters';
+import { toCamelCase } from '@/lib/api/adapters';
 
 import { useAuth } from '@/providers/AuthProvider';
 
 export function useMasterDataList<T>(
   entity: string,
-  schema: ZodSchema<T>,
+  schema: z.ZodType<T, any, any>,
   filters = {},
   options?: { enabled?: boolean }
 ) {
@@ -24,6 +24,12 @@ export function useMasterDataList<T>(
     queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, z.any(), { signal })
       .then(data => {
         try {
+          if (Array.isArray(data)) {
+            return {
+              data: z.array(schema).parse(toCamelCase(data)),
+              meta: { total: data.length, page: 1, pageSize: data.length || 50, totalPages: 1 }
+            };
+          }
           return paginatedSchema(schema).parse(toCamelCase(data));
         } catch (error) {
           console.error(`[Zod Error] Failed to parse ${entity} list response:`, error);
@@ -39,7 +45,7 @@ export function useMasterDataList<T>(
 export function useMasterDataItem<T>(
   entity: string,
   id: string | null,
-  schema: ZodSchema<T>,
+  schema: z.ZodType<T, any, any>,
   options?: { enabled?: boolean }
 ) {
   const { activeScope } = useAuth();
@@ -53,7 +59,7 @@ export function useMasterDataItem<T>(
           return schema.parse(toCamelCase(data));
         } catch (error) {
           console.error(`[Zod Error] Failed to parse ${entity} item response:`, error);
-          return null as any;
+          return null;
         }
       }), 
     ...options,
@@ -61,10 +67,10 @@ export function useMasterDataItem<T>(
   });
 }
 
-export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>, options?: { messages?: { successMessage?: string; errorMessage?: string } }) {
+export function useMasterDataCreate<T>(entity: string, schema: z.ZodType<T, any, any>, options?: { messages?: { successMessage?: string; errorMessage?: string } }) {
   const qc = useQueryClient();
   return useMutation({ 
-    mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, toSnakeCase(body), { signal }), 
+    mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, body, { signal }), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
       toast.success(options?.messages?.successMessage || 'Resource created successfully');
@@ -73,11 +79,11 @@ export function useMasterDataCreate<T>(entity: string, schema: ZodSchema<T>, opt
   });
 }
 
-export function useMasterDataUpdate<T>(entity: string, schema: ZodSchema<T>, options?: { onConflict?: () => void, messages?: { successMessage?: string; errorMessage?: string } }) {
+export function useMasterDataUpdate<T>(entity: string, schema: z.ZodType<T, any, any>, options?: { onConflict?: () => void, messages?: { successMessage?: string; errorMessage?: string } }) {
   const qc = useQueryClient();
   return useSafeMutation({ 
     onConflict: options?.onConflict,
-    mutationFn: ({ id, body, signal }: { id: string; body: unknown; signal?: AbortSignal }) => apiClient.put(`/${entity}/${id}`, schema, toSnakeCase(body), { signal }), 
+    mutationFn: ({ id, body, signal }: { id: string; body: unknown; signal?: AbortSignal }) => apiClient.put(`/${entity}/${id}`, schema, body, { signal }), 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [entity] });
       toast.success(options?.messages?.successMessage || 'Resource updated successfully');

@@ -32,7 +32,7 @@ export function PageHeader({
  className 
 }: PageHeaderProps) {
  return (
- <div className={cn("flex flex-col gap-6 pb-8 relative", className)}>
+ <div data-slot="page-header" className={cn("flex flex-col gap-6 pb-8 relative", className)}>
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div className="space-y-1.5">
  <div className="flex items-center gap-4">

@@ -50,7 +50,7 @@ export default function LotTraceReportClient() {
         const type = (doc.documentType || '').toLowerCase();
         let href = '#';
         if (type.includes('goods receipt') || type.includes('grn')) {
-          href = `/goods-receipts/${doc.documentNumber}`;
+          href = `/goods-received/${doc.documentNumber}`;
         } else if (type.includes('transfer')) {
           href = `/transfers/${doc.documentNumber}`;
         } else if (type.includes('issue')) {

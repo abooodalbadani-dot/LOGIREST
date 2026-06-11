@@ -52,8 +52,8 @@ export class OperationsController {
 
   @Get('lots-available')
   async getLotsAvailable(
-    @Query('item_id') itemId: string,
-    @Query('warehouse_id') warehouseId: string,
+    @Query('itemId') itemId: string,
+    @Query('warehouseId') warehouseId: string,
     @ActiveScope('warehouseId') activeWarehouseId: string,
   ) {
     if (warehouseId !== activeWarehouseId) {

@@ -90,8 +90,10 @@ function mapPRSummary(pr: Record<string, unknown>) {
     documentNumber: pr.requestNumber as string,
     status: pr.status as string,
     departmentId: pr.warehouseId as string,
+    warehouseId: pr.warehouseId as string,
     expectedDate: createdAtIso,
     createdAt: createdAtIso,
+    createdBy: '',
   };
 }
 
@@ -112,17 +114,30 @@ export class PurchaseRequestsController {
     body: {
       branchId: string;
       warehouseId: string;
-      lines: Array<{ itemId: string; quantity: number }>;
+      lines: Array<{
+        itemId: string;
+        quantity: number;
+      }>;
     },
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
+    const branchId = body.branchId;
+    const warehouseId = body.warehouseId;
+    const lines = (body.lines || []).map((line) => ({
+      itemId: line.itemId,
+      quantity: Number(line.quantity),
+    }));
+
     await this.scopeValidationService.validateWarehouse(
       userId,
       role,
-      body.warehouseId,
+      warehouseId,
     );
-    const pr = await this.prService.create(body, userId);
+    const pr = await this.prService.create(
+      { branchId, warehouseId, lines },
+      userId,
+    );
     return { data: mapPRDetail(pr) };
   }
 
@@ -184,12 +199,10 @@ export class PurchaseRequestsController {
         pr.warehouseId,
       );
     }
-    const lines = (body.lines as Record<string, unknown>[])?.map(
-      (line: Record<string, unknown>) => ({
-        itemId: String(line.itemId || line.item_id || ''),
-        quantity: Number(line.quantity || line.req_qty || 0),
-      }),
-    );
+    const lines = (body.lines || []).map((line) => ({
+      itemId: line.itemId,
+      quantity: Number(line.quantity),
+    }));
 
     const updated = await this.prService.update(id, {
       version: body.version,

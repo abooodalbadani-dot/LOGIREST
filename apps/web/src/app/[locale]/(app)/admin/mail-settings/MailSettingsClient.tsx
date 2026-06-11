@@ -6,7 +6,6 @@ import { apiClient } from '@/lib/api/client';
 import { useTranslations } from 'next-intl';
 import { useForm, useWatch, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toSnakeCase } from '@/lib/api/adapters';
 import { 
   Mail, 
   Server, 
@@ -85,7 +84,7 @@ export function MailSettingsClient() {
       const res = await apiClient.post(
         '/admin/settings/test-email',
         z.object({ ok: z.boolean(), error: z.string().optional() }),
-        toSnakeCase(formValues)
+        formValues
       );
       setIsTesting(false);
       if (res.ok) {

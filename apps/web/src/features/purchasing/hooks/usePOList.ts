@@ -11,10 +11,11 @@ const POSummarySchema = z.object({
   documentNumber: z.string(), 
   status: BadgeStatusSchema, 
   supplierId: z.string(), 
-  currencyCode: z.string(), 
-  expectedDate: z.string(),
-  supplierTotalAmount: z.number(),
-  createdAt: z.string(), 
+  supplierName: z.string().optional(),
+  currencyCode: z.string().optional(),
+  expectedDate: z.string().optional(),
+  supplierTotalAmount: z.number().optional(),
+  createdAt: z.string().optional(), 
 });
 
 export type POSummary = z.infer<typeof POSummarySchema>;
@@ -22,7 +23,7 @@ export type POSummary = z.infer<typeof POSummarySchema>;
 export function usePOList(filters: { status?: string; supplierId?: string; search?: string; page?: number } = {}) {
   const params = new URLSearchParams();
   if (filters.status) params.set('status', filters.status);
-  if (filters.supplierId) params.set('supplier_id', filters.supplierId);
+  if (filters.supplierId) params.set('supplierId', filters.supplierId);
   if (filters.search) params.set('search', filters.search);
   params.set('page', String(filters.page ?? 1));
  

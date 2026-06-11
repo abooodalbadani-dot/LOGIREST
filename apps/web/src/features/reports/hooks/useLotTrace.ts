@@ -27,7 +27,7 @@ export function useLotTrace(lotId: string | null) {
     queryKey: ['reports', 'lot-trace', lotId],
     queryFn: ({ signal }) => {
       if (!lotId) return null;
-      return apiClient.get(`/reports/lot-trace?lotId=${lotId}`, LotTraceReportSchema, { signal });
+      return apiClient.get<LotTraceReport>(`/reports/lot-trace?lotId=${lotId}`, LotTraceReportSchema, { signal });
     },
     enabled: !!lotId,
     staleTime: 5 * 60 * 1000,

@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { type ItemFormValues, ItemSchema } from '@/types/master-data';
+import { type ItemFormValues, ItemSchema, type Item } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
-import { paginatedSchema } from '@/types/api';
+import { paginatedSchema, PaginatedResponse } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['items'];
@@ -21,7 +21,7 @@ export function useItems(filters?: { search?: string; category_id?: string; is_a
       if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active));
       
       const path = `/items${params.toString() ? `?${params.toString()}` : ''}`;
-      return apiClient.get(path, paginatedSchema(ItemSchema), { signal });
+      return apiClient.get<PaginatedResponse<Item>>(path, paginatedSchema(ItemSchema), { signal });
     }
   });
 }
@@ -31,7 +31,7 @@ export function useItem(id: string | null) {
     queryKey: [...QUERY_KEY, id],
     queryFn: ({ signal }) => {
       if (!id) return null;
-      return apiClient.get(`/items/${id}`, ItemSchema, { signal });
+      return apiClient.get<Item>(`/items/${id}`, ItemSchema, { signal });
     },
     enabled: !!id && id !== 'undefined' && id !== 'null',
   });

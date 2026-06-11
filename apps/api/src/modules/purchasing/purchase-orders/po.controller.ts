@@ -164,32 +164,18 @@ export class PurchaseOrderController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
-    const rawBody = body as unknown as Record<string, unknown>;
-    const supplierId =
-      body.supplierId ??
-      (typeof rawBody.supplier_id === 'string'
-        ? rawBody.supplier_id
-        : undefined);
-    const currencyId =
-      body.currencyId ??
-      (typeof rawBody.currency_id === 'string'
-        ? rawBody.currency_id
-        : undefined);
-    const prId =
-      body.prId ??
-      (typeof rawBody.pr_id === 'string' ? rawBody.pr_id : undefined);
+    const supplierId = body.supplierId;
+    const currencyId = body.currencyId;
+    const prId = body.prId;
 
     if (!supplierId || !currencyId) {
       throw new BadRequestException('supplierId and currencyId are required');
     }
 
-    const rawLines = (rawBody.lines ?? []) as Record<string, unknown>[];
-    const lines = rawLines.map((line) => {
-      const itemId = (line.itemId ?? line.item_id) as string | undefined;
-      const quantity = (line.quantity ?? line.qty) as number | undefined;
-      const unitPrice = (line.unitPrice ??
-        line.unit_price ??
-        line.unit_cost_foreign) as number | undefined;
+    const lines = (body.lines || []).map((line) => {
+      const itemId = line.itemId;
+      const quantity = line.quantity;
+      const unitPrice = line.unitPrice;
       if (!itemId || quantity === undefined || unitPrice === undefined) {
         throw new BadRequestException(
           'itemId, quantity, and unitPrice are required for each line',
@@ -235,7 +221,7 @@ export class PurchaseOrderController {
     @Query()
     query: {
       status?: string;
-      supplier_id?: string;
+      supplierId?: string;
       search?: string;
       page?: string;
     },
@@ -244,7 +230,7 @@ export class PurchaseOrderController {
     const result = await this.poService.findAll(
       {
         status: query.status,
-        supplierId: query.supplier_id,
+        supplierId: query.supplierId,
         search: query.search,
         page: query.page ? Number(query.page) : 1,
       },
@@ -299,17 +285,8 @@ export class PurchaseOrderController {
       );
     }
 
-    const rawBody = body as unknown as Record<string, unknown>;
-    const supplierId =
-      body.supplierId ??
-      (typeof rawBody.supplier_id === 'string'
-        ? rawBody.supplier_id
-        : undefined);
-    const currencyId =
-      body.currencyId ??
-      (typeof rawBody.currency_id === 'string'
-        ? rawBody.currency_id
-        : undefined);
+    const supplierId = body.supplierId;
+    const currencyId = body.currencyId;
 
     let lines:
       | Array<{
@@ -319,21 +296,18 @@ export class PurchaseOrderController {
           unitPrice: number;
         }>
       | undefined = undefined;
-    if (rawBody.lines) {
-      const rawLines = rawBody.lines as Record<string, unknown>[];
-      lines = rawLines.map((line) => {
-        const itemId = (line.itemId ?? line.item_id) as string | undefined;
-        const quantity = (line.quantity ?? line.qty) as number | undefined;
-        const unitPrice = (line.unitPrice ??
-          line.unit_price ??
-          line.unit_cost_foreign) as number | undefined;
+    if (body.lines) {
+      lines = body.lines.map((line) => {
+        const itemId = line.itemId;
+        const quantity = line.quantity;
+        const unitPrice = line.unitPrice;
         if (!itemId || quantity === undefined || unitPrice === undefined) {
           throw new BadRequestException(
             'itemId, quantity, and unitPrice are required for each line',
           );
         }
         return {
-          id: line.id as string | undefined,
+          id: line.id,
           itemId,
           quantity,
           unitPrice,
@@ -495,7 +469,7 @@ export class PurchaseOrderController {
   async email(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @Body('recipient_email') recipientEmail?: string,
+    @Body('recipientEmail') recipientEmail?: string,
   ) {
     return this.poService.email(id, userId, recipientEmail);
   }

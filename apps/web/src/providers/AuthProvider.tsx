@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const branches = branchesRes.data;
         if (branches && branches.length > 0) {
           const firstBranch = branches[0];
-          const warehousesRes = await apiClient.get(`/warehouses?branch_id=${firstBranch.id}`, z.object({ data: z.array(z.object({ id: z.string() })) }));
+          const warehousesRes = await apiClient.get(`/warehouses?branchId=${firstBranch.id}`, z.object({ data: z.array(z.object({ id: z.string() })) }));
           if (!active) return;
           const warehouses = warehousesRes.data;
           if (warehouses && warehouses.length > 0) {

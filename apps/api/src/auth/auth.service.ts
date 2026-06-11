@@ -116,9 +116,9 @@ export class AuthService {
       email: user.email,
       role: user.role,
       scopes: (user.warehouseScopes || []).map((s) => ({
-        branch_id: s.warehouse?.branchId ?? null,
-        warehouse_id: s.warehouseId,
-        department_id: null,
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
       })),
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
       language: 'en' as const,
@@ -174,16 +174,16 @@ export class AuthService {
       email: user.email,
       role: user.role,
       scopes: (user.warehouseScopes || []).map((s) => ({
-        branch_id: s.warehouse?.branchId ?? null,
-        warehouse_id: s.warehouseId,
-        department_id: null,
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
       })),
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
       language: 'en' as const,
-      avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`,
+      avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`,
       phone: null,
       locale: 'en' as const,
-      notification_preferences: {
+      notificationPreferences: {
         lowStock: true,
         expiry: true,
         pendingApproval: true,
@@ -234,16 +234,16 @@ export class AuthService {
       email: updatedUser.email,
       role: updatedUser.role,
       scopes: (updatedUser.warehouseScopes || []).map((s) => ({
-        branch_id: s.warehouse?.branchId ?? null,
-        warehouse_id: s.warehouseId,
-        department_id: null,
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
       })),
       status: updatedUser.isActive ? 'ACTIVE' : 'INACTIVE',
       language: body.language || 'en',
-      avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,
+      avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,
       phone: body.phone || null,
       locale: body.locale || 'en',
-      notification_preferences: body.notificationPreferences || {
+      notificationPreferences: body.notificationPreferences || {
         lowStock: true,
         expiry: true,
         pendingApproval: true,
@@ -253,10 +253,15 @@ export class AuthService {
     };
   }
 
-  async uploadAvatar(userId: string, file: any) {
+  async uploadAvatar(
+    userId: string,
+    _file:
+      | { buffer?: Buffer; mimetype?: string; originalname?: string }
+      | undefined,
+  ) {
     // Generate a mock avatar URL using the userId to make it look realistic
     const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}-${Date.now()}`;
-    return { avatar_url: avatarUrl };
+    return { avatarUrl };
   }
 
   async forgotPassword(email: string) {
@@ -350,7 +355,7 @@ export class AuthService {
 
   private async logFailedLogin(
     email: string,
-    user: any | null,
+    user: { id: string; email: string } | null,
     reason: string,
     ipAddress?: string,
   ) {

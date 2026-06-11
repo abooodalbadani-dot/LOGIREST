@@ -551,7 +551,7 @@ const t = useTranslations('operations.adjustment');
         description={batchConfirmAction === 'approve'
           ? (t('batch_approve_desc') || `Approve ${selectedIds.size} selected adjustments?`)
           : (t('batch_post_desc') || `Post ${selectedIds.size} selected adjustments?`)}
-        warningText={t(`${batchConfirmAction}_irreversible`) || `This action is irreversible.`}
+        warningText={batchConfirmAction ? (t(`${batchConfirmAction}_irreversible`) || `This action is irreversible.`) : ''}
         requiresTextConfirmation={true}
         variant={batchConfirmAction === 'approve' ? 'default' : 'warning'}
         icon={batchConfirmAction === 'approve' ? 'info' : 'warning'}

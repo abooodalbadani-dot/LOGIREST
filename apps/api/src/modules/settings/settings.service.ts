@@ -35,7 +35,9 @@ export class SettingsService {
       ? (() => {
           try {
             const parsed = JSON.parse(setting.value);
-            return parsed.base_currency;
+            return (parsed.baseCurrency ?? parsed.base_currency) as
+              | string
+              | undefined;
           } catch {
             return undefined;
           }

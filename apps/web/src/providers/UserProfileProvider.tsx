@@ -106,7 +106,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
 
       const apiPayload: Record<string, unknown> = {};
       if (fields.displayName !== undefined) apiPayload.name = fields.displayName;
-      if (fields.avatarUrl !== undefined) apiPayload.avatar_url = fields.avatarUrl;
+      if (fields.avatarUrl !== undefined) apiPayload.avatarUrl = fields.avatarUrl;
       if (fields.phone !== undefined) apiPayload.phone = fields.phone;
       if (fields.email !== undefined) apiPayload.email = fields.email;
       if (fields.locale !== undefined) apiPayload.locale = fields.locale;

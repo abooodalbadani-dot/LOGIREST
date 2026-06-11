@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { YieldService } from './yield.service';
+import type { CreateYieldBatchDto } from './yield.service';
 
 @Controller('operations/yield')
 @UseGuards(JwtAuthGuard)
@@ -23,7 +24,7 @@ export class YieldController {
 
   @Post()
   @Roles(Role.ADMIN, Role.INV_MGR)
-  async create(@Body() body: Record<string, unknown>) {
+  async create(@Body() body: CreateYieldBatchDto) {
     return this.yieldService.create(body);
   }
 }

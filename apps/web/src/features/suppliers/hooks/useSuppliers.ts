@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { type Supplier, type SupplierFormValues, SupplierSchema } from '@/types/master-data';
 import { apiClient } from '@/lib/api/client';
-import { paginatedSchema } from '@/types/api';
+import { paginatedSchema, PaginatedResponse } from '@/types/api';
 import { z } from 'zod';
 
 const QUERY_KEY = ['suppliers'];
@@ -19,7 +19,7 @@ export function useSuppliers(filters?: { search?: string }) {
       const params = new URLSearchParams();
       if (filters?.search) params.append('search', filters.search);
 
-      return apiClient.get(`/suppliers${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(SupplierSchema), { signal });
+      return apiClient.get<PaginatedResponse<Supplier>>(`/suppliers${params.toString() ? `?${params.toString()}` : ''}`, paginatedSchema(SupplierSchema), { signal });
     },
     staleTime: 60_000,
   });

@@ -1387,7 +1387,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
   }
 
   if (normalizedPath === '/currencies/fx-rates') {
-    if (method === 'GET') return MockFactory.wrapPagination(await db.fxRates.findAll());
+    if (method === 'GET') return db.fxRates.findAll();
     if (method === 'POST') return db.fxRates.save(body as FXRate);
   }
   if (normalizedPath.startsWith('/currencies/fx-rates/')) {

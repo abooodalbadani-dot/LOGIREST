@@ -211,8 +211,8 @@ const { data, isLoading } = useStocktakeList({
  ], [t, tc, locale, router, warehouseMap]);
 
 const activeSessionsCount = summaryData?.total ?? data?.meta?.total ?? 0;
-   const inProgressCount = summaryData?.inProgress ?? 0;
-   const postedCount = summaryData?.posted ?? 0;
+const inProgressCount = summaryData?.active ?? 0;
+const postedCount = summaryData?.completed ?? 0;
 
  return (
  <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">

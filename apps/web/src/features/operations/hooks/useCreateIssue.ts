@@ -2,7 +2,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
-import { toSnakeCase } from '@/lib/api/adapters';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { StockIssueDetailSchema } from './useIssue';
@@ -37,7 +36,7 @@ export function useCreateIssue(options?: { onConflict?: () => void }) {
       apiClient.post(
         '/operations/issues',
         z.object({ data: StockIssueDetailSchema }),
-        toSnakeCase(CreateIssuePayloadSchema.parse(data) as unknown as Record<string, unknown>),
+        CreateIssuePayloadSchema.parse(data),
         { signal }
       ).then(res => res.data),
     onSuccess: () => {

@@ -97,6 +97,7 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitConfirmOpen, setSubmitConfirmOpen] = React.useState(false);
   const [pendingValues, setPendingValues] = React.useState<PurchaseRequestFormValues | null>(null);
+  const [idempotencyKey] = React.useState(() => crypto.randomUUID());
 
   const status = initialData?.status as DocumentStatus;
   const isLocked = isDocumentLocked('PR', status);
@@ -237,7 +238,10 @@ export function PurchaseRequestForm({ initialData, onConflict }: PurchaseRequest
           payload: { ...payload, version: initialData?.version ?? 0 }
         });
       } else {
-        const res = await createPR.mutateAsync(payload);
+        const res = await createPR.mutateAsync({
+          payload,
+          headers: { 'X-Idempotency-Key': idempotencyKey }
+        });
         prId = res.id;
       }
 

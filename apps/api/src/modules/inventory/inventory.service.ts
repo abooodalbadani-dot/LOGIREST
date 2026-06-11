@@ -69,8 +69,12 @@ export class InventoryService {
       warehouseName: wItem.warehouse.name,
       qtyOnHand: Number(wItem.qtyOnHand),
       qtyReserved: Number(wItem.qtyAllocated),
-      qtyAvailable: Math.max(0, Number(wItem.qtyOnHand) - Number(wItem.qtyAllocated)),
-      reorderPoint: wItem.item.reorderPoint !== null ? Number(wItem.item.reorderPoint) : 0,
+      qtyAvailable: Math.max(
+        0,
+        Number(wItem.qtyOnHand) - Number(wItem.qtyAllocated),
+      ),
+      reorderPoint:
+        wItem.item.reorderPoint !== null ? Number(wItem.item.reorderPoint) : 0,
     }));
 
     return {
@@ -119,16 +123,35 @@ export class InventoryService {
       }),
     ]);
 
-    const data = lots.map((wLot) => ({
-      lotId: wLot.lotId,
-      lotNumber: wLot.lot.lotNumber,
-      itemId: wLot.itemId,
-      itemCode: wLot.item.sku,
-      itemName: wLot.item.name,
-      onHandQty: Number(wLot.qtyOnHand),
-      expiryDate: wLot.lot.expiryDate,
-      status: wLot.lot.status,
-    }));
+    const data = lots.map((wLot) => {
+      const expiryDate = wLot.lot.expiryDate
+        ? new Date(wLot.lot.expiryDate)
+        : null;
+      const today = new Date();
+      const isExpired = expiryDate ? expiryDate < today : false;
+
+      let isNearExpiry = false;
+      if (expiryDate) {
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(today.getDate() + 30);
+        isNearExpiry = expiryDate > today && expiryDate <= thirtyDaysFromNow;
+      }
+
+      return {
+        id: wLot.lotId,
+        lotId: wLot.lotId,
+        lotNumber: wLot.lot.lotNumber,
+        itemId: wLot.itemId,
+        itemCode: wLot.item.sku,
+        itemName: wLot.item.name,
+        onHandQty: Number(wLot.qtyOnHand),
+        qty_available: Number(wLot.qtyOnHand),
+        expiryDate: wLot.lot.expiryDate,
+        status: wLot.lot.status,
+        is_expired: isExpired,
+        is_near_expiry: isNearExpiry,
+      };
+    });
 
     return {
       data,

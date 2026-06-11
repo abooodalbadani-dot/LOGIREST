@@ -32,7 +32,7 @@ export class DepartmentsController {
   async findAll(
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Query('branch_id') branchId?: string,
+    @Query('branchId') branchId?: string,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
   ) {

@@ -4,13 +4,13 @@ import { apiClient } from '@/lib/api/client';
 import { z } from 'zod';
 import { LotSchema, type Lot } from '@/types/master-data';
 
-export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; warehouse_id?: string }) {
+export function useLotsByItem({ itemId, warehouseId }: { itemId?: string; warehouseId?: string }) {
   return useQuery({
-    queryKey: ['lots-available', { item_id, warehouse_id }],
+    queryKey: ['lots-available', { itemId, warehouseId }],
     queryFn: async ({ signal }) => {
       const qs = new URLSearchParams();
-      if (item_id) qs.append('item_id', item_id);
-      if (warehouse_id) qs.append('warehouse_id', warehouse_id);
+      if (itemId) qs.append('itemId', itemId);
+      if (warehouseId) qs.append('warehouseId', warehouseId);
       
       const res = await apiClient.get(`/operations/lots-available?${qs.toString()}`, z.object({
         data: z.array(z.object({
@@ -29,7 +29,7 @@ export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; war
         const lot: Lot = {
           id: item.id,
           itemId: item.itemId,
-          warehouseId: warehouse_id || '',
+          warehouseId: warehouseId || '',
           lotNumber: item.lotNumber,
           expiryDate: item.expiryDate,
           qtyAvailable: item.totalQty ?? item.qtyAvailable ?? 0,
@@ -39,6 +39,6 @@ export function useLotsByItem({ item_id, warehouse_id }: { item_id?: string; war
         return LotSchema.parse(lot);
       });
     },
-    enabled: !!item_id && !!warehouse_id
+    enabled: !!itemId && !!warehouseId
   });
 }

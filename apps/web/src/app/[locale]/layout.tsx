@@ -150,8 +150,7 @@ export default async function LocaleLayout({
               The frontend application failed to initialize because the primary API Gateway URL is undefined in the environment.
             </p>
             <div className="code-block">
-              FATAL: NEXT_PUBLIC_API_URL is missing<br />
-              NEXT_PUBLIC_USE_MOCKS = false
+              FATAL: NEXT_PUBLIC_API_URL is missing
             </div>
             <div className="footer">
               LogiRest Enterprise Engine v16.2.6

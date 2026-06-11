@@ -151,6 +151,7 @@ export class TransfersService {
       total,
       pending,
       in_transit: inTransit,
+      overdue_count: 0,
     };
   }
 

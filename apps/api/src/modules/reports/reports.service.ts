@@ -235,15 +235,16 @@ export class ReportsService {
           unitOfMeasure: { code: string };
         };
       }) => ({
-      sku: wi.item.sku,
-      name: wi.item.name,
-      category: wi.item.category.name,
-      uom: wi.item.unitOfMeasure.code,
-      qtyPhysical: Number(wi.qtyOnHand),
-      qtyReserved: Number(wi.qtyAllocated),
-      qtyAvailable: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
-      wac: Number(wi.wac || 0),
-    }));
+        sku: wi.item.sku,
+        name: wi.item.name,
+        category: wi.item.category.name,
+        uom: wi.item.unitOfMeasure.code,
+        qtyPhysical: Number(wi.qtyOnHand),
+        qtyReserved: Number(wi.qtyAllocated),
+        qtyAvailable: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+        wac: Number(wi.wac || 0),
+      }),
+    );
   }
 
   async getAvailableInventory(
@@ -302,15 +303,16 @@ export class ReportsService {
             unitOfMeasure: { code: string };
           };
         }) => ({
-        sku: wi.item.sku,
-        name: wi.item.name,
-        category: wi.item.category.name,
-        uom: wi.item.unitOfMeasure.code,
-        qtyPhysical: Number(wi.qtyOnHand),
-        qtyReserved: Number(wi.qtyAllocated),
-        qtyAvailable: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
-        wac: Number(wi.wac || 0),
-      })),
+          sku: wi.item.sku,
+          name: wi.item.name,
+          category: wi.item.category.name,
+          uom: wi.item.unitOfMeasure.code,
+          qtyPhysical: Number(wi.qtyOnHand),
+          qtyReserved: Number(wi.qtyAllocated),
+          qtyAvailable: Number(wi.qtyOnHand) - Number(wi.qtyAllocated),
+          wac: Number(wi.wac || 0),
+        }),
+      ),
     };
   }
 
@@ -491,7 +493,8 @@ export class ReportsService {
 
     return orders.map((po: any) => {
       const total = po.lines.reduce(
-        (sum: number, line: any) => sum + Number(line.quantity) * Number(line.unitPrice),
+        (sum: number, line: any) =>
+          sum + Number(line.quantity) * Number(line.unitPrice),
         0,
       );
       return {

@@ -33,7 +33,7 @@ export class WarehousesDirectController {
   async findAll(
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
-    @Query('branch_id') branchId?: string,
+    @Query('branchId') branchId?: string,
     @Query('limit') limit?: string,
   ) {
     const take = limit ? parseInt(limit, 10) : undefined;

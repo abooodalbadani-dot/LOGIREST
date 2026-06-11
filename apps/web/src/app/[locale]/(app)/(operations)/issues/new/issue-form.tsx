@@ -115,8 +115,8 @@ export function IssueForm() {
   const watchedWarehouse = useWatch({ control: form.control, name: "warehouseId" });
   const activeItemId = activeLineIndex !== null ? fields[activeLineIndex]?.itemId : undefined;
   const { data: availableLots } = useLotsByItem({
-    item_id: activeItemId,
-    warehouse_id: watchedWarehouse,
+    itemId: activeItemId,
+    warehouseId: watchedWarehouse,
   });
 
   const tableLines = React.useMemo<CustomLineItem[]>(() => {

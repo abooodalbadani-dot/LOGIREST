@@ -17,7 +17,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAbortController } from '@/hooks/useAbortController';
 import { MasterDataFormLayout } from '@/features/master-data/components/MasterDataFormLayout';
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
-import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '@/features/suppliers/hooks/useSuppliers';
+import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
+import { generateNextCode } from '@/lib/code-generator';
 import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
 import { useCurrencies, type Currency } from '@/features/purchasing/hooks/useCurrencies';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -47,6 +48,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   const { data, isLoading, isError, refetch } = useSupplier(id);
   const { data: currencies, isLoading: isCurrenciesLoading } = useCurrencies();
+  const { data: suppliersData } = useSuppliers();
   const create = useCreateSupplier();
   const conflict = useConflictHandler('supplier', id ?? '');
   const update = useUpdateSupplier({ onConflict: conflict.triggerConflict });
@@ -54,6 +56,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const { playSound } = useAudioFeedback();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isAutoPopulated, setIsAutoPopulated] = useState(false);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<SupplierFormValues>({
@@ -69,11 +72,13 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
   const currencyItems = useMemo(() => {
     const list = currencies?.map((c: Currency) => ({
       id: c.id,
-      name_en: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
-      name_ar: `${c.code} — ${locale === 'ar' ? c.nameAr : c.nameEn}`,
+      name_en: `${c.code} — ${c.name}`,
+      name_ar: `${c.code} — ${c.name}`,
     })) || [];
     return [{ id: '', name_en: '—', name_ar: '—' }, ...list];
-  }, [currencies, locale]);
+  }, [currencies]);
+
+  const codeValue = useWatch({ control, name: 'code' });
 
   useEffect(() => {
     if (data) {
@@ -87,6 +92,15 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
       });
     }
   }, [data, reset]);
+
+  useEffect(() => {
+    if (!id && suppliersData?.data && !codeValue && !isAutoPopulated) {
+      const existingCodes = suppliersData.data.map((s: any) => s.code);
+      const nextCode = generateNextCode(existingCodes, 'SUP-', 4);
+      setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
+      setIsAutoPopulated(true);
+    }
+  }, [id, suppliersData, setValue, codeValue, isAutoPopulated]);
 
   const onValid = async (values: SupplierFormValues) => {
     if (isReadOnly) return;

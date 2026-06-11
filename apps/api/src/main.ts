@@ -12,6 +12,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 
 import { Logger } from 'nestjs-pino';
+import { TransformInterceptor } from './interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -25,21 +26,17 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Configure CORS
-  const allowedOrigins = (
-    process.env.FRONTEND_URL || 'http://localhost:3000'
-  ).split(',');
   app.enableCors({
-    origin: (
-      origin: string | undefined,
-      callback: (err: Error | null, allow?: boolean) => void,
-    ) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: [
+      'http://localhost:3000',
+      'http://localhost',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders:
+      'Content-Type, Accept, Authorization, x-branch-id, x-warehouse-id, x-xsrf-token ,x-idempotency-key',
   });
 
   // Set global API prefix, excluding /health and /metrics
@@ -135,6 +132,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Register Global Interceptor for camelCase transformation and name fallback
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   await app.listen(process.env.PORT ?? 3000);
 }

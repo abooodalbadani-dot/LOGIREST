@@ -10,14 +10,20 @@ import { PrismaService } from '../../../database/prisma.service';
 export class BarcodesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapDbBarcodeToFrontend(mapping: any) {
+  private mapDbBarcodeToFrontend(mapping: {
+    id: string;
+    itemId: string;
+    barcode: string;
+    version: number;
+    item?: { uomId?: string } | null;
+  }) {
     return {
       id: mapping.id,
-      item_id: mapping.itemId,
-      uom_id: mapping.item?.uomId || '',
+      itemId: mapping.itemId,
+      uomId: mapping.item?.uomId || '',
       code: mapping.barcode,
-      default_qty: 1,
-      is_active: true,
+      defaultQty: 1,
+      isActive: true,
       version: mapping.version,
     };
   }
@@ -60,10 +66,14 @@ export class BarcodesService {
     return { isDuplicate: !!mapping };
   }
 
-  async create(body: any, userId: string, ipAddress?: string) {
-    const { item_id, code } = body;
-    if (!item_id || !code) {
-      throw new BadRequestException('item_id and code are required');
+  async create(
+    body: { itemId: string; code: string },
+    userId: string,
+    ipAddress?: string,
+  ) {
+    const { itemId, code } = body;
+    if (!itemId || !code) {
+      throw new BadRequestException('itemId and code are required');
     }
 
     const existing = await this.prisma.barcodeMapping.findUnique({
@@ -76,7 +86,7 @@ export class BarcodesService {
     const created = await this.prisma.$transaction(async (tx) => {
       const newMapping = await tx.barcodeMapping.create({
         data: {
-          itemId: item_id,
+          itemId: itemId,
           barcode: code,
           version: 1,
         },
@@ -100,7 +110,12 @@ export class BarcodesService {
     return this.findOne(created.id);
   }
 
-  async update(id: string, body: any, userId: string, ipAddress?: string) {
+  async update(
+    id: string,
+    body: { itemId?: string; code?: string; version?: number },
+    userId: string,
+    ipAddress?: string,
+  ) {
     const existing = await this.prisma.barcodeMapping.findUnique({
       where: { id },
     });
@@ -114,13 +129,13 @@ export class BarcodesService {
       );
     }
 
-    const { item_id, code } = body;
+    const { itemId, code } = body;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.barcodeMapping.update({
         where: { id },
         data: {
-          itemId: item_id || existing.itemId,
+          itemId: itemId || existing.itemId,
           barcode: code || existing.barcode,
           version: existing.version + 1,
         },

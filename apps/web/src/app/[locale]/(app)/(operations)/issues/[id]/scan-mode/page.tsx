@@ -31,7 +31,7 @@ type ScanEntry = { barcode: string; item_name: string; timestamp: Date; success:
 
 type LineItem = {
  id: string;
- item: { id: string; code: string; name: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string } };
+ item: { id: string; code: string; name: string; nameAr?: string; nameEn?: string; primaryUom?: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string } | null };
  qty: number;
  uomId: string;
  lotAllocations: LotAllocation[];
@@ -68,8 +68,8 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  const [activeLine, setActiveLine] = useState<LineItem | null>(null);
 
  const { data: lots = [] } = useLotsByItem({ 
- item_id: activeLine?.item?.id, 
- warehouse_id: warehouseId 
+ itemId: activeLine?.item?.id, 
+ warehouseId: warehouseId 
  });
 
  const { data: lockState } = useWarehouseLock(warehouseId);
@@ -209,7 +209,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <div className="flex items-center gap-8">
  <div className="text-end">
  <div className="text-label-sm text-muted-foreground uppercase mb-1">{t('scan_mode.qty')}</div>
- <div className="text-headline-lg font-bold font-mono">{line.qty} <span className="text-body-md opacity-60">{line.item.primaryUom.code}</span></div>
+ <div className="text-headline-lg font-bold font-mono">{line.qty} <span className="text-body-md opacity-60">{line.item.primaryUom?.code || line.uomId || ''}</span></div>
  </div>
  <button 
  className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all ${isFullyAllocated ? 'border-operational-cyan text-operational-cyan bg-operational-cyan/5 hover:bg-operational-cyan/10' : 'border-status-error text-status-error animate-pulse bg-status-error/5 hover:bg-status-error/10'}`}
@@ -276,7 +276,7 @@ function IssueScanModeContent({ locale, id }: { locale: string, id: string }) {
  <FEFOLotAllocator
  lots={lots as Lot[]}
  requestedQty={activeLine.qty}
- uomLabel={activeLine.item.primaryUom.code}
+ uomLabel={activeLine.item.primaryUom?.code || activeLine.uomId || ''}
  userRole={user?.role} onAllocate={(allocations) => {
  setLines(prev => prev.map(l => l.id === activeLine.id ? {
  ...l, lotAllocations: allocations
