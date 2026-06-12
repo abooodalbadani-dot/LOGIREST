@@ -9,6 +9,8 @@ export const ROLES = [
   'VIEWER',
   'KITCHEN_CHIEF',
   'STORE_MGR',
+  'BRANCH_MGR',
+  'PROC_MGR',
 ] as const;
 
 export type Role = (typeof ROLES)[number];

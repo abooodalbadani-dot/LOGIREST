@@ -12,6 +12,8 @@ const PRSummarySchema = z.object({
   status: BadgeStatusSchema, 
   departmentId: z.string().optional(), 
   warehouseId: z.string().optional(), 
+  warehouseName: z.string().optional().nullable(),
+  branchName: z.string().optional().nullable(),
   expectedDate: z.string().optional(), 
   createdAt: z.string().optional(), 
   createdBy: z.string().optional(),

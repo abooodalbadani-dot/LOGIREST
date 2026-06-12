@@ -50,6 +50,7 @@ import { ConfigService } from '@nestjs/config';
   ],
   exports: [
     AuthService,
+    BcryptService,
     RtrService,
     JwtModule,
     PassportModule,

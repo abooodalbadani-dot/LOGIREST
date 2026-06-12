@@ -8,4 +8,6 @@ export type UserRole =
   | 'AUDITOR' 
   | 'VIEWER' 
   | 'KITCHEN_CHIEF' 
-  | 'STORE_MGR';
+  | 'STORE_MGR'
+  | 'BRANCH_MGR'
+  | 'PROC_MGR';

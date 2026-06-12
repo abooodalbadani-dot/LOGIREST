@@ -13,13 +13,16 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { BarcodesService } from './barcodes.service';
+import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 @Controller(['barcodes', 'master-data/barcodes'])
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class BarcodesController {
   constructor(private readonly barcodesService: BarcodesService) {}
@@ -40,6 +43,7 @@ export class BarcodesController {
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.GM)
   async create(
     @Body() body: { itemId: string; code: string },
     @CurrentUser('id') userId: string,
@@ -56,6 +60,7 @@ export class BarcodesController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
     @Body() body: { itemId?: string; code?: string; version?: number },
@@ -74,6 +79,7 @@ export class BarcodesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @Roles(Role.ADMIN, Role.GM)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

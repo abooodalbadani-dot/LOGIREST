@@ -130,9 +130,9 @@ export default function StockBalanceClient() {
     {
       id: 'unit',
       header: tc('table_headers.uom'),
-      cell: () => (
+      cell: ({ row }) => (
         <span className="text-label-xs font-semibold text-muted-foreground/60 uppercase">
-          {tc('uoms.kg')}
+          {row.original.uomCode || tc('uoms.kg')}
         </span>
       ),
     },
@@ -189,10 +189,19 @@ export default function StockBalanceClient() {
     generateExcel(exportColumns, rows, 'Stock_Balances');
   };
 
-  const totalItems = data?.meta?.total ?? 1284; 
-  const lowStockItems = 12; 
-  const nearExpiry = 8; 
-  const totalValue = 452300; 
+  const totalItems = data?.meta?.total ?? 0;
+  
+  const lowStockItems = useMemo(() => {
+    if (!data?.data) return 0;
+    return data.data.filter(item => item.qtyAvailable <= item.reorderPoint).length;
+  }, [data?.data]);
+
+  const nearExpiry = 0; // Expiry calculations belong to the Lots module, not stock balances
+
+  const totalValue = useMemo(() => {
+    if (!data?.data) return 0;
+    return data.data.reduce((sum, item) => sum + (item.qtyAvailable * (item.wac || 0)), 0);
+  }, [data?.data]);
 
   return (
     <div className="min-h-screen bg-surface-container-lowest text-foreground selection:bg-operational-cyan/30 selection:text-operational-cyan">

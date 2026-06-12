@@ -24,6 +24,9 @@ import {
   ApiSecureController,
   ApiIdempotentHeader,
 } from '../../decorators/swagger-docs.decorator';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
@@ -121,6 +124,18 @@ function mapStocktakeDetail(session: Record<string, unknown>) {
 }
 
 @Controller('stocktake/sessions')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(
+  Role.ADMIN,
+  Role.GM,
+  Role.INV_MGR,
+  Role.WH_KEEPER,
+  Role.STORE_MGR,
+  Role.APPROVER,
+  Role.AUDITOR,
+  Role.VIEWER,
+  Role.BRANCH_MGR,
+)
 @ApiSecureController()
 export class StocktakeController {
   constructor(
@@ -151,6 +166,13 @@ export class StocktakeController {
   }
 
   @Post()
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -270,6 +292,13 @@ export class StocktakeController {
   }
 
   @Post(':id/start')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -315,6 +344,13 @@ export class StocktakeController {
   }
 
   @Post(':id/submit')
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.WH_KEEPER,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+  )
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -344,6 +380,7 @@ export class StocktakeController {
   }
 
   @Post(':id/approve')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -374,6 +411,7 @@ export class StocktakeController {
   }
 
   @Post(':id/reject')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.APPROVER, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -474,6 +512,7 @@ export class StocktakeController {
   }
 
   @Post(':id/cancel')
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.STORE_MGR, Role.BRANCH_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',
@@ -504,6 +543,7 @@ export class StocktakeController {
   }
 
   @Post(':id/post')
+  @Roles(Role.ADMIN, Role.INV_MGR)
   @UseGuards(WorkflowStateGuard)
   @WorkflowAction({
     docType: 'stocktake',

@@ -7,139 +7,139 @@ import { AuthUserSchema } from '@/types/auth';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { CreateUserSchema, type CreateUserInput } from '@logirest/shared-types';
 
+export type UserFormValues = CreateUserInput;
 export type AdminUserRow = z.infer<typeof AuthUserSchema>;
 
-export const UserFormSchema = z.object({
- name: z.string().min(3, 'name_min_length'),
- email: z.string().email('invalid_email'),
- role: z.string(),
- status: z.enum(['ACTIVE', 'INACTIVE']),
- language: z.enum(['en', 'ar']),
- branch_ids: z.array(z.string()),
- warehouse_ids: z.array(z.string()),
- department_ids: z.array(z.string()),
-});
-
-export type UserFormValues = z.infer<typeof UserFormSchema>;
+export const UserFormSchema = CreateUserSchema;
 
 export function useAdminUsers(filters: { page?: number } = {}) {
- const params = new URLSearchParams();
- params.set('page', String(filters.page ?? 1));
- return useQuery({
- queryKey: ['admin/users', filters],
-  queryFn: ({ signal }) => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema), { signal }),
- staleTime: 60_000,
- });
+  const params = new URLSearchParams();
+  params.set('page', String(filters.page ?? 1));
+  return useQuery({
+    queryKey: ['admin/users', filters],
+    queryFn: ({ signal }) => apiClient.get(`/admin/users?${params.toString()}`, paginatedSchema(AuthUserSchema), { signal }),
+    staleTime: 60_000,
+  });
 }
 
 export function useAdminUser(id: string | null) {
   return useQuery({
-  queryKey: ['admin/users', id],
-   queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, { signal }),
-  enabled: !!id && id !== 'undefined' && id !== 'null',
+    queryKey: ['admin/users', id],
+    queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, { signal }),
+    enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 }
 
 export function useAdminUserMutations() {
- const queryClient = useQueryClient();
- const { user: currentUser } = useAuth();
- const t = useTranslations('admin.users');
+  const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
+  const t = useTranslations('admin.users');
 
- const checkEmailUnique = (email: string, excludeId?: string) => {
- const allUsers = queryClient.getQueryData<PaginatedResponse<AdminUserRow>>(['admin/users', { page: 1 }])?.data || [];
- return !allUsers.some(u => u.email.toLowerCase() === email.toLowerCase() && u.id !== excludeId);
- };
+  const checkEmailUnique = (email: string, excludeId?: string) => {
+    const allUsers = queryClient.getQueryData<PaginatedResponse<AdminUserRow>>(['admin/users', { page: 1 }])?.data || [];
+    return !allUsers.some(u => u.email.toLowerCase() === email.toLowerCase() && u.id !== excludeId);
+  };
 
- const isLastActiveAdmin = (targetId: string) => {
- const allUsers = queryClient.getQueryData<PaginatedResponse<AdminUserRow>>(['admin/users', { page: 1 }])?.data || [];
- const activeAdmins = allUsers.filter(u => u.role === 'ADMIN' && u.status === 'ACTIVE');
- const targetUser = allUsers.find(u => u.id === targetId) || queryClient.getQueryData<AdminUserRow>(['admin/users', targetId]);
- 
- if (targetUser?.role === 'ADMIN' && targetUser?.status === 'ACTIVE') {
- return activeAdmins.length === 1 && activeAdmins[0].id === targetId;
- }
- return false;
- };
+  const isLastActiveAdmin = (targetId: string) => {
+    const allUsers = queryClient.getQueryData<PaginatedResponse<AdminUserRow>>(['admin/users', { page: 1 }])?.data || [];
+    const activeAdmins = allUsers.filter(u => u.role === 'ADMIN' && u.status === 'ACTIVE');
+    const targetUser = allUsers.find(u => u.id === targetId) || queryClient.getQueryData<AdminUserRow>(['admin/users', targetId]);
+    
+    if (targetUser?.role === 'ADMIN' && targetUser?.status === 'ACTIVE') {
+      return activeAdmins.length === 1 && activeAdmins[0].id === targetId;
+    }
+    return false;
+  };
 
- const createUser = useMutation({
- mutationFn: async (userData: UserFormValues) => {
- if (!checkEmailUnique(userData.email)) {
- throw new Error(t('email_already_exists'));
- }
- // Simulate API call
- return { 
- ...userData, 
- id: Math.random().toString(36).substr(2, 9), 
- created_at: new Date().toISOString(),
- scopes: [
- ...userData.branch_ids.map(id => ({ branch_id: id })),
- ...userData.warehouse_ids.map(id => ({ warehouse_id: id })),
- ...userData.department_ids.map(id => ({ department_id: id })),
- ]
- };
- },
- onSuccess: () => {
- queryClient.invalidateQueries({ queryKey: ['admin/users'] });
- toast.success(t('create_success'));
- },
- onError: (err: Error) => toast.error(err.message),
- });
+  const createUser = useMutation({
+    mutationFn: async (userData: UserFormValues) => {
+      if (!checkEmailUnique(userData.email)) {
+        throw new Error(t('email_already_exists'));
+      }
+      return apiClient.post('/admin/users', AuthUserSchema, userData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin/users'] });
+      toast.success(t('create_success'));
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
 
- const updateUser = useMutation({
- mutationFn: async ({ id, ...values }: UserFormValues & { id: string }) => {
- // Hard Guards (Mutation Level)
- if (currentUser?.id === id) {
+  const updateUser = useMutation({
+    mutationFn: async ({ id, ...values }: UserFormValues & { id: string }) => {
+      if (currentUser?.id === id) {
+        if (values.role !== 'ADMIN' || values.status === 'INACTIVE') {
+          throw new Error(t('cannot_modify_self'));
+        }
+      }
 
-    if (values.role !== 'ADMIN' || values.status === 'INACTIVE') {
- throw new Error(t('cannot_modify_self'));
- }
- }
+      if (!checkEmailUnique(values.email, id)) {
+        throw new Error(t('email_already_exists'));
+      }
 
- if (!checkEmailUnique(values.email, id)) {
- throw new Error(t('email_already_exists'));
- }
+      const originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]);
+      const isCurrentlyAdmin = originalUser?.role === 'ADMIN';
+      const isCurrentlyActive = originalUser?.status === 'ACTIVE';
+      
+      const isDemoting = isCurrentlyAdmin && values.role !== 'ADMIN';
+      const isDeactivating = isCurrentlyActive && values.status === 'INACTIVE';
 
- const originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]);
- const isCurrentlyAdmin = originalUser?.role === 'ADMIN';
- const isCurrentlyActive = originalUser?.status === 'ACTIVE';
- 
- const isDemoting = isCurrentlyAdmin && values.role !== 'ADMIN';
- const isDeactivating = isCurrentlyActive && values.status === 'INACTIVE';
+      if ((isDemoting || isDeactivating) && isLastActiveAdmin(id)) {
+        throw new Error(t('cannot_deactivate_last_admin'));
+      }
 
- if ((isDemoting || isDeactivating) && isLastActiveAdmin(id)) {
- throw new Error(t('cannot_deactivate_last_admin'));
- }
+      return apiClient.put(`/admin/users/${id}`, AuthUserSchema, values);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin/users', data.id] });
+      toast.success(t('update_success'));
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
 
- return { ...values, id };
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: ['admin/users'] });
- queryClient.invalidateQueries({ queryKey: ['admin/users', data.id] });
- toast.success(t('update_success'));
- },
- onError: (err: Error) => toast.error(err.message),
- });
+  const toggleStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'ACTIVE' | 'INACTIVE', role: string }) => {
+      if (currentUser?.id === id && status === 'INACTIVE') {
+        throw new Error(t('cannot_deactivate_self'));
+      }
 
- const toggleStatus = useMutation({
- mutationFn: async ({ id, status }: { id: string; status: 'ACTIVE' | 'INACTIVE', role: string }) => {
- if (currentUser?.id === id && status === 'INACTIVE') {
- throw new Error(t('cannot_deactivate_self'));
- }
+      if (status === 'INACTIVE' && isLastActiveAdmin(id)) {
+        throw new Error(t('cannot_deactivate_last_admin'));
+      }
 
- if (status === 'INACTIVE' && isLastActiveAdmin(id)) {
- throw new Error(t('cannot_deactivate_last_admin'));
- }
+      const originalUser = queryClient.getQueryData<AdminUserRow>(['admin/users', id]) || 
+                           await queryClient.fetchQuery({
+                             queryKey: ['admin/users', id],
+                             queryFn: ({ signal }) => apiClient.get(`/admin/users/${id}`, AuthUserSchema, { signal })
+                           });
 
- return { id, status };
- },
- onSuccess: (data) => {
- queryClient.invalidateQueries({ queryKey: ['admin/users'] });
- queryClient.invalidateQueries({ queryKey: ['admin/users', data.id] });
- toast.success(t('update_success'));
- },
- onError: (err: Error) => toast.error(err.message),
- });
+      if (!originalUser) {
+        throw new Error('User not found');
+      }
 
- return { createUser, updateUser, toggleStatus, isLastActiveAdmin };
+      const values: UserFormValues = {
+        name: originalUser.name,
+        email: originalUser.email,
+        role: originalUser.role,
+        status: status,
+        language: (originalUser.language as 'en' | 'ar') || 'en',
+        branchIds: originalUser.scopes.filter(s => s.branchId).map(s => s.branchId!),
+        warehouseIds: originalUser.scopes.filter(s => s.warehouseId).map(s => s.warehouseId!),
+        departmentIds: originalUser.scopes.filter(s => s.departmentId).map(s => s.departmentId!),
+      };
+
+      return apiClient.put(`/admin/users/${id}`, AuthUserSchema, values);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin/users', data.id] });
+      toast.success(t('update_success'));
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return { createUser, updateUser, toggleStatus, isLastActiveAdmin };
 }

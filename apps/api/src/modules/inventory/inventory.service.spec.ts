@@ -86,6 +86,8 @@ describe('InventoryService', () => {
             qtyReserved: 10.0,
             qtyAvailable: 110.5,
             reorderPoint: 5.0,
+            uomCode: 'kg',
+            wac: 2.5,
           },
         ],
         meta: {
@@ -170,14 +172,18 @@ describe('InventoryService', () => {
       expect(result).toEqual({
         data: [
           {
+            id: 'lot-1',
             lotId: 'lot-1',
             lotNumber: 'LOT-01',
             itemId: 'item-1',
             itemCode: 'ITEM-001',
             itemName: 'Fresh Tomato',
             onHandQty: 50.0,
+            qty_available: 50.0,
             expiryDate: mockExpiry,
             status: 'AVAILABLE',
+            is_expired: true,
+            is_near_expiry: false,
           },
         ],
         meta: {

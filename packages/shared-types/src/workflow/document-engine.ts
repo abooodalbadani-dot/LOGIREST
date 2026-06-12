@@ -119,48 +119,48 @@ interface TransitionRule {
 const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, Partial<Record<DocumentAction, TransitionRule>>>>> = {
   'pr': {
     [PR_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: PR_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'] },
-      'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'] },
-      'CANCEL': { targetStatus: PR_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'] },
+      'SUBMIT': { targetStatus: PR_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
+      'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
+      'CANCEL': { targetStatus: PR_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
     },
     [PR_STATUS.SUBMITTED]: {
-      'APPROVE': { targetStatus: PR_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'] },
-      'REJECT': { targetStatus: PR_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'] },
+      'APPROVE': { targetStatus: PR_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
+      'REJECT': { targetStatus: PR_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
     },
     [PR_STATUS.APPROVED]: {
-      'CONVERT_TO_PO': { targetStatus: PR_STATUS.APPROVED, allowedRoles: ['ADMIN', 'PROC_OFFICER'] },
+      'CONVERT_TO_PO': { targetStatus: PR_STATUS.APPROVED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'PROC_MGR'] },
     },
     [PR_STATUS.REJECTED]: {
-      'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'] },
+      'EDIT': { targetStatus: PR_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
     }
   },
   'po': {
     [PO_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: PO_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
-      'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
-      'CANCEL': { targetStatus: PO_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
+      'SUBMIT': { targetStatus: PO_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'] },
+      'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'] },
+      'CANCEL': { targetStatus: PO_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'] },
     },
     [PO_STATUS.SUBMITTED]: {
-      'APPROVE': { targetStatus: PO_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'] },
-      'REJECT': { targetStatus: PO_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'] },
+      'APPROVE': { targetStatus: PO_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
+      'REJECT': { targetStatus: PO_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
     },
     [PO_STATUS.APPROVED]: {
-      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'PROC_MGR'] },
     },
     [PO_STATUS.PARTIAL]: {
-      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
+      'FULFILL': { targetStatus: PO_STATUS.FULFILLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'PROC_MGR'] },
     },
     [PO_STATUS.REJECTED]: {
-      'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'] },
+      'EDIT': { targetStatus: PO_STATUS.DRAFT, allowedRoles: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'] },
     }
   },
   'grn': {
     [GRN_STATUS.RECEIVED]: {
-      'POST': { targetStatus: GRN_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR', 'PROC_OFFICER'] },
+      'POST': { targetStatus: GRN_STATUS.POSTED, allowedRoles: ['ADMIN', 'INV_MGR', 'PROC_OFFICER', 'PROC_MGR'] },
     },
     [GRN_STATUS.DRAFT]: {
-      'EDIT': { targetStatus: GRN_STATUS.DRAFT, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR'] },
-      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR'] },
+      'EDIT': { targetStatus: GRN_STATUS.DRAFT, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
+      'CANCEL': { targetStatus: GRN_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] },
     },
     [GRN_STATUS.POSTED]: {
       'VOID': { targetStatus: GRN_STATUS.VOIDED, allowedRoles: ['ADMIN'] },
@@ -168,11 +168,11 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
   },
   'transfer': {
     [TRANSFER_STATUS.DRAFT]: {
-      'SHIP': { targetStatus: TRANSFER_STATUS.IN_TRANSIT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
-      'CANCEL': { targetStatus: TRANSFER_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'SHIP': { targetStatus: TRANSFER_STATUS.IN_TRANSIT, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+      'CANCEL': { targetStatus: TRANSFER_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
     },
     [TRANSFER_STATUS.IN_TRANSIT]: {
-      'RECEIVE': { targetStatus: TRANSFER_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR'] },
+      'RECEIVE': { targetStatus: TRANSFER_STATUS.RECEIVED, allowedRoles: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'BRANCH_MGR'] },
     }
   },
   'issue': {
@@ -190,12 +190,12 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
   },
   'adjustment': {
     [ADJUSTMENT_STATUS.DRAFT]: {
-      'SUBMIT': { targetStatus: ADJUSTMENT_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
-      'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'SUBMIT': { targetStatus: ADJUSTMENT_STATUS.SUBMITTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+      'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
     },
     [ADJUSTMENT_STATUS.SUBMITTED]: {
-      'APPROVE': { targetStatus: ADJUSTMENT_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'] },
-      'REJECT': { targetStatus: ADJUSTMENT_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
+      'APPROVE': { targetStatus: ADJUSTMENT_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'] },
+      'REJECT': { targetStatus: ADJUSTMENT_STATUS.REJECTED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'BRANCH_MGR'] },
       'CANCEL': { targetStatus: ADJUSTMENT_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
     },
     [ADJUSTMENT_STATUS.APPROVED]: {
@@ -210,8 +210,8 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
   },
   'stocktake': {
     [STOCKTAKE_STATUS.DRAFT]: {
-      'START': { targetStatus: STOCKTAKE_STATUS.STARTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
-      'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'] },
+      'START': { targetStatus: STOCKTAKE_STATUS.STARTED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
+      'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] },
     },
     [STOCKTAKE_STATUS.STARTED]: {
       'COUNT': { targetStatus: STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR', 'WH_KEEPER'] },
@@ -223,9 +223,9 @@ const transitionMapV2: Record<BaseDocumentType, Partial<Record<DocumentStatus, P
     },
     [STOCKTAKE_STATUS.REVIEW]: {
       'REVIEW_VARIANCE': { targetStatus: STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'INV_MGR'] },
-      'APPROVE': { targetStatus: STOCKTAKE_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
+      'APPROVE': { targetStatus: STOCKTAKE_STATUS.APPROVED, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR', 'BRANCH_MGR'] },
       'REJECT': { targetStatus: STOCKTAKE_STATUS.REVIEW, allowedRoles: ['ADMIN', 'APPROVER', 'INV_MGR'] },
-      'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR'] },
+      'CANCEL': { targetStatus: STOCKTAKE_STATUS.CANCELLED, allowedRoles: ['ADMIN', 'INV_MGR', 'BRANCH_MGR'] },
       'RECOUNT': { targetStatus: STOCKTAKE_STATUS.COUNTING, allowedRoles: ['ADMIN', 'INV_MGR'] },
     },
     [STOCKTAKE_STATUS.APPROVED]: {

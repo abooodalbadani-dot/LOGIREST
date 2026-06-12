@@ -8,7 +8,7 @@ import { getTokenCookie, setTokenCookie, deleteTokenCookie } from '@/lib/api/coo
 import { AuthUserSchema } from '@/types/auth';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
-export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR';
+export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR' | 'BRANCH_MGR' | 'PROC_MGR';
 export interface UserScope { 
   branchId: string | null; 
   warehouseId: string | null; 

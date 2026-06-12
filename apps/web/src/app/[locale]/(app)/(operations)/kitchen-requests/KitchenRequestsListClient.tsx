@@ -88,22 +88,26 @@ export function KitchenRequestsListClient({
       ),
     },
     {
-      accessorKey: 'departmentId',
+      accessorKey: 'departmentName',
       header: t('department'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <ChefHat className="w-3.5 h-3.5 text-muted-foreground/60" />
-          <span className="font-bold text-label-sm text-foreground/80">{row.original.departmentId}</span>
+          <span className="font-bold text-label-sm text-foreground/80">
+            {row.original.departmentName || row.original.departmentId}
+          </span>
         </div>
       ),
     },
     {
-      accessorKey: 'warehouseId',
+      accessorKey: 'warehouseName',
       header: t('warehouse'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Warehouse className="w-3.5 h-3.5 text-muted-foreground/60" />
-          <span className="font-bold text-label-sm text-foreground/80">{row.original.warehouseId}</span>
+          <span className="font-bold text-label-sm text-foreground/80">
+            {row.original.warehouseName || row.original.warehouseId}
+          </span>
         </div>
       ),
     },

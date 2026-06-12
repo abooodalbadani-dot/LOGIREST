@@ -113,6 +113,9 @@ function mapIssueDetail(issue: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
+  const warehouse = issue.warehouse as Record<string, unknown> | null;
+  const department = issue.department as Record<string, unknown> | null;
+
   return {
     id: issue.id as string,
     documentNumber: issue.issueNumber as string,
@@ -120,8 +123,11 @@ function mapIssueDetail(issue: Record<string, unknown>) {
     type: 'ISSUE',
     destinationDeptId: issue.departmentId as string,
     destinationDepartmentId: issue.departmentId as string,
+    destinationDepartmentName: (department?.name as string) || '',
+    departmentName: (department?.name as string) || '',
     requestedBy: 'System',
     warehouseId: issue.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     branchId:
       ((issue.warehouse as Record<string, unknown> | undefined)
         ?.branchId as string) || '',
@@ -150,12 +156,19 @@ function mapIssueSummary(issue: Record<string, unknown>) {
         : new Date(createdAtVal)
       ).toISOString()
     : new Date().toISOString();
+
+  const warehouse = issue.warehouse as Record<string, unknown> | null;
+  const department = issue.department as Record<string, unknown> | null;
+
   return {
     id: issue.id as string,
     documentNumber: issue.issueNumber as string,
     status: issue.status as string,
     destinationDeptId: issue.departmentId as string,
+    destinationDepartmentName: (department?.name as string) || '',
+    departmentName: (department?.name as string) || '',
     warehouseId: issue.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     createdAt: createdAtIso,
     postedAt: issue.status === 'POSTED' ? createdAtIso : null,
   };

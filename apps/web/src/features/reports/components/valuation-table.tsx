@@ -6,6 +6,7 @@ import { DataTable } from '@/components/shared/DataTable/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatQuantity, formatCurrency } from '@/utils/currency';
+import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 
 interface ValuationRow {
   id: string;
@@ -28,6 +29,8 @@ interface Props {
 
 export function ValuationTable({ data, isLoading, currencySymbol = 'SAR' }: Props) {
   const locale = useLocale() as 'ar' | 'en';
+  const showUnitCost = useColumnVisibility('unitCost');
+  const showTotalValue = useColumnVisibility('totalValue');
 
   const columns: ColumnDef<ValuationRow, unknown>[] = useMemo(
     () => [
@@ -68,18 +71,28 @@ export function ValuationTable({ data, isLoading, currencySymbol = 'SAR' }: Prop
         header: 'On Hand',
         cell: ({ row }) => formatQuantity(row.original.qtyOnHand, locale),
       },
-      {
-        accessorKey: 'unitCost',
-        header: `Unit Cost (${currencySymbol})`,
-        cell: ({ row }) => formatCurrency(row.original.unitCost, currencySymbol, locale),
-      },
-      {
-        accessorKey: 'totalValue',
-        header: `Total Value (${currencySymbol})`,
-        cell: ({ row }) => formatCurrency(row.original.totalValue, currencySymbol, locale),
-      },
+      ...(showUnitCost
+        ? [
+            {
+              accessorKey: 'unitCost',
+              header: `Unit Cost (${currencySymbol})`,
+              cell: ({ row }) =>
+                formatCurrency(row.original.unitCost, currencySymbol, locale),
+            } as ColumnDef<ValuationRow, unknown>,
+          ]
+        : []),
+      ...(showTotalValue
+        ? [
+            {
+              accessorKey: 'totalValue',
+              header: `Total Value (${currencySymbol})`,
+              cell: ({ row }) =>
+                formatCurrency(row.original.totalValue, currencySymbol, locale),
+            } as ColumnDef<ValuationRow, unknown>,
+          ]
+        : []),
     ],
-    [currencySymbol, locale],
+    [currencySymbol, locale, showUnitCost, showTotalValue],
   );
 
   return (

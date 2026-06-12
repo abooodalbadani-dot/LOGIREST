@@ -1,21 +1,19 @@
 import json
-import os
 
-log_path = r"C:\Users\Qursan\.gemini\antigravity\brain\29fa2890-1a40-46d8-bd76-9a763d162f87\.system_generated\logs\overview.txt"
-output_path = r"scratch/last_user_prompt.txt"
+logs_path = r"C:\Users\DBi\.gemini\antigravity-ide\brain\8f2572ef-f9b7-4055-8afe-57178c0bcaaa\.system_generated\logs\transcript.jsonl"
+with open(logs_path, "r", encoding="utf-8") as f:
+    lines = [json.loads(line) for line in f]
 
-if os.path.exists(log_path):
-    with open(log_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            if '"step_index":620,' in line:
-                try:
-                    data = json.loads(line)
-                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                    with open(output_path, 'w', encoding='utf-8') as out:
-                        out.write(data['content'])
-                    print("Successfully extracted user request to scratch/last_user_prompt.txt")
-                    break
-                except Exception as e:
-                    print("Error parsing line:", e)
-else:
-    print("Log file not found:", log_path)
+target_lines = [l for l in lines if 140 <= l.get("step_index", 999) <= 184]
+for l in target_lines:
+    idx = l.get("step_index")
+    typ = l.get("type")
+    content = l.get("content", "")
+    if content:
+        content_snippet = content[:180].replace('\n', ' ')
+    else:
+        content_snippet = ""
+    print(f"Step {idx}: {typ} - {content_snippet}")
+    if "tool_calls" in l and l["tool_calls"]:
+        for tc in l["tool_calls"]:
+            print(f"  Tool Call: {tc.get('name')}")

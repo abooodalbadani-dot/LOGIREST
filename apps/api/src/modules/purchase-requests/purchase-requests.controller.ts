@@ -31,6 +31,8 @@ import type { Request } from 'express';
 function mapPRDetail(pr: Record<string, unknown>) {
   const prLines = (pr.lines as Record<string, unknown>[]) || [];
   const createdBy = pr.createdBy as Record<string, unknown> | null;
+  const warehouse = pr.warehouse as Record<string, unknown> | null;
+  const branch = pr.branch as Record<string, unknown> | null;
 
   const lines = prLines.map((line: Record<string, unknown>) => {
     const item = line.item as Record<string, unknown> | null;
@@ -67,6 +69,10 @@ function mapPRDetail(pr: Record<string, unknown>) {
     documentNumber: pr.requestNumber as string,
     status: pr.status as string,
     departmentId: pr.warehouseId as string, // Fallback since no department_id is stored directly
+    warehouseId: pr.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || null,
+    branchId: (pr.branchId as string) || null,
+    branchName: (branch?.name as string) || null,
     expectedDate: createdAtIso,
     version: pr.version as number,
     notes: '',
@@ -85,15 +91,22 @@ function mapPRSummary(pr: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
+  const warehouse = pr.warehouse as Record<string, unknown> | null;
+  const branch = pr.branch as Record<string, unknown> | null;
+  const createdBy = pr.createdBy as Record<string, unknown> | null;
+
   return {
     id: pr.id as string,
     documentNumber: pr.requestNumber as string,
     status: pr.status as string,
     departmentId: pr.warehouseId as string,
     warehouseId: pr.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || null,
+    branchId: (pr.branchId as string) || null,
+    branchName: (branch?.name as string) || null,
     expectedDate: createdAtIso,
     createdAt: createdAtIso,
-    createdBy: '',
+    createdBy: (createdBy?.name as string) || 'System',
   };
 }
 

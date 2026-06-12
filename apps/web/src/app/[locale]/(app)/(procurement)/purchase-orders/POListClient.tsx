@@ -64,11 +64,13 @@ export function POListClient({ locale }: { locale: 'ar' | 'en' }) {
       ),
     },
     {
-      accessorKey: 'supplierId',
+      accessorKey: 'supplierName',
       header: t('supplier'),
       cell: ({ row }) => (
         <div className="flex flex-col text-start">
-          <span className="opacity-90 font-bold text-body-md">{row.original.supplierId}</span>
+          <span className="opacity-90 font-bold text-body-md">
+            {row.original.supplierName || row.original.supplierId}
+          </span>
           <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold">{t('supplier')}</span>
         </div>
       ),

@@ -33,6 +33,7 @@ function mapGRNDetail(grn: Record<string, unknown>) {
   const grnLines = (grn.lines as Record<string, unknown>[]) || [];
   const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
   const supplier = purchaseOrder?.supplier as Record<string, unknown> | null;
+  const warehouse = grn.warehouse as Record<string, unknown> | null;
 
   const lines = grnLines.map((line: Record<string, unknown>) => {
     const item = line.item as Record<string, unknown> | null;
@@ -99,11 +100,13 @@ function mapGRNDetail(grn: Record<string, unknown>) {
           name: supplier.name as string,
         }
       : undefined,
+    supplierName: (supplier?.name as string) || '',
     poId: grn.poId as string,
     poNumber: (purchaseOrder?.poNumber as string) || '',
     poFxRate: 1.0,
     currencyId: (purchaseOrder?.currencyId as string) || '',
     warehouseId: grn.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     fxRate: 1.0,
     fxRateCapturedAt: createdAtIso,
     version: grn.version as number,
@@ -119,6 +122,7 @@ function mapGRNSummary(grn: Record<string, unknown>) {
   const lines = (grn.lines as Record<string, unknown>[]) || [];
   const purchaseOrder = grn.purchaseOrder as Record<string, unknown> | null;
   const supplier = purchaseOrder?.supplier as Record<string, unknown> | null;
+  const warehouse = grn.warehouse as Record<string, unknown> | null;
 
   const supplierTotalAmount = lines.reduce(
     (sum: number, line: Record<string, unknown>) =>
@@ -142,6 +146,7 @@ function mapGRNSummary(grn: Record<string, unknown>) {
     poId: grn.poId as string,
     poNumber: (purchaseOrder?.poNumber as string) || '',
     warehouseId: grn.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     createdAt: createdAtIso,
     supplierTotalAmount: supplierTotalAmount,
     postedAt: grn.postedAt

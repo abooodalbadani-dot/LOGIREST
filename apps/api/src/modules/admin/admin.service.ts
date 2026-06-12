@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   UserRole,
@@ -9,12 +14,35 @@ import {
 } from '@logirest/shared-types';
 import { encrypt, decrypt } from './crypto.util';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { BcryptService } from '../../auth/bcrypt.service';
+import { OutboxEvent, WarehouseItem } from '@prisma/client';
+
+export interface FrozenItem {
+  warehouseId: string;
+  itemId: string;
+  isFrozen: boolean;
+  warehouse: {
+    id: string;
+    name: string | null;
+    code: string;
+  };
+  item: {
+    id: string;
+    name: string;
+    sku: string;
+  };
+}
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bcrypt: BcryptService,
+  ) {}
 
   private getPermissionsForRole(role: UserRole): Permission[] {
     const modules = [
@@ -326,7 +354,15 @@ export class AdminService {
   async getFailedOutboxEvents(
     page: number = 1,
     limit: number = 50,
-  ): Promise<any> {
+  ): Promise<{
+    data: OutboxEvent[];
+    meta: {
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
+  }> {
     const skip = (page - 1) * limit;
     const [total, events] = await Promise.all([
       this.prisma.outboxEvent.count({ where: { status: 'FAILED' } }),
@@ -348,7 +384,7 @@ export class AdminService {
     };
   }
 
-  async retryOutboxEvent(id: string): Promise<any> {
+  async retryOutboxEvent(id: string): Promise<OutboxEvent> {
     const event = await this.prisma.outboxEvent.findUnique({
       where: { id },
     });
@@ -365,7 +401,7 @@ export class AdminService {
     });
   }
 
-  async getFrozenItems(): Promise<any> {
+  async getFrozenItems(): Promise<FrozenItem[]> {
     return this.prisma.warehouseItem.findMany({
       where: { isFrozen: true },
       include: {
@@ -391,7 +427,7 @@ export class AdminService {
     warehouseId: string,
     itemId: string,
     userId: string,
-  ): Promise<any> {
+  ): Promise<WarehouseItem> {
     const item = await this.prisma.warehouseItem.findUnique({
       where: {
         warehouseId_itemId: { warehouseId, itemId },
@@ -434,5 +470,269 @@ export class AdminService {
     });
 
     return updated;
+  }
+
+  async getUsers(page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+
+    const [total, users] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.findMany({
+        include: {
+          warehouseScopes: {
+            include: {
+              warehouse: {
+                include: {
+                  branch: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    const mappedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      scopes: (user.warehouseScopes || []).map((s) => ({
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
+        warehouse: s.warehouse
+          ? {
+              id: s.warehouse.id,
+              name: s.warehouse.name,
+              branch: s.warehouse.branch
+                ? {
+                    id: s.warehouse.branch.id,
+                    name: s.warehouse.branch.name,
+                  }
+                : null,
+            }
+          : null,
+      })),
+      status: user.isActive ? 'ACTIVE' : 'INACTIVE',
+      language: 'en',
+      createdAt: user.createdAt.toISOString(),
+    }));
+
+    return {
+      data: mappedUsers,
+      meta: {
+        page,
+        pageSize: limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        warehouseScopes: {
+          include: {
+            warehouse: {
+              include: {
+                branch: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      scopes: (user.warehouseScopes || []).map((s) => ({
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
+        warehouse: s.warehouse
+          ? {
+              id: s.warehouse.id,
+              name: s.warehouse.name,
+              branch: s.warehouse.branch
+                ? {
+                    id: s.warehouse.branch.id,
+                    name: s.warehouse.branch.name,
+                  }
+                : null,
+            }
+          : null,
+      })),
+      status: user.isActive ? 'ACTIVE' : 'INACTIVE',
+      language: 'en',
+      createdAt: user.createdAt.toISOString(),
+    };
+  }
+
+  async createUser(dto: CreateUserDto, currentUserId: string) {
+    const emailLower = dto.email.toLowerCase();
+    const existing = await this.prisma.user.findUnique({
+      where: { email: emailLower },
+    });
+    if (existing) {
+      throw new BadRequestException('Email already exists');
+    }
+
+    const passwordHash = await this.bcrypt.hash('Password123!');
+
+    const newUser = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          name: dto.name,
+          email: emailLower,
+          passwordHash,
+          role: dto.role,
+          isActive: dto.status === 'ACTIVE',
+        },
+      });
+
+      if (dto.warehouseIds && dto.warehouseIds.length > 0) {
+        await tx.userWarehouseScope.createMany({
+          data: dto.warehouseIds.map((whId) => ({
+            userId: created.id,
+            warehouseId: whId,
+          })),
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: currentUserId,
+          action: 'CREATE_USER',
+          targetTable: 'users',
+          targetId: created.id,
+          beforeStateJson: JSON.stringify({}),
+          afterStateJson: JSON.stringify({
+            name: created.name,
+            email: created.email,
+            role: created.role,
+            isActive: created.isActive,
+            warehouseIds: dto.warehouseIds || [],
+          }),
+        },
+      });
+
+      return created;
+    });
+
+    return this.getUser(newUser.id);
+  }
+
+  async updateUser(id: string, dto: UpdateUserDto, currentUserId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        warehouseScopes: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+
+    const emailLower = dto.email.toLowerCase();
+    if (emailLower !== user.email.toLowerCase()) {
+      const existing = await this.prisma.user.findUnique({
+        where: { email: emailLower },
+      });
+      if (existing) {
+        throw new BadRequestException('Email already exists');
+      }
+    }
+
+    if (currentUserId === id) {
+      if (dto.role !== 'ADMIN' || dto.status === 'INACTIVE') {
+        throw new BadRequestException('Cannot modify self');
+      }
+    }
+
+    const isCurrentlyActiveAdmin = user.role === 'ADMIN' && user.isActive;
+    const isDemotingOrDeactivating =
+      dto.role !== 'ADMIN' || dto.status === 'INACTIVE';
+
+    if (isCurrentlyActiveAdmin && isDemotingOrDeactivating) {
+      const activeAdminsCount = await this.prisma.user.count({
+        where: {
+          role: 'ADMIN',
+          isActive: true,
+        },
+      });
+
+      if (activeAdminsCount <= 1) {
+        throw new BadRequestException(
+          'Cannot deactivate/demote the last active admin',
+        );
+      }
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: {
+          name: dto.name,
+          email: emailLower,
+          role: dto.role,
+          isActive: dto.status === 'ACTIVE',
+          version: { increment: 1 },
+        },
+      });
+
+      await tx.userWarehouseScope.deleteMany({
+        where: { userId: id },
+      });
+
+      if (dto.warehouseIds && dto.warehouseIds.length > 0) {
+        await tx.userWarehouseScope.createMany({
+          data: dto.warehouseIds.map((whId) => ({
+            userId: id,
+            warehouseId: whId,
+          })),
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: currentUserId,
+          action: 'UPDATE_USER',
+          targetTable: 'users',
+          targetId: id,
+          beforeStateJson: JSON.stringify({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isActive: user.isActive,
+            warehouseIds: user.warehouseScopes.map((s) => s.warehouseId),
+          }),
+          afterStateJson: JSON.stringify({
+            name: dto.name,
+            email: emailLower,
+            role: dto.role,
+            isActive: dto.status === 'ACTIVE',
+            warehouseIds: dto.warehouseIds || [],
+          }),
+        },
+      });
+    });
+
+    return this.getUser(id);
   }
 }

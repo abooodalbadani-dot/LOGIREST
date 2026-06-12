@@ -70,7 +70,15 @@ export class RtrService {
     const existingToken = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
       include: {
-        user: { select: { id: true, email: true, role: true, isActive: true } },
+        user: {
+          include: {
+            warehouseScopes: {
+              include: {
+                warehouse: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -192,11 +200,28 @@ export class RtrService {
       throw new UnauthorizedException('Session expired or invalid');
     }
 
+    const mappedUser = {
+      id: existingToken.user.id,
+      name: existingToken.user.name,
+      email: existingToken.user.email,
+      role: existingToken.user.role,
+      scopes: (existingToken.user.warehouseScopes || []).map((s) => ({
+        branchId: s.warehouse?.branchId ?? null,
+        warehouseId: s.warehouseId,
+        departmentId: null,
+      })),
+      status: existingToken.user.isActive
+        ? ('ACTIVE' as const)
+        : ('INACTIVE' as const),
+      language: 'en' as const,
+    };
+
     const accessToken = this.jwtService.sign(
       {
         sub: existingToken.user.id,
         email: existingToken.user.email,
         role: existingToken.user.role,
+        user: mappedUser,
       },
       { expiresIn: '15m' },
     );

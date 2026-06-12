@@ -353,6 +353,53 @@ export class AuthService {
     return { success: true, message: 'Password has been reset successfully.' };
   }
 
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isCurrentValid = await this.bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
+    if (!isCurrentValid) {
+      throw new BadRequestException('Incorrect current password');
+    }
+
+    const newPasswordHash = await this.bcrypt.hash(newPassword);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: newPasswordHash,
+        version: { increment: 1 },
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'PASSWORD_CHANGED',
+        targetTable: 'users',
+        targetId: userId,
+        beforeStateJson: '{}',
+        afterStateJson: '{}',
+      },
+    });
+
+    return { success: true };
+  }
+
   private async logFailedLogin(
     email: string,
     user: { id: string; email: string } | null,

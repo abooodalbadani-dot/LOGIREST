@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
@@ -19,25 +21,19 @@ import { CreateFXRateDto } from './dto/create-fx-rate.dto';
 import type { Request } from 'express';
 
 @Controller('currencies/fx-rates')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class FXRatesController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
   async create(
     @Body() dto: CreateFXRateDto,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to register new FX rates.',
-      );
-    }
-
     return this.prisma.$transaction(async (tx) => {
       // Verify both currencies exist
       const fromCurr = await tx.currency.findUnique({
@@ -98,6 +94,17 @@ export class FXRatesController {
   }
 
   @Get()
+  @Roles(
+    Role.ADMIN,
+    Role.GM,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+    Role.PROC_OFFICER,
+    Role.AUDITOR,
+    Role.APPROVER,
+  )
   async findAll() {
     return this.prisma.fXRate.findMany({
       orderBy: {

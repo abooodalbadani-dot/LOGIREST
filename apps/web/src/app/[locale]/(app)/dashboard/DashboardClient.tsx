@@ -15,6 +15,8 @@ import { StoreManagerDashboard } from '@/features/dashboard/components/StoreMana
 import { NearExpiryWidget } from '@/features/dashboard/components/NearExpiryWidget';
 import { PendingDocumentsWidget } from '@/features/dashboard/components/PendingDocumentsWidget';
 import { useCurrency } from '@/app/[locale]/providers/currency-provider';
+import { useDashboardStats } from '@/features/dashboard/hooks/useDashboardStats';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 
 export default function DashboardClient() {
  const t = useTranslations('dashboard');
@@ -22,18 +24,22 @@ export default function DashboardClient() {
  const { locale } = useLocale();
   const { user } = useAuth();
   const { currency: baseCurrency } = useCurrency();
+  const { data: statsData, isLoading: loadingStats, error } = useDashboardStats();
 
- // Mock static data as per Phase 8 planning
- const stats = {
- totalStockValue: 1245300.50,
- baseCurrency: baseCurrency,
- pendingPRs: 7,
- activeStocktakes: 2,
- lowStockItems: 14,
- systemHealth: 98.4,
- activeUsers: 24,
- lastBackup: '2h ago',
- };
+  if (loadingStats) {
+    return <PageSkeleton />;
+  }
+
+  const stats = {
+    totalStockValue: statsData?.totalValue ?? 0,
+    baseCurrency: baseCurrency,
+    pendingPRs: statsData?.pendingPrs ?? 0,
+    activeStocktakes: statsData?.activeStocktakes ?? 0,
+    lowStockItems: statsData?.lowStockItems ?? 0,
+    systemHealth: statsData?.systemHealth ?? 98.4,
+    activeUsers: statsData?.activeUsers ?? 0,
+    lastBackup: '2h ago',
+  };
  
  // Visibility logic based on roles
  const canSeeApprovals = user?.role === 'ADMIN' || user?.role === 'INV_MGR' || user?.role === 'APPROVER';
@@ -49,6 +55,7 @@ export default function DashboardClient() {
  return <KitchenDashboard />;
  case 'STORE_MGR':
  case 'INV_MGR':
+ case 'WH_KEEPER':
  return <StoreManagerDashboard />;
  default:
  // Generic fallback dashboard (previous content)

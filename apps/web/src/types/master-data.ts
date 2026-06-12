@@ -149,6 +149,8 @@ export const FXRateSchema = z.preprocess(
         ...raw,
         rate: preprocessDecimal(raw.rate),
         effectiveDate: (raw.effectiveDate as string) || (raw.effectiveFrom as string) || '',
+        isActive: raw.isActive ?? true,
+        createdAt: raw.createdAt ?? new Date().toISOString(),
       };
     }
     return data;

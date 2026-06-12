@@ -1,15 +1,17 @@
 import { z } from 'zod';
 
 export const StockBalanceItemSchema = z.object({
- itemId: z.string(),
- itemCode: z.string(),
- itemName: z.string(),
- warehouseId: z.string(),
- warehouseName: z.string(),
- qtyOnHand: z.number(),
- qtyReserved: z.number(),
- qtyAvailable: z.number(),
- reorderPoint: z.number(),
+  itemId: z.string(),
+  itemCode: z.string(),
+  itemName: z.string(),
+  warehouseId: z.string(),
+  warehouseName: z.string(),
+  qtyOnHand: z.number(),
+  qtyReserved: z.number(),
+  qtyAvailable: z.number(),
+  reorderPoint: z.number(),
+  uomCode: z.string().optional(),
+  wac: z.number().optional(),
 });
 
 export type StockBalanceItem = z.infer<typeof StockBalanceItemSchema>;
@@ -33,6 +35,7 @@ export const InventoryMovementSchema = z.object({
   id: z.string(),
   timestamp: z.string().or(z.date()).transform(val => new Date(val).toISOString()),
   itemId: z.string(),
+  itemCode: z.string().optional().nullable(),
   itemName: z.string(),
   transactionType: z.string(),
   documentReference: z.string(),

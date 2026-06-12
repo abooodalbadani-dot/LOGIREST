@@ -19,6 +19,7 @@ import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -99,6 +100,19 @@ export class AuthController {
     @Body() body: Record<string, unknown>,
   ) {
     return this.authService.uploadAvatar(userId, body);
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @CurrentUser('id') userId: string,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      userId,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 
   @Public()

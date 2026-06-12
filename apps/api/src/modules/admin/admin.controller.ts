@@ -22,6 +22,8 @@ import { AssignUserRoleSchema } from '@logirest/shared-types';
 
 import { AdminService } from './admin.service';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
@@ -159,115 +161,29 @@ export class AdminController {
   async getUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
     const pageNum = Math.max(1, parseInt(page || '1', 10));
     const limitNum = Math.max(1, parseInt(limit || '50', 10));
-    const skip = (pageNum - 1) * limitNum;
-
-    const [total, users] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.findMany({
-        include: {
-          warehouseScopes: {
-            include: {
-              warehouse: {
-                include: {
-                  branch: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip,
-        take: limitNum,
-      }),
-    ]);
-
-    const mappedUsers = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      scopes: (user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-        warehouse: s.warehouse
-          ? {
-              id: s.warehouse.id,
-              name: s.warehouse.name,
-              branch: s.warehouse.branch
-                ? {
-                    id: s.warehouse.branch.id,
-                    name: s.warehouse.branch.name,
-                  }
-                : null,
-            }
-          : null,
-      })),
-      status: user.isActive ? 'ACTIVE' : 'INACTIVE',
-      language: 'en',
-      createdAt: user.createdAt.toISOString(),
-    }));
-
-    return {
-      data: mappedUsers,
-      meta: {
-        page: pageNum,
-        pageSize: limitNum,
-        total,
-        totalPages: Math.ceil(total / limitNum),
-      },
-    };
+    return this.adminService.getUsers(pageNum, limitNum);
   }
 
   @Get('users/:id')
   async getUser(@Param('id') id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        warehouseScopes: {
-          include: {
-            warehouse: {
-              include: {
-                branch: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    return this.adminService.getUser(id);
+  }
 
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found.`);
-    }
+  @Post('users')
+  async createUser(
+    @Body() dto: CreateUserDto,
+    @CurrentUser('id') currentUserId: string,
+  ) {
+    return this.adminService.createUser(dto, currentUserId);
+  }
 
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      scopes: (user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-        warehouse: s.warehouse
-          ? {
-              id: s.warehouse.id,
-              name: s.warehouse.name,
-              branch: s.warehouse.branch
-                ? {
-                    id: s.warehouse.branch.id,
-                    name: s.warehouse.branch.name,
-                  }
-                : null,
-            }
-          : null,
-      })),
-      status: user.isActive ? 'ACTIVE' : 'INACTIVE',
-      language: 'en',
-      createdAt: user.createdAt.toISOString(),
-    };
+  @Put('users/:id')
+  async updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @CurrentUser('id') currentUserId: string,
+  ) {
+    return this.adminService.updateUser(id, dto, currentUserId);
   }
 
   @Post('users/:id/unlock')

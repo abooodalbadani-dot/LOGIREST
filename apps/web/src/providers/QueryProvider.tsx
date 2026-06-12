@@ -4,19 +4,28 @@ import { useState } from 'react';
 import { ConflictError } from '@/lib/api/ConflictError';
 import { conflictBus } from '@/lib/api/conflict-bus';
 
-const handleGlobalAuthError = (error: unknown) => {
+/**
+ * Handles global authentication errors from React Query's cache.
+ *
+ * CRITICAL RULE — 401 vs 403:
+ *   - 401 Unauthorized → the session is invalid/expired → trigger logout flow.
+ *   - 403 Forbidden    → the user IS authenticated but lacks the required
+ *     permission for that specific resource. This is a normal authorization
+ *     denial and must NEVER log the user out. The individual query/mutation
+ *     error handler (or a toast) is responsible for surfacing it.
+ */
+const handleGlobalAuthError = (error: unknown): boolean => {
   if (error && typeof error === 'object') {
     const err = error as Record<string, unknown>;
-    const isAuthErr =
+
+    // Only treat true authentication failures as session-expired events.
+    const isSessionExpired =
       err.code === 'UNAUTHORIZED' ||
       err.code === 'SESSION_EXPIRED' ||
-      err.code === 'FORBIDDEN' ||
       err.status === 401 ||
-      err.status === 403 ||
-      err.statusCode === 401 ||
-      err.statusCode === 403;
+      err.statusCode === 401;
 
-    if (isAuthErr) {
+    if (isSessionExpired) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:expired'));
       }

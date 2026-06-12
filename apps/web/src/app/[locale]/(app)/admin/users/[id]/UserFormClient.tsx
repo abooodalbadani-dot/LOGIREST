@@ -55,19 +55,19 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
       role: 'WH_KEEPER',
       status: 'ACTIVE',
       language: 'en',
-      branch_ids: [],
-      warehouse_ids: [],
-      department_ids: [],
+      branchIds: [],
+      warehouseIds: [],
+      departmentIds: [],
     },
   });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
 
-  const selectedBranches = useWatch({ control, name: 'branch_ids' });
-  const selectedWarehouses = useWatch({ control, name: 'warehouse_ids' });
+  const selectedBranches = useWatch({ control, name: 'branchIds' });
+  const selectedWarehouses = useWatch({ control, name: 'warehouseIds' });
   const selectedRole = useWatch({ control, name: 'role' });
   const selectedStatus = useWatch({ control, name: 'status' });
-  const selectedDepartments = useWatch({ control, name: 'department_ids' });
+  const selectedDepartments = useWatch({ control, name: 'departmentIds' });
 
   // Security Check: Is this the last admin?
   const isLastAdmin = useMemo(() => {
@@ -103,17 +103,17 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
   // Auto-reset dependent selections when parent changes
   useEffect(() => {
     const currentWhs = selectedWarehouses || [];
-    const validWhs = currentWhs.filter(whId => filteredWarehouses.some(f => f.id === whId));
+    const validWhs = currentWhs.filter((whId: string) => filteredWarehouses.some(f => f.id === whId));
     if (validWhs.length !== currentWhs.length) {
-      setValue('warehouse_ids', validWhs);
+      setValue('warehouseIds', validWhs);
     }
   }, [filteredWarehouses, setValue, selectedWarehouses]);
 
   useEffect(() => {
     const currentDeps = selectedDepartments || [];
-    const validDeps = currentDeps.filter(depId => filteredDepartments.some(f => f.id === depId));
+    const validDeps = currentDeps.filter((depId: string) => filteredDepartments.some(f => f.id === depId));
     if (validDeps.length !== currentDeps.length) {
-      setValue('department_ids', validDeps);
+      setValue('departmentIds', validDeps);
     }
   }, [filteredDepartments, setValue, selectedDepartments]);
 
@@ -125,9 +125,9 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
         role: data.role as UserRole,
         status: data.status as 'ACTIVE' | 'INACTIVE' || 'ACTIVE',
         language: (data.language as 'en' | 'ar') || 'en',
-        branch_ids: data.scopes.filter(s => s.branchId).map(s => s.branchId!),
-        warehouse_ids: data.scopes.filter(s => s.warehouseId).map(s => s.warehouseId!),
-        department_ids: data.scopes.filter(s => s.departmentId).map(s => s.departmentId!),
+        branchIds: data.scopes.filter(s => s.branchId).map(s => s.branchId!),
+        warehouseIds: data.scopes.filter(s => s.warehouseId).map(s => s.warehouseId!),
+        departmentIds: data.scopes.filter(s => s.departmentId).map(s => s.departmentId!),
       });
     }
   }, [data, reset]);
@@ -256,7 +256,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   icon={<Building2 className="w-3 h-3" />}
                   options={branches.map(b => ({ id: b.id, label: b.name || b.code }))}
                   selected={selectedBranches}
-                  onChange={(v) => setValue('branch_ids', v)}
+                  onChange={(v) => setValue('branchIds', v)}
                   disabled={isAuditor || isSelf}
                   t={t}
                 />
@@ -266,7 +266,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   icon={<Warehouse className="w-3 h-3" />}
                   options={filteredWarehouses.map(w => ({ id: w.id, label: w.name || w.code }))}
                   selected={selectedWarehouses}
-                  onChange={(v) => setValue('warehouse_ids', v)}
+                  onChange={(v) => setValue('warehouseIds', v)}
                   disabled={isAuditor || isSelf || !selectedBranches.length}
                   t={t}
                 />
@@ -276,7 +276,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   icon={<Building2 className="w-3 h-3" />}
                   options={filteredDepartments.map(d => ({ id: d.id, label: d.name || d.code }))}
                   selected={selectedDepartments}
-                  onChange={(v) => setValue('department_ids', v)}
+                  onChange={(v) => setValue('departmentIds', v)}
                   disabled={isAuditor || isSelf || !selectedWarehouses.length}
                   t={t}
                 />

@@ -99,12 +99,26 @@ export function GRNListClient({
   ),
   },
    {
-     accessorKey: 'supplierId',
-     header: () => <SortHeader field="supplierId" label={tc('supplier')} />,
+     accessorKey: 'supplierName',
+     header: () => <SortHeader field="supplierName" label={tc('supplier')} />,
      cell: ({ row }) => (
        <div className="flex flex-col">
-         <span dir="ltr" className="text-label-xs font-semibold text-foreground/80 text-start">{row.original.supplierId}</span>
+         <span className="text-label-xs font-semibold text-foreground/80 text-start">
+           {row.original.supplierName || row.original.supplierId}
+         </span>
          <span className="text-label-xxs font-medium opacity-40 uppercase">{t('verified_vendor_sub')}</span>
+       </div>
+     ),
+   },
+   {
+     accessorKey: 'warehouseName',
+     header: tc('warehouse'),
+     cell: ({ row }) => (
+       <div className="flex flex-col">
+         <span className="text-label-xs font-semibold text-foreground/80 text-start">
+           {row.original.warehouseName || row.original.warehouseId || '-'}
+         </span>
+         <span className="text-label-xxs font-medium opacity-40 uppercase">{tc('warehouse')}</span>
        </div>
      ),
    },

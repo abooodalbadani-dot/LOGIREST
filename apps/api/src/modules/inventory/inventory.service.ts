@@ -75,6 +75,8 @@ export class InventoryService {
       ),
       reorderPoint:
         wItem.item.reorderPoint !== null ? Number(wItem.item.reorderPoint) : 0,
+      uomCode: wItem.item.unitOfMeasure?.code || 'KG',
+      wac: Number(wItem.wac || 0),
     }));
 
     return {
@@ -183,7 +185,13 @@ export class InventoryService {
           i.sku as "itemCode",
           i.name as "itemName",
           sl."documentType" as "transactionType",
-          sl."documentId" as "documentReference",
+          COALESCE(
+            grn."grnNumber",
+            issue."issueNumber",
+            tf."transferNumber",
+            adj."adjustmentNumber",
+            sl."documentId"
+          ) as "documentReference",
           sl.quantity::float as quantity,
           SUM(sl.quantity) OVER (
             PARTITION BY sl."itemId" 
@@ -192,6 +200,10 @@ export class InventoryService {
           sl."postedAt" as raw_posted_at
         FROM stock_ledger sl
         INNER JOIN items i ON i.id = sl."itemId"
+        LEFT JOIN goods_received_notes grn ON grn.id = sl."documentId" AND sl."documentType" = 'GOODS_RECEIVED_NOTE'
+        LEFT JOIN inventory_issues issue ON issue.id = sl."documentId" AND sl."documentType" = 'INVENTORY_ISSUE'
+        LEFT JOIN transfers tf ON tf.id = sl."documentId" AND sl."documentType" = 'TRANSFER'
+        LEFT JOIN adjustments adj ON adj.id = sl."documentId" AND sl."documentType" = 'ADJUSTMENT'
         WHERE sl."warehouseId" = ${warehouseId}
           ${itemIdFilter}
       )
@@ -228,6 +240,7 @@ export class InventoryService {
       id: movement.id,
       timestamp: movement.timestamp,
       itemId: movement.itemId,
+      itemCode: movement.itemCode,
       itemName: movement.itemName,
       transactionType: movement.transactionType,
       documentReference: movement.documentReference,

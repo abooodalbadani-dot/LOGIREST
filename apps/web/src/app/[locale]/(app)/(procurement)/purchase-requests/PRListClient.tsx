@@ -62,11 +62,11 @@ const [page, setPage] = useState(1);
  ),
  },
  {
- accessorKey: 'warehouseId',
+ accessorKey: 'warehouseName',
  header: tc('warehouse'),
  cell: ({ row }) => (
  <div className="flex flex-col">
- <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouseId}</span>
+ <span className="opacity-90 font-bold text-body-md text-start">{row.original.warehouseName || row.original.warehouseId}</span>
  <span className="text-label-xxs uppercase text-muted-foreground/60 font-semibold text-start">{tc('warehouse')}</span>
  </div>
  ),

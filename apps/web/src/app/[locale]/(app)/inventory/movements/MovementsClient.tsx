@@ -17,13 +17,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 
 const getTypeStyle = (docType: string) => {
-  switch (docType) {
-    case 'GRN': return 'bg-status-success/10 text-status-success';
-    case 'ISSUE': return 'bg-status-warning/10 text-status-warning';
-    case 'TRANSFER': return 'bg-operational-cyan/10 text-operational-cyan';
-    case 'ADJUSTMENT': return 'bg-indigo-500/10 text-indigo-400';
-    default: return 'bg-muted/10 text-muted-foreground';
+  const normalized = docType.toUpperCase();
+  if (normalized === 'GRN' || normalized === 'GOODS_RECEIVED_NOTE') {
+    return 'bg-status-success/10 text-status-success';
   }
+  if (normalized === 'ISSUE' || normalized === 'INVENTORY_ISSUE') {
+    return 'bg-status-warning/10 text-status-warning';
+  }
+  if (normalized === 'TRANSFER') {
+    return 'bg-operational-cyan/10 text-operational-cyan';
+  }
+  if (normalized === 'ADJUSTMENT') {
+    return 'bg-indigo-500/10 text-indigo-400';
+  }
+  return 'bg-muted/10 text-muted-foreground';
 };
 
 export default function MovementsClient() {
@@ -43,16 +50,22 @@ export default function MovementsClient() {
   });
 
   const getDocumentPath = useMemo(() => (movement: InventoryMovement): string => {
-    switch (movement.transactionType) {
-      case 'GRN': return `/goods-received/${movement.documentReference}`;
-      case 'ISSUE': return `/issues/${movement.documentReference}`;
-      case 'TRANSFER': return `/transfers/${movement.documentReference}`;
-      case 'ADJUSTMENT':
-        return movement.documentReference === 'INITIAL_BALANCE'
-          ? '/adjustments/new?type=INITIAL_BALANCE'
-          : `/adjustments/${movement.documentReference}`;
-      default: return '#';
+    const type = movement.transactionType.toUpperCase();
+    if (type === 'GRN' || type === 'GOODS_RECEIVED_NOTE') {
+      return `/goods-received/${movement.documentReference}`;
     }
+    if (type === 'ISSUE' || type === 'INVENTORY_ISSUE') {
+      return `/issues/${movement.documentReference}`;
+    }
+    if (type === 'TRANSFER') {
+      return `/transfers/${movement.documentReference}`;
+    }
+    if (type === 'ADJUSTMENT') {
+      return movement.documentReference === 'INITIAL_BALANCE'
+        ? '/adjustments/new?type=INITIAL_BALANCE'
+        : `/adjustments/${movement.documentReference}`;
+    }
+    return '#';
   }, []);
 
   const columns = useMemo<ColumnDef<InventoryMovement, unknown>[]>(() => [
@@ -93,12 +106,12 @@ export default function MovementsClient() {
       ),
     },
     {
-      accessorKey: 'itemId',
+      accessorKey: 'itemCode',
       header: t('item_code'),
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
           <span dir="ltr" className="font-mono text-label-xs font-semibold text-foreground uppercase">
-            {row.original.itemId}
+            {row.original.itemCode || row.original.itemId}
           </span>
           <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase">{t('system_id')}</span>
         </div>

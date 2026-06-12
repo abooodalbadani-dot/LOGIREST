@@ -77,14 +77,33 @@ export function proxy(request: NextRequest) {
   }
 
   // C. Authenticated on Public Page -> Dashboard
+  //
+  // IMPORTANT: Check isAuthReason FIRST.
+  // When a token is present but the reason is "expired" or "verification_failed",
+  // we MUST issue a REDIRECT (not NextResponse.next()) to clear the stale cookie.
+  //
+  // Why redirect instead of next():
+  //   NextResponse.next() causes Next.js to re-invoke this middleware internally
+  //   with the original incoming request, which still carries the stale token in
+  //   its cookies (cookie deletion only affects the outgoing *response*, not the
+  //   *request* object). On that second internal pass, `isAuthReason` would be
+  //   false (re-pass URL may drop the ?reason param), so block D below would fire
+  //   and incorrectly send the user to /dashboard.
+  //
+  //   A redirect forces the *browser* to make a brand-new request — this time
+  //   without the token cookie (because we set maxAge: 0 on the redirect
+  //   response). The next hit arrives with no token, skips all auth blocks, and
+  //   the login page renders correctly.
+  if (token && isAuthReason && (isPublicPage || isRoot)) {
+    console.log(`[Proxy] Authenticated user on public page with expired token reason: ${pathname} -> Redirecting to clear stale cookie`);
+    const redirectUrl = request.nextUrl.clone();
+    const response = NextResponse.redirect(redirectUrl);
+    response.cookies.delete('logirest_token');
+    response.cookies.set('logirest_token', '', { path: '/', maxAge: 0, httpOnly: true, sameSite: 'lax' });
+    return response;
+  }
+
   if (token && (isPublicPage || isRoot)) {
-    if (isAuthReason) {
-      console.log(`[Proxy] Authenticated user on public page with expired token reason: ${pathname} -> Clearing cookie and bypassing redirect`);
-      const response = intlMiddleware(request);
-      response.cookies.delete('logirest_token');
-      response.cookies.set('logirest_token', '', { path: '/', maxAge: 0 });
-      return response;
-    }
     console.log(`[Proxy] Authenticated user on public/root page: ${pathname} -> Redirecting to /dashboard`);
     return NextResponse.redirect(constructUrl('/dashboard'));
   }

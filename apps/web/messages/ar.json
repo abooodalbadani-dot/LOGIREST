@@ -418,6 +418,9 @@
     "error_generic": "حدث خطأ",
     "no_item_found": "لم يتم العثور على الصنف",
     "security_standard_desc": "جلسة تسجيل الدخول الخاصة بك مؤمنة بالتشفير القياسي وحماية النطاق للمؤسسات.",
+    "void_warning_description": "هذا الإجراء غير قابل للتراجع. سيؤدي ذلك إلى عكس قيود المخزون وتعديل أرصدة التكلفة وإقفال المستند.",
+    "void_reason_prompt": "سبب الإبطال (5 أحرف على الأقل):",
+    "void_reason_placeholder": "أدخل سبب الإبطال...",
     "actions": {
       "all_branches": "كل الفروع",
       "approve": "اعتماد",
@@ -439,7 +442,8 @@
       "retry": "إعادة المحاولة",
       "save": "حفظ",
       "submit": "إرسال",
-      "view_all": "عرض الكل"
+      "view_all": "عرض الكل",
+      "void": "إبطال المستند"
     },
     "languages": {
       "arabic": "العربية",
@@ -1047,7 +1051,8 @@
       "label": "المستودعات",
       "main": "المستودع الرئيسي",
       "main_hub": "المركز الرئيسي",
-      "main_store": "المستودع الرئيسي"
+      "main_store": "المستودع الرئيسي",
+      "warehouses": "المستودع"
     },
     "warning": "تحذير",
     "workflow": {
@@ -1200,7 +1205,7 @@
       "critical_items": "أصناف تحت مستوى الأمان",
       "immediate_review": "تتطلب مراجعة فورية",
       "jeddah_riyadh_active": "جدة والرياض نشطة",
-      "low_stock": "أصناف منخفضة المخزون",
+      "low_stock_items": "أصناف منخفضة المخزون",
       "pending_prs": "طلبات شراء معلقة",
       "reorder_suggested": "يوصى بإعادة الطلب",
       "title": "مؤشرات الأداء الرئيسية",
@@ -1376,7 +1381,9 @@
       "types": {
         "adjustment": "تسوية",
         "grn": "استلام بضائع",
+        "goods_received_note": "استلام بضائع",
         "issue": "صرف للمطبخ",
+        "inventory_issue": "صرف للمطبخ",
         "transfer": "تحويل مخزني"
       },
       "zero_movement": "لم يتم رصد أي حركة"
@@ -1662,7 +1669,8 @@
       "status_label": "الحالة",
       "system_state": "حالة النظام",
       "verified_static_data": "بيانات ثابتة محققة",
-      "yes": "نعم"
+      "yes": "نعم",
+      "warning": "تحذير"
     },
     "currencies": {
       "add_rate": "إضافة سعر صرف",
@@ -1676,6 +1684,10 @@
       "description": "إدارة العملات والمعايير المالية.",
       "edit": "تعديل",
       "edit_title": "تعديل عملة",
+      "fx_rates_title": "أسعار الصرف",
+      "to_currency": "إلى العملة",
+      "rate": "سعر الصرف",
+      "effective_date": "تاريخ النفاذ",
       "empty": {
         "description": "حدد العملات العالمية والوحدات الأساسية للمعاملات المالية.",
         "title": "لم يتم العثور على عملات"
@@ -2725,6 +2737,8 @@
       "allocated": "مخصص",
       "audit_metadata": "بيانات التدقيق",
       "authorize_protocol": "تفويض بروتوكول الصرف",
+      "document_manifest": "بيان المستند",
+      "operational_parameters": "المعايير التشغيلية",
       "confirm_allocation": "تأكيد التخصيص",
       "create_new": "إنشاء سند صرف",
       "created_at": "تاريخ الإنشاء",

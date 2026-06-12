@@ -87,7 +87,7 @@ export function AdminDashboard() {
           description={t('kpi.warehouse_locked')}
         />
         <KPICard
-          title={t('kpi.low_stock')}
+          title={t('kpi.low_stock_items')}
           value={formatNumber(stats.lowStockItems, locale as 'ar' | 'en')}
           icon={AlertTriangle}
           accent="red"

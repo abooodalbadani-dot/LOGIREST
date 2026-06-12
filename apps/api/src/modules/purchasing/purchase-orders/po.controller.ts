@@ -120,6 +120,11 @@ function mapPOSummary(po: Record<string, unknown>) {
   const lines = (po.lines as Record<string, unknown>[]) || [];
   const supplier = po.supplier as Record<string, unknown> | null;
   const currency = po.currency as Record<string, unknown> | null;
+  const purchaseRequest = po.purchaseRequest as Record<string, unknown> | null;
+  const warehouse = purchaseRequest?.warehouse as Record<
+    string,
+    unknown
+  > | null;
 
   const supplierTotalAmount = lines.reduce(
     (sum: number, line: Record<string, unknown>) =>
@@ -140,6 +145,7 @@ function mapPOSummary(po: Record<string, unknown>) {
     status: po.status as string,
     supplierId: po.supplierId as string,
     supplierName: (supplier?.name as string) || '',
+    warehouseName: (warehouse?.name as string) || '',
     currencyCode: (currency?.code as string) || '',
     expectedDate: createdAtIso,
     supplierTotalAmount: supplierTotalAmount,

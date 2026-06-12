@@ -67,6 +67,8 @@ export const GRNSchema = BaseDocumentSchema.extend({
   type: z.literal('GRN'),
   poId: z.string().nullable(),
   supplierId: z.string(),
+  supplierName: z.string().optional().nullable(),
+  warehouseName: z.string().optional().nullable(),
   currencyId: z.string(),
   fxRate: z.number().nullable(),
   fxRateCapturedAt: z.string().nullable(),
@@ -96,6 +98,8 @@ export const PurchaseRequestSchema = BaseDocumentSchema.extend({
   type: z.literal('PR'),
   requestedByDept: z.string(),
   requiredByDate: z.string(),
+  warehouseName: z.string().optional().nullable(),
+  branchName: z.string().optional().nullable(),
   lines: z.array(PRLineItemSchema),
 });
 
@@ -123,6 +127,8 @@ export const PurchaseOrderSchema = BaseDocumentSchema.extend({
   type: z.literal('PO'),
   prId: z.string().nullable(),
   supplierId: z.string(),
+  supplierName: z.string().optional().nullable(),
+  warehouseName: z.string().optional().nullable(),
   currencyId: z.string(),
   expectedDeliveryDate: z.string(),
   lines: z.array(POLineItemSchema),
@@ -151,6 +157,9 @@ export const IssueLineItemSchema = z.object({
 export const StockIssueSchema = BaseDocumentSchema.extend({
   type: z.literal('ISSUE'),
   destinationDeptId: z.string(),
+  destinationDepartmentName: z.string().optional().nullable(),
+  departmentName: z.string().optional().nullable(),
+  warehouseName: z.string().optional().nullable(),
   requestedBy: z.string(),
   lines: z.array(IssueLineItemSchema),
 });
@@ -218,13 +227,13 @@ export const AdjustmentSchema = BaseDocumentSchema.extend({
 
 export interface BaseDocument { id: string; documentNumber: string; type: DocumentType; status: DocumentStatus; warehouseId: string; branchId: string; notes: string | null; createdBy: string; createdAt: string; updatedAt: string; postedAt: string | null; postedBy: string | null; version: number; }
 export interface LotAllocation { lotId: string; lotNumber: string; expiryDate?: string | null; allocatedQty: number; overrideReason?: string | null; }
-export interface GRN extends BaseDocument { type: 'GRN'; poId: string | null; supplierId: string; currencyId: string; fxRate: number | null; fxRateCapturedAt: string | null; lines: GRNLineItem[]; }
+export interface GRN extends BaseDocument { type: 'GRN'; poId: string | null; supplierId: string; supplierName?: string | null; warehouseName?: string | null; currencyId: string; fxRate: number | null; fxRateCapturedAt: string | null; lines: GRNLineItem[]; }
 export interface GRNLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name: string; primaryUom: { id: string; code: string; name: string; } }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; poQty: number | null; receivedQty: number; unitCostForeign: number; unitCostBase: number; }
-export interface PurchaseRequest extends BaseDocument { type: 'PR'; requestedByDept: string; requiredByDate: string; lines: PRLineItem[]; }
+export interface PurchaseRequest extends BaseDocument { type: 'PR'; requestedByDept: string; requiredByDate: string; warehouseName?: string | null; branchName?: string | null; lines: PRLineItem[]; }
 export interface PRLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name: string; primaryUom: { id: string; code: string; name: string; } }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; requestedQty: number; approvedQty: number | null; }
-export interface PurchaseOrder extends BaseDocument { type: 'PO'; prId: string | null; supplierId: string; currencyId: string; expectedDeliveryDate: string; lines: POLineItem[]; }
+export interface PurchaseOrder extends BaseDocument { type: 'PO'; prId: string | null; supplierId: string; supplierName?: string | null; warehouseName?: string | null; currencyId: string; expectedDeliveryDate: string; lines: POLineItem[]; }
 export interface POLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name: string; primaryUom: { id: string; code: string; name: string; } }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; orderedQty: number; unitPrice: number; totalPrice: number; }
-export interface StockIssue extends BaseDocument { type: 'ISSUE'; destinationDeptId: string; requestedBy: string; lines: IssueLineItem[]; }
+export interface StockIssue extends BaseDocument { type: 'ISSUE'; destinationDeptId: string; destinationDepartmentName?: string | null; departmentName?: string | null; warehouseName?: string | null; requestedBy: string; lines: IssueLineItem[]; }
 export interface IssueLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name: string; primaryUom: { id: string; code: string; name: string; } }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; requestedQty: number; issuedQty: number; lotAllocations: LotAllocation[]; }
 export interface Transfer extends BaseDocument { type: 'TRANSFER'; fromWarehouseId: string; fromWarehouseName?: string; toWarehouseId: string; toWarehouseName?: string; transferStatus: TransferStatus; shippedAt: string | null; receivedAt: string | null; varianceReason?: string | null; lines: TransferLineItem[]; }
 export interface TransferLineItem { id: string; documentId: string; itemId: string; item: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; primaryUom: { id: string; code: string; name?: string; nameAr?: string; nameEn?: string; } }; lotId: string | null; lot: { id: string; lotNumber: string; expiryDate: string | null; isExpired: boolean; } | null; qty: number; uomId: string; unitCost: number | null; shippedQty: number; receivedQty: number | null; lotAllocations: LotAllocation[]; }

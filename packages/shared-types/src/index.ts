@@ -8,7 +8,9 @@ export * from './schemas';
 export * from './workflows';
 export * from './pagination';
 export * from './zod/landed-cost';
+export * from './zod/admin-user';
 
 // Explicitly re-export conflicting types to resolve TS2308 ambiguity
 export type { DocumentType } from './contracts/role-capabilities';
 export type { Role } from './schemas/enums';
+

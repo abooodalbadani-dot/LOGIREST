@@ -8,6 +8,9 @@ import {
   Param,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -15,10 +18,32 @@ import { ReportsService } from './reports.service';
 import type { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 
+/** Roles allowed to view operational reports (stock movements, expiry, etc.) */
+const OPERATIONAL_REPORT_ROLES = [
+  Role.ADMIN,
+  Role.GM,
+  Role.INV_MGR,
+  Role.STORE_MGR,
+  Role.WH_KEEPER,
+  Role.AUDITOR,
+  Role.BRANCH_MGR,
+  Role.PROC_MGR,
+] as const;
+
+/** Roles allowed to view financial/cost reports (WAC, procurement costs, currencies) */
+const FINANCIAL_REPORT_ROLES = [
+  Role.ADMIN,
+  Role.GM,
+  Role.INV_MGR,
+  Role.AUDITOR,
+  Role.PROC_MGR,
+] as const;
+
 const MAX_EXPORT_ROWS = 50000;
 
 @Controller('reports')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...OPERATIONAL_REPORT_ROLES)
 @ApiSecureController()
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
@@ -93,16 +118,19 @@ export class ReportsController {
   }
 
   @Get('procurement-status')
+  @Roles(...FINANCIAL_REPORT_ROLES)
   async getProcurementStatus(@ActiveScope('warehouseId') warehouseId: string) {
     return this.reportsService.getProcurementStatus(warehouseId);
   }
 
   @Get('currency-summaries')
+  @Roles(...FINANCIAL_REPORT_ROLES)
   async getCurrencySummaries(@ActiveScope('warehouseId') warehouseId: string) {
     return this.reportsService.getCurrencySummaries(warehouseId);
   }
 
   @Get('wac-history')
+  @Roles(...FINANCIAL_REPORT_ROLES)
   async getWacHistory(
     @ActiveScope('warehouseId') warehouseId: string,
     @Query('itemId') itemId: string,
@@ -574,6 +602,7 @@ export class ReportsController {
   }
 
   @Get('procurement-status/export')
+  @Roles(...FINANCIAL_REPORT_ROLES)
   async exportProcurementStatus(
     @ActiveScope('warehouseId') warehouseId: string,
     @CurrentUser('name') userName: string,
@@ -598,6 +627,7 @@ export class ReportsController {
   }
 
   @Get('wac-history/export')
+  @Roles(...FINANCIAL_REPORT_ROLES)
   async exportWacHistory(
     @ActiveScope('warehouseId') warehouseId: string,
     @CurrentUser('name') userName: string,

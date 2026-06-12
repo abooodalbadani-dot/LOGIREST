@@ -23,6 +23,7 @@ interface Props { currencyId: string; locale: 'ar' | 'en'; }
 export function FXRatesClient({ currencyId, locale }: Props) {
  const t = useTranslations('master_data.currencies');
  const tc = useTranslations('master_data.common');
+ const tv = useTranslations();
 
  // Fetch current currency details for context
  const { data: baseCurrency } = useMasterDataItem('currencies', currencyId, CurrencySchema);
@@ -67,20 +68,23 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  });
 
   const columns: ColumnDef<FXRate>[] = [
-  { 
-  accessorKey: 'toCurrencyId', 
-  header: () => <span className="text-label-xs font-semibold uppercase">{t('to_currency')}</span>,
-  cell: ({ row }) => (
-  <div className="flex items-center gap-2">
-  <div className="w-8 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low">
-  <span className="text-label-xs font-mono font-bold text-cyan-500">{row.original.toCurrencyId}</span>
-  </div>
-  <span className="text-body-md font-medium">
-  {currencies?.data?.find(c => c.id === row.original.toCurrencyId)?.name || row.original.toCurrencyId}
-  </span>
-  </div>
-  )
-  },
+   { 
+   accessorKey: 'toCurrencyId', 
+   header: () => <span className="text-label-xs font-semibold uppercase">{t('to_currency')}</span>,
+   cell: ({ row }) => {
+     const currency = currencies?.data?.find(c => c.id === row.original.toCurrencyId);
+     return (
+       <div className="flex items-center gap-2">
+         <div className="w-12 h-8 rounded-sm bg-surface-container-highest/20 flex items-center justify-center border border-outline-low shrink-0">
+           <span className="text-label-xs font-mono font-bold text-cyan-500 uppercase">{currency?.code || row.original.toCurrencyId}</span>
+         </div>
+         <span className="text-body-md font-medium">
+           {currency?.name || row.original.toCurrencyId}
+         </span>
+       </div>
+     );
+   }
+   },
   {
   accessorKey: 'rate',
   header: () => <span className="text-label-xs font-semibold uppercase">{t('rate')}</span>,
@@ -185,7 +189,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
        />
     )}
   />
-  {errors.toCurrencyId && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.toCurrencyId.message}</p>}
+  {errors.toCurrencyId && <p className="text-label-xs font-bold text-red-500 uppercase">{tv(errors.toCurrencyId.message as never)}</p>}
   </div>
 
  {/* Rate */}
@@ -202,7 +206,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
  {...register('rate', { valueAsNumber: true })} 
  />
- {errors.rate && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.rate.message}</p>}
+ {errors.rate && <p className="text-label-xs font-bold text-red-500 uppercase">{tv(errors.rate.message as never)}</p>}
  </div>
 
  {/* Effective date */}
@@ -217,7 +221,7 @@ export function FXRatesClient({ currencyId, locale }: Props) {
  className="h-11 bg-surface-container-highest/30 border-outline-low rounded-sm focus:ring-cyan-500/50"
  {...register('effectiveDate')} 
  />
- {errors.effectiveDate && <p className="text-label-xs font-bold text-red-500 uppercase">{errors.effectiveDate.message}</p>}
+ {errors.effectiveDate && <p className="text-label-xs font-bold text-red-500 uppercase">{tv(errors.effectiveDate.message as never)}</p>}
  </div>
  </CardContent>
  </Card>

@@ -44,13 +44,23 @@ export default function LoginPage() {
     const expiredNotice = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reason') === 'expired'
       ? t('session_expired') : null;
 
-    // Redirect authenticated users to dashboard
+    // Redirect authenticated users to dashboard — but NOT when we're here due to
+    // an expired/invalid session. In that case the proxy has already cleared the
+    // cookie via a self-redirect, but the AuthProvider's verifyTokenAndLoad() may
+    // still resolve with the stale token that was in memory before the Set-Cookie
+    // was applied by the browser. We must let the expiry notice render and wait
+    // for the cookie to be gone before any redirect.
+    const isAuthReason = typeof window !== 'undefined' &&
+        ['expired', 'verification_failed'].includes(
+            new URLSearchParams(window.location.search).get('reason') ?? ''
+        );
+
     useEffect(() => {
-        if (!authLoading && user && !redirected.current) {
+        if (!authLoading && user && !redirected.current && !isAuthReason) {
             redirected.current = true;
             router.replace('/dashboard');
         }
-    }, [user, authLoading, router]);
+    }, [user, authLoading, router, isAuthReason]);
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginValues>({
         resolver: zodResolver(loginSchema as z.ZodType<LoginValues, any, any>),
@@ -67,8 +77,9 @@ export default function LoginPage() {
         }
     };
 
-    // Show overlay spinner only when redirecting (user is authenticated)
-    if (!authLoading && user) {
+    // Show overlay spinner only when redirecting (user is authenticated) — but
+    // skip it when the session has expired; we need the form to be visible.
+    if (!authLoading && user && !isAuthReason) {
         return (
             <div className="flex w-full items-center justify-center min-h-screen bg-[#050505]">
                 <div className="relative">

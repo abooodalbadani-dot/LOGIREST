@@ -117,7 +117,7 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
       ),
     },
     {
-      accessorKey: 'destinationDeptId',
+      accessorKey: 'destinationDepartmentName',
       header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{t('destination')}</span>,
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -125,7 +125,18 @@ export function IssueListClient({ initialStatus, initialPage }: { initialStatus?
             <Activity className="w-3 h-3 text-muted-foreground/40" />
           </div>
           <span className="text-label-xs font-semibold text-muted-foreground/60">
-            {row.original.destinationDeptId || '—'}
+            {row.original.destinationDepartmentName || row.original.destinationDeptId || '—'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'warehouseName',
+      header: () => <span className="text-label-xs font-semibold uppercase opacity-40">{tc('warehouse')}</span>,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <span className="text-label-xs font-semibold text-muted-foreground/60">
+            {row.original.warehouseName || row.original.warehouseId || '—'}
           </span>
         </div>
       ),

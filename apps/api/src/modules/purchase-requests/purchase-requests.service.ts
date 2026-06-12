@@ -93,6 +93,8 @@ export class PurchaseRequestsService {
       this.prisma.purchaseRequest.findMany({
         where,
         include: {
+          warehouse: true,
+          branch: true,
           lines: {
             include: {
               item: {
@@ -199,6 +201,8 @@ export class PurchaseRequestsService {
           }),
         },
         include: {
+          warehouse: true,
+          branch: true,
           lines: {
             include: {
               item: {

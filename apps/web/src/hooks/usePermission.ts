@@ -54,15 +54,19 @@ function checkCapability(role: UserRole, action: ActionType, resource: ResourceT
   return false;
 }
 
+export function checkPermission(role: UserRole, action: ActionType, resource: ResourceType): boolean {
+  const capabilityResult = checkCapability(role, action, resource);
+  if (capabilityResult) return true;
+
+  const roleKey = role as keyof typeof PERMISSION_MATRIX;
+  const allowed = PERMISSION_MATRIX[roleKey]?.[resource] ?? [];
+  return allowed.includes(action);
+}
+
 export function usePermission(action: ActionType, resource: ResourceType): boolean {
   const { user, isLoading } = useAuth();
 
   if (isLoading || !user) return false;
 
-  const capabilityResult = checkCapability(user.role, action, resource);
-  if (capabilityResult) return true;
-
-  const roleKey = user.role as keyof typeof PERMISSION_MATRIX;
-  const allowed = PERMISSION_MATRIX[roleKey]?.[resource] ?? [];
-  return allowed.includes(action);
+  return checkPermission(user.role, action, resource);
 }

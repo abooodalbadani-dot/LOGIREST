@@ -3,6 +3,7 @@ import { AdminService } from './admin.service';
 import { PrismaService } from '../../database/prisma.service';
 import { Role } from '@prisma/client';
 import { encrypt, decrypt } from './crypto.util';
+import { BcryptService } from '../../auth/bcrypt.service';
 
 process.env.ENCRYPTION_KEY = 'test-encryption-key-for-unit-testing-32-chars';
 
@@ -53,11 +54,17 @@ describe('AdminService', () => {
     },
   };
 
+  const mockBcryptService = {
+    hash: jest.fn().mockResolvedValue('mocked-hash'),
+    compare: jest.fn().mockResolvedValue(true),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: BcryptService, useValue: mockBcryptService },
       ],
     }).compile();
 

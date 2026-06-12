@@ -418,6 +418,9 @@
     "error_generic": "An error occurred",
     "no_item_found": "Item not found",
     "security_standard_desc": "Your login session is secured with standard encryption and enterprise scope protection.",
+    "void_warning_description": "This operation is irreversible. This will offset inventory ledgers, adjust cost balances, and lock the document.",
+    "void_reason_prompt": "Reason for voiding (minimum 5 characters):",
+    "void_reason_placeholder": "Enter explanation...",
     "actions": {
       "all_branches": "All Branches",
       "approve": "Approve",
@@ -439,7 +442,8 @@
       "retry": "Retry",
       "save": "Save",
       "submit": "Submit",
-      "view_all": "View All"
+      "view_all": "View All",
+      "void": "Void Document"
     },
     "languages": {
       "arabic": "Arabic",
@@ -1047,7 +1051,8 @@
       "label": "Warehouses",
       "main": "Main Warehouse",
       "main_hub": "Main Hub",
-      "main_store": "Main Store"
+      "main_store": "Main Store",
+      "warehouses": "Warehouse"
     },
     "warning": "Warning",
     "workflow": {
@@ -1200,7 +1205,7 @@
       "critical_items": "Items below safety level",
       "immediate_review": "Immediate review required",
       "jeddah_riyadh_active": "Jeddah & Riyadh active",
-      "low_stock": "Low Stock Items",
+      "low_stock_items": "Low Stock Items",
       "pending_prs": "Pending PRs",
       "reorder_suggested": "Reorder suggested",
       "title": "KPIs",
@@ -1376,7 +1381,9 @@
       "types": {
         "adjustment": "Adjustment",
         "grn": "Goods Received",
+        "goods_received_note": "Goods Received",
         "issue": "Kitchen Issue",
+        "inventory_issue": "Kitchen Issue",
         "transfer": "Warehouse Transfer"
       },
       "zero_movement": "Zero Movement Detected"
@@ -1662,7 +1669,8 @@
       "status_label": "Status",
       "system_state": "System State",
       "verified_static_data": "Verified Static Data",
-      "yes": "Yes"
+      "yes": "Yes",
+      "warning": "Warning"
     },
     "currencies": {
       "add_rate": "Add FX Rate",
@@ -1676,6 +1684,10 @@
       "description": "Management of currencies and financial standards.",
       "edit": "Edit",
       "edit_title": "Edit Currency",
+      "fx_rates_title": "Exchange Rates",
+      "to_currency": "To Currency",
+      "rate": "Exchange Rate",
+      "effective_date": "Effective Date",
       "empty": {
         "description": "Define global currencies and base units for financial transactions.",
         "title": "No Currencies Found"
@@ -2723,6 +2735,8 @@
       "allocated": "Allocated",
       "audit_metadata": "Audit Metadata",
       "authorize_protocol": "Authorize Issuance Protocol",
+      "document_manifest": "Document Manifest",
+      "operational_parameters": "Operational Parameters",
       "confirm_allocation": "Confirm Allocation",
       "create_new": "Create Issue",
       "created_at": "Created At",

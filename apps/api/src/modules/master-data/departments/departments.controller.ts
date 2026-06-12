@@ -19,11 +19,13 @@ import { PrismaService } from '../../../database/prisma.service';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
+import { Roles } from '../../../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 @Controller('departments')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class DepartmentsController {
   constructor(private readonly prisma: PrismaService) {}
@@ -125,17 +127,12 @@ export class DepartmentsController {
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.GM)
   async create(
     @Body() body: { name: string; branchId: string },
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const { name, branchId } = body;
     if (!name || !branchId) {
       throw new BadRequestException('name and branchId are required');
@@ -176,18 +173,13 @@ export class DepartmentsController {
   }
 
   @Put(':id')
+  @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
     @Body() body: { name?: string; branchId?: string; version?: number },
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const existing = await this.prisma.department.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Department with ID ${id} not found`);
@@ -234,17 +226,12 @@ export class DepartmentsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @Roles(Role.ADMIN, Role.GM)
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @CurrentUser('role') role: Role,
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.GM) {
-      throw new ForbiddenException(
-        'Only ADMIN or GM roles are authorized to modify master data.',
-      );
-    }
     const department = await this.prisma.department.findUnique({
       where: { id },
       include: {

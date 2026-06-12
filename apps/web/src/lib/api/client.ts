@@ -112,6 +112,8 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
     }
   }
 
+  // Only 401-class codes indicate a truly expired/invalid session.
+  // FORBIDDEN (403) means authenticated but not permitted — never treat it as expired.
   const isAuthError = (e: Record<string, unknown>) =>
     e.status === 401 || e.code === 'UNAUTHORIZED' || e.code === 'SESSION_EXPIRED';
 
@@ -164,7 +166,8 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
       const errData = await clonedRes.json().catch(() => ({}));
       const isMissingScope = errData.message && typeof errData.message === 'string' && (
         errData.message.includes('active scope headers') ||
-        errData.message.includes('Scope not authorized')
+        errData.message.includes('Scope not authorized') ||
+        errData.message.includes('Warehouse ID is required')
       );
 
       if (isMissingScope && typeof window !== 'undefined') {
@@ -208,19 +211,23 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
         }
 
         if (!resolved) {
-          const isPublicPage = ['/login', '/forgot-password', '/reset-password'].some(
-            p => typeof window !== 'undefined' && window.location.pathname.includes(p)
-          );
-          if (!isPublicPage) {
-            // Redirect the user to a fallback login or Select Branch UI by dispatching auth:expired
-            window.dispatchEvent(new CustomEvent('auth:expired'));
-          }
+          // The scope could not be auto-resolved from the JWT.
+          // Do NOT dispatch auth:expired — the user IS authenticated; they simply
+          // lack a valid scope for this resource. Throw a FORBIDDEN error so the
+          // individual component can handle it (e.g. show an "Access Denied" state)
+          // without triggering a global logout.
+          const scopeError: import('@/types/api').ApiError = {
+            code: 'FORBIDDEN',
+            message: 'errors.forbidden',
+            fieldErrors: null,
+          };
+          throw scopeError;
         }
       }
     }
 
     if (res.status === 401 || res.status === 403) {
-      if (path !== '/auth/login' && path !== '/auth/refresh') {
+      if (res.status === 401 && path !== '/auth/login' && path !== '/auth/refresh') {
         if (!options?.isRetry) {
           await handleAuthError();
           return request(method, path, schema, body, { ...options, isRetry: true });

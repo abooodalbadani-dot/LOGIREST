@@ -12,14 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/api/client';
 
 const passwordSchema = z.object({
- current_password: z.string().min(1, 'Current password is required'),
- new_password: z.string().min(8, 'Password must be at least 8 characters'),
- confirm_password: z.string().min(1, 'Confirmation is required'),
-}).refine((data) => data.new_password === data.confirm_password, {
- message: "Passwords don't match",
- path: ["confirm_password"],
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(1, 'Confirmation is required'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 type PasswordValues = z.infer<typeof passwordSchema>;
@@ -38,22 +39,22 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   const { router: _guardedRouter } = useUnsavedChangesGuard(isDirty);
 
 
- const onSubmit = async (_values: PasswordValues) => {
- setIsSubmitting(true);
- try {
- // Simulate API call
- await new Promise(resolve => setTimeout(resolve, 1500));
- 
- setIsSuccess(true);
- toast.success(t('password_updated'));
- reset();
- setTimeout(() => setIsSuccess(false), 5000);
- } catch (_error) {
- toast.error(t('errors.update_failed'));
- } finally {
- setIsSubmitting(false);
- }
- };
+  const onSubmit = async (values: PasswordValues) => {
+    setIsSubmitting(true);
+    try {
+      await apiClient.post('/auth/change-password', z.object({ success: z.boolean() }), values);
+      setIsSuccess(true);
+      toast.success(t('password_updated'));
+      reset();
+      setTimeout(() => setIsSuccess(false), 5000);
+    } catch (error) {
+      console.error('Failed to change password:', error);
+      const message = error instanceof Error ? error.message : t('errors.update_failed');
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
  return (
  <Card className="border-border-muted/20 bg-surface-container-low/50 backdrop-blur-md relative overflow-hidden group shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
@@ -93,16 +94,16 @@ const [isSubmitting, setIsSubmitting] = useState(false);
  id="current_password"
  type="password"
  className="bg-surface-container-low border-border-muted/30 focus-visible:ring-operational-cyan/20 focus-visible:border-operational-cyan/50 h-11 transition-all ps-10"
- {...register('current_password')}
- />
- <KeyRound className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within/input:text-operational-cyan transition-colors" />
- </div>
- {errors.current_password && (
- <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
- <AlertCircle className="w-3 h-3" />
- <p className="text-label-xs font-bold uppercase">{errors.current_password.message}</p>
- </div>
- )}
+      {...register('currentPassword')}
+      />
+      <KeyRound className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within/input:text-operational-cyan transition-colors" />
+      </div>
+      {errors.currentPassword && (
+      <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
+      <AlertCircle className="w-3 h-3" />
+      <p className="text-label-xs font-bold uppercase">{errors.currentPassword.message}</p>
+      </div>
+      )}
  </div>
  
  <div className="space-y-2">
@@ -113,14 +114,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
  id="new_password"
  type="password"
  className="bg-surface-container-low border-border-muted/30 focus-visible:ring-operational-cyan/20 focus-visible:border-operational-cyan/50 h-11 transition-all"
- {...register('new_password')}
- />
- {errors.new_password && (
- <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
- <AlertCircle className="w-3 h-3" />
- <p className="text-label-xs font-bold uppercase">{errors.new_password.message}</p>
- </div>
- )}
+      {...register('newPassword')}
+      />
+      {errors.newPassword && (
+      <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
+      <AlertCircle className="w-3 h-3" />
+      <p className="text-label-xs font-bold uppercase">{errors.newPassword.message}</p>
+      </div>
+      )}
  </div>
 
  <div className="space-y-2">
@@ -131,14 +132,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
  id="confirm_password"
  type="password"
  className="bg-surface-container-low border-border-muted/30 focus-visible:ring-operational-cyan/20 focus-visible:border-operational-cyan/50 h-11 transition-all"
- {...register('confirm_password')}
- />
- {errors.confirm_password && (
- <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
- <AlertCircle className="w-3 h-3" />
- <p className="text-label-xs font-bold uppercase">{errors.confirm_password.message}</p>
- </div>
- )}
+      {...register('confirmPassword')}
+      />
+      {errors.confirmPassword && (
+      <div className="flex items-center gap-1.5 text-status-error mt-1.5 animate-in slide-in-from-top-1">
+      <AlertCircle className="w-3 h-3" />
+      <p className="text-label-xs font-bold uppercase">{errors.confirmPassword.message}</p>
+      </div>
+      )}
  </div>
 
  <Button 

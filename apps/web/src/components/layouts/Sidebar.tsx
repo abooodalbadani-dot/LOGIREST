@@ -1,9 +1,10 @@
 'use client';
 import { Link, usePathname } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { usePermission } from '@/hooks/usePermission';
+import { usePermission, checkPermission } from '@/hooks/usePermission';
 import { useAuth, type AuthUser } from '@/providers/AuthProvider';
 import { PERMISSION_MATRIX, type ResourceType } from '@/types/rbac';
+import { getRoleCategory } from '@/utils/roleUtils';
 import { 
   LayoutDashboard, 
   Truck, 
@@ -57,19 +58,14 @@ function checkItemVisibility(item: NavItem, user: AuthUser | null, isLoading: bo
     return false;
   }
 
-  const normalizedRole = user.role ? (
-    user.role === 'ADMIN' ? 'admin' :
-    user.role === 'AUDITOR' ? 'auditor' :
-    ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk'
-  ) : 'clerk';
+  const roleCategory = getRoleCategory(user.role);
 
-  if (item.key === 'fx_rates' && normalizedRole === 'clerk') {
+  // FX rates are only for roles with management-level financial visibility
+  if (item.key === 'fx_rates' && (roleCategory === 'clerk' || roleCategory === 'operations')) {
     return false;
   }
 
-  const roleKey = user.role as keyof typeof PERMISSION_MATRIX;
-  const allowed = PERMISSION_MATRIX[roleKey]?.[item.resource] ?? [];
-  return allowed.includes('view');
+  return checkPermission(user.role, 'view', item.resource);
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
@@ -237,13 +233,9 @@ function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: 
   const { user, isLoading } = useAuth();
   
   if (!isLoading) {
-    const normalizedRole = user?.role ? (
-      user.role === 'ADMIN' ? 'admin' :
-      user.role === 'AUDITOR' ? 'auditor' :
-      ['GM', 'INV_MGR', 'STORE_MGR', 'PROC_OFFICER'].includes(user.role) ? 'manager' : 'clerk'
-    ) : 'clerk';
+    const roleCategory = user?.role ? getRoleCategory(user.role) : 'clerk';
 
-    if (item.key === 'fx_rates' && normalizedRole === 'clerk') {
+    if (item.key === 'fx_rates' && (roleCategory === 'clerk' || roleCategory === 'operations')) {
       return null;
     }
   }

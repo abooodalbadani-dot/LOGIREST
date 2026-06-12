@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-E:\kitchen-store-inventory-system\specs\047-hardening-e2e-validation\plan.md
+c:\kitchen-store-inventory-system\specs\048-rbac-master-data-guards\plan.md
 <!-- SPECKIT END -->
 
 # CRITICAL TYPESCRIPT RULES FOR THIS WORKSPACE:
@@ -100,3 +100,40 @@ alwaysApply: true
 ---
 
 
+# AI Agent Guardrails & Scope Freeze Policy
+**Project:** LogiRest (Kitchen-Store-Inventory-System)
+**Status:** Active / Mandatory
+**Phase:** Pre-Launch Stabilization
+**Target Environment:** Antigravity IDE (AI Developer Agents Integration)
+
+## 1. Objective & Purpose
+This document establishes absolute behavioral guardrails and operational constraints for AI development agents operating within the IDE. The immediate goal is to halt scope creep, enforce a strict feature freeze, and focus exclusively on stabilizing the core internal logistics and inventory scope defined in the project proposal, without breaking the existing codebase or deleting forward-looking architectural files.
+
+## 2. Core Directives for AI Agents (The System Prompt)
+All AI agents must strictly adhere to the following execution rules during this phase:
+- **Debug & Refactor Mode Only:** The agent must operate exclusively in a stabilization capacity. Do not propose, generate, or inject new features, additional database fields, or unrequested UI components.
+- **Scope Absolute Restriction:** The active development scope is limited strictly to internal logistics (ledger-based stock movements, FEFO lot allocation, stocktake snapshots/locks, and basic procurement workflows). Any request or auto-suggested path outside this definition must be flagged as out-of-scope.
+- **Idempotency and Non-Disruption:** Code modifications must be highly localized. Agents must ensure that bug fixes do not alter existing established logic or introduce breaking changes to the project's architecture boundaries or UI routing.
+
+## 3. File Management & Deactivation Strategy (Hiding vs. Deletion)
+To preserve work done on extended features while ensuring a clean MVP presentation, the following protocols must be followed to hide out-of-scope files without deleting them:
+
+| Layer / Component | Preservation & Hiding Strategy | Safety Condition (Prevent Code Breaking) |
+| :--- | :--- | :--- |
+| **Frontend Application / UI Layer** | Move out-of-scope page directories or views into a backup/features directory prefixed with an underscore (e.g., `_v2-features/`) or exclude them from the main navigation layout dynamically. | Ensure no active router/navigation links point to the hidden routes. Replace active links with disabled states or hide the navigation links entirely. |
+| **Backend API / Application Layer** | Retain all extra domain entities, handlers, controllers, or services. Deactivate the entry points by commenting them out from the main routing/API registration, or wrapping them in conditional compilation blocks if applicable. | If active core features depend on extended models, stub the dependencies with default or null responses rather than removing the properties, ensuring compilation/execution remains 100% successful. |
+| **Database Schema & Seed Data** | Keep extended tables and columns intact. Do not drop any tables. Update the active migrations, ORM models, or data access logic to simply ignore these columns or pass default/nullable values. | Ensure no database constraints (like non-nullable foreign keys on extended tables) block the core transactional flow of the inventory ledger. |
+
+## 4. Execution Guardrails for Antigravity IDE Agents
+When prompting or interacting with AI agents within the IDE, the following instruction block must be appended to the active context layer:
+
+> **CRITICAL INSTRUCTION FOR THE AGENT:**
+> 1. You are locked in STABILIZATION AND BUG-FIX MODE for the LogiRest project.
+> 2. DO NOT delete any existing files, classes, or database columns, even if they appear unused or related to future phases.
+> 3. If a file or route is designated as "hidden" or "V2", preserve it completely but exclude it from the current active UI navigation and compilation path.
+> 4. Focus only on resolving errors within the active MVP scope (Ledger, FEFO, Stocktake, basic PR/PO/GRN).
+> 5. Maintain strict architectural boundaries based on the current codebase. Do not introduce speculative code or assume specific frameworks unless they already exist in the project files.
+
+## 5. Project Proposal Reference
+**Active Proposal Link/Path:** `[C:\kitchen-store-inventory-system\PROJECT PROPOSAL.md]`
+The agent must read the specified proposal document to cross-reference and validate whether a specific feature or screen belongs to the active MVP boundary before execution.

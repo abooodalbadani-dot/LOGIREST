@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { BcryptService } from './bcrypt.service';
 import { RtrService } from './rtr.service';
@@ -143,7 +147,7 @@ describe('AuthService', () => {
       expect(result.token).toBe('mock-access-token');
       expect(result.user.id).toBe('user-1');
       expect(result.user.scopes).toEqual([
-        { branch_id: 'br-1', warehouse_id: 'wh-1', department_id: null },
+        { branchId: 'br-1', warehouseId: 'wh-1', departmentId: null },
       ]);
       expect(mockRtrService.createSession).toHaveBeenCalledWith(
         'user-1',
@@ -170,8 +174,8 @@ describe('AuthService', () => {
 
       expect(result.id).toBe('user-1');
       expect(result.scopes).toEqual([
-        { branch_id: 'br-1', warehouse_id: 'wh-1', department_id: null },
-        { branch_id: 'br-1', warehouse_id: 'wh-2', department_id: null },
+        { branchId: 'br-1', warehouseId: 'wh-1', departmentId: null },
+        { branchId: 'br-1', warehouseId: 'wh-2', departmentId: null },
       ]);
     });
 
@@ -181,6 +185,48 @@ describe('AuthService', () => {
       await expect(authService.getProfile('user-1')).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should throw if user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        authService.changePassword('user-1', 'old-pass', 'new-pass'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if current password does not match', async () => {
+      const hash = await bcryptService.hash('correct-pass');
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        passwordHash: hash,
+      });
+
+      await expect(
+        authService.changePassword('user-1', 'wrong-pass', 'new-pass'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update user password and create audit log', async () => {
+      const hash = await bcryptService.hash('old-pass');
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        passwordHash: hash,
+      });
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      const result = await authService.changePassword(
+        'user-1',
+        'old-pass',
+        'new-pass',
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockPrisma.user.update).toHaveBeenCalled();
+      expect(mockPrisma.auditLog.create).toHaveBeenCalled();
     });
   });
 });

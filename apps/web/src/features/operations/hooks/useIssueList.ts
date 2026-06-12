@@ -11,7 +11,10 @@ export const IssueSummarySchema = z.object({
   documentNumber: z.string(),
   status: BadgeStatusSchema,
   destinationDeptId: z.string().nullable().optional(),
+  destinationDepartmentName: z.string().optional().nullable(),
+  departmentName: z.string().optional().nullable(),
   warehouseId: z.string(),
+  warehouseName: z.string().optional().nullable(),
   createdAt: z.string(),
   postedAt: z.string().nullable().optional()
 });
