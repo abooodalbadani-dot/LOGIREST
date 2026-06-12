@@ -2,7 +2,7 @@
 // DEV ONLY — DO NOT RUN IN PRODUCTION
 // Contains hardcoded default credentials and mock data.
 // ==========================================
-import { PrismaClient, Role, LotStatus, DocumentType } from '@prisma/client';
+import { PrismaClient, Role, LotStatus, DocumentType, UnitOfMeasure, Category } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -141,7 +141,7 @@ async function main() {
     { name: 'Pound', code: 'LB' },
   ];
 
-  const uoms: Record<string, any> = {};
+  const uoms: Record<string, UnitOfMeasure> = {};
   for (const uom of uomData) {
     uoms[uom.code] = await prisma.unitOfMeasure.upsert({
       where: { code: uom.code },
@@ -215,7 +215,7 @@ async function main() {
     'Spices & Seasoning',
   ];
 
-  const categories: Record<string, any> = {};
+  const categories: Record<string, Category> = {};
   for (const name of categoryNames) {
     categories[name] = await prisma.category.upsert({
       where: { name },

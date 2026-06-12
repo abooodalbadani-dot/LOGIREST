@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useItem, useCreateItem, useUpdateItem, useDeleteItem, useItems } from '@/features/items/hooks/useItems';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useMasterDataList } from '@/features/master-data/hooks/useMasterDataCRUD';
-import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category, type UoMConversion } from '@/types/master-data';
+import { ItemFormSchema, type ItemFormValues, UoMSchema, type Category, type UoMConversion, type Item } from '@/types/master-data';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { ScanInput } from '@/components/shared/ScanInput/ScanInput';
@@ -95,7 +95,7 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
 
   useEffect(() => {
     if (!id && itemsData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = itemsData.data.map((i: any) => i.code);
+      const existingCodes = itemsData.data.map((i: Item) => i.code);
       const nextCode = generateNextCode(existingCodes, 'ITEM-', 4);
       setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
       setIsAutoPopulated(true);

@@ -25,11 +25,11 @@ jest.mock('ioredis', () => {
       return new Proxy(this, {
         get: (target, prop) => {
           if (prop in target) {
-            const val = (target as any)[prop];
-            return typeof val === 'function' ? val.bind(target) : val;
+            const val = Reflect.get(target, prop);
+            return typeof val === 'function' ? (val as (...args: unknown[]) => unknown).bind(target) : val;
           }
           if (typeof prop === 'string') {
-            return (...args: any[]) => Promise.resolve([]);
+            return (...args: unknown[]) => Promise.resolve([]);
           }
           return undefined;
         },
@@ -58,7 +58,7 @@ jest.mock('ioredis', () => {
     duplicate() {
       return new MockRedis();
     }
-    defineCommand(name: string, definition: any) {
+    defineCommand(name: string, definition: unknown) {
       // No-op. The Proxy handles invocations of dynamically defined commands.
     }
     info() {
@@ -66,8 +66,8 @@ jest.mock('ioredis', () => {
     }
   }
   // Assign ES default and named exports to the constructor itself so both CJS and ESM imports work
-  (MockRedis as any).default = MockRedis;
-  (MockRedis as any).Redis = MockRedis;
+  (MockRedis as unknown as Record<string, unknown>).default = MockRedis;
+  (MockRedis as unknown as Record<string, unknown>).Redis = MockRedis;
   return MockRedis;
 });
 */
@@ -112,7 +112,7 @@ describe('Outbox Notification Queue (e2e)', () => {
 
     // Mock Queue.add using Jest spy on the real instance to bypass Redis writes
     const queue = app.get(getQueueToken('outbox'));
-    jest.spyOn(queue, 'add').mockResolvedValue({ id: 'mock-job-id' } as any);
+    jest.spyOn(queue, 'add').mockResolvedValue({ id: 'mock-job-id' } as unknown as Awaited<ReturnType<typeof queue.add>>);
 
     prisma = app.get(PrismaService);
     bcrypt = app.get(BcryptService);
@@ -259,8 +259,8 @@ describe('Outbox Notification Queue (e2e)', () => {
         await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`);
         await prisma.stockLedger.deleteMany({ where: { itemId } });
         await prisma.costLedger.deleteMany({ where: { itemId } });
-      } catch (err: any) {
-        console.warn('Could not disable trigger or delete ledgers in afterAll:', err.message);
+      } catch (err: unknown) {
+        console.warn('Could not disable trigger or delete ledgers in afterAll:', err instanceof Error ? err.message : String(err));
       } finally {
         try {
           await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);
@@ -357,8 +357,10 @@ describe('Outbox Notification Queue (e2e)', () => {
     expect(outboxEvents.length).toBeGreaterThanOrEqual(1);
 
     const matchEvent = outboxEvents.find((e) => {
-      const payloadObj = e.payload as any;
-      return payloadObj.id === prId;
+      const payloadObj = e.payload && typeof e.payload === 'object' && !Array.isArray(e.payload)
+        ? (e.payload as Record<string, unknown>)
+        : null;
+      return payloadObj?.id === prId;
     });
 
     expect(matchEvent).toBeDefined();
@@ -472,8 +474,10 @@ describe('Outbox Notification Queue (e2e)', () => {
     expect(outboxEvents.length).toBeGreaterThanOrEqual(1);
 
     const matchEvent = outboxEvents.find((e) => {
-      const payloadObj = e.payload as any;
-      return payloadObj.issueId === issueId;
+      const payloadObj = e.payload && typeof e.payload === 'object' && !Array.isArray(e.payload)
+        ? (e.payload as Record<string, unknown>)
+        : null;
+      return payloadObj?.issueId === issueId;
     });
     expect(matchEvent).toBeDefined();
     expect(matchEvent?.status).toBe('PENDING');
@@ -600,8 +604,8 @@ describe('Outbox Notification Queue (e2e)', () => {
       await prisma.$executeRawUnsafe(`ALTER TABLE cost_ledger DISABLE TRIGGER cost_ledger_immutable;`);
       await prisma.stockLedger.deleteMany({ where: { OR: [{ warehouseId: sourceWh.id }, { itemId }] } });
       await prisma.costLedger.deleteMany({ where: { OR: [{ warehouseId: sourceWh.id }, { itemId }] } });
-    } catch (err: any) {
-      console.warn('Could not disable trigger or delete ledgers:', err.message);
+    } catch (err: unknown) {
+      console.warn('Could not disable trigger or delete ledgers:', err instanceof Error ? err.message : String(err));
     } finally {
       try {
         await prisma.$executeRawUnsafe(`ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`);

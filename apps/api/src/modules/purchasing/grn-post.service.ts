@@ -7,7 +7,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
 import { DocumentType, Role } from '@logirest/shared-types';
-import { DocumentType as PrismaDocType } from '@prisma/client';
+import { DocumentType as PrismaDocType, GoodsReceivedNote } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class GrnPostService {
   ): Promise<any> {
     return this.prisma.$transaction(async (tx) => {
       // Lock the document first
-      const lockedDoc = await this.lockService.lockDocument(
+      const lockedDoc = await this.lockService.lockDocument<GoodsReceivedNote>(
         tx,
         grnId,
         PrismaDocType.GOODS_RECEIVED_NOTE,

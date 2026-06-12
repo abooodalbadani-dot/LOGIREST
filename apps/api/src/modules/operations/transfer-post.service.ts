@@ -41,7 +41,7 @@ export class TransferPostService {
       return await this.prisma.$transaction(
         async (tx) => {
           // Lock the document first using SELECT FOR UPDATE
-          const lockedDoc = await this.lockService.lockDocument(
+          const lockedDoc = await this.lockService.lockDocument<Transfer>(
             tx,
             transferId,
             DocumentType.TRANSFER,
@@ -343,7 +343,7 @@ export class TransferPostService {
       return await this.prisma.$transaction(
         async (tx) => {
           // Lock the document first using SELECT FOR UPDATE
-          const lockedDoc = await this.lockService.lockDocument(
+          const lockedDoc = await this.lockService.lockDocument<Transfer>(
             tx,
             transferId,
             DocumentType.TRANSFER,

@@ -19,7 +19,7 @@ import { MasterDataFormLayout } from '@/features/master-data/components/MasterDa
 import { SmartCombobox } from '@/components/shared/SmartCombobox';
 import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { generateNextCode } from '@/lib/code-generator';
-import { SupplierFormSchema, type SupplierFormValues } from '@/types/master-data';
+import { SupplierFormSchema, type SupplierFormValues, type Supplier } from '@/types/master-data';
 import { useCurrencies, type Currency } from '@/features/purchasing/hooks/useCurrencies';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -95,7 +95,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   useEffect(() => {
     if (!id && suppliersData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = suppliersData.data.map((s: any) => s.code);
+      const existingCodes = suppliersData.data.map((s: Supplier) => s.code);
       const nextCode = generateNextCode(existingCodes, 'SUP-', 4);
       setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
       setIsAutoPopulated(true);

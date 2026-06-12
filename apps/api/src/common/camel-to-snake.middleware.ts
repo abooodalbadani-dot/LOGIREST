@@ -7,14 +7,14 @@ export class CamelToSnakeMiddleware implements NestMiddleware {
     if (
       req.body &&
       typeof req.body === 'object' &&
-      Object.keys(req.body).length > 0
+      Object.keys(req.body as Record<string, unknown>).length > 0
     ) {
-      req.body = this.transform(req.body);
+      req.body = this.transform(req.body) as Record<string, unknown>;
     }
     next();
   }
 
-  private transform(data: any): any {
+  private transform(data: unknown): unknown {
     if (data === null || data === undefined) {
       return data;
     }
@@ -24,14 +24,15 @@ export class CamelToSnakeMiddleware implements NestMiddleware {
     }
 
     if (Array.isArray(data)) {
-      return data.map((item) => this.transform(item));
+      return data.map((item: unknown) => this.transform(item));
     }
 
     if (typeof data === 'object') {
-      const result: Record<string, any> = {};
+      const result: Record<string, unknown> = {};
+      const obj = data as Record<string, unknown>;
 
-      for (const key of Object.keys(data)) {
-        const value = data[key];
+      for (const key of Object.keys(obj)) {
+        const value = obj[key];
         const snakeKey = this.toSnakeCase(key);
 
         if (value === null || value === undefined) {

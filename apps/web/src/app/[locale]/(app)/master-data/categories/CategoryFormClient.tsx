@@ -14,7 +14,7 @@ import {
   useDeleteCategory,
   useCategories,
 } from '@/features/categories/hooks/useCategories';
-import { CategoryFormSchema, type CategoryFormValues } from '@/types/master-data';
+import { CategoryFormSchema, type CategoryFormValues, type Category } from '@/types/master-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Layers, Edit3, Trash2, AlertTriangle } from 'lucide-react';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -72,7 +72,7 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
 
   useEffect(() => {
     if (!id && categoriesData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = categoriesData.data.map((c: any) => c.code);
+      const existingCodes = categoriesData.data.map((c: Category) => c.code);
       const nextCode = generateNextCode(existingCodes, 'CAT-', 3);
       setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
       setIsAutoPopulated(true);

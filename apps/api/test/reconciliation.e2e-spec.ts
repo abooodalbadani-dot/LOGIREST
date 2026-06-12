@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
 import { ReconciliationJob } from '../src/modules/ledger/reconciliation.job';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 
 describe('Reconciliation Drift (e2e)', () => {
   jest.setTimeout(180000);
@@ -60,8 +60,8 @@ describe('Reconciliation Drift (e2e)', () => {
     if (prisma) {
       try {
         await prisma.notificationLog.deleteMany({ where: { warehouseId } });
-      } catch (err: any) {
-        console.warn('Failed to delete notificationLog:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete notificationLog:', err instanceof Error ? err.message : String(err));
       }
 
       try {
@@ -69,53 +69,53 @@ describe('Reconciliation Drift (e2e)', () => {
           `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
         );
         await prisma.stockLedger.deleteMany({ where: { itemId } });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn(
           'Could not disable trigger or delete stockLedger:',
-          err.message,
+          err instanceof Error ? err.message : String(err),
         );
       } finally {
         try {
           await prisma.$executeRawUnsafe(
             `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
           );
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.warn(
             'Failed to re-enable stock_ledger trigger:',
-            err.message,
+            err instanceof Error ? err.message : String(err),
           );
         }
       }
 
       try {
         await prisma.warehouseItem.deleteMany({ where: { itemId } });
-      } catch (err: any) {
-        console.warn('Failed to delete warehouseItem:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete warehouseItem:', err instanceof Error ? err.message : String(err));
       }
       try {
         await prisma.item.deleteMany({ where: { categoryId } });
-      } catch (err: any) {
-        console.warn('Failed to delete item:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete item:', err instanceof Error ? err.message : String(err));
       }
       try {
         await prisma.unitOfMeasure.delete({ where: { id: uomId } });
-      } catch (err: any) {
-        console.warn('Failed to delete unitOfMeasure:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete unitOfMeasure:', err instanceof Error ? err.message : String(err));
       }
       try {
         await prisma.category.delete({ where: { id: categoryId } });
-      } catch (err: any) {
-        console.warn('Failed to delete category:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete category:', err instanceof Error ? err.message : String(err));
       }
       try {
         await prisma.warehouse.delete({ where: { id: warehouseId } });
-      } catch (err: any) {
-        console.warn('Failed to delete warehouse:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete warehouse:', err instanceof Error ? err.message : String(err));
       }
       try {
         await prisma.branch.delete({ where: { id: branchId } });
-      } catch (err: any) {
-        console.warn('Failed to delete branch:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete branch:', err instanceof Error ? err.message : String(err));
       }
       try {
         await prisma.reconciliationRun.deleteMany({
@@ -125,8 +125,8 @@ describe('Reconciliation Drift (e2e)', () => {
             },
           },
         });
-      } catch (err: any) {
-        console.warn('Failed to delete reconciliationRun:', err.message);
+      } catch (err: unknown) {
+        console.warn('Failed to delete reconciliationRun:', err instanceof Error ? err.message : String(err));
       }
       await prisma.$disconnect();
     }
@@ -264,14 +264,27 @@ describe('Reconciliation Drift (e2e)', () => {
 
     const transactionSpy = jest
       .spyOn(prisma, '$transaction')
-      .mockImplementation(async function (this: any, arg1: any, arg2: any) {
+      .mockImplementation(async function (
+        this: unknown,
+        arg1: unknown,
+        arg2: unknown,
+      ) {
+        const transFn = originalTransaction as (
+          arg1: unknown,
+          arg2?: unknown,
+        ) => Promise<unknown>;
+
         if (typeof arg1 === 'function') {
-          const originalCallback = arg1;
-          const wrappedCallback = async (tx: any) => {
-            const originalFindMany = tx.lotAllocation.findMany;
-            tx.lotAllocation.findMany = async function (
-              this: any,
-              ...args: any[]
+          const originalCallback = arg1 as (tx: Prisma.TransactionClient) => Promise<unknown>;
+          const wrappedCallback = async (tx: Prisma.TransactionClient) => {
+            const txObj = tx as unknown as Record<
+              string,
+              Record<string, (...args: unknown[]) => Promise<unknown>>
+            >;
+            const originalFindMany = txObj.lotAllocation.findMany;
+            txObj.lotAllocation.findMany = async function (
+              this: unknown,
+              ...args: unknown[]
             ) {
               const res = await originalFindMany.apply(this, args);
 
@@ -303,9 +316,9 @@ describe('Reconciliation Drift (e2e)', () => {
             };
             return originalCallback(tx);
           };
-          return originalTransaction.call(this, wrappedCallback, arg2);
+          return transFn(wrappedCallback, arg2);
         }
-        return originalTransaction.call(this, arg1, arg2);
+        return transFn(arg1, arg2);
       });
 
     try {
@@ -327,17 +340,17 @@ describe('Reconciliation Drift (e2e)', () => {
           `ALTER TABLE stock_ledger DISABLE TRIGGER stock_ledger_immutable;`,
         );
         await prisma.stockLedger.deleteMany({ where: { itemId: testItemId } });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn(
           'Failed to clean up stockLedger for iso test:',
-          err.message,
+          err instanceof Error ? err.message : String(err),
         );
       } finally {
         try {
           await prisma.$executeRawUnsafe(
             `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
           );
-        } catch (err: any) {
+        } catch (err: unknown) {
           // ignore
         }
       }
@@ -345,12 +358,12 @@ describe('Reconciliation Drift (e2e)', () => {
         await prisma.warehouseItem.deleteMany({
           where: { itemId: testItemId },
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // ignore
       }
       try {
         await prisma.item.delete({ where: { id: testItemId } });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // ignore
       }
     }
@@ -492,17 +505,17 @@ describe('Reconciliation Drift (e2e)', () => {
         await prisma.stockLedger.deleteMany({
           where: { itemId: { in: [itemAId, itemBId] } },
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn(
           'Failed to clean up stockLedger for lot test:',
-          err.message,
+          err instanceof Error ? err.message : String(err),
         );
       } finally {
         try {
           await prisma.$executeRawUnsafe(
             `ALTER TABLE stock_ledger ENABLE TRIGGER stock_ledger_immutable;`,
           );
-        } catch (err: any) {
+        } catch (err: unknown) {
           // ignore
         }
       }
@@ -511,14 +524,14 @@ describe('Reconciliation Drift (e2e)', () => {
         await prisma.warehouseItemLot.deleteMany({
           where: { itemId: { in: [itemAId, itemBId] } },
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // ignore
       }
       try {
         await prisma.warehouseItem.deleteMany({
           where: { itemId: { in: [itemAId, itemBId] } },
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // ignore
       }
       try {

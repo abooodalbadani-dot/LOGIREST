@@ -12,6 +12,13 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 
+export interface BaseLockedDocument {
+  id: string;
+  version: number;
+  status: string;
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class LedgerLockService {
   private readonly logger = new Logger(LedgerLockService.name);
@@ -21,11 +28,11 @@ export class LedgerLockService {
   /**
    * Locks a document row using raw SQL SELECT FOR UPDATE.
    */
-  async lockDocument(
+  async lockDocument<T extends Record<string, unknown> = BaseLockedDocument>(
     tx: Prisma.TransactionClient,
     documentId: string,
     documentType: DocumentType,
-  ): Promise<any> {
+  ): Promise<T | null> {
     this.logger.debug(
       `Locking document: id=${documentId}, type=${documentType}`,
     );
@@ -62,7 +69,7 @@ export class LedgerLockService {
     }
 
     const query = `SELECT * FROM "${tableName}" WHERE "id" = $1 FOR UPDATE`;
-    const results = await tx.$queryRawUnsafe<any[]>(query, documentId);
+    const results = await tx.$queryRawUnsafe<T[]>(query, documentId);
     if (!results || results.length === 0) {
       return null;
     }

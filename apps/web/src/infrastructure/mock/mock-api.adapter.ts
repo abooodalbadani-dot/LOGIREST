@@ -108,12 +108,14 @@ async function hydratePR(pr: PurchaseRequest, body: HydrationBody): Promise<Purc
 /**
  * Hydrates an Adjustment with nested item details
  */
-async function hydrateAdjustment(doc: any): Promise<any> {
-  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const item = await db.items.findById(l.item_id);
+async function hydrateAdjustment(doc: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const docLines = (doc.lines || []) as Record<string, unknown>[];
+  const lines = await Promise.all(docLines.map(async (l) => {
+    const itemId = String(l.item_id || l.itemId || '');
+    const item = await db.items.findById(itemId);
     return {
-      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      itemId: l.item_id,
+      id: String(l.id || `line-${Math.random().toString(36).substring(7)}`),
+      itemId,
       item: item ? {
         id: item.id,
         code: item.code,
@@ -125,17 +127,17 @@ async function hydrateAdjustment(doc: any): Promise<any> {
           code: item.primaryUom.code,
         }
       } : {
-        id: l.item_id,
+        id: itemId,
         code: 'CUSTOM',
         name_ar: 'Custom Item',
         name_en: 'Custom Item',
-        primary_uom: { id: l.uomId || 'uom-pcs', code: 'PCS' }
+        primary_uom: { id: String(l.uomId || 'uom-pcs'), code: 'PCS' }
       },
-      direction: l.direction || 'INCREASE',
-      qty_before: l.qty_before ?? 0,
-      qty_adjusted: l.qty_adjusted ?? 0,
-      uomId: l.uomId || item?.primaryUom.id || 'uom-pcs',
-      reason_notes: l.reason_notes || undefined,
+      direction: String(l.direction || 'INCREASE'),
+      qty_before: Number(l.qty_before ?? 0),
+      qty_adjusted: Number(l.qty_adjusted ?? 0),
+      uomId: String(l.uomId || item?.primaryUom.id || 'uom-pcs'),
+      reason_notes: l.reason_notes ? String(l.reason_notes) : undefined,
     };
   }));
   return { ...doc, lines };
@@ -144,87 +146,30 @@ async function hydrateAdjustment(doc: any): Promise<any> {
 /**
  * Hydrates an Issue with UoM and lot allocations
  */
-async function hydrateIssue(doc: any): Promise<any> {
-  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const item = await db.items.findById(l.itemId);
-    const lot = l.lotId ? await db.lots.findById(l.lotId) : null;
-    
-    const lotAllocations = await Promise.all((l.lotAllocations || []).map(async (alloc: any) => {
-      const aLot = await db.lots.findById(alloc.lotId);
-      return {
-        lotId: alloc.lotId,
-        lotNumber: alloc.lotNumber || aLot?.lotNumber || '',
-        expiryDate: alloc.expiryDate || aLot?.expiryDate || null,
-        allocatedQty: alloc.allocatedQty ?? 0,
-        overrideReason: alloc.overrideReason || null
-      };
-    }));
-
-    return {
-      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      documentId: doc.id,
-      itemId: l.itemId,
-      item: item ? {
-        id: item.id,
-        code: item.code,
-        name: item.name,
-        nameAr: item.name,
-        nameEn: item.name,
-        primaryUom: {
-          id: item.primaryUom.id,
-          code: item.primaryUom.code,
-          nameAr: item.primaryUom.name || item.primaryUom.code,
-          nameEn: item.primaryUom.name || item.primaryUom.code
-        }
-      } : {
-        id: l.itemId,
-        code: 'CUSTOM',
-        nameAr: 'Custom Item',
-        nameEn: 'Custom Item',
-        primaryUom: { id: l.uomId || 'uom-pcs', code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
-      },
-      lotId: l.lotId || null,
-      lot: lot ? {
-        id: lot.id,
-        lotNumber: lot.lotNumber,
-        expiryDate: lot.expiryDate || null,
-        isExpired: lot.isExpired || false,
-      } : null,
-      qty: l.qty ?? 0,
-      uomId: l.uomId || item?.primaryUom.id || 'uom-pcs',
-      unitCost: l.unitCost ?? null,
-      requestedQty: l.requestedQty ?? l.qty ?? 0,
-      issuedQty: l.issuedQty ?? 0,
-      lotAllocations: lotAllocations
-    };
-  }));
-  return { ...doc, lines };
-}
-
-/**
- * Hydrates a Transfer with lot allocations and exact null fields
- */
-async function hydrateTransfer(doc: any): Promise<any> {
-  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const itemId = l.itemId || l.item_id;
+async function hydrateIssue(doc: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const docLines = (doc.lines || []) as Record<string, unknown>[];
+  const lines = await Promise.all(docLines.map(async (l) => {
+    const itemId = String(l.itemId || l.item_id || '');
     const item = await db.items.findById(itemId);
+    const lotId = l.lotId ? String(l.lotId) : null;
+    const lot = lotId ? await db.lots.findById(lotId) : null;
     
-    const lotAllocations = await Promise.all((l.lotAllocations || l.lot_allocations || []).map(async (alloc: any) => {
-      const aLot = await db.lots.findById(alloc.lotId || alloc.lot_id);
+    const lotAllocationsList = (l.lotAllocations || []) as Record<string, unknown>[];
+    const lotAllocations = await Promise.all(lotAllocationsList.map(async (alloc) => {
+      const allocLotId = String(alloc.lotId || '');
+      const aLot = await db.lots.findById(allocLotId);
       return {
-        lotId: alloc.lotId || alloc.lot_id,
-        lotNumber: alloc.lotNumber || alloc.lot_number || aLot?.lotNumber || '',
-        expiryDate: alloc.expiryDate || alloc.expiry_date || aLot?.expiryDate || null,
-        allocatedQty: alloc.allocatedQty || alloc.allocated_qty || alloc.qty || 0,
-        overrideReason: alloc.overrideReason || alloc.override_reason || null
+        lotId: allocLotId,
+        lotNumber: String(alloc.lotNumber || aLot?.lotNumber || ''),
+        expiryDate: alloc.expiryDate ? String(alloc.expiryDate) : (aLot?.expiryDate || null),
+        allocatedQty: Number(alloc.allocatedQty ?? 0),
+        overrideReason: alloc.overrideReason ? String(alloc.overrideReason) : null
       };
     }));
 
-    const shippedQty = l.quantityShipped ?? l.shippedQty ?? l.qty ?? 0;
-
     return {
-      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
-      documentId: doc.id,
+      id: String(l.id || `line-${Math.random().toString(36).substring(7)}`),
+      documentId: String(doc.id || ''),
       itemId,
       item: item ? {
         id: item.id,
@@ -243,15 +188,80 @@ async function hydrateTransfer(doc: any): Promise<any> {
         code: 'CUSTOM',
         nameAr: 'Custom Item',
         nameEn: 'Custom Item',
-        primaryUom: { id: l.uomId || l.uom_id || 'uom-pcs', code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
+        primaryUom: { id: String(l.uomId || 'uom-pcs'), code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
       },
-      lotId: l.lotId || l.lot_id || null,
+      lotId: lotId || null,
+      lot: lot ? {
+        id: lot.id,
+        lotNumber: lot.lotNumber,
+        expiryDate: lot.expiryDate || null,
+        isExpired: lot.isExpired || false,
+      } : null,
+      qty: Number(l.qty ?? 0),
+      uomId: String(l.uomId || item?.primaryUom.id || 'uom-pcs'),
+      unitCost: l.unitCost !== undefined && l.unitCost !== null ? Number(l.unitCost) : null,
+      requestedQty: Number(l.requestedQty ?? l.qty ?? 0),
+      issuedQty: Number(l.issuedQty ?? 0),
+      lotAllocations: lotAllocations
+    };
+  }));
+  return { ...doc, lines };
+}
+
+/**
+ * Hydrates a Transfer with lot allocations and exact null fields
+ */
+async function hydrateTransfer(doc: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const docLines = (doc.lines || []) as Record<string, unknown>[];
+  const lines = await Promise.all(docLines.map(async (l) => {
+    const itemId = String(l.itemId || l.item_id || '');
+    const item = await db.items.findById(itemId);
+    
+    const lotAllocationsList = (l.lotAllocations || l.lot_allocations || []) as Record<string, unknown>[];
+    const lotAllocations = await Promise.all(lotAllocationsList.map(async (alloc) => {
+      const allocLotId = String(alloc.lotId || alloc.lot_id || '');
+      const aLot = await db.lots.findById(allocLotId);
+      return {
+        lotId: allocLotId,
+        lotNumber: String(alloc.lotNumber || alloc.lot_number || aLot?.lotNumber || ''),
+        expiryDate: alloc.expiryDate ? String(alloc.expiryDate) : (alloc.expiry_date ? String(alloc.expiry_date) : (aLot?.expiryDate || null)),
+        allocatedQty: Number(alloc.allocatedQty || alloc.allocated_qty || alloc.qty || 0),
+        overrideReason: alloc.overrideReason ? String(alloc.overrideReason) : (alloc.override_reason ? String(alloc.override_reason) : null)
+      };
+    }));
+
+    const shippedQty = Number(l.quantityShipped ?? l.shippedQty ?? l.qty ?? 0);
+
+    return {
+      id: String(l.id || `line-${Math.random().toString(36).substring(7)}`),
+      documentId: String(doc.id || ''),
+      itemId,
+      item: item ? {
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        nameAr: item.name,
+        nameEn: item.name,
+        primaryUom: {
+          id: item.primaryUom.id,
+          code: item.primaryUom.code,
+          nameAr: item.primaryUom.name || item.primaryUom.code,
+          nameEn: item.primaryUom.name || item.primaryUom.code
+        }
+      } : {
+        id: itemId,
+        code: 'CUSTOM',
+        nameAr: 'Custom Item',
+        nameEn: 'Custom Item',
+        primaryUom: { id: String(l.uomId || l.uom_id || 'uom-pcs'), code: 'PCS', nameAr: 'حبة', nameEn: 'Piece' }
+      },
+      lotId: l.lotId ? String(l.lotId) : (l.lot_id ? String(l.lot_id) : null),
       lot: null,
       qty: shippedQty,
       unitCost: null,
       shippedQty: shippedQty,
-      receivedQty: l.receivedQty !== undefined ? l.receivedQty : null,
-      uomId: l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs',
+      receivedQty: l.receivedQty !== undefined && l.receivedQty !== null ? Number(l.receivedQty) : null,
+      uomId: String(l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs'),
       lotAllocations: lotAllocations
     };
   }));
@@ -261,17 +271,19 @@ async function hydrateTransfer(doc: any): Promise<any> {
 /**
  * Hydrates a Kitchen Request
  */
-async function hydrateKitchenRequest(doc: any): Promise<any> {
-  const items = await Promise.all((doc.items || []).map(async (l: any) => {
-    const item = await db.items.findById(l.item_id);
+async function hydrateKitchenRequest(doc: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const docItems = (doc.items || []) as Record<string, unknown>[];
+  const items = await Promise.all(docItems.map(async (l) => {
+    const itemId = String(l.item_id || l.itemId || '');
+    const item = await db.items.findById(itemId);
     return {
-      id: l.id || `item-${Math.random().toString(36).substring(7)}`,
-      itemId: l.item_id,
+      id: String(l.id || `item-${Math.random().toString(36).substring(7)}`),
+      itemId,
       itemName: item ? item.name : 'Custom Item',
       uom: item ? item.primaryUom.code : 'PCS',
-      quantity: l.quantity ?? 0,
-      notes: l.notes || '',
-      fulfilled_quantity: l.fulfilled_quantity ?? 0
+      quantity: Number(l.quantity ?? 0),
+      notes: l.notes ? String(l.notes) : '',
+      fulfilled_quantity: Number(l.fulfilled_quantity ?? 0)
     };
   }));
   return { ...doc, items };
@@ -280,22 +292,24 @@ async function hydrateKitchenRequest(doc: any): Promise<any> {
 /**
  * Hydrates a Goods Received Note (GRN) with nested supplier/lots
  */
-async function hydrateGRN(doc: any): Promise<any> {
+async function hydrateGRN(doc: Record<string, unknown>): Promise<Record<string, unknown>> {
   const supplierId = doc.supplierId || doc.supplier_id;
-  const supplier = supplierId ? await db.suppliers.findById(supplierId) : null;
-  const lines = await Promise.all((doc.lines || []).map(async (l: any) => {
-    const itemId = l.itemId || l.item_id;
+  const supplier = supplierId ? await db.suppliers.findById(String(supplierId)) : null;
+  const docLines = (doc.lines || []) as Record<string, unknown>[];
+  const lines = await Promise.all(docLines.map(async (l) => {
+    const itemId = String(l.itemId || l.item_id || '');
     const item = await db.items.findById(itemId);
     
     let lotVal = null;
-    if (l.lot) {
+    const lLot = l.lot as Record<string, unknown> | null;
+    if (lLot) {
       lotVal = {
-        id: l.lot.id || `lot-${Math.random().toString(36).substring(7)}`,
-        lotNumber: l.lot.lotNumber || l.lot.lot_number || '',
-        expiry_date: l.lot.expiryDate || l.lot.expiry_date || null
+        id: String(lLot.id || `lot-${Math.random().toString(36).substring(7)}`),
+        lotNumber: String(lLot.lotNumber || lLot.lot_number || ''),
+        expiry_date: lLot.expiryDate ? String(lLot.expiryDate) : (lLot.expiry_date ? String(lLot.expiry_date) : null)
       };
     } else if (l.lotId || l.lot_id) {
-      const dbLot = await db.lots.findById(l.lotId || l.lot_id);
+      const dbLot = await db.lots.findById(String(l.lotId || l.lot_id));
       if (dbLot) {
         lotVal = {
           id: dbLot.id,
@@ -305,12 +319,12 @@ async function hydrateGRN(doc: any): Promise<any> {
       }
     }
 
-    const qty = l.receivedQty || l.qty || l.received_qty || 0;
-    const uomId = l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs';
-    const unitCostForeign = l.unitCostForeign || l.unit_cost_foreign || null;
+    const qty = Number(l.receivedQty || l.qty || l.received_qty || 0);
+    const uomId = String(l.uomId || l.uom_id || item?.primaryUom.id || 'uom-pcs');
+    const unitCostForeign = l.unitCostForeign !== undefined && l.unitCostForeign !== null ? Number(l.unitCostForeign) : (l.unit_cost_foreign !== undefined && l.unit_cost_foreign !== null ? Number(l.unit_cost_foreign) : null);
 
     return {
-      id: l.id || `line-${Math.random().toString(36).substring(7)}`,
+      id: String(l.id || `line-${Math.random().toString(36).substring(7)}`),
       item: item ? {
         id: item.id,
         code: item.code,
@@ -333,7 +347,7 @@ async function hydrateGRN(doc: any): Promise<any> {
       receivedQty: qty,
       uomId,
       unit_cost_foreign: unitCostForeign,
-      unit_cost_base: l.unit_cost_base ?? null
+      unit_cost_base: l.unit_cost_base !== undefined && l.unit_cost_base !== null ? Number(l.unit_cost_base) : null
     };
   }));
 
@@ -646,7 +660,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'POST') {
       const issue = MockFactory.createIssue(body as StockIssue);
       const saved = await db.issues.save(issue);
-      const hydrated = await hydrateIssue(saved);
+      const hydrated = await hydrateIssue(saved as unknown as Record<string, unknown>);
       return { data: hydrated };
     }
   }
@@ -656,10 +670,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.issues.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return hydrateIssue(doc);
+    if (method === 'GET') return hydrateIssue(doc as unknown as Record<string, unknown>);
     if (method === 'PUT') {
       const saved = await db.issues.save({ ...(body as StockIssue), id });
-      return hydrateIssue(saved);
+      return hydrateIssue(saved as unknown as Record<string, unknown>);
     }
 
     if (parts.length === 5) {
@@ -697,7 +711,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         }
 
         const saved = await db.issues.save(updated);
-        return hydrateIssue(saved);
+        return hydrateIssue(saved as unknown as Record<string, unknown>);
       }
     }
   }
@@ -715,7 +729,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'POST') {
       const transfer = MockFactory.createTransfer(body as Transfer);
       const saved = await db.transfers.save(transfer);
-      return hydrateTransfer(saved);
+      return hydrateTransfer(saved as unknown as Record<string, unknown>);
     }
   }
   if (normalizedPath.startsWith('/operations/transfers/')) {
@@ -724,10 +738,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.transfers.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return hydrateTransfer(doc);
+    if (method === 'GET') return hydrateTransfer(doc as unknown as Record<string, unknown>);
     if (method === 'PUT') {
       const saved = await db.transfers.save({ ...(body as Transfer), id });
-      return hydrateTransfer(saved);
+      return hydrateTransfer(saved as unknown as Record<string, unknown>);
     }
 
     if (parts.length === 5) {
@@ -818,7 +832,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         }
 
         const saved = await db.transfers.save(updated);
-        return hydrateTransfer(saved);
+        return hydrateTransfer(saved as unknown as Record<string, unknown>);
       }
     }
     
@@ -833,7 +847,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
           version: (doc.version || 0) + 1
         };
         const saved = await db.transfers.save(updated);
-        return hydrateTransfer(saved);
+        return hydrateTransfer(saved as unknown as Record<string, unknown>);
       }
     }
   }
@@ -1111,7 +1125,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'POST') {
       const adj = MockFactory.createAdjustment(body as Adjustment);
       const saved = await db.adjustments.save(adj);
-      return hydrateAdjustment(saved);
+      return hydrateAdjustment(saved as unknown as Record<string, unknown>);
     }
   }
   // --- Adjustment Summary Endpoint ---
@@ -1173,10 +1187,10 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     const doc = await db.adjustments.findById(id);
     if (!doc) return undefined;
 
-    if (method === 'GET') return hydrateAdjustment(doc);
+    if (method === 'GET') return hydrateAdjustment(doc as unknown as Record<string, unknown>);
     if (method === 'PUT') {
       const saved = await db.adjustments.save({ ...(body as Adjustment), id });
-      return hydrateAdjustment(saved);
+      return hydrateAdjustment(saved as unknown as Record<string, unknown>);
     }
 
     if (parts.length === 5) {
@@ -1212,7 +1226,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         }
 
         const saved = await db.adjustments.save(updated);
-        return hydrateAdjustment(saved);
+        return hydrateAdjustment(saved as unknown as Record<string, unknown>);
       }
     }
   }
@@ -1290,7 +1304,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'POST') {
       const grn = MockFactory.createGRN(body as GRN);
       const saved = await db.grn.save(grn);
-      const hydrated = await hydrateGRN(saved);
+      const hydrated = await hydrateGRN(saved as unknown as Record<string, unknown>);
       return { data: hydrated };
     }
   }
@@ -1301,12 +1315,12 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (!doc) return undefined;
 
     if (method === 'GET') {
-      const hydrated = await hydrateGRN(doc);
+      const hydrated = await hydrateGRN(doc as unknown as Record<string, unknown>);
       return { data: hydrated };
     }
     if (method === 'PUT') {
       const saved = await db.grn.save({ ...(body as GRN), id });
-      const hydrated = await hydrateGRN(saved);
+      const hydrated = await hydrateGRN(saved as unknown as Record<string, unknown>);
       return { data: hydrated };
     }
 
@@ -1380,7 +1394,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         }
 
         const saved = await db.grn.save(updated);
-        const hydrated = await hydrateGRN(saved);
+        const hydrated = await hydrateGRN(saved as unknown as Record<string, unknown>);
         return { data: hydrated };
       }
     }

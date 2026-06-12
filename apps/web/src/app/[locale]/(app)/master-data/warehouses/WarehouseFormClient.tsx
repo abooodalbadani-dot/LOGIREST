@@ -26,6 +26,7 @@ import { useBranches } from '@/features/branches/hooks/useBranches';
 import {
   WarehouseFormSchema,
   type WarehouseFormValues,
+  type Warehouse as WarehouseModel,
 } from '@/types/master-data';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -81,7 +82,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
 
   useEffect(() => {
     if (!id && warehousesData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = warehousesData.data.map((w: any) => w.code);
+      const existingCodes = warehousesData.data.map((w: WarehouseModel) => w.code);
       const nextCode = generateNextCode(existingCodes, 'WH-', 3);
       setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
       setIsAutoPopulated(true);

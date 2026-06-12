@@ -26,7 +26,7 @@ import {
   useDeleteBranch,
   useBranches,
 } from '@/features/branches/hooks/useBranches';
-import { BranchFormSchema, type BranchFormValues } from '@/types/master-data';
+import { BranchFormSchema, type BranchFormValues, type Branch } from '@/types/master-data';
 import { toast } from 'sonner';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
@@ -93,7 +93,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
 
   useEffect(() => {
     if (!id && branchesData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = branchesData.data.map((b: any) => b.code);
+      const existingCodes = branchesData.data.map((b: Branch) => b.code);
       const nextCode = generateNextCode(existingCodes, 'BR-', 3);
       setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
       setIsAutoPopulated(true);

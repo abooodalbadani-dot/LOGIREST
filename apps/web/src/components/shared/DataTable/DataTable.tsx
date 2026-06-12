@@ -97,7 +97,7 @@ export function DataTable<T>({
   const exportColumns = React.useMemo(() => {
     return columns
       .map(col => {
-        const key = (col as any).accessorKey || col.id;
+        const key = ('accessorKey' in col ? (col.accessorKey as string | undefined) : undefined) || col.id;
         if (!key || key === 'actions') return null;
 
         let headerStr = '';

@@ -1,6 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { VersionConflictException } from '../exceptions/version-conflict.exception';
+import { Prisma } from '@prisma/client';
+
+interface VersionedDocumentDelegate {
+  findUnique(args: {
+    where: { id: string };
+    select: { version: true; createdById: true };
+  }): Promise<{ version: number; createdById: string | null } | null>;
+}
 
 @Injectable()
 export class ConcurrencyService {
@@ -13,11 +21,22 @@ export class ConcurrencyService {
     documentId: string,
     modelName: string,
     expectedVersion: number,
-    tx?: any,
+    tx?: Prisma.TransactionClient,
   ): Promise<never> {
     const prisma = tx || this.prisma;
     // 1. Fetch current version of the document from the database
-    const doc = await prisma[modelName].findUnique({
+    const delegate = (prisma as unknown as Record<string, unknown>)[modelName];
+    if (
+      !delegate ||
+      typeof delegate !== 'object' ||
+      !('findUnique' in delegate) ||
+      typeof (delegate as Record<string, unknown>).findUnique !== 'function'
+    ) {
+      throw new Error(`Invalid model name: ${modelName}`);
+    }
+
+    const versionedDelegate = delegate as unknown as VersionedDocumentDelegate;
+    const doc = await versionedDelegate.findUnique({
       where: { id: documentId },
       select: { version: true, createdById: true },
     });
@@ -44,7 +63,7 @@ export class ConcurrencyService {
     let lastModifiedAt = new Date();
 
     if (latestAuditLog) {
-      lastModifiedBy = latestAuditLog.user?.name || latestAuditLog.userId;
+      lastModifiedBy = latestAuditLog.user?.name || latestAuditLog.userId || 'Unknown';
       lastModifiedAt = latestAuditLog.createdAt;
     } else if (doc.createdById) {
       // Fallback: Get document creator name if no successful workflow transitions are found

@@ -10,7 +10,12 @@ COPY apps/api/package*.json ./apps/api/
 COPY apps/web/package*.json ./apps/web/
 
 # Install dependencies (hoisted to root node_modules)
-RUN npm ci --workspace=apps/api
+#RUN npm ci --workspace=apps/api
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm cache clean --force \
+    && npm ci --workspace=apps/api
 
 # Copy the rest of the source code
 COPY packages/ packages/

@@ -20,7 +20,7 @@ import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { useUoM, useCreateUoM, useUpdateUoM, useDeleteUoM, useUoMs } from '@/features/uoms/hooks/useUoMs';
 import { generateNextCode } from '@/lib/code-generator';
-import { UoMFormSchema, type UoMFormValues } from '@/types/master-data';
+import { UoMFormSchema, type UoMFormValues, type UoM } from '@/types/master-data';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
@@ -81,7 +81,7 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
 
   useEffect(() => {
     if (!id && uomsData?.data && !codeValue && !isAutoPopulated) {
-      const existingCodes = uomsData.data.map((u: any) => u.code);
+      const existingCodes = uomsData.data.map((u: UoM) => u.code);
       const nextCode = generateNextCode(existingCodes, 'UOM-', 3);
       setValue('code', nextCode, { shouldDirty: true, shouldValidate: true });
       setIsAutoPopulated(true);

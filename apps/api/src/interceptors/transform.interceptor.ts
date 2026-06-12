@@ -7,13 +7,18 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+export interface Response<T> {
+  data: T;
+  meta?: unknown;
+}
+
 @Injectable()
-export class TransformInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    return next.handle().pipe(map((data: unknown) => this.transform(data)));
+export class TransformInterceptor<T = unknown> implements NestInterceptor<T, Response<T>> {
+  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<Response<T>> {
+    return next.handle().pipe(map((data: T) => this.transform(data) as Response<T>));
   }
 
-  private transform(data: any): any {
+  private transform(data: unknown): unknown {
     // 3. Ignore null and undefined values
     if (data === null || data === undefined) {
       return data;
@@ -26,19 +31,20 @@ export class TransformInterceptor implements NestInterceptor {
 
     // Recursively handle arrays
     if (Array.isArray(data)) {
-      return data.map((item) => this.transform(item));
+      return data.map((item: unknown) => this.transform(item));
     }
 
     // Recursively handle objects
     if (typeof data === 'object') {
-      const result: Record<string, any> = {};
+      const result: Record<string, unknown> = {};
+      const obj = data as Record<string, unknown>;
 
       // 2. Name field fallback logic (if generic 'name' is missing)
-      const hasName = 'name' in data;
-      const nameEn = data.name_en !== undefined ? data.name_en : data.nameEn;
-      const nameAr = data.name_ar !== undefined ? data.name_ar : data.nameAr;
+      const hasName = 'name' in obj;
+      const nameEn = obj.name_en !== undefined ? obj.name_en : obj.nameEn;
+      const nameAr = obj.name_ar !== undefined ? obj.name_ar : obj.nameAr;
 
-      let fallbackName: any = undefined;
+      let fallbackName: unknown = undefined;
       if (!hasName) {
         if (nameEn !== undefined && nameEn !== null) {
           fallbackName = nameEn;
@@ -47,19 +53,20 @@ export class TransformInterceptor implements NestInterceptor {
         }
       }
 
-      for (const key of Object.keys(data)) {
-        const value = data[key];
+      for (const key of Object.keys(obj)) {
+        const value = obj[key];
         const camelKey = this.toCamelCase(key);
 
         if (value === null || value === undefined) {
           result[camelKey] = value;
         } else if (camelKey === 'meta' && value && typeof value === 'object') {
+          const metaObj = value as Record<string, unknown>;
           result[camelKey] = {
-            ...this.transform(value),
-            page: Number(value.page || 1),
-            pageSize: Number(value.pageSize || 50),
-            total: Number(value.total || 0),
-            totalPages: Number(value.totalPages || 1),
+            ...(this.transform(value) as Record<string, unknown>),
+            page: Number(metaObj.page || 1),
+            pageSize: Number(metaObj.pageSize || 50),
+            total: Number(metaObj.total || 0),
+            totalPages: Number(metaObj.totalPages || 1),
           };
         } else {
           result[camelKey] = this.transform(value);

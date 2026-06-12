@@ -60,7 +60,7 @@ export function VoidButton({
     try {
       await apiClient.post(
         `/operations/${backendDocType}/${documentId}/void`,
-        z.any(),
+        z.unknown(),
         {
           version,
           comment: comment.trim(),

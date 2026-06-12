@@ -19,6 +19,21 @@ import {
 import { DocumentStatus, Role } from '@logirest/shared-types';
 import { ScopeValidationService } from '../auth/scope-validation.service';
 
+interface DocumentDelegate {
+  findUnique(args: {
+    where: { id: string };
+    include?: Record<string, unknown>;
+  }): Promise<{
+    id: string;
+    status: string;
+    version: number;
+    warehouseId?: string;
+    fromWarehouseId?: string;
+    toWarehouseId?: string;
+    purchaseRequest?: { warehouseId: string };
+  } | null>;
+}
+
 @Injectable()
 export class WorkflowStateGuard implements CanActivate {
   constructor(
@@ -64,7 +79,19 @@ export class WorkflowStateGuard implements CanActivate {
       modelName === 'purchaseOrder'
         ? { purchaseRequest: { select: { warehouseId: true } } }
         : undefined;
-    const existingDoc = await (this.prisma[modelName] as any).findUnique({
+
+    const delegate = (this.prisma as unknown as Record<string, unknown>)[modelName];
+    if (
+      !delegate ||
+      typeof delegate !== 'object' ||
+      !('findUnique' in delegate) ||
+      typeof (delegate as Record<string, unknown>).findUnique !== 'function'
+    ) {
+      throw new Error(`Invalid model name: ${modelName}`);
+    }
+
+    const docDelegate = delegate as unknown as DocumentDelegate;
+    const existingDoc = await docDelegate.findUnique({
       where: { id: documentId },
       include: includeConfig,
     });

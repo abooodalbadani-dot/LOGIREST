@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
-import { Role, DocumentType, StocktakeStatus, Prisma } from '@prisma/client';
+import { Role, DocumentType, StocktakeStatus, Prisma, StocktakeSession } from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class StocktakePostService {
   ): Promise<any> {
     return this.prisma.$transaction(async (tx) => {
       // 1. Fetch Session and lock document
-      const session = await this.lockService.lockDocument(
+      const session = await this.lockService.lockDocument<StocktakeSession>(
         tx,
         sessionId,
         DocumentType.STOCKTAKE,

@@ -37,7 +37,7 @@ export class ArchivalJob {
         let lastProcessedLogId: string | undefined = undefined;
         let hasMoreLogs = true;
         while (hasMoreLogs) {
-          const whereClause: any = {
+          const whereClause: Prisma.AuditLogWhereInput = {
             createdAt: { lt: twoYearsAgo },
           };
           if (lastProcessedLogId) {
@@ -92,14 +92,14 @@ export class ArchivalJob {
         let hasMoreLedgers = true;
 
         while (hasMoreLedgers) {
-          const stockWhere: any = {
+          const stockWhere: Prisma.StockLedgerWhereInput = {
             postedAt: { lt: threeYearsAgo },
           };
           if (lastProcessedLedgerId) {
             stockWhere.id = { gt: lastProcessedLedgerId };
           }
 
-          const costWhere: any = {
+          const costWhere: Prisma.CostLedgerWhereInput = {
             postedAt: { lt: threeYearsAgo },
           };
           if (lastProcessedCostId) {

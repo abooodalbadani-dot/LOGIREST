@@ -7,6 +7,7 @@ import { BcryptService } from '../../auth/bcrypt.service';
 import { ROLE_METADATA } from '@logirest/shared-types';
 
 process.env.ENCRYPTION_KEY = 'test-encryption-key-for-unit-testing-32-chars';
+process.env.BASE_CURRENCY_CODE = 'SAR';
 
 describe('AdminService', () => {
   let service: AdminService;

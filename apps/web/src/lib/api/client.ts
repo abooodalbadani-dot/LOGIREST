@@ -98,7 +98,7 @@ function generateIdempotencyKey(): string {
   });
 }
 
-async function request<T>(method: string, path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions): Promise<T> {
+async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(method: string, path: string, schema: z.ZodType<T, D, I>, body?: unknown, options?: RequestOptions): Promise<T> {
   const token = typeof window !== 'undefined' ? getTokenCookie() : null;
   const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
   const signal = options?.signal;
@@ -111,11 +111,6 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
       dispatchExpiredEvent();
     }
   }
-
-  // Only 401-class codes indicate a truly expired/invalid session.
-  // FORBIDDEN (403) means authenticated but not permitted — never treat it as expired.
-  const isAuthError = (e: Record<string, unknown>) =>
-    e.status === 401 || e.code === 'UNAUTHORIZED' || e.code === 'SESSION_EXPIRED';
 
   const csrfToken = getCookie('XSRF-TOKEN');
 
@@ -203,7 +198,7 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
 
                   // Retry the request once
                   if (!options?.isRetry) {
-                    return request(method, path, schema, body, { ...options, isRetry: true });
+                    return request<T, D, I>(method, path, schema, body, { ...options, isRetry: true });
                   }
                 }
               }
@@ -233,7 +228,7 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
       if (res.status === 401 && path !== '/auth/login' && path !== '/auth/refresh') {
         if (!options?.isRetry) {
           await handleAuthError();
-          return request(method, path, schema, body, { ...options, isRetry: true });
+          return request<T, D, I>(method, path, schema, body, { ...options, isRetry: true });
         }
       }
       const err: ApiError = {
@@ -307,9 +302,9 @@ export interface RequestOptions {
 }
 
 export const apiClient = {
-  get: <T>(path: string, schema: z.ZodType<T, any, any>, options?: RequestOptions) => request<T>('GET', path, schema, undefined, options),
-  post: <T>(path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions) => request<T>('POST', path, schema, body, options),
-  put: <T>(path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, schema, body, options),
-  patch: <T>(path: string, schema: z.ZodType<T, any, any>, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, schema, body, options),
-  del: <T>(path: string, schema: z.ZodType<T, any, any>, options?: RequestOptions) => request<T>('DELETE', path, schema, undefined, options),
+  get: <T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(path: string, schema: z.ZodType<T, D, I>, options?: RequestOptions) => request<T, D, I>('GET', path, schema, undefined, options),
+  post: <T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(path: string, schema: z.ZodType<T, D, I>, body?: unknown, options?: RequestOptions) => request<T, D, I>('POST', path, schema, body, options),
+  put: <T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(path: string, schema: z.ZodType<T, D, I>, body?: unknown, options?: RequestOptions) => request<T, D, I>('PUT', path, schema, body, options),
+  patch: <T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(path: string, schema: z.ZodType<T, D, I>, body?: unknown, options?: RequestOptions) => request<T, D, I>('PATCH', path, schema, body, options),
+  del: <T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(path: string, schema: z.ZodType<T, D, I>, options?: RequestOptions) => request<T, D, I>('DELETE', path, schema, undefined, options),
 };

@@ -104,7 +104,10 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
     const timer = setTimeout(async () => {
       setIsCheckingCode(true);
       try {
-        const response = await apiClient.get(`/master-data/barcodes/check-duplicate?barcode=${currentCode}`, z.any());
+        const response = await apiClient.get(
+          `/master-data/barcodes/check-duplicate?barcode=${currentCode}`,
+          z.object({ is_duplicate: z.boolean() })
+        );
         if (response.is_duplicate) {
           setCodeError(tb('errors.code_exists') || 'This code is already in use');
         } else {
