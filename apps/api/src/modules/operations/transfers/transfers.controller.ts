@@ -153,7 +153,12 @@ export class TransfersController {
   @Get()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
-    @ActiveScope('warehouseId') warehouseId?: string,
+    @ActiveScope()
+    activeScope?: {
+      branchId?: string;
+      warehouseId?: string;
+      departmentId?: string;
+    },
   ) {
     const result = await this.transfersService.findAll(
       {
@@ -161,7 +166,7 @@ export class TransfersController {
         search: query.search,
         page: query.page ? Number(query.page) : 1,
       },
-      warehouseId,
+      activeScope,
     );
 
     return {

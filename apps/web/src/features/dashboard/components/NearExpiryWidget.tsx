@@ -1,11 +1,14 @@
 'use client';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, AlertCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { Button } from '@/components/ui/button';
+import { PermissionGate } from '@/components/shared/PermissionGate';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 export interface ExpiringLot {
   id: string;
+  itemId?: string;
   itemName: string;
   lotNumber: string;
   expiryDate: string;
@@ -29,6 +32,7 @@ export function NearExpiryWidget({
   const items = data
     ? data.map((lot) => ({
         id: lot.id,
+        itemId: lot.itemId || lot.id,
         name: lot.itemName,
         lot_number: lot.lotNumber,
         expiry_date: lot.expiryDate,
@@ -41,12 +45,11 @@ export function NearExpiryWidget({
         nameKey: '',
       }))
     : [
-        { id: '1', name: 'Milk / حليب', lot_number: 'L-MK9021', expiry_date: '2026-05-15', days_left: 5, warehouse: 'Main Store', qty: 150, unit: 'l', priority: 'medium', isApi: false, nameKey: 'milk' },
-        { id: '2', name: 'Yogurt / زبادي', lot_number: 'L-YG4402', expiry_date: '2026-04-30', days_left: 2, warehouse: 'Main Store', qty: 85, unit: 'pcs', priority: 'high', isApi: false, nameKey: 'yogurt' },
-        { id: '3', name: 'Chicken / دجاج', lot_number: 'L-CH9025', expiry_date: '2026-06-10', days_left: 25, warehouse: 'Main Store', qty: 240, unit: 'kg', priority: 'low', isApi: false, nameKey: 'chicken' },
+        { id: '1', itemId: '1', name: 'Milk / حليب', lot_number: 'L-MK9021', expiry_date: '2026-05-15', days_left: 5, warehouse: 'Main Store', qty: 150, unit: 'l', priority: 'medium', isApi: false, nameKey: 'milk' },
+        { id: '2', itemId: '2', name: 'Yogurt / زبادي', lot_number: 'L-YG4402', expiry_date: '2026-04-30', days_left: 2, warehouse: 'Main Store', qty: 85, unit: 'pcs', priority: 'high', isApi: false, nameKey: 'yogurt' },
+        { id: '3', itemId: '3', name: 'Chicken / دجاج', lot_number: 'L-CH9025', expiry_date: '2026-06-10', days_left: 25, warehouse: 'Main Store', qty: 240, unit: 'kg', priority: 'low', isApi: false, nameKey: 'chicken' },
       ];
 
-  const isRtl = locale === 'ar';
 
   return (
     <section className="bg-surface-container-low/50 rounded-2xl overflow-hidden border-none backdrop-blur-sm" aria-labelledby="near-expiry-title">
@@ -91,13 +94,22 @@ export function NearExpiryWidget({
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <span className="text-body-md font-semibold text-foreground tabular-nums">
-                {item.qty}
-              </span>
-              <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
-                {item.isApi ? item.unit : tc(`units.${item.unit}`)}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col items-end">
+                <span className="text-body-md font-semibold text-foreground tabular-nums">
+                  {item.qty}
+                </span>
+                <span className="text-label-xxs text-muted-foreground/40 uppercase font-semibold">
+                  {item.isApi ? item.unit : tc(`units.${item.unit}`)}
+                </span>
+              </div>
+              <PermissionGate action="create" resource="operations_adjustments">
+                <Link href={`/adjustments/new?itemId=${item.itemId}&batch=${item.lot_number}&reason=damage`} className="contents">
+                  <Button variant="ghost" className="rounded-xl border-none bg-surface-container-low h-9 w-9 p-0 hover:bg-status-warning hover:text-black transition-all hover:scale-110 active:scale-95 shadow-sm">
+                    <AlertCircle className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </PermissionGate>
             </div>
           </div>
         ))}

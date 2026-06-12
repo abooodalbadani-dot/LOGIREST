@@ -173,10 +173,12 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
       backHref='/master-data/departments'
       isSaving={isSaving} saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/departments')}
+      onCancel={() => guardedRouter.push('/master-data/departments', { skipGuard: true })}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
+      resource="master_data_departments"
+      saveAction={id ? 'edit' : 'create'}
       headerActions={
         id && !isReadOnly && (
           <PermissionGate action="delete" resource="master_data_departments">
@@ -347,11 +349,11 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
  <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
  <div className="space-y-1">
  <Label htmlFor="dept-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{td('fields.is_active')}</Label>
- <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
+ <p className={`text-label-sm font-semibold uppercase ${(isActive ?? true) ? 'text-status-active' : 'text-status-error'}`}>{ (isActive ?? true) ? t('active') : t('inactive')}</p>
  </div>
                 <Switch
                   id="dept-is-active"
-                  checked={isActive}
+                  checked={isActive ?? true}
                   onCheckedChange={(v) => setValue('isActive', v)}
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-status-active"

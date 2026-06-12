@@ -20,7 +20,20 @@ import { useBranches } from '@/features/branches/hooks/useBranches';
 import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { useDepartments } from '@/features/departments/hooks/useDepartments';
 
-const ALL_ROLES: UserRole[] = ['ADMIN', 'INV_MGR', 'APPROVER', 'WH_KEEPER', 'PROC_OFFICER', 'AUDITOR', 'VIEWER'];
+const ALL_ROLES: { value: UserRole; labelEn: string; labelAr: string }[] = [
+  { value: 'ADMIN',        labelEn: 'System Administrator', labelAr: 'مسؤول النظام'       },
+  { value: 'GM',           labelEn: 'General Manager',      labelAr: 'المدير العام'        },
+  { value: 'BRANCH_MGR',  labelEn: 'Branch Manager',       labelAr: 'مدير الفرع'         },
+  { value: 'INV_MGR',     labelEn: 'Inventory Manager',    labelAr: 'مدير المخزون'       },
+  { value: 'STORE_MGR',   labelEn: 'Store Manager',        labelAr: 'مدير المتجر'        },
+  { value: 'WH_KEEPER',   labelEn: 'Warehouse Keeper',     labelAr: 'أمين المستودع'      },
+  { value: 'KITCHEN_CHIEF', labelEn: 'Kitchen Chief',      labelAr: 'رئيس المطبخ'        },
+  { value: 'PROC_MGR',    labelEn: 'Procurement Manager',  labelAr: 'مدير المشتريات'     },
+  { value: 'PROC_OFFICER', labelEn: 'Procurement Officer', labelAr: 'مسؤول المشتريات'    },
+  { value: 'APPROVER',    labelEn: 'Approver',             labelAr: 'مفوض الاعتماد'      },
+  { value: 'AUDITOR',     labelEn: 'Auditor',              labelAr: 'مدقق مالي'          },
+  { value: 'VIEWER',      labelEn: 'Viewer (Read-Only)',   labelAr: 'مشاهد (قراءة فقط)' },
+];
 
 interface Props {
   id: string | null;
@@ -94,9 +107,9 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
 
   const roleItems = useMemo(() => {
     return ALL_ROLES.map((r) => ({
-      id: r,
-      name_en: r,
-      name_ar: r,
+      id: r.value,
+      name_en: r.labelEn,
+      name_ar: r.labelAr,
     }));
   }, []);
 

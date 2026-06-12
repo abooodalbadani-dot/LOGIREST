@@ -20,19 +20,29 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useDashboardStats } from '../hooks/useDashboardStats';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
+
+const mapStatus = (status: string) => {
+  const s = status.toLowerCase();
+  if (s === 'draft' || s === 'submitted' || s === 'pending') return 'pending';
+  if (s === 'fulfilled') return 'fulfilled';
+  return 'rejected';
+};
 
 export function KitchenDashboard() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
+  const { data: stats, isLoading, error } = useDashboardStats();
 
-  // Mock data for Kitchen Chief
-  const stats = {
-    pendingRequests: 4,
-    itemsShortage: 3,
-    todayConsumption: 124,
-    stockHealth: 92,
-  };
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
+
+  if (error || !stats) {
+    return <div className="p-8 text-status-error uppercase font-bold">{t('error_loading')}</div>;
+  }
 
   return (
     <main role="main" className="space-y-10 animate-in fade-in duration-200">
@@ -46,8 +56,8 @@ export function KitchenDashboard() {
             {tc('department')} <span className="text-status-warning">{t('kitchen.overview')}</span>
           </h1>
         </div>
-        <PermissionGate action="create" resource="operations_issues">
-          <Link href="/issues/new" className="contents">
+        <PermissionGate action="create" resource="operations_kitchen_requests">
+          <Link href="/kitchen-requests/new" className="contents">
             <Button className="primary-gradient text-white font-semibold uppercase px-8 rounded-xl h-12">
               <Plus className="w-5 h-5 me-2" /> {t('kitchen.new_request')}
             </Button>
@@ -60,14 +70,14 @@ export function KitchenDashboard() {
         <h2 id="kpi-grid-title" className="sr-only">{t('aria.kpi_grid')}</h2>
         <KPICard
           title={t('kitchen.active_requests')}
-          value={formatNumber(stats.pendingRequests, locale as 'ar' | 'en')}
+          value={formatNumber(stats.pendingFulfillment, locale as 'ar' | 'en')}
           icon={ClipboardList}
           accent="amber"
           description={t('kitchen.awaiting_fulfillment')}
         />
         <KPICard
           title={t('kitchen.critical_shortage')}
-          value={formatNumber(stats.itemsShortage, locale as 'ar' | 'en')}
+          value={formatNumber(stats.shortages, locale as 'ar' | 'en')}
           icon={AlertTriangle}
           accent="red"
           description={t('kitchen.immediate_action')}
@@ -99,44 +109,40 @@ export function KitchenDashboard() {
                 <CardTitle id="supply-requests-title" className="text-title-lg font-semibold uppercase italic">{t('kitchen.supply_requests')}</CardTitle>
                 <CardDescription className="text-label-xs font-medium text-muted-foreground/60 uppercase">{t('kitchen.tracking_flow')}</CardDescription>
               </div>
-              <PermissionGate action="view" resource="operations_issues">
-                <Link href="/issues">
+              <PermissionGate action="view" resource="operations_kitchen_requests">
+                <Link href="/kitchen-requests">
                   <Button variant="link" className="text-status-warning font-semibold uppercase text-label-xs">{t('kitchen.view_history')}</Button>
                 </Link>
               </PermissionGate>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-transparent">
-                {[
-                  { id: 'RQ-2024-081', items: t('kitchen.mock.request_items_1'), status: 'pending', time: tc('time_ago.hours', { count: 1 }), priority: 'high' },
-                  { id: 'RQ-2024-079', items: t('kitchen.mock.request_items_2'), status: 'fulfilled', time: tc('time_ago.hours', { count: 4 }), priority: 'normal' },
-                  { id: 'RQ-2024-075', items: t('kitchen.mock.request_items_3'), status: 'rejected', time: tc('time_ago.days', { count: 1 }), priority: 'urgent' },
-                ].map((req, i) => (
+                {stats.recentRequests.map((req, i) => (
                   <div key={i} className="p-5 flex items-center justify-between hover:bg-surface-container-high/40 transition-all duration-140 ease-industrial group cursor-pointer">
                     <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-xl border-none ${ req.status === 'pending' ? 'bg-status-warning/10' : req.status === 'fulfilled' ? 'bg-status-success/10' : 'bg-status-error/10' }`}>
-                        <PackageSearch className={`w-5 h-5 ${ req.status === 'pending' ? 'text-status-warning' : req.status === 'fulfilled' ? 'text-status-success' : 'text-status-error' }`} />
+                      <div className={`p-3 rounded-xl border-none ${ mapStatus(req.status) === 'pending' ? 'bg-status-warning/10' : mapStatus(req.status) === 'fulfilled' ? 'bg-status-success/10' : 'bg-status-error/10' }`}>
+                        <PackageSearch className={`w-5 h-5 ${ mapStatus(req.status) === 'pending' ? 'text-status-warning' : mapStatus(req.status) === 'fulfilled' ? 'text-status-success' : 'text-status-error' }`} />
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-body-md font-semibold text-foreground uppercase italic">{req.id}</span>
-                          <Badge variant="outline" className={`text-label-xxs font-semibold uppercase px-1.5 h-4 ${ req.priority === 'urgent' ? 'text-status-error bg-status-error/5' : req.priority === 'high' ? 'text-status-warning bg-status-warning/5' : 'text-muted-foreground/40 border-none bg-surface-container-low' }`}>
-                            {t(`kitchen.priority.${req.priority}`)}
+                          <span className="text-body-md font-semibold text-foreground uppercase italic">{req.documentNumber}</span>
+                          <Badge variant="outline" className={`text-label-xxs font-semibold uppercase px-1.5 h-4 ${ req.priority.toLowerCase() === 'urgent' || req.priority.toLowerCase() === 'high' ? 'text-status-error bg-status-error/5' : 'text-muted-foreground/40 border-none bg-surface-container-low' }`}>
+                            {t(`kitchen.priority.${(req.priority || 'normal').toLowerCase()}`)}
                           </Badge>
                         </div>
-                        <p className="text-label-xs text-muted-foreground font-medium line-clamp-1">{req.items}</p>
+                        <p className="text-label-xs text-muted-foreground font-medium line-clamp-1">{req.itemsSummary}</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <span className="text-label-xxs font-semibold text-muted-foreground/40 uppercase flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" /> {req.time}
+                        <Clock className="w-3 h-3" /> {new Date(req.createdAt).toLocaleDateString()}
                       </span>
                       <Badge className={`${
-                        req.status === 'pending' ? 'bg-status-warning/10 text-status-warning' : 
-                        req.status === 'fulfilled' ? 'bg-status-success/10 text-status-success' : 
+                        mapStatus(req.status) === 'pending' ? 'bg-status-warning/10 text-status-warning' : 
+                        mapStatus(req.status) === 'fulfilled' ? 'bg-status-success/10 text-status-success' : 
                         'bg-status-error/10 text-status-error'
                       } text-label-xxs font-semibold uppercase border-none`}>
-                        {t(`kitchen.status.${req.status}`)}
+                        {t(`kitchen.status.${mapStatus(req.status)}`)}
                       </Badge>
                     </div>
                   </div>
@@ -157,22 +163,17 @@ export function KitchenDashboard() {
               <CardTitle id="daily-activity-title" className="text-title-sm font-semibold uppercase">{t('kitchen.consumption_log')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {[
-                { item: t('kitchen.mock.consumption_items.olive_oil'), qty: t('kitchen.mock.consumption_qty.liters', { count: 2.5 }), time: '14:20' },
-                { item: t('kitchen.mock.consumption_items.basmati_rice'), qty: t('kitchen.mock.consumption_qty.kilograms', { count: 15 }), time: '12:30' },
-                { item: t('kitchen.mock.consumption_items.frozen_chicken'), qty: t('kitchen.mock.consumption_qty.kilograms', { count: 24 }), time: '09:15' },
-                { item: t('kitchen.mock.consumption_items.flour'), qty: t('kitchen.mock.consumption_qty.kilograms', { count: 5 }), time: '08:00' },
-              ].map((log, i) => (
+              {stats.activityLog.map((log, i) => (
                 <div key={i} className="flex items-center justify-between group">
                   <div className="flex flex-col">
-                    <span className="text-label-xs font-bold text-foreground group-hover:text-cyan-500 transition-colors">{log.item}</span>
-                    <span className="text-label-xxs font-medium text-muted-foreground/40">{log.qty} {t('kitchen.recorded')}</span>
+                    <span className="text-label-xs font-bold text-foreground group-hover:text-cyan-500 transition-colors">{log.itemName}</span>
+                    <span className="text-label-xxs font-medium text-muted-foreground/40">{log.qty} {log.uom} {t('kitchen.recorded')}</span>
                   </div>
                   <span className="text-label-xs font-semibold text-muted-foreground/30 font-mono">{log.time}</span>
                 </div>
               ))}
-              <PermissionGate action="create" resource="operations_issues">
-                <Link href="/issues/new" className="w-full">
+              <PermissionGate action="create" resource="operations_kitchen_requests">
+                <Link href="/kitchen-requests/new" className="w-full">
                   <Button variant="outline" className="w-full bg-surface-container-low border-none text-label-xs font-semibold uppercase h-10 hover:bg-operational-cyan/20 hover:text-operational-cyan transition-all duration-140 ease-industrial">
                     {t('kitchen.quick_record')} <ArrowUpRight className="w-3 h-3 ms-2" />
                   </Button>

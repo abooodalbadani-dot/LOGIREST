@@ -7,8 +7,30 @@ import {
   IsEnum,
   Min,
   Max,
+  IsBoolean,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export enum PaperSize {
+  A4 = 'A4',
+  T80 = '80mm',
+  T58 = '58mm',
+}
+
+export class PrintSettingsDto {
+  @IsEnum(PaperSize)
+  @IsOptional()
+  defaultPaperSize?: PaperSize;
+
+  @IsBoolean()
+  @IsOptional()
+  thermalShowLogo?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  autoPrintOnFulfill?: boolean;
+}
 
 export enum MailProvider {
   SMTP = 'smtp',
@@ -81,4 +103,9 @@ export class UpdateSettingsDto {
   @IsEnum(SmtpEncryption)
   @IsOptional()
   smtpEncryption?: SmtpEncryption;
+
+  @ValidateNested()
+  @Type(() => PrintSettingsDto)
+  @IsOptional()
+  printSettings?: PrintSettingsDto;
 }

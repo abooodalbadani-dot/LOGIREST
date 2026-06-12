@@ -42,7 +42,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcrypt: BcryptService,
-  ) {}
+  ) { }
 
   private getPermissionsForRole(role: UserRole): Permission[] {
     const modules = [
@@ -202,6 +202,11 @@ export class AdminService {
     smtpEncryption: string;
     version: number;
     updatedAt: string;
+    printSettings?: {
+      defaultPaperSize: 'A4' | '80mm' | '58mm';
+      thermalShowLogo: boolean;
+      autoPrintOnFulfill: boolean;
+    };
   }> {
     const setting = await this.prisma.systemSetting.findUnique({
       where: { key: 'system_settings' },
@@ -214,7 +219,7 @@ export class AdminService {
     const defaultSettings = {
       id: 'system_settings',
       systemName: 'LogiRest System',
-      baseCurrency: process.env.BASE_CURRENCY_CODE || 'SAR',
+      baseCurrency: process.env.BASE_CURRENCY_CODE || 'USD',
       branchId: 'HQ',
       timezone: 'Asia/Riyadh',
       localeDefault: 'en',
@@ -229,6 +234,11 @@ export class AdminService {
       smtpEncryption: 'tls',
       version: 1,
       updatedAt: new Date().toISOString(),
+      printSettings: {
+        defaultPaperSize: 'A4' as const,
+        thermalShowLogo: true,
+        autoPrintOnFulfill: false,
+      },
     };
 
     if (!setting) {
@@ -286,6 +296,17 @@ export class AdminService {
         defaultSettings.smtpEncryption) as string,
       version: setting.version,
       updatedAt: setting.updatedAt.toISOString(),
+      printSettings: {
+        defaultPaperSize: ((saved.printSettings as any)?.defaultPaperSize ??
+          (saved.print_settings as any)?.default_paper_size ??
+          defaultSettings.printSettings.defaultPaperSize) as 'A4' | '80mm' | '58mm',
+        thermalShowLogo: !!((saved.printSettings as any)?.thermalShowLogo ??
+          (saved.print_settings as any)?.thermal_show_logo ??
+          defaultSettings.printSettings.thermalShowLogo),
+        autoPrintOnFulfill: !!((saved.printSettings as any)?.autoPrintOnFulfill ??
+          (saved.print_settings as any)?.auto_print_on_fulfill ??
+          defaultSettings.printSettings.autoPrintOnFulfill),
+      },
     };
   }
 
@@ -332,6 +353,15 @@ export class AdminService {
       smtpUser: dto.smtpUser || '',
       smtpPassword: encryptedPassword,
       smtpEncryption: dto.smtpEncryption || 'none',
+      printSettings: dto.printSettings ? {
+        defaultPaperSize: dto.printSettings.defaultPaperSize || 'A4',
+        thermalShowLogo: dto.printSettings.thermalShowLogo ?? true,
+        autoPrintOnFulfill: dto.printSettings.autoPrintOnFulfill ?? false,
+      } : (savedConfig.printSettings ?? savedConfig.print_settings ?? {
+        defaultPaperSize: 'A4',
+        thermalShowLogo: true,
+        autoPrintOnFulfill: false,
+      }),
       updatedBy: userId,
     };
 
@@ -488,6 +518,20 @@ export class AdminService {
               },
             },
           },
+          departmentScopes: {
+            include: {
+              department: {
+                include: {
+                  branch: true,
+                },
+              },
+            },
+          },
+          branchScopes: {
+            include: {
+              branch: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'desc',
@@ -502,23 +546,51 @@ export class AdminService {
       name: user.name,
       email: user.email,
       role: user.role,
-      scopes: (user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-        warehouse: s.warehouse
-          ? {
+      scopes: [
+        ...(user.warehouseScopes || []).map((s) => ({
+          branchId: s.warehouse?.branchId ?? null,
+          warehouseId: s.warehouseId,
+          departmentId: null,
+          warehouse: s.warehouse
+            ? {
               id: s.warehouse.id,
               name: s.warehouse.name,
               branch: s.warehouse.branch
                 ? {
-                    id: s.warehouse.branch.id,
-                    name: s.warehouse.branch.name,
-                  }
+                  id: s.warehouse.branch.id,
+                  name: s.warehouse.branch.name,
+                }
                 : null,
             }
-          : null,
-      })),
+            : null,
+          department: null,
+        })),
+        ...(user.departmentScopes || []).map((s) => ({
+          branchId: s.department?.branchId ?? null,
+          warehouseId: null,
+          departmentId: s.departmentId,
+          warehouse: null,
+          department: s.department
+            ? {
+              id: s.department.id,
+              name: s.department.name,
+              branch: s.department.branch
+                ? {
+                  id: s.department.branch.id,
+                  name: s.department.branch.name,
+                }
+                : null,
+            }
+            : null,
+        })),
+        ...(user.branchScopes || []).map((s) => ({
+          branchId: s.branchId,
+          warehouseId: null,
+          departmentId: null,
+          warehouse: null,
+          department: null,
+        })),
+      ],
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',
       createdAt: user.createdAt.toISOString(),
@@ -548,6 +620,20 @@ export class AdminService {
             },
           },
         },
+        departmentScopes: {
+          include: {
+            department: {
+              include: {
+                branch: true,
+              },
+            },
+          },
+        },
+        branchScopes: {
+          include: {
+            branch: true,
+          },
+        },
       },
     });
 
@@ -560,23 +646,51 @@ export class AdminService {
       name: user.name,
       email: user.email,
       role: user.role,
-      scopes: (user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-        warehouse: s.warehouse
-          ? {
+      scopes: [
+        ...(user.warehouseScopes || []).map((s) => ({
+          branchId: s.warehouse?.branchId ?? null,
+          warehouseId: s.warehouseId,
+          departmentId: null,
+          warehouse: s.warehouse
+            ? {
               id: s.warehouse.id,
               name: s.warehouse.name,
               branch: s.warehouse.branch
                 ? {
-                    id: s.warehouse.branch.id,
-                    name: s.warehouse.branch.name,
-                  }
+                  id: s.warehouse.branch.id,
+                  name: s.warehouse.branch.name,
+                }
                 : null,
             }
-          : null,
-      })),
+            : null,
+          department: null,
+        })),
+        ...(user.departmentScopes || []).map((s) => ({
+          branchId: s.department?.branchId ?? null,
+          warehouseId: null,
+          departmentId: s.departmentId,
+          warehouse: null,
+          department: s.department
+            ? {
+              id: s.department.id,
+              name: s.department.name,
+              branch: s.department.branch
+                ? {
+                  id: s.department.branch.id,
+                  name: s.department.branch.name,
+                }
+                : null,
+            }
+            : null,
+        })),
+        ...(user.branchScopes || []).map((s) => ({
+          branchId: s.branchId,
+          warehouseId: null,
+          departmentId: null,
+          warehouse: null,
+          department: null,
+        })),
+      ],
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
       language: 'en',
       createdAt: user.createdAt.toISOString(),
@@ -614,6 +728,24 @@ export class AdminService {
         });
       }
 
+      if (dto.branchIds && dto.branchIds.length > 0) {
+        await tx.userBranchScope.createMany({
+          data: dto.branchIds.map((branchId) => ({
+            userId: created.id,
+            branchId,
+          })),
+        });
+      }
+
+      if (dto.departmentIds && dto.departmentIds.length > 0) {
+        await tx.userDepartmentScope.createMany({
+          data: dto.departmentIds.map((deptId) => ({
+            userId: created.id,
+            departmentId: deptId,
+          })),
+        });
+      }
+
       await tx.auditLog.create({
         data: {
           userId: currentUserId,
@@ -627,6 +759,8 @@ export class AdminService {
             role: created.role,
             isActive: created.isActive,
             warehouseIds: dto.warehouseIds || [],
+            branchIds: dto.branchIds || [],
+            departmentIds: dto.departmentIds || [],
           }),
         },
       });
@@ -642,6 +776,8 @@ export class AdminService {
       where: { id },
       include: {
         warehouseScopes: true,
+        branchScopes: true,
+        departmentScopes: true,
       },
     });
 
@@ -709,6 +845,32 @@ export class AdminService {
         });
       }
 
+      await tx.userBranchScope.deleteMany({
+        where: { userId: id },
+      });
+
+      if (dto.branchIds && dto.branchIds.length > 0) {
+        await tx.userBranchScope.createMany({
+          data: dto.branchIds.map((branchId) => ({
+            userId: id,
+            branchId,
+          })),
+        });
+      }
+
+      await tx.userDepartmentScope.deleteMany({
+        where: { userId: id },
+      });
+
+      if (dto.departmentIds && dto.departmentIds.length > 0) {
+        await tx.userDepartmentScope.createMany({
+          data: dto.departmentIds.map((deptId) => ({
+            userId: id,
+            departmentId: deptId,
+          })),
+        });
+      }
+
       await tx.auditLog.create({
         data: {
           userId: currentUserId,
@@ -721,6 +883,8 @@ export class AdminService {
             role: user.role,
             isActive: user.isActive,
             warehouseIds: user.warehouseScopes.map((s) => s.warehouseId),
+            branchIds: user.branchScopes.map((s) => s.branchId),
+            departmentIds: user.departmentScopes.map((s) => s.departmentId),
           }),
           afterStateJson: JSON.stringify({
             name: dto.name,
@@ -728,6 +892,8 @@ export class AdminService {
             role: dto.role,
             isActive: dto.status === 'ACTIVE',
             warehouseIds: dto.warehouseIds || [],
+            branchIds: dto.branchIds || [],
+            departmentIds: dto.departmentIds || [],
           }),
         },
       });

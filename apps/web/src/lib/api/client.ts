@@ -146,6 +146,9 @@ async function request<T>(method: string, path: string, schema: z.ZodType<T, any
         if (scope.warehouseId && !headers['x-warehouse-id']) {
           headers['x-warehouse-id'] = scope.warehouseId;
         }
+        if (scope.departmentId && !headers['x-department-id']) {
+          headers['x-department-id'] = scope.departmentId;
+        }
       }
     } catch (e) {
       console.error('Failed to parse active scope from localStorage:', e);

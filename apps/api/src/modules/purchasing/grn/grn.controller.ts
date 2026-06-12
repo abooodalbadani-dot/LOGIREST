@@ -25,6 +25,8 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreateGrnDto } from './dto/create-grn.dto';
 import { UpdateGrnDto } from './dto/update-grn.dto';
 import type { Request } from 'express';
@@ -159,6 +161,7 @@ function mapGRNSummary(grn: Record<string, unknown>) {
 }
 
 @Controller('procurement/grns')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class GrnController {
   constructor(
@@ -169,6 +172,14 @@ export class GrnController {
   ) {}
 
   @Post()
+  @Roles(
+    Role.ADMIN,
+    Role.WH_KEEPER,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+  )
   async create(
     @Body() body: CreateGrnDto,
     @CurrentUser('id') userId: string,
@@ -209,7 +220,12 @@ export class GrnController {
   @Get()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
-    @ActiveScope('warehouseId') warehouseId?: string,
+    @ActiveScope()
+    activeScope?: {
+      branchId?: string;
+      warehouseId?: string;
+      departmentId?: string;
+    },
   ) {
     const result = await this.grnService.findAll(
       {
@@ -217,7 +233,7 @@ export class GrnController {
         search: query.search,
         page: query.page ? Number(query.page) : 1,
       },
-      warehouseId,
+      activeScope,
     );
 
     return {
@@ -242,7 +258,13 @@ export class GrnController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.PROC_OFFICER,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -299,7 +321,13 @@ export class GrnController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.PROC_OFFICER,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -330,6 +358,13 @@ export class GrnController {
     action: 'POST',
     modelName: 'goodsReceivedNote',
   })
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.PROC_OFFICER,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   @HttpCode(HttpStatus.OK)
   async post(
     @Param('id') id: string,

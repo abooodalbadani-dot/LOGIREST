@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
+import { useSafeMutation, type AxiosLikeError } from '@/core/concurrency/useSafeMutation';
 import { apiClient } from '@/lib/api/client';
 import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
@@ -11,7 +11,7 @@ import {
  KitchenRequestDetailSchema,
  CreateKitchenRequestDTO 
 } from '../types/kitchen-request';
-import { KITCHEN_REQUEST_STATUS } from '@logirest/shared-types';
+
 
 const UpdateKitchenRequestStatusInputSchema = z.object({
   id: z.string().min(1, { message: 'ID required' }),
@@ -144,6 +144,7 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
   const queryClient = useQueryClient();
    return useSafeMutation({
      onConflict: options?.onConflict,
+     skipAutoToast: true,
       mutationFn: ({ id, fulfillments, version, headers, signal }: { id: string; fulfillments: { itemId: string; fulfilledQty: number }[]; version: number; headers?: Record<string, string>; signal?: AbortSignal }) => {
         if (fulfillments.some(f => f.fulfilledQty <= 0)) {
           throw new Error("Fulfilled quantity must be greater than zero");
@@ -155,10 +156,21 @@ export function useFulfillKitchenRequest(options?: { onConflict?: () => void }) 
   queryClient.invalidateQueries({ queryKey: ['kitchen-requests', variables.id] });
   queryClient.invalidateQueries({ queryKey: ['inventory/balance'] });
   },
-  onError: (error) => {
+  onError: (error: AxiosLikeError) => {
     console.error('Failed to fulfill kitchen request:', error);
-    const message = error instanceof Error ? error.message : 'Failed to fulfill kitchen request';
-    toast.error(message);
+    const errorMsg = error.message || error.response?.data?.message || '';
+    if (errorMsg.includes('Insufficient stock')) {
+      const match = /Requested:\s*([\d.]+),\s*Available\s*\(net\s*of\s*allocations\):\s*([\d.]+)/i.exec(errorMsg);
+      if (match) {
+        const requested = match[1];
+        const available = match[2];
+        toast.error(`الرصيد غير كافٍ! الكمية المطلوبة: ${requested}، بينما المتاح الفعلي هو: ${available}`);
+      } else {
+        toast.error('الرصيد غير كافٍ لإتمام عملية الصرف!');
+      }
+    } else {
+      toast.error('فشلت عملية الصرف! يرجى التحقق من المدخلات وإعادة المحاولة.');
+    }
   },
   });
 }

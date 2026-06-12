@@ -38,6 +38,16 @@ export class AuthService {
             warehouse: true,
           },
         },
+        departmentScopes: {
+          include: {
+            department: true,
+          },
+        },
+        branchScopes: {
+          include: {
+            branch: true,
+          },
+        },
       },
     });
 
@@ -115,11 +125,45 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      scopes: (user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-      })),
+      scopes: [
+        ...(user.warehouseScopes || []).map((s) => ({
+          branchId: s.warehouse?.branchId ?? null,
+          warehouseId: s.warehouseId,
+          departmentId: null,
+          warehouse: s.warehouse
+            ? {
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+              }
+            : null,
+          department: null,
+        })),
+        ...(user.departmentScopes || []).map((s) => ({
+          branchId: s.department?.branchId ?? null,
+          warehouseId: null,
+          departmentId: s.departmentId,
+          warehouse: null,
+          department: s.department
+            ? {
+                id: s.department.id,
+                name: s.department.name,
+              }
+            : null,
+        })),
+        ...(user.branchScopes || []).map((s) => ({
+          branchId: s.branchId,
+          warehouseId: null,
+          departmentId: null,
+          warehouse: null,
+          department: null,
+          branch: s.branch
+            ? {
+                id: s.branch.id,
+                name: s.branch.name,
+              }
+            : null,
+        })),
+      ],
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
       language: 'en' as const,
     };
@@ -161,6 +205,16 @@ export class AuthService {
             warehouse: true,
           },
         },
+        departmentScopes: {
+          include: {
+            department: true,
+          },
+        },
+        branchScopes: {
+          include: {
+            branch: true,
+          },
+        },
       },
     });
 
@@ -173,11 +227,45 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      scopes: (user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-      })),
+      scopes: [
+        ...(user.warehouseScopes || []).map((s) => ({
+          branchId: s.warehouse?.branchId ?? null,
+          warehouseId: s.warehouseId,
+          departmentId: null,
+          warehouse: s.warehouse
+            ? {
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+              }
+            : null,
+          department: null,
+        })),
+        ...(user.departmentScopes || []).map((s) => ({
+          branchId: s.department?.branchId ?? null,
+          warehouseId: null,
+          departmentId: s.departmentId,
+          warehouse: null,
+          department: s.department
+            ? {
+                id: s.department.id,
+                name: s.department.name,
+              }
+            : null,
+        })),
+        ...(user.branchScopes || []).map((s) => ({
+          branchId: s.branchId,
+          warehouseId: null,
+          departmentId: null,
+          warehouse: null,
+          department: null,
+          branch: s.branch
+            ? {
+                id: s.branch.id,
+                name: s.branch.name,
+              }
+            : null,
+        })),
+      ],
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
       language: 'en' as const,
       avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`,
@@ -213,6 +301,16 @@ export class AuthService {
             warehouse: true,
           },
         },
+        departmentScopes: {
+          include: {
+            department: true,
+          },
+        },
+        branchScopes: {
+          include: {
+            branch: true,
+          },
+        },
       },
     });
 
@@ -233,11 +331,45 @@ export class AuthService {
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
-      scopes: (updatedUser.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-      })),
+      scopes: [
+        ...(updatedUser.warehouseScopes || []).map((s) => ({
+          branchId: s.warehouse?.branchId ?? null,
+          warehouseId: s.warehouseId,
+          departmentId: null,
+          warehouse: s.warehouse
+            ? {
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+              }
+            : null,
+          department: null,
+        })),
+        ...(updatedUser.departmentScopes || []).map((s) => ({
+          branchId: s.department?.branchId ?? null,
+          warehouseId: null,
+          departmentId: s.departmentId,
+          warehouse: null,
+          department: s.department
+            ? {
+                id: s.department.id,
+                name: s.department.name,
+              }
+            : null,
+        })),
+        ...(updatedUser.branchScopes || []).map((s) => ({
+          branchId: s.branchId,
+          warehouseId: null,
+          departmentId: null,
+          warehouse: null,
+          department: null,
+          branch: s.branch
+            ? {
+                id: s.branch.id,
+                name: s.branch.name,
+              }
+            : null,
+        })),
+      ],
       status: updatedUser.isActive ? 'ACTIVE' : 'INACTIVE',
       language: body.language || 'en',
       avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,

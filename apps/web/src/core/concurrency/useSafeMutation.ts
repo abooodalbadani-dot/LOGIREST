@@ -27,6 +27,7 @@ export interface AxiosLikeError {
 export interface SafeMutationOptions<TData, TError, TVariables, TContext>
   extends UseMutationOptions<TData, TError, TVariables, TContext> {
   onConflict?: () => void;
+  skipAutoToast?: boolean;
 }
 
 /**
@@ -47,7 +48,7 @@ export function useSafeMutation<
 >(
   options: SafeMutationOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
-  const { onConflict, onError, ...rest } = options;
+  const { onConflict, onError, skipAutoToast, ...rest } = options;
 
   return useMutation<TData, TError, TVariables, TContext>({
     ...rest,
@@ -72,7 +73,7 @@ export function useSafeMutation<
         error.message === 'Aborted' || 
         error.message === 'AbortError';
 
-      if (!isConflict && !isAbortError) {
+      if (!isConflict && !isAbortError && !skipAutoToast) {
         const message = error.message || error.response?.data?.message || 'Operation failed / فشلت العملية';
         toast.error(message);
       }

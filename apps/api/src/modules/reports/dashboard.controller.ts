@@ -36,10 +36,19 @@ export class DashboardController {
   @Get('stats')
   async getDashboardStats(
     @ActiveScope('warehouseId') warehouseId: string | null,
+    @ActiveScope('departmentId') departmentId: string | null,
     @CurrentUser('role') role: Role,
   ) {
     if (role === Role.ADMIN || role === Role.GM) {
       return this.reportsService.getGlobalDashboardStats();
+    }
+    if (role === Role.KITCHEN_CHIEF) {
+      if (!departmentId) {
+        throw new BadRequestException(
+          'Department ID is required for kitchen chief dashboard statistics.',
+        );
+      }
+      return this.reportsService.getKitchenChiefDashboardStats(departmentId);
     }
     if (!warehouseId) {
       throw new BadRequestException(

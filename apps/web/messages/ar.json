@@ -259,6 +259,10 @@
       "select_currency": "اختر العملة",
       "select_language": "اختر اللغة",
       "sender_name": "اسم المرسل",
+      "print_section": "إعدادات الطباعة",
+      "paper_size": "حجم الورق الافتراضي",
+      "show_logo": "إظهار شعار المطعم في الإيصال",
+      "auto_print": "طباعة الإيصال تلقائياً عند الاكتمال",
       "settings_saved": "تم تحديث إعدادات النظام بنجاح",
       "settings_subtitle": "التكوين التشغيلي والمعلمات العالمية",
       "settings_title": "إعدادات النظام",
@@ -814,6 +818,7 @@
       "report_expiry": "تقرير انتهاء الصلاحية",
       "report_movements": "حركات المخزون",
       "report_procurement_status": "حالة المشتريات",
+      "report_wac_history": "سجل متوسط التكلفة المرجح",
       "report_stocktake_variance": "فروقات الجرد",
       "reports": "التقارير والتحليلات",
       "restaurant_profile": "الملف التعريفي للمطعم",
@@ -2586,6 +2591,7 @@
   },
   "operations": {
     "adjustment": {
+      "new": "جديد",
       "suggest_fifo": "اقتراح FIFO تلقائي",
       "fifo_applied": "تم تطبيق اقتراحات FIFO بنجاح.",
       "shortage_warning": "عجز جزئي: تعذر تخصيص {qty} وحدات لعدم كفاية المخزون.",
@@ -3616,6 +3622,7 @@
       "variance": "الفرق"
     },
     "title": "مركز التقارير",
+    "search_placeholder": "اختر صنفاً لعرض تاريخ التكلفة...",
     "view_report": "عرض التقرير",
     "select_session": "اختر الجلسة",
     "wac_history": "سجل متوسط التكلفة المرجح",

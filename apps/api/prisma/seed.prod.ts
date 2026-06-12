@@ -7,10 +7,9 @@ async function main() {
   console.log('Seeding production database reference data...');
 
   // ─── System Settings (M5) ────────────────────────────────────
-  const baseCurrencyCode = process.env.SEED_BASE_CURRENCY || process.env.BASE_CURRENCY_CODE || 'SAR';
   const systemSettingsConfig = {
     system_name: 'LogiRest System',
-    base_currency: baseCurrencyCode,
+    base_currency: 'USD',
     branch_id: 'HQ',
     timezone: 'Asia/Riyadh',
     locale_default: 'en',
@@ -36,32 +35,27 @@ async function main() {
     },
   });
 
-  // 1. Currencies
-  const BASE_CURRENCY_CODE = process.env.SEED_BASE_CURRENCY || process.env.BASE_CURRENCY_CODE || 'SAR';
-  const BASE_CURRENCY_NAME = process.env.SEED_BASE_CURRENCY_NAME || process.env.BASE_CURRENCY_NAME || 'Saudi Riyal';
-
-  const baseCurrency = await prisma.currency.upsert({
-    where: { code: BASE_CURRENCY_CODE },
-    update: {},
-    create: { code: BASE_CURRENCY_CODE, name: BASE_CURRENCY_NAME, isBase: true },
-  });
-
+  // ─── Currencies ──────────────────────────────────────────────
   const usd = await prisma.currency.upsert({
     where: { code: 'USD' },
-    update: {},
-    create: { code: 'USD', name: 'US Dollar', isBase: false },
+    update: {
+      name: 'US Dollar',
+      isBase: true,
+    },
+    create: { code: 'USD', name: 'US Dollar', isBase: true },
   });
 
-  const eur = await prisma.currency.upsert({
-    where: { code: 'EUR' },
-    update: {},
-    create: { code: 'EUR', name: 'Euro', isBase: false },
+  await prisma.currency.upsert({
+    where: { code: 'CNY' },
+    update: {
+      name: 'Chinese Yuan',
+      isBase: false,
+    },
+    create: { code: 'CNY', name: 'Chinese Yuan', isBase: false },
   });
 
-  // 2. FX Rates (Entered via admin UI post-deployment, skipped in production seed)
-
-  // 3. Units of Measure
-  const uoms = [
+  // ─── Units of Measure ────────────────────────────────────────
+  const uomsData = [
     { name: 'Kilogram', code: 'KG' },
     { name: 'Liter', code: 'LTR' },
     { name: 'Piece', code: 'PCS' },
@@ -73,16 +67,19 @@ async function main() {
     { name: 'Dozen', code: 'DZ' },
     { name: 'Pound', code: 'LB' },
   ];
-  for (const uom of uoms) {
-    await prisma.unitOfMeasure.upsert({
+
+  const seededUoms: Record<string, { id: string }> = {};
+  for (const uom of uomsData) {
+    const record = await prisma.unitOfMeasure.upsert({
       where: { code: uom.code },
       update: {},
       create: uom,
     });
+    seededUoms[uom.code] = { id: record.id };
   }
 
-  // 4. Categories
-  const categories = [
+  // ─── Categories ──────────────────────────────────────────────
+  const categoriesData = [
     'Default Category',
     'Meat & Poultry',
     'Dry Goods',
@@ -95,24 +92,32 @@ async function main() {
     'Disposable',
     'Spices & Seasoning',
   ];
-  for (const name of categories) {
-    await prisma.category.upsert({
+
+  const seededCategories: Record<string, { id: string }> = {};
+  for (const name of categoriesData) {
+    const record = await prisma.category.upsert({
       where: { name },
       update: {},
       create: { name },
     });
+    seededCategories[name] = { id: record.id };
   }
 
   // ─── Main Branch & Warehouse ──────────────────────────────────
   const mainBranch = await prisma.branch.upsert({
     where: { code: 'HQ' },
-    update: {},
+    update: {
+      name: 'Main Branch - HQ',
+    },
     create: { name: 'Main Branch - HQ', code: 'HQ' },
   });
 
   const mainWh = await prisma.warehouse.upsert({
     where: { code: 'WH-HQ-01' },
-    update: {},
+    update: {
+      name: 'HQ Main Warehouse',
+      branchId: mainBranch.id,
+    },
     create: {
       name: 'HQ Main Warehouse',
       code: 'WH-HQ-01',
@@ -121,39 +126,52 @@ async function main() {
   });
 
   // ─── Departments ─────────────────────────────────────────────
-  const existingDept = await prisma.department.findFirst({
-    where: { name: 'Main Kitchen', branchId: mainBranch.id },
-  });
-  if (!existingDept) {
-    try {
-      await prisma.department.create({
-        data: {
-          name: 'Main Kitchen',
-          branchId: mainBranch.id,
-        },
+  const departmentNames = ['Hot Kitchen', 'Cold Kitchen'];
+  const depts: Record<string, string> = {};
+  for (const name of departmentNames) {
+    let existing = await prisma.department.findFirst({
+      where: { name, branchId: mainBranch.id },
+    });
+    if (!existing) {
+      existing = await prisma.department.create({
+        data: { name, branchId: mainBranch.id },
       });
-      console.log('Seeded default "Main Kitchen" department linked to HQ Branch.');
-    } catch (e: any) {
-      if (e?.code !== 'P2002') throw e; // ignore unique constraint violation on retry
-      console.log('"Main Kitchen" department already exists, skipping.');
     }
+    depts[name] = existing.id;
   }
 
-  // 5. Secure First Admin User Setup
-  const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@logirest.com';
-  const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'AdminPassword123!';
-  const adminName = process.env.INITIAL_ADMIN_NAME || 'System Administrator';
+  // ─── Admin User Setup (CRITICAL) ──────────────────────────────
+  const adminEmail = 'admin@logirest.local';
+  const adminPassword = 'Password123!';
+  const adminName = 'System Administrator';
 
   console.log(`Seeding initial admin user: ${adminEmail}`);
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
+      passwordHash,
+      name: adminName,
+      role: Role.ADMIN,
+      isActive: true,
       warehouseScopes: {
         deleteMany: {},
         create: {
           warehouseId: mainWh.id,
         },
+      },
+      branchScopes: {
+        deleteMany: {},
+        create: {
+          branchId: mainBranch.id,
+        },
+      },
+      departmentScopes: {
+        deleteMany: {},
+        create: [
+          { departmentId: depts['Hot Kitchen'] },
+          { departmentId: depts['Cold Kitchen'] },
+        ],
       },
     },
     create: {
@@ -167,11 +185,21 @@ async function main() {
           warehouseId: mainWh.id,
         },
       },
+      branchScopes: {
+        create: {
+          branchId: mainBranch.id,
+        },
+      },
+      departmentScopes: {
+        create: [
+          { departmentId: depts['Hot Kitchen'] },
+          { departmentId: depts['Cold Kitchen'] },
+        ],
+      },
     },
   });
-  console.log('Initial admin user successfully seeded!');
 
-  // Link admin user to the main warehouse scope
+  // Explicit upserts to guarantee mappings in scope tables
   await prisma.userWarehouseScope.upsert({
     where: {
       userId_warehouseId: {
@@ -185,7 +213,107 @@ async function main() {
       warehouseId: mainWh.id,
     },
   });
-  console.log('Admin user linked to Main Warehouse scope!');
+
+  await prisma.userBranchScope.upsert({
+    where: {
+      userId_branchId: {
+        userId: adminUser.id,
+        branchId: mainBranch.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      branchId: mainBranch.id,
+    },
+  });
+
+  await prisma.userDepartmentScope.upsert({
+    where: {
+      userId_departmentId: {
+        userId: adminUser.id,
+        departmentId: depts['Hot Kitchen'],
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      departmentId: depts['Hot Kitchen'],
+    },
+  });
+
+  await prisma.userDepartmentScope.upsert({
+    where: {
+      userId_departmentId: {
+        userId: adminUser.id,
+        departmentId: depts['Cold Kitchen'],
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      departmentId: depts['Cold Kitchen'],
+    },
+  });
+
+  console.log('Initial admin user and scopes successfully seeded!');
+
+  // ─── Suppliers ───────────────────────────────────────────────
+  await prisma.supplier.upsert({
+    where: { code: 'SUP-001' },
+    update: {
+      name: 'General Supplier Co.',
+      isActive: true,
+    },
+    create: {
+      code: 'SUP-001',
+      name: 'General Supplier Co.',
+      isActive: true,
+    },
+  });
+
+  // ─── Items ───────────────────────────────────────────────────
+  await prisma.item.upsert({
+    where: { sku: 'MILK-001' },
+    update: {
+      name: 'Fresh Whole Milk',
+      categoryId: seededCategories['Dairy'].id,
+      uomId: seededUoms['LTR'].id,
+      isBatched: false,
+      hasExpiry: false,
+      isActive: true,
+    },
+    create: {
+      sku: 'MILK-001',
+      name: 'Fresh Whole Milk',
+      categoryId: seededCategories['Dairy'].id,
+      uomId: seededUoms['LTR'].id,
+      isBatched: false,
+      hasExpiry: false,
+      isActive: true,
+    },
+  });
+
+  await prisma.item.upsert({
+    where: { sku: 'RICE-001' },
+    update: {
+      name: 'Basmati Rice',
+      categoryId: seededCategories['Dry Goods'].id,
+      uomId: seededUoms['KG'].id,
+      isBatched: false,
+      hasExpiry: false,
+      isActive: true,
+    },
+    create: {
+      sku: 'RICE-001',
+      name: 'Basmati Rice',
+      categoryId: seededCategories['Dry Goods'].id,
+      uomId: seededUoms['KG'].id,
+      isBatched: false,
+      hasExpiry: false,
+      isActive: true,
+    },
+  });
 
   console.log('Production reference data seeding complete!');
 }

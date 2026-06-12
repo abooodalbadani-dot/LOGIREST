@@ -21,6 +21,14 @@ export interface UserScope {
       name: string;
     } | null;
   } | null;
+  department?: {
+    id: string;
+    name: string;
+  } | null;
+  branch?: {
+    id: string;
+    name: string;
+  } | null;
 }
 export interface ActiveScope { branchId: string | null; warehouseId: string | null; departmentId: string | null; }
 export interface AuthUser { 

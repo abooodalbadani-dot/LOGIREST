@@ -22,10 +22,10 @@ export function getRoleCategory(role: UserRole): RoleCategory {
     case 'PROC_OFFICER':
     case 'BRANCH_MGR':
     case 'PROC_MGR':
+    case 'APPROVER':
       return 'manager';
     case 'WH_KEEPER':
     case 'KITCHEN_CHIEF':
-    case 'APPROVER':
       return 'operations';
     case 'VIEWER':
     default:
@@ -62,7 +62,8 @@ export function hasApprovalAuthority(role: UserRole): boolean {
  * (unit price, WAC, total value).
  * Operational roles (WH_KEEPER, KITCHEN_CHIEF) are excluded.
  */
-export function canViewFinancialData(role: UserRole): boolean {
+export function canViewFinancialData(role: UserRole | string | undefined | null): boolean {
+  if (!role) return false;
   return (
     role === 'ADMIN' ||
     role === 'GM' ||
@@ -73,4 +74,11 @@ export function canViewFinancialData(role: UserRole): boolean {
     role === 'STORE_MGR' ||
     role === 'BRANCH_MGR'
   );
+}
+/**
+ * Returns true for the KITCHEN_CHIEF role, which is strictly department-scoped.
+ * Used to hide warehouse-only and procurement sidebar items from kitchen staff.
+ */
+export function isKitchenChief(role: UserRole | string | undefined | null): boolean {
+  return role === 'KITCHEN_CHIEF';
 }

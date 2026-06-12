@@ -1230,6 +1230,7 @@ export class ReportsService {
           id: true,
           lotNumber: true,
           expiryDate: true,
+          itemId: true,
           item: {
             select: { name: true, unitOfMeasure: { select: { code: true } } },
           },
@@ -1308,6 +1309,7 @@ export class ReportsService {
       const wil = lot.warehouseItemLots[0];
       return {
         id: lot.id,
+        itemId: lot.itemId,
         itemName: lot.item.name,
         lotNumber: lot.lotNumber,
         expiryDate: lot.expiryDate?.toISOString() ?? '',
@@ -1464,12 +1466,18 @@ export class ReportsService {
 
     const issuesList = await this.prisma.inventoryIssue.findMany({
       where: { warehouseId },
+      include: {
+        department: { select: { name: true } },
+      },
       orderBy: { createdAt: 'desc' },
       take: 5,
     });
     const transfersList = await this.prisma.transfer.findMany({
       where: {
         OR: [{ fromWarehouseId: warehouseId }, { toWarehouseId: warehouseId }],
+      },
+      include: {
+        toWarehouse: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: 5,
@@ -1483,7 +1491,7 @@ export class ReportsService {
         priority: 'HIGH',
         itemsSummary: 'Stock Issue Request',
         createdAt: i.createdAt.toISOString(),
-        destination: i.departmentId,
+        destination: i.department?.name || i.departmentId,
       })),
       ...transfersList.map((t) => ({
         id: t.id,
@@ -1493,7 +1501,7 @@ export class ReportsService {
         priority: 'NORMAL',
         itemsSummary: 'Warehouse Transfer Request',
         createdAt: t.createdAt.toISOString(),
-        destination: t.toWarehouseId,
+        destination: t.toWarehouse?.name || t.toWarehouseId,
       })),
     ]
       .sort(
@@ -1573,6 +1581,7 @@ export class ReportsService {
     });
     const expiringLots = expiringLotsList.map((l) => ({
       id: l.id,
+      itemId: l.itemId,
       itemName: l.item.name,
       lotNumber: l.lotNumber,
       expiryDate: l.expiryDate?.toISOString().split('T')[0] || '',
@@ -1587,6 +1596,7 @@ export class ReportsService {
     if (expiringLots.length === 0) {
       expiringLots.push({
         id: 'exp-1',
+        itemId: 'exp-1',
         itemName: 'Milk (Fresh)',
         lotNumber: 'LOT-M-001',
         expiryDate: new Date(Date.now() + 5 * 24 * 3600000)
@@ -1609,7 +1619,7 @@ export class ReportsService {
           status: i.status,
           priority: 'HIGH',
           itemsCount: 2,
-          destination: i.departmentId,
+          destination: i.department?.name || i.departmentId,
           createdAt: i.createdAt.toISOString(),
         })),
       ...transfersList
@@ -1621,7 +1631,7 @@ export class ReportsService {
           status: t.status,
           priority: 'NORMAL',
           itemsCount: 3,
-          destination: t.toWarehouseId,
+          destination: t.toWarehouse?.name || t.toWarehouseId,
           createdAt: t.createdAt.toISOString(),
         })),
     ].slice(0, 5);
@@ -1641,6 +1651,9 @@ export class ReportsService {
 
     const pendingPRsList = await this.prisma.purchaseRequest.findMany({
       where: { warehouseId, status: 'SUBMITTED' },
+      include: {
+        warehouse: { select: { name: true } },
+      },
       take: 5,
     });
     const pendingApprovals = pendingPRsList.map((pr) => ({
@@ -1649,7 +1662,7 @@ export class ReportsService {
       type: 'PR' as const,
       status: pr.status,
       priority: 'HIGH',
-      destination: pr.warehouseId,
+      destination: pr.warehouse?.name || pr.warehouseId,
       createdAt: pr.createdAt.toISOString(),
       totalValue: 15000,
     }));
@@ -1723,6 +1736,200 @@ export class ReportsService {
       topVendors,
       efficiencyMetrics,
       systemAuditLogs,
+    };
+  }
+
+  async getKitchenChiefDashboardStats(departmentId: string) {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [
+      pendingRequests,
+      pendingItems,
+      todayIssues,
+      recentRequestsForHealth,
+      recentKitchenRequests,
+      recentIssuesForLog,
+    ] = await Promise.all([
+      // 1. Pending requests count
+      this.prisma.kitchenRequest.count({
+        where: {
+          departmentId,
+          status: { in: ['DRAFT', 'SUBMITTED'] },
+        },
+      }),
+      // 2. Pending items requested vs fulfilled
+      this.prisma.kitchenRequestItem.findMany({
+        where: {
+          kitchenRequest: {
+            departmentId,
+            status: { in: ['DRAFT', 'SUBMITTED'] },
+          },
+        },
+        select: {
+          quantityRequested: true,
+          quantityFulfilled: true,
+        },
+      }),
+      // 3. Today's consumption issues
+      this.prisma.inventoryIssue.findMany({
+        where: {
+          departmentId,
+          status: 'POSTED',
+          createdAt: { gte: startOfToday },
+        },
+        include: {
+          lines: {
+            select: {
+              quantity: true,
+            },
+          },
+        },
+      }),
+      // 4. Last 30 days requests for stock health
+      this.prisma.kitchenRequestItem.findMany({
+        where: {
+          kitchenRequest: {
+            departmentId,
+            createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+            status: 'FULFILLED',
+          },
+        },
+        select: {
+          quantityRequested: true,
+          quantityFulfilled: true,
+        },
+      }),
+      // 5. Recent Requests list (Kitchen Requests)
+      this.prisma.kitchenRequest.findMany({
+        where: { departmentId },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          department: { select: { name: true } },
+          items: {
+            include: {
+              item: true,
+            },
+          },
+        },
+      }),
+      // 6. Recent consumption logs (posted Issues)
+      this.prisma.inventoryIssue.findMany({
+        where: {
+          departmentId,
+          status: 'POSTED',
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          lines: {
+            include: {
+              item: {
+                include: {
+                  unitOfMeasure: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Calculate shortages
+    const shortages = pendingItems.filter(
+      (item) => Number(item.quantityRequested) > Number(item.quantityFulfilled),
+    ).length;
+
+    // Calculate today consumption
+    let todayConsumption = 0;
+    for (const issue of todayIssues) {
+      for (const line of issue.lines) {
+        todayConsumption += Number(line.quantity);
+      }
+    }
+
+    // Calculate stock health
+    let totalRequested = 0;
+    let totalFulfilled = 0;
+    for (const item of recentRequestsForHealth) {
+      totalRequested += Number(item.quantityRequested);
+      totalFulfilled += Number(item.quantityFulfilled);
+    }
+    const stockHealth =
+      totalRequested > 0
+        ? Math.round((totalFulfilled / totalRequested) * 100)
+        : 100;
+
+    // Build recent requests formatted for schema
+    const recentRequests = recentKitchenRequests.map((req) => ({
+      id: req.id,
+      documentNumber: req.requestNumber,
+      type: 'ISSUE' as const,
+      status: req.status,
+      priority: 'NORMAL',
+      itemsSummary: req.items
+        .map((i) => `${i.item.name} x ${Number(i.quantityRequested)}`)
+        .join(', '),
+      createdAt: req.createdAt.toISOString(),
+      destination: req.department?.name || req.departmentId,
+    }));
+
+    // Build activity log
+    const activityLog: Array<{
+      id: string;
+      itemName: string;
+      qty: number;
+      uom: string;
+      time: string;
+      type: string;
+    }> = [];
+    for (const issue of recentIssuesForLog) {
+      for (const line of issue.lines) {
+        activityLog.push({
+          id: line.id,
+          itemName: line.item.name,
+          qty: Number(line.quantity),
+          uom: line.item.unitOfMeasure?.code ?? 'PCS',
+          time: issue.createdAt.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          type: 'OUT (Issue)',
+        });
+      }
+    }
+
+    return {
+      totalValue: 0,
+      pendingFulfillment: pendingRequests,
+      shortages,
+      warehouseCapacity: 100,
+      pendingPrs: 0,
+      activeStocktakes: 0,
+      lowStockItems: shortages,
+      systemHealth: 100,
+      activeUsers: 0,
+      nearExpiryCount: 0,
+      todayConsumption,
+      stockHealth,
+      activePos: 0,
+      pendingGrns: 0,
+      totalProcurementSpend: 0,
+      recentRequests,
+      activityLog: activityLog.slice(0, 5),
+      expiringLots: [],
+      fulfillmentQueue: [],
+      pendingApprovals: [],
+      topVendors: [],
+      efficiencyMetrics: {
+        poConversionRate: 100,
+        fulfillmentCycleDays: 1,
+        throughputWeek: 0,
+        conversionChart: [],
+        velocityChart: [],
+      },
+      systemAuditLogs: [],
     };
   }
 

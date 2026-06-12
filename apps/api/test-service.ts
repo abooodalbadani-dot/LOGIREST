@@ -1,37 +1,24 @@
 import { PrismaService } from './src/database/prisma.service';
+import { ReportsService } from './src/modules/reports/reports.service';
 
 async function main() {
-  console.log('Scratch script started. Instantiating PrismaService...');
-  const start = Date.now();
+  console.log('Scratch script started. Instantiating PrismaService & ReportsService...');
   const prisma = new PrismaService();
-
-  console.log('Connecting to database...');
   await prisma.onModuleInit();
-  console.log('Connected.');
+  const reportsService = new ReportsService(prisma);
+
+  const warehouseId = 'b1b5d190-a1fe-485f-9c47-72d8ffd947ab';
+  console.log('Querying dashboard stats for warehouseId:', warehouseId);
 
   try {
-    console.log('Attempting to count branches using PrismaService...');
-    const count = await prisma.branch.count();
-    console.log(`Success! Branch count: ${count} in ${Date.now() - start}ms`);
-  } catch (err) {
-    console.error('Failed to count branches:', err);
-  }
+    const stats = await reportsService.getDashboardStats('WH_KEEPER', warehouseId);
+    console.log('API RESPONSE STATS - FULFILLMENT QUEUE:');
+    console.log(JSON.stringify(stats.fulfillmentQueue, null, 2));
 
-  try {
-    console.log('Attempting to create a branch using PrismaService...');
-    const branch = await prisma.branch.create({
-      data: {
-        name: `Diag Branch ${Date.now()}`,
-        code: `DIAG-${Date.now()}`,
-      },
-    });
-    console.log('Branch created successfully:', branch.id);
-    
-    // Clean up
-    await prisma.branch.delete({ where: { id: branch.id } });
-    console.log('Branch cleaned up.');
+    console.log('API RESPONSE STATS - RECENT REQUESTS:');
+    console.log(JSON.stringify(stats.recentRequests, null, 2));
   } catch (err) {
-    console.error('Failed to create/delete branch:', err);
+    console.error('Failed to query dashboard stats:', err);
   }
 
   await prisma.onModuleDestroy();

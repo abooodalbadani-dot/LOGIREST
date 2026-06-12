@@ -25,6 +25,7 @@ interface AuthenticatedRequest extends Request {
   activeScope?: {
     warehouseId: string;
     branchId: string;
+    departmentId?: string;
   };
 }
 
@@ -76,26 +77,113 @@ export class ScopeInterceptor implements NestInterceptor {
 
     const warehouseId = request.headers['x-warehouse-id'] as string | undefined;
     const branchId = request.headers['x-branch-id'] as string | undefined;
-    const hasHeaders = !!(warehouseId && branchId);
-
-    // If route is exempt and headers are missing, bypass scope checks entirely
-    if (isExempt && !hasHeaders) {
-      return next.handle();
-    }
+    const departmentId = request.headers['x-department-id'] as
+      | string
+      | undefined;
 
     const authenticatedUser = request.user;
     if (!authenticatedUser) {
       return next.handle();
     }
 
+    const isKitchenChief = authenticatedUser.role === 'KITCHEN_CHIEF';
+    const isBranchMgr = authenticatedUser.role === 'BRANCH_MGR';
+    const isGlobal =
+      authenticatedUser.role === 'ADMIN' || authenticatedUser.role === 'GM';
+
+    const hasHeaders = isGlobal
+      ? !!branchId
+      : isKitchenChief
+        ? !!(branchId && departmentId)
+        : isBranchMgr
+          ? !!branchId
+          : !!(warehouseId && branchId);
+
+    // If route is exempt and headers are missing, bypass scope checks entirely
+    if (isExempt && !hasHeaders) {
+      return next.handle();
+    }
+
     // If headers are missing on a non-exempt route, reject
-    if (!warehouseId || !branchId) {
+    if (!hasHeaders) {
       if (isExempt) {
         return next.handle();
       }
-      throw new BadRequestException(
-        'Missing active scope headers: x-warehouse-id, x-branch-id',
-      );
+      if (isKitchenChief) {
+        throw new BadRequestException(
+          'Missing active scope headers: x-branch-id, x-department-id',
+        );
+      } else if (isBranchMgr) {
+        throw new BadRequestException(
+          'Missing active scope header: x-branch-id',
+        );
+      } else {
+        throw new BadRequestException(
+          'Missing active scope headers: x-warehouse-id, x-branch-id',
+        );
+      }
+    }
+
+    if (isGlobal) {
+      request.activeScope = {
+        warehouseId: warehouseId || '',
+        branchId: branchId!,
+        departmentId: departmentId || '',
+      };
+      return next.handle();
+    }
+
+    if (isKitchenChief) {
+      const scope = await this.prisma.userDepartmentScope.findUnique({
+        where: {
+          userId_departmentId: {
+            userId: authenticatedUser.id,
+            departmentId: departmentId!,
+          },
+        },
+        include: {
+          department: {
+            select: { branchId: true },
+          },
+        },
+      });
+
+      if (!scope || scope.department.branchId !== branchId) {
+        throw new ForbiddenException(
+          'Access denied: Department scope not authorized',
+        );
+      }
+
+      request.activeScope = {
+        warehouseId: warehouseId || '',
+        branchId: branchId,
+        departmentId: departmentId!,
+      };
+      return next.handle();
+    }
+
+    if (isBranchMgr) {
+      const scope = await this.prisma.userBranchScope.findUnique({
+        where: {
+          userId_branchId: {
+            userId: authenticatedUser.id,
+            branchId: branchId!,
+          },
+        },
+      });
+
+      if (!scope) {
+        throw new ForbiddenException(
+          'Access denied: Branch scope not authorized',
+        );
+      }
+
+      request.activeScope = {
+        warehouseId: warehouseId || '',
+        branchId: branchId!,
+        departmentId: departmentId || '',
+      };
+      return next.handle();
     }
 
     let scope = null;
@@ -104,7 +192,7 @@ export class ScopeInterceptor implements NestInterceptor {
         where: {
           userId_warehouseId: {
             userId: authenticatedUser.id,
-            warehouseId,
+            warehouseId: warehouseId!,
           },
         },
         include: {
@@ -138,7 +226,7 @@ export class ScopeInterceptor implements NestInterceptor {
           userId: authenticatedUser.id,
           action: 'SCOPE_ACCESS_VIOLATION',
           targetTable: 'warehouses',
-          targetId: warehouseId,
+          targetId: warehouseId!,
           beforeStateJson: '',
           afterStateJson: JSON.stringify({
             attemptedWarehouseId: warehouseId,
@@ -159,8 +247,9 @@ export class ScopeInterceptor implements NestInterceptor {
     }
 
     request.activeScope = {
-      warehouseId,
-      branchId,
+      warehouseId: warehouseId!,
+      branchId: branchId,
+      departmentId: departmentId || '',
     };
 
     return next.handle();

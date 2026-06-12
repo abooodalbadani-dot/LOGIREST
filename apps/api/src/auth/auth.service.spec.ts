@@ -138,7 +138,10 @@ describe('AuthService', () => {
         role: 'WH_KEEPER',
         isActive: true,
         warehouseScopes: [
-          { warehouseId: 'wh-1', warehouse: { branchId: 'br-1' } },
+          {
+            warehouseId: 'wh-1',
+            warehouse: { id: 'wh-1', name: 'Main WH', branchId: 'br-1' },
+          },
         ],
       });
 
@@ -147,7 +150,13 @@ describe('AuthService', () => {
       expect(result.token).toBe('mock-access-token');
       expect(result.user.id).toBe('user-1');
       expect(result.user.scopes).toEqual([
-        { branchId: 'br-1', warehouseId: 'wh-1', departmentId: null },
+        {
+          branchId: 'br-1',
+          warehouseId: 'wh-1',
+          departmentId: null,
+          warehouse: { id: 'wh-1', name: 'Main WH' },
+          department: null,
+        },
       ]);
       expect(mockRtrService.createSession).toHaveBeenCalledWith(
         'user-1',
@@ -165,8 +174,14 @@ describe('AuthService', () => {
         role: 'WH_KEEPER',
         isActive: true,
         warehouseScopes: [
-          { warehouseId: 'wh-1', warehouse: { branchId: 'br-1' } },
-          { warehouseId: 'wh-2', warehouse: { branchId: 'br-1' } },
+          {
+            warehouseId: 'wh-1',
+            warehouse: { id: 'wh-1', name: 'WH 1', branchId: 'br-1' },
+          },
+          {
+            warehouseId: 'wh-2',
+            warehouse: { id: 'wh-2', name: 'WH 2', branchId: 'br-1' },
+          },
         ],
       });
 
@@ -174,8 +189,20 @@ describe('AuthService', () => {
 
       expect(result.id).toBe('user-1');
       expect(result.scopes).toEqual([
-        { branchId: 'br-1', warehouseId: 'wh-1', departmentId: null },
-        { branchId: 'br-1', warehouseId: 'wh-2', departmentId: null },
+        {
+          branchId: 'br-1',
+          warehouseId: 'wh-1',
+          departmentId: null,
+          warehouse: { id: 'wh-1', name: 'WH 1' },
+          department: null,
+        },
+        {
+          branchId: 'br-1',
+          warehouseId: 'wh-2',
+          departmentId: null,
+          warehouse: { id: 'wh-2', name: 'WH 2' },
+          department: null,
+        },
       ]);
     });
 

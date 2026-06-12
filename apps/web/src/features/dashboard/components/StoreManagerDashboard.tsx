@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { 
   Truck, 
   AlertCircle, 
@@ -18,6 +18,8 @@ import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useBaseCurrency } from '@/hooks/useBaseCurrency';
+import { useAuth } from '@/providers/AuthProvider';
+import { canViewFinancialData } from '@/utils/roleUtils';
 
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -26,6 +28,8 @@ export function StoreManagerDashboard() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
+  const { user } = useAuth();
+  const router = useRouter();
   const { currency: baseCurrency, isLoading: loadingCurrency } = useBaseCurrency();
   const { data: stats, isLoading: loadingStats, error } = useDashboardStats();
 
@@ -95,13 +99,15 @@ export function StoreManagerDashboard() {
           accent="amber"
           description={t('store.capacity_usage')}
         />
-        <KPICard
-          title={t('store.asset_value')}
-          value={loadingCurrency ? '...' : formatCurrency(stats.totalValue, baseCurrency, locale as 'ar' | 'en')}
-          icon={Layers}
-          accent="cyan"
-          description={t('store.stock_valuation')}
-        />
+        {user?.role && canViewFinancialData(user.role) && (
+          <KPICard
+            title={t('store.asset_value')}
+            value={loadingCurrency ? '...' : formatCurrency(stats.totalValue, baseCurrency, locale as 'ar' | 'en')}
+            icon={Layers}
+            accent="cyan"
+            description={t('store.stock_valuation')}
+          />
+        )}
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -152,7 +158,17 @@ export function StoreManagerDashboard() {
                         </div>
                       </div>
                       <PermissionGate action="edit" resource="operations_issues">
-                        <Button variant="ghost" className="rounded-2xl border-none bg-surface-container-low h-12 w-12 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-110 active:scale-95">
+                        <Button 
+                          variant="ghost" 
+                          className="rounded-2xl border-none bg-surface-container-low h-12 w-12 p-0 hover:bg-status-success hover:text-black transition-all hover:scale-110 active:scale-95"
+                          onClick={() => {
+                            if (job.type === 'ISSUE') {
+                              router.push(`/issues/${job.id}`);
+                            } else {
+                              router.push(`/transfers/${job.id}`);
+                            }
+                          }}
+                        >
                           <ArrowRightLeft className="w-4 h-4" />
                         </Button>
                       </PermissionGate>
@@ -178,12 +194,21 @@ export function StoreManagerDashboard() {
             </div>
             <div className="p-8 pt-2 space-y-6">
               {stats.expiringLots.map((item) => (
-                <div key={item.id} className="flex flex-col gap-2 border-s-2 border-surface-container-low ps-6 hover:border-status-success transition-all duration-140 ease-industrial group/item">
-                  <div className="flex items-center justify-between">
-                    <span className="text-label-xs font-semibold text-foreground group-hover/item:text-status-success transition-colors uppercase">{item.itemName}</span>
-                    <span className={`text-label-xxs font-semibold px-3 py-1 rounded-lg ${item.daysLeft < 3 ? 'bg-status-error/10 text-status-error' : 'bg-status-warning/10 text-status-warning'} uppercase`}>{t('store.days_left', { days: item.daysLeft })}</span>
+                <div key={item.id} className="flex items-center justify-between border-s-2 border-surface-container-low ps-6 hover:border-status-success transition-all duration-140 ease-industrial group/item">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-label-xs font-semibold text-foreground group-hover/item:text-status-success transition-colors uppercase">{item.itemName}</span>
+                      <span className={`text-label-xxs font-semibold px-3 py-1 rounded-lg ${item.daysLeft < 3 ? 'bg-status-error/10 text-status-error' : 'bg-status-warning/10 text-status-warning'} uppercase`}>{t('store.days_left', { days: item.daysLeft })}</span>
+                    </div>
+                    <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{tc('batch')} {item.lotNumber} • {tc('warehouse')} {item.warehouseName}</span>
                   </div>
-                  <span className="text-label-xxs font-semibold text-muted-foreground/30 uppercase">{tc('batch')} {item.lotNumber} • {tc('warehouse')} {item.warehouseName}</span>
+                  <PermissionGate action="create" resource="operations_adjustments">
+                    <Link href={`/adjustments/new?itemId=${item.itemId || item.id}&batch=${item.lotNumber}&reason=damage`} className="contents">
+                      <Button variant="ghost" className="rounded-xl border-none bg-surface-container-low h-10 w-10 p-0 hover:bg-status-warning hover:text-black transition-all hover:scale-110 active:scale-95 shadow-sm">
+                        <AlertCircle className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </PermissionGate>
                 </div>
               ))}
               <PermissionGate action="create" resource="operations_adjustments">

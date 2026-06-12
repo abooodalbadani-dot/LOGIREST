@@ -1,78 +1,87 @@
 "use strict";
+/**
+ * Role Capabilities Contract
+ * Single source of truth for per-document-type role authorization.
+ * Both usePermission and canPerformActionV2 derive from this contract.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ROLE_METADATA = exports.ROLE_CAPABILITIES = void 0;
 exports.canRolePerformAction = canRolePerformAction;
 exports.ROLE_CAPABILITIES = {
     adjustment: {
-        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        submit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
-        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
+        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        submit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'],
+        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'],
         post: ['ADMIN', 'INV_MGR'],
-        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        edit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
-        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'],
+        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        edit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'],
+        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'],
     },
     transfer: {
-        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        ship: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        receive: ['ADMIN', 'INV_MGR', 'WH_KEEPER'],
-        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
-        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'],
+        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        ship: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        receive: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'BRANCH_MGR'],
+        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'],
+        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'],
     },
     issue: {
-        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF'],
-        submit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF'],
+        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'],
+        submit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'],
         post: ['ADMIN', 'INV_MGR'],
-        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
-        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'],
+        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF', 'BRANCH_MGR'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'],
+        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'],
     },
     stocktake: {
-        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        start: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        count: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        review: ['ADMIN', 'INV_MGR', 'STORE_MGR'],
-        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
-        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
+        create: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        start: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        count: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'],
+        review: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'],
+        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'],
+        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'],
         post: ['ADMIN', 'INV_MGR'],
         close: ['ADMIN', 'INV_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
-        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'],
+        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'],
+        recount: ['ADMIN', 'INV_MGR'],
     },
     kitchen_request: {
         create: ['ADMIN', 'KITCHEN_CHIEF', 'INV_MGR', 'STORE_MGR'],
         submit: ['ADMIN', 'KITCHEN_CHIEF', 'INV_MGR', 'STORE_MGR'],
         fulfill: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'KITCHEN_CHIEF'],
         cancel: ['ADMIN', 'KITCHEN_CHIEF', 'INV_MGR', 'STORE_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'],
     },
     pr: {
-        create: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'],
-        submit: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'],
-        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
-        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
-        cancel: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
+        create: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        submit: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        cancel: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'],
     },
     po: {
-        create: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'],
-        submit: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'],
-        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
-        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR'],
-        cancel: ['ADMIN', 'PROC_OFFICER', 'INV_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
+        create: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'],
+        submit: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'],
+        approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        cancel: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'],
     },
     grn: {
-        create: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR'],
-        post: ['ADMIN', 'INV_MGR'],
-        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR'],
-        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER'],
-        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM'],
+        create: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        post: ['ADMIN', 'INV_MGR', 'PROC_MGR'],
+        cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'],
+        view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'],
+        export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR', 'PROC_MGR'],
     },
 };
+/**
+ * Check if a role can perform a specific action on a document type.
+ */
 function canRolePerformAction(documentType, action, role) {
     if (!role)
         return false;
@@ -126,5 +135,12 @@ exports.ROLE_METADATA = {
         displayName: 'Store Manager',
         description: 'Branch-level operational management and cost analysis',
     },
+    BRANCH_MGR: {
+        displayName: 'Branch Manager',
+        description: 'Full operational and approval authority for all warehouses in a branch',
+    },
+    PROC_MGR: {
+        displayName: 'Procurement Manager',
+        description: 'Manages suppliers, FX rates, and purchase lifecycle across the organization',
+    },
 };
-//# sourceMappingURL=role-capabilities.js.map

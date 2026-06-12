@@ -145,6 +145,7 @@ describe('ScopeInterceptor', () => {
     expect(request.activeScope).toEqual({
       warehouseId: 'wh-1',
       branchId: 'br-1',
+      departmentId: '',
     });
   });
 });

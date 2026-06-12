@@ -4,6 +4,7 @@ import type { Request } from 'express';
 export interface ActiveScope {
   warehouseId: string;
   branchId: string;
+  departmentId?: string;
 }
 
 interface AuthenticatedRequest extends Request {

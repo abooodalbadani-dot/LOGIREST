@@ -77,6 +77,16 @@ export class RtrService {
                 warehouse: true,
               },
             },
+            departmentScopes: {
+              include: {
+                department: true,
+              },
+            },
+            branchScopes: {
+              include: {
+                branch: true,
+              },
+            },
           },
         },
       },
@@ -205,11 +215,45 @@ export class RtrService {
       name: existingToken.user.name,
       email: existingToken.user.email,
       role: existingToken.user.role,
-      scopes: (existingToken.user.warehouseScopes || []).map((s) => ({
-        branchId: s.warehouse?.branchId ?? null,
-        warehouseId: s.warehouseId,
-        departmentId: null,
-      })),
+      scopes: [
+        ...(existingToken.user.warehouseScopes || []).map((s) => ({
+          branchId: s.warehouse?.branchId ?? null,
+          warehouseId: s.warehouseId,
+          departmentId: null,
+          warehouse: s.warehouse
+            ? {
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+              }
+            : null,
+          department: null,
+        })),
+        ...(existingToken.user.departmentScopes || []).map((s) => ({
+          branchId: s.department?.branchId ?? null,
+          warehouseId: null,
+          departmentId: s.departmentId,
+          warehouse: null,
+          department: s.department
+            ? {
+                id: s.department.id,
+                name: s.department.name,
+              }
+            : null,
+        })),
+        ...(existingToken.user.branchScopes || []).map((s) => ({
+          branchId: s.branchId,
+          warehouseId: null,
+          departmentId: null,
+          warehouse: null,
+          department: null,
+          branch: s.branch
+            ? {
+                id: s.branch.id,
+                name: s.branch.name,
+              }
+            : null,
+        })),
+      ],
       status: existingToken.user.isActive
         ? ('ACTIVE' as const)
         : ('INACTIVE' as const),

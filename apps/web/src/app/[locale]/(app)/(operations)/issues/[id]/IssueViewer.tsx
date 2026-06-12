@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -13,8 +14,12 @@ import {
   Clock,
   User,
   FileText,
-  MapPin
+  MapPin,
+  Printer
 } from 'lucide-react';
+import { useSystemPrintSettings } from '@/features/admin/hooks/useSystemPrintSettings';
+import { dispatchPrintJob } from '@/lib/export/printDispatcher';
+import { ThermalReceipt } from '@/components/shared/ThermalReceipt';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
@@ -29,6 +34,8 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
   const t = useTranslations('operations.issue');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const { data: settings, isLoading: isLoadingSettings } = useSystemPrintSettings();
+  const [thermalConfig, setThermalConfig] = useState<{ paperSize: '80mm' | '58mm'; showLogo: boolean } | null>(null);
 
   const issueStatus = issue?.status ?? 'DRAFT';
   
@@ -81,6 +88,25 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
               />
             </div>
           </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <Button
+            variant="outline"
+            disabled={isLoadingSettings}
+            className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
+            onClick={() => dispatchPrintJob({
+              docType: 'INVENTORY_ISSUE',
+              doc: issue,
+              settings,
+              locale,
+              onThermalPrint: (paperSize, showLogo) => {
+                setThermalConfig({ paperSize, showLogo });
+              }
+            })}
+          >
+            <Printer className="w-4 h-4 me-2" />
+            {tCommon('print')}
+          </Button>
         </div>
       </div>
 
@@ -248,6 +274,35 @@ export function IssueViewer({ issue, locale }: IssueViewerProps) {
           </div>
         </div>
       </div>
+      {thermalConfig && (
+        <ThermalReceipt
+          docType="INVENTORY_ISSUE"
+          docNumber={issue.documentNumber}
+          date={issue.createdAt}
+          operator={issue.createdBy || tCommon('system_user')}
+          department={
+            issue.destinationDeptId === 'dep-1' ? tCommon('departments.kitchen_1') : 
+            issue.destinationDeptId === 'dep-2' ? tCommon('departments.pastry') : 
+            issue.destinationDeptId || undefined
+          }
+          warehouse={
+            issue.warehouseId === 'wh-1' ? tCommon('warehouses.main') :
+            issue.warehouseId || ''
+          }
+          notes={issue.notes || undefined}
+          items={(issue.lines || []).map(line => ({
+            code: line.item.code,
+            name: line.item.name,
+            qty: line.qty,
+            uom: line.item.primaryUom?.code || line.uomId || '',
+            notes: line.lot ? `${line.lot.lotNumber}` : undefined,
+          }))}
+          paperSize={thermalConfig.paperSize}
+          showLogo={thermalConfig.showLogo}
+          locale={locale}
+          onClose={() => setThermalConfig(null)}
+        />
+      )}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 import { BarChart3, Clock, ShoppingCart, ClipboardCheck, Wallet, Activity, ArrowRight, TrendingUp, Hash } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { usePathname } from '@/i18n/navigation';
+import { useAuth } from '@/providers/AuthProvider';
+import { canViewFinancialData } from '@/utils/roleUtils';
 
 interface ReportCardProps {
  title: string;
@@ -52,65 +54,76 @@ function ReportCard({ title, description, icon, href }: ReportCardProps) {
 
 
 export function ReportsHubClient() {
- const t = useTranslations('reports');
- const pathname = usePathname();
+  const t = useTranslations('reports');
+  const pathname = usePathname();
+  const { user } = useAuth();
 
- const reportLinks = [
- {
- title: t('available_inventory'),
- description: t('available_inventory_desc'),
- icon: <BarChart3 className="w-6 h-6" />,
- href: `${pathname}/available-inventory`,
- },
- {
- title: t('movements'),
- description: t('movements_desc'),
- icon: <Activity className="w-6 h-6" />,
- href: `${pathname}/movements`,
- },
- {
- title: t('expiry'),
- description: t('expiry_desc'),
- icon: <Clock className="w-6 h-6" />,
- href: `${pathname}/expiry`,
- },
- {
- title: t('stocktake_variance'),
- description: t('stocktake_variance_desc'),
- icon: <ClipboardCheck className="w-6 h-6" />,
- href: `${pathname}/stocktake-variance`,
- },
- {
- title: t('procurement_status'),
- description: t('procurement_status_desc'),
- icon: <ShoppingCart className="w-6 h-6" />,
- href: `${pathname}/procurement-status`,
- },
-  {
-  title: t('currency_summaries'),
-  description: t('currency_summaries_desc'),
-  icon: <Wallet className="w-6 h-6" />,
-  href: `${pathname}/currency-summaries`,
-  },
-  {
-  title: t('wac_history'),
-  description: t('wac_history_desc'),
-  icon: <TrendingUp className="w-6 h-6" />,
-  href: `${pathname}/wac-history`,
-  },
-  {
-  title: t('lot_trace'),
-  description: t('lot_trace_desc'),
-  icon: <Hash className="w-6 h-6" />,
-  href: `${pathname}/lot-trace`,
-  },
+  const reportLinks = [
+    {
+      title: t('available_inventory'),
+      description: t('available_inventory_desc'),
+      icon: <BarChart3 className="w-6 h-6" />,
+      href: `${pathname}/available-inventory`,
+    },
+    {
+      title: t('movements'),
+      description: t('movements_desc'),
+      icon: <Activity className="w-6 h-6" />,
+      href: `${pathname}/movements`,
+    },
+    {
+      title: t('expiry'),
+      description: t('expiry_desc'),
+      icon: <Clock className="w-6 h-6" />,
+      href: `${pathname}/expiry`,
+    },
+    {
+      title: t('stocktake_variance'),
+      description: t('stocktake_variance_desc'),
+      icon: <ClipboardCheck className="w-6 h-6" />,
+      href: `${pathname}/stocktake-variance`,
+    },
+    {
+      title: t('procurement_status'),
+      description: t('procurement_status_desc'),
+      icon: <ShoppingCart className="w-6 h-6" />,
+      href: `${pathname}/procurement-status`,
+    },
+    {
+      title: t('currency_summaries'),
+      description: t('currency_summaries_desc'),
+      icon: <Wallet className="w-6 h-6" />,
+      href: `${pathname}/currency-summaries`,
+    },
+    {
+      title: t('wac_history'),
+      description: t('wac_history_desc'),
+      icon: <TrendingUp className="w-6 h-6" />,
+      href: `${pathname}/wac-history`,
+    },
+    {
+      title: t('lot_trace'),
+      description: t('lot_trace_desc'),
+      icon: <Hash className="w-6 h-6" />,
+      href: `${pathname}/lot-trace`,
+    },
   ];
 
- return (
- <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
- {reportLinks.map((r) => (
- <ReportCard key={r.title} {...r} />
- ))}
- </div>
- );
+  const financialReportKeys = ['procurement-status', 'currency-summaries', 'wac-history'];
+
+  const visibleReports = reportLinks.filter((r) => {
+    const isFinancial = financialReportKeys.some((key) => r.href.endsWith(key));
+    if (isFinancial && user) {
+      return canViewFinancialData(user.role);
+    }
+    return true;
+  });
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {visibleReports.map((r) => (
+        <ReportCard key={r.title} {...r} />
+      ))}
+    </div>
+  );
 }

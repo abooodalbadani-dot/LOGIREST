@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
@@ -20,7 +21,7 @@ import { SuppliersService } from './suppliers.service';
 import type { Request } from 'express';
 
 @Controller(['suppliers', 'master-data/suppliers'])
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
@@ -36,7 +37,7 @@ export class SuppliersController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
   async create(
     @Body() body: Record<string, unknown>,
     @CurrentUser('id') userId: string,
@@ -53,7 +54,7 @@ export class SuppliersController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.GM)
+  @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
   async update(
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,

@@ -17,7 +17,7 @@ async function main() {
   console.log('Seeding database...');
 
   // ─── System Settings (M5) ────────────────────────────────────
-  const baseCurrencyCode = process.env.BASE_CURRENCY_CODE || 'SAR';
+  const baseCurrencyCode = process.env.BASE_CURRENCY_CODE || 'USD';
   const systemSettingsConfig = {
     system_name: 'LogiRest System',
     base_currency: baseCurrencyCode,
@@ -47,16 +47,31 @@ async function main() {
   });
 
   // ─── Currencies ──────────────────────────────────────────────
-  const sar = await prisma.currency.upsert({
-    where: { code: 'SAR' },
-    update: {},
-    create: { code: 'SAR', name: 'Saudi Riyal', isBase: true },
-  });
-
   const usd = await prisma.currency.upsert({
     where: { code: 'USD' },
-    update: {},
-    create: { code: 'USD', name: 'US Dollar', isBase: false },
+    update: {
+      name: 'US Dollar',
+      isBase: true,
+    },
+    create: { code: 'USD', name: 'US Dollar', isBase: true },
+  });
+
+  const sar = await prisma.currency.upsert({
+    where: { code: 'SAR' },
+    update: {
+      name: 'Saudi Riyal',
+      isBase: false,
+    },
+    create: { code: 'SAR', name: 'Saudi Riyal', isBase: false },
+  });
+
+  const cny = await prisma.currency.upsert({
+    where: { code: 'CNY' },
+    update: {
+      name: 'Chinese Yuan',
+      isBase: false,
+    },
+    create: { code: 'CNY', name: 'Chinese Yuan', isBase: false },
   });
 
   const eur = await prisma.currency.upsert({
@@ -91,6 +106,28 @@ async function main() {
   });
 
   // ─── Units of Measure ────────────────────────────────────────
+  // Ensure we transition L to LTR safely if it exists to prevent unique constraint violations on name/code.
+  const lUom = await prisma.unitOfMeasure.findUnique({
+    where: { code: 'L' },
+  });
+  if (lUom) {
+    await prisma.unitOfMeasure.update({
+      where: { id: lUom.id },
+      data: { code: 'LTR', name: 'Liter' },
+    });
+  }
+
+  // Also check if there's any other UOM with name 'Liter' but code !== 'LTR'
+  const otherLiter = await prisma.unitOfMeasure.findFirst({
+    where: { name: 'Liter', NOT: { code: 'LTR' } }
+  });
+  if (otherLiter) {
+    await prisma.unitOfMeasure.update({
+      where: { id: otherLiter.id },
+      data: { name: `Liter (${otherLiter.code})` }
+    });
+  }
+
   const uomData = [
     { name: 'Kilogram', code: 'KG' },
     { name: 'Liter', code: 'LTR' },
@@ -150,15 +187,17 @@ async function main() {
   // ─── Departments ─────────────────────────────────────────────
   // Use createMany or individual upserts to prevent duplicate errors
   const departmentNames = ['Hot Kitchen', 'Cold Kitchen', 'Bakery', 'Pastry', 'Stewarding'];
+  const depts: Record<string, string> = {};
   for (const name of departmentNames) {
-    const existing = await prisma.department.findFirst({
+    let existing = await prisma.department.findFirst({
       where: { name, branchId: mainBranch.id },
     });
     if (!existing) {
-      await prisma.department.create({
+      existing = await prisma.department.create({
         data: { name, branchId: mainBranch.id },
       });
     }
+    depts[name] = existing.id;
   }
 
   // ─── Categories ──────────────────────────────────────────────
@@ -186,17 +225,31 @@ async function main() {
   }
 
   // ─── Users ───────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('Password123!', 12);
-  const adminPasswordHash = await bcrypt.hash('Password123!', 12);
+  const passwordHash = await bcrypt.hash('Password123!', 10);
+  const adminPasswordHash = await bcrypt.hash('Password123!', 10);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.local' },
     update: {
+      passwordHash,
       warehouseScopes: {
         deleteMany: {},
         create: {
           warehouseId: mainWh.id,
         },
+      },
+      branchScopes: {
+        deleteMany: {},
+        create: {
+          branchId: mainBranch.id,
+        },
+      },
+      departmentScopes: {
+        deleteMany: {},
+        create: [
+          { departmentId: depts['Hot Kitchen'] },
+          { departmentId: depts['Cold Kitchen'] },
+        ],
       },
     },
     create: {
@@ -210,17 +263,42 @@ async function main() {
           warehouseId: mainWh.id,
         },
       },
+      branchScopes: {
+        create: {
+          branchId: mainBranch.id,
+        },
+      },
+      departmentScopes: {
+        create: [
+          { departmentId: depts['Hot Kitchen'] },
+          { departmentId: depts['Cold Kitchen'] },
+        ],
+      },
     },
   });
 
   const adminComUser = await prisma.user.upsert({
     where: { email: 'admin@logirest.com' },
     update: {
+      passwordHash: adminPasswordHash,
       warehouseScopes: {
         deleteMany: {},
         create: {
           warehouseId: mainWh.id,
         },
+      },
+      branchScopes: {
+        deleteMany: {},
+        create: {
+          branchId: mainBranch.id,
+        },
+      },
+      departmentScopes: {
+        deleteMany: {},
+        create: [
+          { departmentId: depts['Hot Kitchen'] },
+          { departmentId: depts['Cold Kitchen'] },
+        ],
       },
     },
     create: {
@@ -233,6 +311,17 @@ async function main() {
         create: {
           warehouseId: mainWh.id,
         },
+      },
+      branchScopes: {
+        create: {
+          branchId: mainBranch.id,
+        },
+      },
+      departmentScopes: {
+        create: [
+          { departmentId: depts['Hot Kitchen'] },
+          { departmentId: depts['Cold Kitchen'] },
+        ],
       },
     },
   });
@@ -301,6 +390,92 @@ async function main() {
     create: {
       userId: managerUser.id,
       warehouseId: mainWh.id,
+    },
+  });
+
+  // ─── User Branch Scope ────────────────────────────────────
+  await prisma.userBranchScope.upsert({
+    where: {
+      userId_branchId: {
+        userId: adminUser.id,
+        branchId: mainBranch.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      branchId: mainBranch.id,
+    },
+  });
+
+  await prisma.userBranchScope.upsert({
+    where: {
+      userId_branchId: {
+        userId: adminComUser.id,
+        branchId: mainBranch.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: adminComUser.id,
+      branchId: mainBranch.id,
+    },
+  });
+
+  // ─── User Department Scope ────────────────────────────────────
+  await prisma.userDepartmentScope.upsert({
+    where: {
+      userId_departmentId: {
+        userId: adminUser.id,
+        departmentId: depts['Hot Kitchen'],
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      departmentId: depts['Hot Kitchen'],
+    },
+  });
+
+  await prisma.userDepartmentScope.upsert({
+    where: {
+      userId_departmentId: {
+        userId: adminUser.id,
+        departmentId: depts['Cold Kitchen'],
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      departmentId: depts['Cold Kitchen'],
+    },
+  });
+
+  await prisma.userDepartmentScope.upsert({
+    where: {
+      userId_departmentId: {
+        userId: adminComUser.id,
+        departmentId: depts['Hot Kitchen'],
+      },
+    },
+    update: {},
+    create: {
+      userId: adminComUser.id,
+      departmentId: depts['Hot Kitchen'],
+    },
+  });
+
+  await prisma.userDepartmentScope.upsert({
+    where: {
+      userId_departmentId: {
+        userId: adminComUser.id,
+        departmentId: depts['Cold Kitchen'],
+      },
+    },
+    update: {},
+    create: {
+      userId: adminComUser.id,
+      departmentId: depts['Cold Kitchen'],
     },
   });
 
@@ -593,7 +768,7 @@ async function main() {
 
   // ─── Document Sequences (T019) ───────────────────────────────
   const currentYear = new Date().getFullYear();
-  
+
   await prisma.documentSequence.upsert({
     where: {
       documentType_year_branchId: {

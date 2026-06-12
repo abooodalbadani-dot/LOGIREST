@@ -19,10 +19,13 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { StatusTimeline, type StatusTimelineEntry } from '@/components/shared/StatusTimeline';
 import { cn } from '@/lib/utils';
 import { DocumentLineItemTable, type LineItem } from '@/components/shared/DocumentLineItemTable/DocumentLineItemTable';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Status } from '@/components/shared/StatusTimeline';
 import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 import { type KitchenRequestDetail, type KitchenRequestItem } from '@/features/operations/types/kitchen-request';
+import { useSystemPrintSettings } from '@/features/admin/hooks/useSystemPrintSettings';
+import { dispatchPrintJob } from '@/lib/export/printDispatcher';
+import { ThermalReceipt } from '@/components/shared/ThermalReceipt';
 
 interface KitchenRequestLineItem extends LineItem {
   fulfilledQty?: number;
@@ -39,6 +42,8 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
   const t = useTranslations('operations.kitchen_request');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const { data: settings, isLoading: isLoadingSettings } = useSystemPrintSettings();
+  const [thermalConfig, setThermalConfig] = useState<{ paperSize: '80mm' | '58mm'; showLogo: boolean } | null>(null);
 
   const tableLines = useMemo((): KitchenRequestLineItem[] => {
     return request.items.map((item) => ({
@@ -110,8 +115,17 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
             {actions}
             <Button
               variant="outline"
+              disabled={isLoadingSettings}
               className="bg-surface-container-high border-white/5 rounded-xl h-11 px-6 text-label-xs font-semibold uppercase transition-all hover:bg-surface-container-highest"
-              onClick={() => window.print()}
+              onClick={() => dispatchPrintJob({
+                docType: 'KITCHEN_REQUEST',
+                doc: request,
+                settings,
+                locale,
+                onThermalPrint: (paperSize, showLogo) => {
+                  setThermalConfig({ paperSize, showLogo });
+                }
+              })}
             >
               <Printer className="w-4 h-4 me-2" />
               {tCommon('print')}
@@ -226,6 +240,29 @@ export function KitchenRequestViewer({ request, locale, actions }: KitchenReques
           </div>
         </div>
       </div>
+      {thermalConfig && (
+        <ThermalReceipt
+          docType="KITCHEN_REQUEST"
+          docNumber={request.requestNumber}
+          date={request.createdAt}
+          operator={request.requestedBy}
+          department={request.departmentName}
+          warehouse={request.warehouseName || ''}
+          notes={request.notes}
+          items={request.items.map(item => ({
+            code: item.itemId,
+            name: item.itemName,
+            qty: item.quantity,
+            uom: item.uom,
+            fulfilledQty: item.fulfilledQuantity,
+            notes: item.notes,
+          }))}
+          paperSize={thermalConfig.paperSize}
+          showLogo={thermalConfig.showLogo}
+          locale={locale}
+          onClose={() => setThermalConfig(null)}
+        />
+      )}
     </div>
   );
 }

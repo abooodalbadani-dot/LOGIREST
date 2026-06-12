@@ -8,7 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class GrnService {
@@ -112,28 +112,45 @@ export class GrnService {
 
   async findAll(
     params: { status?: string; search?: string; page?: number },
-    warehouseId?: string,
+    activeScope?: { branchId?: string; warehouseId?: string },
   ) {
     const page = Number(params.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.GoodsReceivedNoteWhereInput = {};
     if (params.status) {
       where.status = params.status;
     }
-    if (warehouseId) {
-      where.warehouseId = warehouseId;
+
+    const andConditions: Prisma.GoodsReceivedNoteWhereInput[] = [];
+
+    if (activeScope?.warehouseId) {
+      andConditions.push({ warehouseId: activeScope.warehouseId });
     }
-    if (params.search) {
-      where.OR = [
-        { grnNumber: { contains: params.search, mode: 'insensitive' } },
-        {
-          purchaseOrder: {
-            poNumber: { contains: params.search, mode: 'insensitive' },
-          },
+    if (activeScope?.branchId) {
+      andConditions.push({
+        warehouse: {
+          branchId: activeScope.branchId,
         },
-      ];
+      });
+    }
+
+    if (params.search) {
+      andConditions.push({
+        OR: [
+          { grnNumber: { contains: params.search, mode: 'insensitive' } },
+          {
+            purchaseOrder: {
+              poNumber: { contains: params.search, mode: 'insensitive' },
+            },
+          },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const [items, total] = await Promise.all([

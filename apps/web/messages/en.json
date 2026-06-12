@@ -259,6 +259,10 @@
       "select_currency": "Select Currency",
       "select_language": "Select Language",
       "sender_name": "Sender Name",
+      "print_section": "Print Settings",
+      "paper_size": "Default Paper Size",
+      "show_logo": "Show Restaurant Logo on Receipt",
+      "auto_print": "Auto-Print Receipt on Fulfillment",
       "settings_saved": "System settings updated successfully",
       "settings_subtitle": "Operational Configuration & Global Parameters",
       "settings_title": "System Settings",
@@ -2584,6 +2588,7 @@
   },
   "operations": {
     "adjustment": {
+      "new": "New",
       "suggest_fifo": "Suggest FIFO",
       "fifo_applied": "FIFO suggestions applied successfully.",
       "shortage_warning": "Partial shortage: {qty} units could not be allocated due to insufficient stock.",
@@ -3614,6 +3619,7 @@
       "variance": "Variance"
     },
     "title": "Reports Hub",
+    "search_placeholder": "Select an item to view its cost history...",
     "view_report": "View Report",
     "select_session": "Select Session",
     "wac_history": "WAC History",

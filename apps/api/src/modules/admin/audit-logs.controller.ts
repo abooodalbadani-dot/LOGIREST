@@ -1,33 +1,21 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import type { Role, AuditLogsQuery } from '@logirest/shared-types';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
+import type { AuditLogsQuery } from '@logirest/shared-types';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 
 @Controller('admin/audit-logs')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class AuditLogsController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  async getAuditLogs(
-    @CurrentUser('role') role: Role,
-    @Query() query: AuditLogsQuery,
-  ) {
-    if (role !== 'ADMIN' && role !== 'INV_MGR' && role !== 'AUDITOR') {
-      throw new ForbiddenException(
-        'Only admins, managers, and auditors are authorized to access administrative audit logs.',
-      );
-    }
-
+  @Roles(Role.ADMIN, Role.INV_MGR, Role.AUDITOR)
+  async getAuditLogs(@Query() query: AuditLogsQuery) {
     const page = query.page || 1;
     const limit = query.limit || 50;
     const skip = (page - 1) * limit;

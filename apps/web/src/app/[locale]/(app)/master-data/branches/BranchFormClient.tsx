@@ -183,10 +183,12 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
       backHref='/master-data/branches'
       isSaving={isSaving} saveDisabled={conflict.saveDisabled}
       onSubmit={onSubmit}
-      onCancel={() => guardedRouter.push('/master-data/branches')}
+      onCancel={() => guardedRouter.push('/master-data/branches', { skipGuard: true })}
       hideSave={isReadOnly}
       isDirty={isDirty}
       isValid={isValid}
+      resource="master_data_branches"
+      saveAction={id ? 'edit' : 'create'}
       headerActions={
         id && !isReadOnly && (
           <PermissionGate action="delete" resource="master_data_branches">
@@ -269,11 +271,11 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
               <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
                 <div className="space-y-1">
                   <Label htmlFor="branch-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
-                  <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('statuses.active') : t('statuses.inactive')}</p>
+                  <p className={`text-label-sm font-semibold uppercase ${(isActive ?? true) ? 'text-status-active' : 'text-status-error'}`}>{(isActive ?? true) ? t('statuses.active') : t('statuses.inactive')}</p>
                 </div>
                 <Switch
                   id="branch-is-active"
-                  checked={isActive}
+                  checked={isActive ?? true}
                   onCheckedChange={(v) => setValue('isActive', v)}
                   disabled={isReadOnly}
                   className="data-[state=checked]:bg-status-active"

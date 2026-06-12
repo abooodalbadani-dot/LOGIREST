@@ -29,7 +29,7 @@ import { LandedCostPostService } from './landed-cost-post.service';
 @Controller('procurement/landed-cost')
 @ApiSecureController()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN, Role.PROC_OFFICER, Role.GM)
+@Roles(Role.ADMIN, Role.PROC_OFFICER, Role.PROC_MGR, Role.GM)
 export class LandedCostController {
   constructor(
     private readonly landedCostService: LandedCostService,

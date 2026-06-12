@@ -21,6 +21,8 @@ import { LotsAvailableService } from './lots-available.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -36,7 +38,7 @@ const VALID_DOC_TYPES = [
 ] as const;
 
 @Controller('operations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class OperationsController {
   constructor(
@@ -51,6 +53,20 @@ export class OperationsController {
   ) {}
 
   @Get('lots-available')
+  @Roles(
+    Role.ADMIN,
+    Role.GM,
+    Role.INV_MGR,
+    Role.STORE_MGR,
+    Role.WH_KEEPER,
+    Role.KITCHEN_CHIEF,
+    Role.AUDITOR,
+    Role.BRANCH_MGR,
+    Role.PROC_MGR,
+    Role.PROC_OFFICER,
+    Role.APPROVER,
+    Role.VIEWER,
+  )
   async getLotsAvailable(
     @Query('itemId') itemId: string,
     @Query('warehouseId') warehouseId: string,
@@ -66,6 +82,7 @@ export class OperationsController {
   }
 
   @Post(':documentType/:id/void')
+  @Roles(Role.ADMIN, Role.INV_MGR)
   @HttpCode(HttpStatus.OK)
   async voidDocument(
     @Param('documentType') documentType: string,
@@ -75,12 +92,6 @@ export class OperationsController {
     @Body() body: { version?: number },
     @Req() req: Request,
   ) {
-    if (role !== Role.ADMIN && role !== Role.INV_MGR) {
-      throw new ForbiddenException(
-        'Only administrators and inventory managers can void documents',
-      );
-    }
-
     if (
       !VALID_DOC_TYPES.includes(
         documentType as (typeof VALID_DOC_TYPES)[number],

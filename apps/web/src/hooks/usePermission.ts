@@ -1,6 +1,6 @@
 'use client';
 import { useAuth, type UserRole } from '@/providers/AuthProvider';
-import { ROLE_CAPABILITIES, type DocumentType, type CapabilityAction, canRolePerformAction } from '@logirest/shared-types';
+import { type DocumentType, type CapabilityAction, canRolePerformAction } from '@logirest/shared-types';
 import { PERMISSION_MATRIX, type ResourceType, type ActionType } from '@/types/rbac';
 
 const RESOURCE_TO_DOCUMENT_TYPE: Partial<Record<ResourceType, DocumentType>> = {

@@ -4,15 +4,16 @@ import { z } from 'zod';
 
 import { VarianceReasonSchema } from '@/types/master-data';
 
-export const VarianceReasonListSchema = z.object({
-  data: z.array(VarianceReasonSchema),
-  meta: z.object({
-    page: z.number(),
-    pageSize: z.number().optional(),
-    total: z.number(),
-    totalPages: z.number().optional(),
-  }).optional(),
-});
+export const VarianceReasonListSchema = z.array(VarianceReasonSchema)
+  .transform((data) => ({
+    data,
+    meta: {
+      page: 1,
+      pageSize: data.length,
+      total: data.length,
+      totalPages: 1,
+    }
+  }));
 
 export type VarianceReasonItem = z.infer<typeof VarianceReasonSchema>;
 

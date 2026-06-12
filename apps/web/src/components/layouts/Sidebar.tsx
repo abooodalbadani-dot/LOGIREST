@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { usePermission, checkPermission } from '@/hooks/usePermission';
 import { useAuth, type AuthUser } from '@/providers/AuthProvider';
 import { PERMISSION_MATRIX, type ResourceType } from '@/types/rbac';
-import { getRoleCategory } from '@/utils/roleUtils';
+import { getRoleCategory, canViewFinancialData, isKitchenChief } from '@/utils/roleUtils';
 import { 
   LayoutDashboard, 
   Truck, 
@@ -41,6 +41,9 @@ interface NavItem {
   resource: ResourceType;
   labelKey: string;
   icon: LucideIcon;
+  financialOnly?: boolean;
+  /** If true, hidden from KITCHEN_CHIEF (department-scoped role). */
+  warehouseOnly?: boolean;
 }
 
 interface NavGroup {
@@ -58,10 +61,17 @@ function checkItemVisibility(item: NavItem, user: AuthUser | null, isLoading: bo
     return false;
   }
 
-  const roleCategory = getRoleCategory(user.role);
+  // FX rates and other financial items are restricted to roles with financial visibility
+  if (item.key === 'fx_rates' && !canViewFinancialData(user.role)) {
+    return false;
+  }
 
-  // FX rates are only for roles with management-level financial visibility
-  if (item.key === 'fx_rates' && (roleCategory === 'clerk' || roleCategory === 'operations')) {
+  if (item.financialOnly && !canViewFinancialData(user.role)) {
+    return false;
+  }
+
+  // Warehouse-only items are hidden from department-scoped kitchen staff
+  if (item.warehouseOnly && isKitchenChief(user.role)) {
     return false;
   }
 
@@ -86,20 +96,20 @@ export function Sidebar({ onClose }: SidebarProps) {
       key: 'inventory',
       titleKey: 'group_inventory',
       items: [
-        { key: 'balance', href: '/inventory/balance', resource: 'inventory', labelKey: 'balance', icon: Layers },
-        { key: 'lots', href: '/inventory/lots', resource: 'inventory_lots', labelKey: 'lots', icon: Package },
-        { key: 'movements', href: '/inventory/movements', resource: 'inventory_movements', labelKey: 'movements', icon: History },
-        { key: 'grn', href: '/goods-received', resource: 'grn', labelKey: 'grn', icon: Truck },
-        { key: 'issue', href: '/issues', resource: 'issue', labelKey: 'issue', icon: ClipboardList },
-        { key: 'transfer', href: '/transfers', resource: 'transfer', labelKey: 'transfer', icon: ArrowRightLeft },
-        { key: 'stocktake', href: '/stocktake', resource: 'stocktake', labelKey: 'stocktake', icon: ClipboardCheck },
-        { key: 'adjustment', href: '/adjustments', resource: 'adjustment', labelKey: 'adjustment', icon: Sliders },
+        { key: 'balance', href: '/inventory/balance', resource: 'inventory_balance', labelKey: 'balance', icon: Layers },
+        { key: 'lots', href: '/inventory/lots', resource: 'inventory_lots', labelKey: 'lots', icon: Package, warehouseOnly: true },
+        { key: 'movements', href: '/inventory/movements', resource: 'inventory_movements', labelKey: 'movements', icon: History, warehouseOnly: true },
+        { key: 'grn', href: '/goods-received', resource: 'grn', labelKey: 'grn', icon: Truck, warehouseOnly: true },
+        { key: 'issue', href: '/issues', resource: 'issue', labelKey: 'issue', icon: ClipboardList, warehouseOnly: true },
+        { key: 'transfer', href: '/transfers', resource: 'transfer', labelKey: 'transfer', icon: ArrowRightLeft, warehouseOnly: true },
+        { key: 'stocktake', href: '/stocktake', resource: 'stocktake', labelKey: 'stocktake', icon: ClipboardCheck, warehouseOnly: true },
+        { key: 'adjustment', href: '/adjustments', resource: 'adjustment', labelKey: 'adjustment', icon: Sliders, warehouseOnly: true },
         { key: 'kitchen_requests', href: '/kitchen-requests', resource: 'kitchen_requests', labelKey: 'kitchen_requests', icon: Store },
-        { key: 'scan_mode', href: '/inventory/scan-mode', resource: 'inventory', labelKey: 'scan_mode', icon: Barcode },
-        { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck },
+        { key: 'scan_mode', href: '/inventory/scan-mode', resource: 'inventory', labelKey: 'scan_mode', icon: Barcode, warehouseOnly: true },
+        { key: 'expired_override', href: '/inventory/expired-override', resource: 'inventory', labelKey: 'expired_override', icon: ShieldCheck, warehouseOnly: true },
         // yield_management hidden for MVR launch — not in RFC scope
-        { key: 'stocktake_archive', href: '/stocktake/archive', resource: 'stocktake', labelKey: 'stocktake_archive', icon: History },
-        { key: 'transfer_hub', href: '/transfers/hub', resource: 'transfer', labelKey: 'transfer_hub', icon: LayoutDashboard },
+        { key: 'stocktake_archive', href: '/stocktake/archive', resource: 'stocktake', labelKey: 'stocktake_archive', icon: History, warehouseOnly: true },
+        { key: 'transfer_hub', href: '/transfers/hub', resource: 'transfer', labelKey: 'transfer_hub', icon: LayoutDashboard, warehouseOnly: true },
       ]
     },
     {
@@ -145,10 +155,11 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { key: 'reports', href: '/reports', resource: 'reports', labelKey: 'reports', icon: BarChart3 },
         { key: 'report_available_inventory', href: '/reports/available-inventory', resource: 'reports', labelKey: 'report_available_inventory', icon: FileText },
-        { key: 'report_currency_summaries', href: '/reports/currency-summaries', resource: 'reports', labelKey: 'report_currency_summaries', icon: FileText },
+        { key: 'report_currency_summaries', href: '/reports/currency-summaries', resource: 'reports', labelKey: 'report_currency_summaries', icon: FileText, financialOnly: true },
         { key: 'report_expiry', href: '/reports/expiry', resource: 'reports', labelKey: 'report_expiry', icon: FileText },
         { key: 'report_movements', href: '/reports/movements', resource: 'reports', labelKey: 'report_movements', icon: FileText },
-        { key: 'report_procurement_status', href: '/reports/procurement-status', resource: 'reports', labelKey: 'report_procurement_status', icon: FileText },
+        { key: 'report_procurement_status', href: '/reports/procurement-status', resource: 'reports', labelKey: 'report_procurement_status', icon: FileText, financialOnly: true },
+        { key: 'report_wac_history', href: '/reports/wac-history', resource: 'reports', labelKey: 'report_wac_history', icon: TrendingUp, financialOnly: true },
         { key: 'report_stocktake_variance', href: '/reports/stocktake-variance', resource: 'reports', labelKey: 'report_stocktake_variance', icon: FileText },
       ]
     },
@@ -200,6 +211,13 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       <nav className="flex-1 py-4 flex flex-col gap-6 px-3 overflow-y-auto custom-scrollbar">
         {groups.map((group) => {
+          // Supply Chain group must not render if user lacks pr and po view access
+          if (group.key === 'procurement') {
+            const hasPrView = user ? checkPermission(user.role, 'view', 'pr') : false;
+            const hasPoView = user ? checkPermission(user.role, 'view', 'po') : false;
+            if (!hasPrView && !hasPoView) return null;
+          }
+
           const visibleItems = group.items.filter(item => {
             return checkItemVisibility(item, user, isLoading);
           });
@@ -232,10 +250,14 @@ function SidebarLink({ item, pathname, t, onClick }: { item: NavItem, pathname: 
   const canView = usePermission('view', item.resource);
   const { user, isLoading } = useAuth();
   
-  if (!isLoading) {
-    const roleCategory = user?.role ? getRoleCategory(user.role) : 'clerk';
-
-    if (item.key === 'fx_rates' && (roleCategory === 'clerk' || roleCategory === 'operations')) {
+  if (!isLoading && user) {
+    if (item.key === 'fx_rates' && !canViewFinancialData(user.role)) {
+      return null;
+    }
+    if (item.financialOnly && !canViewFinancialData(user.role)) {
+      return null;
+    }
+    if (item.warehouseOnly && isKitchenChief(user.role)) {
       return null;
     }
   }

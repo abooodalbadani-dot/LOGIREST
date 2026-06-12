@@ -191,7 +191,7 @@ export const BranchFormSchema = z.object({
     .refine(val => !val || val.length >= 2, { message: 'validation.code_min' })
     .refine(val => !val || /^[A-Z0-9_-]+$/.test(val), { message: 'validation.code_format' }),
   name: z.string().min(3, 'validation.name_min'),
-  isActive: z.boolean(),
+  isActive: z.boolean().optional(),
   version: z.number().optional()
 });
 
@@ -208,14 +208,14 @@ export const WarehouseFormSchema = z.object({
 
 export const DepartmentFormSchema = z.object({
   branchId: z.string().min(1, 'master_data.departments.validation.branch_required'),
-  warehouseId: z.string().min(1, 'master_data.departments.validation.warehouse_required'),
+  warehouseId: z.string().optional(),
   code: z.string().nullish()
     .refine(val => !val || val.length >= 2, { message: 'master_data.departments.validation.code_min' })
     .refine(val => !val || /^[A-Z0-9_-]+$/.test(val), { message: 'master_data.departments.validation.code_format' }),
   name: z.string().min(3, 'master_data.departments.validation.name_min'),
   manager: z.string().optional(),
   costCenter: z.string().optional(),
-  isActive: z.boolean(),
+  isActive: z.boolean().optional(),
   version: z.number().optional()
 });
 

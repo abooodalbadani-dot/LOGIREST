@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
-import { Role, UpdateKitchenRequestDto } from '@logirest/shared-types';
+import { UpdateKitchenRequestDto } from '@logirest/shared-types';
 import { DocumentNumberService } from '../sequencing/document-number.service';
 import { IssuePostService } from '../operations/issue-post.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 @Injectable()
 export class KitchenRequestsService {
@@ -51,6 +51,7 @@ export class KitchenRequestsService {
           departmentId: body.departmentId,
           warehouseId: body.warehouseId,
           status: 'DRAFT',
+          requestedById: userId,
           items: {
             create: body.items.map((item) => ({
               itemId: item.itemId,
@@ -71,6 +72,7 @@ export class KitchenRequestsService {
           },
           department: true,
           warehouse: true,
+          requestedBy: true,
         },
       });
     };
@@ -84,15 +86,16 @@ export class KitchenRequestsService {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
           timeout: 30000,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const isKnownError =
+          error instanceof Prisma.PrismaClientKnownRequestError;
         const isSerializationError =
-          (error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2034') ||
+          (isKnownError && error.code === 'P2034') ||
           (error instanceof Error &&
-            (error.message?.includes('40001') ||
-              error.message?.includes('40P01') ||
-              error.message?.includes('serialization') ||
-              error.message?.includes('deadlock')));
+            (error.message.includes('40001') ||
+              error.message.includes('40P01') ||
+              error.message.includes('serialization') ||
+              error.message.includes('deadlock')));
         if (isSerializationError && attempt < maxAttempts) {
           const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
           await new Promise((resolve) => setTimeout(resolve, delay));
@@ -105,23 +108,58 @@ export class KitchenRequestsService {
 
   async findAll(
     params: { status?: string; search?: string; page?: number },
-    warehouseId?: string,
+    activeScope?: {
+      branchId?: string;
+      warehouseId?: string;
+      departmentId?: string;
+    },
+    user?: { id: string; role: Role },
   ) {
     const page = Number(params.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.KitchenRequestWhereInput = {};
     if (params.status) {
       where.status = params.status;
     }
-    if (warehouseId) {
-      where.warehouseId = warehouseId;
+
+    const andConditions: Prisma.KitchenRequestWhereInput[] = [];
+
+    if (user && user.role === Role.KITCHEN_CHIEF) {
+      const authorizedDepts = await this.prisma.userDepartmentScope.findMany({
+        where: { userId: user.id },
+        select: { departmentId: true },
+      });
+      const deptIds = authorizedDepts.map((d) => d.departmentId);
+
+      if (
+        activeScope?.departmentId &&
+        deptIds.includes(activeScope.departmentId)
+      ) {
+        andConditions.push({ departmentId: activeScope.departmentId });
+      } else {
+        andConditions.push({ departmentId: { in: deptIds } });
+      }
+    } else {
+      if (activeScope?.warehouseId) {
+        andConditions.push({ warehouseId: activeScope.warehouseId });
+      }
+      if (activeScope?.branchId) {
+        andConditions.push({ warehouse: { branchId: activeScope.branchId } });
+      }
+      if (activeScope?.departmentId) {
+        andConditions.push({ departmentId: activeScope.departmentId });
+      }
     }
     if (params.search) {
-      where.OR = [
-        { requestNumber: { contains: params.search, mode: 'insensitive' } },
-      ];
+      andConditions.push({
+        requestNumber: { contains: params.search, mode: 'insensitive' },
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const [items, total] = await Promise.all([
@@ -139,6 +177,7 @@ export class KitchenRequestsService {
           },
           department: true,
           warehouse: true,
+          requestedBy: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -173,6 +212,7 @@ export class KitchenRequestsService {
         },
         department: true,
         warehouse: true,
+        requestedBy: true,
       },
     });
 
@@ -466,7 +506,7 @@ export class KitchenRequestsService {
             departmentId: kr.departmentId,
             warehouseId: kr.warehouseId,
             version: kr.version,
-            items: kr.items.map((i: any) => ({
+            items: kr.items.map((i) => ({
               itemId: i.itemId,
               qty: i.quantityRequested,
             })),
@@ -475,7 +515,7 @@ export class KitchenRequestsService {
             departmentId: updated.departmentId,
             warehouseId: updated.warehouseId,
             version: updated.version,
-            items: updated.items.map((i: any) => ({
+            items: updated.items.map((i) => ({
               itemId: i.itemId,
               qty: i.quantityRequested,
             })),
@@ -496,15 +536,16 @@ export class KitchenRequestsService {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
           timeout: 30000,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const isKnownError =
+          error instanceof Prisma.PrismaClientKnownRequestError;
         const isSerializationError =
-          (error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2034') ||
+          (isKnownError && error.code === 'P2034') ||
           (error instanceof Error &&
-            (error.message?.includes('40001') ||
-              error.message?.includes('40P01') ||
-              error.message?.includes('serialization') ||
-              error.message?.includes('deadlock')));
+            (error.message.includes('40001') ||
+              error.message.includes('40P01') ||
+              error.message.includes('serialization') ||
+              error.message.includes('deadlock')));
         if (isSerializationError && attempt < maxAttempts) {
           const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
           await new Promise((resolve) => setTimeout(resolve, delay));

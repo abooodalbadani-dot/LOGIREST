@@ -45,6 +45,7 @@ export const DashboardStatsSchema = z.object({
   })),
   expiringLots: z.array(z.object({
     id: z.string(),
+    itemId: z.string().optional(),
     itemName: z.string(),
     lotNumber: z.string(),
     expiryDate: z.string(),

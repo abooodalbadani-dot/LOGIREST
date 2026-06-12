@@ -17,13 +17,15 @@ import {
   Sliders,
   ShieldAlert,
   ServerCrash,
-  Activity
+  Activity,
+  Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
 import { Link } from '@/i18n/navigation';
 import { useAdminSettings, useUpdateSettings, AdminSettingsSchema, type AdminSettings } from '@/features/admin/hooks/useAdminSettings';
@@ -430,6 +432,78 @@ export function SettingsClient({ locale }: { locale: string }) {
                     </p>
                   )}
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Bento Grid Item 6: Print Settings Section (Glassmorphic Container Card) */}
+            <motion.div 
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="p-8 md:p-10 rounded-[2.5rem] bg-surface-container-low/60 backdrop-blur-lg border border-white/10 shadow-2xl space-y-10 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-80 h-80 bg-operational-cyan/5 rounded-full blur-[80px] pointer-events-none" />
+              
+              <div className="flex items-center gap-4.5 border-b border-white/5 pb-6">
+                <div className="p-3 bg-operational-cyan/10 rounded-2xl border border-operational-cyan/20">
+                  <Printer className="w-5 h-5 text-operational-cyan" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-foreground uppercase tracking-widest">
+                    {t('print_section')}
+                  </h3>
+                  <p className="text-[9px] text-muted-foreground/50 uppercase font-bold tracking-widest mt-1">
+                    Manage default document sizes and receipt formats
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                {/* Default Paper Size Select Block */}
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 ml-1">
+                    {t('paper_size')}
+                  </Label>
+                  <Select 
+                    onValueChange={(val) => setValue('printSettings.defaultPaperSize', val as 'A4' | '80mm' | '58mm', { shouldDirty: true })}
+                    value={useWatch({ control, name: 'printSettings.defaultPaperSize' }) || 'A4'}
+                  >
+                    <SelectTrigger className="h-14 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 font-bold transition-all hover:border-operational-cyan/20 text-sm focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface-container-lowest border-outline-low rounded-xl backdrop-blur-xl">
+                      <SelectItem value="A4" className="rounded-lg">A4 Standard</SelectItem>
+                      <SelectItem value="80mm" className="rounded-lg">Thermal 80mm</SelectItem>
+                      <SelectItem value="58mm" className="rounded-lg">Thermal 58mm</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Show Logo on Receipt */}
+                <div className="flex items-center justify-between p-4 bg-surface-container-lowest/40 rounded-2xl border border-outline-low h-14">
+                  <Label htmlFor="thermal-show-logo" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 cursor-pointer select-none">
+                    {t('show_logo')}
+                  </Label>
+                  <Switch
+                    id="thermal-show-logo"
+                    checked={useWatch({ control, name: 'printSettings.thermalShowLogo' }) ?? true}
+                    onCheckedChange={(val) => setValue('printSettings.thermalShowLogo', val, { shouldDirty: true })}
+                  />
+                </div>
+
+                {/* Auto Print on Fulfill */}
+                <div className="flex items-center justify-between p-4 bg-surface-container-lowest/40 rounded-2xl border border-outline-low h-14 md:col-span-2">
+                  <Label htmlFor="auto-print-fulfill" className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 cursor-pointer select-none">
+                    {t('auto_print')}
+                  </Label>
+                  <Switch
+                    id="auto-print-fulfill"
+                    checked={useWatch({ control, name: 'printSettings.autoPrintOnFulfill' }) ?? false}
+                    onCheckedChange={(val) => setValue('printSettings.autoPrintOnFulfill', val, { shouldDirty: true })}
+                  />
+                </div>
+
               </div>
             </motion.div>
 

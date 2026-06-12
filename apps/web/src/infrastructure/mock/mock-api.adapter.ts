@@ -1490,6 +1490,16 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     }
   }
 
+  if (normalizedPath === '/settings/print') {
+    if (method === 'GET') {
+      return {
+        defaultPaperSize: 'A4' as const,
+        thermalShowLogo: true,
+        autoPrintOnFulfill: false,
+      };
+    }
+  }
+
   if (normalizedPath === '/admin/settings/test-email' && method === 'POST') {
     return { ok: true };
   }

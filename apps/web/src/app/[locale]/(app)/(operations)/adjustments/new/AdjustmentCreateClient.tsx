@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Textarea } from '@/components/ui/textarea';
@@ -95,6 +96,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const t = useTranslations('operations.adjustment');
   const tCommon = useTranslations('common');
   const abortController = useAbortController();
+  const searchParams = useSearchParams();
 
   const { data: warehousesData } = useWarehouses(); const warehouses = warehousesData?.data || [];
   const { data: itemsData, isLoading: isLoadingItems } = useItems(); const items = itemsData?.data || [];
@@ -106,6 +108,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const [reasonCategory, setReasonCategory] = useState('DAMAGE');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<NewAdjustmentLine[]>([]);
+
   const [customItems, setCustomItems] = useState<ItemOption[]>([]);
   const [isCustomItemDialogOpen, setIsCustomItemDialogOpen] = useState(false);
   const [customItemNameQuery, setCustomItemNameQuery] = useState('');
@@ -280,6 +283,47 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
     }));
     return [...mappedItems, ...customItems];
   }, [items, customItems]);
+
+  // Parse query parameters to pre-populate expiring item disposal
+  const paramItemId = searchParams.get('itemId');
+  const paramBatch = searchParams.get('batch');
+  const paramReason = searchParams.get('reason');
+
+  useEffect(() => {
+    if (paramReason === 'damage') {
+      setReasonCategory('DAMAGE');
+    }
+  }, [paramReason]);
+
+  useEffect(() => {
+    if (!paramItemId || allItems.length === 0) return;
+
+    setLines(prev => {
+      const alreadyAdded = prev.some(l => l.itemId === paramItemId);
+      if (alreadyAdded) return prev;
+
+      const item = allItems.find(i => i.id === paramItemId || i.code === paramItemId);
+      if (item) {
+        return [{
+          id: `temp-${item.id}-${Date.now()}`,
+          itemId: item.id,
+          item: {
+            id: item.id,
+            code: item.code,
+            name: item.name,
+            primaryUom: {
+              code: item.primaryUom.code
+            }
+          },
+          qty: 1,
+          uomId: item.primaryUom.id,
+          direction: 'DECREASE',
+          lotNumber: paramBatch || ''
+        }];
+      }
+      return prev;
+    });
+  }, [paramItemId, paramBatch, allItems]);
 
   const handleAddItem = (barcode: string) => {
     const item = allItems.find((i: ItemOption) => i.barcode === barcode || i.code === barcode);

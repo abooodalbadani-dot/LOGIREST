@@ -214,7 +214,13 @@ export class IssuesController {
   @Get()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
-    @ActiveScope('warehouseId') warehouseId?: string,
+    @ActiveScope()
+    activeScope?: {
+      branchId?: string;
+      warehouseId?: string;
+      departmentId?: string;
+    },
+    @CurrentUser() user?: { id: string; role: Role },
   ) {
     const result = await this.issuesService.findAll(
       {
@@ -222,7 +228,8 @@ export class IssuesController {
         search: query.search,
         page: query.page ? Number(query.page) : 1,
       },
-      warehouseId,
+      activeScope,
+      user,
     );
 
     return {

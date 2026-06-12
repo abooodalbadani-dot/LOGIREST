@@ -31,7 +31,50 @@ export class ScopeValidationService {
     role: Role,
     warehouseId: string,
   ): Promise<void> {
-    if (role === Role.ADMIN) return;
+    if (role === Role.ADMIN || role === Role.GM) return;
+
+    if (role === Role.KITCHEN_CHIEF) {
+      const wh = await this.prisma.warehouse.findUnique({
+        where: { id: warehouseId },
+        select: { branchId: true },
+      });
+      if (!wh) {
+        throw new ForbiddenException('Warehouse not found.');
+      }
+      const deptScopes = await this.prisma.userDepartmentScope.findMany({
+        where: { userId },
+        include: { department: true },
+      });
+      const hasScopeInBranch = deptScopes.some(
+        (ds) => ds.department.branchId === wh.branchId,
+      );
+      if (!hasScopeInBranch) {
+        throw new ForbiddenException(
+          'Access to this warehouse branch is not authorized.',
+        );
+      }
+      return;
+    }
+
+    if (role === Role.BRANCH_MGR) {
+      const wh = await this.prisma.warehouse.findUnique({
+        where: { id: warehouseId },
+        select: { branchId: true },
+      });
+      if (!wh) {
+        throw new ForbiddenException('Warehouse not found.');
+      }
+      const hasBranchScope = await this.prisma.userBranchScope.findUnique({
+        where: { userId_branchId: { userId, branchId: wh.branchId } },
+      });
+      if (!hasBranchScope) {
+        throw new ForbiddenException(
+          'Access to this branch is not authorized.',
+        );
+      }
+      return;
+    }
+
     const hasScope = await this.prisma.userWarehouseScope.findUnique({
       where: { userId_warehouseId: { userId, warehouseId } },
     });
@@ -42,12 +85,29 @@ export class ScopeValidationService {
     }
   }
 
+  async validateDepartment(
+    userId: string,
+    role: Role,
+    departmentId: string,
+  ): Promise<void> {
+    if (role === Role.ADMIN || role === Role.GM) return;
+
+    const hasScope = await this.prisma.userDepartmentScope.findUnique({
+      where: { userId_departmentId: { userId, departmentId } },
+    });
+    if (!hasScope) {
+      throw new ForbiddenException(
+        'Access to this department is not authorized.',
+      );
+    }
+  }
+
   async validateAtLeastOneWarehouse(
     userId: string,
     role: Role,
     warehouseIds: string[],
   ): Promise<void> {
-    if (role === Role.ADMIN) return;
+    if (role === Role.ADMIN || role === Role.GM) return;
     const scopes = await this.prisma.userWarehouseScope.findMany({
       where: { userId, warehouseId: { in: warehouseIds } },
       select: { warehouseId: true },

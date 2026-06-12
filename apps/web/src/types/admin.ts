@@ -19,6 +19,11 @@ export const AdminSettingsSchema = z.object({
   version: z.number(),
   updatedAt: z.string(),
   updatedBy: z.string().optional(),
+  printSettings: z.object({
+    defaultPaperSize: z.enum(['A4', '80mm', '58mm']),
+    thermalShowLogo: z.boolean(),
+    autoPrintOnFulfill: z.boolean(),
+  }).optional(),
 });
 
 export type AdminSettings = z.infer<typeof AdminSettingsSchema>;

@@ -64,7 +64,7 @@ export class TransfersService {
 
   async findAll(
     params: { status?: string; search?: string; page?: number },
-    warehouseId?: string,
+    activeScope?: { branchId?: string; warehouseId?: string },
   ) {
     const page = Number(params.page) || 1;
     const limit = 10;
@@ -75,15 +75,22 @@ export class TransfersService {
       where.status = params.status;
     }
     // Use AND to compose warehouse scope and search independently so neither overwrites the other
-    if (warehouseId) {
-      where.AND = [
-        {
-          OR: [
-            { fromWarehouseId: warehouseId },
-            { toWarehouseId: warehouseId },
-          ],
-        },
-      ];
+    where.AND = [];
+    if (activeScope?.warehouseId) {
+      where.AND.push({
+        OR: [
+          { fromWarehouseId: activeScope.warehouseId },
+          { toWarehouseId: activeScope.warehouseId },
+        ],
+      });
+    }
+    if (activeScope?.branchId) {
+      where.AND.push({
+        OR: [
+          { fromWarehouse: { branchId: activeScope.branchId } },
+          { toWarehouse: { branchId: activeScope.branchId } },
+        ],
+      });
     }
     if (params.search) {
       const searchCondition = {

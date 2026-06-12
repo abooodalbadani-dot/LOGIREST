@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/TableSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ExportMenu } from '../ExportMenu';
 
 interface DataTableProps<T> {
   data: T[];
@@ -47,6 +48,9 @@ interface DataTableProps<T> {
   };
   onExport?: () => void;
   exportComponent?: React.ReactNode;
+  enableExport?: boolean;
+  exportFilename?: string;
+  exportTitle?: string;
   emptyState?: React.ReactNode;
   emptyTitle?: string;
   emptyDescription?: string;
@@ -70,6 +74,9 @@ export function DataTable<T>({
   pagination,
   onExport,
   exportComponent,
+  enableExport = true,
+  exportFilename,
+  exportTitle,
   emptyState,
   emptyTitle,
   emptyDescription,
@@ -86,6 +93,23 @@ export function DataTable<T>({
  const t = useTranslations('common.datatable');
  const locale = useLocale();
  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const exportColumns = React.useMemo(() => {
+    return columns
+      .map(col => {
+        const key = (col as any).accessorKey || col.id;
+        if (!key || key === 'actions') return null;
+
+        let headerStr = '';
+        if (typeof col.header === 'string') {
+          headerStr = col.header;
+        } else {
+          headerStr = String(key);
+        }
+        return { header: headerStr, key };
+      })
+      .filter((col): col is { header: string; key: string } => !!col && !!col.header);
+  }, [columns]);
 
  const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
 
@@ -143,44 +167,40 @@ export function DataTable<T>({
     return enableSorting !== false;
   };
 
- return (
- <div className="flex flex-col gap-6 w-full">
- {(filters || onExport) && (
- <div className="flex justify-between items-start gap-4 flex-wrap">
- <div className="flex-1 min-w-[200px]">
- {filters}
- </div>
- { (onExport || exportComponent) && (
- <PermissionGate action="export" resource={collectionName || 'generic_table'}>
- <div className="flex items-center gap-2 mt-1">
- {exportComponent}
- {!exportComponent && onExport && (
- <>
- <Button 
- variant="secondary"
- size="sm"
- onClick={onExport}
- className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-label-xxs font-semibold uppercase transition-all border-none`}
- >
- <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
- CSV
- </Button>
- <Button 
- variant="secondary"
- size="sm"
- onClick={onExport}
- className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-label-xxs font-semibold uppercase transition-all border-none`}
- >
- <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>
- Excel
- </Button>
- </>
- )}
- </div>
- </PermissionGate>
- )}
- </div>
- )}
+  return (
+  <div className="flex flex-col gap-6 w-full">
+  {(filters || onExport || exportComponent || (enableExport && data && data.length > 0)) && (
+  <div className="flex justify-between items-start gap-4 flex-wrap">
+  <div className="flex-1 min-w-[200px]">
+  {filters}
+  </div>
+  { (onExport || exportComponent || (enableExport && data && data.length > 0)) && (
+  <PermissionGate action="export" resource={collectionName || 'generic_table'}>
+  <div className="flex items-center gap-2 mt-1">
+  {exportComponent}
+  {!exportComponent && enableExport && data && data.length > 0 && (
+    <ExportMenu
+      data={data as Record<string, unknown>[]}
+      columns={exportColumns}
+      filename={exportFilename || collectionName || 'report'}
+      title={exportTitle || collectionName || 'Report'}
+    />
+  )}
+  {!exportComponent && !enableExport && onExport && (
+    <Button 
+      variant="secondary"
+      size="sm"
+      onClick={onExport}
+      className={`h-9 px-6 flex items-center gap-2 rounded-2xl bg-surface-container-low hover:bg-surface-container text-label-xxs font-semibold uppercase transition-all border-none`}
+    >
+      CSV
+    </Button>
+  )}
+  </div>
+  </PermissionGate>
+  )}
+  </div>
+  )}
 
    {isError ? (
      <div className="p-8">

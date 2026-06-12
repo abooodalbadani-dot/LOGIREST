@@ -37,6 +37,8 @@ const FINANCIAL_REPORT_ROLES = [
   Role.INV_MGR,
   Role.AUDITOR,
   Role.PROC_MGR,
+  Role.STORE_MGR,
+  Role.BRANCH_MGR,
 ] as const;
 
 const MAX_EXPORT_ROWS = 50000;

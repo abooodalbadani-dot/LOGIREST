@@ -108,6 +108,7 @@ model User {
 
   warehouseScopes     UserWarehouseScope[]
   branchScopes        UserBranchScope[]
+  departmentScopes    UserDepartmentScope[]
   purchaseRequests    PurchaseRequest[]
   approvalEvents      ApprovalEvent[]
   warehouseLocks      WarehouseLock[]
@@ -116,6 +117,7 @@ model User {
   refreshTokens             RefreshToken[]
   passwordResetTokens       PasswordResetToken[]
   createdLandedCostVouchers LandedCostVoucher[] @relation("CreatedVouchers")
+  kitchenRequests           KitchenRequest[]
 
   @@map("users")
 }
@@ -144,6 +146,19 @@ model UserBranchScope {
 
   @@unique([userId, branchId])
   @@map("user_branch_scopes")
+}
+
+model UserDepartmentScope {
+  id           String @id @default(uuid())
+  userId       String @map("user_id")
+  departmentId String @map("department_id")
+  version      Int    @default(1)
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, departmentId])
+  @@map("user_department_scopes")
 }
 
 model RefreshToken {
@@ -235,6 +250,7 @@ model Department {
   branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Restrict)
   inventoryIssues InventoryIssue[]
   kitchenRequests KitchenRequest[]
+  userScopes      UserDepartmentScope[]
 
   @@map("departments")
 }
@@ -612,10 +628,12 @@ model KitchenRequest {
   status        String   @default("DRAFT")
   version       Int      @default(1)
   issueId       String?  @unique @map("issue_id")
+  requestedById String?  @map("requested_by_id")
   createdAt     DateTime @default(now())
 
   department     Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   warehouse      Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  requestedBy    User?                @relation(fields: [requestedById], references: [id], onDelete: Restrict)
   inventoryIssue InventoryIssue?      @relation(fields: [issueId], references: [id])
   items          KitchenRequestItem[]
 

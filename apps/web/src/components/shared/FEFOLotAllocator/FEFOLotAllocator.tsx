@@ -27,7 +27,7 @@ export function FEFOLotAllocator({ lots, requestedQty, uomLabel, userRole, onAll
  
  for (const lot of sortedLots) {
  if (remaining <= 0) break;
- if (isExpired(lot.expiryDate) && !['ADMIN', 'INV_MGR'].includes(userRole || '')) {
+ if (isExpired(lot.expiryDate) && !['ADMIN', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'].includes(userRole || '')) {
  continue;
  }
  

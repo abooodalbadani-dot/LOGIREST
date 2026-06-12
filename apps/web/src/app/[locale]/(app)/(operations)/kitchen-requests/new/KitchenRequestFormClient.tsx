@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -112,6 +112,15 @@ export function KitchenRequestFormClient({ locale }: { locale: 'ar' | 'en' }) {
       code: d.code,
     }));
   }, [departmentsList, assignedDepartmentIds]);
+
+  useEffect(() => {
+    if (departmentItems.length === 1) {
+      const singleDept = departmentItems[0];
+      if (form.getValues('departmentId') !== String(singleDept.id)) {
+        form.setValue('departmentId', String(singleDept.id), { shouldValidate: true });
+      }
+    }
+  }, [departmentItems, form]);
 
   const itemItems = useMemo(() => {
     return items.map(item => mapItemToCombobox(item));

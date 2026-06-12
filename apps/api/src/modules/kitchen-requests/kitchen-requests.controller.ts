@@ -36,6 +36,7 @@ function mapKitchenRequestDetail(
   const krItems = (kr.items as Record<string, unknown>[]) || [];
   const department = kr.department as Record<string, unknown> | null;
   const warehouse = kr.warehouse as Record<string, unknown> | null;
+  const requestedBy = kr.requestedBy as Record<string, unknown> | null;
 
   const items = krItems.map((item: Record<string, unknown>) => {
     const it = item.item as Record<string, unknown> | null;
@@ -58,6 +59,9 @@ function mapKitchenRequestDetail(
       ).toISOString()
     : new Date().toISOString();
 
+  const requestedByName =
+    (requestedBy?.name as string) || currentUserId || 'System';
+
   return {
     id: kr.id as string,
     requestNumber: kr.requestNumber as string,
@@ -67,7 +71,7 @@ function mapKitchenRequestDetail(
     warehouseName: (warehouse?.name as string) || '',
     status: kr.status as string,
     notes: (kr.notes as string) || '',
-    requestedBy: currentUserId || 'System',
+    requestedBy: requestedByName,
     requestedAt: createdAtIso,
     createdAt: createdAtIso,
     updatedAt: createdAtIso,
@@ -99,11 +103,19 @@ export class KitchenRequestsController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: Role,
   ) {
-    await this.scopeValidationService.validateWarehouse(
-      userId,
-      role,
-      body.warehouseId,
-    );
+    if (role === Role.KITCHEN_CHIEF) {
+      await this.scopeValidationService.validateDepartment(
+        userId,
+        role,
+        body.departmentId,
+      );
+    } else {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        body.warehouseId,
+      );
+    }
     const kr = await this.krService.create(body, userId);
     return { data: mapKitchenRequestDetail(kr, userId) };
   }
@@ -111,7 +123,13 @@ export class KitchenRequestsController {
   @Get()
   async findAll(
     @Query() query: { status?: string; search?: string; page?: string },
-    @ActiveScope('warehouseId') warehouseId?: string,
+    @ActiveScope()
+    activeScope?: {
+      branchId?: string;
+      warehouseId?: string;
+      departmentId?: string;
+    },
+    @CurrentUser() user?: { id: string; role: Role },
   ) {
     const result = await this.krService.findAll(
       {
@@ -119,7 +137,8 @@ export class KitchenRequestsController {
         search: query.search,
         page: query.page ? Number(query.page) : 1,
       },
-      warehouseId,
+      activeScope,
+      user,
     );
 
     return {
@@ -135,11 +154,19 @@ export class KitchenRequestsController {
     @CurrentUser('role') role: Role,
   ) {
     const kr = await this.krService.findOne(id);
-    await this.scopeValidationService.validateWarehouse(
-      userId,
-      role,
-      kr.warehouseId,
-    );
+    if (role === Role.KITCHEN_CHIEF) {
+      await this.scopeValidationService.validateDepartment(
+        userId,
+        role,
+        kr.departmentId,
+      );
+    } else {
+      await this.scopeValidationService.validateWarehouse(
+        userId,
+        role,
+        kr.warehouseId,
+      );
+    }
     return { data: mapKitchenRequestDetail(kr, userId) };
   }
 
@@ -154,14 +181,22 @@ export class KitchenRequestsController {
   ) {
     const kr = await this.prisma.kitchenRequest.findUnique({
       where: { id },
-      select: { warehouseId: true },
+      select: { warehouseId: true, departmentId: true },
     });
     if (kr) {
-      await this.scopeValidationService.validateWarehouse(
-        userId,
-        role,
-        kr.warehouseId,
-      );
+      if (role === Role.KITCHEN_CHIEF) {
+        await this.scopeValidationService.validateDepartment(
+          userId,
+          role,
+          dto.departmentId || kr.departmentId,
+        );
+      } else {
+        await this.scopeValidationService.validateWarehouse(
+          userId,
+          role,
+          dto.warehouseId || kr.warehouseId,
+        );
+      }
     }
 
     const ipAddress =

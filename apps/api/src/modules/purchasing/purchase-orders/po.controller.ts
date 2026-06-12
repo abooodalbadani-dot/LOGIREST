@@ -30,6 +30,8 @@ import { Role } from '@prisma/client';
 import { ScopeValidationService } from '../../../auth/scope-validation.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { Roles } from '../../../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { CreatePoDto } from './dto/create-po.dto';
 import { UpdatePoDto } from './dto/update-po.dto';
 import type { Request } from 'express';
@@ -154,6 +156,7 @@ function mapPOSummary(po: Record<string, unknown>) {
 }
 
 @Controller('procurement/purchase-orders')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiSecureController()
 export class PurchaseOrderController {
   constructor(
@@ -163,6 +166,13 @@ export class PurchaseOrderController {
   ) {}
 
   @Post()
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.PROC_OFFICER,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   @Idempotent()
   @ApiIdempotentHeader()
   async create(
@@ -271,7 +281,13 @@ export class PurchaseOrderController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.PROC_OFFICER,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -331,7 +347,13 @@ export class PurchaseOrderController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.INV_MGR, Role.PROC_OFFICER)
+  @Roles(
+    Role.ADMIN,
+    Role.INV_MGR,
+    Role.PROC_OFFICER,
+    Role.PROC_MGR,
+    Role.BRANCH_MGR,
+  )
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,

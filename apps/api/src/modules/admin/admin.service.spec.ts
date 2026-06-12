@@ -4,6 +4,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { Role } from '@prisma/client';
 import { encrypt, decrypt } from './crypto.util';
 import { BcryptService } from '../../auth/bcrypt.service';
+import { ROLE_METADATA } from '@logirest/shared-types';
 
 process.env.ENCRYPTION_KEY = 'test-encryption-key-for-unit-testing-32-chars';
 
@@ -86,8 +87,8 @@ describe('AdminService', () => {
 
     const result = await service.getRoles();
 
-    // Verify all 10 roles are returned
-    expect(result).toHaveLength(10);
+    // Verify all roles are returned
+    expect(result).toHaveLength(Object.keys(ROLE_METADATA).length);
 
     // Verify that ADMIN has count 2
     const adminRole = result.find((r) => r.id === 'ADMIN');

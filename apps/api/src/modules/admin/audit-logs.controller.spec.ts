@@ -24,14 +24,6 @@ describe('AuditLogsController', () => {
     jest.clearAllMocks();
   });
 
-  it('should throw ForbiddenException if user role is not ADMIN or INV_MGR', async () => {
-    await expect(
-      controller.getAuditLogs(Role.WH_KEEPER, { page: 1, limit: 50 }),
-    ).rejects.toThrow(ForbiddenException);
-
-    expect(mockPrismaService.auditLog.findMany).not.toHaveBeenCalled();
-  });
-
   it('should return paginated and mapped audit logs for ADMIN', async () => {
     mockPrismaService.auditLog.count.mockResolvedValue(1);
     mockPrismaService.auditLog.findMany.mockResolvedValue([
@@ -45,7 +37,7 @@ describe('AuditLogsController', () => {
       },
     ]);
 
-    const result = await controller.getAuditLogs(Role.ADMIN, {
+    const result = await controller.getAuditLogs({
       page: 1,
       limit: 50,
     });
@@ -80,7 +72,7 @@ describe('AuditLogsController', () => {
       },
     ]);
 
-    const result = await controller.getAuditLogs(Role.INV_MGR, {
+    const result = await controller.getAuditLogs({
       page: 1,
       limit: 50,
       userId: 'mgr-1',
@@ -103,7 +95,7 @@ describe('AuditLogsController', () => {
       },
     ]);
 
-    const result = await controller.getAuditLogs(Role.AUDITOR, {
+    const result = await controller.getAuditLogs({
       page: 1,
       limit: 50,
     });

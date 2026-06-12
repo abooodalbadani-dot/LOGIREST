@@ -15,6 +15,14 @@ export const UserScopeSchema = z.object({
  warehouseId: z.string().nullable(),
  departmentId: z.string().nullable(),
  warehouse: WarehouseDetailsSchema,
+ department: z.object({
+   id: z.string(),
+   name: z.string(),
+ }).nullable().optional(),
+ branch: z.object({
+   id: z.string(),
+   name: z.string(),
+ }).nullable().optional(),
 });
 
 export const NotificationPreferencesSchema = z.object({
@@ -29,7 +37,7 @@ export const AuthUserSchema = z.object({
  id: z.string(), 
  name: z.string(), 
  email: z.string().email(), 
- role: z.enum(['ADMIN','GM','INV_MGR','WH_KEEPER','PROC_OFFICER','APPROVER','AUDITOR','VIEWER','KITCHEN_CHIEF','STORE_MGR']), 
+ role: z.enum(['ADMIN','GM','INV_MGR','WH_KEEPER','PROC_OFFICER','APPROVER','AUDITOR','VIEWER','KITCHEN_CHIEF','STORE_MGR','BRANCH_MGR','PROC_MGR']), 
  scopes: z.array(UserScopeSchema), 
  locale: z.enum(['ar','en']).optional(),
  status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),

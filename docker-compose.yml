@@ -41,7 +41,6 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       target: builder
-      network: host
     container_name: logirest-api
     restart: unless-stopped
     environment:
@@ -94,7 +93,6 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       target: builder
-      network: host
       # NEXT_PUBLIC_API_URL is required at build time because Next.js bakes 
       # NEXT_PUBLIC_ environment variables directly into the compiled client-side bundles.
       args:

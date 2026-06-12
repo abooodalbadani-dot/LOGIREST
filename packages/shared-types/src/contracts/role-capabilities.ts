@@ -46,7 +46,7 @@ export const ROLE_CAPABILITIES = {
     post: ['ADMIN', 'INV_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     edit: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
-    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
+    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'] as const,
   },
   transfer: {
@@ -54,7 +54,7 @@ export const ROLE_CAPABILITIES = {
     ship: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
     receive: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'BRANCH_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR'] as const,
-    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
+    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'] as const,
   },
   issue: {
@@ -74,7 +74,7 @@ export const ROLE_CAPABILITIES = {
     reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR'] as const,
     post: ['ADMIN', 'INV_MGR'] as const,
     close: ['ADMIN', 'INV_MGR'] as const,
-    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
+    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR'] as const,
     recount: ['ADMIN', 'INV_MGR'] as const,
   },
@@ -91,7 +91,7 @@ export const ROLE_CAPABILITIES = {
     approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
     reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
     cancel: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
-    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
+    view: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
   },
   po: {
     create: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'] as const,
@@ -99,13 +99,13 @@ export const ROLE_CAPABILITIES = {
     approve: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
     reject: ['ADMIN', 'APPROVER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
     cancel: ['ADMIN', 'PROC_OFFICER', 'INV_MGR', 'PROC_MGR'] as const,
-    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
+    view: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
   },
   grn: {
     create: ['ADMIN', 'WH_KEEPER', 'INV_MGR', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
     post: ['ADMIN', 'INV_MGR', 'PROC_MGR'] as const,
     cancel: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'BRANCH_MGR', 'PROC_MGR'] as const,
-    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'KITCHEN_CHIEF', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
+    view: ['ADMIN', 'INV_MGR', 'WH_KEEPER', 'STORE_MGR', 'APPROVER', 'PROC_OFFICER', 'AUDITOR', 'GM', 'VIEWER', 'BRANCH_MGR', 'PROC_MGR'] as const,
     export: ['ADMIN', 'INV_MGR', 'STORE_MGR', 'AUDITOR', 'GM', 'BRANCH_MGR', 'PROC_MGR'] as const,
   },
 } as const satisfies Record<BaseDocumentType, Partial<Record<CapabilityAction, readonly UserRole[]>>>;
