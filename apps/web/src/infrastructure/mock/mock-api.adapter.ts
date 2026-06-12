@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { db } from './mock-database';
 import { MockFactory } from './mock-factory';
 import { PurchaseRequest, PurchaseOrder, GRN, StockIssue, Transfer, Adjustment, DocumentStatus, TransferStatus, PRLineItem } from '@/types/documents';
@@ -653,8 +653,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       let issues = await db.issues.findAll();
       const warehouseId = searchParams.get('warehouse_id');
       const branchId = searchParams.get('branch_id');
-      if (warehouseId) issues = issues.filter((i: any) => i.warehouse_id === warehouseId);
-      if (branchId) issues = issues.filter((i: any) => i.branch_id === branchId || i.destination_dept_id === branchId);
+      if (warehouseId) issues = issues.filter(i => (i as unknown as Record<string, unknown>).warehouse_id === warehouseId);
+      if (branchId) issues = issues.filter(i => (i as unknown as Record<string, unknown>).branch_id === branchId || (i as unknown as Record<string, unknown>).destination_dept_id === branchId);
       return MockFactory.wrapPagination(issues);
     }
     if (method === 'POST') {
@@ -722,8 +722,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       let transfers = await db.transfers.findAll();
       const warehouseId = searchParams.get('warehouse_id');
       const branchId = searchParams.get('branch_id');
-      if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.toWarehouseId === warehouseId);
-      if (branchId) transfers = transfers.filter((t: any) => t.branch_id === branchId);
+      if (warehouseId) transfers = transfers.filter(t => (t as unknown as Record<string, unknown>).from_warehouse_id === warehouseId || t.toWarehouseId === warehouseId);
+      if (branchId) transfers = transfers.filter(t => (t as unknown as Record<string, unknown>).branch_id === branchId);
       return MockFactory.wrapPagination(transfers);
     }
     if (method === 'POST') {
@@ -858,8 +858,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       let sessions = await db.stocktake.findAll();
       const warehouseId = searchParams.get('warehouse_id') || searchParams.get('warehouseId');
       const branchId = searchParams.get('branch_id') || searchParams.get('branchId');
-      if (warehouseId) sessions = sessions.filter((s: any) => s.warehouseId === warehouseId);
-      if (branchId) sessions = sessions.filter((s: any) => s.branch_id === branchId);
+      if (warehouseId) sessions = sessions.filter((s: Record<string, unknown>) => s.warehouseId === warehouseId);
+      if (branchId) sessions = sessions.filter((s: Record<string, unknown>) => s.branch_id === branchId);
       return MockFactory.wrapPagination(sessions.map(s => {
         const items = s.items || [];
         return {
@@ -1118,8 +1118,8 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       let adjustments = await db.adjustments.findAll();
       const warehouseId = searchParams.get('warehouse_id');
       const branchId = searchParams.get('branch_id');
-      if (warehouseId) adjustments = adjustments.filter((a: any) => a.warehouse_id === warehouseId);
-      if (branchId) adjustments = adjustments.filter((a: any) => a.branch_id === branchId);
+      if (warehouseId) adjustments = adjustments.filter((a) => (a as unknown as Record<string, unknown>).warehouse_id === warehouseId);
+      if (branchId) adjustments = adjustments.filter((a) => (a as unknown as Record<string, unknown>).branch_id === branchId);
       return MockFactory.wrapPagination(adjustments);
     }
     if (method === 'POST') {
@@ -1133,12 +1133,18 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     let adjustments = await db.adjustments.findAll();
     const warehouseId = searchParams.get('warehouse_id');
     const branchId = searchParams.get('branch_id');
-    if (warehouseId) adjustments = adjustments.filter((a: any) => a.warehouse_id === warehouseId);
-    if (branchId) adjustments = adjustments.filter((a: any) => a.branch_id === branchId);
+    if (warehouseId) adjustments = adjustments.filter((a) => (a as unknown as Record<string, unknown>).warehouse_id === warehouseId);
+    if (branchId) adjustments = adjustments.filter((a) => (a as unknown as Record<string, unknown>).branch_id === branchId);
     return {
       total: adjustments.length,
-      pending: adjustments.filter((a: any) => a.status === ADJUSTMENT_STATUS.DRAFT || a.status === ADJUSTMENT_STATUS.SUBMITTED).length,
-      critical_losses: adjustments.filter((a: any) => a.reason === 'DAMAGE' || a.reason === 'THEFT').length,
+      pending: adjustments.filter((a) => {
+        const status = (a as unknown as Record<string, unknown>).status;
+        return status === ADJUSTMENT_STATUS.DRAFT || status === ADJUSTMENT_STATUS.SUBMITTED;
+      }).length,
+      critical_losses: adjustments.filter((a) => {
+        const reason = (a as unknown as Record<string, unknown>).reason;
+        return reason === 'DAMAGE' || reason === 'THEFT';
+      }).length,
     };
   }
 
@@ -1147,16 +1153,23 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     let transfers = await db.transfers.findAll();
     const warehouseId = searchParams.get('warehouse_id');
     const branchId = searchParams.get('branch_id');
-    if (warehouseId) transfers = transfers.filter((t: any) => t.from_warehouse_id === warehouseId || t.toWarehouseId === warehouseId);
-    if (branchId) transfers = transfers.filter((t: any) => t.branch_id === branchId);
-    const inTransit = transfers.filter((t: any) => t.transferStatus === TRANSFER_STATUS.IN_TRANSIT || t.status === TRANSFER_STATUS.IN_TRANSIT);
+    if (warehouseId) transfers = transfers.filter((t) => {
+      const rec = t as unknown as Record<string, unknown>;
+      return rec.from_warehouse_id === warehouseId || rec.toWarehouseId === warehouseId;
+    });
+    if (branchId) transfers = transfers.filter((t) => (t as unknown as Record<string, unknown>).branch_id === branchId);
+    const inTransit = transfers.filter((t) => {
+      const rec = t as unknown as Record<string, unknown>;
+      return rec.transferStatus === TRANSFER_STATUS.IN_TRANSIT || rec.status === TRANSFER_STATUS.IN_TRANSIT;
+    });
     const overdueDays = OPERATIONAL_CONFIG.TRANSFER_OVERDUE_DAYS;
-    const overdueCount = inTransit.filter((t: any) => {
-      const shippedDate = t.shipped_at || t.created_at;
+    const overdueCount = inTransit.filter((t) => {
+      const rec = t as unknown as Record<string, unknown>;
+      const shippedDate = rec.shipped_at || rec.created_at;
       if (!shippedDate) return false;
       const threshold = new Date();
       threshold.setDate(threshold.getDate() - overdueDays);
-      return new Date(shippedDate) < threshold;
+      return new Date(shippedDate as string | number | Date) < threshold;
     }).length;
     return {
       total: transfers.length,
@@ -1170,14 +1183,15 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     let sessions = await db.stocktake.findAll();
     const warehouseId = searchParams.get('warehouse_id');
     const branchId = searchParams.get('branch_id');
-    if (warehouseId) sessions = sessions.filter((s: any) => s.warehouse_id === warehouseId);
-    if (branchId) sessions = sessions.filter((s: any) => s.branch_id === branchId);
+    if (warehouseId) sessions = sessions.filter((s) => (s as unknown as Record<string, unknown>).warehouse_id === warehouseId);
+    if (branchId) sessions = sessions.filter((s) => (s as unknown as Record<string, unknown>).branch_id === branchId);
     return {
       total: sessions.length,
-      in_progress: sessions.filter((s: any) =>
-        [STOCKTAKE_STATUS.DRAFT, STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING, STOCKTAKE_STATUS.REVIEW].includes(s.status)
-      ).length,
-      posted: sessions.filter((s: any) => s.status === STOCKTAKE_STATUS.POSTED).length,
+      in_progress: sessions.filter((s) => {
+        const rec = s as unknown as Record<string, unknown>;
+        return ([STOCKTAKE_STATUS.DRAFT, STOCKTAKE_STATUS.STARTED, STOCKTAKE_STATUS.COUNTING, STOCKTAKE_STATUS.REVIEW] as string[]).includes(rec.status as string);
+      }).length,
+      posted: sessions.filter((s) => (s as unknown as Record<string, unknown>).status === STOCKTAKE_STATUS.POSTED).length,
     };
   }
 
@@ -1472,7 +1486,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
     if (method === 'PUT') {
       const movements = await db.movements.findAll();
       const currentSettings = { base_currency: 'SAR' }; // Mocked existing state
-      const newSettings = body as Record<string, any>;
+      const newSettings = body as Record<string, unknown>;
 
       if (movements.length > 0 && newSettings.base_currency && newSettings.base_currency !== currentSettings.base_currency) {
         return {
@@ -1498,7 +1512,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
         smtp_user: newSettings.smtp_user || '',
         smtp_password: newSettings.smtp_password || '',
         smtp_encryption: newSettings.smtp_encryption || 'tls',
-        version: (newSettings.version || 1) + 1,
+        version: (Number(newSettings.version) || 1) + 1,
         updatedAt: new Date().toISOString()
       };
     }

@@ -25,10 +25,12 @@ describe('AdminService', () => {
   const mockOutboxEventUpdate = jest.fn();
   const mockAuditLogCreate = jest.fn();
 
-  const mockPrismaService: any = {
+  const mockUserGroupBy = jest.fn();
+
+  const mockPrismaService = {
     $transaction: jest.fn((cb) => cb(mockPrismaService)),
     user: {
-      groupBy: jest.fn(),
+      groupBy: mockUserGroupBy,
     },
     systemSetting: {
       findUnique: mockSystemSettingFindUnique,
@@ -54,7 +56,7 @@ describe('AdminService', () => {
     auditLog: {
       create: mockAuditLogCreate,
     },
-  };
+  } as unknown as PrismaService;
 
   const mockBcryptService = {
     hash: jest.fn().mockResolvedValue('mocked-hash'),
@@ -84,7 +86,7 @@ describe('AdminService', () => {
       { role: Role.INV_MGR, _count: 5 },
     ];
 
-    mockPrismaService.user.groupBy.mockResolvedValue(mockGroupResult);
+    mockUserGroupBy.mockResolvedValue(mockGroupResult);
 
     const result = await service.getRoles();
 
@@ -111,7 +113,7 @@ describe('AdminService', () => {
     expect(whKeeperRole?.userCount).toBe(0);
     expect(whKeeperRole?.displayName).toBe('Warehouse Keeper');
 
-    expect(mockPrismaService.user.groupBy).toHaveBeenCalledWith({
+    expect(mockUserGroupBy).toHaveBeenCalledWith({
       by: ['role'],
       _count: true,
       where: { isActive: true },

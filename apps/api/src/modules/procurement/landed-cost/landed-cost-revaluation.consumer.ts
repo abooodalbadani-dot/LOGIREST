@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger, BadRequestException } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { Prisma, AdjustmentDirection } from '@prisma/client';
+import { Prisma, AdjustmentDirection, DocumentType } from '@prisma/client';
 import { PrismaService } from '../../../database/prisma.service';
 import { RevaluationLockingService } from './revaluation-locking.service';
 
@@ -63,7 +63,10 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
             string,
             { itemId: string; lotIds: Set<string> }
           >();
-          const grnLineMap = new Map<string, any>();
+          const grnLineMap = new Map<
+            string,
+            Prisma.GRNLineGetPayload<{ include: { goodsReceivedNote: true } }>
+          >();
           const lockedGrnIds = new Set<string>();
 
           for (const allocation of voucher.lines) {
@@ -309,7 +312,7 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
                 unitPrice: unitLandedCost,
                 newWac: roundedWac,
                 documentId: voucherId,
-                documentType: 'GOODS_RECEIVED_NOTE' as any,
+                documentType: DocumentType.GOODS_RECEIVED_NOTE,
                 idempotencyKey,
               },
             });
@@ -342,7 +345,7 @@ export class LandedCostRevaluationConsumer extends WorkerHost {
         const existingLedgerEntries = await this.prisma.costLedger.findFirst({
           where: {
             documentId: voucherId,
-            documentType: 'GOODS_RECEIVED_NOTE' as any,
+            documentType: DocumentType.GOODS_RECEIVED_NOTE,
           },
         });
 

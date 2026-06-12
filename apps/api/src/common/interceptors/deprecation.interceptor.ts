@@ -16,7 +16,7 @@ import {
 export class DeprecationInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const handler = context.getHandler();
     const controller = context.getClass();
 

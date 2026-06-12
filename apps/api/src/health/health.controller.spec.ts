@@ -5,7 +5,7 @@ import { BackupCalculatorService } from '../modules/health/backup-calculator.ser
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let backupServiceMock: any;
+  let backupServiceMock: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     backupServiceMock = {

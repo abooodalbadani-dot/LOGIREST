@@ -13,9 +13,17 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T = unknown> implements NestInterceptor<T, Response<T>> {
-  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<Response<T>> {
-    return next.handle().pipe(map((data: T) => this.transform(data) as Response<T>));
+export class TransformInterceptor<T = unknown> implements NestInterceptor<
+  T,
+  Response<T>
+> {
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler<T>,
+  ): Observable<Response<T>> {
+    return next
+      .handle()
+      .pipe(map((data: T) => this.transform(data) as Response<T>));
   }
 
   private transform(data: unknown): unknown {

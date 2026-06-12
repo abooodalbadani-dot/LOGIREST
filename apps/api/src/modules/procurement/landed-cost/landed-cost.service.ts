@@ -250,7 +250,7 @@ export class LandedCostService {
         }
       }
 
-      const updateData: any = {
+      const updateData: Prisma.LandedCostVoucherUpdateInput = {
         version: { increment: 1 },
       };
 

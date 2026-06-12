@@ -72,25 +72,31 @@ export class SettingsService {
     try {
       const parsed = JSON.parse(setting.value) as Record<string, unknown>;
       const rawPrintObj = parsed.printSettings ?? parsed.print_settings;
-      const printObj = typeof rawPrintObj === 'object' && rawPrintObj !== null
-        ? (rawPrintObj as Record<string, unknown>)
-        : {};
+      const printObj =
+        typeof rawPrintObj === 'object' && rawPrintObj !== null
+          ? (rawPrintObj as Record<string, unknown>)
+          : {};
 
-      const defaultPaperSizeVal = printObj.defaultPaperSize ?? printObj.default_paper_size;
-      const thermalShowLogoVal = printObj.thermalShowLogo ?? printObj.thermal_show_logo;
-      const autoPrintOnFulfillVal = printObj.autoPrintOnFulfill ?? printObj.auto_print_on_fulfill;
+      const defaultPaperSizeVal =
+        printObj.defaultPaperSize ?? printObj.default_paper_size;
+      const thermalShowLogoVal =
+        printObj.thermalShowLogo ?? printObj.thermal_show_logo;
+      const autoPrintOnFulfillVal =
+        printObj.autoPrintOnFulfill ?? printObj.auto_print_on_fulfill;
 
       return {
         defaultPaperSize: (typeof defaultPaperSizeVal === 'string' &&
         ['A4', '80mm', '58mm'].includes(defaultPaperSizeVal)
           ? defaultPaperSizeVal
           : defaultSettings.defaultPaperSize) as 'A4' | '80mm' | '58mm',
-        thermalShowLogo: typeof thermalShowLogoVal === 'boolean'
-          ? thermalShowLogoVal
-          : defaultSettings.thermalShowLogo,
-        autoPrintOnFulfill: typeof autoPrintOnFulfillVal === 'boolean'
-          ? autoPrintOnFulfillVal
-          : defaultSettings.autoPrintOnFulfill,
+        thermalShowLogo:
+          typeof thermalShowLogoVal === 'boolean'
+            ? thermalShowLogoVal
+            : defaultSettings.thermalShowLogo,
+        autoPrintOnFulfill:
+          typeof autoPrintOnFulfillVal === 'boolean'
+            ? autoPrintOnFulfillVal
+            : defaultSettings.autoPrintOnFulfill,
       };
     } catch (e: unknown) {
       this.logger.error(

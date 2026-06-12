@@ -63,7 +63,8 @@ export class ConcurrencyService {
     let lastModifiedAt = new Date();
 
     if (latestAuditLog) {
-      lastModifiedBy = latestAuditLog.user?.name || latestAuditLog.userId || 'Unknown';
+      lastModifiedBy =
+        latestAuditLog.user?.name || latestAuditLog.userId || 'Unknown';
       lastModifiedAt = latestAuditLog.createdAt;
     } else if (doc.createdById) {
       // Fallback: Get document creator name if no successful workflow transitions are found

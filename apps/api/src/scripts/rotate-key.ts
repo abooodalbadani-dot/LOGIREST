@@ -40,7 +40,7 @@ async function main() {
     );
     const savedConfig = JSON.parse(setting.value) as {
       smtp_password?: string;
-      [key: string]: any;
+      [key: string]: unknown;
     };
 
     if (savedConfig.smtp_password) {

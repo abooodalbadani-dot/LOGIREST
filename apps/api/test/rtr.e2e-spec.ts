@@ -72,7 +72,9 @@ describe('Refresh Token Rotation (e2e)', () => {
 
     await app.init();
     const queue = app.get(getQueueToken('outbox'));
-    jest.spyOn(queue, 'add').mockResolvedValue({ id: 'mock-job-id' } as any);
+    jest.spyOn(queue, 'add').mockResolvedValue({
+      id: 'mock-job-id',
+    });
     prisma = app.get(PrismaService);
   });
 

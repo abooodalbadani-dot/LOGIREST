@@ -1,10 +1,25 @@
 import { PrismaClient } from '@prisma/client';
 
+interface PgLockConflict {
+  blocked_pid: number | string;
+  blocking_pid: number | string;
+  blocked_statement: string;
+  blocking_statement: string;
+}
+
+interface PgStatActivity {
+  pid: number | string;
+  datname: string;
+  state: string;
+  query: string;
+  age: string;
+}
+
 async function main() {
   const prisma = new PrismaClient();
   try {
     console.log('Querying active lock conflicts in PostgreSQL...');
-    const locks = await prisma.$queryRaw<any[]>`
+    const locks = await prisma.$queryRaw<PgLockConflict[]>`
       SELECT
           blocked_locks.pid     AS blocked_pid,
           blocking_locks.pid    AS blocking_pid,
@@ -42,7 +57,7 @@ async function main() {
       console.log(
         'No blocking lock conflicts found. Querying all active connections...',
       );
-      const activeConns = await prisma.$queryRaw<any[]>`
+      const activeConns = await prisma.$queryRaw<PgStatActivity[]>`
         SELECT pid, datname, state, query, age(clock_timestamp(), query_start)::text as age
         FROM pg_stat_activity
         WHERE pid <> pg_backend_pid();

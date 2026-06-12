@@ -13,9 +13,11 @@ describe('InventoryValidationService', () => {
   const mockReconciliationRunCreate = jest.fn();
   const mockQueryRaw = jest.fn();
 
-  const mockPrismaService: any = {
+  const mockPrismaService: Record<string, unknown> = {
     $queryRaw: mockQueryRaw,
-    $transaction: jest.fn((cb: any) => cb(mockPrismaService)),
+    $transaction: jest.fn((cb: (tx: unknown) => unknown) =>
+      cb(mockPrismaService),
+    ),
     warehouseItem: {
       findUnique: mockWarehouseItemFindUnique,
       update: mockWarehouseItemUpdate,

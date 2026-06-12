@@ -39,7 +39,7 @@ describe('KitchenRequestVoidService', () => {
 
   const mockPrisma = {
     $transaction: jest.fn().mockImplementation(
-      (cb: any, _options?: any) => cb(mockPrismaTx),
+      (cb: (tx: Prisma.TransactionClient) => Promise<unknown>, _options?: unknown) => cb(mockPrismaTx),
     ),
   } as unknown as PrismaService;
 

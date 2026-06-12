@@ -5,12 +5,22 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Prisma } from '@prisma/client';
+
+interface UomDto {
+  code?: string;
+  name_en?: string;
+  name_ar?: string;
+  version?: number;
+}
 
 @Injectable()
 export class UomService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapDbUoMToFrontend(uom: any) {
+  private mapDbUoMToFrontend(
+    uom: Prisma.UnitOfMeasureGetPayload<Record<string, never>>,
+  ) {
     return {
       id: uom.id,
       code: uom.code,
@@ -18,7 +28,7 @@ export class UomService {
       name_en: uom.name,
       category: 'General',
       is_active: true,
-      created_at: uom.createdAt || new Date().toISOString(),
+      created_at: new Date().toISOString(),
       version: uom.version,
     };
   }
@@ -49,7 +59,7 @@ export class UomService {
     return this.mapDbUoMToFrontend(uom);
   }
 
-  async create(body: any, userId: string, ipAddress?: string) {
+  async create(body: UomDto, userId: string, ipAddress?: string) {
     let { code } = body;
     const { name_en, name_ar } = body;
     if (!name_en && !name_ar) {
@@ -94,8 +104,8 @@ export class UomService {
     const created = await this.prisma.$transaction(async (tx) => {
       const newUom = await tx.unitOfMeasure.create({
         data: {
-          code,
-          name,
+          code: code,
+          name: name ?? '',
           version: 1,
         },
       });
@@ -118,7 +128,7 @@ export class UomService {
     return this.mapDbUoMToFrontend(created);
   }
 
-  async update(id: string, body: any, userId: string, ipAddress?: string) {
+  async update(id: string, body: UomDto, userId: string, ipAddress?: string) {
     const existing = await this.prisma.unitOfMeasure.findUnique({
       where: { id },
     });

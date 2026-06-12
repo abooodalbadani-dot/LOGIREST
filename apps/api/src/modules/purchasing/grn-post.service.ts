@@ -7,7 +7,11 @@ import { PrismaService } from '../../database/prisma.service';
 import { LedgerLockService } from '../ledger/ledger-lock.service';
 import { WacService } from '../ledger/wac.service';
 import { DocumentType, Role } from '@logirest/shared-types';
-import { DocumentType as PrismaDocType, GoodsReceivedNote } from '@prisma/client';
+import {
+  DocumentType as PrismaDocType,
+  GoodsReceivedNote,
+  $Enums,
+} from '@prisma/client';
 import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
@@ -25,7 +29,7 @@ export class GrnPostService {
     userRole: Role,
     clientVersion?: number,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<GoodsReceivedNote> {
     return this.prisma.$transaction(async (tx) => {
       // Lock the document first
       const lockedDoc = await this.lockService.lockDocument<GoodsReceivedNote>(
@@ -207,6 +211,12 @@ export class GrnPostService {
         where: { id: grnId },
       });
 
+      if (!updatedGrn) {
+        throw new Error(
+          `Failed to retrieve GoodsReceivedNote with ID ${grnId} after update`,
+        );
+      }
+
       this.metricsService.postingOperationsCounter.inc({
         document_type: 'GOODS_RECEIVED_NOTE',
       });
@@ -228,7 +238,7 @@ export class GrnPostService {
           toStatus: 'POSTED',
           actionPerformed: 'POST',
           userId,
-          userRole: userRole as any,
+          userRole: userRole,
           stepNumber,
         },
       });

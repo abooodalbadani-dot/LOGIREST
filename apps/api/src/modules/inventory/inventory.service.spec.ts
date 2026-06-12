@@ -29,7 +29,9 @@ describe('InventoryService', () => {
     },
     $transaction: jest
       .fn()
-      .mockImplementation((cb: any) => cb(mockPrismaService)),
+      .mockImplementation((cb: (tx: unknown) => unknown) =>
+        cb(mockPrismaService),
+      ),
     $queryRaw: jest.fn(),
   };
 
@@ -164,7 +166,7 @@ describe('InventoryService', () => {
 
       const result = await service.getLots('wh-1', {
         itemId: 'item-1',
-        status: 'AVAILABLE' as any,
+        status: 'AVAILABLE' as import('@prisma/client').LotStatus,
         page: 1,
         limit: 50,
       });

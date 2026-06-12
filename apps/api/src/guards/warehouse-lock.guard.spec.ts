@@ -30,9 +30,9 @@ describe('WarehouseLockGuard', () => {
 
   const mockExecutionContext = (
     method: string,
-    body: any = {},
-    params: any = {},
-    query: any = {},
+    body: Record<string, unknown> = {},
+    params: Record<string, string> = {},
+    query: Record<string, string> = {},
   ) => {
     return {
       switchToHttp: () => ({

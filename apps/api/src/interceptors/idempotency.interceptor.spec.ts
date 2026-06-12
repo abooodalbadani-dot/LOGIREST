@@ -54,13 +54,13 @@ describe('IdempotencyInterceptor', () => {
     } as unknown as ExecutionContext;
   };
 
-  const mockCallHandler = (value: any) => {
+  const mockCallHandler = (value: unknown) => {
     return {
       handle: () => of(value),
     } as CallHandler;
   };
 
-  const mockCallHandlerError = (error: any) => {
+  const mockCallHandlerError = (error: unknown) => {
     return {
       handle: () => throwError(() => error),
     } as CallHandler;

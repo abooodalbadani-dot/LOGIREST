@@ -103,7 +103,7 @@ export class AdjustmentPostService {
               const qtyVal = Number(line.quantity);
 
               // Historical posting guard with raw SELECT FOR UPDATE to serialize concurrent posts
-              const latestLedgers = await tx.$queryRaw<any[]>`
+              const latestLedgers = await tx.$queryRaw<{ postedAt: Date }[]>`
           SELECT "postedAt"
           FROM "stock_ledger"
           WHERE "warehouseId" = ${adj.warehouseId} AND "itemId" = ${item.id}

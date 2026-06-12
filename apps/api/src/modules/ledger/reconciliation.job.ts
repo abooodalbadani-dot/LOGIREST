@@ -105,7 +105,11 @@ export class ReconciliationJob {
           // 3. Paginate warehouse items sweep (batch size 500)
           let itemCursor: { warehouseId: string; itemId: string } | undefined;
           while (true) {
-            const batch: Array<any> = await tx.warehouseItem.findMany({
+            const batch: Array<
+              Prisma.WarehouseItemGetPayload<{
+                include: { item: true; warehouse: true };
+              }>
+            > = await tx.warehouseItem.findMany({
               take: 500,
               ...(itemCursor
                 ? { skip: 1, cursor: { warehouseId_itemId: itemCursor } }
@@ -196,7 +200,15 @@ export class ReconciliationJob {
             | { warehouseId: string; itemId: string; lotId: string }
             | undefined;
           while (true) {
-            const batchLots: Array<any> = await tx.warehouseItemLot.findMany({
+            const batchLots: Array<
+              Prisma.WarehouseItemLotGetPayload<{
+                include: {
+                  item: { select: { sku: true } };
+                  lot: { select: { lotNumber: true; status: true } };
+                  warehouse: { select: { name: true; code: true } };
+                };
+              }>
+            > = await tx.warehouseItemLot.findMany({
               take: 500,
               ...(lotCursor
                 ? { skip: 1, cursor: { warehouseId_itemId_lotId: lotCursor } }

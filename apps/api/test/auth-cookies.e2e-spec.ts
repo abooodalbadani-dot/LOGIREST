@@ -40,7 +40,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
       expect(res.status).toBe(200);
       expect(res.body.token).toBeDefined();
 
-      const cookies = res.headers['set-cookie'] as any as string[];
+      const cookies = res.headers['set-cookie'] as unknown as string[];
       expect(cookies).toBeDefined();
 
       const tokenCookie = cookies.find((c: string) =>
@@ -67,7 +67,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
         .post('/api/v1/auth/login')
         .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
-      const cookies = loginRes.headers['set-cookie'] as any as string[];
+      const cookies = loginRes.headers['set-cookie'] as unknown as string[];
       const tokenCookieString = cookies.find((c: string) =>
         c.startsWith('logirest_token='),
       );
@@ -88,7 +88,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
         .post('/api/v1/auth/login')
         .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
-      const cookies = loginRes.headers['set-cookie'] as any as string[];
+      const cookies = loginRes.headers['set-cookie'] as unknown as string[];
       const refreshCookieString = cookies.find((c: string) =>
         c.startsWith('logirest_refresh='),
       );
@@ -101,7 +101,9 @@ describe('Secure Cookie Authentication (e2e)', () => {
       expect(refreshRes.status).toBe(200);
       expect(refreshRes.body.success).toBe(true);
 
-      const newCookies = refreshRes.headers['set-cookie'] as any as string[];
+      const newCookies = refreshRes.headers[
+        'set-cookie'
+      ] as unknown as string[];
       expect(newCookies).toBeDefined();
 
       const newTokenCookie = newCookies.find((c: string) =>
@@ -122,7 +124,7 @@ describe('Secure Cookie Authentication (e2e)', () => {
         .post('/api/v1/auth/login')
         .send({ email: 'admin@logirest.com', password: 'Password123!' });
 
-      const cookies = loginRes.headers['set-cookie'] as any as string[];
+      const cookies = loginRes.headers['set-cookie'] as unknown as string[];
       const refreshCookieString = cookies.find((c: string) =>
         c.startsWith('logirest_refresh='),
       );
@@ -135,7 +137,9 @@ describe('Secure Cookie Authentication (e2e)', () => {
       expect(logoutRes.status).toBe(200);
       expect(logoutRes.body.success).toBe(true);
 
-      const clearedCookies = logoutRes.headers['set-cookie'] as any as string[];
+      const clearedCookies = logoutRes.headers[
+        'set-cookie'
+      ] as unknown as string[];
       expect(clearedCookies).toBeDefined();
 
       const tokenCookie = clearedCookies.find((c: string) =>

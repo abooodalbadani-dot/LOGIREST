@@ -23,7 +23,7 @@ describe('PurchaseRequestsService', () => {
     },
     $transaction: jest
       .fn()
-      .mockImplementation((cb: (tx: any) => Promise<unknown>) =>
+      .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
         cb(mockPrisma),
       ),
   };

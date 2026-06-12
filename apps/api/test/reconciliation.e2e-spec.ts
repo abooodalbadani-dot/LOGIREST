@@ -61,7 +61,10 @@ describe('Reconciliation Drift (e2e)', () => {
       try {
         await prisma.notificationLog.deleteMany({ where: { warehouseId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete notificationLog:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete notificationLog:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
 
       try {
@@ -90,32 +93,50 @@ describe('Reconciliation Drift (e2e)', () => {
       try {
         await prisma.warehouseItem.deleteMany({ where: { itemId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete warehouseItem:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete warehouseItem:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       try {
         await prisma.item.deleteMany({ where: { categoryId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete item:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete item:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       try {
         await prisma.unitOfMeasure.delete({ where: { id: uomId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete unitOfMeasure:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete unitOfMeasure:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       try {
         await prisma.category.delete({ where: { id: categoryId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete category:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete category:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       try {
         await prisma.warehouse.delete({ where: { id: warehouseId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete warehouse:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete warehouse:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       try {
         await prisma.branch.delete({ where: { id: branchId } });
       } catch (err: unknown) {
-        console.warn('Failed to delete branch:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete branch:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       try {
         await prisma.reconciliationRun.deleteMany({
@@ -126,7 +147,10 @@ describe('Reconciliation Drift (e2e)', () => {
           },
         });
       } catch (err: unknown) {
-        console.warn('Failed to delete reconciliationRun:', err instanceof Error ? err.message : String(err));
+        console.warn(
+          'Failed to delete reconciliationRun:',
+          err instanceof Error ? err.message : String(err),
+        );
       }
       await prisma.$disconnect();
     }
@@ -275,7 +299,9 @@ describe('Reconciliation Drift (e2e)', () => {
         ) => Promise<unknown>;
 
         if (typeof arg1 === 'function') {
-          const originalCallback = arg1 as (tx: Prisma.TransactionClient) => Promise<unknown>;
+          const originalCallback = arg1 as (
+            tx: Prisma.TransactionClient,
+          ) => Promise<unknown>;
           const wrappedCallback = async (tx: Prisma.TransactionClient) => {
             const txObj = tx as unknown as Record<
               string,

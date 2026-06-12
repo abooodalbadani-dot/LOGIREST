@@ -81,7 +81,7 @@ describe('AdminController', () => {
     });
 
     it('should call updateSettings on AdminService', async () => {
-      const dto = {} as any;
+      const dto = {} as UpdateSettingsDto;
       mockAdminService.updateSettings.mockResolvedValue({ success: true });
 
       const result = await controller.updateSettings('user-1', dto);

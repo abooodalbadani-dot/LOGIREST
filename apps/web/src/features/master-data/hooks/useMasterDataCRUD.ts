@@ -11,7 +11,7 @@ import { useAuth } from '@/providers/AuthProvider';
 
 export function useMasterDataList<T>(
   entity: string,
-  schema: z.ZodType<T, any, any>,
+  schema: z.ZodType<T, z.ZodTypeDef, unknown>,
   filters = {},
   options?: { enabled?: boolean }
 ) {
@@ -21,7 +21,7 @@ export function useMasterDataList<T>(
 
   return useQuery({ 
     queryKey: [entity, filters], 
-    queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, z.any(), { signal })
+    queryFn: ({ signal }) => apiClient.get(`/${entity}?${params.toString()}`, z.unknown(), { signal })
       .then(data => {
         try {
           if (Array.isArray(data)) {
@@ -45,7 +45,7 @@ export function useMasterDataList<T>(
 export function useMasterDataItem<T>(
   entity: string,
   id: string | null,
-  schema: z.ZodType<T, any, any>,
+  schema: z.ZodType<T, z.ZodTypeDef, unknown>,
   options?: { enabled?: boolean }
 ) {
   const { activeScope } = useAuth();
@@ -53,7 +53,7 @@ export function useMasterDataItem<T>(
 
   return useQuery({ 
     queryKey: [entity, id], 
-    queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, z.any(), { signal })
+    queryFn: ({ signal }) => apiClient.get(`/${entity}/${id}`, z.unknown(), { signal })
       .then(data => {
         try {
           return schema.parse(toCamelCase(data));
@@ -67,7 +67,7 @@ export function useMasterDataItem<T>(
   });
 }
 
-export function useMasterDataCreate<T>(entity: string, schema: z.ZodType<T, any, any>, options?: { messages?: { successMessage?: string; errorMessage?: string } }) {
+export function useMasterDataCreate<T>(entity: string, schema: z.ZodType<T, z.ZodTypeDef, unknown>, options?: { messages?: { successMessage?: string; errorMessage?: string } }) {
   const qc = useQueryClient();
   return useMutation({ 
     mutationFn: ({ body, signal }: { body: unknown; signal?: AbortSignal }) => apiClient.post(`/${entity}`, schema, body, { signal }), 
@@ -79,7 +79,7 @@ export function useMasterDataCreate<T>(entity: string, schema: z.ZodType<T, any,
   });
 }
 
-export function useMasterDataUpdate<T>(entity: string, schema: z.ZodType<T, any, any>, options?: { onConflict?: () => void, messages?: { successMessage?: string; errorMessage?: string } }) {
+export function useMasterDataUpdate<T>(entity: string, schema: z.ZodType<T, z.ZodTypeDef, unknown>, options?: { onConflict?: () => void, messages?: { successMessage?: string; errorMessage?: string } }) {
   const qc = useQueryClient();
   return useSafeMutation({ 
     onConflict: options?.onConflict,

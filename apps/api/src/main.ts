@@ -10,6 +10,7 @@ import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import type { Request, Response, NextFunction } from 'express';
 
 import { Logger } from 'nestjs-pino';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
@@ -53,7 +54,7 @@ async function bootstrap() {
   // Swagger: HTTP Basic Auth protection for Swagger UI in all environments except development
   const nodeEnv = process.env.NODE_ENV || 'development';
   if (nodeEnv !== 'development') {
-    app.use('/api/docs', (req: any, res: any, next: any) => {
+    app.use('/api/docs', (req: Request, res: Response, next: NextFunction) => {
       const authHeader = req.headers.authorization;
       if (!authHeader) {
         res.setHeader(

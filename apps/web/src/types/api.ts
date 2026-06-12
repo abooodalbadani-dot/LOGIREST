@@ -18,7 +18,7 @@ export const PaginationMetaSchema = z.object({
   totalPages: z.number().int().nonnegative(),
 });
 
-export function paginatedSchema<T>(itemSchema: z.ZodType<T, any, any>) {
+export function paginatedSchema<T>(itemSchema: z.ZodType<T, z.ZodTypeDef, unknown>) {
   return z.object({
     data: z.array(itemSchema),
     meta: PaginationMetaSchema,

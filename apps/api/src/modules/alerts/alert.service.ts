@@ -10,7 +10,7 @@ export class AlertService {
   async sendSlackAlert(
     message: string,
     title = '🚨 LogiRest Alert',
-    details?: any,
+    details?: Record<string, unknown>,
   ) {
     const webhookUrl = this.config.get<string>('ALERT_WEBHOOK_URL');
     if (!webhookUrl) {
@@ -21,7 +21,7 @@ export class AlertService {
     }
 
     try {
-      const blocks: any[] = [
+      const blocks: Array<Record<string, unknown>> = [
         {
           type: 'header',
           text: {

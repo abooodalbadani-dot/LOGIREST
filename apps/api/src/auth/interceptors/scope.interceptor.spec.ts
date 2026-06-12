@@ -25,7 +25,10 @@ describe('ScopeInterceptor', () => {
 
   const createMockContext = (opts: {
     url?: string;
-    user?: any;
+    user?: { id: string; role: string; warehouseId?: string } & Record<
+      string,
+      unknown
+    >;
     headers?: Record<string, string>;
     isPublic?: boolean;
   }): ExecutionContext => {
@@ -141,7 +144,7 @@ describe('ScopeInterceptor', () => {
       expect(val).toBe('test');
     });
 
-    const request = (ctx as any).switchToHttp().getRequest();
+    const request = ctx.switchToHttp().getRequest();
     expect(request.activeScope).toEqual({
       warehouseId: 'wh-1',
       branchId: 'br-1',

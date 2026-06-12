@@ -80,7 +80,9 @@ export class WorkflowStateGuard implements CanActivate {
         ? { purchaseRequest: { select: { warehouseId: true } } }
         : undefined;
 
-    const delegate = (this.prisma as unknown as Record<string, unknown>)[modelName];
+    const delegate = (this.prisma as unknown as Record<string, unknown>)[
+      modelName
+    ];
     if (
       !delegate ||
       typeof delegate !== 'object' ||

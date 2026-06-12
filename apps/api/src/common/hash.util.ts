@@ -18,9 +18,10 @@ export function calculateArchiveHash(data: Record<string, unknown>): string {
     } else if (
       value &&
       typeof value === 'object' &&
-      typeof (value as any).toFixed === 'function'
+      'toFixed' in value &&
+      typeof value.toFixed === 'function'
     ) {
-      cleanData[key] = value.toString();
+      cleanData[key] = (value as { toString(): string }).toString();
     } else if (value && typeof value === 'object') {
       // For JSON fields or arrays, stringify them deterministically
       cleanData[key] = JSON.stringify(value);

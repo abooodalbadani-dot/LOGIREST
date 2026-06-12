@@ -38,8 +38,8 @@ describe('env.validation', () => {
 
     const mockExit = jest
       .spyOn(process, 'exit')
-      .mockImplementation((code?: any): never => {
-        throw new Error(`process.exit mock: ${code}`);
+      .mockImplementation((code?: unknown): never => {
+        throw new Error(`process.exit mock: ${String(code)}`);
       });
     const mockConsoleError = jest
       .spyOn(console, 'error')
@@ -63,8 +63,8 @@ describe('env.validation', () => {
 
     const mockExit = jest
       .spyOn(process, 'exit')
-      .mockImplementation((code?: any): never => {
-        throw new Error(`process.exit mock: ${code}`);
+      .mockImplementation((code?: unknown): never => {
+        throw new Error(`process.exit mock: ${String(code)}`);
       });
     const mockConsoleError = jest
       .spyOn(console, 'error')

@@ -42,7 +42,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcrypt: BcryptService,
-  ) { }
+  ) {}
 
   private getPermissionsForRole(role: UserRole): Permission[] {
     const modules = [
@@ -245,9 +245,23 @@ export class AdminService {
       return defaultSettings;
     }
 
-    let saved: Record<string, unknown> = {};
+    interface SystemPrintSettings {
+      defaultPaperSize?: 'A4' | '80mm' | '58mm';
+      default_paper_size?: 'A4' | '80mm' | '58mm';
+      thermalShowLogo?: boolean;
+      thermal_show_logo?: boolean;
+      autoPrintOnFulfill?: boolean;
+      auto_print_on_fulfill?: boolean;
+    }
+
+    interface SavedSystemSettings extends Record<string, unknown> {
+      printSettings?: SystemPrintSettings;
+      print_settings?: SystemPrintSettings;
+    }
+
+    let saved: SavedSystemSettings = {};
     try {
-      saved = JSON.parse(setting.value) as Record<string, unknown>;
+      saved = JSON.parse(setting.value) as SavedSystemSettings;
     } catch (e: unknown) {
       this.logger.error(
         `Failed to parse system settings JSON from DB: ${e instanceof Error ? e.message : String(e)}`,
@@ -255,6 +269,7 @@ export class AdminService {
     }
 
     // Stored blob may be in snake_case (legacy) – normalize to camelCase on read
+    const printSettingsData = saved.printSettings ?? saved.print_settings ?? {};
     return {
       id: 'system_settings',
       systemName: (saved.systemName ??
@@ -297,15 +312,20 @@ export class AdminService {
       version: setting.version,
       updatedAt: setting.updatedAt.toISOString(),
       printSettings: {
-        defaultPaperSize: ((saved.printSettings as any)?.defaultPaperSize ??
-          (saved.print_settings as any)?.default_paper_size ??
-          defaultSettings.printSettings.defaultPaperSize) as 'A4' | '80mm' | '58mm',
-        thermalShowLogo: !!((saved.printSettings as any)?.thermalShowLogo ??
-          (saved.print_settings as any)?.thermal_show_logo ??
-          defaultSettings.printSettings.thermalShowLogo),
-        autoPrintOnFulfill: !!((saved.printSettings as any)?.autoPrintOnFulfill ??
-          (saved.print_settings as any)?.auto_print_on_fulfill ??
-          defaultSettings.printSettings.autoPrintOnFulfill),
+        defaultPaperSize:
+          printSettingsData.defaultPaperSize ??
+          printSettingsData.default_paper_size ??
+          defaultSettings.printSettings.defaultPaperSize,
+        thermalShowLogo: !!(
+          printSettingsData.thermalShowLogo ??
+          printSettingsData.thermal_show_logo ??
+          defaultSettings.printSettings.thermalShowLogo
+        ),
+        autoPrintOnFulfill: !!(
+          printSettingsData.autoPrintOnFulfill ??
+          printSettingsData.auto_print_on_fulfill ??
+          defaultSettings.printSettings.autoPrintOnFulfill
+        ),
       },
     };
   }
@@ -353,15 +373,18 @@ export class AdminService {
       smtpUser: dto.smtpUser || '',
       smtpPassword: encryptedPassword,
       smtpEncryption: dto.smtpEncryption || 'none',
-      printSettings: dto.printSettings ? {
-        defaultPaperSize: dto.printSettings.defaultPaperSize || 'A4',
-        thermalShowLogo: dto.printSettings.thermalShowLogo ?? true,
-        autoPrintOnFulfill: dto.printSettings.autoPrintOnFulfill ?? false,
-      } : (savedConfig.printSettings ?? savedConfig.print_settings ?? {
-        defaultPaperSize: 'A4',
-        thermalShowLogo: true,
-        autoPrintOnFulfill: false,
-      }),
+      printSettings: dto.printSettings
+        ? {
+            defaultPaperSize: dto.printSettings.defaultPaperSize || 'A4',
+            thermalShowLogo: dto.printSettings.thermalShowLogo ?? true,
+            autoPrintOnFulfill: dto.printSettings.autoPrintOnFulfill ?? false,
+          }
+        : (savedConfig.printSettings ??
+          savedConfig.print_settings ?? {
+            defaultPaperSize: 'A4',
+            thermalShowLogo: true,
+            autoPrintOnFulfill: false,
+          }),
       updatedBy: userId,
     };
 
@@ -553,15 +576,15 @@ export class AdminService {
           departmentId: null,
           warehouse: s.warehouse
             ? {
-              id: s.warehouse.id,
-              name: s.warehouse.name,
-              branch: s.warehouse.branch
-                ? {
-                  id: s.warehouse.branch.id,
-                  name: s.warehouse.branch.name,
-                }
-                : null,
-            }
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+                branch: s.warehouse.branch
+                  ? {
+                      id: s.warehouse.branch.id,
+                      name: s.warehouse.branch.name,
+                    }
+                  : null,
+              }
             : null,
           department: null,
         })),
@@ -572,15 +595,15 @@ export class AdminService {
           warehouse: null,
           department: s.department
             ? {
-              id: s.department.id,
-              name: s.department.name,
-              branch: s.department.branch
-                ? {
-                  id: s.department.branch.id,
-                  name: s.department.branch.name,
-                }
-                : null,
-            }
+                id: s.department.id,
+                name: s.department.name,
+                branch: s.department.branch
+                  ? {
+                      id: s.department.branch.id,
+                      name: s.department.branch.name,
+                    }
+                  : null,
+              }
             : null,
         })),
         ...(user.branchScopes || []).map((s) => ({
@@ -653,15 +676,15 @@ export class AdminService {
           departmentId: null,
           warehouse: s.warehouse
             ? {
-              id: s.warehouse.id,
-              name: s.warehouse.name,
-              branch: s.warehouse.branch
-                ? {
-                  id: s.warehouse.branch.id,
-                  name: s.warehouse.branch.name,
-                }
-                : null,
-            }
+                id: s.warehouse.id,
+                name: s.warehouse.name,
+                branch: s.warehouse.branch
+                  ? {
+                      id: s.warehouse.branch.id,
+                      name: s.warehouse.branch.name,
+                    }
+                  : null,
+              }
             : null,
           department: null,
         })),
@@ -672,15 +695,15 @@ export class AdminService {
           warehouse: null,
           department: s.department
             ? {
-              id: s.department.id,
-              name: s.department.name,
-              branch: s.department.branch
-                ? {
-                  id: s.department.branch.id,
-                  name: s.department.branch.name,
-                }
-                : null,
-            }
+                id: s.department.id,
+                name: s.department.name,
+                branch: s.department.branch
+                  ? {
+                      id: s.department.branch.id,
+                      name: s.department.branch.name,
+                    }
+                  : null,
+              }
             : null,
         })),
         ...(user.branchScopes || []).map((s) => ({

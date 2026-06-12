@@ -6,14 +6,16 @@ import { getQueueToken } from '@nestjs/bullmq';
 
 describe('OutboxSweepJob', () => {
   let job: OutboxSweepJob;
-  let prismaMock: any;
-  let lockServiceMock: any;
-  let queueMock: any;
+  let prismaMock: Record<string, unknown>;
+  let lockServiceMock: Record<string, jest.Mock>;
+  let queueMock: Record<string, jest.Mock>;
+
+  const mockOutboxEventFindMany = jest.fn();
 
   beforeEach(async () => {
     prismaMock = {
       outboxEvent: {
-        findMany: jest.fn(),
+        findMany: mockOutboxEventFindMany,
       },
     };
 
@@ -44,7 +46,7 @@ describe('OutboxSweepJob', () => {
   });
 
   it('should skip re-enqueueing if no stale outbox events are found', async () => {
-    prismaMock.outboxEvent.findMany.mockResolvedValue([]);
+    mockOutboxEventFindMany.mockResolvedValue([]);
 
     await job.sweepStaleOutboxEvents();
 
@@ -53,7 +55,7 @@ describe('OutboxSweepJob', () => {
       250,
       expect.any(Function),
     );
-    expect(prismaMock.outboxEvent.findMany).toHaveBeenCalled();
+    expect(mockOutboxEventFindMany).toHaveBeenCalled();
     expect(queueMock.add).not.toHaveBeenCalled();
   });
 
@@ -72,11 +74,11 @@ describe('OutboxSweepJob', () => {
         attempts: 1,
       },
     ];
-    prismaMock.outboxEvent.findMany.mockResolvedValue(mockEvents);
+    mockOutboxEventFindMany.mockResolvedValue(mockEvents);
 
     await job.sweepStaleOutboxEvents();
 
-    expect(prismaMock.outboxEvent.findMany).toHaveBeenCalledWith(
+    expect(mockOutboxEventFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           status: 'PENDING',

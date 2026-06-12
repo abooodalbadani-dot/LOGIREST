@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
-import { Role, StocktakeStatus, LockType } from '@prisma/client';
+import { Role, StocktakeStatus, LockType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class StocktakeService {
@@ -34,9 +34,9 @@ export class StocktakeService {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.StocktakeSessionWhereInput = {};
     if (params.status) {
-      where.status = params.status as any;
+      where.status = params.status as StocktakeStatus;
     }
     if (warehouseId) {
       where.warehouseId = warehouseId;
@@ -90,7 +90,7 @@ export class StocktakeService {
   }
 
   async getSummary(warehouseId?: string) {
-    const where: any = {};
+    const where: Prisma.StocktakeSessionWhereInput = {};
     if (warehouseId) {
       where.warehouseId = warehouseId;
     }

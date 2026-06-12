@@ -27,6 +27,7 @@ describe('TransferVoidService', () => {
   const mockGoodsReceivedNoteFindFirst = jest.fn();
   const mockAdjustmentFindFirst = jest.fn();
 
+  const mockTransferUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
   const mockPrismaTx = {
     goodsReceivedNote: {
       findFirst: mockGoodsReceivedNoteFindFirst,
@@ -38,7 +39,7 @@ describe('TransferVoidService', () => {
       findUnique: mockTransferFindUnique,
       update: mockTransferUpdate,
       findFirst: mockTransferFindFirst,
-      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      updateMany: mockTransferUpdateMany,
     },
     stocktakeSession: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -162,7 +163,7 @@ describe('TransferVoidService', () => {
     expect(result).toBeDefined();
     expect(mockWarehouseItemUpdate).toHaveBeenCalled();
     expect(mockStockLedgerCreate).toHaveBeenCalled();
-    expect(mockPrismaTx.transfer.updateMany).toHaveBeenCalledWith({
+    expect(mockTransferUpdateMany).toHaveBeenCalledWith({
       where: { id: transferId, version: 1 },
       data: { status: 'VOIDED', version: 2 },
     });

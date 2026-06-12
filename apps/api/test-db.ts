@@ -19,7 +19,7 @@ async function main() {
   // Attempt to check active locks in Postgres
   try {
     console.log('Checking active locks/queries in PostgreSQL...');
-    const locks = await prisma.$queryRawUnsafe<any[]>(`
+    const locks = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`
       SELECT 
         t.schemaname,
         t.relname AS table_name,

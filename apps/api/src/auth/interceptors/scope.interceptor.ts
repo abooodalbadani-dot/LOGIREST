@@ -201,14 +201,17 @@ export class ScopeInterceptor implements NestInterceptor {
           },
         },
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const stack = e instanceof Error ? e.stack : undefined;
+      const dbErr = e as { code?: string; message?: string };
       this.logger.error(
-        `Database query failed in ScopeInterceptor: ${e.message}`,
-        e.stack,
+        `Database query failed in ScopeInterceptor: ${msg}`,
+        stack,
       );
       const isOutage =
-        (e.code && String(e.code).startsWith('P1')) ||
-        (e.message && /connection/i.test(e.message));
+        (dbErr.code && String(dbErr.code).startsWith('P1')) ||
+        (msg && /connection/i.test(msg));
       if (isOutage && !isExempt) {
         throw e;
       }

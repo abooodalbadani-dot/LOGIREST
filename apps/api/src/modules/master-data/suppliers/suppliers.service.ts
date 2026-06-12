@@ -5,6 +5,17 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Prisma } from '@prisma/client';
+
+interface SupplierDto {
+  code?: string;
+  name_en?: string;
+  name_ar?: string;
+  email?: string;
+  phone?: string;
+  is_active?: boolean;
+  version?: number;
+}
 
 @Injectable()
 export class SuppliersService {
@@ -19,7 +30,10 @@ export class SuppliersService {
     return first ? first.id : 'sar-id';
   }
 
-  private mapDbSupplierToFrontend(supplier: any, currencyId: string) {
+  private mapDbSupplierToFrontend(
+    supplier: Prisma.SupplierGetPayload<Record<string, never>>,
+    currencyId: string,
+  ) {
     return {
       id: supplier.id,
       code: supplier.code,
@@ -65,7 +79,7 @@ export class SuppliersService {
     return this.mapDbSupplierToFrontend(supplier, currencyId);
   }
 
-  async create(body: any, userId: string, ipAddress?: string) {
+  async create(body: SupplierDto, userId: string, ipAddress?: string) {
     let { code } = body;
     const { name_en, name_ar, email, phone } = body;
     if (!name_en && !name_ar) {
@@ -110,8 +124,8 @@ export class SuppliersService {
     const created = await this.prisma.$transaction(async (tx) => {
       const newSup = await tx.supplier.create({
         data: {
-          code,
-          name,
+          code: code,
+          name: name ?? '',
           contactEmail: email || null,
           contactPhone: phone || null,
           isActive: body.is_active !== undefined ? body.is_active : true,
@@ -138,7 +152,12 @@ export class SuppliersService {
     return this.mapDbSupplierToFrontend(created, currencyId);
   }
 
-  async update(id: string, body: any, userId: string, ipAddress?: string) {
+  async update(
+    id: string,
+    body: SupplierDto,
+    userId: string,
+    ipAddress?: string,
+  ) {
     const existing = await this.prisma.supplier.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Supplier with ID ${id} not found`);

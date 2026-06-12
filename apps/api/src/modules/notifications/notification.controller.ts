@@ -18,7 +18,11 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ActiveScope } from '../../auth/decorators/active-scope.decorator';
 import { NotificationService } from './notification.service';
-import { NotificationTemplateService } from './notification-template.service';
+import {
+  NotificationTemplateService,
+  CreateNotificationTemplateDto,
+  UpdateNotificationTemplateDto,
+} from './notification-template.service';
 import { ApiSecureController } from '../../decorators/swagger-docs.decorator';
 import { ScopeValidationService } from '../../auth/scope-validation.service';
 import { PrismaService } from '../../database/prisma.service';
@@ -134,7 +138,7 @@ export class NotificationController {
 
   @Post('templates')
   @Roles(Role.ADMIN)
-  async createTemplate(@Body() body: Record<string, unknown>) {
+  async createTemplate(@Body() body: CreateNotificationTemplateDto) {
     return this.templateService.create(body);
   }
 
@@ -142,7 +146,7 @@ export class NotificationController {
   @Roles(Role.ADMIN)
   async updateTemplate(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateNotificationTemplateDto,
   ) {
     return this.templateService.update(id, body);
   }

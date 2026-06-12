@@ -175,8 +175,21 @@ export class InventoryService {
       ? Prisma.sql`AND sl."itemId" = ${query.itemId}`
       : Prisma.empty;
 
+    interface RawMovementResult {
+      id: string;
+      timestamp: Date;
+      itemId: string;
+      itemCode: string;
+      itemName: string;
+      transactionType: string;
+      documentReference: string | null;
+      quantity: number | string;
+      balanceAfter: number | string;
+      performedByUserName: string | null;
+    }
+
     // Retrieve raw movements with calculated running balance using window functions (T024)
-    const rawMovements = await this.prisma.$queryRaw<any[]>`
+    const rawMovements = await this.prisma.$queryRaw<RawMovementResult[]>`
       WITH movements_with_balance AS (
         SELECT 
           sl.id,

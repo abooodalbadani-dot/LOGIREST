@@ -5,12 +5,21 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Prisma } from '@prisma/client';
+
+interface CategoryDto {
+  name_en?: string;
+  name_ar?: string;
+  version?: number;
+}
 
 @Injectable()
 export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapDbCategoryToFrontend(category: any) {
+  private mapDbCategoryToFrontend(
+    category: Prisma.CategoryGetPayload<Record<string, never>>,
+  ) {
     return {
       id: category.id,
       code: category.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
@@ -47,7 +56,7 @@ export class CategoriesService {
     return this.mapDbCategoryToFrontend(category);
   }
 
-  async create(body: any, userId: string, ipAddress?: string) {
+  async create(body: CategoryDto, userId: string, ipAddress?: string) {
     const { name_en, name_ar } = body;
     const name = name_en || name_ar;
     if (!name) {
@@ -87,7 +96,12 @@ export class CategoriesService {
     return this.mapDbCategoryToFrontend(created);
   }
 
-  async update(id: string, body: any, userId: string, ipAddress?: string) {
+  async update(
+    id: string,
+    body: CategoryDto,
+    userId: string,
+    ipAddress?: string,
+  ) {
     const existing = await this.prisma.category.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Category with ID ${id} not found`);

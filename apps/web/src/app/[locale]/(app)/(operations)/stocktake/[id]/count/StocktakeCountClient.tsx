@@ -59,8 +59,7 @@ export function StocktakeCountClient({ id, locale }: { id: string, locale: 'ar' 
   const [localCounts, setLocalCounts] = React.useState<Record<string, number>>({})
   const [focusedRowIndex, setFocusedRowIndex] = React.useState<number>(-1)
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rowVirtualizerRef = React.useRef<any>(null)
+  const rowVirtualizerRef = React.useRef<{ scrollToIndex: (index: number, options?: { align?: string }) => void } | null>(null)
   const inputRefs = React.useRef<Map<number, HTMLInputElement>>(new Map())
 
   const items = session?.items || []

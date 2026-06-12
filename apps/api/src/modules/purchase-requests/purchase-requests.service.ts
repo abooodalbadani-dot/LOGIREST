@@ -8,7 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../sequencing/document-number.service';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PurchaseRequestsService {
@@ -76,7 +76,7 @@ export class PurchaseRequestsService {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.PurchaseRequestWhereInput = {};
     if (params.status) {
       where.status = params.status;
     }
@@ -423,7 +423,8 @@ export class PurchaseRequestsService {
             error &&
             typeof error === 'object' &&
             'code' in error &&
-            (error as any).code === 'P2002'
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2002'
           ) {
             throw new ConflictException(
               `Purchase Request ${id} has already been converted to a Purchase Order.`,

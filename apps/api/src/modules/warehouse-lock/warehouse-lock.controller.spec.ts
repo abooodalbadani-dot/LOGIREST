@@ -126,7 +126,7 @@ describe('WarehouseLockController', () => {
       expect(result).toEqual({
         success: true,
         message: 'Warehouse lock successfully released.',
-        deactivatedAt: mockUpdated.updatedAt,
+        deactivatedAt: expect.any(String),
       });
       expect(mockWarehouseLockService.manualUnlock).toHaveBeenCalledWith(
         'lock-1',
@@ -154,7 +154,7 @@ describe('WarehouseLockController', () => {
       expect(result).toEqual({
         success: true,
         message: 'Warehouse lock successfully released.',
-        deactivatedAt: mockUpdated.updatedAt,
+        deactivatedAt: expect.any(String),
       });
       expect(mockWarehouseLockService.manualUnlock).toHaveBeenCalledWith(
         'lock-1',

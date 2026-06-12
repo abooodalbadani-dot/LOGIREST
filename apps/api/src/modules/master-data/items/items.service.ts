@@ -5,12 +5,34 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Prisma } from '@prisma/client';
+
+interface ItemCreateDto {
+  code?: string;
+  name_en?: string;
+  name_ar?: string;
+  category_id?: string;
+  primary_uom_id?: string;
+  track_lots?: boolean;
+  min_stock_level?: number;
+  reorder_point?: number;
+  is_active?: boolean;
+  barcode?: string;
+}
+
+interface ItemUpdateDto extends ItemCreateDto {
+  version?: number;
+}
 
 @Injectable()
 export class ItemsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapDbItemToFrontend(item: any) {
+  private mapDbItemToFrontend(
+    item: Prisma.ItemGetPayload<{
+      include: { unitOfMeasure: true; barcodeMappings: true; category: true };
+    }>,
+  ) {
     return {
       id: item.id,
       code: item.sku,
@@ -26,8 +48,7 @@ export class ItemsService {
             name_en: item.unitOfMeasure.name,
             category: 'General',
             is_active: true,
-            created_at:
-              item.unitOfMeasure.createdAt || new Date().toISOString(),
+            created_at: new Date().toISOString(),
             version: item.unitOfMeasure.version,
           }
         : null,
@@ -55,7 +76,7 @@ export class ItemsService {
     const limitNum = filters.limit ? parseInt(filters.limit, 10) : 10;
     const skip = (pageNum - 1) * limitNum;
 
-    const where: any = {};
+    const where: Prisma.ItemWhereInput = {};
 
     if (filters.is_active !== undefined) {
       where.isActive = filters.is_active === 'true';
@@ -131,7 +152,7 @@ export class ItemsService {
     };
   }
 
-  async create(body: any, userId: string, ipAddress?: string) {
+  async create(body: ItemCreateDto, userId: string, ipAddress?: string) {
     let { code } = body;
     const {
       name_en,
@@ -230,7 +251,12 @@ export class ItemsService {
     return this.findOne(created.id);
   }
 
-  async update(id: string, body: any, userId: string, ipAddress?: string) {
+  async update(
+    id: string,
+    body: ItemUpdateDto,
+    userId: string,
+    ipAddress?: string,
+  ) {
     const existing = await this.prisma.item.findUnique({
       where: { id },
       include: { barcodeMappings: true },

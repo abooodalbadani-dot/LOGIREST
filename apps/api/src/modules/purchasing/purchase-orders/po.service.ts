@@ -8,7 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -105,7 +105,7 @@ export class PurchaseOrderService {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.PurchaseOrderWhereInput = {};
     if (params.status) {
       where.status = params.status;
     }

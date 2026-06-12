@@ -25,7 +25,7 @@ export class MetricsInterceptor implements NestInterceptor {
       });
   }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest();
     const start = Date.now();
     const method = req.method;

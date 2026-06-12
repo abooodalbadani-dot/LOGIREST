@@ -10,35 +10,48 @@ describe('StocktakeService', () => {
   let prisma: PrismaService;
   let workflowService: WorkflowService;
 
-  const mockPrisma: any = {
+  const mockStocktakeSessionCreate = jest.fn();
+  const mockStocktakeSessionFindUnique = jest.fn();
+  const mockStocktakeSessionUpdate = jest.fn();
+  const mockWarehouseUpdate = jest.fn();
+  const mockWarehouseLockCreate = jest.fn();
+  const mockWarehouseLockUpdateMany = jest.fn();
+  const mockWarehouseItemFindMany = jest.fn();
+  const mockWarehouseItemLotFindMany = jest.fn();
+  const mockStocktakeSnapshotCreateMany = jest.fn();
+  const mockStocktakeCountFindFirst = jest.fn();
+  const mockStocktakeCountCreate = jest.fn();
+  const mockStocktakeCountUpdate = jest.fn();
+
+  const mockPrisma = {
     stocktakeSession: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
+      create: mockStocktakeSessionCreate,
+      findUnique: mockStocktakeSessionFindUnique,
+      update: mockStocktakeSessionUpdate,
     },
     warehouse: {
-      update: jest.fn(),
+      update: mockWarehouseUpdate,
     },
     warehouseLock: {
-      create: jest.fn(),
-      updateMany: jest.fn(),
+      create: mockWarehouseLockCreate,
+      updateMany: mockWarehouseLockUpdateMany,
     },
     warehouseItem: {
-      findMany: jest.fn(),
+      findMany: mockWarehouseItemFindMany,
     },
     warehouseItemLot: {
-      findMany: jest.fn(),
+      findMany: mockWarehouseItemLotFindMany,
     },
     stocktakeSnapshot: {
-      createMany: jest.fn(),
+      createMany: mockStocktakeSnapshotCreateMany,
     },
     stocktakeCount: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      findFirst: mockStocktakeCountFindFirst,
+      create: mockStocktakeCountCreate,
+      update: mockStocktakeCountUpdate,
     },
     $transaction: jest.fn((callback) => callback(mockPrisma)),
-  };
+  } as unknown as PrismaService;
 
   const mockWorkflowService = {
     executeTransition: jest.fn(),
@@ -62,7 +75,7 @@ describe('StocktakeService', () => {
 
   describe('create', () => {
     it('should create session', async () => {
-      mockPrisma.stocktakeSession.create.mockResolvedValue({ id: 's-1' });
+      mockStocktakeSessionCreate.mockResolvedValue({ id: 's-1' });
 
       const result = await service.create({ warehouseId: 'wh-1' }, 'user-1');
       expect(result).toEqual({ id: 's-1' });
@@ -74,7 +87,7 @@ describe('StocktakeService', () => {
     const role = 'WH_KEEPER' as Role;
 
     it('should throw NotFoundException if session does not exist', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue(null);
+      mockStocktakeSessionFindUnique.mockResolvedValue(null);
 
       await expect(service.start('s-1', userId, role, {})).rejects.toThrow(
         NotFoundException,
@@ -82,7 +95,7 @@ describe('StocktakeService', () => {
     });
 
     it('should throw BadRequestException if not DRAFT status', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue({
+      mockStocktakeSessionFindUnique.mockResolvedValue({
         id: 's-1',
         status: 'STARTED',
       });
@@ -93,12 +106,12 @@ describe('StocktakeService', () => {
     });
 
     it('should lock warehouse, write snapshot, and execute transition', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue({
+      mockStocktakeSessionFindUnique.mockResolvedValue({
         id: 's-1',
         status: 'DRAFT',
         warehouseId: 'wh-1',
       });
-      mockPrisma.warehouseItem.findMany.mockResolvedValue([
+      mockWarehouseItemFindMany.mockResolvedValue([
         {
           itemId: 'item-1',
           qtyOnHand: 10,
@@ -106,7 +119,7 @@ describe('StocktakeService', () => {
           item: { isBatched: false, hasExpiry: false },
         },
       ]);
-      mockPrisma.warehouseItemLot.findMany.mockResolvedValue([]);
+      mockWarehouseItemLotFindMany.mockResolvedValue([]);
       mockWorkflowService.executeTransition.mockResolvedValue({
         id: 's-1',
         status: 'STARTED',
@@ -117,17 +130,17 @@ describe('StocktakeService', () => {
         comments: 'start',
       });
       expect(result).toEqual({ id: 's-1', status: 'STARTED' });
-      expect(mockPrisma.warehouse.update).toHaveBeenCalledWith({
+      expect(mockWarehouseUpdate).toHaveBeenCalledWith({
         where: { id: 'wh-1' },
         data: { isLocked: true },
       });
-      expect(mockPrisma.stocktakeSnapshot.createMany).toHaveBeenCalled();
+      expect(mockStocktakeSnapshotCreateMany).toHaveBeenCalled();
     });
   });
 
   describe('count', () => {
     it('should throw NotFoundException if session does not exist', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue(null);
+      mockStocktakeSessionFindUnique.mockResolvedValue(null);
 
       await expect(service.count('s-1', [], 'user-1')).rejects.toThrow(
         NotFoundException,
@@ -135,7 +148,7 @@ describe('StocktakeService', () => {
     });
 
     it('should throw BadRequestException if session is not in STARTED or COUNTING status', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue({
+      mockStocktakeSessionFindUnique.mockResolvedValue({
         id: 's-1',
         status: 'DRAFT',
       });
@@ -146,11 +159,11 @@ describe('StocktakeService', () => {
     });
 
     it('should create new count if none exists', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue({
+      mockStocktakeSessionFindUnique.mockResolvedValue({
         id: 's-1',
         status: 'STARTED',
       });
-      mockPrisma.stocktakeCount.findFirst.mockResolvedValue(null);
+      mockStocktakeCountFindFirst.mockResolvedValue(null);
 
       const result = await service.count(
         's-1',
@@ -158,8 +171,8 @@ describe('StocktakeService', () => {
         'user-1',
       );
       expect(result).toEqual({ success: true });
-      expect(mockPrisma.stocktakeCount.create).toHaveBeenCalled();
-      expect(mockPrisma.stocktakeSession.update).toHaveBeenCalledWith({
+      expect(mockStocktakeCountCreate).toHaveBeenCalled();
+      expect(mockStocktakeSessionUpdate).toHaveBeenCalledWith({
         where: { id: 's-1' },
         data: { status: 'COUNTING' },
       });
@@ -168,7 +181,7 @@ describe('StocktakeService', () => {
 
   describe('cancel', () => {
     it('should unlock warehouse and transition session to cancelled', async () => {
-      mockPrisma.stocktakeSession.findUnique.mockResolvedValue({
+      mockStocktakeSessionFindUnique.mockResolvedValue({
         id: 's-1',
         status: 'STARTED',
         warehouseId: 'wh-1',
@@ -180,11 +193,11 @@ describe('StocktakeService', () => {
 
       const result = await service.cancel('s-1', 'user-1', 'WH_KEEPER', {});
       expect(result).toEqual({ id: 's-1', status: 'CANCELLED' });
-      expect(mockPrisma.warehouse.update).toHaveBeenCalledWith({
+      expect(mockWarehouseUpdate).toHaveBeenCalledWith({
         where: { id: 'wh-1' },
         data: { isLocked: false },
       });
-      expect(mockPrisma.warehouseLock.updateMany).toHaveBeenCalledWith({
+      expect(mockWarehouseLockUpdateMany).toHaveBeenCalledWith({
         where: { warehouseId: 'wh-1', isActive: true },
         data: { isActive: false },
       });

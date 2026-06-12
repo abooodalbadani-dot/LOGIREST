@@ -56,7 +56,14 @@ describe('ConcurrencyService', () => {
       fail('Expected handleConflict to throw VersionConflictException');
     } catch (error) {
       expect(error).toBeInstanceOf(VersionConflictException);
-      const response = (error as VersionConflictException).getResponse() as any;
+      const response = (
+        error as VersionConflictException
+      ).getResponse() as unknown as {
+        statusCode: number;
+        currentVersion: number;
+        lastModifiedBy: string;
+        lastModifiedAt: Date;
+      };
       expect(response.statusCode).toBe(409);
       expect(response.currentVersion).toBe(2);
       expect(response.lastModifiedBy).toBe('Jane Doe');
@@ -75,7 +82,14 @@ describe('ConcurrencyService', () => {
       fail('Expected handleConflict to throw VersionConflictException');
     } catch (error) {
       expect(error).toBeInstanceOf(VersionConflictException);
-      const response = (error as VersionConflictException).getResponse() as any;
+      const response = (
+        error as VersionConflictException
+      ).getResponse() as unknown as {
+        statusCode: number;
+        currentVersion: number;
+        lastModifiedBy: string;
+        lastModifiedAt: Date;
+      };
       expect(response.statusCode).toBe(409);
       expect(response.currentVersion).toBe(2);
       expect(response.lastModifiedBy).toBe('John Doe');
@@ -93,7 +107,14 @@ describe('ConcurrencyService', () => {
       fail('Expected handleConflict to throw VersionConflictException');
     } catch (error) {
       expect(error).toBeInstanceOf(VersionConflictException);
-      const response = (error as VersionConflictException).getResponse() as any;
+      const response = (
+        error as VersionConflictException
+      ).getResponse() as unknown as {
+        statusCode: number;
+        currentVersion: number;
+        lastModifiedBy: string;
+        lastModifiedAt: Date;
+      };
       expect(response.statusCode).toBe(409);
       expect(response.currentVersion).toBe(2);
       expect(response.lastModifiedBy).toBe('Unknown');

@@ -16,11 +16,10 @@ export class BackupCron {
       this.logger.log(
         `Cron: Daily backup completed successfully. S3 Key: ${result.key}, Size: ${result.size} bytes.`,
       );
-    } catch (e: any) {
-      this.logger.error(
-        `Cron: Daily database backup failed: ${e.message}`,
-        e.stack,
-      );
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const stack = e instanceof Error ? e.stack : undefined;
+      this.logger.error(`Cron: Daily database backup failed: ${msg}`, stack);
     }
   }
 }

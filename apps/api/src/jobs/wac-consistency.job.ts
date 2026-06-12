@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationService } from '../modules/notifications/notification.service';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 
 @Injectable()
 export class WacConsistencyJob {
@@ -33,7 +33,7 @@ export class WacConsistencyJob {
 
       // O(2) queries regardless of item count
       const latestWacByItem = await this.prisma.$queryRaw<
-        Array<{ warehouseId: string; itemId: string; newWac: any }>
+        Array<{ warehouseId: string; itemId: string; newWac: Prisma.Decimal }>
       >`
         SELECT DISTINCT ON ("warehouseId", "itemId")
           "warehouseId", "itemId", "newWac"

@@ -551,10 +551,11 @@ export class WorkflowService {
     } catch (error) {
       // Failed transition logging outside the transaction
       const errorMsg = error instanceof Error ? error.message : String(error);
-      const beforeState = fetchedDoc
+      const docState = fetchedDoc as DynamicDocument | null;
+      const beforeState = docState
         ? {
-            status: (fetchedDoc as any).status,
-            version: (fetchedDoc as any).version,
+            status: docState.status,
+            version: docState.version,
           }
         : undefined;
       await this.writeAuditLog(

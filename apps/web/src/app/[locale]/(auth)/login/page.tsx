@@ -63,7 +63,7 @@ export default function LoginPage() {
     }, [user, authLoading, router, isAuthReason]);
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginValues>({
-        resolver: zodResolver(loginSchema as z.ZodType<LoginValues, any, any>),
+        resolver: zodResolver(loginSchema),
     });
 
     const onSubmit = async (values: LoginValues) => {

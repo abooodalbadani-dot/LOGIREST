@@ -3,7 +3,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { WorkflowService } from '../../workflow/workflow.service';
 import { Role } from '@logirest/shared-types';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class TransfersService {
@@ -70,7 +70,7 @@ export class TransfersService {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.TransferWhereInput = {};
     if (params.status) {
       where.status = params.status;
     }
@@ -93,9 +93,14 @@ export class TransfersService {
       });
     }
     if (params.search) {
-      const searchCondition = {
+      const searchCondition: Prisma.TransferWhereInput = {
         OR: [
-          { transferNumber: { contains: params.search, mode: 'insensitive' } },
+          {
+            transferNumber: {
+              contains: params.search,
+              mode: Prisma.QueryMode.insensitive,
+            },
+          },
         ],
       };
       if (where.AND) {
@@ -136,7 +141,7 @@ export class TransfersService {
   }
 
   async getSummary(warehouseId?: string) {
-    const where: any = {};
+    const where: Prisma.TransferWhereInput = {};
     if (warehouseId) {
       where.OR = [
         { fromWarehouseId: warehouseId },

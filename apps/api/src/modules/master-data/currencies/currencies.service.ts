@@ -1,11 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { Prisma } from '@prisma/client';
+
+interface CurrencyDto {
+  code?: string;
+  name_en?: string;
+  name_ar?: string;
+  is_base_currency?: boolean;
+  version?: number;
+}
 
 @Injectable()
 export class CurrenciesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private mapDbCurrencyToFrontend(currency: any) {
+  private mapDbCurrencyToFrontend(
+    currency: Prisma.CurrencyGetPayload<Record<string, never>>,
+  ) {
     return {
       id: currency.id,
       code: currency.code,
@@ -50,7 +61,7 @@ export class CurrenciesService {
     return this.mapDbCurrencyToFrontend(currency);
   }
 
-  async create(data: any) {
+  async create(data: CurrencyDto) {
     if (data.is_base_currency) {
       await this.prisma.currency.updateMany({
         where: { isBase: true },
@@ -60,15 +71,15 @@ export class CurrenciesService {
 
     const currency = await this.prisma.currency.create({
       data: {
-        code: data.code,
-        name: data.name_en || data.name_ar || '',
+        code: data.code ?? '',
+        name: data.name_en ?? data.name_ar ?? '',
         isBase: data.is_base_currency ?? false,
       },
     });
     return this.mapDbCurrencyToFrontend(currency);
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: CurrencyDto) {
     if (data.is_base_currency) {
       await this.prisma.currency.updateMany({
         where: { isBase: true },

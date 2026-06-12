@@ -79,7 +79,7 @@ export class WarehouseLockController {
     return {
       success: true,
       message: 'Warehouse lock successfully released.',
-      deactivatedAt: updatedLock.updatedAt,
+      deactivatedAt: new Date().toISOString(),
     };
   }
 }

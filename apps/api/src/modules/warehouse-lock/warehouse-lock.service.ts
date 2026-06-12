@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { WarehouseLock } from '@prisma/client';
 
 @Injectable()
 export class WarehouseLockService {
@@ -17,7 +18,7 @@ export class WarehouseLockService {
     adminId: string,
     reasonNotes: string,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<WarehouseLock> {
     // 1. Retrieve the lock details
     const lock = await this.prisma.warehouseLock.findUnique({
       where: { id: lockId },
@@ -75,7 +76,7 @@ export class WarehouseLockService {
     lockId: string,
     userId: string,
     ipAddress?: string,
-  ): Promise<any> {
+  ): Promise<WarehouseLock> {
     const lock = await this.prisma.warehouseLock.findUnique({
       where: { id: lockId },
     });

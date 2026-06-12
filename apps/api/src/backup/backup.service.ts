@@ -82,9 +82,10 @@ export class BackupService {
       username = dbUrl.username || username;
       password = decodeURIComponent(dbUrl.password || '');
       database = dbUrl.pathname.substring(1) || database;
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
       this.logger.warn(
-        `Failed parsing DATABASE_URL using URL parser: ${e.message}. Using default params.`,
+        `Failed parsing DATABASE_URL using URL parser: ${msg}. Using default params.`,
       );
     }
 
@@ -102,9 +103,10 @@ export class BackupService {
         },
       );
       dumpData = stdout;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
       this.logger.warn(
-        `Local pg_dump failed: ${err.message}. Trying docker exec fallback...`,
+        `Local pg_dump failed: ${errMsg}. Trying docker exec fallback...`,
       );
       try {
         const containerName = process.env.BACKUP_DB_CONTAINER || 'logirest-db';
@@ -117,10 +119,10 @@ export class BackupService {
           },
         );
         dumpData = stdout;
-      } catch (dockerErr: any) {
-        this.logger.error(
-          `Docker pg_dump fallback failed: ${dockerErr.message}`,
-        );
+      } catch (dockerErr: unknown) {
+        const dockerMsg =
+          dockerErr instanceof Error ? dockerErr.message : String(dockerErr);
+        this.logger.error(`Docker pg_dump fallback failed: ${dockerMsg}`);
         throw new Error(
           `Database dump failed: both local pg_dump and docker fallback failed.`,
         );
@@ -172,8 +174,15 @@ export class BackupService {
     // Ensure bucket exists
     try {
       await this.s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
-    } catch (e: any) {
-      if (e.name === 'NotFound' || e.$metadata?.httpStatusCode === 404) {
+    } catch (e: unknown) {
+      const s3Err = e as {
+        name?: string;
+        $metadata?: { httpStatusCode?: number };
+      };
+      if (
+        s3Err.name === 'NotFound' ||
+        s3Err.$metadata?.httpStatusCode === 404
+      ) {
         this.logger.log(`Bucket '${bucketName}' does not exist. Creating...`);
         await this.s3Client.send(
           new CreateBucketCommand({ Bucket: bucketName }),
@@ -254,8 +263,9 @@ export class BackupService {
         lastBackupAt: lastBackupDate.toISOString(),
         ageHours: Number(ageHours.toFixed(1)),
       };
-    } catch (e: any) {
-      this.logger.error(`Failed to get backup status: ${e.message}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.error(`Failed to get backup status: ${msg}`);
       return {
         status: 'degraded',
         lastBackupAt: null,

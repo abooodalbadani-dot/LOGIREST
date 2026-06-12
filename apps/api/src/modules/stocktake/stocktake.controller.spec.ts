@@ -31,12 +31,14 @@ describe('StocktakeController', () => {
     post: jest.fn(),
   };
 
-  const mockPrismaService: any = {
+  const mockStocktakeSessionFindUnique = jest.fn();
+
+  const mockPrismaService = {
     $transaction: jest.fn((cb) => cb(mockPrismaService)),
     stocktakeSession: {
-      findUnique: jest.fn(),
+      findUnique: mockStocktakeSessionFindUnique,
     },
-  };
+  } as unknown as PrismaService;
   const mockWorkflowService = {};
 
   const mockRequest = {
@@ -68,7 +70,7 @@ describe('StocktakeController', () => {
       id: 'session-1',
       warehouseId: 'wh-1',
     });
-    mockPrismaService.stocktakeSession.findUnique.mockResolvedValue({
+    mockStocktakeSessionFindUnique.mockResolvedValue({
       warehouseId: 'wh-1',
     });
   });

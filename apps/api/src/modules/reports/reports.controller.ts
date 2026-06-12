@@ -402,7 +402,7 @@ export class ReportsController {
         const rowValues = columns.map((col) => {
           const val = item[col.key];
           if (col.isDate && val) {
-            return new Date(val);
+            return new Date(val as string | number | Date);
           }
           if (col.isNumber && val !== undefined && val !== null) {
             return Number(val);

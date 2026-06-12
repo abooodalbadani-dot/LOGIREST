@@ -146,7 +146,7 @@ describe('WorkflowStateGuard', () => {
     mockWorkflowService.verifyRolePermission.mockReturnValue(true);
     mockWorkflowService.getNextStatus.mockReturnValue('SUBMITTED');
 
-    const req: any = {
+    const req: Record<string, unknown> = {
       user: { id: 'user-1', role: 'PROC_OFFICER' },
       params: { id: 'doc-1' },
       headers: {},
@@ -162,8 +162,9 @@ describe('WorkflowStateGuard', () => {
 
     const result = await guard.canActivate(ctx);
     expect(result).toBe(true);
-    expect(req.workflowContext).toBeDefined();
-    expect(req.workflowContext.document).toEqual(doc);
-    expect(req.workflowContext.targetStatus).toBe('SUBMITTED');
+    const reqCtx = req as unknown as { workflowContext: Record<string, unknown> };
+    expect(reqCtx.workflowContext.workflowName).toBe('PURCHASE_REQUEST');
+    expect(reqCtx.workflowContext.currentStatus).toBe('DRAFT');
+    expect(reqCtx.workflowContext.nextStatus).toBe('SUBMITTED');
   });
 });

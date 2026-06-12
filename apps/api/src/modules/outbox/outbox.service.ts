@@ -25,7 +25,9 @@ export class OutboxService {
 
     const documentId =
       payload && typeof payload === 'object' && 'id' in payload && payload.id
-        ? String(payload.id)
+        ? typeof payload.id === 'string' || typeof payload.id === 'number'
+          ? String(payload.id)
+          : ''
         : null;
 
     const eventHash = createHash('sha256')

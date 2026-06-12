@@ -11,6 +11,8 @@ import {
   AdjustmentDirection,
   AdjustmentReason,
   DocumentType,
+  Prisma,
+  $Enums,
 } from '@prisma/client';
 import { DocumentNumberService } from '../../sequencing/document-number.service';
 
@@ -124,7 +126,7 @@ export class AdjustmentsService {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.AdjustmentWhereInput = {};
     if (params.status) {
       where.status = params.status;
     }
@@ -168,7 +170,7 @@ export class AdjustmentsService {
   }
 
   async getSummary(warehouseId?: string) {
-    const where: any = {};
+    const where: Prisma.AdjustmentWhereInput = {};
     if (warehouseId) {
       where.warehouseId = warehouseId;
     }
@@ -383,7 +385,7 @@ export class AdjustmentsService {
           toStatus: 'DRAFT',
           actionPerformed: 'EDIT',
           userId,
-          userRole: userRole as any,
+          userRole: userRole,
           stepNumber,
           comments: 'Reset to Draft for editing',
         },

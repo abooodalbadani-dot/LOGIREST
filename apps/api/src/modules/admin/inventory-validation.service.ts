@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 
 export interface Discrepancy {
   type: 'ITEM_LEDGER_PARITY' | 'LOT_LEDGER_PARITY' | 'LOT_ITEM_AGGREGATION';
@@ -196,7 +196,7 @@ export class InventoryValidationService {
       await this.prisma.outboxEvent.create({
         data: {
           eventType: 'SLACK_VALIDATION_ALERT',
-          payload: payload as any,
+          payload: payload,
           status: 'PENDING',
           attempts: 0,
           expiresAt,
@@ -206,7 +206,7 @@ export class InventoryValidationService {
       await this.prisma.outboxEvent.create({
         data: {
           eventType: 'EMAIL_VALIDATION_ALERT',
-          payload: payload as any,
+          payload: payload,
           status: 'PENDING',
           attempts: 0,
           expiresAt,

@@ -22,6 +22,28 @@ export interface NotificationTemplate {
   allowed_parameters: TemplateParameter[];
 }
 
+export class CreateNotificationTemplateDto {
+  code!: string;
+  subject_ar?: string;
+  subject_en?: string;
+  body_ar?: string;
+  body_en?: string;
+  trigger_event!: string;
+  is_active?: boolean;
+  allowed_parameters?: TemplateParameter[];
+}
+
+export class UpdateNotificationTemplateDto {
+  code?: string;
+  subject_ar?: string;
+  subject_en?: string;
+  body_ar?: string;
+  body_en?: string;
+  trigger_event?: string;
+  is_active?: boolean;
+  allowed_parameters?: TemplateParameter[];
+}
+
 export interface EmailOutboxEntry {
   id: string;
   template_id: string;
@@ -341,7 +363,7 @@ export class NotificationTemplateService {
     return template;
   }
 
-  create(body: any) {
+  create(body: CreateNotificationTemplateDto) {
     const newTemplate: NotificationTemplate = {
       id: `tmpl-${Date.now()}`,
       code: body.code,
@@ -357,7 +379,7 @@ export class NotificationTemplateService {
     return newTemplate;
   }
 
-  update(id: string, body: any) {
+  update(id: string, body: UpdateNotificationTemplateDto) {
     const index = this.templates.findIndex((t) => t.id === id);
     if (index === -1) {
       throw new NotFoundException(`Template with ID ${id} not found`);

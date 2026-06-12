@@ -39,7 +39,9 @@ describe('KitchenRequestVoidService', () => {
 
   const mockTransaction = jest
     .fn()
-    .mockImplementation((cb: any, _options?: any) => cb(mockPrismaTx));
+    .mockImplementation((cb: (tx: unknown) => unknown, _options?: unknown) =>
+      cb(mockPrismaTx),
+    );
   const mockPrisma = {
     $transaction: mockTransaction,
   } as unknown as PrismaService;
@@ -178,7 +180,7 @@ describe('KitchenRequestVoidService', () => {
     mockLockService.lockItem.mockResolvedValue({
       wac: new Prisma.Decimal(10),
       qtyOnHand: new Prisma.Decimal(100),
-    } as any);
+    } as unknown as Prisma.WarehouseItemGetPayload<Record<string, never>>);
     mockIssueVoidService.void.mockResolvedValue(undefined);
 
     const result: unknown = await service.void(krId, userId, Role.ADMIN, 1);
@@ -219,7 +221,7 @@ describe('KitchenRequestVoidService', () => {
 
     mockLockService.lockItem.mockResolvedValue({
       wac: new Prisma.Decimal(10),
-    } as any);
+    } as unknown as Prisma.WarehouseItemGetPayload<Record<string, never>>);
     mockIssueVoidService.void.mockRejectedValue(
       new BadRequestException('Issue cannot be voided'),
     );
