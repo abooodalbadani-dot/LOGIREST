@@ -3,7 +3,7 @@ import StocktakeVarianceClient from './StocktakeVarianceClient';
 
 export async function generateMetadata() {
  return {
- title: 'Stocktake Variance Report | LogiRest'
+ title: 'Stocktake Variance Report | Otantik مطاعم'
  };
 }
 

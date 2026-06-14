@@ -5,7 +5,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'auth' });
   return {
-    title: `${t('login.title')} | LogiRest`,
+    title: `${t('login.title')} | Otantik مطاعم`,
     description: 'Secure authentication portal for the Kitchen-Store Inventory System.',
   };
 }

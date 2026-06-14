@@ -5,7 +5,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'master_data.currencies' });
  return {
- title: `${t('fx_rates_title')} | LogiRest`,
+ title: `${t('fx_rates_title')} | Otantik مطاعم`,
  description: 'Historical exchange rates and currency conversion management',
  };
 }

@@ -23,7 +23,7 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
   const { user, logout, activeScope } = useAuth();
   const { displayName, avatarUrl } = useUserProfile();
   const { branchName, warehouseName, isLoading } = useContextScope();
-  
+
   const isMissingDepartment = user?.role === 'KITCHEN_CHIEF' && !activeScope?.departmentId;
   const isMissingWarehouse = user?.role === 'STORE_MGR' && !activeScope?.warehouseId;
   const isScopeMissing = isMissingDepartment || isMissingWarehouse;
@@ -36,7 +36,7 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
     <header className="h-14 bg-surface-container-lowest flex items-center justify-between px-4 sticky top-0 z-40">
       <div className="flex items-center gap-4">
         {/* Mobile Menu Button */}
-        <button 
+        <button
           onClick={onMenuClick}
           className="p-2 -ms-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-lg md:hidden transition-all"
         >
@@ -50,9 +50,8 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
         {user && (
           <button
             onClick={() => setIsSelectorOpen(true)}
-            className={`flex items-center gap-3 px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all group relative overflow-hidden ${
-              isScopeMissing ? 'ring-2 ring-status-warning ring-offset-2 animate-pulse' : ''
-            }`}
+            className={`flex items-center gap-3 px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all group relative overflow-hidden ${isScopeMissing ? 'ring-2 ring-status-warning ring-offset-2 animate-pulse' : ''
+              }`}
           >
             {/* Subtle glow effect */}
             <div className="absolute inset-0 bg-operational-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -81,7 +80,7 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
-        <Link 
+        <Link
           href="/search"
           className="p-2 text-muted-foreground/60 hover:text-operational-cyan hover:bg-operational-cyan/10 rounded-xl transition-all"
           title={tc('search')}
@@ -97,7 +96,7 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
       <div className="flex items-center gap-2 md:gap-4">
         {user ? (
           <>
-            <Link 
+            <Link
               href="/profile"
               className="flex items-center gap-3 pe-2 md:pe-4 group"
             >

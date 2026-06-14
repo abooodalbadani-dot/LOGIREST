@@ -157,6 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (finalUser.locale) {
           document.cookie = `NEXT_LOCALE=${finalUser.locale}; path=/; max-age=31536000; SameSite=Lax`;
         }
+        if (finalUser.themePreferences) {
+          document.cookie = `theme=${finalUser.themePreferences}; path=/; max-age=31536000; SameSite=Lax`;
+        }
         setUser(finalUser);
         setToken(storedToken);
 
@@ -313,6 +316,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (parsedUser.locale) {
         document.cookie = `NEXT_LOCALE=${parsedUser.locale}; path=/; max-age=31536000; SameSite=Lax`;
+      }
+      if (parsedUser.themePreferences) {
+        document.cookie = `theme=${parsedUser.themePreferences}; path=/; max-age=31536000; SameSite=Lax`;
       }
       setUser(parsedUser);
       setToken(data.token);

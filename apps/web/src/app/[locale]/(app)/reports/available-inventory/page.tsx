@@ -3,7 +3,7 @@ import AvailableInventoryClient from './AvailableInventoryClient';
 
 export async function generateMetadata() {
  return {
- title: 'Available Inventory Report | LogiRest'
+ title: 'Available Inventory Report | Otantik مطاعم'
  };
 }
 

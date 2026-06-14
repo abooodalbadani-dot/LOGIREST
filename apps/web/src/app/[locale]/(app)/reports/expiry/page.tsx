@@ -3,7 +3,7 @@ import ExpiryReportClient from './ExpiryReportClient';
 
 export async function generateMetadata() {
  return {
- title: 'Expiry Report | LogiRest'
+ title: 'Expiry Report | Otantik مطاعم'
  };
 }
 

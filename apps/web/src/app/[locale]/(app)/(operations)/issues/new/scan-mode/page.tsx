@@ -1,7 +1,7 @@
 import { IssueScanClient } from "./issue-scan-client";
 import ProtectedRoute from "@/components/shared/ProtectedRoute";
 
-export const metadata = { title: "وضع المسح — الصرف | LogiRest" };
+export const metadata = { title: "وضع المسح — الصرف | Otantik مطاعم" };
 
 export default function IssueScanPage() {
  return (

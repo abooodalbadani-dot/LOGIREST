@@ -6,7 +6,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'master_data.warehouses' });
  return {
- title: `${t('title')} | LogiRest`,
+ title: `${t('title')} | Otantik مطاعم`,
  description: t('description'),
  };
 }

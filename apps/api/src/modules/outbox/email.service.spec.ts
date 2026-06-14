@@ -94,7 +94,7 @@ describe('EmailService', () => {
     });
     expect(mockTransporter.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: 'noreply@otantikrestuarant.com',
+        from: '"Otantik Restuarant Alerts" <noreply@otantikrestuarant.com>',
         to: 'test@example.com',
         subject: 'Test Subject',
         html: expect.stringContaining(

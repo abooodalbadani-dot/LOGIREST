@@ -3,7 +3,7 @@ import LotTraceReportClient from '@/features/reports/components/LotTraceReport';
 
 export async function generateMetadata() {
   return {
-    title: 'Lot Trace Report | LogiRest',
+    title: 'Lot Trace Report | Otantik مطاعم',
   };
 }
 

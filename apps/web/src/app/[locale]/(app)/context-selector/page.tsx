@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/shared/ProtectedRoute';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
  return {
- title: `Context Selector | LogiRest`,
+ title: `Context Selector | Otantik مطاعم`,
  };
 }
 

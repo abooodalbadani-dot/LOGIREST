@@ -5,7 +5,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'dashboard' });
  return {
- title: `Dashboard | LogiRest`,
+ title: `Dashboard | Otantik مطاعم`,
  description: t('description'),
  };
 }

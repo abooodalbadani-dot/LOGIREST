@@ -3,7 +3,7 @@ import { TransferNewClient } from './TransferNewClient';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 
 export const metadata: Metadata = {
- title: 'New Stock Transfer | LogiRest',
+ title: 'New Stock Transfer | Otantik مطاعم',
  description: 'Create a new warehouse-to-warehouse stock transfer voucher.',
 };
 

@@ -44,16 +44,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
- width: 'device-width',
- initialScale: 1,
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default async function LocaleLayout({
- children,
- params
+  children,
+  params
 }: {
- children: React.ReactNode;
- params: Promise<{ locale: string }>;
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
   if (!isConfigValid(process.env)) {
     return (
@@ -168,7 +168,7 @@ export default async function LocaleLayout({
 
   const { locale } = await params;
   const messages = await getMessages();
-  
+
   console.log(`[Layout] Rendering for locale: ${locale}`);
   console.log(`[Layout] Messages loaded: ${Object.keys(messages).length > 0 ? 'YES' : 'EMPTY'}`);
   if (Object.keys(messages).length === 0) {
@@ -182,7 +182,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={direction} suppressHydrationWarning>
-      <body 
+      <body
         className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${cairo.variable}`}
         suppressHydrationWarning
       >
@@ -196,13 +196,13 @@ export default async function LocaleLayout({
                       <UserProfileProvider>
                         <WarehouseScopeProvider>
                           <CurrencyProvider>
-                          <ErrorBoundary>
-                            <NetworkStatusBanner />
-                            <ErrorProvider>
-                              {children}
-                            </ErrorProvider>
-                            <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
-                          </ErrorBoundary>
+                            <ErrorBoundary>
+                              <NetworkStatusBanner />
+                              <ErrorProvider>
+                                {children}
+                              </ErrorProvider>
+                              <Toaster richColors position={direction === 'rtl' ? 'top-left' : 'top-right'} dir={direction as 'rtl' | 'ltr'} />
+                            </ErrorBoundary>
                           </CurrencyProvider>
                         </WarehouseScopeProvider>
                       </UserProfileProvider>

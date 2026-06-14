@@ -11,6 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ColumnDef } from '@tanstack/react-table';
 import { LucideIcon } from 'lucide-react';
 import { MetricCard } from '@/components/ui/metric-card';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 
 const statusConfig: Record<string, { color: string, icon: LucideIcon }> = {
   PENDING: { color: 'text-amber-400', icon: Clock },
@@ -24,6 +29,26 @@ export function EmailOutboxClient() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const { data, isLoading } = useEmailOutbox({ status: statusFilter || undefined, page });
+  
+  const queryClient = useQueryClient();
+  const { playSound } = useAudioFeedback();
+  const [retryingIds, setRetryingIds] = useState<Record<string, boolean>>({});
+
+  const handleRetry = async (id: string) => {
+    setRetryingIds(prev => ({ ...prev, [id]: true }));
+    try {
+      await apiClient.post(`/notifications/outbox/${id}/retry`, z.any(), {});
+      playSound('success');
+      toast.success(t('retry_success') || 'Requeued for transmission.');
+      queryClient.invalidateQueries({ queryKey: ['notifications/outbox'] });
+    } catch (err: unknown) {
+      playSound('error');
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg || 'Failed to retry email transmission.');
+    } finally {
+      setRetryingIds(prev => ({ ...prev, [id]: false }));
+    }
+  };
 
   const columns: ColumnDef<EmailOutboxRow>[] = [
     {
@@ -75,10 +100,14 @@ export function EmailOutboxClient() {
         ? (
           <div className="flex justify-end">
             <button
-              className="flex items-center gap-2 px-4 py-1.5 text-label-xxs font-semibold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm hover:bg-amber-500/20 transition-all"
-              onClick={(e: React.MouseEvent) => { e.stopPropagation(); }}
+              className="flex items-center gap-2 px-4 py-1.5 text-label-xxs font-semibold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-sm hover:bg-amber-500/20 transition-all disabled:opacity-50"
+              disabled={retryingIds[row.original.id]}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                handleRetry(row.original.id);
+              }}
             >
-              <RefreshCcw className="w-3 h-3" />
+              <RefreshCcw className={`w-3 h-3 ${retryingIds[row.original.id] ? 'animate-spin' : ''}`} />
               {t('retry')}
             </button>
           </div>

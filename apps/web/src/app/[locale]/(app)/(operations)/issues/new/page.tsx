@@ -1,7 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { IssueForm } from "./issue-form";
 
-export const metadata = { title: "صرف جديد | LogiRest" };
+export const metadata = { title: "صرف جديد | Otantik مطاعم" };
 
 export default async function CreateIssuePage(props: { params: Promise<{ locale: string }> }) {
  const { locale } = await props.params;

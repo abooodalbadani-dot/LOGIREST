@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props) {
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'inventory.expired_override' });
  return {
- title: `${t('title')} | LogiRest`,
+ title: `${t('title')} | Otantik مطاعم`,
  };
 }
 

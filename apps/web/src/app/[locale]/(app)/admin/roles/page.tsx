@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'admin' });
   return {
-    title: `${t('roles.roles_title')} | LogiRest`,
+    title: `${t('roles.roles_title')} | Otantik مطاعم`,
     description: t('roles.roles_page_description'),
   };
 }

@@ -133,7 +133,10 @@ describe('OutboxWorker', () => {
         role: { in: [Role.APPROVER] },
         isActive: true,
       },
-      select: { email: true },
+      select: {
+        email: true,
+        notificationPreferences: true,
+      },
     });
 
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
@@ -252,7 +255,10 @@ describe('OutboxWorker', () => {
         role: { in: [Role.ADMIN] },
         isActive: true,
       },
-      select: { email: true },
+      select: {
+        email: true,
+        notificationPreferences: true,
+      },
     });
 
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
@@ -334,7 +340,10 @@ describe('OutboxWorker', () => {
         role: { in: [Role.ADMIN, Role.INV_MGR] },
         isActive: true,
       },
-      select: { email: true },
+      select: {
+        email: true,
+        notificationPreferences: true,
+      },
     });
 
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(
@@ -429,7 +438,10 @@ describe('OutboxWorker', () => {
         role: { in: [Role.INV_MGR] },
         isActive: true,
       },
-      select: { email: true },
+      select: {
+        email: true,
+        notificationPreferences: true,
+      },
     });
 
     expect(mockEmail.sendEmail).toHaveBeenCalledWith(

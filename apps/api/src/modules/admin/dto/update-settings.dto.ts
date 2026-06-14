@@ -34,6 +34,7 @@ export class PrintSettingsDto {
 
 export enum MailProvider {
   SMTP = 'smtp',
+  SES = 'ses',
   NONE = 'none',
 }
 

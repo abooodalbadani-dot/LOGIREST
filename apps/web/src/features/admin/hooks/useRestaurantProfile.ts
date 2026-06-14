@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -35,7 +35,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
         const profile = await apiClient.get('/admin/restaurant-profile', RestaurantProfileSchema.partial(), { signal });
         
         const merged = {
-          name: profile.name || settings?.systemName || 'LogiRest Enterprise',
+          name: profile.name || settings?.systemName || 'Otantik مطاعم',
           address: profile.address || '',
           phone: profile.phone || '',
           email: profile.email || '',
@@ -57,7 +57,7 @@ export function useRestaurantProfile(options?: { enabled?: boolean }) {
         console.error('Failed to fetch restaurant profile:', err);
 
         const fallback = {
-          name: settings?.systemName || 'LogiRest Enterprise',
+          name: settings?.systemName || 'Otantik مطاعم',
           address: '',
           phone: '',
           email: '',
@@ -114,3 +114,4 @@ export function useUpdateRestaurantProfile() {
     }
   });
 }
+

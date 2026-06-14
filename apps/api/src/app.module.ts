@@ -55,6 +55,12 @@ import { SettingsModule } from './modules/settings/settings.module';
 
 import { CorrelationMiddleware } from './common/correlation.middleware';
 import { correlationStorage } from './common/correlation.context';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import * as path from 'path';
+
+const rootDir = process.cwd().includes('apps')
+  ? path.join(process.cwd(), '..', '..')
+  : process.cwd();
 
 @Module({
   imports: [
@@ -88,6 +94,10 @@ import { correlationStorage } from './common/correlation.context';
       },
     }),
     ScheduleModule.forRoot(),
+    ServeStaticModule.forRoot({
+      rootPath: path.join(rootDir, 'apps', 'web', 'public', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     BullModule.forRoot({
       connection: {
         url: process.env.REDIS_URL || 'redis://localhost:6379',

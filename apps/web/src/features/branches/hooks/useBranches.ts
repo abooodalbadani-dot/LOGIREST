@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeMutation } from '@/core/concurrency/useSafeMutation';
@@ -10,7 +10,7 @@ import { paginatedSchema } from '@/types/api';
 import { z } from 'zod';
 
 /**
- * LOGIREST ENTERPRISE STANDARDS: MASTER DATA
+ * Otantik مطاعم STANDARDS: MASTER DATA
  * Query Key Discipline: ["branches"]
  */
 
@@ -123,4 +123,5 @@ export function useDeleteBranch() {
     }
   });
 }
+
 

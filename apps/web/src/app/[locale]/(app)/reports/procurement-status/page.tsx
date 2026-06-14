@@ -3,7 +3,7 @@ import ProcurementStatusClient from './ProcurementStatusClient';
 
 export async function generateMetadata() {
  return {
- title: 'Procurement Status Report | LogiRest'
+ title: 'Procurement Status Report | Otantik مطاعم'
  };
 }
 

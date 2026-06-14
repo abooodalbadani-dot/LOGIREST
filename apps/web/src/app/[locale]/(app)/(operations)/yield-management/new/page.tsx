@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { YieldNewBatchClient } from './YieldNewBatchClient';
 
 export const metadata = {
-  title: 'New Production Batch | LogiRest',
+  title: 'New Production Batch | Otantik مطاعم',
   description: 'Track yield and efficiency for a new production batch'
 };
 

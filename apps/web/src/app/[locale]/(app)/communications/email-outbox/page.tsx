@@ -7,7 +7,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'notifications' });
  return {
- title: `${t('outbox')} | LogiRest`,
+ title: `${t('outbox')} | Otantik مطاعم`,
  description: 'Track sent emails and notification history',
  };
 }

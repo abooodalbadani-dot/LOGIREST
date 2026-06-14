@@ -3,7 +3,7 @@ import WacHistoryReportClient from '@/features/reports/components/WacHistoryRepo
 
 export async function generateMetadata() {
   return {
-    title: 'WAC History Report | LogiRest',
+    title: 'WAC History Report | Otantik مطاعم',
   };
 }
 

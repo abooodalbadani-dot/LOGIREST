@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
 
 export interface TemplateParameter {
   name: string;
@@ -46,12 +47,12 @@ export class UpdateNotificationTemplateDto {
 
 export interface EmailOutboxEntry {
   id: string;
-  template_id: string;
-  recipient_email: string;
+  templateId: string;
+  recipientEmail: string;
   subject: string;
-  sent_at: string | null;
+  sentAt: string | null;
   status: 'PENDING' | 'SENT' | 'FAILED';
-  error_message: string | null;
+  errorMessage: string | null;
   warehouseId?: string | null;
 }
 
@@ -75,6 +76,111 @@ export interface EntityField {
 
 @Injectable()
 export class NotificationTemplateService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private async resolveRecipientEmails(
+    eventType: string,
+    payload: unknown,
+  ): Promise<string> {
+    const data = (payload || {}) as Record<string, string | undefined>;
+    if (
+      eventType === 'SUPPLIER_PO_NOTIFIED' ||
+      eventType === 'SUPPLIER_GRN_NOTIFIED'
+    ) {
+      return data.supplierEmail || 'supplier@otantikrestuarant.com';
+    }
+    if (eventType === 'PASSWORD_RESET_REQUESTED') {
+      return data.email || '';
+    }
+
+    let targetRoles: Role[] = [];
+    switch (eventType) {
+      case 'SECURITY_ALERT_REPLAY_ATTACK':
+        targetRoles = [Role.ADMIN];
+        break;
+      case 'ISSUE_POSTED':
+        targetRoles = [Role.ADMIN, Role.INV_MGR];
+        break;
+      case 'PR_SUBMITTED':
+        targetRoles = [Role.APPROVER];
+        break;
+      case 'PR_APPROVED':
+        if (data.createdById) {
+          const creator = await this.prisma.user.findUnique({
+            where: { id: data.createdById, isActive: true },
+            select: { email: true },
+          });
+          if (creator) return creator.email;
+        }
+        targetRoles = [Role.PROC_OFFICER];
+        break;
+      case 'GRN_POSTED':
+      case 'ADJUSTMENT_POSTED':
+      case 'STOCKTAKE_POSTED':
+      case 'LOW_STOCK_ALERT':
+      case 'EXPIRY_WARNING':
+        targetRoles = [Role.INV_MGR];
+        if (
+          eventType === 'ADJUSTMENT_POSTED' ||
+          eventType === 'STOCKTAKE_POSTED'
+        ) {
+          targetRoles.push(Role.AUDITOR);
+        }
+        break;
+      case 'KITCHEN_REQUEST_SUBMITTED':
+      case 'TRANSFER_SHIPPED':
+      case 'STOCKTAKE_STARTED':
+      case 'TRANSFER_RECEIVED':
+        targetRoles = [Role.WH_KEEPER];
+        break;
+      case 'KITCHEN_REQUEST_POSTED':
+        targetRoles = [Role.KITCHEN_CHIEF];
+        break;
+      default:
+        break;
+    }
+
+    if (targetRoles.length === 0) return '';
+    const users = await this.prisma.user.findMany({
+      where: { role: { in: targetRoles }, isActive: true },
+      select: { email: true },
+    });
+    return users.map((u) => u.email).join(', ');
+  }
+
+  private renderEventSubject(eventType: string, payload: unknown): string {
+    const data = (payload || {}) as Record<string, string | undefined>;
+    const docNo = data.documentNumber || data.id || 'N/A';
+    switch (eventType) {
+      case 'SECURITY_ALERT_REPLAY_ATTACK':
+        return '🚨 SECURITY ALERT: Token Replay Attack Detected';
+      case 'ISSUE_POSTED':
+        return `Stock Issue Posted — ${data.issueNumber || docNo} / تم ترحيل صرف مخزون`;
+      case 'PR_SUBMITTED':
+        return `Purchase Request ${docNo} awaiting approval`;
+      case 'PR_APPROVED':
+        return `Your PR ${docNo} has been approved`;
+      case 'GRN_POSTED':
+        return `GRN ${docNo} posted — stock updated`;
+      case 'KITCHEN_REQUEST_SUBMITTED':
+        return `Kitchen Request ${docNo} submitted`;
+      case 'TRANSFER_SHIPPED':
+        return `Transfer ${docNo} in transit to you`;
+      case 'LOW_STOCK_ALERT':
+        return `⚠️ Low stock: ${data.itemName || 'Item'} in ${data.warehouseName || 'Warehouse'}`;
+      case 'EXPIRY_WARNING':
+        return `⚠️ Expiry Alert: ${data.itemName || 'Item'} in ${data.warehouseName || 'Warehouse'} expiring soon`;
+      case 'SUPPLIER_PO_NOTIFIED':
+        return `Purchase Order ${docNo} Approved`;
+      case 'SUPPLIER_GRN_NOTIFIED':
+        return `Goods Receipt Confirmed for PO/GRN ${docNo}`;
+      case 'PASSWORD_RESET_REQUESTED':
+        return '🔐 Otantik Restuarant Password Reset Request';
+      default:
+        return `Inventory notification: ${eventType}`;
+    }
+  }
+
   private templates: NotificationTemplate[] = [
     {
       id: 'tmpl-1',
@@ -163,32 +269,32 @@ export class NotificationTemplateService {
   private outbox: EmailOutboxEntry[] = [
     {
       id: 'outbox-1',
-      template_id: 'tmpl-1',
-      recipient_email: 'inv.manager@kitchenstore.com',
+      templateId: 'tmpl-1',
+      recipientEmail: 'inv.manager@kitchenstore.com',
       subject: 'Low Stock Alert: Tomato Paste',
-      sent_at: '2026-05-30T00:15:00.000Z',
+      sentAt: '2026-05-30T00:15:00.000Z',
       status: 'SENT',
-      error_message: null,
+      errorMessage: null,
       warehouseId: 'wh-main',
     },
     {
       id: 'outbox-2',
-      template_id: 'tmpl-2',
-      recipient_email: 'approver@kitchenstore.com',
+      templateId: 'tmpl-2',
+      recipientEmail: 'approver@kitchenstore.com',
       subject: 'Purchase Order Pending Approval: PO-2026-0001',
-      sent_at: null,
+      sentAt: null,
       status: 'PENDING',
-      error_message: null,
+      errorMessage: null,
       warehouseId: null,
     },
     {
       id: 'outbox-3',
-      template_id: 'tmpl-1',
-      recipient_email: 'wh.keeper@kitchenstore.com',
+      templateId: 'tmpl-1',
+      recipientEmail: 'wh.keeper@kitchenstore.com',
       subject: 'Low Stock Alert: Olive Oil',
-      sent_at: '2026-05-29T18:22:11.000Z',
+      sentAt: '2026-05-29T18:22:11.000Z',
       status: 'FAILED',
-      error_message: 'SMTP Connection Timeout',
+      errorMessage: 'SMTP Connection Timeout',
       warehouseId: 'wh-main',
     },
   ];
@@ -426,20 +532,70 @@ export class NotificationTemplateService {
     return this.parameterRegistry;
   }
 
-  getOutbox(status?: string, page = 1, allowedWarehouseIds?: string[]) {
+  async getOutbox(status?: string, page = 1, allowedWarehouseIds?: string[]) {
     const limit = 10;
-    let filtered = this.outbox;
-    if (status) {
-      filtered = filtered.filter((e) => e.status === status);
+    const skip = (page - 1) * limit;
+
+    let dbStatus: string | undefined = undefined;
+    if (status === 'SENT') {
+      dbStatus = 'SUCCEEDED';
+    } else if (status) {
+      dbStatus = status;
     }
-    if (allowedWarehouseIds) {
-      filtered = filtered.filter(
-        (e) => !e.warehouseId || allowedWarehouseIds.includes(e.warehouseId),
+
+    const where: { status?: string } = {};
+    if (dbStatus) {
+      where.status = dbStatus;
+    }
+
+    const [total, dbEvents] = await Promise.all([
+      this.prisma.outboxEvent.count({ where }),
+      this.prisma.outboxEvent.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    const data: EmailOutboxEntry[] = [];
+    for (const event of dbEvents) {
+      const payload = (event.payload || {}) as Record<string, unknown>;
+      const warehouseId =
+        typeof payload.warehouseId === 'string' ? payload.warehouseId : null;
+
+      if (
+        allowedWarehouseIds &&
+        warehouseId &&
+        !allowedWarehouseIds.includes(warehouseId)
+      ) {
+        continue;
+      }
+
+      const recipientEmail = await this.resolveRecipientEmails(
+        event.eventType,
+        payload,
       );
+      const subject = this.renderEventSubject(event.eventType, payload);
+
+      let mappedStatus: 'PENDING' | 'SENT' | 'FAILED' = 'PENDING';
+      if (event.status === 'SUCCEEDED') {
+        mappedStatus = 'SENT';
+      } else if (event.status === 'FAILED') {
+        mappedStatus = 'FAILED';
+      }
+
+      data.push({
+        id: event.id,
+        templateId: event.eventType,
+        recipientEmail,
+        subject,
+        sentAt: event.processedAt ? event.processedAt.toISOString() : null,
+        status: mappedStatus,
+        errorMessage: event.lastError,
+        warehouseId,
+      });
     }
-    const startIndex = (page - 1) * limit;
-    const data = filtered.slice(startIndex, startIndex + limit);
-    const total = filtered.length;
 
     return {
       data,
@@ -450,5 +606,22 @@ export class NotificationTemplateService {
         totalPages: Math.ceil(total / limit) || 1,
       },
     };
+  }
+
+  async retryOutboxEvent(id: string) {
+    const event = await this.prisma.outboxEvent.findUnique({
+      where: { id },
+    });
+    if (!event) {
+      throw new NotFoundException(`Outbox event with ID ${id} not found.`);
+    }
+    return this.prisma.outboxEvent.update({
+      where: { id },
+      data: {
+        status: 'PENDING',
+        attempts: 0,
+        lastError: null,
+      },
+    });
   }
 }

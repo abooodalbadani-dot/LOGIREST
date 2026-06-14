@@ -1,7 +1,7 @@
 import { OutboxMonitoringClient } from './OutboxMonitoringClient';
 
 export const metadata = {
-  title: 'Outbox Event Monitoring | LogiRest',
+  title: 'Outbox Event Monitoring | Otantik مطاعم',
   description: 'Monitor failed communications outbox events and retry queued deliveries.',
 };
 

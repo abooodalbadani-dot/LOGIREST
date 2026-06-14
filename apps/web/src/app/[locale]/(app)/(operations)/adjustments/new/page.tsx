@@ -7,7 +7,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'operations.adjustment' });
  return {
- title: `${t('title_new')} | LogiRest`,
+ title: `${t('title_new')} | Otantik مطاعم`,
  description: 'Manual inventory correction and stock recalibration',
  };
 }

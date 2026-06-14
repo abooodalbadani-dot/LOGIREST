@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'procurement.grn' });
   return {
-    title: `${t('post_grn')} | LogiRest`,
+    title: `${t('post_grn')} | Otantik مطاعم`,
   };
 }
 

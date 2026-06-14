@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  const { locale } = await params;
  const t = await getTranslations({ locale, namespace: 'masterData.common' });
  return {
- title: `${t('master_data')} | LogiRest`,
+ title: `${t('master_data')} | Otantik مطاعم`,
  };
 }
 

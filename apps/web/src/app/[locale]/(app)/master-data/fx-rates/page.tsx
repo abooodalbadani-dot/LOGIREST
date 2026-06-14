@@ -7,7 +7,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'master_data.fx_rates' });
   return {
-    title: `${t('title')} | LogiRest`,
+    title: `${t('title')} | Otantik مطاعم`,
     description: 'Foreign exchange rate and currency conversion management',
   };
 }

@@ -39,9 +39,13 @@ export class EmailService {
         const smtpHost = (config.smtpHost ?? config.smtp_host) as
           | string
           | undefined;
-        if (mailProvider === 'smtp' && smtpHost) {
+        const isSmtp = mailProvider === 'smtp';
+        const isSes = mailProvider === 'ses';
+        if ((isSmtp || isSes) && smtpHost) {
           this.hasDbConfig = true;
-          this.logger.log('SMTP dynamic configuration detected from database.');
+          this.logger.log(
+            'SMTP/SES dynamic configuration detected from database.',
+          );
           return;
         }
       }
@@ -83,7 +87,9 @@ export class EmailService {
           | undefined;
         const smtpEncryption = (config.smtpEncryption ??
           config.smtp_encryption) as string | undefined;
-        if (mailProvider === 'smtp' && smtpHost) {
+        const isSmtp = mailProvider === 'smtp';
+        const isSes = mailProvider === 'ses';
+        if ((isSmtp || isSes) && smtpHost) {
           this.hasDbConfig = true;
           let password = '';
           if (smtpPassword) {
@@ -96,9 +102,16 @@ export class EmailService {
             }
           }
 
+          let host = smtpHost;
+          if (isSes) {
+            host = smtpHost.includes('.')
+              ? smtpHost
+              : `email-smtp.${smtpHost}.amazonaws.com`;
+          }
+
           const port = Number(smtpPort) || 587;
           return nodemailer.createTransport({
-            host: smtpHost,
+            host,
             port,
             secure: port === 465 || smtpEncryption === 'ssl',
             auth:
@@ -147,10 +160,34 @@ export class EmailService {
       return { ok: false, reason: 'SMTP_UNCONFIGURED' };
     }
 
-    const from = this.config.get<string>(
-      'SMTP_FROM',
-      'noreply@otantikrestuarant.com',
-    );
+    let fromName = 'Otantik Restuarant Alerts';
+    let fromEmail = '';
+
+    try {
+      const setting = await this.prisma.systemSetting.findUnique({
+        where: { key: 'system_settings' },
+      });
+      if (setting) {
+        const config = JSON.parse(setting.value) as Record<string, unknown>;
+        fromName = (config.senderName ??
+          config.sender_name ??
+          fromName) as string;
+        fromEmail = (config.replyToEmail ??
+          config.reply_to_email ??
+          '') as string;
+      }
+    } catch (err) {
+      // Ignore
+    }
+
+    if (!fromEmail) {
+      fromEmail = this.config.get<string>(
+        'SMTP_FROM',
+        'noreply@otantikrestuarant.com',
+      );
+    }
+
+    const from = `"${fromName}" <${fromEmail}>`;
     const recipients = Array.isArray(to) ? to.join(', ') : to;
 
     try {
@@ -258,6 +295,7 @@ export class EmailService {
   }
 
   async testConnection(config: {
+    mailProvider?: string;
     smtpHost?: string;
     smtpPort?: number | string;
     smtpUser?: string;
@@ -280,9 +318,15 @@ export class EmailService {
           }
         }
       }
+
+      let host = config.smtpHost;
+      if (config.mailProvider === 'ses' && host) {
+        host = host.includes('.') ? host : `email-smtp.${host}.amazonaws.com`;
+      }
+
       const port = Number(config.smtpPort) || 587;
       const transporter = nodemailer.createTransport({
-        host: config.smtpHost,
+        host,
         port,
         secure: port === 465 || config.smtpEncryption === 'ssl',
         auth:

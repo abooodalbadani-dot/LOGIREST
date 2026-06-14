@@ -268,10 +268,32 @@ export class OutboxWorker extends WorkerHost {
         role: { in: targetRoles },
         isActive: true,
       },
-      select: { email: true },
+      select: {
+        email: true,
+        notificationPreferences: true,
+      },
     });
 
-    return users.map((u) => u.email);
+    return users
+      .filter((u) => {
+        if (!u.notificationPreferences) return true;
+        const prefs = u.notificationPreferences as Record<string, unknown>;
+        if (eventType === 'LOW_STOCK_ALERT' && prefs.lowStock === false)
+          return false;
+        if (eventType === 'EXPIRY_WARNING' && prefs.expiry === false)
+          return false;
+        if (eventType === 'PR_SUBMITTED' && prefs.pendingApproval === false)
+          return false;
+        if (
+          eventType === 'SECURITY_ALERT_REPLAY_ATTACK' &&
+          prefs.security === false
+        )
+          return false;
+        if (eventType === 'GRN_POSTED' && prefs.poFinalized === false)
+          return false;
+        return true;
+      })
+      .map((u) => u.email);
   }
 
   /**

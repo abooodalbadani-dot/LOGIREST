@@ -307,18 +307,16 @@ export function OutboxMonitoringClient() {
 
                   <div className="space-y-4">
                     {/* Event Type & Info */}
-                    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-surface-container-highest/20 rounded-2xl border border-surface-highest/5 justify-between">
-                      <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-surface-container-highest/20 rounded-2xl border border-surface-highest/5 justify-between items-start">
+                      <div className="space-y-1 flex-1 min-w-0 w-full">
                         <span className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-wider">
                           Type
                         </span>
-                        <p className="text-xs font-bold text-foreground break-all whitespace-normal">
-                          <span dir="ltr" className="inline-block text-left">
-                            {selectedEvent.eventType}
-                          </span>
-                        </p>
+                        <div className="text-xs font-bold text-foreground break-all whitespace-normal" dir="ltr" style={{ textAlign: 'start' }}>
+                          {selectedEvent.eventType}
+                        </div>
                       </div>
-                      <div className="space-y-1 sm:text-end shrink-0">
+                      <div className="space-y-1 sm:text-end shrink-0 min-w-fit">
                         <span className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-wider">
                           Attempts
                         </span>
@@ -359,8 +357,8 @@ export function OutboxMonitoringClient() {
                           JSON Payload Data
                         </span>
                       </div>
-                      <div dir="ltr" className="text-left font-mono">
-                        <pre className="text-[10px] text-muted-foreground/80 leading-relaxed bg-surface-container-lowest p-4 rounded-2xl border border-outline-low overflow-auto max-h-60 break-all shadow-inner">
+                      <div dir="ltr" className="text-left font-mono w-full overflow-x-auto">
+                        <pre className="text-[10px] text-muted-foreground/80 leading-relaxed bg-surface-container-lowest p-4 rounded-2xl border border-outline-low overflow-x-auto max-h-60 whitespace-pre-wrap break-words shadow-inner" style={{ direction: 'ltr', textAlign: 'left' }}>
                           {JSON.stringify(selectedEvent.payload, null, 2)}
                         </pre>
                       </div>

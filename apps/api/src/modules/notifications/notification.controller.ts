@@ -115,6 +115,33 @@ export class NotificationController {
     return this.templateService.getOutbox(status, pageNum, allowedWarehouseIds);
   }
 
+  @Post('outbox/:id/retry')
+  async retryOutboxEvent(
+    @Param('id') id: string,
+    @CurrentUser('role') role: Role,
+    @CurrentUser('id') userId: string,
+  ) {
+    if (role !== Role.ADMIN) {
+      const event = await this.prisma.outboxEvent.findUnique({
+        where: { id },
+      });
+      if (!event) {
+        throw new NotFoundException(`Outbox event with ID ${id} not found`);
+      }
+      const payload = (event.payload || {}) as Record<string, unknown>;
+      const warehouseId =
+        typeof payload.warehouseId === 'string' ? payload.warehouseId : null;
+      if (warehouseId) {
+        await this.scopeValidationService.validateWarehouse(
+          userId,
+          role,
+          warehouseId,
+        );
+      }
+    }
+    return this.templateService.retryOutboxEvent(id);
+  }
+
   @Get('parameter-registry')
   async getParameterRegistry() {
     return this.templateService.getParameterRegistry();
