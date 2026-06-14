@@ -50,9 +50,9 @@ export function TransferHubClient() {
       header: t('route'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3 text-sm font-medium">
-          <span className="text-muted-foreground">{row.original.fromWarehouseId}</span>
+          <span className="text-muted-foreground">{row.original.fromWarehouseName || row.original.fromWarehouseId}</span>
           <ArrowRight className="w-3 h-3 opacity-30" />
-          <span className="text-foreground">{row.original.toWarehouseId}</span>
+          <span className="text-foreground">{row.original.toWarehouseName || row.original.toWarehouseId}</span>
         </div>
       ),
     },

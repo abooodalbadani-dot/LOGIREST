@@ -151,7 +151,7 @@ export function POApproveClient({ id }: Props) {
                 <div className="space-y-1.5">
                   <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('approval.order_total')}</p>
                   <p className="font-mono font-semibold text-title-lg text-operational-cyan">
-                    {formatCurrency(po.total || 0, po.currencyId, locale as 'ar' | 'en')}
+                    {formatCurrency(po.total || 0, po.currencyCode || po.currencyId || 'USD', locale as 'ar' | 'en')}
                   </p>
                 </div>
                 <div className="space-y-1.5">
@@ -199,7 +199,7 @@ export function POApproveClient({ id }: Props) {
         <div className="space-y-8">
           <MetricCard
             label={t('budget_consumption') || 'Budget Consumption'}
-            value={po ? formatCurrency(po.total || 0, po.currencyId, locale as 'ar' | 'en') : '--'}
+            value={po ? formatCurrency(po.total || 0, po.currencyCode || po.currencyId || 'USD', locale as 'ar' | 'en') : '--'}
             trend={t('department_budget_placeholder') || 'Department Budget: -- / --'}
             icon={AlertCircle}
             color="amber"

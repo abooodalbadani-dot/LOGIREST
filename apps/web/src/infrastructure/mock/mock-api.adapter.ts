@@ -550,7 +550,7 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const allItems = await db.items.findAll();
       const allBarcodes = await db.barcodes.findAll();
       const isDup = allItems.some(i => i.barcode === barcode) || allBarcodes.some(b => b.code === barcode);
-      return { is_duplicate: isDup };
+      return { isDuplicate: isDup };
     }
   }
   if (normalizedPath.startsWith('/items/')) {
@@ -1465,13 +1465,13 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       const movements = await db.movements.findAll();
       return {
         id: 'system_settings',
-        system_name: 'LogiRest Enterprise',
+        system_name: 'Otantik Restuarant',
         base_currency: 'SAR',
         branch_id: 'HQ',
         timezone: 'Asia/Riyadh',
         locale_default: 'en' as const,
-        sender_name: 'LogiRest System',
-        reply_to_email: 'no-reply@logirest.com',
+        sender_name: 'Otantik Restuarant System',
+        reply_to_email: 'no-reply@otantikrestuarant.com',
         has_transactions: movements.length > 0,
         mail_provider: 'smtp' as const,
         smtp_host: 'smtp.mailtrap.io',
@@ -1498,13 +1498,13 @@ export async function getMockResponse(method: string, path: string, body?: unkno
       }
       return {
         id: 'system_settings',
-        system_name: newSettings.system_name || 'LogiRest Enterprise',
+        system_name: newSettings.system_name || 'Otantik Restuarant',
         base_currency: newSettings.base_currency || 'SAR',
         branch_id: newSettings.branch_id || 'HQ',
         timezone: newSettings.timezone || 'Asia/Riyadh',
         locale_default: newSettings.locale_default || 'en',
-        sender_name: newSettings.sender_name || 'LogiRest System',
-        reply_to_email: newSettings.reply_to_email || 'no-reply@logirest.com',
+        sender_name: newSettings.sender_name || 'Otantik Restuarant System',
+        reply_to_email: newSettings.reply_to_email || 'no-reply@otantikrestuarant.com',
         has_transactions: movements.length > 0,
         mail_provider: newSettings.mail_provider || 'smtp',
         smtp_host: newSettings.smtp_host || '',

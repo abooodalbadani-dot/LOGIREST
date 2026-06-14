@@ -118,7 +118,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
               <Wallet className="w-12 h-12" />
             </div>
             <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{tc('order_currency')}</p>
-            <p className="font-mono font-semibold text-title-sm text-primary mt-2">{document?.currencyId}</p>
+            <p className="font-mono font-semibold text-title-sm text-primary mt-2">{document?.currencyCode || document?.currencyId}</p>
           </div>
 
           {/* Linked PO */}
@@ -195,7 +195,7 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="flex items-center gap-2 text-amber-500">
               <TrendingUp className="w-3 h-3" />
               <p dir="ltr" className="text-label-sm font-mono font-semibold">
-                1 {document?.currencyId} = {currentFxRate} {baseCurrency}
+                1 {document?.currencyCode || document?.currencyId} = {currentFxRate} {baseCurrency}
               </p>
             </div>
           </div>
@@ -204,8 +204,8 @@ export function GRNViewer({ document, locale, actions }: GRNViewerProps) {
             <div className="absolute top-0 end-0 w-1 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-all" />
             <div className="space-y-6 relative z-10">
               <div className="flex justify-between items-baseline gap-10">
-                <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currencyId })}</p>
-                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currencyId, locale)}</p>
+                <p className="text-label-xs font-semibold uppercase text-primary/30 group-hover:text-primary transition-colors">{t('receipt_total', { currency: document?.currencyCode || document?.currencyId })}</p>
+                <p dir="ltr" className="text-headline-lg font-display font-semibold text-foreground">{formatCurrency(totalForeign, document?.currencyCode || document?.currencyId, locale)}</p>
               </div>
               <div className="h-px bg-surface-container-high/20 w-full" />
               <div className="flex justify-between items-center gap-10">

@@ -28,9 +28,14 @@ import { NetworkStatusBanner } from '@/core/network/NetworkStatusBanner';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
-  title: 'لوجي ريست | LogiRest',
+  title: 'مطاعم أوتانتيك | Otantik Restuarant',
   description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
   robots: 'index, follow',
+  openGraph: {
+    title: 'مطاعم أوتانتيك | Otantik Restuarant',
+    description: 'Enterprise-grade inventory and procurement management for high-volume kitchens.',
+    type: 'website',
+  },
   icons: {
     icon: '/icon.svg',
     shortcut: '/favicon.svg',
@@ -54,7 +59,7 @@ export default async function LocaleLayout({
     return (
       <html lang="en" className="dark">
         <head>
-          <title>Configuration Error | LogiRest</title>
+          <title>Configuration Error | Otantik Restuarant</title>
           <style>{`
             body {
               margin: 0;
@@ -153,7 +158,7 @@ export default async function LocaleLayout({
               FATAL: NEXT_PUBLIC_API_URL is missing
             </div>
             <div className="footer">
-              LogiRest Enterprise Engine v16.2.6
+              Otantik Restuarant Enterprise Engine v16.2.6
             </div>
           </div>
         </body>

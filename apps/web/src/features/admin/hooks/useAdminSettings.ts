@@ -7,11 +7,13 @@ import { AdminSettingsSchema, type AdminSettings } from '@/types/admin';
 
 export { AdminSettingsSchema, type AdminSettings };
 
-export function useAdminSettings() {
+export function useAdminSettings(options?: { enabled?: boolean }) {
+  const isEnabled = options?.enabled ?? true;
   return useQuery({
     queryKey: ['admin/settings'],
     queryFn: ({ signal }) => apiClient.get('/admin/settings', AdminSettingsSchema, { signal }),
     staleTime: 60_000,
+    enabled: isEnabled,
   });
 }
 

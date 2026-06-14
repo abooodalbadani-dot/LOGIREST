@@ -1,11 +1,12 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useAuth, AuthUser } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { apiClient } from '@/lib/api/client';
 import { AuthUserSchema } from '@/types/auth';
 import { z } from 'zod';
+import { useRestaurantProfile } from '@/features/admin/hooks/useRestaurantProfile';
 
 interface UserProfileContextType {
   avatarUrl: string | null;
@@ -45,12 +46,15 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   const { user, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
 
+  // Call useRestaurantProfile hook to ensure configuration data is fetched and synced to localStorage
+  useRestaurantProfile({ enabled: !!user });
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const avatarUrl = user?.avatarUrl || null;
   const displayName = user?.name || '';
-  const themePreferences: 'light' | 'dark' = theme === 'dark' ? 'dark' : 'light';
+  const themePreferences: 'light' | 'dark' = user?.themePreferences || (theme === 'dark' ? 'dark' : 'light');
   const notificationPreferences = user?.notificationPreferences ?? {
     lowStock: true,
     expiry: true,
@@ -59,6 +63,13 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     security: true,
   };
   const locale: 'ar' | 'en' = user?.locale || 'en';
+
+  // Synchronize database theme preference to next-themes theme on user load/change
+  useEffect(() => {
+    if (user?.themePreferences && user.themePreferences !== theme) {
+      setTheme(user.themePreferences);
+    }
+  }, [user?.themePreferences, theme, setTheme]);
 
   const uploadAvatar = useCallback(async (file: File): Promise<string | null> => {
     setIsSaving(true);
@@ -103,6 +114,9 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       if (fields.themePreferences) {
         setTheme(fields.themePreferences);
       }
+      if (fields.locale) {
+        document.cookie = `NEXT_LOCALE=${fields.locale}; path=/; max-age=31536000; SameSite=Lax`;
+      }
 
       const apiPayload: Record<string, unknown> = {};
       if (fields.displayName !== undefined) apiPayload.name = fields.displayName;
@@ -110,6 +124,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       if (fields.phone !== undefined) apiPayload.phone = fields.phone;
       if (fields.email !== undefined) apiPayload.email = fields.email;
       if (fields.locale !== undefined) apiPayload.locale = fields.locale;
+      if (fields.themePreferences !== undefined) apiPayload.themePreferences = fields.themePreferences;
       if (fields.notificationPreferences !== undefined) {
         apiPayload.notificationPreferences = {
           ...notificationPreferences,
@@ -123,6 +138,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       if (fields.phone !== undefined) localUpdatedFields.phone = fields.phone;
       if (fields.email !== undefined) localUpdatedFields.email = fields.email;
       if (fields.locale !== undefined) localUpdatedFields.locale = fields.locale;
+      if (fields.themePreferences !== undefined) localUpdatedFields.themePreferences = fields.themePreferences;
       if (fields.notificationPreferences !== undefined) {
         localUpdatedFields.notificationPreferences = {
           ...notificationPreferences,

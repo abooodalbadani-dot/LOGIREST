@@ -37,7 +37,7 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  }, [currencies, search]);
 
  const stats = useMemo(() => {
- const base = currencies.find((c: Currency) => c.isBaseCurrency);
+ const base = currencies.find((c: Currency) => c.isBase);
  return {
  total: currencies.length,
  active: currencies.filter((c: Currency) => c.isActive).length,
@@ -75,9 +75,9 @@ export function CurrencyListClient({ locale }: { locale: string }) {
  )
  },
  {
- accessorKey: 'isBaseCurrency',
+ accessorKey: 'isBase',
  header: t('fields.is_base'),
- cell: ({ row }) => row.original.isBaseCurrency ? (
+ cell: ({ row }) => row.original.isBase ? (
  <Badge className="bg-amber-500/10 text-amber-500 border-none rounded-sm text-label-xxs font-semibold uppercase px-2 h-5">
  {t('fields.is_base')}
  </Badge>

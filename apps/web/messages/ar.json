@@ -1,4 +1,13 @@
 {
+  "scope_guard": {
+    "branch_title": "الفرع مطلوب",
+    "branch_desc": "يرجى اختيار الفرع من شريط النطاق العلوي لاستعراض البيانات.",
+    "warehouse_title": "المستودع مطلوب",
+    "warehouse_desc": "يرجى اختيار المستودع من شريط النطاق العلوي لاستعراض بيانات وعمليات المخزون.",
+    "department_title": "المطبخ مطلوب",
+    "department_desc": "يرجى اختيار المطبخ (القسم) من شريط النطاق العلوي لاستعراض البيانات والطلبات الحية.",
+    "action_hint": "حدد النطاق من الشريط العلوي"
+  },
   "admin": {
     "action": "الإجراء",
     "admins": "المسؤولين",
@@ -185,7 +194,7 @@
         "identity": "الهوية التجارية",
         "legal": "البيانات القانونية"
       },
-      "subtitle": "لوجي ريست | LogiRest",
+      "subtitle": "مطاعم أوتانتيك | Otantik Restuarant",
       "title": "ملف المطعم",
       "upload_logo": "رفع الشعار",
       "validation": {
@@ -380,11 +389,11 @@
       "description": "أدخل بيانات الاعتماد الخاصة بك للوصول إلى البوابة الآمنة.",
       "hardware_token": "رمز الأمان المادي",
       "hero_subtitle": "إدارة دقيقة للمطابخ عالية الأداء. تتبع المخزون في الوقت الفعلي والمشتريات المؤتمتة.",
-      "hero_title": "LogiRest | لوجي ريست",
+      "hero_title": "Otantik Restuarant | مطاعم أوتانتيك",
       "initialize_session": "بدء الجلسة",
       "operator_id": "معرف المشغل",
       "operator_id_placeholder": "أدخل المعرف أو البريد الإلكتروني",
-      "operator_placeholder": "operator@logirest.io",
+      "operator_placeholder": "operator@otantikrestuarant.com",
       "password_placeholder": "أدخل كلمة المرور",
       "professional_kitchen_alt": "مطبخ احترافي",
       "recover_access": "استعادة الوصول",
@@ -394,7 +403,7 @@
       "version": "الإصدار v3.1.04"
     },
     "login_failed": "فشلت عملية المصادقة",
-    "logo_alt": "شعار لوجي ريست",
+    "logo_alt": "شعار مطاعم أوتانتيك",
     "new_password": "كلمة المرور الجديدة",
     "password": "كلمة المرور",
     "password_reset_redirect": "تمت مزامنة مفتاح الوصول بنجاح. جاري إعادة التوجيه إلى البوابة...",
@@ -484,8 +493,8 @@
     "bilingual_record": "سجل تصنيف ثنائي اللغة",
     "branches": "الفروع",
     "branding": {
-      "logirest_logo": "شعار لوجي ريست",
-      "logo_alt": "شعار لوجي ريست",
+      "logirest_logo": "شعار مطاعم أوتانتيك",
+      "logo_alt": "شعار مطاعم أوتانتيك",
       "restaurant_logo": "شعار المطعم"
     },
     "cancel": "إلغاء",
@@ -895,7 +904,7 @@
       "live_updates": "تحديثات مباشرة"
     },
     "system": {
-      "name": "لوجي رست",
+      "name": "مطاعم أوتانتيك",
       "restaurant_logo": "شعار المطعم",
       "toggle_theme": "تبديل المظهر"
     },
@@ -1044,6 +1053,7 @@
       "invalid_selection": "اختيار غير صالح",
       "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل",
       "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
+      "name_min": "يجب أن يكون الاسم 3 أحرف على الأقل",
       "required": "هذا الحقل مطلوب"
     },
     "verified": "موثق",
@@ -1160,6 +1170,8 @@
     "error_loading": "فشل في تحميل إحصائيات لوحة التحكم",
     "expiry_control": "مراقبة ومتابعة الصلاحية",
     "kitchen": {
+      "missing_department_title": "القسم مطلوب",
+      "missing_department_desc": "الرجاء تحديد القسم المراد استعراض بياناته من القائمة العلوية لتتمكن من رؤية إحصائيات المطبخ.",
       "active_requests": "الطلبات النشطة",
       "awaiting_fulfillment": "في انتظار التنفيذ",
       "consumption_log": "سجل الاستهلاك",
@@ -1636,7 +1648,8 @@
       "placeholders": {
         "name": "اسم الفئة",
         "name_ar": "مثال: مواد خام (AR)",
-        "name_en": "مثلاً Raw Materials"
+        "name_en": "مثلاً Raw Materials",
+        "code": "مثال: CAT-001"
       },
       "search_placeholder": "تصفية الفئات حسب الاسم أو الكود...",
       "title": "الفئات",
@@ -1661,6 +1674,7 @@
       "inactive": "غير نشط",
       "is_active": "نشط؟",
       "metadata": "البيانات الوصفية",
+      "name": "الاسم",
       "name_ar": "الاسم بالعربية",
       "name_en": "الاسم بالإنجليزية",
       "no": "لا",
@@ -1711,6 +1725,7 @@
         "code": "كود العملة",
         "is_active": "نشطة",
         "is_base": "أساسية",
+        "name": "اسم العملة",
         "name_ar": "اسم العملة (AR)",
         "name_en": "اسم العملة (EN)",
         "symbol": "الرمز"
@@ -1739,9 +1754,10 @@
       "title": "العملات",
       "updated_success": "تم تحديث العملة",
       "validation": {
-        "code_format": "يجب أن يتكون الكود من 3 أحرف كبيرة",
+        "code_format": "يجب أن يتكون الكود من 3 أحرف",
         "code_length": "يجب أن يتكون الكود من 3 أحرف بالضبط",
         "code_required": "رمز العملة مطلوب",
+        "name_required": "اسم العملة مطلوب",
         "name_ar_required": "الاسم بالعربي مطلوب",
         "name_en_required": "الاسم بالإنجليزي مطلوب"
       },
@@ -1797,6 +1813,7 @@
         "branch_required": "اختيار الفرع مطلوب",
         "code_format": "يجب أن يكون الكود أحرف كبيرة وأرقام فقط",
         "code_min": "يجب أن يكون الكود حرفين على الأقل",
+        "name_min": "يجب أن يكون الاسم 3 أحرف على الأقل",
         "name_ar_min": "يجب أن يكون الاسم بالعربية 3 أحرف على الأقل",
         "name_en_min": "يجب أن يكون الاسم بالإنجليزية 3 أحرف على الأقل",
         "warehouse_required": "المستودع الأب مطلوب"
@@ -2037,6 +2054,7 @@
       },
       "code": "كود المورد",
       "code_placeholder": "مثال: V-001",
+      "name_placeholder": "أدخل اسم المورد",
       "contact_info": "معلومات الاتصال",
       "contact_person": "الشخص المسؤول",
       "contact_person_placeholder": "فلان الفلاني",
@@ -2287,7 +2305,7 @@
   "not_found": {
     "description": "المورد المطلوب غير موجود أو تم نقله.",
     "go_home": "العودة إلى مركز التحكم",
-    "mission_description": "في LogiRest، نؤمن بالدقة المتناهية. نظامنا مبني لضمان عدم ضياع أي جرام من المخزون في فراغ عدم الكفاءة.",
+    "mission_description": "في Otantik Restuarant، نؤمن بالدقة المتناهية. نظامنا مبني لضمان عدم ضياع أي جرام من المخزون في فراغ عدم الكفاءة.",
     "mission_title": "مهمتنا",
     "partners": {
       "food_logistics": "FOOD_LOGISTICS",

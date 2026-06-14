@@ -45,13 +45,6 @@ export function UoMListClient({ locale }: { locale: string }) {
       )
     },
     {
-      accessorKey: 'isActive',
-      header: t('status'),
-      cell: ({ row }) => (
-        <StatusBadge status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-lg px-2.5" />
-      )
-    },
-    {
       id: 'actions',
       header: '',
       cell: ({ row }) => (

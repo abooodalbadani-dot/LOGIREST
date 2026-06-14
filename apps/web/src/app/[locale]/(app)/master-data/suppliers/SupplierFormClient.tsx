@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useForm, useWatch, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Truck, CreditCard, ShieldCheck, Edit3, Trash2 } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
@@ -62,7 +62,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     useForm<SupplierFormValues>({
       resolver: zodResolver(SupplierFormSchema),
       disabled: isReadOnly,
-      defaultValues: { code: '', name: '', currencyId: '', paymentTerms: '', isActive: true, version: undefined },
+      defaultValues: { code: '', name: '', currencyId: '', paymentTerms: '', contactName: '', contactEmail: '', contactPhone: '', isActive: true, version: undefined },
     });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
@@ -87,6 +87,9 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
         name: data.name,
         currencyId: data.currencyId,
         paymentTerms: data.paymentTerms || '',
+        contactName: data.contactName || '',
+        contactEmail: data.contactEmail || '',
+        contactPhone: data.contactPhone || '',
         isActive: data.isActive,
         version: data.version,
       });
@@ -102,32 +105,80 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
     }
   }, [id, suppliersData, setValue, codeValue, isAutoPopulated]);
 
-  const onValid = async (values: SupplierFormValues) => {
+  const onValid = (values: SupplierFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/suppliers', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    const payload = {
+      code: values.code || undefined,
+      name: values.name,
+      currencyId: values.currencyId || undefined,
+      paymentTerms: values.paymentTerms,
+      contactName: values.contactName || undefined,
+      contactEmail: values.contactEmail || undefined,
+      contactPhone: values.contactPhone || undefined,
+      isActive: values.isActive ?? true,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: {
+            ...payload,
+            version: values.version || undefined,
+          },
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          ...payload, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<SupplierFormValues>) => {
+    console.log('3. [SupplierForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
 
-  const handleDelete = async () => {
+  const onSubmit = handleSubmit(onValid, onInvalid);
+
+  const handleDelete = () => {
     if (!id) return;
-    try {
-      await deleteMutation.mutateAsync({ id, signal: abortController.signal });
-      guardedRouter.push('/master-data/suppliers', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hook
-    }
+    deleteMutation.mutate(
+      { id, version: data?.version, signal: abortController.signal },
+      {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/suppliers', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          setDeleteConfirmOpen(false);
+        }
+      }
+    );
   };
 
   const isSaving = create.isPending || update.isPending;
@@ -231,6 +282,56 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
             <CardContent className="p-8 space-y-8">
               <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
                 <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Truck className="w-5 h-5 text-tertiary" />
+                </div>
+                <div>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{ts('contact_info')}</h3>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label htmlFor="sup-contact-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('contact_person')}</Label>
+                  <Input 
+                    id="sup-contact-name" 
+                    {...register('contactName')} 
+                    disabled={isReadOnly}
+                    className="font-semibold" 
+                    placeholder={ts('contact_person_placeholder')} 
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sup-contact-email" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('email')}</Label>
+                  <Input 
+                    id="sup-contact-email" 
+                    type="email"
+                    {...register('contactEmail')} 
+                    disabled={isReadOnly}
+                    className="font-semibold" 
+                    placeholder={ts('email_placeholder')} 
+                  />
+                  {errors.contactEmail?.message && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.contactEmail.message as never)}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sup-contact-phone" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{ts('phone')}</Label>
+                  <Input 
+                    id="sup-contact-phone" 
+                    {...register('contactPhone')} 
+                    disabled={isReadOnly}
+                    className="font-semibold" 
+                    placeholder={ts('phone_placeholder')} 
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
                   <CreditCard className="w-5 h-5 text-tertiary" />
                 </div>
                 <div>
@@ -248,7 +349,7 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                     render={({ field }) => (
                       <SmartCombobox
                         disabled={isReadOnly}
-                        value={field.value}
+                        value={field.value ?? undefined}
                         onSelect={(item) => field.onChange(item.id)}
                         items={currencyItems}
                         placeholder="—"
@@ -293,12 +394,18 @@ export function SupplierFormClient({ id, createTitle, editTitle, viewTitle, isRe
                   <Label htmlFor="sup-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('is_active')}</Label>
                   <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
                 </div>
-                <Switch
-                  id="sup-active"
-                  checked={isActive}
-                  onCheckedChange={(v) => !isReadOnly && setValue('isActive', v)}
-                  disabled={isReadOnly}
-                  className="data-[state=checked]:bg-status-active"
+                <Controller
+                  control={control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <Switch
+                      id="sup-active"
+                      checked={field.value ?? true}
+                      onCheckedChange={(v) => !isReadOnly && field.onChange(v)}
+                      disabled={isReadOnly}
+                      className="data-[state=checked]:bg-status-active"
+                    />
+                  )}
                 />
               </div>
             </CardContent>

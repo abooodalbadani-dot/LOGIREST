@@ -77,7 +77,9 @@ services:
       - "4000:4000"
     volumes:
       - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/prisma:/app/apps/api/prisma
       - ./packages/shared-types/src:/app/packages/shared-types/src
+      - ./apps/web/public/uploads:/app/apps/web/public/uploads
       - ./backups:/backups:ro
     working_dir: /app/apps/api
     command: sh -c "if [ -z \"$DIRECT_URL\" ]; then export DIRECT_URL=\"$DATABASE_URL\"; fi && ../../node_modules/.bin/prisma generate && ../../node_modules/.bin/prisma migrate deploy && npm run start:dev"
@@ -124,6 +126,7 @@ services:
       - ./apps/web/src:/app/apps/web/src
       - ./apps/web/messages:/app/apps/web/messages
       - ./packages/shared-types/src:/app/packages/shared-types/src
+      - ./apps/web/public/uploads:/app/apps/web/public/uploads
     command: sh -c "cd apps/web && npx next start -H 0.0.0.0 --port 3000"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: '127.0.0.1', port: 3000, path: '/', timeout: 2000}, (res) => { if (res.statusCode >= 200 && res.statusCode < 400) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]

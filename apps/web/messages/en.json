@@ -1,4 +1,13 @@
 {
+  "scope_guard": {
+    "branch_title": "Branch Context Required",
+    "branch_desc": "Please select a branch from the top menu to view the data.",
+    "warehouse_title": "Warehouse Context Required",
+    "warehouse_desc": "Please select a specific warehouse from the top menu to access inventory operations.",
+    "department_title": "Department Context Required",
+    "department_desc": "Please select a specific department from the top menu to view kitchen statistics and requests.",
+    "action_hint": "Select Context from Top Bar"
+  },
   "admin": {
     "action": "Action",
     "admins": "Admins",
@@ -185,7 +194,7 @@
         "identity": "Brand Identity",
         "legal": "Legal Metadata"
       },
-      "subtitle": "LogiRest Identity & Branding",
+      "subtitle": "Otantik Restuarant Identity & Branding",
       "title": "Restaurant Profile",
       "upload_logo": "Upload Logo",
       "validation": {
@@ -380,11 +389,11 @@
       "description": "Enter your credentials to access the secure portal.",
       "hardware_token": "HARDWARE TOKEN",
       "hero_subtitle": "Precision management for high-performance kitchens. Real-time inventory tracking and automated procurement.",
-      "hero_title": "LogiRest | Smart Inventory Control",
+      "hero_title": "Otantik Restuarant | Smart Inventory Control",
       "initialize_session": "INITIALIZE SESSION",
       "operator_id": "Operator ID",
       "operator_id_placeholder": "Enter ID or Email",
-      "operator_placeholder": "operator@logirest.io",
+      "operator_placeholder": "operator@otantikrestuarant.com",
       "password_placeholder": "Enter Password",
       "professional_kitchen_alt": "Professional Kitchen",
       "recover_access": "Recover Access",
@@ -394,7 +403,7 @@
       "version": "v3.1.04"
     },
     "login_failed": "Authentication Failed",
-    "logo_alt": "LogiRest Logo",
+    "logo_alt": "Otantik Restuarant Logo",
     "new_password": "New Password",
     "password": "Password",
     "password_reset_redirect": "Access key successfully synchronized. Redirecting to portal...",
@@ -484,8 +493,8 @@
     "bilingual_record": "Bilingual classification record",
     "branches": "Branches",
     "branding": {
-      "logirest_logo": "LogiRest Logo",
-      "logo_alt": "LogiRest Logo",
+      "logirest_logo": "Otantik Restuarant Logo",
+      "logo_alt": "Otantik Restuarant Logo",
       "restaurant_logo": "Restaurant Logo"
     },
     "cancel": "Cancel",
@@ -818,6 +827,7 @@
       "report_expiry": "Expiry Report",
       "report_movements": "Stock Movements",
       "report_procurement_status": "Procurement Status",
+      "report_wac_history": "WAC History",
       "report_stocktake_variance": "Stocktake Variance",
       "reports": "Reports & Analytics",
       "restaurant_profile": "Restaurant Profile",
@@ -894,7 +904,7 @@
       "live_updates": "Live Updates"
     },
     "system": {
-      "name": "LogiRest",
+      "name": "Otantik Restuarant",
       "restaurant_logo": "Restaurant Logo",
       "toggle_theme": "Toggle Theme"
     },
@@ -1043,6 +1053,7 @@
       "invalid_selection": "Invalid selection",
       "name_ar_min": "Arabic name must be at least 3 characters",
       "name_en_min": "English name must be at least 3 characters",
+      "name_min": "Name must be at least 3 characters",
       "required": "This field is required"
     },
     "verified": "Verified",
@@ -1159,6 +1170,8 @@
     "error_loading": "Failed to load dashboard statistics",
     "expiry_control": "Expiry Control & Monitoring",
     "kitchen": {
+      "missing_department_title": "Department Context Required",
+      "missing_department_desc": "Please select a specific department from the top menu to view kitchen statistics.",
       "active_requests": "Active Requests",
       "awaiting_fulfillment": "Awaiting Fulfillment",
       "consumption_log": "Consumption Log",
@@ -1635,7 +1648,8 @@
       "placeholders": {
         "name": "Category Name",
         "name_ar": "مثال: مواد خام",
-        "name_en": "e.g. Raw Materials"
+        "name_en": "e.g. Raw Materials",
+        "code": "e.g. CAT-001"
       },
       "search_placeholder": "Filter categories by name or code...",
       "title": "Categories",
@@ -1660,6 +1674,7 @@
       "inactive": "Inactive",
       "is_active": "Is Active",
       "metadata": "Metadata",
+      "name": "Name",
       "name_ar": "Arabic Name",
       "name_en": "English Name",
       "no": "No",
@@ -1710,6 +1725,7 @@
         "code": "Currency Code",
         "is_active": "Active",
         "is_base": "Base",
+        "name": "Currency Name",
         "name_ar": "Currency Name (AR)",
         "name_en": "Currency Name (EN)",
         "symbol": "Symbol"
@@ -1738,9 +1754,10 @@
       "title": "Currencies",
       "updated_success": "Currency updated",
       "validation": {
-        "code_format": "Code must be 3 uppercase letters",
+        "code_format": "Code must be 3 letters",
         "code_length": "Code must be exactly 3 characters",
         "code_required": "Currency code is required",
+        "name_required": "Currency name is required",
         "name_ar_required": "Arabic name is required",
         "name_en_required": "English name is required"
       },
@@ -1796,6 +1813,7 @@
         "branch_required": "Branch selection is required",
         "code_format": "Code must be uppercase alphanumeric",
         "code_min": "Code must be at least 2 characters",
+        "name_min": "Name must be at least 3 characters",
         "name_ar_min": "Arabic name must be at least 3 characters",
         "name_en_min": "English name must be at least 3 characters",
         "warehouse_required": "Parent warehouse is required"
@@ -1980,8 +1998,10 @@
         "barcode": "Barcode / GTIN",
         "base_unit": "Stock Unit",
         "category": "Classification",
+        "code": "Code",
         "is_active": "Status",
         "min_stock": "Safety Stock (Min)",
+        "name": "Name",
         "name_ar": "Item Name (AR)",
         "name_en": "Item Name (EN)",
         "reorder_point": "Reorder Threshold",
@@ -2034,6 +2054,7 @@
       },
       "code": "Supplier Code",
       "code_placeholder": "e.g. V-001",
+      "name_placeholder": "Enter Supplier Name",
       "contact_info": "Contact Information",
       "contact_person": "Primary Contact Person",
       "contact_person_placeholder": "John Doe",
@@ -2284,7 +2305,7 @@
   "not_found": {
     "description": "The requested resource could not be found or has been moved.",
     "go_home": "Back to Control Center",
-    "mission_description": "At LogiRest, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.",
+    "mission_description": "At Otantik Restuarant, we believe in frictionless precision. Our system is built to ensure that not a single gram of inventory is lost to the void of inefficiency.",
     "mission_title": "Our Mission",
     "partners": {
       "food_logistics": "FOOD_LOGISTICS",

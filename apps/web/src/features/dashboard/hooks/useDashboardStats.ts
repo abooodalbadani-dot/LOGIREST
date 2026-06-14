@@ -103,12 +103,23 @@ export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
  * Uses TanStack Query for caching and state management.
  */
 export function useDashboardStats() {
-  const { user } = useAuth();
+  const { user, activeScope } = useAuth();
   const userRole = user?.role;
 
   return useQuery<DashboardStats>({
-    queryKey: ['dashboard', 'stats', userRole],
-    queryFn: () => apiClient.get(`/dashboard/stats?role=${userRole}`, DashboardStatsSchema),
+    queryKey: ['dashboard', 'stats', userRole, activeScope.departmentId, activeScope.warehouseId, activeScope.branchId],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (userRole) params.append('role', userRole);
+      if (activeScope.departmentId) params.append('departmentId', activeScope.departmentId);
+      if (activeScope.warehouseId) params.append('warehouseId', activeScope.warehouseId);
+      if (activeScope.branchId) params.append('branchId', activeScope.branchId);
+      
+      return apiClient.get(`/dashboard/stats?${params.toString()}`, DashboardStatsSchema);
+    },
+    enabled: !!userRole && 
+      (userRole !== 'KITCHEN_CHIEF' || !!activeScope.departmentId) && 
+      (userRole !== 'STORE_MGR' || !!activeScope.warehouseId),
     staleTime: 120000,
     refetchInterval: 60000,
   });

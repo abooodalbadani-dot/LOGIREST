@@ -94,11 +94,11 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
     return warehouses.filter(wh => wh.branchId && selectedBranches.includes(wh.branchId));
   }, [selectedBranches, warehouses]);
 
-  // Cascading Logic: Departments depend on Warehouses
+  // Cascading Logic: Departments depend on Branches
   const filteredDepartments = useMemo(() => {
-    if (!selectedWarehouses?.length) return [];
-    return departments.filter(dep => dep.warehouseId && selectedWarehouses.includes(dep.warehouseId));
-  }, [selectedWarehouses, departments]);
+    if (!selectedBranches?.length) return [];
+    return departments.filter(dep => dep.branchId && selectedBranches.includes(dep.branchId));
+  }, [selectedBranches, departments]);
 
   const languageItems = useMemo(() => [
     { id: 'en', name_en: t('lang_en'), name_ar: t('lang_en') },
@@ -138,9 +138,9 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
         role: data.role as UserRole,
         status: data.status as 'ACTIVE' | 'INACTIVE' || 'ACTIVE',
         language: (data.language as 'en' | 'ar') || 'en',
-        branchIds: data.scopes.filter(s => s.branchId).map(s => s.branchId!),
-        warehouseIds: data.scopes.filter(s => s.warehouseId).map(s => s.warehouseId!),
-        departmentIds: data.scopes.filter(s => s.departmentId).map(s => s.departmentId!),
+        branchIds: Array.from(new Set(data.scopes.filter((s: { branchId?: string | null }) => s.branchId).map((s: { branchId?: string | null }) => s.branchId!))),
+        warehouseIds: Array.from(new Set(data.scopes.filter((s: { warehouseId?: string | null }) => s.warehouseId).map((s: { warehouseId?: string | null }) => s.warehouseId!))),
+        departmentIds: Array.from(new Set(data.scopes.filter((s: { departmentId?: string | null }) => s.departmentId).map((s: { departmentId?: string | null }) => s.departmentId!))),
       });
     }
   }, [data, reset]);
@@ -290,7 +290,7 @@ export function UserFormClient({ id, createTitle, editTitle, locale, isReadOnly 
                   options={filteredDepartments.map(d => ({ id: d.id, label: d.name || d.code }))}
                   selected={selectedDepartments}
                   onChange={(v) => setValue('departmentIds', v)}
-                  disabled={isAuditor || isSelf || !selectedWarehouses.length}
+                  disabled={isAuditor || isSelf || !selectedBranches.length}
                   t={t}
                 />
 

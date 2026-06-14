@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/providers/UserProfileProvider';
 import { useContextScope } from '@/hooks/useContextScope';
+import { getMediaUrl } from '@/utils/path';
 import LocaleSwitcher from '../shared/LocaleSwitcher';
 import { ContextSelector } from '../shared/ContextSelector';
 import { ThemeToggle } from '../shared/ThemeToggle';
@@ -19,9 +20,13 @@ interface TopbarProps {
 }
 
 export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, activeScope } = useAuth();
   const { displayName, avatarUrl } = useUserProfile();
   const { branchName, warehouseName, isLoading } = useContextScope();
+  
+  const isMissingDepartment = user?.role === 'KITCHEN_CHIEF' && !activeScope?.departmentId;
+  const isMissingWarehouse = user?.role === 'STORE_MGR' && !activeScope?.warehouseId;
+  const isScopeMissing = isMissingDepartment || isMissingWarehouse;
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const t = useTranslations('context');
@@ -39,13 +44,15 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
         </button>
 
         <div className="text-title-sm font-bold text-operational-cyan hidden sm:block">
-          LogiRest
+          Otantik Restuarant
         </div>
 
         {user && (
           <button
             onClick={() => setIsSelectorOpen(true)}
-            className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all group relative overflow-hidden"
+            className={`flex items-center gap-3 px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all group relative overflow-hidden ${
+              isScopeMissing ? 'ring-2 ring-status-warning ring-offset-2 animate-pulse' : ''
+            }`}
           >
             {/* Subtle glow effect */}
             <div className="absolute inset-0 bg-operational-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -100,7 +107,7 @@ export function Topbar({ locale: _locale, onMenuClick }: TopbarProps) {
               </div>
               <div className="w-8 h-8 md:w-9 md:h-9 rounded-sm bg-surface-container-low flex items-center justify-center text-body-md font-semibold text-operational-cyan transition-all group-hover:bg-surface-container overflow-hidden">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName || user.name} className="w-full h-full object-cover" />
+                  <img src={getMediaUrl(avatarUrl)} alt={displayName || user.name} className="w-full h-full object-cover" />
                 ) : (
                   (displayName || user.name || '').charAt(0).toUpperCase()
                 )}

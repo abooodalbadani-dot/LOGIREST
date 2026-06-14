@@ -107,7 +107,7 @@ export function BarcodeMappingClient({ locale }: { locale: string }) {
       header: tc('category'),
       cell: ({ row }) => (
         <span className="text-label-xs font-semibold text-muted-foreground/40 uppercase">
-          {row.original.categoryId || '---'}
+          {row.original.category?.name || row.original.categoryId || '---'}
         </span>
       )
     },

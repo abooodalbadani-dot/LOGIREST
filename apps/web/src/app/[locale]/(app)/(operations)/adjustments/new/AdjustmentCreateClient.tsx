@@ -245,7 +245,7 @@ export function AdjustmentCreateClient({ locale }: { locale: 'ar' | 'en' }) {
   const isLocked = !!lockState?.isLocked;
 
   const uoms = uomsResult?.data || [];
-  const activeUoMs = uoms.filter(u => u.isActive !== false);
+  const activeUoMs = uoms;
 
   const warehouseItems = useMemo(() => {
     return (warehouses || []).map(w => ({

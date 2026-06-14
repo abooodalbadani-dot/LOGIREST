@@ -1,3 +1,4 @@
+import { CreateBranchDto, UpdateBranchDto } from './dto/branch.dto';
 import {
   Controller,
   Get,
@@ -109,11 +110,11 @@ export class BranchesController {
   @Post()
   @Roles(Role.ADMIN, Role.GM)
   async create(
-    @Body() body: { name: string; code?: string },
+    @Body() body: CreateBranchDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
-    const { name } = body;
+    const { name, isActive } = body;
     let { code } = body;
     if (!name) {
       throw new BadRequestException('name is required');
@@ -144,7 +145,13 @@ export class BranchesController {
     }
 
     const branch = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.branch.create({ data: { name, code } });
+      const created = await tx.branch.create({
+        data: {
+          name,
+          code,
+          isActive: isActive !== undefined ? isActive : true,
+        },
+      });
 
       const ipAddress =
         (Array.isArray(req.headers['x-forwarded-for'])
@@ -160,7 +167,11 @@ export class BranchesController {
           targetTable: 'branches',
           targetId: created.id,
           beforeStateJson: '',
-          afterStateJson: JSON.stringify({ name, code }),
+          afterStateJson: JSON.stringify({
+            name,
+            code,
+            isActive: created.isActive,
+          }),
           ipAddress: ipAddress || null,
         },
       });
@@ -175,7 +186,7 @@ export class BranchesController {
   @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
-    @Body() body: { name?: string; code?: string; version?: number },
+    @Body() body: UpdateBranchDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -190,6 +201,7 @@ export class BranchesController {
         data: {
           ...(body.name ? { name: body.name } : {}),
           ...(body.code ? { code: body.code } : {}),
+          isActive: body.isActive !== undefined ? body.isActive : undefined,
           version: existing.version + 1,
         },
       });

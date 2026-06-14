@@ -15,12 +15,14 @@ export class BarcodesService {
     itemId: string;
     barcode: string;
     version: number;
-    item?: { uomId?: string } | null;
+    item?: { uomId?: string; name?: string; sku?: string } | null;
   }) {
     return {
       id: mapping.id,
       itemId: mapping.itemId,
       uomId: mapping.item?.uomId || '',
+      itemName: mapping.item?.name || '',
+      itemCode: mapping.item?.sku || '',
       code: mapping.barcode,
       defaultQty: 1,
       isActive: true,

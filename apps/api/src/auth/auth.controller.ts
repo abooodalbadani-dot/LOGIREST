@@ -1,3 +1,4 @@
+/// <reference types="multer" />
 import {
   Controller,
   Post,
@@ -10,7 +11,10 @@ import {
   HttpCode,
   HttpStatus,
   UnauthorizedException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -95,11 +99,12 @@ export class AuthController {
   }
 
   @Post('profile/avatar')
+  @UseInterceptors(FileInterceptor('avatar'))
   async uploadAvatar(
     @CurrentUser('id') userId: string,
-    @Body() body: Record<string, unknown>,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.authService.uploadAvatar(userId, body);
+    return this.authService.uploadAvatar(userId, file);
   }
 
   @Post('change-password')

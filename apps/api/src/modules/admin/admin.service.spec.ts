@@ -24,11 +24,12 @@ describe('AdminService', () => {
   const mockOutboxEventFindUnique = jest.fn();
   const mockOutboxEventUpdate = jest.fn();
   const mockAuditLogCreate = jest.fn();
+  const mockTransaction = jest.fn();
 
   const mockUserGroupBy = jest.fn();
 
   const mockPrismaService = {
-    $transaction: jest.fn((cb) => cb(mockPrismaService)),
+    $transaction: mockTransaction,
     user: {
       groupBy: mockUserGroupBy,
     },
@@ -73,6 +74,7 @@ describe('AdminService', () => {
     }).compile();
 
     service = module.get<AdminService>(AdminService);
+    mockTransaction.mockImplementation((cb) => cb(mockPrismaService));
     jest.clearAllMocks();
   });
 
@@ -319,7 +321,7 @@ describe('AdminService', () => {
 
         const result = await service.unfreezeItem('w-1', 'i-1', 'user-1');
         expect(result.isFrozen).toBe(false);
-        expect(mockPrismaService.$transaction).toHaveBeenCalled();
+        expect(mockTransaction).toHaveBeenCalled();
         expect(mockWarehouseItemUpdate).toHaveBeenCalledWith({
           where: { warehouseId_itemId: { warehouseId: 'w-1', itemId: 'i-1' } },
           data: { isFrozen: false },

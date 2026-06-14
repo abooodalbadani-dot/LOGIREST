@@ -42,7 +42,7 @@ const OutboxResponseSchema = z.object({
   meta: z.object({
     total: z.number(),
     page: z.number(),
-    limit: z.number(),
+    pageSize: z.number(),
     totalPages: z.number(),
   }),
 });
@@ -198,25 +198,27 @@ export function OutboxMonitoringClient() {
                         : 'bg-surface-container-lowest border-outline-low hover:border-operational-cyan/20'
                     }`}
                   >
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-2 flex-1 w-full min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-status-error/10 text-status-error border border-status-error/20 uppercase font-bold tracking-wider">
-                          {event.eventType}
+                          <span dir="ltr" className="inline-block text-left break-all whitespace-normal">
+                            {event.eventType}
+                          </span>
                         </span>
-                        <span className="text-[10px] text-muted-foreground/60 font-mono">
+                        <span className="text-[10px] text-muted-foreground/60 font-mono shrink-0" dir="ltr">
                           Attempts: {event.attempts}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-foreground truncate max-w-sm">
+                      <h4 className="text-xs font-bold text-foreground truncate max-w-sm" dir="ltr">
                         {event.payload?.subject || 'No Subject Defined'}
                       </h4>
-                      <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
+                      <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground/60">
+                        <span dir="ltr" className="inline-flex items-center gap-1 text-left">
+                          <Calendar className="w-3 h-3 shrink-0" />
                           {new Date(event.createdAt).toLocaleString()}
                         </span>
                         <span>•</span>
-                        <span className="text-status-error font-medium truncate max-w-xs block">
+                        <span dir="ltr" className="text-status-error font-medium truncate max-w-xs block text-left">
                           {event.lastError || 'Unknown Error'}
                         </span>
                       </div>
@@ -305,16 +307,18 @@ export function OutboxMonitoringClient() {
 
                   <div className="space-y-4">
                     {/* Event Type & Info */}
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-surface-container-highest/20 rounded-2xl border border-surface-highest/5">
-                      <div className="space-y-1">
+                    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-surface-container-highest/20 rounded-2xl border border-surface-highest/5 justify-between">
+                      <div className="space-y-1 flex-1 min-w-0">
                         <span className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-wider">
                           Type
                         </span>
-                        <p className="text-xs font-bold text-foreground">
-                          {selectedEvent.eventType}
+                        <p className="text-xs font-bold text-foreground break-all whitespace-normal">
+                          <span dir="ltr" className="inline-block text-left">
+                            {selectedEvent.eventType}
+                          </span>
                         </p>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 sm:text-end shrink-0">
                         <span className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-wider">
                           Attempts
                         </span>
@@ -329,7 +333,7 @@ export function OutboxMonitoringClient() {
                       <span className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-wider">
                         Recipient (To)
                       </span>
-                      <p className="text-xs font-mono font-bold text-foreground break-all">
+                      <p dir="ltr" className="text-xs font-mono font-bold text-foreground break-all text-left">
                         {selectedEvent.payload?.to || 'Not Specified'}
                       </p>
                     </div>
@@ -342,7 +346,7 @@ export function OutboxMonitoringClient() {
                           Last SMTP Exception
                         </span>
                       </div>
-                      <p className="text-xs font-mono text-muted-foreground leading-relaxed bg-surface-container-lowest/50 p-3 rounded-lg border border-white/5 break-all max-h-32 overflow-y-auto">
+                      <p dir="ltr" className="text-xs font-mono text-muted-foreground leading-relaxed bg-surface-container-lowest/50 p-3 rounded-lg border border-white/5 break-all max-h-32 overflow-y-auto text-left">
                         {selectedEvent.lastError || 'None logged.'}
                       </p>
                     </div>
@@ -355,9 +359,11 @@ export function OutboxMonitoringClient() {
                           JSON Payload Data
                         </span>
                       </div>
-                      <pre className="text-[10px] font-mono text-muted-foreground/80 leading-relaxed bg-surface-container-lowest p-4 rounded-2xl border border-outline-low overflow-auto max-h-60 break-all shadow-inner">
-                        {JSON.stringify(selectedEvent.payload, null, 2)}
-                      </pre>
+                      <div dir="ltr" className="text-left font-mono">
+                        <pre className="text-[10px] text-muted-foreground/80 leading-relaxed bg-surface-container-lowest p-4 rounded-2xl border border-outline-low overflow-auto max-h-60 break-all shadow-inner">
+                          {JSON.stringify(selectedEvent.payload, null, 2)}
+                        </pre>
+                      </div>
                     </div>
                   </div>
                 </div>

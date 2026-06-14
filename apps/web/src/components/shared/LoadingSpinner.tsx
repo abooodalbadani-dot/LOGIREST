@@ -6,7 +6,7 @@ export default function LoadingSpinner() {
       <div className="flex flex-col items-stretch space-y-4 max-w-xs w-full">
         <div className="flex items-center justify-between">
           <span className="text-xs font-mono tracking-wider uppercase text-operational-cyan">
-            LOGIREST_CORE
+            OTANTIK_CORE
           </span>
           <div className="w-3.5 h-3.5 border-1.5 border-operational-cyan border-t-transparent rounded-full animate-spin" style={{ borderWidth: '1.5px' }} />
         </div>

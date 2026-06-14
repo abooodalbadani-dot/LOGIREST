@@ -8,6 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Prisma } from '@prisma/client';
 
 interface CategoryDto {
+  name?: string;
   name_en?: string;
   name_ar?: string;
   version?: number;
@@ -23,6 +24,7 @@ export class CategoriesService {
     return {
       id: category.id,
       code: category.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+      name: category.name,
       name_ar: category.name,
       name_en: category.name,
       is_referenced: true,
@@ -57,10 +59,9 @@ export class CategoriesService {
   }
 
   async create(body: CategoryDto, userId: string, ipAddress?: string) {
-    const { name_en, name_ar } = body;
-    const name = name_en || name_ar;
+    const name = body.name || body.name_en || body.name_ar;
     if (!name) {
-      throw new BadRequestException('name_en or name_ar is required');
+      throw new BadRequestException('name, name_en, or name_ar is required');
     }
 
     const existing = await this.prisma.category.findUnique({ where: { name } });
@@ -113,8 +114,7 @@ export class CategoriesService {
       );
     }
 
-    const { name_en, name_ar } = body;
-    const name = name_en || name_ar || existing.name;
+    const name = body.name || body.name_en || body.name_ar || existing.name;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.category.update({

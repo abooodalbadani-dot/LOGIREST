@@ -19,6 +19,7 @@ import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { SuppliersService } from './suppliers.service';
 import type { Request } from 'express';
+import { CreateSupplierDto, UpdateSupplierDto } from './dto/supplier.dto';
 
 @Controller(['suppliers', 'master-data/suppliers'])
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -39,7 +40,7 @@ export class SuppliersController {
   @Post()
   @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
   async create(
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateSupplierDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -57,7 +58,7 @@ export class SuppliersController {
   @Roles(Role.ADMIN, Role.GM, Role.PROC_MGR)
   async update(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateSupplierDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {

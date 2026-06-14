@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -186,23 +186,62 @@ export function FXRateFormClient({
     );
   }
 
-  const onValid = async (values: FXRateFormValues) => {
+  const onValid = (values: FXRateFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    const payload = {
+      fromCurrencyId: values.fromCurrencyId,
+      toCurrencyId: values.toCurrencyId,
+      rate: values.rate,
+      effectiveDate: values.effectiveDate,
+      isActive: values.isActive ?? true,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: {
+            ...payload,
+            version: values.version || undefined,
+          },
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          values: payload,
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/fx-rates', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<FXRateFormValues>) => {
+    console.log('3. [FXRateForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const displayTitle = (isReadOnlyProp || normalizedRole === 'auditor') ? (viewTitle || t('view_title') || editTitle) : (id ? editTitle : createTitle);
 
@@ -358,7 +397,7 @@ export function FXRateFormClient({
                   control={control}
                   render={({ field }) => (
                     <Switch
-                      checked={field.value}
+                      checked={field.value ?? true}
                       onCheckedChange={field.onChange}
                       disabled={isReadOnly}
                       className="data-[state=checked]:bg-status-active"

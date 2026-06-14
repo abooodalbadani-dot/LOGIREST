@@ -4,9 +4,8 @@ import { Prisma } from '@prisma/client';
 
 interface CurrencyDto {
   code?: string;
-  name_en?: string;
-  name_ar?: string;
-  is_base_currency?: boolean;
+  name?: string;
+  isBase?: boolean;
   version?: number;
 }
 
@@ -20,17 +19,18 @@ export class CurrenciesService {
     return {
       id: currency.id,
       code: currency.code,
-      name_ar: currency.name,
-      name_en: currency.name,
+      name: currency.name,
+      nameEn: currency.name,
+      nameAr: currency.name,
       symbol:
         currency.code === 'SAR'
           ? 'ر.س'
           : currency.code === 'USD'
             ? '$'
             : currency.code,
-      is_base_currency: currency.isBase,
-      is_active: true,
-      created_at: new Date().toISOString(),
+      isBase: currency.isBase,
+      isActive: true,
+      createdAt: new Date().toISOString(),
       version: currency.version,
     };
   }
@@ -62,7 +62,7 @@ export class CurrenciesService {
   }
 
   async create(data: CurrencyDto) {
-    if (data.is_base_currency) {
+    if (data.isBase) {
       await this.prisma.currency.updateMany({
         where: { isBase: true },
         data: { isBase: false },
@@ -72,15 +72,15 @@ export class CurrenciesService {
     const currency = await this.prisma.currency.create({
       data: {
         code: data.code ?? '',
-        name: data.name_en ?? data.name_ar ?? '',
-        isBase: data.is_base_currency ?? false,
+        name: data.name ?? '',
+        isBase: data.isBase ?? false,
       },
     });
     return this.mapDbCurrencyToFrontend(currency);
   }
 
   async update(id: string, data: CurrencyDto) {
-    if (data.is_base_currency) {
+    if (data.isBase) {
       await this.prisma.currency.updateMany({
         where: { isBase: true },
         data: { isBase: false },
@@ -91,8 +91,8 @@ export class CurrenciesService {
       where: { id },
       data: {
         code: data.code,
-        name: data.name_en || data.name_ar || '',
-        isBase: data.is_base_currency,
+        name: data.name,
+        isBase: data.isBase,
         version: data.version ? { increment: 1 } : undefined,
       },
     });

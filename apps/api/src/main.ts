@@ -1,6 +1,9 @@
 import './otel';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import {
   ValidationPipe,
   BadRequestException,
@@ -10,13 +13,36 @@ import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { json, urlencoded } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 
 import { Logger } from 'nestjs-pino';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+    bodyParser: false,
+  });
+
+  const rootDir = process.cwd().includes('apps')
+    ? join(process.cwd(), '..', '..')
+    : process.cwd();
+  const uploadsDir = join(rootDir, 'apps', 'web', 'public', 'uploads');
+
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/uploads',
+  });
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/api/v1/uploads',
+  });
+
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ limit: '10mb', extended: true }));
 
   app.useLogger(app.get(Logger));
 
@@ -36,8 +62,18 @@ async function bootstrap() {
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders:
-      'Content-Type, Accept, Authorization, x-branch-id, x-warehouse-id, x-xsrf-token ,x-idempotency-key',
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'x-idempotency-key',
+      'x-department-id',
+      'x-branch-id',
+      'x-warehouse-id',
+      'x-xsrf-token',
+    ],
   });
 
   // Set global API prefix, excluding /health and /metrics
@@ -59,7 +95,7 @@ async function bootstrap() {
       if (!authHeader) {
         res.setHeader(
           'WWW-Authenticate',
-          'Basic realm="LogiRest Swagger Docs"',
+          'Basic realm="Otantik Restuarant Swagger Docs"',
         );
         return res.status(401).send('Unauthorized');
       }
@@ -77,14 +113,19 @@ async function bootstrap() {
         return next();
       }
 
-      res.setHeader('WWW-Authenticate', 'Basic realm="LogiRest Swagger Docs"');
+      res.setHeader(
+        'WWW-Authenticate',
+        'Basic realm="Otantik Restuarant Swagger Docs"',
+      );
       return res.status(401).send('Unauthorized');
     });
   }
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('LogiRest API')
-    .setDescription('LogiRest Warehouse & Kitchen Inventory Management API')
+    .setTitle('Otantik Restuarant API')
+    .setDescription(
+      'Otantik Restuarant Warehouse & Kitchen Inventory Management API',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .addCookieAuth('jwt')

@@ -5,11 +5,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding demo users...');
-  const passwordHash = await bcrypt.hash('password123', 12);
+  const passwordHash = await bcrypt.hash('Password123!', 12);
   const warehouses = await prisma.warehouse.findMany();
-  
+
   const demoUsers = [
-    { email: 'admin@kitchen.io', name: 'System Administrator (Demo)', role: Role.ADMIN },
+    { email: 'admin@logirest.local', name: 'System Administrator (Demo)', role: Role.ADMIN },
     { email: 'store@kitchen.io', name: 'Store Manager (Demo)', role: Role.STORE_MGR },
     { email: 'kitchen@kitchen.io', name: 'Kitchen Chief (Demo)', role: Role.KITCHEN_CHIEF },
     { email: 'procurement@kitchen.io', name: 'Procurement Officer (Demo)', role: Role.PROC_OFFICER },

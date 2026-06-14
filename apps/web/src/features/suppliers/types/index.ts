@@ -1,10 +1,9 @@
 import { Supplier as CoreSupplier } from '@/types/master-data';
 
 export interface Supplier extends CoreSupplier {
-  contact_person?: string;
-  email?: string;
-  phone?: string;
-  tax_number?: string;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
 }
 
 export interface CreateSupplierDTO {
@@ -13,10 +12,9 @@ export interface CreateSupplierDTO {
   name_en: string;
   currency_id: string;
   payment_terms: string;
-  contact_person?: string;
-  email?: string;
-  phone?: string;
-  tax_number?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   is_active: boolean;
 }
 

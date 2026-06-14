@@ -44,6 +44,41 @@ export function normalizeKeysToCamelCase<T>(obj: T): CamelCaseKeys<T> {
   return obj as unknown as CamelCaseKeys<T>;
 }
 
+export function sanitizePayload(obj: unknown): unknown {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizePayload);
+  }
+
+  if (obj instanceof Date) {
+    return obj;
+  }
+
+  if (typeof obj === 'object') {
+    if (
+      (typeof FormData !== 'undefined' && obj instanceof FormData) ||
+      (typeof Blob !== 'undefined' && obj instanceof Blob) ||
+      (typeof File !== 'undefined' && obj instanceof File)
+    ) {
+      return obj;
+    }
+    const result = {} as Record<string, unknown>;
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      if (value === '') {
+        result[key] = null;
+      } else {
+        result[key] = sanitizePayload(value);
+      }
+    }
+    return result;
+  }
+
+  return obj;
+}
+
 const BASE = (typeof window === 'undefined' ? process.env.API_URL : null) ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
 let refreshPromise: Promise<boolean> | null = null;
@@ -98,6 +133,27 @@ function generateIdempotencyKey(): string {
   });
 }
 
+interface NestValidationMessage {
+  success: boolean;
+  errors: { field: string; message: string }[];
+}
+
+function isNestValidationMessage(value: unknown): value is NestValidationMessage {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.success !== 'boolean') return false;
+  const errors = obj.errors;
+  if (!Array.isArray(errors)) return false;
+  for (const err of errors) {
+    if (!err || typeof err !== 'object') return false;
+    const errObj = err as Record<string, unknown>;
+    if (typeof errObj.field !== 'string' || typeof errObj.message !== 'string') {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(method: string, path: string, schema: z.ZodType<T, D, I>, body?: unknown, options?: RequestOptions): Promise<T> {
   const token = typeof window !== 'undefined' ? getTokenCookie() : null;
   const locale = typeof document !== 'undefined' ? document.documentElement.lang : 'ar';
@@ -120,8 +176,10 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
     k => k.toLowerCase() === 'x-idempotency-key'
   );
 
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     'Accept-Language': locale,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
@@ -156,7 +214,9 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
       signal,
       credentials: 'include',
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body
+        ? (isFormData ? (body as BodyInit) : JSON.stringify(sanitizePayload(body)))
+        : undefined,
     });
 
     if (res.status === 400 || res.status === 403) {
@@ -257,6 +317,34 @@ async function request<T, D extends z.ZodTypeDef = z.ZodTypeDef, I = unknown>(me
         return { code: 'NETWORK_ERROR', message: 'errors.network', fieldErrors: null };
       });
       const normalizedErr = normalizeKeysToCamelCase(err) as ApiError;
+      
+      if (isNestValidationMessage(normalizedErr)) {
+        const fieldErrors: Record<string, string[]> = {};
+        for (const error of normalizedErr.errors) {
+          if (!fieldErrors[error.field]) {
+            fieldErrors[error.field] = [];
+          }
+          fieldErrors[error.field].push(error.message);
+        }
+        normalizedErr.fieldErrors = fieldErrors;
+        normalizedErr.message = normalizedErr.errors[0]?.message || 'errors.validation';
+      } else {
+        const msgObj = normalizedErr.message as unknown;
+        if (Array.isArray(msgObj)) {
+          normalizedErr.message = msgObj[0] || 'errors.unknown';
+        } else if (isNestValidationMessage(msgObj)) {
+          const fieldErrors: Record<string, string[]> = {};
+          for (const error of msgObj.errors) {
+            if (!fieldErrors[error.field]) {
+              fieldErrors[error.field] = [];
+            }
+            fieldErrors[error.field].push(error.message);
+          }
+          normalizedErr.fieldErrors = fieldErrors;
+          normalizedErr.message = msgObj.errors[0]?.message || 'errors.validation';
+        }
+      }
+      
       console.error(`[API Error] ${method} ${path}`, normalizedErr);
       throw normalizedErr;
     }

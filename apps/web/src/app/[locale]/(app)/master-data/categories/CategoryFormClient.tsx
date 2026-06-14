@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,39 +104,76 @@ export function CategoryFormClient({ id, createTitle, editTitle, viewTitle, isRe
     );
   }
 
-  const onValid = async (values: CategoryFormValues) => {
+  const onValid = (values: CategoryFormValues) => {
     if (isReadOnly || data?.isReferenced) return;
     
-    try {
-      if (id) {
-        // Only send editable fields (omit readonly category code, nameAr, and nameEn if referenced)
-        const updateValues: Partial<CategoryFormValues> = {
-          version: values.version,
-        };
-        if (!data?.isReferenced) {
-          updateValues.name = values.name;
-        }
-        await update.mutateAsync({ id, values: updateValues as CategoryFormValues, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ values, signal: abortController.signal });
+    if (id) {
+      // Only send editable fields (omit readonly category code, nameAr, and nameEn if referenced)
+      const updateValues: Partial<CategoryFormValues> = {
+        version: values.version,
+      };
+      if (!data?.isReferenced) {
+        updateValues.name = values.name;
       }
-      reset(values);
-      guardedRouter.push('/master-data/categories', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+      update.mutate(
+        { 
+          id, 
+          values: updateValues as CategoryFormValues, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/categories', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          values: {
+            code: values.code || undefined,
+            name: values.name,
+          }, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/categories', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<CategoryFormValues>) => {
+    console.log('3. [CategoryForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
 
-  const handleDelete = async () => {
+  const onSubmit = handleSubmit(onValid, onInvalid);
+
+  const handleDelete = () => {
     if (!id) return;
-    try {
-      await deleteMutation.mutateAsync({ id, signal: abortController.signal });
-      guardedRouter.push('/master-data/categories', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hook
-    }
+    deleteMutation.mutate(
+      { id, version: data?.version, signal: abortController.signal },
+      {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/categories', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          setDeleteConfirmOpen(false);
+        }
+      }
+    );
   };
 
   return (

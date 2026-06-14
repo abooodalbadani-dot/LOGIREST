@@ -86,7 +86,7 @@ export class PrismaService
 
     try {
       const dbMigrations = await this.$queryRawUnsafe<PrismaMigration[]>(
-        `SELECT migration_name FROM _prisma_migrations WHERE applied_steps_count > 0`,
+        `SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL`,
       );
       const dbMigrationNames = new Set(
         dbMigrations.map((m) => m.migration_name),

@@ -36,7 +36,6 @@ export function BarcodeListClient({ locale }: { locale: string }) {
   const stats = useMemo(() => {
     return {
       total: barcodes.length,
-      active: barcodes.filter(b => b.isActive).length,
       items: new Set(barcodes.map(b => b.itemId)).size
     };
   }, [barcodes]);
@@ -64,44 +63,6 @@ export function BarcodeListClient({ locale }: { locale: string }) {
           <span className="font-bold text-label-sm">{item.name}</span>
         );
       }
-    },
-    { 
-      accessorKey: 'uomId', 
-      header: t('fields.uom'), 
-      cell: ({ row }) => {
-        const uom = uoms.find(u => u.id === row.original.uomId);
-        if (!uom) return <span className="opacity-40 italic">---</span>;
-        return (
-          <span className="font-bold text-label-sm">{uom.name}</span>
-        );
-      }
-    },
-    {
-      accessorKey: 'defaultQty',
-      header: t('fields.default_qty'),
-      cell: ({ row }) => {
-        const uom = uoms.find(u => u.id === row.original.uomId);
-        return (
-          <div className="flex items-center gap-1.5 font-mono">
-            <span className="text-label-xs text-muted-foreground/40 font-bold italic">x</span>
-            <span className="font-semibold text-amber-500/80">{row.original.defaultQty}</span>
-            {uom && (
-              <span className="text-label-xs font-bold text-muted-foreground/30 uppercase">
-                {uom.code}
-              </span>
-            )}
-          </div>
-        );
-      }
-    },
-    {
-      accessorKey: 'isActive', 
-      header: t('fields.is_active'),
-      cell: ({ row }) => (
-        <StatusBadge 
-          status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
-        />
-      )
     },
     {
       id: 'actions',
@@ -137,7 +98,7 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         </div>
       ),
     },
-  ], [tc, t, locale, router, items, uoms]);
+  ], [tc, t, locale, router, items]);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -173,20 +134,12 @@ export function BarcodeListClient({ locale }: { locale: string }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MetricCard
           label={tc('total_records')}
           value={stats.total}
           icon={BarcodeIcon}
           color="cyan"
-          dir="ltr"
-        />
-
-        <MetricCard
-          label={tc('statuses.active')}
-          value={stats.active}
-          icon={CheckCircle2}
-          color="emerald"
           dir="ltr"
         />
 

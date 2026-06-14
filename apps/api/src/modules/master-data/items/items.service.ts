@@ -8,6 +8,13 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Prisma } from '@prisma/client';
 
 interface ItemCreateDto {
+  name?: string;
+  categoryId?: string;
+  primaryUomId?: string;
+  trackLots?: boolean;
+  minStockLevel?: number;
+  reorderPoint?: number;
+  isActive?: boolean;
   code?: string;
   name_en?: string;
   name_ar?: string;
@@ -37,13 +44,22 @@ export class ItemsService {
       id: item.id,
       code: item.sku,
       barcode: item.barcodeMappings?.[0]?.barcode || '',
+      name: item.name,
       name_ar: item.name,
       name_en: item.name,
       category_id: item.categoryId,
+      category: item.category
+        ? {
+            id: item.category.id,
+            name: item.category.name,
+            version: item.category.version,
+          }
+        : null,
       primary_uom: item.unitOfMeasure
         ? {
             id: item.unitOfMeasure.id,
             code: item.unitOfMeasure.code,
+            name: item.unitOfMeasure.name,
             name_ar: item.unitOfMeasure.name,
             name_en: item.unitOfMeasure.name,
             category: 'General',
@@ -154,17 +170,15 @@ export class ItemsService {
 
   async create(body: ItemCreateDto, userId: string, ipAddress?: string) {
     let { code } = body;
-    const {
-      name_en,
-      name_ar,
-      category_id,
-      primary_uom_id,
-      track_lots,
-      min_stock_level,
-      reorder_point,
-      is_active,
-      barcode,
-    } = body;
+    const name_en = body.name_en;
+    const name_ar = body.name_ar;
+    const category_id = body.category_id || body.categoryId;
+    const primary_uom_id = body.primary_uom_id || body.primaryUomId;
+    const track_lots = body.track_lots ?? body.trackLots;
+    const min_stock_level = body.min_stock_level ?? body.minStockLevel;
+    const reorder_point = body.reorder_point ?? body.reorderPoint;
+    const is_active = body.is_active ?? body.isActive;
+    const barcode = body.barcode;
 
     if (!category_id || !primary_uom_id) {
       throw new BadRequestException(
@@ -206,7 +220,7 @@ export class ItemsService {
       }
     }
 
-    const name = name_en || name_ar || code;
+    const name = body.name || name_en || name_ar || code;
 
     const created = await this.prisma.$transaction(async (tx) => {
       const newItem = await tx.item.create({
@@ -273,18 +287,16 @@ export class ItemsService {
       );
     }
 
-    const {
-      code,
-      name_en,
-      name_ar,
-      category_id,
-      primary_uom_id,
-      track_lots,
-      reorder_point,
-      is_active,
-      barcode,
-    } = body;
-    const name = name_en || name_ar || existing.name;
+    const code = body.code;
+    const name_en = body.name_en;
+    const name_ar = body.name_ar;
+    const category_id = body.category_id || body.categoryId;
+    const primary_uom_id = body.primary_uom_id || body.primaryUomId;
+    const track_lots = body.track_lots ?? body.trackLots;
+    const reorder_point = body.reorder_point ?? body.reorderPoint;
+    const is_active = body.is_active ?? body.isActive;
+    const barcode = body.barcode;
+    const name = body.name || name_en || name_ar || existing.name;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.item.update({

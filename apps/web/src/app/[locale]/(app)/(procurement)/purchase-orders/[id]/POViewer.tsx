@@ -69,13 +69,13 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
     })) || [];
   }, [documentLines]);
 
-  const currencyId = document?.currencyId;
+  const currencyCode = document?.currencyCode || 'USD';
   const extraColumns = React.useMemo(() => [
     {
       header: t('unit_price'),
       cell: (line: MappedPOLine) => (
         <span dir="ltr" className="font-mono text-label-sm font-bold text-operational-cyan">
-          {line.unitCost}
+          {formatCurrency(line.unitCost, currencyCode, locale)}
         </span>
       )
     },
@@ -83,11 +83,11 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
       header: tCommon('subtotal') || 'Subtotal',
       cell: (line: MappedPOLine) => (
         <span dir="ltr" className="font-mono text-body-md font-semibold text-foreground">
-          {formatCurrency((line.qty || 0) * (line.unitCost || 0), currencyId, locale)}
+          {formatCurrency((line.qty || 0) * (line.unitCost || 0), currencyCode, locale)}
         </span>
       )
     }
-  ], [t, tCommon, currencyId, locale]);
+  ], [t, tCommon, currencyCode, locale]);
 
   return (
     <div className="space-y-10 w-full bg-surface-container-low min-h-screen p-6 lg:p-10 animate-in fade-in duration-500">
@@ -125,7 +125,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
               { label: tCommon('supplier'), value: document?.supplierName || document?.supplierId, icon: User, color: 'text-primary' },
-              { label: tCommon('order_currency'), value: document?.currencyId, icon: Wallet, color: 'text-operational-cyan' },
+              { label: tCommon('order_currency'), value: document?.currencyCode || document?.currencyId, icon: Wallet, color: 'text-operational-cyan' },
               { label: t('target_warehouse'), value: document?.warehouseName || document?.targetWarehouseId, icon: Warehouse, color: 'text-emerald-500' },
               { label: t('expected_delivery_date'), value: document?.expectedDeliveryDate || '—', icon: Clock, color: 'text-amber-500' },
             ].map((item, idx) => (
@@ -168,7 +168,7 @@ export function POViewer({ document, locale, actions }: POViewerProps) {
                   <div className="flex flex-col items-end">
                     <p className="text-label-xs font-semibold uppercase text-muted-foreground/40">{t('order_total')}</p>
                     <p dir="ltr" className="text-headline-lg font-semibold text-primary">
-                      {formatCurrency(document?.total || 0, document?.currencyId, locale)}
+                      {formatCurrency(document?.total || 0, currencyCode, locale)}
                     </p>
                   </div>
                 </div>

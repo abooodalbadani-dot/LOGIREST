@@ -7,12 +7,13 @@ import { apiClient, normalizeKeysToCamelCase } from '@/lib/api/client';
 import { getTokenCookie, setTokenCookie, deleteTokenCookie } from '@/lib/api/cookies';
 import { AuthUserSchema } from '@/types/auth';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import type { ApiError } from '@/types/api';
 
 export type UserRole = 'ADMIN' | 'GM' | 'INV_MGR' | 'WH_KEEPER' | 'PROC_OFFICER' | 'APPROVER' | 'AUDITOR' | 'VIEWER' | 'KITCHEN_CHIEF' | 'STORE_MGR' | 'BRANCH_MGR' | 'PROC_MGR';
-export interface UserScope { 
-  branchId: string | null; 
-  warehouseId: string | null; 
-  departmentId: string | null; 
+export interface UserScope {
+  branchId: string | null;
+  warehouseId: string | null;
+  departmentId: string | null;
   warehouse?: {
     id: string;
     name: string;
@@ -31,15 +32,16 @@ export interface UserScope {
   } | null;
 }
 export interface ActiveScope { branchId: string | null; warehouseId: string | null; departmentId: string | null; }
-export interface AuthUser { 
-  id: string; 
-  name: string; 
-  email: string; 
-  role: UserRole; 
-  scopes: UserScope[]; 
-  locale?: 'ar' | 'en'; 
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  scopes: UserScope[];
+  locale?: 'ar' | 'en';
   avatarUrl?: string | null;
   phone?: string | null;
+  themePreferences?: 'light' | 'dark';
   notificationPreferences?: {
     lowStock: boolean;
     expiry: boolean;
@@ -48,11 +50,11 @@ export interface AuthUser {
     security: boolean;
   };
 }
-export interface AuthContextValue { 
-  user: AuthUser | null; 
-  token: string | null; 
-  login: (email: string, password: string) => Promise<void>; 
-  logout: () => void; 
+export interface AuthContextValue {
+  user: AuthUser | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
   updateUser: (updatedFields: Partial<AuthUser>) => void;
   isLoading: boolean;
   activeScope: ActiveScope;
@@ -89,14 +91,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(null);
       setActiveScopeState({ branchId: null, warehouseId: null, departmentId: null });
       setHasAttemptedAutoSelect(false);
-      
+
       if (typeof window !== 'undefined') {
         try {
           sessionStorage.clear();
         } catch (e) {
           console.error('Failed to clear session storage:', e);
         }
-        
+
         // Remove document cookie explicitly to double-guarantee
         document.cookie = 'logirest_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
 
@@ -151,6 +153,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Failed to parse user overrides:', err);
             localStorage.removeItem('logirest_user_overrides');
           }
+        }
+        if (finalUser.locale) {
+          document.cookie = `NEXT_LOCALE=${finalUser.locale}; path=/; max-age=31536000; SameSite=Lax`;
         }
         setUser(finalUser);
         setToken(storedToken);
@@ -306,6 +311,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const camelPayloadUser = normalizeKeysToCamelCase(payload.user);
       const parsedUser = AuthUserSchema.parse(camelPayloadUser);
 
+      if (parsedUser.locale) {
+        document.cookie = `NEXT_LOCALE=${parsedUser.locale}; path=/; max-age=31536000; SameSite=Lax`;
+      }
       setUser(parsedUser);
       setToken(data.token);
 
@@ -324,9 +332,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (err) {
+      const isApiError = (error: unknown): error is ApiError => {
+        return (
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          'message' in error &&
+          'fieldErrors' in error
+        );
+      };
+
       console.error('[Auth] Login sequence failed:', {
         error: err,
-        message: err instanceof Error ? err.message : String(err),
+        message: isApiError(err)
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : String(err),
         timestamp: new Date().toISOString()
       });
       throw new Error(t('login_failed'));

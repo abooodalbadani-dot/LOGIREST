@@ -2,8 +2,9 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getExportBranding } from './exportBranding';
 import { format } from 'date-fns';
-import { getCairoFontBase64 } from './fontLoader';
+import { getArabicFontBase64, getArabicBoldFontBase64 } from './fontLoader';
 import { reshapeArabicText } from './arabicShaper';
+import { translateToEnglish } from './translate';
 
 export interface PDFColumn {
   header: string;
@@ -16,31 +17,49 @@ interface PDFExportOptions {
   generatedBy?: string;
 }
 
-/**
- * Detects text alignment based on content.
- * Arabic RTL strings -> right
- * Numbers and SKUs -> center/left
- */
-function getAlignment(text: string): 'right' | 'left' | 'center' {
-  if (!text) return 'left';
-  
-  // Arabic character range check
-  if (/[\u0600-\u06FF\uFE70-\uFEFC]/.test(text)) {
-    return 'right';
-  }
-  
-  const clean = text.trim();
-  // Numeric values, percentages, currencies
-  if (/^\d+(\.\d+)?%?$/.test(clean) || /^[A-Z0-9-]+-\d+$/.test(clean)) {
-    return 'center';
-  }
-  
-  return 'left';
+function hasArabic(text: string): boolean {
+  return /[\u0600-\u06FF\uFE70-\uFEFC]/.test(text);
 }
 
 /**
- * Generates a professional PDF report with branding, watermark, and pagination.
+ * Detects text alignment based on content and columns.
+ * - Arabic fallbacks -> right
+ * - Financial fields -> right
+ * - Numeric / SKU fields -> center
+ * - General English text -> left
  */
+function getCellAlignment(
+  text: string,
+  columnKey: string | number,
+  columnHeader: string
+): 'left' | 'center' | 'right' {
+  if (!text) return 'left';
+
+  if (hasArabic(text)) {
+    return 'right';
+  }
+
+  const keyLower = String(columnKey).toLowerCase();
+  const headerLower = String(columnHeader).toLowerCase();
+
+  // Financial columns keywords
+  const financialKeywords = ['value', 'price', 'total', 'wac', 'cost', 'amount', 'rate', 'currency'];
+  if (financialKeywords.some(k => keyLower.includes(k) || headerLower.includes(k))) {
+    return 'right';
+  }
+
+  const clean = text.trim();
+  const isNumeric = /^\d+(\.\d+)?%?$/.test(clean);
+  const isSKU = /^[A-Z0-9-]+-\d+$/.test(clean) || keyLower.includes('sku') || headerLower.includes('sku');
+  const isQty = keyLower.includes('qty') || headerLower.includes('quantity') || headerLower.includes('qty');
+
+  if (isNumeric || isSKU || isQty) {
+    return 'center';
+  }
+
+  return 'left';
+}
+
 export async function generatePDF(
   columns: PDFColumn[],
   rows: Record<string, unknown>[],
@@ -56,24 +75,32 @@ export async function generatePDF(
 
   const branding = getExportBranding();
   const dateStr = format(new Date(), 'yyyy-MM-dd HH:mm');
-  
+
   // Base64 Font Setup
-  const cairoBase64 = await getCairoFontBase64();
-  const activeFont = cairoBase64 ? 'Cairo' : 'helvetica';
-  
-  if (cairoBase64) {
-    doc.addFileToVFS('Cairo-Regular.ttf', cairoBase64);
-    doc.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
+  const [arabicBase64, arabicBoldBase64] = await Promise.all([
+    getArabicFontBase64(),
+    getArabicBoldFontBase64(),
+  ]);
+  const activeFont = arabicBase64 ? 'Amiri' : 'helvetica';
+
+  if (arabicBase64) {
+    doc.addFileToVFS('Amiri-Regular.ttf', arabicBase64);
+    doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal', 'Identity-H');
+  }
+  if (arabicBoldBase64) {
+    doc.addFileToVFS('Amiri-Bold.ttf', arabicBoldBase64);
+    doc.addFont('Amiri-Bold.ttf', 'Amiri', 'bold', 'Identity-H');
   }
   doc.setFont(activeFont, 'normal');
 
-  const headers = columns.map(col => col.header);
-  const data = rows.map(row => 
+  // Translate all headers and cell values to English
+  const headers = columns.map(col => translateToEnglish(col.header));
+  const data = rows.map(row =>
     columns.map(col => {
       const val = row[col.key];
       if (val === null || val === undefined) return '';
       if (typeof val === 'boolean') return val ? 'Yes' : 'No';
-      return String(val);
+      return translateToEnglish(String(val));
     })
   );
 
@@ -85,14 +112,13 @@ export async function generatePDF(
     if (branding?.logo) {
       try {
         pdfDoc.saveGraphicsState();
-        // Set opacity strictly to 0.04
         pdfDoc.setGState(pdfDoc.GState({ opacity: 0.04 }));
-        
+
         const size = 120; // 120mm x 120mm
         const x = (pageWidth - size) / 2;
         const y = (pageHeight - size) / 2;
         const imageFormat = branding.logo.includes('png') ? 'PNG' : 'JPEG';
-        
+
         pdfDoc.addImage(branding.logo, imageFormat, x, y, size, size);
         pdfDoc.restoreGraphicsState();
       } catch (error) {
@@ -105,13 +131,36 @@ export async function generatePDF(
       pdfDoc.setFontSize(48);
       pdfDoc.setTextColor(150);
       pdfDoc.setFont(activeFont, 'bold');
-      
-      const watermarkText = reshapeArabicText(branding?.name || 'LOGIREST');
+
+      const watermarkTextRaw = branding?.name || 'OTANTIK RESTUARANT';
+      const watermarkTextTranslated = translateToEnglish(watermarkTextRaw);
+      const watermarkText = reshapeArabicText(watermarkTextTranslated);
       pdfDoc.text(watermarkText, pageWidth / 2, pageHeight / 2, {
         align: 'center',
         angle: 30,
       });
       pdfDoc.restoreGraphicsState();
+    }
+  };
+
+  // Helper to draw a line of text in the header with correct translation and alignment
+  const drawHeaderLine = (
+    text: string,
+    y: number,
+    fontSize: number,
+    isBold: boolean,
+    textColor: [number, number, number],
+    leftX: number
+  ) => {
+    const translated = translateToEnglish(text);
+    doc.setFontSize(fontSize);
+    doc.setFont(activeFont, isBold ? 'bold' : 'normal');
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+
+    if (hasArabic(translated)) {
+      doc.text(reshapeArabicText(translated), pageWidth - 14, y, { align: 'right' });
+    } else {
+      doc.text(translated, leftX, y, { align: 'left' });
     }
   };
 
@@ -127,54 +176,48 @@ export async function generatePDF(
       }
     }
 
-    // Profile Text Block
-    pdfDoc.setFontSize(15);
-    pdfDoc.setTextColor(30, 41, 59); // Slate 800
-    pdfDoc.setFont(activeFont, 'bold');
-    pdfDoc.text(reshapeArabicText(branding?.name || 'LogiRest Enterprise'), pageWidth - 14, 15, { align: 'right' });
+    const brandingLeftX = branding?.logo ? 42 : 14;
 
-    pdfDoc.setFontSize(9);
-    pdfDoc.setFont(activeFont, 'normal');
-    pdfDoc.setTextColor(71, 85, 105); // Slate 600
-    
+    // Profile Text Block - Branding Name
+    const brandingName = branding?.name || 'Otantik Restuarant Enterprise';
+    drawHeaderLine(brandingName, 15, 15, true, [30, 41, 59], brandingLeftX);
+
     let currentY = 20;
     if (branding?.address) {
-      pdfDoc.text(reshapeArabicText(branding.address), pageWidth - 14, currentY, { align: 'right' });
+      drawHeaderLine(branding.address, currentY, 9, false, [71, 85, 105], brandingLeftX);
       currentY += 4.5;
     }
 
     const contactStr = `هاتف: ${branding?.phone || ''} | بريد: ${branding?.email || ''}`;
-    pdfDoc.text(reshapeArabicText(contactStr), pageWidth - 14, currentY, { align: 'right' });
+    drawHeaderLine(contactStr, currentY, 9, false, [71, 85, 105], brandingLeftX);
     currentY += 4.5;
 
     const taxCR: string[] = [];
     if (branding?.taxNumber) taxCR.push(`الرقم الضريبي: ${branding.taxNumber}`);
     if (branding?.commercialRegistration) taxCR.push(`سجل تجاري: ${branding.commercialRegistration}`);
-    
+
     if (taxCR.length > 0) {
-      pdfDoc.text(reshapeArabicText(taxCR.join(' | ')), pageWidth - 14, currentY, { align: 'right' });
+      drawHeaderLine(taxCR.join(' | '), currentY, 9, false, [71, 85, 105], brandingLeftX);
       currentY += 4.5;
     }
 
-    currentY += 2; // Spacing before title
+    // Ensure title does not overlap with logo height (logo is 24mm high, placed at y = 10, ending at y = 34)
+    if (branding?.logo && currentY < 37) {
+      currentY = 37;
+    } else {
+      currentY += 2; // Spacing before title
+    }
 
     // Report Title
-    pdfDoc.setFontSize(13);
-    pdfDoc.setFont(activeFont, 'bold');
-    pdfDoc.setTextColor(15, 118, 110); // Teal 700
-    pdfDoc.text(reshapeArabicText(title), pageWidth - 14, currentY, { align: 'right' });
+    drawHeaderLine(title, currentY, 13, true, [15, 118, 110], 14);
     currentY += 4.5;
 
     // Report Metadata
-    pdfDoc.setFontSize(8.5);
-    pdfDoc.setFont(activeFont, 'normal');
-    pdfDoc.setTextColor(100, 116, 139); // Slate 500
-    
     const metaParts = [`تاريخ التقرير: ${dateStr}`];
     if (options?.scope) {
       metaParts.push(`النطاق: ${options.scope}`);
     }
-    pdfDoc.text(reshapeArabicText(metaParts.join(' | ')), pageWidth - 14, currentY, { align: 'right' });
+    drawHeaderLine(metaParts.join(' | '), currentY, 8.5, false, [100, 116, 139], 14);
     currentY += 3;
 
     // Line separator
@@ -213,19 +256,19 @@ export async function generatePDF(
     },
     margin: { top: 14, bottom: 20 },
     didDrawPage: () => {
-      // Add watermark behind cells
       addWatermark(doc);
     },
     didParseCell: (cellData) => {
       const text = String(cellData.cell.raw || '');
-      cellData.cell.text = [reshapeArabicText(text)];
-      
-      // Determine text alignments dynamically based on content type
-      if (cellData.section === 'head') {
-        cellData.cell.styles.halign = getAlignment(text);
-      } else {
-        cellData.cell.styles.halign = getAlignment(text);
-      }
+      const translated = translateToEnglish(text);
+      cellData.cell.text = [reshapeArabicText(translated)];
+
+      const colIndex = cellData.column.index;
+      const col = columns[colIndex];
+      const colKey = col?.key || '';
+      const colHeader = col?.header || '';
+
+      cellData.cell.styles.halign = getCellAlignment(translated, colKey, colHeader);
     }
   });
 
@@ -233,28 +276,36 @@ export async function generatePDF(
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    
-    // Draw header block on pages > 1 if they exist
+
     if (i > 1) {
       renderHeader(doc);
     }
-    
+
     // Footer Block
     doc.setFont(activeFont, 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(148, 163, 184); // Slate 400
-    
-    // Arabic page format "صفحة X من Y"
-    const pageText = reshapeArabicText(`صفحة ${i} من ${totalPages}`);
-    
-    // User audit details
+
+    const rawPageText = `صفحة ${i} من ${totalPages}`;
+    const pageTextTranslated = translateToEnglish(rawPageText);
+
     const auditUser = options?.generatedBy ? `تم الإنشاء بواسطة: ${options.generatedBy}` : '';
     const auditScope = options?.scope ? `النطاق: ${options.scope}` : '';
-    const auditText = reshapeArabicText([auditUser, auditScope].filter(Boolean).join(' | '));
-    
-    doc.text(pageText, 14, pageHeight - 10);
-    if (auditText) {
-      doc.text(auditText, pageWidth - 14, pageHeight - 10, { align: 'right' });
+    const rawAuditText = [auditUser, auditScope].filter(Boolean).join(' | ');
+    const auditTextTranslated = translateToEnglish(rawAuditText);
+
+    if (hasArabic(pageTextTranslated)) {
+      doc.text(reshapeArabicText(pageTextTranslated), 14, pageHeight - 10);
+    } else {
+      doc.text(pageTextTranslated, pageWidth - 14, pageHeight - 10, { align: 'right' });
+    }
+
+    if (auditTextTranslated) {
+      if (hasArabic(auditTextTranslated)) {
+        doc.text(reshapeArabicText(auditTextTranslated), pageWidth - 14, pageHeight - 10, { align: 'right' });
+      } else {
+        doc.text(auditTextTranslated, 14, pageHeight - 10);
+      }
     }
   }
 

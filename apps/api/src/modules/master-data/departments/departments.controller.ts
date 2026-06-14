@@ -1,3 +1,4 @@
+import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
 import {
   Controller,
   Get,
@@ -129,18 +130,22 @@ export class DepartmentsController {
   @Post()
   @Roles(Role.ADMIN, Role.GM)
   async create(
-    @Body() body: { name: string; branchId: string },
+    @Body() body: CreateDepartmentDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
-    const { name, branchId } = body;
+    const { name, branchId, isActive } = body;
     if (!name || !branchId) {
       throw new BadRequestException('name and branchId are required');
     }
 
     const department = await this.prisma.$transaction(async (tx) => {
       const created = await tx.department.create({
-        data: { name, branchId },
+        data: {
+          name,
+          branchId,
+          isActive: isActive !== undefined ? isActive : true,
+        },
         include: { branch: true },
       });
 
@@ -158,7 +163,11 @@ export class DepartmentsController {
           targetTable: 'departments',
           targetId: created.id,
           beforeStateJson: '',
-          afterStateJson: JSON.stringify({ name, branchId }),
+          afterStateJson: JSON.stringify({
+            name,
+            branchId,
+            isActive: created.isActive,
+          }),
           ipAddress: ipAddress || null,
         },
       });
@@ -176,7 +185,7 @@ export class DepartmentsController {
   @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
-    @Body() body: { name?: string; branchId?: string; version?: number },
+    @Body() body: UpdateDepartmentDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -191,6 +200,7 @@ export class DepartmentsController {
         data: {
           ...(body.name ? { name: body.name } : {}),
           ...(body.branchId ? { branchId: body.branchId } : {}),
+          isActive: body.isActive !== undefined ? body.isActive : undefined,
           version: existing.version + 1,
         },
         include: { branch: true },

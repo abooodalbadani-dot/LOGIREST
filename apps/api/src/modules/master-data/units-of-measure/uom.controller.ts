@@ -19,6 +19,7 @@ import { ApiSecureController } from '../../../decorators/swagger-docs.decorator'
 import { UomService } from './uom.service';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
+import { CreateUomDto, UpdateUomDto } from './dto/uom.dto';
 
 @Controller(['units-of-measure', 'master-data/units-of-measure'])
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -39,7 +40,7 @@ export class UomController {
   @Post()
   @Roles(Role.ADMIN, Role.GM)
   async create(
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateUomDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -57,7 +58,7 @@ export class UomController {
   @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateUomDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {

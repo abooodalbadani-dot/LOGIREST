@@ -36,7 +36,7 @@ export function CreateCustomItemDialog({
   const { data: uomsResult, isLoading: isLoadingUoMs } = useUoMs();
   
   const uoms = uomsResult?.data || [];
-  const activeUoMs = uoms.filter(u => u.isActive !== false);
+  const activeUoMs = uoms;
 
   const isArabic = /[\u0600-\u06FF]/.test(defaultName);
   const [nameEn, setNameEn] = useState(() => isArabic ? '' : defaultName);

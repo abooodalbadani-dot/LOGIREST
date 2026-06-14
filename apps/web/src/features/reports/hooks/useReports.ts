@@ -20,6 +20,29 @@ export const PaginatedAvailableInventorySchema = z.object({
  data: z.array(AvailableInventoryReportSchema),
 });
 
+export const StockMovementBackendItemSchema = z.object({
+  id: z.string(),
+  postedAt: z.string(),
+  warehouseId: z.string(),
+  itemId: z.string(),
+  lotId: z.string().nullable().optional(),
+  quantity: z.number().or(z.string()).transform((val) => Number(val)),
+  documentId: z.string(),
+  documentType: z.string(),
+  item: z.object({
+    id: z.string(),
+    name: z.string(),
+    sku: z.string(),
+  }),
+});
+
+export const PaginatedStockMovementsSchema = z.object({
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  data: z.array(StockMovementBackendItemSchema),
+});
+
 export const StockMovementsReportSchema = z.object({
  date: z.string(),
  reference: z.string(),
@@ -138,9 +161,21 @@ export function useAvailableInventoryReport(page = 1, limit = 100, search?: stri
 
 export function useStockMovementsReport() {
  return useQuery({
- queryKey: ['reports', 'movements'],
- queryFn: ({ signal }) => apiClient.get('/reports/movements', z.array(StockMovementsReportSchema), { signal }),
- staleTime: 5 * 60 * 1000,
+   queryKey: ['reports', 'movements'],
+   queryFn: async ({ signal }) => {
+     const response = await apiClient.get('/reports/movements', PaginatedStockMovementsSchema, { signal });
+     return response.data.map((m) => ({
+       date: m.postedAt,
+       reference: m.documentId,
+       type: m.documentType,
+       from: '-',
+       to: '-',
+       item: `${m.item.sku} - ${m.item.name}`,
+       qty: m.quantity,
+       user: '-',
+     }));
+   },
+   staleTime: 5 * 60 * 1000,
  });
 }
 

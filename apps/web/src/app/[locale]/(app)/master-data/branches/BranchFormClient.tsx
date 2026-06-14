@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, ShieldCheck, Trash2 } from 'lucide-react';
 
@@ -56,12 +56,15 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     reset, 
     setValue, 
     control, 
-    formState: { errors, isDirty, isValid } 
+    formState 
   } = useForm<BranchFormValues>({
     resolver: zodResolver(BranchFormSchema),
     disabled: isReadOnly,
     defaultValues: { code: '', name: '', isActive: true, version: undefined },
   });
+  const { errors, isDirty, isValid } = formState;
+
+  console.log('Form State - isSubmitting:', formState.isSubmitting, 'isValid:', formState.isValid);
 
   const { 
     data, 
@@ -71,9 +74,9 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     fetchStatus 
   } = useBranch(id);
   const { data: branchesData } = useBranches();
-  const create = useCreateBranch();
+  const createBranch = useCreateBranch();
   const conflict = useConflictHandler('branch', id ?? '');
-  const update = useUpdateBranch({ onConflict: conflict.triggerConflict });
+  const updateBranch = useUpdateBranch({ onConflict: conflict.triggerConflict });
   const deleteBranch = useDeleteBranch();
   const { playSound } = useAudioFeedback();
 
@@ -100,22 +103,41 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     }
   }, [id, branchesData, setValue, codeValue, isAutoPopulated]);
 
-  const onValid = async (values: BranchFormValues) => {
+  const onValid = (values: BranchFormValues) => {
+    console.log('3. [BranchForm] Validation PASSED. Data:', values);
     if (isReadOnly) return;
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/branches', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    
+    if (id) {
+      updateBranch.mutate({ id, values, signal: abortController.signal }, {
+        onSuccess: () => {
+          toast.success(tb('updated_success'));
+          reset(values);
+          guardedRouter.push('/master-data/branches', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Update failed:', error);
+        }
+      });
+    } else {
+      createBranch.mutate({ ...values, signal: abortController.signal }, {
+        onSuccess: () => {
+          toast.success(tb('created_success'));
+          reset(values);
+          guardedRouter.push('/master-data/branches', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Create failed:', error);
+        }
+      });
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<BranchFormValues>) => {
+    console.log('3. [BranchForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   const handleDelete = async () => {
     if (!id) return;
@@ -169,7 +191,7 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
     );
   }
 
-  const isSaving = create.isPending || update.isPending || deleteBranch.isPending;
+  const isSaving = createBranch.isPending || updateBranch.isPending || deleteBranch.isPending;
 
   // Determine the display title
   const displayTitle = id 
@@ -224,13 +246,19 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
               {/* Code */}
               <div className="space-y-2 max-w-md">
                 <Label htmlFor="branch-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
-                <Input 
-                  id="branch-code" 
-                  dir="ltr" 
-                  {...register('code')} 
-                  disabled={isReadOnly}
-                  className="font-mono font-semibold uppercase text-status-active" 
-                  placeholder={tb('placeholders.code')} 
+                <Controller
+                  control={control}
+                  name="code"
+                  render={({ field }) => (
+                    <Input 
+                      id="branch-code" 
+                      dir="ltr" 
+                      {...field} 
+                      disabled={isReadOnly}
+                      className="font-mono font-semibold uppercase text-status-active" 
+                      placeholder={tb('placeholders.code')} 
+                    />
+                  )}
                 />
                 {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.code.message as string)}</p>}
               </div>
@@ -239,13 +267,19 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                 {/* Name EN */}
                 <div className="space-y-2">
                   <Label htmlFor="branch-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name')}</Label>
-                  <Input 
-                    id="branch-name" 
-                    dir="ltr" 
-                    {...register('name')} 
-                    disabled={isReadOnly}
-                    className="font-semibold" 
-                    placeholder={tb('placeholders.name')} 
+                  <Controller
+                    control={control}
+                    name="name"
+                    render={({ field }) => (
+                      <Input 
+                        id="branch-name" 
+                        dir="ltr" 
+                        {...field} 
+                        disabled={isReadOnly}
+                        className="font-semibold" 
+                        placeholder={tb('placeholders.name')} 
+                      />
+                    )}
                   />
                   {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{t(errors.name.message as string)}</p>}
                 </div>
@@ -273,12 +307,18 @@ export function BranchFormClient({ id, createTitle, editTitle, viewTitle, locale
                   <Label htmlFor="branch-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
                   <p className={`text-label-sm font-semibold uppercase ${(isActive ?? true) ? 'text-status-active' : 'text-status-error'}`}>{(isActive ?? true) ? t('statuses.active') : t('statuses.inactive')}</p>
                 </div>
-                <Switch
-                  id="branch-is-active"
-                  checked={isActive ?? true}
-                  onCheckedChange={(v) => setValue('isActive', v)}
-                  disabled={isReadOnly}
-                  className="data-[state=checked]:bg-status-active"
+                <Controller
+                  control={control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <Switch
+                      id="branch-is-active"
+                      checked={field.value ?? true}
+                      onCheckedChange={field.onChange}
+                      disabled={isReadOnly}
+                      className="data-[state=checked]:bg-status-active"
+                    />
+                  )}
                 />
               </div>
             </CardContent>

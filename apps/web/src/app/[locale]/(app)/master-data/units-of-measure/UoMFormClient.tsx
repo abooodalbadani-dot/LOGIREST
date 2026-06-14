@@ -2,13 +2,11 @@
 
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Ruler, Activity, ShieldCheck, Tags } from 'lucide-react';
+import { Ruler, Activity } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState } from 'react';
 import { PostConfirmDialog } from '@/components/shared/PostConfirmDialog';
@@ -57,13 +55,11 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isDirty, isValid } } = useForm<UoMFormValues>({
     resolver: zodResolver(UoMFormSchema),
-    defaultValues: { code: '', name: '', category: '', isActive: true, version: undefined },
+    defaultValues: { code: '', name: '', version: undefined },
     disabled: isReadOnly,
   });
 
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
-
-  const isActive = useWatch({ control, name: 'isActive' });
 
   const codeValue = useWatch({ control, name: 'code' });
 
@@ -72,8 +68,6 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
       reset({ 
         code: data.code, 
         name: data.name, 
-        category: data.category || '',
-        isActive: data.isActive,
         version: data.version
       });
     }
@@ -113,32 +107,74 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
     );
   }
 
-  const onValid = async (values: UoMFormValues) => {
+  const onValid = (values: UoMFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    const payload = {
+      code: values.code || undefined,
+      name: values.name,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: {
+            ...payload,
+            version: values.version || undefined,
+          },
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          ...payload, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<UoMFormValues>) => {
+    console.log('3. [UoMForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
 
-  const handleDelete = async () => {
+  const onSubmit = handleSubmit(onValid, onInvalid);
+
+  const handleDelete = () => {
     if (!id) return;
-    try {
-      await deleteUoM.mutateAsync({ id, signal: abortController.signal });
-      guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
-    } catch {
-      setShowDeleteConfirm(false);
-    }
+    deleteUoM.mutate(
+      { id, signal: abortController.signal },
+      {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/units-of-measure', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          setShowDeleteConfirm(false);
+        }
+      }
+    );
   };
 
   const isSaving = create.isPending || update.isPending || deleteUoM.isPending;
@@ -176,124 +212,64 @@ export function UoMFormClient({ id, createTitle, editTitle, viewTitle, isReadOnl
           )
         }
       >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-8">
-                <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                    <Ruler className="w-5 h-5 text-tertiary" />
-                  </div>
-                  <div>
-                    <h3 className="text-body-md font-semibold text-foreground uppercase">{t('basic_info')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tu('description')}</p>
-                  </div>
+        <div className="max-w-3xl mx-auto space-y-8">
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Ruler className="w-5 h-5 text-tertiary" />
                 </div>
+                <div>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{t('basic_info')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tu('description')}</p>
+                </div>
+              </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2 max-w-md">
-                    <Label htmlFor="uom-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
-                    <Controller
-                      name="code"
-                      control={control}
-                      render={({ field }) => (
-                          <Input 
-                            {...field}
-                            value={field.value ?? ''}
-                            id="uom-code" 
-                            dir="ltr" 
-                            disabled={isReadOnly}
-                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                            className="font-mono font-semibold uppercase text-status-active" 
-                            placeholder={tu('placeholders.code')} 
-                          />
-                      )}
-                    />
-                    {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
-                  </div>
-
-                  <div className="space-y-2 max-w-md">
-                    <Label htmlFor="uom-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name') || 'Name'}</Label>
-                    <Input 
-                      id="uom-name" 
-                      {...register('name')} 
-                      disabled={isReadOnly}
-                      className="font-semibold" 
-                      placeholder={tu('placeholders.name') || 'Enter UoM Name'} 
-                    />
-                    {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
-                  </div>
-
-                  <div className="space-y-2 max-w-sm">
-                    <Label htmlFor="uom-category" className="text-label-xs font-semibold uppercase text-muted-foreground/70 flex items-center gap-2">
-                      <Tags className="w-3 h-3" />
-                      {tu('fields.category')}
-                    </Label>
-                    <Controller
-                      name="category"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          value={field.value || ''}
-                          onValueChange={field.onChange}
+              <div className="space-y-6">
+                <div className="space-y-2 max-w-md">
+                  <Label htmlFor="uom-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('code')}</Label>
+                  <Controller
+                    name="code"
+                    control={control}
+                    render={({ field }) => (
+                        <Input 
+                          {...field}
+                          value={field.value ?? ''}
+                          id="uom-code" 
+                          dir="ltr" 
                           disabled={isReadOnly}
-                        >
-                          <SelectTrigger id="uom-category" className="bg-surface-container-lowest border-none h-11 rounded-xl font-semibold text-label-xs uppercase">
-                            <SelectValue placeholder={t('select_none')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {['mass', 'volume', 'unit', 'count', 'length', 'area'].map(cat => (
-                              <SelectItem key={cat} value={cat} className="text-label-xs font-semibold uppercase">
-                                {tu(`category_options.${cat}`)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-8">
-            <Card className="bg-surface-container-low border-none overflow-hidden">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                  <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-tertiary" />
-                  </div>
-                  <div>
-                    <h3 className="text-body-md font-semibold text-foreground uppercase">{t('status')}</h3>
-                    <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('status')}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10 group transition-all hover:bg-surface-container-highest/30">
-                  <div className="space-y-1">
-                    <Label htmlFor="uom-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{t('is_active')}</Label>
-                    <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? t('active') : t('inactive')}</p>
-                  </div>
-                  <Switch
-                    id="uom-active"
-                    checked={isActive}
-                    onCheckedChange={(v) => setValue('isActive', v)}
-                    className="data-[state=checked]:bg-status-active"
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                          className="font-mono font-semibold uppercase text-status-active" 
+                          placeholder={tu('placeholders.code')} 
+                        />
+                    )}
                   />
+                  {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
                 </div>
 
-                <div className="p-4 bg-amber-500/5 rounded-md border border-amber-500/10 border-dashed">
-                  <div className="flex items-center gap-2 mb-2 text-amber-500">
-                    <Activity className="w-3.5 h-3.5" />
-                    <span className="text-label-xs font-semibold uppercase">{tu('precision')}</span>
-                  </div>
-                  <p className="text-label-xs text-muted-foreground/50 uppercase font-medium leading-relaxed">
-                    {tu('precision_description')}
-                  </p>
+                <div className="space-y-2 max-w-md">
+                  <Label htmlFor="uom-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{t('name') || 'Name'}</Label>
+                  <Input 
+                    id="uom-name" 
+                    {...register('name')} 
+                    disabled={isReadOnly}
+                    className="font-semibold" 
+                    placeholder={tu('placeholders.name') || 'Enter UoM Name'} 
+                  />
+                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="p-4 bg-amber-500/5 rounded-md border border-amber-500/10 border-dashed max-w-md">
+            <div className="flex items-center gap-2 mb-2 text-amber-500">
+              <Activity className="w-3.5 h-3.5" />
+              <span className="text-label-xs font-semibold uppercase">{tu('precision')}</span>
+            </div>
+            <p className="text-label-xs text-muted-foreground/50 uppercase font-medium leading-relaxed">
+              {tu('precision_description')}
+            </p>
           </div>
         </div>
       </MasterDataFormLayout>

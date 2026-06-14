@@ -9,15 +9,15 @@ export const initialBranches: Branch[] = [
 ];
 
 export const initialWarehouses: Warehouse[] = [
-  { id: 'wh-1', branchId: 'br-1', code: 'WH-001', name: 'Main Warehouse', type: 'main', isActive: true },
-  { id: 'wh-2', branchId: 'br-1', code: 'WH-002', name: 'Cold Storage', type: 'cold', isActive: true },
-  { id: 'wh-3', branchId: 'br-2', code: 'WH-003', name: 'Dry Storage', type: 'dry', isActive: true },
-  { id: 'wh-4', branchId: 'br-3', code: 'WH-004', name: 'Virtual WH', type: 'virtual', isActive: true }
+  { id: 'wh-1', branchId: 'br-1', code: 'WH-001', name: 'Main Warehouse', isActive: true },
+  { id: 'wh-2', branchId: 'br-1', code: 'WH-002', name: 'Cold Storage', isActive: true },
+  { id: 'wh-3', branchId: 'br-2', code: 'WH-003', name: 'Dry Storage', isActive: true },
+  { id: 'wh-4', branchId: 'br-3', code: 'WH-004', name: 'Virtual WH', isActive: true }
 ];
 
 export const initialDepartments: Department[] = [
-  { id: 'dep-1', branchId: 'br-1', warehouseId: 'wh-1', code: 'DEP-001', name: 'Kitchen', isActive: true },
-  { id: 'dep-2', branchId: 'br-1', warehouseId: 'wh-1', code: 'DEP-002', name: 'Service', isActive: true }
+  { id: 'dep-1', branchId: 'br-1', code: 'DEP-001', name: 'Kitchen', isActive: true },
+  { id: 'dep-2', branchId: 'br-1', code: 'DEP-002', name: 'Service', isActive: true }
 ];
 
 export const initialSuppliers: Supplier[] = [
@@ -31,31 +31,31 @@ export const initialCategories: Category[] = [
 ];
 
 export const initialUoMs: UoM[] = [
-  { id: 'uom-kg', code: 'KG', name: 'Kilogram', isActive: true, createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'uom-ctn', code: 'CTN', name: 'Carton', isActive: true, createdAt: '2026-01-01T00:00:00Z' }
+  { id: 'uom-kg', code: 'KG', name: 'Kilogram' },
+  { id: 'uom-ctn', code: 'CTN', name: 'Carton' }
 ];
 
 export const initialItems: Item[] = [
   { 
     id: 'item-1', code: 'ITM-001', barcode: '000001', name: 'Beef', categoryId: 'CAT-001', 
-    primaryUom: { id: 'uom-kg', code: 'KG', name: 'Kilogram', isActive: true, createdAt: '2026-01-01T00:00:00Z' }, 
+    primaryUom: { id: 'uom-kg', code: 'KG', name: 'Kilogram' }, 
     uomConversions: [], trackLots: true, minStockLevel: 50, reorderPoint: 100, isActive: true 
   },
   { 
     id: 'item-2', code: 'ITM-002', barcode: '000002', name: 'Chicken', categoryId: 'CAT-001', 
-    primaryUom: { id: 'uom-ctn', code: 'CTN', name: 'Carton', isActive: true, createdAt: '2026-01-01T00:00:00Z' }, 
+    primaryUom: { id: 'uom-ctn', code: 'CTN', name: 'Carton' }, 
     uomConversions: [], trackLots: true, minStockLevel: 20, reorderPoint: 50, isActive: true 
   }
 ];
 
 export const initialBarcodes: Barcode[] = [
-  { id: 'bc-1', itemId: 'item-1', uomId: 'uom-kg', code: '000001', defaultQty: 1, isActive: true },
-  { id: 'bc-2', itemId: 'item-2', uomId: 'uom-ctn', code: '000002', defaultQty: 12, isActive: true }
+  { id: 'bc-1', itemId: 'item-1', code: '000001' },
+  { id: 'bc-2', itemId: 'item-2', code: '000002' }
 ];
 
 export const initialCurrencies: Currency[] = [
-  { id: 'cur-sar', code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س', isBaseCurrency: true, isActive: true, createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'cur-usd', code: 'USD', name: 'US Dollar', symbol: '$', isBaseCurrency: false, isActive: true, createdAt: '2026-01-01T00:00:00Z' }
+  { id: 'cur-sar', code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س', isBase: true, isActive: true, createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'cur-usd', code: 'USD', name: 'US Dollar', symbol: '$', isBase: false, isActive: true, createdAt: '2026-01-01T00:00:00Z' }
 ];
 
 export const initialFXRates: FXRate[] = [

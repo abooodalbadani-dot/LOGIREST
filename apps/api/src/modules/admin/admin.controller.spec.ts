@@ -94,7 +94,7 @@ describe('AdminController', () => {
 
     it('should pass validation with a valid settings payload', async () => {
       const validDto = {
-        systemName: 'LogiRest Test',
+        systemName: 'Otantik Restuarant Test',
         baseCurrency: 'USD',
         branchId: 'HQ',
         timezone: 'Asia/Riyadh',
@@ -112,7 +112,7 @@ describe('AdminController', () => {
       });
 
       expect(result).toBeDefined();
-      expect(result.systemName).toBe('LogiRest Test');
+      expect(result.systemName).toBe('Otantik Restuarant Test');
     });
 
     it('should throw validation errors if payload is invalid', async () => {

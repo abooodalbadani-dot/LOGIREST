@@ -23,17 +23,22 @@ import { canViewFinancialData } from '@/utils/roleUtils';
 
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { EmptyScopeState } from '@/components/ui/EmptyScopeState';
 
 export function StoreManagerDashboard() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
-  const { user } = useAuth();
+  const { user, activeScope } = useAuth();
   const router = useRouter();
   const { currency: baseCurrency, isLoading: loadingCurrency } = useBaseCurrency();
-  const { data: stats, isLoading: loadingStats, error } = useDashboardStats();
+  const { data: stats, isLoading, error } = useDashboardStats();
 
-  if (loadingStats) {
+  if (!activeScope?.warehouseId) {
+    return <EmptyScopeState context="warehouse" />;
+  }
+
+  if (isLoading) {
     return <PageSkeleton />;
   }
 

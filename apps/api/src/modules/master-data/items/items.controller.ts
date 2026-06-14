@@ -20,6 +20,7 @@ import { ApiSecureController } from '../../../decorators/swagger-docs.decorator'
 import { ItemsService } from './items.service';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
+import { CreateItemDto, UpdateItemDto } from './dto/item.dto';
 
 @Controller(['items', 'master-data/items'])
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -54,7 +55,7 @@ export class ItemsController {
   @Post()
   @Roles(Role.ADMIN, Role.GM)
   async create(
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateItemDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -72,7 +73,7 @@ export class ItemsController {
   @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateItemDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {

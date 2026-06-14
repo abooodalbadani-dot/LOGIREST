@@ -77,7 +77,7 @@ describe('EmailService', () => {
       SMTP_PORT: 587,
       SMTP_USER: 'user',
       SMTP_PASS: 'pass',
-      SMTP_FROM: 'noreply@logirest.app',
+      SMTP_FROM: 'noreply@otantikrestuarant.com',
     });
 
     const result = await service.sendEmail(
@@ -94,10 +94,12 @@ describe('EmailService', () => {
     });
     expect(mockTransporter.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: 'noreply@logirest.app',
+        from: 'noreply@otantikrestuarant.com',
         to: 'test@example.com',
         subject: 'Test Subject',
-        html: expect.stringContaining('LogiRest Inventory Management'),
+        html: expect.stringContaining(
+          'Otantik Restuarant Inventory Management',
+        ),
       }),
     );
   });

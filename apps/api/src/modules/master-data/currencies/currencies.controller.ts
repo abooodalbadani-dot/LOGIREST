@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CurrenciesService } from './currencies.service';
+import { CreateCurrencyDto, UpdateCurrencyDto } from './dto/currency.dto';
 
 @Controller(['currencies', 'master-data/currencies'])
 @UseGuards(JwtAuthGuard)
@@ -32,13 +33,13 @@ export class CurrenciesController {
 
   @Post()
   @Roles(Role.ADMIN, Role.GM)
-  async create(@Body() body: Record<string, unknown>) {
+  async create(@Body() body: CreateCurrencyDto) {
     return this.currenciesService.create(body);
   }
 
   @Put(':id')
   @Roles(Role.ADMIN, Role.GM)
-  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async update(@Param('id') id: string, @Body() body: UpdateCurrencyDto) {
     return this.currenciesService.update(id, body);
   }
 

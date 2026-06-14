@@ -38,7 +38,11 @@ export function useCreateFXRate() {
 
   return useMutation({
     mutationFn: ({ values, signal }: { values: FXRateFormValues; signal?: AbortSignal }) => {
-      return apiClient.post('/currencies/fx-rates', FXRateSchema, values, { signal });
+      const { effectiveDate, ...rest } = values;
+      return apiClient.post('/currencies/fx-rates', FXRateSchema, {
+        ...rest,
+        effectiveFrom: new Date(effectiveDate).toISOString(),
+      }, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -58,7 +62,11 @@ export function useUpdateFXRate(options?: { onConflict?: () => void }) {
   return useSafeMutation({
     onConflict: options?.onConflict,
     mutationFn: ({ id, values, signal }: { id: string; values: FXRateFormValues; signal?: AbortSignal }) => {
-      return apiClient.put(`/currencies/fx-rates/${id}`, FXRateSchema, values, { signal });
+      const { effectiveDate, ...rest } = values;
+      return apiClient.put(`/currencies/fx-rates/${id}`, FXRateSchema, {
+        ...rest,
+        effectiveFrom: new Date(effectiveDate).toISOString(),
+      }, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

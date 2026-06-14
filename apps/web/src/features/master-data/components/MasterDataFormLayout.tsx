@@ -87,7 +87,10 @@ export function MasterDataFormLayout({
         <PermissionGate action={saveAction} resource={resource}>
           <FormFooter 
             onCancel={onCancel}
-            onSubmit={onSubmit}
+            onSubmit={() => {
+              console.log('2. [MasterDataFormLayout] onSubmit triggered!');
+              onSubmit();
+            }}
             isSaving={isSaving}
             isDirty={isDirty}
             isValid={isValid}

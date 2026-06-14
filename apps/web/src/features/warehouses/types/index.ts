@@ -7,6 +7,5 @@ export interface CreateWarehouseDTO {
   branch_id: string;
   name_ar: string;
   name_en: string;
-  type: Warehouse['type'];
   is_active: boolean;
 }

@@ -10,11 +10,23 @@ import { Type } from 'class-transformer';
 class NotificationPreferencesDto {
   @IsOptional()
   @IsBoolean()
-  email?: boolean;
+  lowStock?: boolean;
 
   @IsOptional()
   @IsBoolean()
-  push?: boolean;
+  expiry?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pendingApproval?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  poFinalized?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  security?: boolean;
 }
 
 export class UpdateProfileDto {
@@ -31,8 +43,12 @@ export class UpdateProfileDto {
   phone?: string;
 
   @IsOptional()
-  @IsString()
-  locale?: string;
+  @IsIn(['en', 'ar'])
+  locale?: 'en' | 'ar';
+
+  @IsOptional()
+  @IsIn(['light', 'dark'])
+  themePreferences?: 'light' | 'dark';
 
   @IsOptional()
   @ValidateNested()

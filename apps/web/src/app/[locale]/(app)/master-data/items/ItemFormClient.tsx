@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, Controller, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Package, Plus, Trash2, ShieldCheck, Scale, Boxes, Settings2, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -129,32 +129,84 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
     return [{ id: '', name_en: tm('select_none'), name_ar: tm('select_none') }, ...list];
   }, [uoms?.data, tm]);
 
-  const onValid = async (values: ItemFormValues) => {
+  const onValid = (values: ItemFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/items', { skipGuard: true });
-    } catch {
-      // Handled by mutation callbacks
+    const payload = {
+      code: values.code || undefined,
+      barcode: values.barcode,
+      name: values.name,
+      categoryId: values.categoryId,
+      primaryUomId: values.primaryUomId,
+      trackLots: values.trackLots,
+      minStockLevel: values.minStockLevel,
+      reorderPoint: values.reorderPoint,
+      uomConversions: values.uomConversions.map((conv) => ({
+        fromUomId: conv.fromUomId,
+        toUomId: conv.toUomId,
+        factor: conv.factor,
+      })),
+      isActive: values.isActive ?? true,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: payload, 
+          version: values.version || undefined, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/items', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          ...payload, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/items', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<ItemFormValues>) => {
+    console.log('3. [ItemForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
 
-  const handleDelete = async () => {
+  const onSubmit = handleSubmit(onValid, onInvalid);
+
+  const handleDelete = () => {
     if (!id) return;
-    try {
-      await deleteMutation.mutateAsync({ id, signal: abortController.signal });
-      guardedRouter.push('/master-data/items', { skipGuard: true });
-    } catch {
-      // Handled by mutation callbacks
-    }
+    deleteMutation.mutate(
+      { id, version: data?.version, signal: abortController.signal },
+      {
+        onSuccess: () => {
+          guardedRouter.push('/master-data/items', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          setDeleteConfirmOpen(false);
+        }
+      }
+    );
   };
 
   const isSaving = create.isPending || update.isPending;
@@ -449,11 +501,17 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                       <Label className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{tm('status_label')}</Label>
                       <p className={`text-label-sm font-semibold uppercase ${isActive ? 'text-status-active' : 'text-status-error'}`}>{isActive ? tm('active') : tm('inactive')}</p>
                     </div>
-                    <Switch 
-                      checked={isActive} 
-                      onCheckedChange={(v) => !isReadOnly && setValue('isActive', v)} 
-                      disabled={isReadOnly}
-                      className="data-[state=checked]:bg-status-active" 
+                    <Controller
+                      control={control}
+                      name="isActive"
+                      render={({ field }) => (
+                        <Switch 
+                          checked={field.value ?? true} 
+                          onCheckedChange={(v) => !isReadOnly && field.onChange(v)} 
+                          disabled={isReadOnly}
+                          className="data-[state=checked]:bg-status-active" 
+                        />
+                      )}
                     />
                   </div>
                   <div
@@ -469,14 +527,20 @@ export function ItemFormClient({ id, createTitle, editTitle, viewTitle, locale, 
                         </p>
                       )}
                     </div>
-                    <Switch 
-                      checked={trackLots} 
-                      onCheckedChange={(v) => {
-                        const d = data as { has_transactions?: boolean } | null;
-                        if (!isReadOnly && !d?.has_transactions) setValue('trackLots', v);
-                      }} 
-                      disabled={isReadOnly || !!(data as { has_transactions?: boolean } | null)?.has_transactions}
-                      className="data-[state=checked]:bg-status-active" 
+                    <Controller
+                      control={control}
+                      name="trackLots"
+                      render={({ field }) => (
+                        <Switch 
+                          checked={field.value ?? false} 
+                          onCheckedChange={(v) => {
+                            const d = data as { has_transactions?: boolean } | null;
+                            if (!isReadOnly && !d?.has_transactions) field.onChange(v);
+                          }} 
+                          disabled={isReadOnly || !!(data as { has_transactions?: boolean } | null)?.has_transactions}
+                          className="data-[state=checked]:bg-status-active" 
+                        />
+                      )}
                     />
                   </div>
                 </div>

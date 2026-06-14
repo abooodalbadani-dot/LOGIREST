@@ -8,13 +8,13 @@ async function main() {
 
   // ─── System Settings (M5) ────────────────────────────────────
   const systemSettingsConfig = {
-    system_name: 'LogiRest System',
+    system_name: 'Otantik Restuarant System',
     base_currency: 'USD',
     branch_id: 'HQ',
     timezone: 'Asia/Riyadh',
     locale_default: 'en',
-    sender_name: 'LogiRest Alerts',
-    reply_to_email: 'alerts@logirest.app',
+    sender_name: 'Otantik Restuarant Alerts',
+    reply_to_email: 'alerts@otantikrestuarant.com',
     mail_provider: 'smtp',
     smtp_host: process.env.SMTP_HOST || '',
     smtp_port: Number(process.env.SMTP_PORT) || 587,
@@ -108,8 +108,9 @@ async function main() {
     where: { code: 'HQ' },
     update: {
       name: 'Main Branch - HQ',
+      isActive: true,
     },
-    create: { name: 'Main Branch - HQ', code: 'HQ' },
+    create: { name: 'Main Branch - HQ', code: 'HQ', isActive: true },
   });
 
   const mainWh = await prisma.warehouse.upsert({
@@ -117,11 +118,13 @@ async function main() {
     update: {
       name: 'HQ Main Warehouse',
       branchId: mainBranch.id,
+      isActive: true,
     },
     create: {
       name: 'HQ Main Warehouse',
       code: 'WH-HQ-01',
       branchId: mainBranch.id,
+      isActive: true,
     },
   });
 
@@ -134,14 +137,14 @@ async function main() {
     });
     if (!existing) {
       existing = await prisma.department.create({
-        data: { name, branchId: mainBranch.id },
+        data: { name, branchId: mainBranch.id, isActive: true },
       });
     }
     depts[name] = existing.id;
   }
 
   // ─── Admin User Setup (CRITICAL) ──────────────────────────────
-  const adminEmail = 'admin@logirest.local';
+  const adminEmail = 'admin@otantikrestuarant.local';
   const adminPassword = 'Password123!';
   const adminName = 'System Administrator';
 

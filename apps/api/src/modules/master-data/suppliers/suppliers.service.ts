@@ -9,11 +9,11 @@ import { Prisma } from '@prisma/client';
 
 interface SupplierDto {
   code?: string;
-  name_en?: string;
-  name_ar?: string;
-  email?: string;
-  phone?: string;
-  is_active?: boolean;
+  name?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactName?: string;
+  isActive?: boolean;
   version?: number;
 }
 
@@ -37,14 +37,13 @@ export class SuppliersService {
     return {
       id: supplier.id,
       code: supplier.code,
-      name_ar: supplier.name,
-      name_en: supplier.name,
-      email: supplier.contactEmail || '',
-      phone: supplier.contactPhone || '',
-      tax_number: '',
-      currency_id: currencyId,
-      payment_terms: 'NET_30',
-      is_active: supplier.isActive,
+      name: supplier.name,
+      contactEmail: supplier.contactEmail || '',
+      contactPhone: supplier.contactPhone || '',
+      contactName: supplier.contactName || '',
+      currencyId: currencyId,
+      paymentTerms: 'NET_30',
+      isActive: supplier.isActive,
       version: supplier.version,
     };
   }
@@ -81,8 +80,8 @@ export class SuppliersService {
 
   async create(body: SupplierDto, userId: string, ipAddress?: string) {
     let { code } = body;
-    const { name_en, name_ar, email, phone } = body;
-    if (!name_en && !name_ar) {
+    const { name, contactEmail, contactPhone, contactName } = body;
+    if (!name) {
       throw new BadRequestException('name is required');
     }
 
@@ -119,16 +118,15 @@ export class SuppliersService {
       }
     }
 
-    const name = name_en || name_ar;
-
     const created = await this.prisma.$transaction(async (tx) => {
       const newSup = await tx.supplier.create({
         data: {
           code: code,
-          name: name ?? '',
-          contactEmail: email || null,
-          contactPhone: phone || null,
-          isActive: body.is_active !== undefined ? body.is_active : true,
+          name: name,
+          contactEmail: contactEmail || null,
+          contactPhone: contactPhone || null,
+          contactName: contactName || null,
+          isActive: body.isActive !== undefined ? body.isActive : true,
           version: 1,
         },
       });
@@ -169,19 +167,22 @@ export class SuppliersService {
       );
     }
 
-    const { code, name_en, name_ar, email, phone } = body;
-    const name = name_en || name_ar || existing.name;
+    const { code, name, contactEmail, contactPhone, contactName } = body;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.supplier.update({
         where: { id },
         data: {
           code: code || existing.code,
-          name,
-          contactEmail: email !== undefined ? email : existing.contactEmail,
-          contactPhone: phone !== undefined ? phone : existing.contactPhone,
+          name: name || existing.name,
+          contactEmail:
+            contactEmail !== undefined ? contactEmail : existing.contactEmail,
+          contactPhone:
+            contactPhone !== undefined ? contactPhone : existing.contactPhone,
+          contactName:
+            contactName !== undefined ? contactName : existing.contactName,
           isActive:
-            body.is_active !== undefined ? body.is_active : existing.isActive,
+            body.isActive !== undefined ? body.isActive : existing.isActive,
           version: existing.version + 1,
         },
       });

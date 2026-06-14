@@ -85,13 +85,25 @@ export function UserListClient({ locale: _locale }: { locale: string }) {
       cell: ({ row }) => {
         const scopeLabels: string[] = [];
         row.original.scopes.forEach((s) => {
-          if (s.warehouse && s.warehouse.branch) {
-            scopeLabels.push(`${s.warehouse.branch.name} - ${s.warehouse.name}`);
+          if (s.department) {
+            if (s.branch) {
+              scopeLabels.push(`${s.branch.name} - ${s.department.name}`);
+            } else {
+              scopeLabels.push(`${s.department.name}`);
+            }
+          } else if (s.warehouse) {
+            if (s.warehouse.branch) {
+              scopeLabels.push(`${s.warehouse.branch.name} - ${s.warehouse.name}`);
+            } else {
+              scopeLabels.push(`${s.warehouse.name}`);
+            }
+          } else if (s.branch) {
+            scopeLabels.push(`${s.branch.name}`);
           } else {
             const parts: string[] = [];
-            if (s.branchId) parts.push(`B:${s.branchId}`);
-            if (s.warehouseId) parts.push(`W:${s.warehouseId}`);
-            if (s.departmentId) parts.push(`D:${s.departmentId}`);
+            if (s.branchId) parts.push(`B:${s.branchId.slice(0, 8)}...`);
+            if (s.warehouseId) parts.push(`W:${s.warehouseId.slice(0, 8)}...`);
+            if (s.departmentId) parts.push(`D:${s.departmentId.slice(0, 8)}...`);
             if (parts.length) scopeLabels.push(parts.join(', '));
           }
         });

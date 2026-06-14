@@ -18,6 +18,7 @@ import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { CategoriesService } from './categories.service';
 import type { Request } from 'express';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
 @Controller(['categories', 'master-data/categories'])
 @UseGuards(JwtAuthGuard)
@@ -38,7 +39,7 @@ export class CategoriesController {
   @Post()
   @Roles(Role.ADMIN, Role.GM)
   async create(
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateCategoryDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -56,7 +57,7 @@ export class CategoriesController {
   @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateCategoryDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {

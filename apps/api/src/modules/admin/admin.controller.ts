@@ -275,4 +275,14 @@ export class AdminController {
       message: `User role updated to ${newRole}`,
     };
   }
+
+  @Get('restaurant-profile')
+  async getRestaurantProfile() {
+    return this.adminService.getRestaurantProfile();
+  }
+
+  @Put('restaurant-profile')
+  async updateRestaurantProfile(@Body() data: Record<string, unknown>) {
+    return this.adminService.updateRestaurantProfile(data);
+  }
 }

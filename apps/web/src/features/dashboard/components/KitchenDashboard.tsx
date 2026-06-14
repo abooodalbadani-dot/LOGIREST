@@ -22,6 +22,8 @@ import { Button } from '@/components/ui/button';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { useAuth } from '@/providers/AuthProvider';
+import { EmptyScopeState } from '@/components/ui/EmptyScopeState';
 
 const mapStatus = (status: string) => {
   const s = status.toLowerCase();
@@ -34,7 +36,12 @@ export function KitchenDashboard() {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const { locale } = useLocale();
+  const { activeScope } = useAuth();
   const { data: stats, isLoading, error } = useDashboardStats();
+
+  if (!activeScope?.departmentId) {
+    return <EmptyScopeState context="department" />;
+  }
 
   if (isLoading) {
     return <PageSkeleton />;

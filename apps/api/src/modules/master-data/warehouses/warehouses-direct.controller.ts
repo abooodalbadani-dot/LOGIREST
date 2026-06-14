@@ -1,3 +1,4 @@
+import { CreateWarehouseDto, UpdateWarehouseDto } from './dto/warehouse.dto';
 import {
   Controller,
   Get,
@@ -11,6 +12,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
   HttpCode,
   HttpStatus,
   Req,
@@ -109,8 +111,8 @@ export class WarehousesDirectController {
 
   @Post()
   @Roles(Role.ADMIN, Role.GM)
-  async create(@Body() body: Record<string, unknown>) {
-    let code = body.code as string;
+  async create(@Body() body: CreateWarehouseDto) {
+    let code = body.code;
     if (!code || code.trim() === '') {
       const allWarehouses = await this.prisma.warehouse.findMany({
         where: {
@@ -135,26 +137,43 @@ export class WarehousesDirectController {
       code = `WH-${String(maxNum + 1).padStart(4, '0')}`;
     }
 
+    if (!body.name || !body.branchId) {
+      throw new BadRequestException('name and branchId are required');
+    }
+
     return this.prisma.warehouse.create({
       data: {
-        name: body.name as string,
+        name: body.name,
         code,
-        branchId: body.branchId as string,
-        isActive: true,
+        branchId: body.branchId,
+        isActive: body.isActive !== undefined ? body.isActive === true : true,
       },
     });
   }
 
   @Put(':id')
   @Roles(Role.ADMIN, Role.GM)
-  async update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+  async update(@Param('id') id: string, @Body() body: UpdateWarehouseDto) {
+    const existing = await this.prisma.warehouse.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Warehouse with ID ${id} not found`);
+    }
+
+    if (body.version !== undefined && existing.version !== body.version) {
+      throw new ConflictException(
+        'Optimistic locking failure: version mismatch',
+      );
+    }
+
     return this.prisma.warehouse.update({
       where: { id },
       data: {
-        name: body.name as string,
-        code: body.code as string,
-        branchId: body.branchId as string,
-        version: body.version ? { increment: 1 } : undefined,
+        name: body.name !== undefined ? body.name : undefined,
+        code: body.code !== undefined ? body.code : undefined,
+        branchId: body.branchId !== undefined ? body.branchId : undefined,
+        isActive:
+          body.isActive !== undefined ? body.isActive === true : undefined,
+        version: existing.version + 1,
       },
     });
   }

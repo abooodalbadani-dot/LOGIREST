@@ -8,6 +8,8 @@ import { PrismaService } from '../../../database/prisma.service';
 import { Prisma } from '@prisma/client';
 
 interface UomDto {
+  name?: string;
+  isActive?: boolean;
   code?: string;
   name_en?: string;
   name_ar?: string;
@@ -24,6 +26,7 @@ export class UomService {
     return {
       id: uom.id,
       code: uom.code,
+      name: uom.name,
       name_ar: uom.name,
       name_en: uom.name,
       category: 'General',
@@ -61,8 +64,9 @@ export class UomService {
 
   async create(body: UomDto, userId: string, ipAddress?: string) {
     let { code } = body;
-    const { name_en, name_ar } = body;
-    if (!name_en && !name_ar) {
+    const name_en = body.name_en;
+    const name_ar = body.name_ar;
+    if (!body.name && !name_en && !name_ar) {
       throw new BadRequestException('name is required');
     }
 
@@ -99,7 +103,7 @@ export class UomService {
       }
     }
 
-    const name = name_en || name_ar;
+    const name = body.name || name_en || name_ar;
 
     const created = await this.prisma.$transaction(async (tx) => {
       const newUom = await tx.unitOfMeasure.create({
@@ -142,8 +146,10 @@ export class UomService {
       );
     }
 
-    const { code, name_en, name_ar } = body;
-    const name = name_en || name_ar || existing.name;
+    const code = body.code;
+    const name_en = body.name_en;
+    const name_ar = body.name_ar;
+    const name = body.name || name_en || name_ar || existing.name;
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const res = await tx.unitOfMeasure.update({

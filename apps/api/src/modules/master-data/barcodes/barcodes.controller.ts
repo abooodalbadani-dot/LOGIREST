@@ -18,6 +18,7 @@ import { Roles } from '../../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { ApiSecureController } from '../../../decorators/swagger-docs.decorator';
 import { BarcodesService } from './barcodes.service';
+import { CreateBarcodeDto, UpdateBarcodeDto } from './dto/barcode.dto';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
@@ -45,7 +46,7 @@ export class BarcodesController {
   @Post()
   @Roles(Role.ADMIN, Role.GM)
   async create(
-    @Body() body: { itemId: string; code: string },
+    @Body() body: CreateBarcodeDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {
@@ -63,7 +64,7 @@ export class BarcodesController {
   @Roles(Role.ADMIN, Role.GM)
   async update(
     @Param('id') id: string,
-    @Body() body: { itemId?: string; code?: string; version?: number },
+    @Body() body: UpdateBarcodeDto,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
   ) {

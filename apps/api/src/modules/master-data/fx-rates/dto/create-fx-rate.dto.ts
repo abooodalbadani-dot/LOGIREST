@@ -4,6 +4,7 @@ import {
   IsPositive,
   IsDateString,
   IsUUID,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateFXRateDto {
@@ -22,4 +23,10 @@ export class CreateFXRateDto {
     { message: 'effectiveFrom must be a valid ISO date string' },
   )
   effectiveFrom!: string;
+}
+
+export class UpdateFXRateDto extends CreateFXRateDto {
+  @IsOptional()
+  @IsNumber()
+  version?: number;
 }

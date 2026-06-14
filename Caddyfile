@@ -3,13 +3,11 @@
     handle @options {
         header Access-Control-Allow-Origin "http://localhost:3000"
         header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Accept, Authorization, x-branch-id, x-warehouse-id, x-xsrf-token"
+        header Access-Control-Allow-Headers "Content-Type, Accept, Authorization, x-idempotency-key, x-department-id, x-branch-id, x-warehouse-id, x-xsrf-token, Origin, X-Requested-With"
         header Access-Control-Allow-Credentials "true"
         header Access-Control-Max-Age "3600"
         respond "" 204
     }
-    header Access-Control-Allow-Origin "http://localhost:3000"
-    header Access-Control-Allow-Credentials "true"
 }
 
 http://{$DOMAIN:localhost} {

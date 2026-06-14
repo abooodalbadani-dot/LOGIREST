@@ -29,16 +29,9 @@ export function WarehouseListClient({ locale }: { locale: string }) {
   const { data, isLoading, isError, refetch } = useWarehouses({ search });
   const warehouses = data?.data || [];
 
-  const WAREHOUSE_TYPE_STYLES: Record<string, { label: string; color: string; shadow: string }> = useMemo(() => ({
-    main: { label: t('types.main'), color: 'text-primary', shadow: 'shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]' },
-    cold: { label: t('types.cold'), color: 'text-operational-cyan', shadow: 'shadow-[0_0_8px_rgba(var(--cyan-rgb),0.4)]' },
-    dry: { label: t('types.dry'), color: 'text-operational-orange', shadow: 'shadow-[0_0_8px_rgba(var(--orange-rgb),0.4)]' },
-  }), [t]);
-
   const stats = useMemo(() => ({
     total: data?.meta?.total || 0,
     active: warehouses.filter(w => w.isActive).length,
-    physical: warehouses.filter(w => w.type === 'main' || w.type === 'cold').length,
   }), [data, warehouses]);
 
   const columns = useMemo<ColumnDef<Warehouse, unknown>[]>(() => [
@@ -59,19 +52,6 @@ export function WarehouseListClient({ locale }: { locale: string }) {
           <span className="font-bold text-label-sm">{row.original.name}</span>
         </div>
       )
-    },
-    {
-      accessorKey: 'type', 
-      header: tc('fields.type'),
-      cell: ({ row }) => {
-        const style = WAREHOUSE_TYPE_STYLES[row.original.type as NonNullable<typeof row.original.type>] || { label: row.original.type, color: 'text-muted-foreground', shadow: '' };
-        return (
-          <div className={`flex items-center gap-2 ${style.color} font-bold text-label-xxs uppercase bg-current/5 px-2.5 py-1 rounded-lg border border-current/10 w-fit`}>
-            <div className={`w-1.5 h-1.5 rounded-full bg-current ${style.shadow}`} />
-            {style.label}
-          </div>
-        );
-      }
     },
     {
       accessorKey: 'isActive', 
@@ -116,7 +96,7 @@ export function WarehouseListClient({ locale }: { locale: string }) {
         </div>
       ),
     },
-  ], [tc, t, router, WAREHOUSE_TYPE_STYLES]);
+  ], [tc, router]);
 
   if (isLoading) return <PageSkeleton variant="list" />;
   if (isError) return <ErrorState onRetry={refetch} />;
@@ -165,10 +145,10 @@ export function WarehouseListClient({ locale }: { locale: string }) {
         />
 
         <MetricCard
-          label={tc('fields.type')}
-          value={stats.physical}
+          label={tc('statuses.inactive')}
+          value={stats.total - stats.active}
           icon={MapPin}
-          color="amber"
+          color="rose"
           dir="ltr"
         />
       </div>

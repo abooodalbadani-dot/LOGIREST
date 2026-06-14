@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
 import { useTranslations, useLocale } from 'next-intl';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
@@ -72,7 +72,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     useForm<WarehouseFormValues>({
       resolver: zodResolver(WarehouseFormSchema),
       disabled: isReadOnly,
-      defaultValues: { branchId: '', code: '', name: '', type: 'main', isActive: true, version: undefined },
+      defaultValues: { branchId: '', code: '', name: '', isActive: true, version: undefined },
     });
   
   const { router: guardedRouter } = useUnsavedChangesGuard(isDirty);
@@ -97,17 +97,9 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     }));
   }, [branches, locale]);
 
-  const typeItems = useMemo(() => {
-    return (['main','dry','cold','virtual','transit'] as const).map((ty) => ({
-      id: ty,
-      name_en: tw(`types.${ty.toLowerCase() as 'main' | 'dry' | 'cold' | 'virtual' | 'transit'}`),
-      name_ar: tw(`types.${ty.toLowerCase() as 'main' | 'dry' | 'cold' | 'virtual' | 'transit'}`),
-    }));
-  }, [tw]);
-
   useEffect(() => {
     if (data) {
-      reset({ branchId: data.branchId, code: data.code, name: data.name, type: data.type, isActive: data.isActive, version: data.version });
+      reset({ branchId: data.branchId, code: data.code, name: data.name, isActive: data.isActive, version: data.version });
     }
   }, [data, reset]);
 
@@ -136,32 +128,79 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
     );
   }
 
-  const onValid = async (values: WarehouseFormValues) => {
+  const onValid = (values: WarehouseFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/warehouses', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    const payload = {
+      branchId: values.branchId,
+      code: values.code || undefined,
+      name: values.name,
+      isActive: values.isActive ?? true,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: {
+            ...payload,
+            version: values.version || undefined,
+          },
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            toast.success(tw('updated_success') || 'Warehouse updated successfully');
+            reset(values);
+            guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          ...payload, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            toast.success(tw('created_success') || 'Warehouse created successfully');
+            reset(values);
+            guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (errors: FieldErrors<WarehouseFormValues>) => {
+    console.log('3. [WarehouseForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
 
-  const handleArchive = async () => {
+  const onSubmit = handleSubmit(onValid, onInvalid);
+
+  const handleArchive = () => {
     if (!id) return;
-    try {
-      await archiveWarehouse.mutateAsync({ id, signal: abortController.signal });
-      guardedRouter.push('/master-data/warehouses', { skipGuard: true });
-    } catch {
-      setShowDeleteConfirm(false);
-    }
+    archiveWarehouse.mutate(
+      { id, signal: abortController.signal },
+      {
+        onSuccess: () => {
+          toast.success(tw('archived_success') || 'Warehouse archived successfully');
+          guardedRouter.push('/master-data/warehouses', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Archive failed:', error);
+          setShowDeleteConfirm(false);
+        }
+      }
+    );
   };
 
   const isSaving = create.isPending || update.isPending || archiveWarehouse.isPending;
@@ -279,40 +318,7 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
             </CardContent>
           </Card>
 
-          <Card className="bg-surface-container-low border-none overflow-hidden">
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
-                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-tertiary" />
-                </div>
-                <div>
-                  <h3 className="text-body-md font-semibold text-foreground uppercase">{tw('fields.type')}</h3>
-                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">
-                    {t('operational_status')}
-                  </p>
-                </div>
-              </div>
 
-              <div className="space-y-2 max-w-md">
-                <Label htmlFor="wh-type" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-                  {tw('fields.type')}
-                </Label>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <SmartCombobox
-                      disabled={isReadOnly}
-                      value={field.value}
-                      onSelect={(item) => field.onChange(item.id)}
-                      items={typeItems}
-                      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-                    />
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-8">
@@ -337,12 +343,18 @@ export function WarehouseFormClient({ id, createTitle, editTitle, viewTitle, isR
                     {isActive ? t('active') : t('inactive')}
                   </p>
                 </div>
-                <Switch 
-                  id="wh-active" 
-                  checked={isActive} 
-                  onCheckedChange={(v: boolean) => !isReadOnly && setValue('isActive', v)} 
-                  disabled={isReadOnly}
-                  className="data-[state=checked]:bg-status-active"
+                <Controller
+                  control={control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <Switch 
+                      id="wh-active" 
+                      checked={field.value ?? true} 
+                      onCheckedChange={(v: boolean) => !isReadOnly && field.onChange(v)} 
+                      disabled={isReadOnly}
+                      className="data-[state=checked]:bg-status-active"
+                    />
+                  )}
                 />
               </div>
             </CardContent>

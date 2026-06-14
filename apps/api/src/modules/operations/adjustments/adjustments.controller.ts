@@ -78,11 +78,14 @@ function mapAdjustmentDetail(adj: Record<string, unknown>) {
       ).toISOString()
     : new Date().toISOString();
 
+  const warehouse = adj.warehouse as Record<string, unknown> | null;
+
   return {
     id: adj.id as string,
     documentNumber: adj.adjustmentNumber as string,
     status: adj.status as string,
     warehouseId: adj.warehouseId as string,
+    warehouseName: (warehouse?.name as string) || '',
     reason: mainReason,
     notes: '',
     reject: null,

@@ -41,6 +41,9 @@ export class VarianceReasonsService {
   ];
 
   findAll() {
-    return this.varianceReasons;
+    return this.varianceReasons.map((r) => ({
+      ...r,
+      name: r.name_en,
+    }));
   }
 }

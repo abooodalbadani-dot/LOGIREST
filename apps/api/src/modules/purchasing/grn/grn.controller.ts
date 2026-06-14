@@ -107,6 +107,9 @@ function mapGRNDetail(grn: Record<string, unknown>) {
     poNumber: (purchaseOrder?.poNumber as string) || '',
     poFxRate: 1.0,
     currencyId: (purchaseOrder?.currencyId as string) || '',
+    currencyCode:
+      ((purchaseOrder?.currency as Record<string, unknown> | null)
+        ?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     fxRate: 1.0,
@@ -147,6 +150,9 @@ function mapGRNSummary(grn: Record<string, unknown>) {
     supplierName: (supplier?.name as string) || '',
     poId: grn.poId as string,
     poNumber: (purchaseOrder?.poNumber as string) || '',
+    currencyCode:
+      ((purchaseOrder?.currency as Record<string, unknown> | null)
+        ?.code as string) || '',
     warehouseId: grn.warehouseId as string,
     warehouseName: (warehouse?.name as string) || '',
     createdAt: createdAtIso,

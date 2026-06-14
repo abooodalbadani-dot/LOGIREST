@@ -13,10 +13,16 @@ interface ContextSelectorProps {
  onOpenChange: (open: boolean) => void;
 }
 
+interface MasterDataItem {
+ id: string;
+ name?: string;
+ code?: string;
+}
+
 export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  const t = useTranslations('context');
  const commonT = useTranslations('common');
- const { activeScope, setActiveScope } = useAuth();
+ const { user, activeScope, setActiveScope } = useAuth();
  const { isRtl } = useLocale();
 
  // Local state for selections before confirming
@@ -31,16 +37,32 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  // Fetch warehouses for the selected branch
  const { data: warehousesData } = useMasterDataList('warehouses', WarehouseSchema, { 
  limit: '100',
- branch_id: selectedBranchId 
- });
- const warehouses = warehousesData?.data || [];
+ branchId: selectedBranchId 
+ }, { enabled: !!selectedBranchId });
+ let warehouses = warehousesData?.data || [];
+
+ if (user?.role !== 'ADMIN' && user?.scopes) {
+   const allowedWarehouseIds = user.scopes
+     .filter((s: { branchId: string | null; warehouseId: string | null }) => s.branchId === selectedBranchId && s.warehouseId)
+     .map((s: { warehouseId: string | null }) => s.warehouseId as string);
+   if (allowedWarehouseIds.length > 0 || user?.role === 'STORE_MGR') {
+     warehouses = warehouses.filter((w: MasterDataItem) => allowedWarehouseIds.includes(w.id));
+   }
+ }
 
  // Fetch departments for the selected branch
  const { data: departmentsData } = useMasterDataList('departments', DepartmentSchema, { 
  limit: '100',
- branch_id: selectedBranchId 
- });
- const departments = departmentsData?.data || [];
+ branchId: selectedBranchId 
+ }, { enabled: !!selectedBranchId });
+ let departments = departmentsData?.data || [];
+
+ if (user?.role === 'KITCHEN_CHIEF' && user?.scopes) {
+   const allowedDeptIds = user.scopes
+     .filter((s: { branchId: string | null; departmentId: string | null }) => s.branchId === selectedBranchId && s.departmentId)
+     .map((s: { departmentId: string | null }) => s.departmentId as string);
+   departments = departments.filter((d: MasterDataItem) => allowedDeptIds.includes(d.id));
+ }
 
  // Update local state when activeScope changes (e.g. on mount or when changed externally)
  useEffect(() => {
@@ -78,6 +100,13 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  };
 
  if (!open) return null;
+
+ let isConfirmDisabled = !selectedBranchId;
+ if (user?.role === 'KITCHEN_CHIEF') {
+   isConfirmDisabled = !selectedBranchId || !selectedDepartmentId;
+ } else if (user?.role === 'STORE_MGR') {
+   isConfirmDisabled = !selectedBranchId || !selectedWarehouseId;
+ }
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-md animate-in fade-in duration-300">
@@ -187,7 +216,8 @@ export function ContextSelector({ open, onOpenChange }: ContextSelectorProps) {
  </button>
  <button 
  onClick={handleConfirm}
- className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:brightness-110 transition-all active:scale-[0.98]"
+ disabled={isConfirmDisabled}
+ className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {t('confirm_selection')}
  </button>

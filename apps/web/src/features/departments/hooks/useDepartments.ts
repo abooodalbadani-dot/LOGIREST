@@ -11,13 +11,13 @@ import { z } from 'zod';
 
 const QUERY_KEY = ['departments'];
 
-export function useDepartments(filters?: { branch_id?: string; warehouse_id?: string; search?: string }) {
+export function useDepartments(filters?: { branchId?: string; warehouseId?: string; search?: string }) {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
     queryFn: ({ signal }) => {
       const params = new URLSearchParams();
-      if (filters?.branch_id) params.append('branch_id', filters.branch_id);
-      if (filters?.warehouse_id) params.append('warehouse_id', filters.warehouse_id);
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.warehouseId) params.append('warehouseId', filters.warehouseId);
       if (filters?.search) params.append('search', filters.search);
       
       const path = `/departments${params.toString() ? `?${params.toString()}` : ''}`;
@@ -45,8 +45,7 @@ export function useCreateDepartment() {
     mutationFn: (variables: DepartmentFormValues & { signal?: AbortSignal }) => {
       const { signal, ...values } = variables;
       return apiClient.post('/departments', DepartmentSchema, {
-        ...values,
-        code: values.code ? values.code.toUpperCase() : undefined
+        ...values
       }, { signal });
     },
     onSuccess: () => {
@@ -69,8 +68,7 @@ export function useUpdateDepartment(options?: { onConflict?: () => void }) {
     meta: { suppressGlobalConflict: true },
     mutationFn: ({ id, values, signal }: { id: string; values: DepartmentFormValues; signal?: AbortSignal }) => {
       return apiClient.put(`/departments/${id}`, DepartmentSchema, {
-        ...values,
-        code: values.code ? values.code.toUpperCase() : undefined
+        ...values
       }, { signal });
     },
     onSuccess: (data) => {

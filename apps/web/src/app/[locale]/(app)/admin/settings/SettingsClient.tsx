@@ -56,6 +56,9 @@ export function SettingsClient({ locale }: { locale: string }) {
 
   const watchedBaseCurrency = useWatch({ control, name: 'baseCurrency' });
   const watchedLanguage = useWatch({ control, name: 'localeDefault' });
+  const watchedDefaultPaperSize = useWatch({ control, name: 'printSettings.defaultPaperSize' });
+  const watchedThermalShowLogo = useWatch({ control, name: 'printSettings.thermalShowLogo' });
+  const watchedAutoPrintOnFulfill = useWatch({ control, name: 'printSettings.autoPrintOnFulfill' });
   const initialBaseCurrency = currentSettings?.baseCurrency || null;
 
   const showCurrencyWarning = watchedBaseCurrency && initialBaseCurrency && watchedBaseCurrency !== initialBaseCurrency;
@@ -467,7 +470,7 @@ export function SettingsClient({ locale }: { locale: string }) {
                   </Label>
                   <Select 
                     onValueChange={(val) => setValue('printSettings.defaultPaperSize', val as 'A4' | '80mm' | '58mm', { shouldDirty: true })}
-                    value={useWatch({ control, name: 'printSettings.defaultPaperSize' }) || 'A4'}
+                    value={watchedDefaultPaperSize || 'A4'}
                   >
                     <SelectTrigger className="h-14 bg-surface-container-lowest/80 border border-outline-low rounded-2xl px-5 font-bold transition-all hover:border-operational-cyan/20 text-sm focus:border-operational-cyan focus:ring-1 focus:ring-operational-cyan">
                       <SelectValue />
@@ -487,7 +490,7 @@ export function SettingsClient({ locale }: { locale: string }) {
                   </Label>
                   <Switch
                     id="thermal-show-logo"
-                    checked={useWatch({ control, name: 'printSettings.thermalShowLogo' }) ?? true}
+                    checked={watchedThermalShowLogo ?? true}
                     onCheckedChange={(val) => setValue('printSettings.thermalShowLogo', val, { shouldDirty: true })}
                   />
                 </div>
@@ -499,7 +502,7 @@ export function SettingsClient({ locale }: { locale: string }) {
                   </Label>
                   <Switch
                     id="auto-print-fulfill"
-                    checked={useWatch({ control, name: 'printSettings.autoPrintOnFulfill' }) ?? false}
+                    checked={watchedAutoPrintOnFulfill ?? false}
                     onCheckedChange={(val) => setValue('printSettings.autoPrintOnFulfill', val, { shouldDirty: true })}
                   />
                 </div>

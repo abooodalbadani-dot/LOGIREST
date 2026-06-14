@@ -21,13 +21,6 @@
   --text-label-xs: 0.625rem;
   --text-label-xxs: 0.5rem;
 
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 40px;
-
   /* Semantic Colors - Core Mappings */
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -1124,12 +1124,12 @@ export class ReportsService {
     if (setting) {
       try {
         const parsed = JSON.parse(setting.value);
-        return parsed.system_name || 'LogiRest System';
+        return parsed.system_name || 'Otantik Restuarant System';
       } catch {
-        return 'LogiRest System';
+        return 'Otantik Restuarant System';
       }
     }
-    return 'LogiRest System';
+    return 'Otantik Restuarant System';
   }
 
   async exportMovementsCursorChunk(

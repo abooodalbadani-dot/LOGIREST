@@ -3,9 +3,9 @@
 import { useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, useWatch, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Briefcase, ShieldCheck, Landmark } from 'lucide-react';
+import { Briefcase, ShieldCheck } from 'lucide-react';
 import { useConflictHandler } from '@/core/concurrency/useConflictHandler';
 import { ConflictDialog } from '@/core/concurrency/ConflictDialog';
 import { useAbortController } from '@/hooks/useAbortController';
@@ -16,7 +16,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { onFormError } from '@/hooks/useFormError';
+import { useOperationalScope } from '@/hooks/useOperationalScope';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,6 @@ import {
  useDeleteDepartment,
 } from '@/features/departments/hooks/useDepartments';
 import { useBranches } from '@/features/branches/hooks/useBranches';
-import { useWarehouses } from '@/features/warehouses/hooks/useWarehouses';
 import { DepartmentFormSchema, type DepartmentFormValues } from '@/types/master-data';
 
 interface Props {
@@ -50,17 +49,14 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
   const tv = useTranslations();
   const locale = useLocale();
   const abortController = useAbortController();
+  const { branchId: activeBranchId } = useOperationalScope();
   
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
-      branchId: '',
-      warehouseId: '',
-      code: '',
+      branchId: activeBranchId || '',
       name: '',
       isActive: true,
-      manager: '',
-      costCenter: '',
       version: undefined
     },
     disabled: isReadOnly,
@@ -68,10 +64,8 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
  
   const { data, isLoading, isError, refetch } = useDepartment(id);
   const { data: branchesData, isLoading: branchesLoading, isError: branchesError, refetch: refetchBranches } = useBranches();
-  const { data: warehousesData, isLoading: warehousesLoading, isError: warehousesError, refetch: refetchWarehouses } = useWarehouses();
 
   const branches = branchesData?.data || [];
-  const warehouses = warehousesData?.data || [];
 
   const create = useCreateDepartment();
   const conflict = useConflictHandler('department', id ?? '');
@@ -90,11 +84,14 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     }
   }, [data, reset]);
 
-  const isActive = useWatch({ control, name: 'isActive' });
- const selectedBranchId = useWatch({ control, name: 'branchId' });
+  // Sync defaults with active scopes in create mode
+  useEffect(() => {
+    if (!id && activeBranchId) {
+      setValue('branchId', activeBranchId, { shouldDirty: false, shouldValidate: true });
+    }
+  }, [id, activeBranchId, setValue]);
 
- // Filter warehouses based on selected branch
- const filteredWarehouses = warehouses.filter(w => !selectedBranchId || w.branchId === selectedBranchId);
+  const isActive = useWatch({ control, name: 'isActive' });
 
   const branchItems = useMemo(() => {
     return branches.map((b) => ({
@@ -103,55 +100,95 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
     }));
   }, [branches, locale]);
 
-  const warehouseItems = useMemo(() => {
-    return filteredWarehouses.map((w) => ({
-      id: w.id,
-      name: `${w.code} — ${w.name || ''}`,
-    }));
-  }, [filteredWarehouses, locale]);
-
-  const onValid = async (values: DepartmentFormValues) => {
+  const onValid = (values: DepartmentFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ ...values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/departments', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    const payload = {
+      branchId: values.branchId,
+      name: values.name,
+      isActive: values.isActive ?? true,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: {
+            ...payload,
+            version: values.version || undefined,
+          },
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            toast.success(td('updated_success') || 'Department updated successfully');
+            reset(values);
+            guardedRouter.push('/master-data/departments', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          ...payload, 
+          signal: abortController.signal 
+        },
+        {
+          onSuccess: () => {
+            toast.success(td('created_success') || 'Department created successfully');
+            reset(values);
+            guardedRouter.push('/master-data/departments', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
   };
 
-  const onSubmit = handleSubmit(onValid, onFormError);
+  const onInvalid = (validationErrors: FieldErrors<DepartmentFormValues>) => {
+    console.error('Form Validation Errors:', validationErrors);
+    toast.error("يرجى تعبئة جميع الحقول المطلوبة / Please fill in all required fields", {
+      duration: 5000,
+    });
+  };
 
-  const handleDelete = async () => {
+  const onSubmit = handleSubmit(onValid, onInvalid);
+
+  const handleDelete = () => {
     if (!id) return;
-    try {
-      await deleteDept.mutateAsync({ id, signal: abortController.signal });
-      guardedRouter.push('/master-data/departments', { skipGuard: true });
-    } catch {
-      setShowDeleteConfirm(false);
-    }
+    deleteDept.mutate(
+      { id, signal: abortController.signal },
+      {
+        onSuccess: () => {
+          toast.success(td('deleted_success') || 'Department deleted successfully');
+          guardedRouter.push('/master-data/departments', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          setShowDeleteConfirm(false);
+        }
+      }
+    );
   };
 
   const isSaving = create.isPending || update.isPending || deleteDept.isPending;
 
-  if ((id && isLoading && !data) || branchesLoading || warehousesLoading) {
+  if ((id && isLoading && !data) || branchesLoading) {
     return <PageSkeleton variant="detail" />;
   }
 
-  if (isError || branchesError || warehousesError) {
+  if (isError || branchesError) {
     return (
       <ErrorState 
         error={500} 
         onRetry={() => {
           refetch();
           refetchBranches();
-          refetchWarehouses();
         }}
       />
     );
@@ -196,86 +233,46 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
         )
       }
     >
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
- {/* Main Content */}
- <div className="lg:col-span-2 space-y-8">
- {/* Section: Basic Info */}
- <Card className="bg-surface-container-low border-none overflow-hidden">
- <CardContent className="p-8 space-y-8">
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
- <Briefcase className="w-5 h-5 text-tertiary" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{td('title')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{td('description')}</p>
- </div>
- </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Section: Basic Info */}
+          <Card className="bg-surface-container-low border-none overflow-hidden">
+            <CardContent className="p-8 space-y-8">
+              <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
+                <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-tertiary" />
+                </div>
+                <div>
+                  <h3 className="text-body-md font-semibold text-foreground uppercase">{td('title')}</h3>
+                  <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{td('description')}</p>
+                </div>
+              </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- {/* Branch Select */}
-  <div className="space-y-2">
-  <Label htmlFor="dept-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.branch')}</Label>
-  <Controller
-  name="branchId"
-  control={control}
-  render={({ field }) => (
-    <SmartCombobox
-      disabled={isReadOnly}
-      value={field.value ?? ''}
-      onSelect={(item) => {
-        field.onChange(item.id);
-        setValue('warehouseId', ''); // Reset warehouse when branch changes
-      }}
-      items={branchItems}
-      placeholder={t('null_select')}
-      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-    />
-  )}
-  />
-  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.branchId.message as never)}</p>}
-  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Branch Select */}
+                <div className="space-y-2">
+                  <Label htmlFor="dept-branch" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.branch')}</Label>
+                  <Controller
+                    name="branchId"
+                    control={control}
+                    render={({ field }) => (
+                      <SmartCombobox
+                        disabled={isReadOnly}
+                        value={field.value ?? ''}
+                        onSelect={(item) => field.onChange(item.id)}
+                        items={branchItems}
+                        placeholder={t('null_select')}
+                        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
+                      />
+                    )}
+                  />
+                  {errors.branchId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.branchId.message as never)}</p>}
+                </div>
 
- {/* Warehouse Select */}
-  <div className="space-y-2">
-  <Label htmlFor="dept-warehouse" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.warehouse')}</Label>
-  <Controller
-  name="warehouseId"
-  control={control}
-  render={({ field }) => (
-    <SmartCombobox
-      disabled={isReadOnly || !selectedBranchId}
-      value={field.value ?? ''}
-      onSelect={(item) => field.onChange(item.id)}
-      items={warehouseItems}
-      placeholder={t('null_select')}
-      className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-    />
-  )}
-  />
-  {errors.warehouseId && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.warehouseId.message as never)}</p>}
-  </div>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- {/* Code */}
- <div className="space-y-2">
- <Label htmlFor="dept-code" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.code')}</Label>
-                <Input 
-                  id="dept-code" 
-                  dir="ltr" 
-                  {...register('code')} 
-                  disabled={isReadOnly}
-                  className="font-mono font-semibold uppercase text-status-active" 
-                  placeholder={td('placeholders.code')} 
-                />
- {errors.code && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.code.message as never)}</p>}
- </div>
-
- <div className="grid grid-cols-2 gap-4">
- {/* Name */}
- <div className="space-y-2">
- <Label htmlFor="dept-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.name')}</Label>
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="dept-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.name')}</Label>
                   <Input 
                     id="dept-name" 
                     dir="ltr" 
@@ -283,57 +280,15 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
                     disabled={isReadOnly}
                     className="font-semibold" 
                   />
- {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
- </div>
- </div>
- </div>
- </CardContent>
- </Card>
+                  {errors.name && <p className="text-label-xs font-semibold text-status-error uppercase">{tv(errors.name.message as never)}</p>}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
- {/* Section: Operational Details */}
- <Card className="bg-surface-container-low border-none overflow-hidden">
- <CardContent className="p-8 space-y-8">
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-tertiary-container/10 flex items-center justify-center">
- <Landmark className="w-5 h-5 text-tertiary" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{t('operational_details')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{t('operational_status')}</p>
- </div>
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- {/* Manager */}
- <div className="space-y-2">
- <Label htmlFor="dept-manager" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.manager')}</Label>
-                <Input 
-                  id="dept-manager" 
-                  {...register('manager')} 
-                  disabled={isReadOnly}
-                  className="font-semibold" 
-                />
- </div>
-
- {/* Cost Center */}
- <div className="space-y-2">
- <Label htmlFor="dept-cost-center" className="text-label-xs font-semibold uppercase text-muted-foreground/70">{td('fields.cost_center')}</Label>
-                <Input 
-                  id="dept-cost-center" 
-                  dir="ltr"
-                  {...register('costCenter')} 
-                  disabled={isReadOnly}
-                  className="font-mono font-semibold uppercase text-tertiary" 
-                  placeholder={td('placeholders.cost_center')} 
-                />
- </div>
- </div>
- </CardContent>
- </Card>
- </div>
-
- {/* Sidebar */}
- <div className="space-y-8">
+        {/* Sidebar */}
+        <div className="space-y-8">
  <Card className="bg-surface-container-low border-none overflow-hidden">
  <CardContent className="p-8 space-y-6">
  <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
@@ -351,12 +306,18 @@ export function DepartmentFormClient({ id, createTitle, editTitle, viewTitle, is
  <Label htmlFor="dept-is-active" className="text-label-xs font-semibold uppercase cursor-pointer text-muted-foreground/60">{td('fields.is_active')}</Label>
  <p className={`text-label-sm font-semibold uppercase ${(isActive ?? true) ? 'text-status-active' : 'text-status-error'}`}>{ (isActive ?? true) ? t('active') : t('inactive')}</p>
  </div>
-                <Switch
-                  id="dept-is-active"
-                  checked={isActive ?? true}
-                  onCheckedChange={(v) => setValue('isActive', v)}
-                  disabled={isReadOnly}
-                  className="data-[state=checked]:bg-status-active"
+                <Controller
+                  control={control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <Switch
+                      id="dept-is-active"
+                      checked={field.value ?? true}
+                      onCheckedChange={field.onChange}
+                      disabled={isReadOnly}
+                      className="data-[state=checked]:bg-status-active"
+                    />
+                  )}
                 />
  </div>
  </CardContent>

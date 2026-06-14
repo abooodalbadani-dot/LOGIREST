@@ -59,7 +59,7 @@ export function DepartmentListClient({ locale }: { locale: string }) {
       accessorKey: 'isActive',
       header: t('fields.is_active'),
       cell: ({ row }) => (
-        <StatusBadge 
+        <StatusBadge
           status={row.original.isActive ? 'ACTIVE' : 'INACTIVE'} className="rounded-sm h-5"
         />
       ),
@@ -70,9 +70,9 @@ export function DepartmentListClient({ locale }: { locale: string }) {
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
           <PermissionGate action="view" resource="master_data">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-label-xs font-semibold uppercase text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 h-7"
               onClick={(e) => {
                 e.stopPropagation();
@@ -83,9 +83,9 @@ export function DepartmentListClient({ locale }: { locale: string }) {
             </Button>
           </PermissionGate>
           <PermissionGate action="edit" resource="master_data">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-label-xs font-semibold uppercase text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 h-7"
               onClick={(e) => {
                 e.stopPropagation();
@@ -111,8 +111,8 @@ export function DepartmentListClient({ locale }: { locale: string }) {
           { label: tc('master_data'), href: `/master-data` },
           { label: t('title') }
         ]} />
-        <PageHeader 
-          title={t('title')} 
+        <PageHeader
+          title={t('title')}
           description={t('description')}
           actions={
             <PermissionGate action="create" resource="master_data">
@@ -153,14 +153,14 @@ export function DepartmentListClient({ locale }: { locale: string }) {
         />
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={departments} 
+      <DataTable
+        columns={columns}
+        data={departments}
         isLoading={isLoading}
         collectionName="master_data_departments"
         onRowClick={(r: Department) => router.push(`/master-data/departments/${r.id}`)}
         emptyState={
-          <EmptyState 
+          <EmptyState
             variant="minimal"
             title={tc('no_data')}
           />

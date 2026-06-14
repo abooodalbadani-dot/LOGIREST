@@ -593,16 +593,16 @@ export class AdminService {
           warehouseId: null,
           departmentId: s.departmentId,
           warehouse: null,
+          branch: s.department?.branch
+            ? {
+                id: s.department.branch.id,
+                name: s.department.branch.name,
+              }
+            : null,
           department: s.department
             ? {
                 id: s.department.id,
                 name: s.department.name,
-                branch: s.department.branch
-                  ? {
-                      id: s.department.branch.id,
-                      name: s.department.branch.name,
-                    }
-                  : null,
               }
             : null,
         })),
@@ -612,6 +612,12 @@ export class AdminService {
           departmentId: null,
           warehouse: null,
           department: null,
+          branch: s.branch
+            ? {
+                id: s.branch.id,
+                name: s.branch.name,
+              }
+            : null,
         })),
       ],
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
@@ -693,16 +699,16 @@ export class AdminService {
           warehouseId: null,
           departmentId: s.departmentId,
           warehouse: null,
+          branch: s.department?.branch
+            ? {
+                id: s.department.branch.id,
+                name: s.department.branch.name,
+              }
+            : null,
           department: s.department
             ? {
                 id: s.department.id,
                 name: s.department.name,
-                branch: s.department.branch
-                  ? {
-                      id: s.department.branch.id,
-                      name: s.department.branch.name,
-                    }
-                  : null,
               }
             : null,
         })),
@@ -712,6 +718,12 @@ export class AdminService {
           departmentId: null,
           warehouse: null,
           department: null,
+          branch: s.branch
+            ? {
+                id: s.branch.id,
+                name: s.branch.name,
+              }
+            : null,
         })),
       ],
       status: user.isActive ? 'ACTIVE' : 'INACTIVE',
@@ -743,8 +755,9 @@ export class AdminService {
       });
 
       if (dto.warehouseIds && dto.warehouseIds.length > 0) {
+        const uniqueWarehouseIds = Array.from(new Set(dto.warehouseIds));
         await tx.userWarehouseScope.createMany({
-          data: dto.warehouseIds.map((whId) => ({
+          data: uniqueWarehouseIds.map((whId) => ({
             userId: created.id,
             warehouseId: whId,
           })),
@@ -752,8 +765,9 @@ export class AdminService {
       }
 
       if (dto.branchIds && dto.branchIds.length > 0) {
+        const uniqueBranchIds = Array.from(new Set(dto.branchIds));
         await tx.userBranchScope.createMany({
-          data: dto.branchIds.map((branchId) => ({
+          data: uniqueBranchIds.map((branchId) => ({
             userId: created.id,
             branchId,
           })),
@@ -761,8 +775,9 @@ export class AdminService {
       }
 
       if (dto.departmentIds && dto.departmentIds.length > 0) {
+        const uniqueDeptIds = Array.from(new Set(dto.departmentIds));
         await tx.userDepartmentScope.createMany({
-          data: dto.departmentIds.map((deptId) => ({
+          data: uniqueDeptIds.map((deptId) => ({
             userId: created.id,
             departmentId: deptId,
           })),
@@ -860,8 +875,9 @@ export class AdminService {
       });
 
       if (dto.warehouseIds && dto.warehouseIds.length > 0) {
+        const uniqueWarehouseIds = Array.from(new Set(dto.warehouseIds));
         await tx.userWarehouseScope.createMany({
-          data: dto.warehouseIds.map((whId) => ({
+          data: uniqueWarehouseIds.map((whId) => ({
             userId: id,
             warehouseId: whId,
           })),
@@ -873,8 +889,9 @@ export class AdminService {
       });
 
       if (dto.branchIds && dto.branchIds.length > 0) {
+        const uniqueBranchIds = Array.from(new Set(dto.branchIds));
         await tx.userBranchScope.createMany({
-          data: dto.branchIds.map((branchId) => ({
+          data: uniqueBranchIds.map((branchId) => ({
             userId: id,
             branchId,
           })),
@@ -886,8 +903,9 @@ export class AdminService {
       });
 
       if (dto.departmentIds && dto.departmentIds.length > 0) {
+        const uniqueDeptIds = Array.from(new Set(dto.departmentIds));
         await tx.userDepartmentScope.createMany({
-          data: dto.departmentIds.map((deptId) => ({
+          data: uniqueDeptIds.map((deptId) => ({
             userId: id,
             departmentId: deptId,
           })),
@@ -923,5 +941,39 @@ export class AdminService {
     });
 
     return this.getUser(id);
+  }
+
+  async getRestaurantProfile(): Promise<Record<string, unknown>> {
+    const existing = await this.prisma.systemSetting.findUnique({
+      where: { key: 'restaurant_profile' },
+    });
+    if (!existing) return {};
+    try {
+      return JSON.parse(existing.value) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+
+  async updateRestaurantProfile(
+    data: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    const existing = await this.getRestaurantProfile();
+    const newProfile = { ...existing, ...data };
+
+    await this.prisma.systemSetting.upsert({
+      where: { key: 'restaurant_profile' },
+      update: {
+        value: JSON.stringify(newProfile),
+        version: { increment: 1 },
+      },
+      create: {
+        key: 'restaurant_profile',
+        value: JSON.stringify(newProfile),
+        version: 1,
+      },
+    });
+
+    return newProfile;
   }
 }

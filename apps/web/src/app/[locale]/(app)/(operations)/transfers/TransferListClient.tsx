@@ -100,7 +100,7 @@ export function TransferListClient() {
       header: t('from_warehouse'),
       cell: ({ row }) => {
         const name = warehouseMap.get(row.original.fromWarehouseId);
-        const display = name || row.original.fromWarehouseId;
+        const display = name || row.original.fromWarehouseName || row.original.fromWarehouseId;
         return (
           <span className="opacity-80 font-medium">
             {display}
@@ -113,7 +113,7 @@ export function TransferListClient() {
       header: t('to_warehouse'),
       cell: ({ row }) => {
         const name = warehouseMap.get(row.original.toWarehouseId);
-        const display = name || row.original.toWarehouseId;
+        const display = name || row.original.toWarehouseName || row.original.toWarehouseId;
         return (
           <span className="opacity-80 font-medium">
             {display}

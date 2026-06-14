@@ -431,7 +431,7 @@ export function TemplateCreateClient({ locale }: { locale: string }) {
                                       field.type === 'string' ? 'bg-emerald-500/10 text-emerald-500/70' :
                                       field.type === 'number' ? 'bg-amber-500/10 text-amber-500/70' :
                                       field.type === 'date' ? 'bg-sky-500/10 text-sky-500/70' :
-                                      'bg-purple-500/10 text-purple-500/70'
+                                      'bg-rose-500/10 text-rose-500/70'
                                     }`}>
                                       {field.type}
                                     </span>

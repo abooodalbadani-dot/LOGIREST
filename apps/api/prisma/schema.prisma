@@ -100,8 +100,13 @@ model User {
   name         String
   role         Role
   isActive     Boolean  @default(true)
+  avatarUrl    String?  @map("avatar_url")
   failedLoginAttempts Int                  @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime?            @map("locked_until")
+  phone               String?
+  locale              String               @default("ar")
+  themePreferences    String               @default("light") @map("theme_preferences")
+  notificationPreferences Json?                @map("notification_preferences")
   version             Int                  @default(1)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
@@ -199,6 +204,7 @@ model Branch {
   id        String   @id @default(uuid())
   name      String   @unique
   code      String   @unique
+  isActive  Boolean  @default(true)
   version   Int      @default(1)
   createdAt DateTime @default(now())
 
@@ -245,6 +251,7 @@ model Department {
   id       String @id @default(uuid())
   branchId String
   name     String
+  isActive Boolean @default(true)
   version  Int    @default(1)
 
   branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Restrict)

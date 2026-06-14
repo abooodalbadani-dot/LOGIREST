@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { useOperationalScope } from '@/hooks/useOperationalScope';
 import { getTokenCookie } from '@/lib/api/cookies';
 import { checkReportCount } from '@/features/reports/api/reportsApi';
+import { translateToEnglish } from '../../lib/export/translate';
 
 const BASE = (typeof window === 'undefined' ? process.env.API_URL : null) ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
@@ -86,8 +87,8 @@ export function ReportExportMenu({
   }, [countCheckParams]);
 
   const handleExportCSV = () => {
-    const headers = columns.map((c) => c.header);
-    const rows = data.map((row) => columns.map((c) => String(row[c.key] ?? '')));
+    const headers = columns.map((c) => translateToEnglish(c.header));
+    const rows = data.map((row) => columns.map((c) => translateToEnglish(String(row[c.key] ?? ''))));
     generateCSV(headers, rows, filename);
   };
 
@@ -137,12 +138,37 @@ export function ReportExportMenu({
         console.error('Export error:', error);
       }
     } else {
-      generateExcel(columns, data, filename);
+      const englishColumns = columns.map((c) => ({
+        ...c,
+        header: translateToEnglish(c.header),
+      }));
+      const englishData = data.map((row) => {
+        const cleanRow: Record<string, string | number | boolean | null | undefined> = {};
+        for (const key of Object.keys(row)) {
+          const val = row[key];
+          cleanRow[key] = typeof val === 'string' ? translateToEnglish(val) : val;
+        }
+        return cleanRow;
+      });
+      generateExcel(englishColumns, englishData, filename);
     }
   };
 
   const handleExportPDF = () => {
-    generatePDF(columns, data, filename, title);
+    const englishColumns = columns.map((c) => ({
+      ...c,
+      header: translateToEnglish(c.header),
+    }));
+    const englishData = data.map((row) => {
+      const cleanRow: Record<string, string | number | boolean | null | undefined> = {};
+      for (const key of Object.keys(row)) {
+        const val = row[key];
+        cleanRow[key] = typeof val === 'string' ? translateToEnglish(val) : val;
+      }
+      return cleanRow;
+    });
+    const englishTitle = translateToEnglish(title);
+    generatePDF(englishColumns, englishData, filename, englishTitle);
   };
 
   const exportDisabled =

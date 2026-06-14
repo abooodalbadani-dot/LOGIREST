@@ -113,7 +113,10 @@ export function FormFooter({
             {/* Primary Action: Save / Submit (Drafting) */}
             {onSubmit && !isLocked && (
               <Button
-                onClick={onSubmit}
+                onClick={() => {
+                  console.log('1. [FormFooter] Save button clicked!');
+                  onSubmit();
+                }}
                 disabled={actualIsSaving}
                 className={cn(
                   "h-8 md:h-10 px-6 md:px-10 rounded-full transition-all",

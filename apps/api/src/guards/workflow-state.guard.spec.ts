@@ -162,9 +162,17 @@ describe('WorkflowStateGuard', () => {
 
     const result = await guard.canActivate(ctx);
     expect(result).toBe(true);
-    const reqCtx = req as unknown as { workflowContext: Record<string, unknown> };
-    expect(reqCtx.workflowContext.workflowName).toBe('PURCHASE_REQUEST');
-    expect(reqCtx.workflowContext.currentStatus).toBe('DRAFT');
-    expect(reqCtx.workflowContext.nextStatus).toBe('SUBMITTED');
+    const reqCtx = req as unknown as {
+      workflowContext: {
+        docType: string;
+        targetStatus: string;
+        document: {
+          status: string;
+        };
+      };
+    };
+    expect(reqCtx.workflowContext.docType).toBe('pr');
+    expect(reqCtx.workflowContext.document.status).toBe('DRAFT');
+    expect(reqCtx.workflowContext.targetStatus).toBe('SUBMITTED');
   });
 });

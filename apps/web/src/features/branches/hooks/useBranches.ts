@@ -47,11 +47,15 @@ export function useCreateBranch() {
 
   return useMutation({
     mutationFn: (variables: BranchFormValues & { signal?: AbortSignal }) => {
-      const { signal, ...values } = variables;
-      return apiClient.post('/branches', BranchSchema, {
-        ...values,
-        code: values.code ? values.code.toUpperCase() : undefined
-      }, { signal });
+      const { signal, name, code, isActive } = variables;
+      // Send ONLY the fields the CreateBranchDto accepts: { name, code, isActive }
+      // This mirrors the successful test script payload exactly.
+      const payload: { name: string; code?: string; isActive?: boolean } = {
+        name,
+        ...(code ? { code: code.toUpperCase() } : {}),
+        isActive: isActive ?? true,
+      };
+      return apiClient.post('/branches', BranchSchema, payload, { signal });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -72,10 +76,15 @@ export function useUpdateBranch(options?: { onConflict?: () => void }) {
     onConflict: options?.onConflict,
     meta: { suppressGlobalConflict: true },
     mutationFn: ({ id, values, signal }: { id: string; values: BranchFormValues; signal?: AbortSignal }) => {
-      return apiClient.put(`/branches/${id}`, BranchSchema, {
-        ...values,
-        code: values.code ? values.code.toUpperCase() : undefined
-      }, { signal });
+      const { name, code, isActive, version } = values;
+      // Send only UpdateBranchDto fields: { name, code, isActive, version }
+      const payload: { name?: string; code?: string; isActive?: boolean; version?: number } = {
+        ...(name ? { name } : {}),
+        ...(code ? { code: code.toUpperCase() } : {}),
+        ...(isActive !== undefined ? { isActive } : {}),
+        ...(version !== undefined ? { version } : {}),
+      };
+      return apiClient.put(`/branches/${id}`, BranchSchema, payload, { signal });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

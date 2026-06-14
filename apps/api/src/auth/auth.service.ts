@@ -15,6 +15,50 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { OutboxService } from '../modules/outbox/outbox.service';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
+
+export interface NotificationPreferences {
+  lowStock: boolean;
+  expiry: boolean;
+  pendingApproval: boolean;
+  poFinalized: boolean;
+  security: boolean;
+}
+
+function parseNotificationPreferences(json: unknown): NotificationPreferences {
+  const defaultPrefs: NotificationPreferences = {
+    lowStock: true,
+    expiry: true,
+    pendingApproval: true,
+    poFinalized: false,
+    security: true,
+  };
+  if (json && typeof json === 'object' && !Array.isArray(json)) {
+    const obj = json as Record<string, unknown>;
+    return {
+      lowStock:
+        typeof obj.lowStock === 'boolean'
+          ? obj.lowStock
+          : defaultPrefs.lowStock,
+      expiry:
+        typeof obj.expiry === 'boolean' ? obj.expiry : defaultPrefs.expiry,
+      pendingApproval:
+        typeof obj.pendingApproval === 'boolean'
+          ? obj.pendingApproval
+          : defaultPrefs.pendingApproval,
+      poFinalized:
+        typeof obj.poFinalized === 'boolean'
+          ? obj.poFinalized
+          : defaultPrefs.poFinalized,
+      security:
+        typeof obj.security === 'boolean'
+          ? obj.security
+          : defaultPrefs.security,
+    };
+  }
+  return defaultPrefs;
+}
 
 @Injectable()
 export class AuthService {
@@ -165,7 +209,14 @@ export class AuthService {
         })),
       ],
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
-      language: 'en' as const,
+      language: (user.locale || 'ar') as 'en' | 'ar',
+      locale: (user.locale || 'ar') as 'en' | 'ar',
+      avatarUrl: user.avatarUrl || null,
+      phone: user.phone || null,
+      themePreferences: (user.themePreferences || 'light') as 'light' | 'dark',
+      notificationPreferences: parseNotificationPreferences(
+        user.notificationPreferences,
+      ),
     };
 
     const accessToken = this.jwtService.sign(
@@ -267,17 +318,14 @@ export class AuthService {
         })),
       ],
       status: user.isActive ? 'ACTIVE' : ('INACTIVE' as const),
-      language: 'en' as const,
-      avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`,
-      phone: null,
-      locale: 'en' as const,
-      notificationPreferences: {
-        lowStock: true,
-        expiry: true,
-        pendingApproval: true,
-        poFinalized: false,
-        security: true,
-      },
+      language: (user.locale || 'ar') as 'en' | 'ar',
+      avatarUrl: user.avatarUrl || null,
+      phone: user.phone || null,
+      locale: (user.locale || 'ar') as 'en' | 'ar',
+      themePreferences: (user.themePreferences || 'light') as 'light' | 'dark',
+      notificationPreferences: parseNotificationPreferences(
+        user.notificationPreferences,
+      ),
     };
   }
 
@@ -290,10 +338,45 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
+    const targetLocale = body.locale || body.language || undefined;
+
+    let mergedPrefs: Record<string, boolean> | undefined = undefined;
+    if (body.notificationPreferences) {
+      const existing = parseNotificationPreferences(
+        user.notificationPreferences,
+      );
+      mergedPrefs = {
+        lowStock:
+          body.notificationPreferences.lowStock !== undefined
+            ? body.notificationPreferences.lowStock
+            : existing.lowStock,
+        expiry:
+          body.notificationPreferences.expiry !== undefined
+            ? body.notificationPreferences.expiry
+            : existing.expiry,
+        pendingApproval:
+          body.notificationPreferences.pendingApproval !== undefined
+            ? body.notificationPreferences.pendingApproval
+            : existing.pendingApproval,
+        poFinalized:
+          body.notificationPreferences.poFinalized !== undefined
+            ? body.notificationPreferences.poFinalized
+            : existing.poFinalized,
+        security:
+          body.notificationPreferences.security !== undefined
+            ? body.notificationPreferences.security
+            : existing.security,
+      };
+    }
+
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
         name: body.name || undefined,
+        phone: body.phone !== undefined ? body.phone : undefined,
+        locale: targetLocale,
+        themePreferences: body.themePreferences || undefined,
+        notificationPreferences: mergedPrefs || undefined,
       },
       include: {
         warehouseScopes: {
@@ -321,8 +404,20 @@ export class AuthService {
         action: 'USER_PROFILE_UPDATED',
         targetTable: 'users',
         targetId: userId,
-        beforeStateJson: JSON.stringify({ name: user.name }),
-        afterStateJson: JSON.stringify({ name: updatedUser.name }),
+        beforeStateJson: JSON.stringify({
+          name: user.name,
+          phone: user.phone,
+          locale: user.locale,
+          themePreferences: user.themePreferences,
+          notificationPreferences: user.notificationPreferences,
+        }),
+        afterStateJson: JSON.stringify({
+          name: updatedUser.name,
+          phone: updatedUser.phone,
+          locale: updatedUser.locale,
+          themePreferences: updatedUser.themePreferences,
+          notificationPreferences: updatedUser.notificationPreferences,
+        }),
       },
     });
 
@@ -371,28 +466,57 @@ export class AuthService {
         })),
       ],
       status: updatedUser.isActive ? 'ACTIVE' : 'INACTIVE',
-      language: body.language || 'en',
-      avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${updatedUser.id}`,
-      phone: body.phone || null,
-      locale: body.locale || 'en',
-      notificationPreferences: body.notificationPreferences || {
-        lowStock: true,
-        expiry: true,
-        pendingApproval: true,
-        poFinalized: false,
-        security: true,
-      },
+      language: (updatedUser.locale || 'ar') as 'en' | 'ar',
+      avatarUrl: updatedUser.avatarUrl || null,
+      phone: updatedUser.phone || null,
+      locale: (updatedUser.locale || 'ar') as 'en' | 'ar',
+      themePreferences: (updatedUser.themePreferences || 'light') as
+        | 'light'
+        | 'dark',
+      notificationPreferences: parseNotificationPreferences(
+        updatedUser.notificationPreferences,
+      ),
     };
   }
 
   async uploadAvatar(
     userId: string,
-    _file:
+    file:
       | { buffer?: Buffer; mimetype?: string; originalname?: string }
       | undefined,
   ) {
-    // Generate a mock avatar URL using the userId to make it look realistic
-    const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${userId}-${Date.now()}`;
+    if (!file || !file.buffer || !file.originalname) {
+      throw new BadRequestException('Avatar file is missing or invalid.');
+    }
+
+    const rootDir = process.cwd().includes('apps')
+      ? path.join(process.cwd(), '..', '..')
+      : process.cwd();
+    const uploadDir = path.join(
+      rootDir,
+      'apps',
+      'web',
+      'public',
+      'uploads',
+      'avatars',
+    );
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const ext = path.extname(file.originalname);
+    const filename = `user_${userId}_${Date.now()}${ext}`;
+    const filePath = path.join(uploadDir, filename);
+
+    fs.writeFileSync(filePath, file.buffer);
+
+    const avatarUrl = `/uploads/avatars/${filename}`;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+    });
+
     return { avatarUrl };
   }
 

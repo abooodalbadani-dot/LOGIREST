@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
+import { getMediaUrl } from '@/utils/path';
 
 export default function ProfilePage() {
   const t = useTranslations('profile');
@@ -207,7 +208,7 @@ export default function ProfilePage() {
                 <div className="relative group/avatar">
                   <div className="w-24 h-24 rounded-2xl bg-surface-container-high border-2 border-white/10 flex items-center justify-center text-3xl font-extrabold text-operational-cyan shadow-xl overflow-hidden relative">
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="Profile Photo" className="w-full h-full object-cover" />
+                      <img src={getMediaUrl(avatarUrl)} alt="Profile Photo" className="w-full h-full object-cover" />
                     ) : (
                       (displayName || user.name || '').charAt(0).toUpperCase()
                     )}

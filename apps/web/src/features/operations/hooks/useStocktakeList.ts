@@ -10,6 +10,7 @@ const StocktakeSummarySchema = z.object({
   id: z.string(),
   sessionNumber: z.string(),
   warehouseId: z.string(),
+  warehouseName: z.string().optional().nullable(),
   status: BadgeStatusSchema,
   snapshotAt: z.string(),
   startedBy: z.string(),

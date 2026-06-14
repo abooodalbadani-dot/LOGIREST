@@ -45,6 +45,7 @@ export const AuthUserSchema = z.object({
  createdAt: z.string().optional(),
  avatarUrl: z.string().optional().nullable(),
  phone: z.string().optional().nullable(),
+ themePreferences: z.enum(['light', 'dark']).optional(),
  notificationPreferences: NotificationPreferencesSchema.optional(),
 });
 

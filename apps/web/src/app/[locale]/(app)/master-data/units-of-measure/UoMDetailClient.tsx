@@ -1,11 +1,9 @@
 'use client';
 
-import { Ruler, Activity, Clock, Hash } from 'lucide-react';
+import { Ruler, Activity, Hash, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ClientOnlyTime } from '@/components/shared/ClientOnlyTime';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { StatusBadge } from '@/components/shared/StatusBadge';
 import { MasterDataDetailLayout } from '@/features/master-data/components/MasterDataDetailLayout';
 import { useUoM } from '@/features/uoms/hooks/useUoMs';
 import { PageSkeleton } from '@/components/shared/PageSkeleton';
@@ -96,12 +94,6 @@ export function UoMDetailClient({ id }: Props) {
  
  <div className="space-y-3">
  <div className="flex justify-between items-center">
- <span className="text-label-xs font-medium text-muted-foreground/40 uppercase">{tc('created_at')}</span>
- <span className="text-label-xs font-mono font-bold text-muted-foreground/70 dir-ltr">
- {data.createdAt ? <ClientOnlyTime date={data.createdAt} mode="datetime" /> : '-'}
- </span>
- </div>
- <div className="flex justify-between items-center">
  <span className="text-label-xs font-medium text-muted-foreground/40 uppercase">{tc('id')}</span>
  <span className="text-label-xs font-mono font-bold text-muted-foreground/30 dir-ltr">{data.id.slice(0, 8)}...</span>
  </div>
@@ -113,37 +105,18 @@ export function UoMDetailClient({ id }: Props) {
  </Card>
  </div>
 
- <div className="space-y-8">
- <Card className="bg-surface-container-low border-none overflow-hidden">
- <CardContent className="p-8 space-y-6">
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-status-active/10 flex items-center justify-center">
- <Activity className="w-5 h-5 text-status-active" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{tc('status')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tc('system_state')}</p>
- </div>
- </div>
-
- <div className="flex items-center justify-between p-4 bg-surface-container-highest/20 rounded-md border border-surface-variant/10">
- <div className="space-y-1">
- <p className="text-label-xs font-semibold uppercase text-muted-foreground/50">{tc('current_status')}</p>
- <StatusBadge 
- status={data.isActive ? 'ACTIVE' : 'INACTIVE'} className="h-5 px-3 text-label-xxs"
- />
- </div>
- </div>
-
- <div className="p-4 bg-status-active/5 rounded-md border border-status-active/10 border-dashed">
- <h3 className="text-label-xs font-semibold uppercase text-status-active mb-1">{t('precision')}</h3>
- <p className="text-label-xs text-muted-foreground/60 uppercase font-medium leading-relaxed">
- {t('precision_description')}
- </p>
- </div>
- </CardContent>
- </Card>
- </div>
+  <div className="space-y-8">
+  <Card className="bg-surface-container-low border-none overflow-hidden">
+  <CardContent className="p-8 space-y-6">
+  <div className="p-4 bg-status-active/5 rounded-md border border-status-active/10 border-dashed">
+  <h3 className="text-label-xs font-semibold uppercase text-status-active mb-1">{t('precision')}</h3>
+  <p className="text-label-xs text-muted-foreground/60 uppercase font-medium leading-relaxed">
+  {t('precision_description')}
+  </p>
+  </div>
+  </CardContent>
+  </Card>
+  </div>
  </div>
  </MasterDataDetailLayout>
  );

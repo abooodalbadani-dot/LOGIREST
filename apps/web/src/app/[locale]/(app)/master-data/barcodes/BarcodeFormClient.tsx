@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 import { useUnsavedChangesGuard } from '@/lib/unsaved-changes/useUnsavedChangesGuard';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ import { apiClient } from '@/infrastructure/api/client';
 import { z } from 'zod';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { onFormError } from '@/hooks/useFormError';
+import { useAbortController } from '@/hooks/useAbortController';
 
 interface Props { 
   id: string | null; 
@@ -46,16 +47,14 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
   const conflict = useConflictHandler('barcode', id ?? '');
   const update = useUpdateBarcode({ onConflict: conflict.triggerConflict });
   const { playSound } = useAudioFeedback();
+  const abortController = useAbortController();
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isDirty, isValid } } =
     useForm<BarcodeFormValues>({
       resolver: zodResolver(BarcodeFormSchema),
       defaultValues: { 
         itemId: '', 
-        uomId: '', 
         code: '', 
-        defaultQty: 1,
-        isActive: true,
         version: undefined
       },
       disabled: isReadOnly,
@@ -75,22 +74,11 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
     })) || [];
   }, [items?.data]);
 
-  const uomItems = useMemo(() => {
-    return uoms?.data?.map((u) => ({
-      id: u.id,
-      name_en: `${u.code} — ${u.name}`,
-      name_ar: `${u.code} — ${u.name}`,
-    })) || [];
-  }, [uoms?.data]);
-
   useEffect(() => {
     if (barcode) {
       reset({ 
         itemId: barcode.itemId, 
-        uomId: barcode.uomId,
         code: barcode.code, 
-        defaultQty: barcode.defaultQty,
-        isActive: barcode.isActive,
         version: barcode.version
       });
     }
@@ -106,9 +94,9 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
       try {
         const response = await apiClient.get(
           `/master-data/barcodes/check-duplicate?barcode=${currentCode}`,
-          z.object({ is_duplicate: z.boolean() })
+          z.object({ isDuplicate: z.boolean() })
         );
-        if (response.is_duplicate) {
+        if (response.isDuplicate) {
           setCodeError(tb('errors.code_exists') || 'This code is already in use');
         } else {
           setCodeError(null);
@@ -122,21 +110,59 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
     return () => clearTimeout(timer);
   }, [currentCode, id, tb]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValid = (values: BarcodeFormValues) => {
     if (isReadOnly || codeError) return;
-    
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values });
-      } else {
-        await create.mutateAsync({ values });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/barcodes', { skipGuard: true });
-    } catch (e) {
-      console.error(e);
+
+    const payload = {
+      itemId: values.itemId,
+      code: values.code,
+    };
+
+    if (id) {
+      update.mutate(
+        { 
+          id, 
+          values: {
+            ...payload,
+            version: values.version || undefined,
+          },
+          signal: abortController.signal
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/barcodes', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Update failed:', error);
+          }
+        }
+      );
+    } else {
+      create.mutate(
+        { 
+          values: payload,
+          signal: abortController.signal
+        },
+        {
+          onSuccess: () => {
+            reset(values);
+            guardedRouter.push('/master-data/barcodes', { skipGuard: true });
+          },
+          onError: (error) => {
+            console.error('Create failed:', error);
+          }
+        }
+      );
     }
-  }, onFormError);
+  };
+
+  const onInvalid = (errors: FieldErrors<BarcodeFormValues>) => {
+    console.log('3. [BarcodeForm] Validation FAILED (Silent Zod Blocker):', errors);
+    onFormError(errors);
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   return (
     <>
@@ -186,45 +212,7 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
    {errors.itemId && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.itemId.message}</p>}
    </div>
 
-   <div className="space-y-2">
-   <Label htmlFor="bc-uom" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-   {tb('fields.uom')}
-   </Label>
-   <Controller
-   name="uomId"
-   control={control}
-   render={({ field }) => (
-      <SmartCombobox
-        disabled={isReadOnly}
-        value={field.value}
-        onSelect={(item) => field.onChange(item.id)}
-        items={uomItems}
-        placeholder="—"
-        className="w-full bg-surface-container-high/40 hover:bg-surface-container-high transition-colors text-label-xs font-bold"
-      />
-   )}
-   />
-   {errors.uomId && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.uomId.message}</p>}
-   </div>
 
-  <div className="space-y-2">
-  <Label htmlFor="bc-qty" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
-  {tb('fields.default_qty')}
-  </Label>
-  <div className="relative group">
-  <Hash className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-status-active transition-colors" />
-                 <Input 
-                   id="bc-qty" 
-                   type="number" 
-                   dir="ltr" 
-                   min={1}
-                   disabled={isReadOnly}
-                   {...register('defaultQty', { valueAsNumber: true })} 
-                   className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-status-active"
-                 />
-  </div>
-  {errors.defaultQty && <p className="text-label-xs font-semibold text-rose-400 uppercase">{errors.defaultQty.message}</p>}
-  </div>
  </div>
  </CardContent>
  </Card>
@@ -280,38 +268,6 @@ export function BarcodeFormClient({ id, createTitle, editTitle, viewTitle, local
  </div>
 
  <div className="space-y-8">
- <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
- <CardContent className="p-8 space-y-6">
- <div className="flex items-center gap-3 pb-4 border-b border-surface-variant/10">
- <div className="w-10 h-10 rounded-md bg-status-active/10 flex items-center justify-center">
- <Settings2 className="w-5 h-5 text-status-active" />
- </div>
- <div>
- <h3 className="text-body-md font-semibold text-foreground uppercase">{tb('configuration')}</h3>
- <p className="text-label-xs font-semibold text-muted-foreground/60 uppercase mt-0.5">{tb('operational_status')}</p>
- </div>
- </div>
- 
- <div className="flex items-center justify-between p-4 bg-surface-container-highest/10 rounded-md border border-surface-variant/5">
- <div className="space-y-0.5">
- <Label className="text-label-xs font-bold uppercase text-foreground/80">{tb('active_status_label')}</Label>
- <p className="text-label-xxs text-muted-foreground uppercase font-medium">{tb('active_status_desc')}</p>
- </div>
-  <Controller
-  name="isActive"
-  control={control}
-  render={({ field }) => (
-                   <Switch
-                     checked={field.value}
-                     onCheckedChange={field.onChange}
-                     disabled={isReadOnly}
-                     className="data-[state=checked]:bg-status-active"
-                   />
-  )}
-  />
- </div>
- </CardContent>
- </Card>
 
  <Card className="bg-surface-container-low border-none rounded-md overflow-hidden">
  <CardContent className="p-8 space-y-6">

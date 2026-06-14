@@ -28,7 +28,13 @@ export function proxy(request: NextRequest) {
   const segments = pathname.split('/');
   const firstSegment = segments[1] || '';
   const hasLocalePrefix = supportedLocales.includes(firstSegment);
-  const locale = hasLocalePrefix ? firstSegment : (routing.defaultLocale as string);
+  
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  const preferredLocale = (cookieLocale && supportedLocales.includes(cookieLocale))
+    ? cookieLocale
+    : (routing.defaultLocale as string);
+
+  const locale = hasLocalePrefix ? firstSegment : preferredLocale;
 
   // 3. Helpers & Normalization
   const publicPaths = ['/login', '/forgot-password', '/reset-password'];

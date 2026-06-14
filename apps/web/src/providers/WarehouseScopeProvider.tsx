@@ -15,7 +15,7 @@ const WarehouseScopeContext = createContext<WarehouseScopeContextValue | null>(n
 
 export function WarehouseScopeProvider({ children }: { children: ReactNode }) {
   const { user, activeScope, isLoading: authLoading } = useAuth();
-  
+
   // Guard the hook argument and loading check
   const warehouseId = activeScope?.warehouseId;
   const { data: lockState, isLoading: lockLoading } = useWarehouseLock(warehouseId ?? null);

@@ -176,13 +176,13 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
                 <div className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                   <Mail className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                 </div>
-                <span className="text-label-xs font-bold text-muted-foreground group-hover:text-white transition-colors">{supplier.email || 'N/A'}</span>
+                <span className="text-label-xs font-bold text-muted-foreground group-hover:text-white transition-colors">{supplier.contactEmail || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-4 group">
                 <div className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                   <Phone className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                 </div>
-                <span className="text-label-xs font-bold text-muted-foreground group-hover:text-white transition-colors" dir="ltr">{supplier.phone || 'N/A'}</span>
+                <span className="text-label-xs font-bold text-muted-foreground group-hover:text-white transition-colors" dir="ltr">{supplier.contactPhone || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-4 group">
                 <div className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -194,8 +194,8 @@ export function SupplierProfileClient({ locale, id }: { locale: string, id: stri
 
             <div className="pt-4 border-t border-white/5 space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('tax_number')}</span>
-                <span className="text-label-xs font-mono font-bold text-muted-foreground/80">{supplier.taxNumber || '---'}</span>
+                <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('contact_person')}</span>
+                <span className="text-label-xs font-bold text-muted-foreground/80">{supplier.contactName || '---'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('payment_terms')}</span>

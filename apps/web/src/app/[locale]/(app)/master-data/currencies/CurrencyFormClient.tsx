@@ -40,11 +40,12 @@ export function CurrencyFormClient({
   isReadOnly = false,
 }: Props) {
   const t = useTranslations('master_data.currencies');
+  const tv = useTranslations();
   const abortController = useAbortController();
   const { data: currency, isLoading, isError, isFetched, refetch } = useCurrency(id);
-  const create = useCreateCurrency();
+  const createCurrency = useCreateCurrency();
   const conflict = useConflictHandler('currency', id ?? '');
-  const update = useUpdateCurrency({ onConflict: conflict.triggerConflict });
+  const updateCurrency = useUpdateCurrency({ onConflict: conflict.triggerConflict });
   const { playSound } = useAudioFeedback();
 
   const { register, handleSubmit, reset, control, formState: { errors, isDirty, isValid } } =
@@ -55,7 +56,7 @@ export function CurrencyFormClient({
         code: '', 
         name: '', 
         symbol: '',
-        isBaseCurrency: false,
+        isBase: false,
         isActive: true,
         version: undefined
       },
@@ -71,7 +72,7 @@ export function CurrencyFormClient({
         code: currency.code, 
         name: currency.name,
         symbol: currency.symbol || '',
-        isBaseCurrency: currency.isBaseCurrency,
+        isBase: currency.isBase,
         isActive: currency.isActive,
         version: currency.version
       });
@@ -103,19 +104,31 @@ export function CurrencyFormClient({
     );
   }
 
-  const onValid = async (values: CurrencyFormValues) => {
+  const onValid = (values: CurrencyFormValues) => {
     if (isReadOnly) return;
     
-    try {
-      if (id) {
-        await update.mutateAsync({ id, values, signal: abortController.signal });
-      } else {
-        await create.mutateAsync({ values, signal: abortController.signal });
-      }
-      reset(values);
-      guardedRouter.push('/master-data/currencies', { skipGuard: true });
-    } catch {
-      // Error handled by mutation hooks or conflict handler
+    if (id) {
+      updateCurrency.mutate({ id, values, signal: abortController.signal }, {
+        onSuccess: () => {
+          toast.success(t('updated_success'));
+          reset(values);
+          guardedRouter.push('/master-data/currencies', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Update failed:', error);
+        }
+      });
+    } else {
+      createCurrency.mutate({ values, signal: abortController.signal }, {
+        onSuccess: () => {
+          toast.success(t('created_success'));
+          reset(values);
+          guardedRouter.push('/master-data/currencies', { skipGuard: true });
+        },
+        onError: (error) => {
+          console.error('Create failed:', error);
+        }
+      });
     }
   };
 
@@ -128,7 +141,7 @@ export function CurrencyFormClient({
     <MasterDataFormLayout 
       title={displayTitle} 
       backHref='/master-data/currencies'
-      isSaving={create.isPending || update.isPending} 
+      isSaving={createCurrency.isPending || updateCurrency.isPending} 
       onSubmit={onSubmit}
       onCancel={() => guardedRouter.push('/master-data/currencies')}
       hideSave={isReadOnly}
@@ -171,19 +184,25 @@ export function CurrencyFormClient({
                   </Label>
                   <div className="relative group">
                     <Coins className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-cyan-500 transition-colors" />
-                    <Input 
-                      id="curr-code" 
-                      placeholder={t('placeholders.code')}
-                      dir="ltr" 
-                      maxLength={3}
-                      {...register('code')} 
-                      disabled={isReadOnly}
-                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm uppercase text-cyan-500 disabled:opacity-70"
+                    <Controller
+                      control={control}
+                      name="code"
+                      render={({ field }) => (
+                        <Input 
+                          id="curr-code" 
+                          placeholder={t('placeholders.code')}
+                          dir="ltr" 
+                          maxLength={3}
+                          {...field} 
+                          disabled={isReadOnly}
+                          className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm uppercase text-cyan-500 disabled:opacity-70"
+                        />
+                      )}
                     />
                   </div>
                   {errors.code?.message && (
                     <p className="text-label-xs font-semibold text-rose-400 uppercase">
-                      {t(errors.code.message as Parameters<typeof t>[0])}
+                      {tv(errors.code.message as Parameters<typeof tv>[0])}
                     </p>
                   )}
                 </div>
@@ -195,12 +214,19 @@ export function CurrencyFormClient({
                   </Label>
                   <div className="relative group">
                     <Type className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-amber-500 transition-colors" />
-                    <Input 
-                      id="curr-symbol" 
-                      placeholder={t('placeholders.symbol')}
-                      {...register('symbol')} 
-                      disabled={isReadOnly}
-                      className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-amber-500 disabled:opacity-70"
+                    <Controller
+                      control={control}
+                      name="symbol"
+                      render={({ field }) => (
+                        <Input 
+                          id="curr-symbol" 
+                          placeholder={t('placeholders.symbol')}
+                          {...field} 
+                          value={field.value ?? ''}
+                          disabled={isReadOnly}
+                          className="h-11 ps-10 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors font-mono font-bold text-label-sm text-amber-500 disabled:opacity-70"
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -212,15 +238,21 @@ export function CurrencyFormClient({
                   <Label htmlFor="curr-name" className="text-label-xs font-semibold uppercase text-muted-foreground/70">
                     {t('fields.name') || 'Name'}
                   </Label>
-                  <Input 
-                    id="curr-name" 
-                    {...register('name')} 
-                    disabled={isReadOnly}
-                    className="h-11 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold disabled:opacity-70"
+                  <Controller
+                    control={control}
+                    name="name"
+                    render={({ field }) => (
+                      <Input 
+                        id="curr-name" 
+                        {...field} 
+                        disabled={isReadOnly}
+                        className="h-11 border-none bg-surface-container-high/40 focus:bg-surface-container-high transition-colors text-label-sm font-bold disabled:opacity-70"
+                      />
+                    )}
                   />
                   {errors.name?.message && (
                     <p className="text-label-xs font-semibold text-rose-400 uppercase">
-                      {t(errors.name.message as Parameters<typeof t>[0])}
+                      {tv(errors.name.message as Parameters<typeof tv>[0])}
                     </p>
                   )}
                 </div>
@@ -250,7 +282,7 @@ export function CurrencyFormClient({
                   <p className="text-label-xxs text-muted-foreground uppercase font-medium">{t('placeholders.base_desc')}</p>
                 </div>
                 <Controller
-                  name="isBaseCurrency"
+                  name="isBase"
                   control={control}
                   render={({ field }) => (
                     <Switch
@@ -274,7 +306,7 @@ export function CurrencyFormClient({
                   control={control}
                   render={({ field }) => (
                     <Switch
-                      checked={field.value}
+                      checked={!!field.value}
                       onCheckedChange={field.onChange}
                       disabled={isReadOnly}
                       className="data-[state=checked]:bg-status-active"

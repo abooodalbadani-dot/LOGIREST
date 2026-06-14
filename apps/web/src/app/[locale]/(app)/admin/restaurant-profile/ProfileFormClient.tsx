@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useFormError } from '@/hooks/useFormError';
 import { 
  Building2, 
  MapPin, 
@@ -37,40 +38,39 @@ export function ProfileFormClient({ locale: _locale }: { locale: string }) {
   const { mutateAsync: updateProfile, isPending } = useUpdateRestaurantProfile();
   const { playSound } = useAudioFeedback();
   
-const { register, handleSubmit, formState: { errors, isDirty }, reset, setValue, control } = useForm<RestaurantProfile>({
-  resolver: zodResolver(RestaurantProfileSchema),
+  const { register, handleSubmit, formState: { errors, isDirty }, reset, control } = useForm<RestaurantProfile>({
+    resolver: zodResolver(RestaurantProfileSchema),
   });
 
   const { router: _guardedRouter } = useUnsavedChangesGuard(isDirty);
+  const onFormError = useFormError();
 
- const logoPreview = useWatch({ control, name: 'logo' });
+  useEffect(() => {
+    if (profile) {
+      reset(profile);
+    }
+  }, [profile, reset]);
 
- useEffect(() => {
- if (profile) {
- reset(profile);
- }
- }, [profile, reset]);
-
- const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
- const file = e.target.files?.[0];
- if (file) {
- const reader = new FileReader();
- reader.onloadend = () => {
- const base64 = reader.result as string;
- setValue('logo', base64, { shouldDirty: true });
- };
- reader.readAsDataURL(file);
- }
- };
-
- const removeLogo = () => {
- setValue('logo', '', { shouldDirty: true });
- };
-
-const onSubmit = async (data: RestaurantProfile) => {
+  const onSubmit = async (data: RestaurantProfile) => {
     try {
-      await updateProfile({ values: data });
-      reset(data);
+      // Clean payload: empty strings and nulls to undefined
+      const cleanData: RestaurantProfile = {
+        name: data.name,
+        address: data.address === '' ? undefined : (data.address ?? undefined),
+        phone: data.phone === '' ? undefined : (data.phone ?? undefined),
+        email: data.email === '' ? undefined : (data.email ?? undefined),
+        logo: data.logo === '' ? undefined : (data.logo ?? undefined),
+        logoUrl: data.logoUrl === '' ? undefined : (data.logoUrl ?? undefined),
+        taxNumber: data.taxNumber === '' ? undefined : (data.taxNumber ?? undefined),
+        taxId: data.taxId === '' ? undefined : (data.taxId ?? undefined),
+        commercialRegistration: data.commercialRegistration === '' ? undefined : (data.commercialRegistration ?? undefined),
+        website: data.website === '' ? undefined : (data.website ?? undefined),
+        socialLinks: data.socialLinks === '' ? undefined : (data.socialLinks ?? undefined),
+        updatedAt: data.updatedAt === '' ? undefined : (data.updatedAt ?? undefined),
+      };
+
+      await updateProfile({ values: cleanData });
+      reset(cleanData);
     } catch {
       // Error handled by mutation hooks
     }
@@ -102,7 +102,7 @@ const onSubmit = async (data: RestaurantProfile) => {
  </p>
  </div>
  <Button
- onClick={handleSubmit(onSubmit)}
+ onClick={handleSubmit(onSubmit, onFormError)}
  disabled={isPending || !isDirty}
  className="h-12 px-8 bg-operational-cyan text-white hover:bg-operational-cyan/90 transition-all font-semibold uppercase text-label-xs gap-2 rounded-[var(--radius)] shadow-[0_0_20px_rgba(var(--operational-cyan-rgb),0.2)] disabled:opacity-50"
  >
@@ -118,52 +118,68 @@ const onSubmit = async (data: RestaurantProfile) => {
  <Label className="text-label-xs font-semibold uppercase text-muted-foreground">
  {t('fields.logo')}
  </Label>
- <div className="relative group aspect-square rounded-[var(--radius)] border-2 border-dashed border-outline-low hover:border-operational-cyan transition-all overflow-hidden flex flex-col items-center justify-center bg-surface-container-lowest">
- {logoPreview ? (
- <>
- <Image src={logoPreview} alt={t('placeholders.logo_alt')} className="w-full h-full object-contain p-4" fill />
- <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
- <Button
- type="button"
- variant="ghost"
- size="icon"
- onClick={() => document.getElementById('logo-upload')?.click()}
- className="text-white hover:text-operational-cyan"
- >
- <Upload className="w-6 h-6" />
- </Button>
- <Button
- type="button"
- variant="ghost"
- size="icon"
- onClick={removeLogo}
- className="text-white hover:text-red-400"
- >
- <Trash2 className="w-6 h-6" />
- </Button>
- </div>
- </>
- ) : (
- <div 
- onClick={() => document.getElementById('logo-upload')?.click()}
- className="flex flex-col items-center gap-4 cursor-pointer"
- >
- <div className="p-4 bg-surface-container rounded-full">
- <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
- </div>
- <span className="text-label-xs font-bold text-muted-foreground uppercase">
- {t('upload_logo')}
- </span>
- </div>
- )}
- <input 
- id="logo-upload"
- type="file" 
- accept="image/*" 
- className="hidden" 
- onChange={handleLogoChange}
- />
- </div>
+  <Controller
+    control={control}
+    name="logo"
+    render={({ field }) => (
+      <div className="relative group aspect-square rounded-[var(--radius)] border-2 border-dashed border-outline-low hover:border-operational-cyan transition-all overflow-hidden flex flex-col items-center justify-center bg-surface-container-lowest">
+        {field.value ? (
+          <>
+            <Image src={field.value} alt={t('placeholders.logo_alt')} className="w-full h-full object-contain p-4" fill />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => document.getElementById('logo-upload')?.click()}
+                className="text-white hover:text-operational-cyan"
+              >
+                <Upload className="w-6 h-6" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => field.onChange('')}
+                className="text-white hover:text-red-400"
+              >
+                <Trash2 className="w-6 h-6" />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div 
+            onClick={() => document.getElementById('logo-upload')?.click()}
+            className="flex flex-col items-center gap-4 cursor-pointer"
+          >
+            <div className="p-4 bg-surface-container rounded-full">
+              <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
+            </div>
+            <span className="text-label-xs font-bold text-muted-foreground uppercase">
+              {t('upload_logo')}
+            </span>
+          </div>
+        )}
+        <input 
+          id="logo-upload"
+          type="file" 
+          accept="image/*" 
+          className="hidden" 
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = reader.result as string;
+                field.onChange(base64);
+              };
+              reader.readAsDataURL(file);
+            }
+          }}
+        />
+      </div>
+    )}
+  />
  <p className="text-label-xxs text-muted-foreground italic leading-relaxed">
  {t('logo_hint')}
  </p>

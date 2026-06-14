@@ -147,7 +147,10 @@ export class EmailService {
       return { ok: false, reason: 'SMTP_UNCONFIGURED' };
     }
 
-    const from = this.config.get<string>('SMTP_FROM', 'noreply@logirest.app');
+    const from = this.config.get<string>(
+      'SMTP_FROM',
+      'noreply@otantikrestuarant.com',
+    );
     const recipients = Array.isArray(to) ? to.join(', ') : to;
 
     try {
@@ -238,15 +241,15 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>LogiRest Inventory Management</h1>
+            <h1>Otantik Restuarant Inventory Management</h1>
           </div>
           <div class="content">
             <h2>${title}</h2>
             ${body}
           </div>
           <div class="footer">
-            <p>This is an automated notification from the LogiRest Enterprise system.</p>
-            <p>&copy; 2026 LogiRest Inc. All rights reserved.</p>
+            <p>This is an automated notification from the Otantik Restuarant Enterprise system.</p>
+            <p>&copy; 2026 Otantik Restuarant. All rights reserved.</p>
           </div>
         </div>
       </body>
