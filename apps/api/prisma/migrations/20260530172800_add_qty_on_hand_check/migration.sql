@@ -1,4 +1,6 @@
--- Prevent inventory lots from having a negative quantity on hand
-ALTER TABLE "warehouse_item_lots"
-  ADD CONSTRAINT "chk_qty_non_negative"
-  CHECK ("qtyOnHand" >= 0);
+-- NO-OP: This migration was suppressed to prevent a duplicate constraint error on fresh deployments.
+-- The constraint "warehouse_item_lots_qty_on_hand_nonneg" (CHECK "qtyOnHand" >= 0) was already
+-- applied in migration 20260525172054_add_nonneg_qty_constraints using the correct camelCase
+-- column name convention. Adding a second identical constraint here would cause
+-- `prisma migrate deploy` to fail on a clean production database.
+-- Original intent: Prevent inventory lots from having a negative quantity on hand. ✅ Already enforced.

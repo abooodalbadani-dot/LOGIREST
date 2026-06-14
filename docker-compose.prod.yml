@@ -1,0 +1,223 @@
+# =============================================================================
+# LogiRest — Production Docker Compose
+# =============================================================================
+# Usage:
+#   1. Copy docker-compose.env.example to .env and fill in all values.
+#   2. Run: docker compose -f docker-compose.prod.yml up -d --build
+#   3. Seed the database (first boot only):
+#      docker compose -f docker-compose.prod.yml exec api npm run prisma:seed
+#
+# Key differences from docker-compose.yml (dev):
+#   - Uses the `production` stage from each Dockerfile (compiled output, not source)
+#   - NODE_ENV=production on all services
+#   - No source-code volume mounts (no hot reload)
+#   - DB and Redis ports NOT exposed to host (internal network only)
+#   - Only Caddy is exposed on 80/443
+# =============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: logirest-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-logirest}
+      POSTGRES_USER: ${DB_USER:-logirest}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-logirest}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # NOT exposed to host — only accessible inside the Docker network
+    expose:
+      - "5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: logirest-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # NOT exposed to host — only accessible inside the Docker network
+    expose:
+      - "6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    container_name: logirest-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-logirest}:${DB_PASSWORD}@db:5432/${DB_NAME:-logirest}?lock_timeout=5000&connect_timeout=10
+      DIRECT_URL: postgresql://${DB_USER:-logirest}:${DB_PASSWORD}@db:5432/${DB_NAME:-logirest}?lock_timeout=5000&connect_timeout=10
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: ${FRONTEND_URL}
+      PORT: 4000
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=1024
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      BASE_CURRENCY_CODE: ${BASE_CURRENCY_CODE:-USD}
+      BASE_CURRENCY_NAME: ${BASE_CURRENCY_NAME:-US Dollar}
+      TRANSFER_OVERDUE_DAYS: ${TRANSFER_OVERDUE_DAYS:-7}
+      SMTP_FROM: ${SMTP_FROM}
+      ENABLE_AUTO_FREEZE: ${ENABLE_AUTO_FREEZE:-false}
+      ENABLE_SLACK_ALERTS: ${ENABLE_SLACK_ALERTS:-false}
+      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-http://minio:9000}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-logirest-backups}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+        reservations:
+          cpus: '0.5'
+          memory: 768M
+    expose:
+      - "4000"
+    volumes:
+      # Persist user uploads between deployments
+      - uploads_data:/app/apps/web/public/uploads
+      - ./backups:/backups:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:4000/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+      # NEXT_PUBLIC_API_URL must be set at build time — Next.js bakes it into
+      # client-side bundles. Set this to the public URL of the API.
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: logirest-web
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_USE_MOCKS: "false"
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://127.0.0.1:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: logirest-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+  minio:
+    image: minio/minio:RELEASE.2024-01-28T22-35-53Z
+    container_name: logirest-minio
+    restart: unless-stopped
+    expose:
+      - "9000"
+    ports:
+      # Admin console — restrict access via firewall on production server
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${BACKUP_S3_ACCESS_KEY:-logirest_minio}
+      MINIO_ROOT_PASSWORD: ${BACKUP_S3_SECRET_KEY:-logirest_minio_secret}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-backup:
+    image: postgres:16-alpine
+    container_name: logirest-db-backup
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      PGDATABASE: ${DB_NAME:-logirest}
+      PGUSER: ${DB_USER:-logirest}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGHOST: db
+      PGPORT: 5432
+      BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:-logirest_minio}
+      BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-logirest_minio_secret}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-logirest-backups}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-http://minio:9000}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
+    volumes:
+      - ./scripts:/scripts:ro
+      - ./backups:/backups
+    entrypoint: ["sh", "-c", "while true; do sh /scripts/db-backup.sh; sleep 86400; done"]
+
+volumes:
+  db_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+  minio_data:
+  uploads_data:
