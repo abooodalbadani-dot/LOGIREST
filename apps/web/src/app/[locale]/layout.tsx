@@ -18,7 +18,7 @@ import { UserProfileProvider } from '@/providers/UserProfileProvider';
 import { CurrencyProvider } from '@/app/[locale]/providers/currency-provider';
 
 
-import { ibmPlexSans, ibmPlexSansArabic, cairo, ibmPlexMono } from '@/lib/fonts';
+import { ibmPlexSans, ibmPlexSansArabic, beVietnamPro, ibmPlexMono } from '@/lib/fonts';
 
 
 import { Metadata, Viewport } from 'next';
@@ -183,7 +183,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={direction} suppressHydrationWarning>
       <body
-        className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${cairo.variable}`}
+        className={`${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} ${ibmPlexMono.variable} ${beVietnamPro.variable} font-sans antialiased text-foreground bg-background transition-colors duration-300 min-h-screen`}
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>

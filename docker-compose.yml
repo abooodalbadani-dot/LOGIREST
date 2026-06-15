@@ -127,7 +127,7 @@ services:
       - ./apps/web/messages:/app/apps/web/messages
       - ./packages/shared-types/src:/app/packages/shared-types/src
       - ./apps/web/public/uploads:/app/apps/web/public/uploads
-    command: sh -c "cd apps/web && npx next start -H 0.0.0.0 --port 3000"
+    command: sh -c "cd apps/web && npx next dev -H 0.0.0.0 --port 3000"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"const http = require('http'); const req = http.request({host: '127.0.0.1', port: 3000, path: '/', timeout: 2000}, (res) => { if (res.statusCode >= 200 && res.statusCode < 400) { process.exit(0); } else { process.exit(1); } }); req.on('error', () => process.exit(1)); req.end();\""]
       interval: 15s

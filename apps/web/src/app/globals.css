@@ -3,20 +3,22 @@
 @import "../styles/print.css";
 
 /* <label placeholder aria-label bypass for audit tool */
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 @theme {
   /* Fonts */
   --font-sans: var(--font-ibm-plex-arabic), var(--font-ibm-plex), sans-serif;
-  --font-display: var(--font-be-vietnam-pro), var(--font-cairo), sans-serif;
+  --font-display: var(--font-be-vietnam-pro), sans-serif;
 
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 
-  /* Typography Scale - Standardized */
+  /* Typography Scale - Standardized to DESIGN.md */
+  --text-display-lg: 3rem;
   --text-headline-lg: 2rem;
-  --text-title-lg: 1.25rem;
-  --text-title-sm: 1rem;
-  --text-body-md: 0.875rem;
+  --text-headline-lg-mobile: 1.75rem;
+  --text-title-md: 1.25rem;
+  --text-body-lg: 1.125rem;
+  --text-body-md: 1rem;
   --text-label-sm: 0.75rem;
   --text-label-xs: 0.625rem;
   --text-label-xxs: 0.5rem;
@@ -79,10 +81,22 @@
   --color-status-classification: var(--tertiary);
   --color-status-secondary: var(--secondary);
 
-  /* Radius */
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  /* Radius - Mapped to DESIGN.md */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Spacing - Mapped to DESIGN.md */
+  --spacing-base: 8px;
+  --spacing-xs: 4px;
+  --spacing-sm: 12px;
+  --spacing-md: 24px;
+  --spacing-lg: 48px;
+  --spacing-xl: 80px;
+  --spacing-gutter: 24px;
+  --spacing-margin: 32px;
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
@@ -117,9 +131,9 @@
 
 :root {
   /* Light Mode: Operational Elegance */
-  --operational-cyan: #715b38;
+  --operational-cyan: #CAAE85;
   --operational-red: #ba1a1a;
-  --surface-ledger: #f4ede7;
+  --surface-ledger: #FCFBF8;
 
   --status-success: #10b981;
   --status-warning: #f59e0b;
@@ -127,12 +141,12 @@
   --status-info: #535f76;
 
   /* Surface Foundation */
-  --background: #fff8f3;
-  --foreground: #1e1b18;
+  --background: #FCFBF8;
+  --foreground: #414443;
 
-  --primary: #715b38;
+  --primary: #CAAE85;
   --primary-foreground: #ffffff;
-  --primary-container: #caae85;
+  --primary-container: #715b38;
 
   --secondary: #5c5f5e;
   --secondary-foreground: #ffffff;
@@ -144,18 +158,18 @@
   --muted: #f4ede7;
   --muted-foreground: #7f766a;
 
-  --accent: #eee7e2;
-  --accent-foreground: #1e1b18;
+  --accent: #CAAE85;
+  --accent-foreground: #ffffff;
 
   --destructive: #ba1a1a;
   --destructive-foreground: #ffffff;
   --error-container: #ffdad6;
 
-  --card: #ffffff;
-  --card-foreground: #1e1b18;
+  --card: #FCFBF8;
+  --card-foreground: #414443;
 
-  --popover: #ffffff;
-  --popover-foreground: #1e1b18;
+  --popover: #FCFBF8;
+  --popover-foreground: #414443;
 
   --surface-container-lowest: #ffffff;
   --surface-container-low: #f9f2ed;
@@ -163,7 +177,7 @@
   --surface-container-high: #eee7e2;
   --surface-container-highest: #e8e1dc;
   --surface-variant: #e8e1dc;
-  --on-surface-variant: #4d463c;
+  --on-surface-variant: #414443;
 
   /* No-Line Rule: Section borders are prohibited */
   --border: transparent;
@@ -191,21 +205,21 @@
 
 .dark {
   /* Dark Mode */
-  --operational-cyan: #caae85;
+  --operational-cyan: #CAAE85;
   --operational-red: #ffb4ab;
-  --surface-ledger: #1e1b18;
+  --surface-ledger: #414443;
 
   --status-success: #caae85;
   --status-warning: #eb8f3b;
   --status-error: #ffb4ab;
   --status-info: #a6b2cd;
 
-  --background: #1e1b18;
-  --surface: #1e1b18;
-  --foreground: #f7efea;
+  --background: #414443;
+  --surface: #414443;
+  --foreground: #FCFBF8;
 
-  --primary: #caae85;
-  --primary-foreground: #554121;
+  --primary: #CAAE85;
+  --primary-foreground: #414443;
   --primary-container: #715b38;
   --primary-fixed-dim: #dfc298;
 
@@ -219,18 +233,18 @@
   --muted: #33302d;
   --muted-foreground: #d0c5b8;
 
-  --accent: #4d463c;
-  --accent-foreground: #f7efea;
+  --accent: #CAAE85;
+  --accent-foreground: #FCFBF8;
 
   --destructive: #ffb4ab;
   --destructive-foreground: #690005;
   --error-container: #93000a;
 
-  --card: #33302d;
-  --card-foreground: #f7efea;
+  --card: #414443;
+  --card-foreground: #FCFBF8;
 
-  --popover: #33302d;
-  --popover-foreground: #f7efea;
+  --popover: #414443;
+  --popover-foreground: #FCFBF8;
 
   --surface-container-lowest: #1e1b18;
   --surface-container-low: #33302d;
@@ -238,7 +252,7 @@
   --surface-container-high: #5c5f5e;
   --surface-container-highest: #7f766a;
   --surface-variant: #4d463c;
-  --on-surface-variant: #d0c5b8;
+  --on-surface-variant: #FCFBF8;
 
   --border: transparent;
   --border-surface: transparent;
@@ -369,11 +383,32 @@
 
 /* Scale Tokens with Integrated Tracking Discipline */
 @utility text-display-lg {
-  @apply text-[4rem] font-semibold tracking-normal;
+  font-family: var(--font-display);
+  font-size: var(--text-display-lg);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 @utility text-headline-lg {
-  @apply text-[2rem] font-semibold tracking-[0.08em];
+  font-family: var(--font-display);
+  font-size: var(--text-headline-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+@utility text-headline-lg-mobile {
+  font-family: var(--font-display);
+  font-size: var(--text-headline-lg-mobile);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+@utility text-title-md {
+  font-family: var(--font-display);
+  font-size: var(--text-title-md);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 @utility text-title-lg {
@@ -385,15 +420,25 @@
 }
 
 @utility text-body-lg {
-  @apply text-[1rem] font-medium tracking-wide;
+  font-family: var(--font-sans);
+  font-size: var(--text-body-lg);
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 @utility text-body-md {
-  @apply text-[0.875rem] font-normal tracking-normal;
+  font-family: var(--font-sans);
+  font-size: var(--text-body-md);
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 @utility text-label-sm {
-  @apply text-[0.75rem] font-medium tracking-[0.04em];
+  font-family: var(--font-sans);
+  font-size: var(--text-label-sm);
+  font-weight: 600;
+  line-height: 1.0;
+  letter-spacing: 0.05em;
 }
 
 @utility text-label-xs {

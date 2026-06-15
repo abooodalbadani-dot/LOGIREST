@@ -105,12 +105,12 @@ export default function LoginPage() {
                         className="object-cover scale-105"
                     />
                     {/* Multi-layer overlays for depth and legibility */}
-                    <div className="absolute inset-0 bg-white/60 dark:bg-black/70 backdrop-blur-[1px]" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white dark:from-[#050505] via-white/40 dark:via-[#050505]/40 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90 dark:to-[#050505]/90" />
+                    <div className="absolute inset-0 bg-background/30 dark:bg-background/60 backdrop-blur-[1px]" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-background dark:from-background via-background/20 dark:via-background/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 dark:to-background/90" />
 
                     {/* Dynamic accent glows */}
-                    <div className="absolute -top-40 -start-40 w-[600px] h-[600px] bg-operational-cyan/10 blur-[120px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+                    <div className="absolute -top-40 -start-40 w-[600px] h-[600px] bg-accent/10 blur-[120px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
                     <div className="absolute bottom-1/4 -end-20 w-[400px] h-[400px] bg-primary/10 blur-[100px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
                 </div>
 

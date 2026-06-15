@@ -1,4 +1,4 @@
-import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic, Cairo, IBM_Plex_Mono } from 'next/font/google';
+import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic, Be_Vietnam_Pro, IBM_Plex_Mono } from 'next/font/google';
 
 export const ibmPlexSans = IBM_Plex_Sans({ 
  subsets: ['latin'], 
@@ -21,10 +21,10 @@ export const ibmPlexMono = IBM_Plex_Mono({
  display: 'swap'
 });
 
-export const cairo = Cairo({
- subsets: ['arabic', 'latin'],
+export const beVietnamPro = Be_Vietnam_Pro({
+ subsets: ['latin'],
  weight: ['300', '400', '500', '600', '700', '800', '900'],
- variable: '--font-cairo',
+ variable: '--font-be-vietnam-pro',
  display: 'swap'
 });
 

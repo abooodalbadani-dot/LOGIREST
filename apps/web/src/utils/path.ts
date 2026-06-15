@@ -24,6 +24,11 @@ export function getMediaUrl(path: string | null | undefined): string {
   
   if (path.startsWith('/uploads')) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+    
+    if (apiUrl.startsWith('/')) {
+      return path;
+    }
+
     let backendOrigin = 'http://localhost:4000';
     try {
       const urlObj = new URL(apiUrl);
